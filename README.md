@@ -1,4 +1,4 @@
-# Elona: Masterpiece Edition (Commercial Release v1.0.0)
+# naRou: Masterpiece Edition (Commercial Release v1.0.0)
 
 『Elona: Masterpiece Edition』は、伝説的ローグライクRPG「Elona」の世界観をベースに、疎結合アーキテクチャ・ECS（Entity Component System）・スキルツリー・ジョブ・ギルド・派閥戦争・輪廻転生・ペット進化/融合・ストーリーテラー・Webクライアント連携を完全統合した商用クオリティのローグライクゲームです。
 
