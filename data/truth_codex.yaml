@@ -1,0 +1,36 @@
+# 真理コーデックス定義 (Step 9)
+# required_decoded_fragments が全て解読済みになると真理ノードに到達。
+# candidate_endings は story_endings.yaml の id 群。プレイヤーの解釈でどれに寄るかを決める。
+
+truth_codex:
+  truth_of_coexistence:
+    id: "truth_of_coexistence"
+    name: "共存の真実"
+    description: "魔物にも家族があり、王もまた迷いながら統治した。殲滅か共存か、答えは読者に委ねられる。"
+    required_decoded_fragments:
+      - "goblin_child_screams"
+      - "traitor_kings_will"
+    candidate_endings:
+      - "goblin_peace_bringer"
+      - "ruthless_slayer_conqueror"
+
+  truth_of_inheritance:
+    id: "truth_of_inheritance"
+    name: "継承の真実"
+    description: "英雄の祈りは星に刻まれ、巡り巡って受け継がれる。その意志をどう活かすかは読者次第。"
+    required_decoded_fragments:
+      - "ancient_hero_memory"
+      - "star_chart_shard"
+    candidate_endings:
+      - "goblin_peace_bringer"
+      - "ruthless_slayer_conqueror"
+
+  truth_of_drowned_age:
+    id: "truth_of_drowned_age"
+    name: "沈んだ時代の真実"
+    description: "海が飲んだ文明は、記憶を言葉にせず水に託した。その意思を汲むか忘れるかは読者に委ねられる。"
+    required_decoded_fragments:
+      - "sunken_civ_tablet"
+    candidate_endings:
+      - "ruthless_slayer_conqueror"
+      - "goblin_peace_bringer"

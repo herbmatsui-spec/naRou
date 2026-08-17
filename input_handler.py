@@ -46,7 +46,6 @@ from input_actions import (
     SaveAction,
     LoadAction,
     DebugAction,
-    QuitAction,
 )
 
 if TYPE_CHECKING:
@@ -65,16 +64,16 @@ class InputHandler:
     # ------------------------------------------------------------------
     @classmethod
     def handle_event(cls, event: tcod.event.Event, engine: Engine) -> None:
-        if event.type == "QUIT":
+        if isinstance(event, tcod.event.Quit):
             print("Auto-saving before quit...")
             SaveSystem.save(engine)
             sys.exit()
-        elif event.type == "TEXTINPUT":
+        elif isinstance(event, tcod.event.TextInput):
             if engine.game_state == "wish":
                 engine.wish_input += event.text
             elif engine.game_state == "debug":
                 engine.debug_input += event.text
-        elif event.type == "KEYDOWN":
+        elif isinstance(event, tcod.event.KeyDown):
             cls._handle_keydown(event, engine)
 
     # ------------------------------------------------------------------

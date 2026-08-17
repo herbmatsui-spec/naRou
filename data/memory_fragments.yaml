@@ -1,4 +1,6 @@
-# 記憶フラグメント設定 (Steps 13, 14)
+# 記憶フラグメント設定 (Steps 13, 14, 6拡張)
+# 考古学・発掘・解読メタゲーム用に glyph_script / cipher_type / decoder_hint / truth_link を拡張。
+# 既存キー (id/name/description/trigger_conditions/unlock_requirement/effects/resolution_paths) は維持。
 
 memory_fragments:
   goblin_child_screams:
@@ -13,6 +15,10 @@ memory_fragments:
     resolution_paths:
       - "spared_cubs"
       - "ruthless_extermination"
+    cipher_type: "goblin_rune"
+    glyph_script: "⟁⟟⌖⏃⌖ ⏚⟒⏚⟒ ⏃⌖⟒⏚⟟⌖ ⟁⟟⏚"
+    decoder_hint: "ゴブリンの唄には『家族』を表す繰り返しの刻印がある。"
+    truth_link: "truth_of_coexistence"
 
   ancient_hero_memory:
     id: "ancient_hero_memory"
@@ -25,3 +31,56 @@ memory_fragments:
       skill_potential_boost: 10
     resolution_paths:
       - "inherit_will"
+    cipher_type: "heroic_glyph"
+    glyph_script: "☉⟡⌬⟡☉ ⌖⟒⏚⟟⌖ ⟁⟟⏚⟒⏚ ⌬⟡⌬"
+    decoder_hint: "英雄の碑文は『守る』という語で始まる祈りの定型句を持つ。"
+    truth_link: "truth_of_inheritance"
+
+  # ---- 新規追加断片 (Step 6) ----
+  sunken_civ_tablet:
+    id: "sunken_civ_tablet"
+    name: "沈没文明の石板"
+    description: "海底から引き揚げられた石板。未知の文字列が波のように刻まれている。"
+    trigger_conditions:
+      - "excavate_abyssal_dig"
+    unlock_requirement: "depth_20"
+    effects:
+      lore_sea: true
+    resolution_paths:
+      - "surface_truth"
+    cipher_type: "abyssal_script"
+    glyph_script: "⌁⟒⏚⟟⌖ ⟁⟟⏚⟒⏚ ⏃⌖⟒⏚ ⟟⌖⟁⟟⏚"
+    decoder_hint: "深淵の文字は『水』と『記憶』を結ぶ二重写しの記号を含む。"
+    truth_link: "truth_of_drowned_age"
+
+  star_chart_shard:
+    id: "star_chart_shard"
+    name: "星図の欠片"
+    description: "夜空を切り取ったように光る破片。星座の間に細い文字が潜む。"
+    trigger_conditions:
+      - "excavate_hero_sanctum"
+    unlock_requirement: "depth_10"
+    effects:
+      lore_cosmos: true
+    resolution_paths:
+      - "read_the_stars"
+    cipher_type: "heroic_glyph"
+    glyph_script: "☉⟡⌬ ⏃⌖⟒⏚⟟⌖ ⟁⟟⏚⟒⏚ ☉⟡⌬⟡☉"
+    decoder_hint: "星図は英雄の碑文と同じ言語族だが、『巡る』を表す語を足す。"
+    truth_link: "truth_of_inheritance"
+
+  traitor_kings_will:
+    id: "traitor_kings_will"
+    name: "裏切り王の遺言"
+    description: "玉座の下に埋められていた巻物。誰も読めぬはずの文字で綴られている。"
+    trigger_conditions:
+      - "excavate_goblin_ruins"
+    unlock_requirement: "dungeon_goblin_depth_3"
+    effects:
+      lore_throne: true
+    resolution_paths:
+      - "judge_the_king"
+    cipher_type: "goblin_rune"
+    glyph_script: "⟁⟟⏚ ⏚⟒⏚⟒ ⟁⟟⌖⏃⌖ ⟟⌖⟁⟟⏚⟒⏚"
+    decoder_hint: "王の文字はゴブリンの刻印に似るが、『王』を意味する逆さの印がある。"
+    truth_link: "truth_of_coexistence"

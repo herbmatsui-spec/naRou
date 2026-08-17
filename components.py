@@ -9,6 +9,44 @@ from typing import Dict, List, Set, Tuple, Any, Optional
 
 
 @dataclass
+class AttributesComponent:
+    """主能力 8種 - ECSコンポーネントとして管理 (Step 2)"""
+    strength: int = 10
+    endurance: int = 10
+    dexterity: int = 10
+    perception: int = 10
+    learning: int = 10
+    will: int = 10
+    magic: int = 10
+    charisma: int = 10
+
+    def to_dict(self) -> Dict[str, int]:
+        return {
+            "strength": self.strength,
+            "endurance": self.endurance,
+            "dexterity": self.dexterity,
+            "perception": self.perception,
+            "learning": self.learning,
+            "will": self.will,
+            "magic": self.magic,
+            "charisma": self.charisma,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "AttributesComponent":
+        return cls(
+            strength=data.get("strength", 10),
+            endurance=data.get("endurance", 10),
+            dexterity=data.get("dexterity", 10),
+            perception=data.get("perception", 10),
+            learning=data.get("learning", 10),
+            will=data.get("will", 10),
+            magic=data.get("magic", 10),
+            charisma=data.get("charisma", 10),
+        )
+
+
+@dataclass
 class TitleComponent:
     """称号およびプレイヤー実績統計用コンポーネント"""
     titles: List[str] = field(default_factory=list)
@@ -103,6 +141,18 @@ class SkillFusionComponent:
 
 
 @dataclass
+class ProceduralQuestComponent:
+    """プロシージャル・クエスト生成用コンポーネント (Steps 34-35)"""
+    active_board: List[Dict[str, Any]] = field(default_factory=list)
+    accepted_quests: List[Dict[str, Any]] = field(default_factory=list)
+    completed_quest_ids: List[str] = field(default_factory=list)
+    completed_count: int = 0
+    generated_total_count: int = 0
+    board_seed: int = 0
+    active_chains: Dict[str, List[str]] = field(default_factory=dict)  # 連鎖状態 (Step 23)
+
+
+@dataclass
 class StorytellerComponent:
     """ダンジョン・ワールド自動生成ストーリーテラー用コンポーネント"""
     story_flags: Dict[str, bool] = field(default_factory=dict)
@@ -118,3 +168,16 @@ class StorytellerComponent:
     story_notifications: List[Dict[str, Any]] = field(default_factory=list)
     current_choice_prompt: Optional[Dict[str, Any]] = None
     ending_progress: Dict[str, int] = field(default_factory=dict)
+
+
+@dataclass
+class ArchaeologyComponent:
+    """考古学・発掘・解読メタゲーム用コンポーネント (Steps 10-12)"""
+    excavated_sites: List[str] = field(default_factory=list)            # 発掘済み遺跡サイト id
+    collected_fragments: List[str] = field(default_factory=list)        # 収集済み断片 id（生・未解読含む）
+    decoded_fragments: List[str] = field(default_factory=list)          # 解読済み断片 id
+    owned_keys: List[str] = field(default_factory=list)                # 所持デコーダー鍵 id
+    reached_truths: List[str] = field(default_factory=list)            # 到達済み真理ノード id
+    leaned_endings: Dict[str, str] = field(default_factory=dict)       # truth_id -> 寄り先 ending_id
+    interpretation_notes: Dict[str, str] = field(default_factory=dict) # truth_id -> プレイヤー解釈文
+    decoder_hints_seen: List[str] = field(default_factory=list)       # 蓄積された解読ヒント（気づき）

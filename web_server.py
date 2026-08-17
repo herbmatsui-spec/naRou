@@ -10,6 +10,9 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from typing import Optional, Dict, Any, TYPE_CHECKING
 import os
 
+from ui_event_panel import get_current_event_info, get_event_ranking, get_player_event_score
+from ui_ranking_panel import get_all_event_rankings
+
 if TYPE_CHECKING:
     from game import Engine
 
@@ -38,6 +41,44 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             state = self._serialize_engine_state(_ENGINE_INSTANCE)
             self._set_headers("application/json; charset=utf-8")
             self.wfile.write(json.dumps(state, ensure_ascii=False).encode('utf-8'))
+        elif self.path == "/api/event/info":
+            # イベント情報を取得
+            query = self.path.split('?', 1)[1] if '?' in self.path else ''
+            params = dict(qc.split('=') for qc in query.split('&') if qc)
+            turn = int(params.get('turn', 0))
+            info = get_current_event_info(turn)
+            self._set_headers("application/json; charset=utf-8")
+            self.wfile.write(json.dumps(info, ensure_ascii=False).encode('utf-8'))
+        elif self.path == "/api/event/ranking":
+            query = self.path.split('?', 1)[1] if '?' in self.path else ''
+            params = dict(qc.split('=') for qc in query.split('&') if qc)
+            event_id = params.get('event_id', '')
+            top_n = int(params.get('top_n', 10))
+            ranking = get_event_ranking(event_id, top_n)
+            self._set_headers("application/json; charset=utf-8")
+            self.wfile.write(json.dumps(ranking, ensure_ascii=False).encode('utf-8'))
+        elif self.path == "/api/event/score":
+            query = self.path.split('?', 1)[1] if '?' in self.path else ''
+            params = dict(qc.split('=') for qc in query.split('&') if qc)
+            event_id = params.get('event_id', '')
+            player_id = params.get('player_id', '')
+            score = get_player_event_score(event_id, player_id)
+            self._set_headers("application/json; charset=utf-8")
+            self.wfile.write(json.dumps({"score": score}, ensure_ascii=False).encode('utf-8'))
+        elif self.path == "/api/event/titles":
+            query = self.path.split('?', 1)[1] if '?' in self.path else ''
+            params = dict(qc.split('=') for qc in query.split('&') if qc)
+            event_id = params.get('event_id', '')
+            player_id = params.get('player_id', '')
+            # プレイヤーオブジェクトを取得する必要があるが、ここでは簡易的に空リストを返す
+            # 実際には、エンジンからプレイヤーオブジェクトを取得する
+            titles = []  # プレースホルダー
+            self._set_headers("application/json; charset=utf-8")
+            self.wfile.write(json.dumps(titles, ensure_ascii=False).encode('utf-8'))
+        elif self.path == "/api/event/all_rankings":
+            all_rankings = get_all_event_rankings()
+            self._set_headers("application/json; charset=utf-8")
+            self.wfile.write(json.dumps(all_rankings, ensure_ascii=False).encode('utf-8'))
         elif self.path == "/" or self.path.endswith(".html") or self.path == "/index.html":
             html_path = os.path.join(os.path.dirname(__file__), "web_game_client.html")
             if os.path.exists(html_path):

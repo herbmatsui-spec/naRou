@@ -1,11 +1,9 @@
 import os
 import sys
-import pytest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 if hasattr(sys.stdout, 'reconfigure'): sys.stdout.reconfigure(encoding='utf-8')
 from game import Engine
-from ui_fx_systems import TutorialManager, NotificationManager, ScreenShake
-from core_framework import MessageLog, LogMessage
+from ui_fx_systems import TutorialManager
 
 def test_tutorial_manager_loading_and_triggers():
     tm = TutorialManager('data/tutorial_guides.yaml')

@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+    <script src="/UIProvider.js"></script>
+    <script src="/ui-components-base.js"></script>
+    <script src="/log-window.js"></script>
+    <script src="/status-bar.js"></script>
+    <script src="/item-slot.js"></script>
+    <script src="/inventory-grid.js"></script>
+    <script src="/skill-node.js"></script>
+    <script src="/skill-tree.js"></script>
+    <script src="/ui-a11y.js"></script>
+    <script src="/ui-performance.js"></script>
+    <script>window.UIProvider.init();</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Elona Scene Demo - 10. ペット闘技場</title>
@@ -9,8 +20,8 @@
     <style>
         body {
             font-family: 'Outfit', 'Noto Sans JP', sans-serif;
-            background: #070913;
-            color: #ffffff;
+            background: var(--colors-surface-background);
+            color: var(--colors-content-text-main);
             margin: 0;
             display: flex;
             justify-content: center;
@@ -21,24 +32,24 @@
         }
         .stage-box {
             width: 820px;
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: var(--colors-surface-surface-low);
+            border: 1px solid var(--colors-surface-border);
             border-radius: 16px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.8);
             overflow: hidden;
-            padding: 24px;
+            padding: var(--spacing-6);
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: var(--spacing-4);
         }
         .grid-map {
             display: grid;
             grid-template-columns: repeat(10, 1fr);
-            gap: 4px;
+            gap: var(--spacing-1);
             background: #030712;
-            padding: 16px;
+            padding: var(--spacing-4);
             border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid var(--colors-surface-border);
             font-size: 32px;
             user-select: none;
         }
@@ -64,7 +75,7 @@
             <div class="flex items-center gap-3">
                 <span class="text-3xl">🏟️</span>
                 <div>
-                    <h1 class="text-xl font-bold text-sky-400">10. ペット闘技場</h1>
+                    <h1 class="text-xl font-bold text-[var(--colors-brand-primary)]">10. ペット闘技場</h1>
                     <p class="text-xs text-slate-400">シエルが強敵オークと1対1の真剣勝負</p>
                 </div>
             </div>
@@ -124,10 +135,15 @@
             <div class="tile tile-wall">🧱</div>
         </div>
 
-        <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 text-sm flex items-center justify-between">
-            <span class="text-yellow-300 font-medium">📜 闘技場🏟️の決闘！シエル👧が長剣🗡️を構え、強敵オーク👹に挑む！</span>
-            <span class="text-xs text-slate-500">Elona Masterpiece Engine</span>
-        </div>
+        <div id="scene-log-container"></div>
+        <script>
+            const logWin = new LogWindow();
+            document.getElementById("scene-log-container").appendChild(logWin.render({
+                messages: [
+                    { text: "📜 闘技場🏟️の決闘！シエル👧が長剣🗡️を構え、強敵オーク👹に挑む！", type: "story" }
+                ]
+            }));
+        </script>
     </div>
 </body>
 </html>

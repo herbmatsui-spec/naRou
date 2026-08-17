@@ -11,13 +11,14 @@ Elona Roguelike - UI & Visual FX Systems (Phases 2 - 8)
 
 from __future__ import annotations
 import math
+import random
 from typing import List, Tuple, Optional, Dict, Any
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import tcod
 
 from constants import (
-    SCREEN_WIDTH, SCREEN_HEIGHT, MAP_WIDTH, MAP_HEIGHT, VIEW_HEIGHT,
-    COLOR_HP_GREEN, COLOR_GOLD_YELLOW, COLOR_PET_PINK
+    MAP_WIDTH, VIEW_HEIGHT,
+    COLOR_PET_PINK
 )
 
 @dataclass
@@ -502,6 +503,7 @@ def play_pet_fusion_fx(engine: Any, pet1_name: str, pet2_name: str, result_name:
         color=(255, 215, 0),
         lifetime=30
     ))
+    from sound_manager import SoundManager
     SoundManager.play_se("level_up")
     engine.log(f"★錬金遺伝子融合の奇跡！【{pet1_name}】と【{pet2_name}】が融合し、【{result_name}】が誕生した！", (255, 215, 0))
 

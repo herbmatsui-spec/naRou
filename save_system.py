@@ -5,11 +5,11 @@ import gzip
 import pickle
 import hashlib
 from typing import Any, Tuple, Optional, Dict
-from exceptions import SaveSystemError, SaveDataCorruptedError
+from exceptions import SaveDataCorruptedError
 from components import (
     TitleComponent, GuildFactionComponent, AchievementComponent,
     ReincarnationComponent, SkillTreeJobComponent, SkillFusionComponent,
-    StorytellerComponent
+    StorytellerComponent, ProceduralQuestComponent
 )
 
 
@@ -51,6 +51,9 @@ class SaveSystem:
         'skill_archive_progress': dict, 'story_flags': dict, 'story_variables': dict,
         'player_legacy': dict, 'character_relationships': dict, 'ending_progress': dict,
         'skill_tree_progress': dict, 'faction_reputation': dict, 'guild_quest_progress': dict,
+        'excavated_sites': list, 'decoded_fragments': list,
+        'owned_keys': list, 'reached_truths': list, 'leaned_endings': dict, 'interpretation_notes': dict,
+        'decoder_hints_seen': list,
         # 数値型
         'karma_law_chaos': int, 'karma_good_evil': int, 'reincarnation_count': int,
         'max_dungeon_depth': int, 'near_death_count': int, 'total_turns': int, 'gold': int,
@@ -90,7 +93,7 @@ class SaveSystem:
         # 各コンポーネントの初期化/補完
         for comp_cls in [TitleComponent, GuildFactionComponent, AchievementComponent,
                          ReincarnationComponent, SkillTreeJobComponent, SkillFusionComponent,
-                         StorytellerComponent]:
+                         StorytellerComponent, ProceduralQuestComponent]:
             if comp_cls not in player.components:
                 player.components[comp_cls] = comp_cls()
 

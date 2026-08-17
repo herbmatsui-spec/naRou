@@ -4,10 +4,12 @@
 """
 
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Any, TYPE_CHECKING
 import yaml
-from pathlib import Path
+
+if TYPE_CHECKING:
+    from entity import Entity
 
 
 @dataclass

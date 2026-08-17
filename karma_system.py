@@ -2,7 +2,7 @@
 カーマシステム
 """
 from dataclasses import dataclass
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple
 import yaml
 import os
 

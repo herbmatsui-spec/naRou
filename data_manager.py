@@ -8,17 +8,15 @@ import os
 import yaml
 import json
 import random
-from typing import Dict, Any, Optional, List, Tuple, TYPE_CHECKING
+from typing import Dict, Any, Optional, List, TYPE_CHECKING
 
 from core_framework import BaseSystem
 from constants import (
-    QUALITY_BAD, QUALITY_NORMAL, QUALITY_GOOD, QUALITY_MIRACLE, QUALITY_GOD,
-    ItemCategory
+    QUALITY_BAD, QUALITY_NORMAL, QUALITY_GOOD, QUALITY_MIRACLE, QUALITY_GOD
 )
 from item_system import (
     Item, MATERIALS,
-    CAT_WEAPON, CAT_SHIELD, CAT_ARMOR, CAT_HELM, CAT_RING,
-    CAT_POTION, CAT_SCROLL, CAT_FOOD, CAT_SPELLBOOK, CAT_TOOL, CAT_ROD, CAT_ORE, CAT_GOLD
+    CAT_TOOL
 )
 from entity import Entity, Attributes
 

@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "tile_size": 16,
+  "tiles": {
+    "TILE_WALL": {"file": "terrain/wall_dungeon.png", "variants": 4, "autotile": true, "variant_width": 16},
+    "TILE_FLOOR": {"file": "terrain/floor_dungeon.png", "variants": 8, "autotile": true, "variant_width": 16},
+    "TILE_STAIRS_DOWN": {"file": "terrain/stairs_down.png", "animated": true, "frames": 4, "fps": 4},
+    "TILE_STAIRS_UP": {"file": "terrain/stairs_up.png", "animated": true, "frames": 4, "fps": 4},
+    "TILE_WATER": {"file": "terrain/water.png", "animated": true, "frames": 8, "fps": 8},
+    "TILE_TRAP": {"file": "terrain/trap.png", "animated": true, "frames": 3, "fps": 6},
+    "PLAYER": {"file": "entities/player.png", "animated": true, "frames": 4, "directions": 4, "states": ["idle", "walk", "attack"]},
+    "PET": {"file": "entities/pet.png", "animated": true, "frames": 4, "directions": 4},
+    "ENEMY_GOBLIN": {"file": "entities/enemy_goblin.png", "animated": true, "frames": 4, "directions": 4, "states": ["idle", "walk", "attack"]},
+    "ITEM_POTION": {"file": "objects/item_potion.png"},
+    "ITEM_WEAPON": {"file": "objects/item_weapon.png"},
+    "ITEM_ARMOR": {"file": "objects/item_armor.png"},
+    "ITEM_GOLD": {"file": "objects/item_gold.png", "animated": true, "frames": 4, "fps": 8},
+    "DECOR_TORCH": {"file": "effects/torch.png", "animated": true, "frames": 4, "fps": 8},
+    "DECOR_BLOOD": {"file": "effects/blood_splat.png", "variants": 4, "variant_width": 16},
+    "EFFECT_MAGIC": {"file": "effects/magic_cast.png", "animated": true, "frames": 6, "fps": 12}
+  }
+}

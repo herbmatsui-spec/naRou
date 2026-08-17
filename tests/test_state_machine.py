@@ -1,6 +1,5 @@
 import os
 import sys
-import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -9,7 +8,6 @@ if hasattr(sys.stdout, 'reconfigure'):
 
 from game import Engine
 from constants import GameState
-from input_handler import InputHandler
 
 def test_game_state_definitions():
     assert GameState.EXPLORING.value == 'exploring'

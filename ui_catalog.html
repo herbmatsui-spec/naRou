@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>UI Component Catalog - Elona Design System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="UIProvider.js"></script>
+    <script src="ui-components-base.js"></script>
+    <script src="log-window.js"></script>
+    <script src="status-bar.js"></script>
+    <script src="item-slot.js"></script>
+    <script src="inventory-grid.js"></script>
+    <script src="skill-node.js"></script>
+    <script src="skill-tree.js"></script>
+    <style>
+        body {
+            background-color: var(--colors-surface-background);
+            color: var(--colors-content-text-main);
+            font-family: var(--typography-font-family-main);
+            padding: var(--spacing-8);
+        }
+        .catalog-section {
+            background-color: var(--colors-surface-surface-low);
+            border: 1px solid var(--colors-surface-border);
+            border-radius: 12px;
+            padding: var(--spacing-6);
+            margin-bottom: var(--spacing-8);
+        }
+        .component-preview {
+            padding: var(--spacing-8);
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: var(--spacing-4);
+            border: 1px dashed var(--colors-surface-surface-high);
+        }
+        h1 { font-size: var(--typography-size-h1); color: var(--colors-brand-primary); margin-bottom: var(--spacing-4); }
+        h2 { font-size: var(--typography-size-h2); color: var(--colors-brand-secondary); margin-bottom: var(--spacing-2); }
+        .token-label { font-size: var(--typography-size-caption); color: var(--colors-content-text-muted); }
+    </style>
+</head>
+<body>
+    <h1>🎨 UI Component Catalog</h1>
+    <p class="mb-8 opacity-70">Elona Design Systemの全コンポーネントとデザイントークンの可視化ページ</p>
+
+    <!-- LogWindow Section -->
+    <div class="catalog-section">
+        <h2>LogWindow</h2>
+        <p class="token-label">messages: Array<{text, type}></p>
+        <div id="preview-log" class="component-preview"></div>
+    </div>
+
+    <!-- StatusBar Section -->
+    <div class="catalog-section">
+        <h2>StatusBar</h2>
+        <p class="token-label">label, current, max, colorToken</p>
+        <div id="preview-status" class="component-preview" style="display: flex; flex-direction: column; gap: 10px;"></div>
+    </div>
+
+    <!-- Inventory Section -->
+    <div class="catalog-section">
+        <h2>InventoryGrid & ItemSlot</h2>
+        <p class="token-label">items: Array<{icon, rarity, quantity, tooltip}></p>
+        <div id="preview-inventory" class="component-preview"></div>
+    </div>
+
+    <!-- SkillTree Section -->
+    <div class="catalog-section">
+        <h2>SkillTree & SkillNode</h2>
+        <p class="token-label">nodes: Array, connections: Array</p>
+        <div id="preview-skills" class="component-preview"></div>
+    </div>
+
+    <script>
+        async function initCatalog() {
+            await window.UIProvider.init();
+
+            // 1. LogWindow Preview
+            const logWin = new LogWindow();
+            document.getElementById('preview-log').appendChild(logWin.render({
+                messages: [
+                    { text: "物語の始まり。あなたはこの世界に降り立った。", type: "story" },
+                    { text: "ゴブリンが現れた！", type: "combat" },
+                    { text: "システム: 経験値を10獲得しました。", type: "system" },
+                    { text: "警告: 空腹度が限界に近づいています。", type: "warning" }
+                ]
+            }));
+
+            // 2. StatusBar Previews
+            const statusBar = new StatusBar();
+            const statusContainer = document.getElementById('preview-status');
+            statusContainer.appendChild(statusBar.render({ label: "HP", current: 80, max: 100, colorToken: '--colors-status-danger' }));
+            statusContainer.appendChild(statusBar.render({ label: "MP", current: 40, max: 100, colorToken: '--colors-brand-primary' }));
+            statusContainer.appendChild(statusBar.render({ label: "EXP", current: 120, max: 1000, colorToken: '--colors-brand-accent' }));
+
+            // 3. Inventory Preview
+            const invGrid = new InventoryGrid();
+            document.getElementById('preview-inventory').appendChild(invGrid.render({
+                items: [
+                    { icon: '🗡️', rarity: 'rare', quantity: 1, tooltip: '鋼の剣' },
+                    { icon: '🛡️', rarity: 'uncommon', quantity: 1, tooltip: '革の盾' },
+                    { icon: '🧪', rarity: 'common', quantity: 5, tooltip: '回復薬' },
+                    { icon: '💎', rarity: 'legendary', quantity: 1, tooltip: '古代の宝石' },
+                    { icon: '🍎', rarity: 'common', quantity: 12, tooltip: 'リンゴ' },
+                    { icon: '📜', rarity: 'epic', quantity: 1, tooltip: '禁断の魔導書' },
+                ],
+                columns: 6
+            }));
+
+            // 4. SkillTree Preview
+            const skillTree = new SkillTree();
+            document.getElementById('preview-skills').appendChild(skillTree.render({
+                nodes: [
+                    { id: 'root', name: '冒険者', icon: '🚶', state: 'learned', position: { x: 100, y: 100 } },
+                    { id: 'warrior', name: '戦士', icon: '⚔️', state: 'available', position: { x: 250, y: 50 } },
+                    { id: 'mage', name: '魔術師', icon: '🪄', state: 'learned', position: { x: 250, y: 150 } },
+                    { id: 'hero', name: '勇者', icon: '🌟', state: 'locked', position: { x: 400, y: 100 } },
+                ],
+                connections: [
+                    { from: 'root', to: 'warrior' },
+                    { from: 'root', to: 'mage' },
+                    { from: 'warrior', to: 'hero' },
+                    { from: 'mage', to: 'hero' },
+                ]
+            }));
+        }
+
+        initCatalog();
+    </script>
+</body>
+</html>

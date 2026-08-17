@@ -6,14 +6,13 @@ Handles the progression of the primary story line, quest tracking, and reward di
 from __future__ import annotations
 import yaml
 import os
-from typing import List, Tuple, Optional, Dict, Any, TYPE_CHECKING
+from typing import List, Optional, Dict, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
 from enum import Enum, auto
 
 if TYPE_CHECKING:
     from entity import Entity
     from game import Engine
-    from world_state_system import WorldPhase
 
 class QuestStatus(Enum):
     LOCKED = auto()      # 解放前

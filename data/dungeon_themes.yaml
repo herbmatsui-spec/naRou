@@ -1,6 +1,8 @@
 # ダンジョンテーマ設定 (Steps 7, 8)
+# 後方互換性のため従来の構造を保持しつつ、新しい垂直ワールド構造を追加
 
 dungeon_themes:
+  # 後方互換性のための従来のテーマ（既存のコンテンツ用）
   goblin_cave:
     theme_id: "goblin_cave"
     name: "ゴブリンの洞窟"
@@ -40,3 +42,392 @@ dungeon_themes:
       - "relic_chamber"
     story_hooks:
       - "discover_lost_magic"
+
+  # 新しい垂直ワールド構造: zone.biome.depth_range.dimension
+  vertical_world:
+    surface:
+      plains:
+        depth_0_5:
+          material:
+            theme_id: "surface_plains_shallow_material"
+            name: "陽だまりの草原"
+            base_layout: "open"
+            difficulty_modifier: 0.5
+            enemy_pools:
+              common:
+                - "slime"
+                - "snail"
+              uncommon:
+                - "goblin"
+              rare:
+                - "kobold"
+              unique_boss: "grassland_guardian"
+            environmental_hazards:
+              - "thorn_bush"
+            special_rooms:
+              - "wildflower_patch"
+              - "herb_garden"
+            story_hooks:
+              - "lost_traveler"
+              - "wild_horse_herd"
+            resources:
+              common:
+                - "grass"
+                - "wild_flower"
+              uncommon:
+                - "medicinal_herb"
+              rare:
+                - "golden_wheat"
+          ethereal:
+            theme_id: "surface_plains_shallow_ethereal"
+            name: "霧の草原"
+            base_layout: "open"
+            difficulty_modifier: 0.7
+            enemy_pools:
+              common:
+                - "wisp"
+                - "fairy"
+              uncommon:
+                - "sprite"
+              rare:
+                - "forest_guardian"
+              unique_boss: "ethereal_stag"
+            environmental_hazards:
+              - "mana_flower"
+              - "confusing_spores"
+            special_rooms:
+              - "fairy_ring"
+              - "moonlit_glade"
+            story_hooks:
+              - "fairy_queen's_invitation"
+              - "lost_child_in_mist"
+            resources:
+              common:
+                - "moonpetal"
+                - "stardust"
+              uncommon:
+                - "crystal_berry"
+              rare:
+                - "ethereal_essence"
+          void:
+            theme_id: "surface_plains_shallow_void"
+            name: "歪んだ草原"
+            base_layout: "open"
+            difficulty_modifier: 1.2
+            enemy_pools:
+              common:
+                - "void_spawn"
+                - "shadow_creep"
+              uncommon:
+                - "void_walker"
+              rare:
+                - "stalker_of_the_void"
+              unique_boss: "void_grazelord"
+            environmental_hazards:
+              - "reality_tear"
+              - "madness_gas"
+            special_rooms:
+              - "void_circle"
+              - "whispering_stones"
+            story_hooks:
+              - "voices_from_beyond"
+              - "the_watching_eyes"
+            resources:
+              common:
+                - "void_shard"
+                - "shadow_essence"
+              uncommon:
+                - "distorted_crystal"
+              rare:
+                - "void_core"
+        depth_6_10:
+          material:
+            theme_id: "surface_plains_mid_material"
+            name: "広がる平原"
+            base_layout: "open"
+            difficulty_modifier: 0.8
+            enemy_pools:
+              common:
+                - "goblin"
+                - "hound"
+              uncommon:
+                - "orc_scout"
+              rare:
+                - "wargs"
+              unique_boss: "plains_warlord"
+            environmental_hazards:
+              - "quick_sand"
+              - "dust_devil"
+            special_rooms:
+              - "nomad_camp"
+              - "ancient_burial_mound"
+            story_hooks:
+              - "stolen_herd"
+              - "ancient_spirit_awakens"
+            resources:
+              common:
+                - "grass"
+                - "wheat"
+              uncommon:
+                - "iron_ore"
+              rare:
+                - "silver_nugget"
+      forest:
+        depth_0_5:
+          material:
+            theme_id: "surface_forest_shallow_material"
+            name: "陽だまりの森"
+            base_layout: "forest"
+            difficulty_modifier: 0.6
+            enemy_pools:
+              common:
+                - "snail"
+                - "forest_gnome"
+              uncommon:
+                - "goblin_archer"
+              rare:
+                - "forest_yeti"
+              unique_boss: "ancient_tree_spirit"
+            environmental_hazards:
+              - "poison_ivy"
+              - "entangling_vines"
+            special_rooms:
+              - "fairy_grove"
+              - "ancient_druid_circle"
+            story_hooks:
+              - "cursed_grove"
+              - "druid's_request"
+            resources:
+              common:
+                - "wood"
+                - "mushroom"
+              uncommon:
+                - "healing_herb"
+              rare:
+                - "moonwood"
+          ethereal:
+            theme_id: "surface_forest_shallow_ethereal"
+            name: "幽霊の森"
+            base_layout: "forest"
+            difficulty_modifier: 0.9
+            enemy_pools:
+              common:
+                - "willow_wisp"
+                - "banshee"
+              uncommon:
+                - "phantom_archer"
+              rare:
+                - "spectral_wolf"
+              unique_boss: "forest_wraith_queen"
+            environmental_hazards:
+              - "soul_drain_mist"
+              - "memory_loss_spores"
+            special_rooms:
+              - "ghost_grove"
+              - "whispering_trees"
+            story_hooks:
+              - "lost_souls"
+              - "forest_memory"
+            resources:
+              common:
+                - "ectoplasm"
+                - "memory_crystal"
+              uncommon:
+                - "soul_gem"
+              rare:
+                - "forest_heart"
+    underground:
+      forest:
+        depth_11_20:
+          material:
+            theme_id: "underground_forest_shallow_material"
+            name: "地下のキノコ林"
+            base_layout: "cavern"
+            difficulty_modifier: 1.0
+            enemy_pools:
+              common:
+                - "giant_snail"
+                - "cave_goblin"
+              uncommon:
+                - "fungal_zombie"
+              rare:
+                - "cave_troll"
+              unique_boss: "myconid_sovereign"
+            environmental_hazards:
+              - "toxic_spores"
+              - "acid_drip"
+            special_rooms:
+              - "giant_mushroom_canyon"
+              - "bioluminescent_grove"
+            story_hooks:
+              - "lost_mycology_team"
+              - "fungal_plague"
+            resources:
+              common:
+                - "glowing_fungus"
+                - "cave_moss"
+              uncommon:
+                - "rare_spores"
+              rare:
+                - "queen's_nectar"
+          ethereal:
+            theme_id: "underground_forest_shallow_ethereal"
+            name: "幽霊のキノコ林"
+            base_layout: "cavern"
+            difficulty_modifier: 1.3
+            enemy_pools:
+              common:
+                - "spore_wraith"
+                - "ghost_gnome"
+              uncommon:
+                - "phantomic_fungal"
+              rare:
+                - "myconid_phantom"
+              unique_boss: "ethereal_myconid_lord"
+            environmental_hazards:
+              - "hallucination_gas"
+              - "memory_fog"
+            special_rooms:
+              - "spirit_mushroom_ring"
+              - "echoing_cavern"
+            story_hooks:
+              - "forgotten_names"
+              - "underground_memories"
+            resources:
+              common:
+                - "ghost_spores"
+                - "echo_crystal"
+              uncommon:
+                - "memory_fragment"
+              rare:
+                - "soul_mushroom"
+    otherworld:
+      ruins:
+        depth_51_60:
+          material:
+            theme_id: "otherworld_ruins_mid_material"
+            name: "時の歪み遺跡"
+            base_layout: "dungeon_grid"
+            difficulty_modifier: 2.0
+            enemy_pools:
+              common:
+                - "time_warp_goblin"
+                - "paradox_slime"
+              uncommon:
+                - "temporal_orc"
+              rare:
+                - "chrono_knight"
+              unique_boss: "chronomancer_prime"
+            environmental_hazards:
+              - "time_dilation_field"
+              - "reverse_gravity_zone"
+            special_rooms:
+              - "clockwork_chamber"
+              - "eternal_archive"
+            story_hooks:
+              - "the_stopped_clock"
+              - "empire_that_never_was"
+            resources:
+              common:
+                - "broken_clock_gear"
+                - "temporal_dust"
+              uncommon:
+                - "stabilized_chronite"
+              rare:
+                - "eternity_shard"
+          ethereal:
+            theme_id: "otherworld_ruins_mid_ethereal"
+            name: "霊界の遺跡"
+            base_layout: "dungeon_grid"
+            difficulty_modifier: 2.2
+            enemy_pools:
+              common:
+                - "ruin_wraith"
+                - "spectral_guard"
+              uncommon:
+                - "ethereal_archer"
+              rare:
+                - "phantom_king"
+              unique_boss: "spectral_emperor"
+            environmental_hazards:
+              - "soul_extraction_field"
+              - "memory_labyrinth"
+            special_rooms:
+              - "hall_of_memories"
+              - "altar_of_forgotten_gods"
+            story_hooks:
+              - "whispers_of_the_dead"
+              - "gods'_forgotten_pact"
+            resources:
+              common:
+                - "spirit_residue"
+                - "memory_shard"
+              uncommon:
+                - "divine_remnant"
+              rare:
+                - "god_touch"
+    heaven:
+      plains:
+        depth_101_110:
+          material:
+            theme_id: "heaven_plains_mid_material"
+            name: "聖なる光の草原"
+            base_layout: "open"
+            difficulty_modifier: 2.5
+            enemy_pools:
+              common:
+                - "celestial_hare"
+                - "light_fox"
+              uncommon:
+                - "seraphim_initiate"
+              rare:
+                - "cherubim_warden"
+              unique_boss: "archangel_vanguard"
+            environmental_hazards:
+              - "blinding_light"
+              - "divine_judgment_zone"
+            special_rooms:
+              - "prayer_garden"
+              - "altar_of_light"
+            story_hooks:
+              - "pilgrim's_quest"
+              - "angel's_message"
+            resources:
+              common:
+                - "holy_water"
+                - "blessed_herb"
+              uncommon:
+                - "divine_essence"
+              rare:
+                - "fragment_of_divinity"
+          ethereal:
+            theme_id: "heaven_plains_mid_ethereal"
+            name: "魂の楽園"
+            base_layout: "open"
+            difficulty_modifier: 2.8
+            enemy_pools:
+              common:
+                - "soul_butterfly"
+                - "spirit_dove"
+              uncommon:
+                - "guardian_angel"
+              rare:
+                - "virtue_knight"
+              unique_boss: "seraphim_sovereign"
+            environmental_hazards:
+              - "soul_weighing"
+              - "purgatory_flames"
+            special_rooms:
+              - "hall_of_virtues"
+              - "gate_to_nirvana"
+            story_hooks:
+              - "judgment_day"
+              - "path_to_enlightenment"
+            resources:
+              common:
+                - "virtue_crystal"
+                - "prayer_bead"
+              uncommon:
+                - "blessing_scroll"
+              rare:
+                - "teardrop_of_compassion"

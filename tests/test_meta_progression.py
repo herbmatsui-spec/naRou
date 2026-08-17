@@ -9,7 +9,6 @@ Tests for MetaProgressionSystem:
 
 import sys
 import os
-import pytest
 
 # Add project root to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -18,10 +17,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from entity import Entity, Attributes
-from components import ReincarnationComponent, AchievementComponent, StorytellerComponent
+from entity import Entity
+from components import AchievementComponent
 from meta_progression_system import (
-    MemoryFragmentData, MemoryFragmentGenerator, MetaProgressionManager, REGISTRY as META_REG
+    MemoryFragmentData, MemoryFragmentGenerator, MetaProgressionManager
 )
 from save_system import SaveSystem
 

@@ -5,46 +5,35 @@ Food Rot, AoE+FriendlyFire, Bleeding, Crafting, Wish Parser, CompressedSave, Deb
 Status Screen, Tabbed Inventory, Colored Logs, Faction/Aggro
 """
 from __future__ import annotations
-import sys
-import os
-import json
 import random
-import gzip
 from typing import List, Optional, Tuple, Dict, Any, Set
 
 import tcod
 import tcod.event
 
 from constants import (
-    SCREEN_WIDTH, SCREEN_HEIGHT, MAP_WIDTH, MAP_HEIGHT, VIEW_WIDTH, VIEW_HEIGHT,
-    ENERGY_THRESHOLD, TILE_WALL, TILE_FLOOR, TILE_STAIRS_DOWN, TILE_STAIRS_UP, TILE_WATER, TILE_TRAP,
-    COLOR_WALL_DARK, COLOR_WALL_LIT, COLOR_FLOOR_DARK, COLOR_FLOOR_LIT, COLOR_ALTAR,
-    COLOR_HP_GREEN, COLOR_MP_BLUE, COLOR_GOLD_YELLOW, COLOR_PET_PINK, Element, GameState,
+    SCREEN_WIDTH, SCREEN_HEIGHT, MAP_WIDTH, MAP_HEIGHT, ENERGY_THRESHOLD, TILE_WALL, TILE_FLOOR, TILE_STAIRS_DOWN, TILE_TRAP,
+    COLOR_GOLD_YELLOW, COLOR_PET_PINK, Element, GameState,
 )
 from core_framework import Point, bresenham_line, AStar, EventBus, MessageLog
 from turn_manager import TimeSystem, TurnQueue
-from entity import Entity, Attributes, GodInfo
+from entity import Entity, GodInfo
 from map_engine import GameMap
 from item_system import (
     Item, Inventory, create_sample_item,
-    CAT_WEAPON, CAT_SHIELD, CAT_ARMOR, CAT_FOOD, CAT_POTION, CAT_SPELLBOOK,
-    QUALITY_GOD, QUALITY_MIRACLE, QUALITY_NORMAL,
+    CAT_FOOD, QUALITY_NORMAL,
 )
 from systems import (
     CombatSystem, SurvivalSystem, MonsterPreset, Quest,
-    StatusEffect, STATUS_BLEEDING, STATUS_POISON, STATUS_HASTE,
-    FACTION_MONSTER, FACTION_GUARD, ResistanceSet, AggroList,
+    StatusEffect, FACTION_GUARD, ResistanceSet, AggroList,
 )
 from advanced_systems import (
-    ResourceNode, CRAFTING_RECIPES, try_craft,
-    WishParser, UniqueItemManager, SaveSystem, DebugConsole,
+    ResourceNode, WishParser, UniqueItemManager, SaveSystem, DebugConsole,
 )
-from rich_content import NPCS_CATALOG, RANDOM_EVENTS
 from sound_manager import SoundManager
 from fx_manager import FXManager
 from ui_fx_systems import (
     FloatingText, Particle, LookCursor, ContextMenu, ContextAction,
-    MiniMapRenderer, DynamicLighting, GaugeBar, HelpSystem, SkillTreeUI, JobUI,
     TutorialManager, NotificationManager, ScreenShake
 )
 from web_server import start_web_server
@@ -56,8 +45,8 @@ from guild_quest_system import GuildQuestRegistry, GuildQuestManager
 from faction_war_system import FactionWarRegistry, FactionWarManager
 from guild_skill_system import GuildSkillRegistry, GuildSkillManager
 from pet_contract_system import PetContractRegistry, PetContractManager
-from config_manager import ConfigManager, get_config_manager
-from renderer import Renderer, NullRenderer, get_renderer, set_renderer
+from config_manager import get_config_manager
+from renderer import Renderer, get_renderer, set_renderer
 from pet_evolution_system import PetEvolutionRegistry, PetEvolutionManager
 from pet_fusion_system import PetFusionRegistry, PetFusionManager
 from dialogue_system import DialogueManager
@@ -215,14 +204,10 @@ class Engine:
         from input_handler import InputHandler
         InputHandler.register_default_actions()
 
-        # Step 7: Renderer インターフェースの保持 (後方互換: 既定は NullRenderer)
-        from renderer import get_renderer
-        self.renderer = get_renderer()
-
     def setup_systems(self) -> None:
         """各種マネージャーとサブシステムの生成・初期化 (Step 8)"""
         from main_quest_system import MainQuestSystem
-        from world_state_system import WorldStateManager, REGISTRY
+        from world_state_system import WorldStateManager
         from journal_ui import JournalUI
         from achievement_system import AchievementRegistry, AchievementManager
         from reincarnation_system import ReincarnationRegistry, ReincarnationManager
@@ -240,7 +225,7 @@ class Engine:
         from skill_specialization_system import SkillSpecializationRegistry, SkillSpecializationManager
         from storyteller_system import StorytellerRegistry, StorytellerManager
         from choice_system import ChoiceRegistry, ChoiceManager
-        from world_state_system import WorldStateRegistry, WorldStateManager
+        from world_state_system import WorldStateRegistry
         from procedural_dungeon_generator import DungeonThemeRegistry, ProceduralDungeonGenerator
         from relationship_system import RelationshipRegistry, RelationshipManager
         from world_event_system import WorldEventRegistry, WorldEventManager
@@ -497,7 +482,7 @@ class Engine:
             if ent and ent not in (self.player, self.pet):
                 actions.append(ContextAction(f"話す / 調べる: {ent.name}", "talk", "talk_target", ent))
             elif ent == self.pet:
-                actions.append(ContextAction(f"シエルの荷物を見る", "pet_inv", "open_pet_inv", ent))
+                actions.append(ContextAction("シエルの荷物を見る", "pet_inv", "open_pet_inv", ent))
 
         # 3. 祭壇
         if (px, py) == self.altar_pos:

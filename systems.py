@@ -5,13 +5,13 @@ Steps 37-45: 属性耐性, 詠唱失敗率, AoEパターン, Faction/Aggro, 出�
 
 from __future__ import annotations
 import random
-import math
 from typing import List, Tuple, Optional, Dict, Any, TYPE_CHECKING
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from constants import Element
 
 if TYPE_CHECKING:
     from entity import Entity
+    from item_system import Item
 
 # 状態異常
 STATUS_POISON    = "毒"

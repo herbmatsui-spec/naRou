@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <script src="/UIProvider.js"></script>
+    <script src="/ui-components-base.js"></script>
+    <script src="/log-window.js"></script>
+    <script src="/status-bar.js"></script>
+    <script src="/item-slot.js"></script>
+    <script src="/inventory-grid.js"></script>
+    <script src="/skill-node.js"></script>
+    <script src="/skill-tree.js"></script>
+    <script src="/ui-a11y.js"></script>
+    <script src="/ui-performance.js"></script>
+    <script>window.UIProvider.init();</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>フォントテクスチャアトラス生成ツール</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #1a1a1a;
+            color: var(--colors-content-text-main);
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #4fc3f7;
+            text-align: center;
+        }
+        .controls {
+            background-color: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            background-color: #3d3d3d;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: var(--colors-content-text-main);
+        }
+        button {
+            background-color: #4fc3f7;
+            color: #000000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #81d4fa;
+        }
+        #preview {
+            background-color: #000000;
+            border: 2px solid #4fc3f7;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        #atlasImage {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        #jsonOutput {
+            width: 100%;
+            height: 200px;
+            background-color: #0d0d0d;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            padding: 10px;
+            overflow: auto;
+            margin-bottom: 10px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .button-group button {
+            flex: 1;
+            min-width: 120px;
+        }
+        .instructions {
+            background-color: #2d2d2d;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4fc3f7;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #81d4fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>フォントテクスチャアトラス生成ツール</h1>
+        
+        <div class="instructions">
+            <h3>使用方法</h3>
+            <ol>
+                <li>「アトラスを生成」ボタンをクリック</li>
+                <li>生成されたアトラス画像を右クリックして「名前を付けて画像を保存」</li>
+                <li>JSONメタデータをコピーしてテキストファイルに保存（拡張子: .json）</li>
+                <li>生成されたアトラスとメタデータを demos/assets/ フォルダーに保存</li>
+            </ol>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="atlasSize">アトラスサイズ (ピクセル):</label>
+                <input type="number" id="atlasSize" value="512" min="64" step="64">
+            </div>
+            
+            <div class="control-group">
+                <label for="glyphSize">1グリフサイズ (ピクセル):</label>
+                <input type="number" id="glyphSize" value="24" min="8" step="4">
+            </div>
+            
+            <div class="control-group">
+                <label for="padding">グリフ間パディング (ピクセル):</label>
+                <input type="number" id="padding" value="2" min="0" step="1">
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button id="generateBtn">アトラスを生成</button>
+            <button id="clearBtn">クリア</button>
+            <button id="downloadImgBtn">画像をダウンロード</button>
+            <button id="downloadJsonBtn">JSONをダウンロード</button>
+        </div>
+        
+        <div id="preview">
+            <canvas id="atlasCanvas" width="512" height="512"></canvas>
+            <div id="loading">生成中...</div>
+        </div>
+        
+        <div class="control-group">
+            <label for="jsonOutput">JSONメタデータ:</label>
+            <textarea id="jsonOutput" readonly>ここにJSONメタデータが表示されます</textarea>
+        </div>
+    </div>
+
+    <script>
+        // 対象文字リスト
+        const CHARACTERS = [
+            // 基本タイル文字
+            '@', 'p', '#', '.', '>', '⛩️',
+            // アイテム文字
+            '%', '?', '$', '*', '!',
+            // 数字
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+            // 大文字アルファベット
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+            'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+            // 小文字アルファベット
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+            'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+        ];
+
+        const canvas = document.getElementById('atlasCanvas');
+        const ctx = canvas.getContext('2d');
+        const generateBtn = document.getElementById('generateBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const downloadImgBtn = document.getElementById('downloadImgBtn');
+        const downloadJsonBtn = document.getElementById('downloadJsonBtn');
+        const atlasSizeInput = document.getElementById('atlasSize');
+        const glyphSizeInput = document.getElementById('glyphSize');
+        const paddingInput = document.getElementById('padding');
+        const loadingDiv = document.getElementById('loading');
+        const jsonOutput = document.getElementById('jsonOutput');
+        const previewDiv = document.getElementById('preview');
+
+        let atlasImage = null;
+        let glyphMap = {};
+
+        // フォントの読み込み
+        function loadFont() {
+            // デフォルトのフォントを使用（ブラウザの標準フォント）
+            // 必要に応じて、特定のフォントファイルを読み込むことも可能
+            return new Promise((resolve) => {
+                // フォントが読み込まれたと仮定して即座に解決
+                // 実際のアプリケーションでは、FontFace APIを使用してフォントをプリロードする
+                resolve();
+            });
+        }
+
+        // アトラスを生成
+        function generateAtlas() {
+            const atlasSize = parseInt(atlasSizeInput.value);
+            const glyphSize = parseInt(glyphSizeInput.value);
+            const padding = parseInt(paddingInput.value);
+            
+            // キャンバスサイズを設定
+            canvas.width = atlasSize;
+            canvas.height = atlasSize;
+            
+            // 背景を透明に設定
+            ctx.clearRect(0, 0, atlasSize, atlasSize);
+            
+            // グリフマップを初期化
+            glyphMap = {};
+            
+            // 計算: 1行に何個のグリフが配置できるか
+            const glyphsPerRow = Math.floor((atlasSize + padding) / (glyphSize + padding));
+            const rowsNeeded = Math.ceil(CHARACTERS.length / glyphsPerRow);
+            
+            // サイズチェック
+            if (rowsNeeded * (glyphSize + padding) - padding > atlasSize) {
+                alert('エラー: 指定されたサイズではすべてのグリフを収めることができません。\n' +
+                      'アトラスサイズ、グリフサイズ、またはパディングを調整してください。');
+                return;
+            }
+            
+            loadingDiv.style.display = 'block';
+            
+            // フォントの読み込みを待機
+            loadFont().then(() => {
+                // 各グリフを描画
+                CHARACTERS.forEach((char, index) => {
+                    const row = Math.floor(index / glyphsPerRow);
+                    const col = index % glyphsPerRow;
+                    
+                    const x = col * (glyphSize + padding) + padding;
+                    const y = row * (glyphSize + padding) + padding;
+                    
+                    // グリフの位置とサイズを記録
+                    glyphMap[char] = {
+                        x: x,
+                        y: y,
+                        width: glyphSize,
+                        height: glyphSize
+                    };
+                    
+                    // グリフを描画
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = `${glyphSize}px monospace`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(char, x + glyphSize / 2, y + glyphSize / 2);
+                });
+                
+                // キャンバスから画像データを取得
+                atlasImage = canvas.toDataURL('image/png');
+                
+                // プレビューを更新
+                const img = new Image();
+                img.onload = () => {
+                    // プレビューエリアに画像を表示
+                    previewDiv.innerHTML = '';
+                    previewDiv.appendChild(img);
+                    loadingDiv.style.display = 'none';
+                };
+                img.src = atlasImage;
+                
+                // JSONメタデータを生成
+                const metadata = {
+                    format: "font_atlas",
+                    textureSize: { width: atlasSize, height: atlasSize },
+                    glyphSize: { width: glyphSize, height: glyphSize },
+                    padding: padding,
+                    glyphs: glyphMap
+                };
+                
+                jsonOutput.value = JSON.stringify(metadata, null, 2);
+            });
+        }
+        
+        // イベントリスナー
+        generateBtn.addEventListener('click', generateAtlas);
+        
+        clearBtn.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            previewDiv.innerHTML = '<canvas id="atlasCanvas" width="512" height="512"></canvas>';
+            jsonOutput.value = 'ここにJSONメタデータが表示されます';
+            atlasImage = null;
+            glyphMap = {};
+        });
+        
+        downloadImgBtn.addEventListener('click', () => {
+            if (atlasImage) {
+                const link = document.createElement('a');
+                link.href = atlasImage;
+                link.download = 'font_atlas.png';
+                link.click();
+            } else {
+                alert('まず「アトラスを生成」ボタンをクリックしてアトラスを生成してください。');
+            }
+        });
+        
+        downloadJsonBtn.addEventListener('click', () => {
+            if (jsonOutput.value.trim() && jsonOutput.value !== 'ここにJSONメタデータが表示されます') {
+                const blob = new Blob([jsonOutput.value], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'font_atlas.json';
+                link.click();
+                URL.revokeObjectURL(url);
+            } else {
+                alert('まず「アトラスを生成」ボタンをクリックしてメタデータを生成してください。');
+            }
+        });
+        
+        // Enterキーでの生成
+        atlasSizeInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') generateAtlas();
+        });
+        glyphSizeInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') generateAtlas();
+        });
+        paddingInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') generateAtlas();
+        });
+    </script>
+</body>
+</html>

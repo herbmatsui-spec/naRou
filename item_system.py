@@ -6,12 +6,11 @@ Steps 28-36: UUID, 呪いアイテム, 食料腐敗, 厳密スタック判定, �
 from __future__ import annotations
 import uuid
 import copy
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional, List, Dict, Tuple, Any
-import random
 
 from constants import (
-    ItemCategory, QUALITY_BAD, QUALITY_NORMAL, QUALITY_GOOD, QUALITY_MIRACLE, QUALITY_GOD
+    QUALITY_NORMAL
 )
 
 # 素材定義

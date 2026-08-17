@@ -1,15 +1,14 @@
 import os
 import sys
-import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
-from sound_manager import SoundManager, BGMManager, AmbientLayer
-from config_manager import DataCache, ConfigManager
-from world_state_system import WorldStateManager, WorldStateRegistry
+from sound_manager import BGMManager, AmbientLayer
+from config_manager import DataCache
+from world_state_system import WorldStateManager
 from game import Engine
 
 def test_dynamic_soundscape():

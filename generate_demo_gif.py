@@ -2,9 +2,8 @@
 Generate a high quality animated GIF preview for naRou: Masterpiece Edition gameplay.
 Creates demo_gameplay.gif showing a rogue adventure loop in naRou: Masterpiece Edition.
 """
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 import math
-import os
 
 W, H = 720, 420
 BG_COLOR = (10, 14, 25)
@@ -86,7 +85,7 @@ for sc_idx, sc in enumerate(scenes):
         draw.rectangle([(stat_x, GRID_Y - 4), (stat_x + stat_w, GRID_Y + map_h + 4)], fill=PANEL_BG, outline=PANEL_BORDER, width=1)
 
         draw.text((stat_x + 12, GRID_Y + 8), "冒険者ステータス", fill=GOLD)
-        draw.text((stat_x + 12, GRID_Y + 30), f"Lv.24  ウォーリア", fill=TEXT_WHITE)
+        draw.text((stat_x + 12, GRID_Y + 30), "Lv.24  ウォーリア", fill=TEXT_WHITE)
         
         # HP Bar
         draw.text((stat_x + 12, GRID_Y + 58), "HP 380/380", fill=HP_GREEN)

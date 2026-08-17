@@ -5,7 +5,6 @@
 import sys
 import os
 import yaml
-from pathlib import Path
 
 # Add project root to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -40,7 +39,7 @@ def test_all_72_steps_guild_faction():
     print("[OK] Steps 7-10 (data/factions.yaml)")
 
     # Step 11 - 14: entity.py fields
-    from entity import Entity, Attributes
+    from entity import Entity
     p = Entity(0, 0, "@")
     assert hasattr(p, "guild_id") and hasattr(p, "guild_rank"), "Step 12 Failed"
     assert hasattr(p, "guild_contribution") and hasattr(p, "guild_role"), "Step 12 Failed"

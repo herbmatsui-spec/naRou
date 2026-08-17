@@ -1,36 +1,492 @@
-# キャラクター関係性テンプレート (Steps 9, 10)
+# キャラクター関係性テンプレート (拡張版 - 多層グラフ対応)
+# Step 3: YAML data schema for character_relations.yaml expansion
 
 relationship_templates:
+  # 基本テンプレート（既存のものを拡張）
   saved_villager:
     id: "saved_villager"
     name: "助けた村人"
-    relationship_type: "gratitude"
-    decay_rate: 0.01
+    # 多層関係タイプ（配列で複数タイプをサポート）
+    relationship_types:
+      - favorability      # 好感度
+      - friendship        # 友情
+    initial_levels:
+      favorability: 30    # 初期好感度
+      friendship: 10      # 初期友情度
+    decay_rates:
+      favorability: 0.01  # 好感度の減衰率
+      friendship: 0.005   # 友情の減衰率（ゆっくり減衰）
     interaction_effects:
       - action: "talk"
-        trust_delta: 5
-        mood_delta: 10
+        effects:
+          favorability: 5
+          friendship: 2
+          mood_delta: 10
       - action: "gift"
-        trust_delta: 15
-        mood_delta: 20
+        effects:
+          favorability: 15
+          friendship: 8
+          mood_delta: 20
+      - action: "help"
+        effects:
+          favorability: 25
+          friendship: 15
+          trust_delta: 20
     benefits_at_levels:
-      level_1: "shop_discount_5"
-      level_2: "free_inn_stay"
-      level_3: "unique_quest_unlock"
+      favorability:
+        level_1: "shop_discount_5"      # 好感度30以上
+        level_2: "free_inn_stay"        # 好感度60以上
+        level_3: "unique_quest_unlock"  # 好感度90以上
+      friendship:
+        level_1: "shared_secrets"       # 友情20以上
+        level_2: "emergency_aid"        # 友情50以上
+        level_3: " lifelong_bond"       # 友情80以上
     memory_triggers:
       - "rescue_anniversary"
+      - "first_gift_received"
+    # 拡張フィールド
+    romance_potential: 0.1      # 低い恋愛可能性（村人なので）
+    betrayal_risk: 0.05         # 低い裏切りリスク
+    mentorship_value: 0.2       # 少しの知識共有可能
+    faction_influence: 0.1      # 村の派閥への影響力小
 
   rival_adventurer:
     id: "rival_adventurer"
     name: "好敵手の冒険者"
-    relationship_type: "rivalry"
-    decay_rate: 0.0
+    relationship_types:
+      - favorability
+      - rivalry
+      - friendship  # 複雑な関係：ライバルだけど尊敬もある
+    initial_levels:
+      favorability: -10   # 初期はやや否定的
+      rivalry: 40         # ライバル心は強い
+      friendship: 5       # 少しの尊敬はある
+    decay_rates:
+      favorability: 0.005 # ゆっくり変化
+      rivalry: 0.002      # ライバル関係は持続
+      friendship: 0.01    # 友情は変わりやすい
     interaction_effects:
       - action: "duel"
-        trust_delta: 10
-        mood_delta: 5
+        effects:
+          favorability: 5   # 勝負を通じて若干の好感変化
+          rivalry: -10      # 決着がつくとライバル心減少
+          friendship: 8     # いい勝負をすれば友情増加
+          mood_delta: 5
+      - action: "share_info"
+        effects:
+          favorability: 12
+          friendship: 15
+          rivalry: -5       # 情報共有でライバル心和らぐ
+      - action: "steal_from"
+        effects:
+          favorability: -20
+          friendship: -25
+          rivalry: 15       # 盗まれたらライバル心増幅
     benefits_at_levels:
-      level_1: "combat_advice"
-      level_2: "joint_incursion"
+      favorability:
+        level_1: "casual_greeting"      # 好感度0以上
+        level_2: "friendly_advice"      # 好感度30以上
+        level_3: "true_friendship"      # 好感度70以上
+      rivalry:
+        level_1: "motivational_push"    # ライバル10以上
+        level_2: "improved_skills"      # ライバル30以上（切磋琢磨）
+        level_3: "epic_showdown"        # ライバル70以上（伝説の対決）
+      friendship:
+        level_1: "tactical_advice"      # 友情10以上
+        level_2: "combined_tactics"     # 友情40以上
+        level_3: "death_oath"           # 友情80以上（生死を共にする誓約）
     memory_triggers:
       - "boss_defeat_comparison"
+      - "shared_victory"
+      - "bitter_defeat"
+    # 拡張フィールド
+    romance_potential: 0.3      # 中程度の恋愛可能性
+    betrayal_risk: 0.15         # 中程度の裏切りリスク（利害衝突時）
+    mentorship_value: 0.4       # 高い知識共有可能性（スキル交換）
+    faction_influence: 0.3      # 中程度の派閥影響力
+
+  # 新規テンプレート：師弟関係
+  master_apprentice:
+    id: "master_apprentice"
+    name: "師弟関係"
+    relationship_types:
+      - favorability
+      - mentorship
+      - friendship
+    initial_levels:
+      favorability: 20
+      mentorship: 50  # 師弟関係は初期から強い
+      friendship: 5
+    decay_rates:
+      favorability: 0.008
+      mentorship: 0.001 # 師弟関係はほとんど減衰しない
+      friendship: 0.006
+    interaction_effects:
+      - action: "teach"
+        effects:
+          favorability: 8
+          mentorship: 12
+          friendship: 3
+          skill_bonus: 5  # 特別効果：スキルボーナス
+      - action: "learn"
+        effects:
+          favorability: 5
+          mentorship: 8
+          friendship: 2
+          skill_gain: 8   # 特別効果：スキル獲得量増加
+      - action: "disobey"
+        effects:
+          favorability: -15
+          mentorship: -20 # 逆らうと師弟関係に大きなダメージ
+          friendship: -10
+      - action: "protect_master"
+        effects:
+          favorability: 25
+          mentorship: 15
+          friendship: 12
+          loyalty_bonus: 20
+    benefits_at_levels:
+      favorability:
+        level_1: "basic_respect"        # 好感度15以上
+        level_2: "trusted_aide"         # 好感度40以上
+        level_3: "right_hand"           # 好感度70以上
+      mentorship:
+        level_1: "apprentice_learning"  # 師弟10以上：基本伝達
+        level_2: "journeyman_skills"    # 師弟30以上：中級スキル伝達
+        level_3: "master_secrets"       # 師弟60以上：奥義伝達
+        level_4: "true_successor"       # 師弟90以上：真の後継者認定
+      friendship:
+        level_1: "companionship"        # 友情10以上
+        level_2: "mutual_respect"       # 友情40以上
+        level_3: "beyond_mastery"       # 友情80以上：師を超える関係
+    memory_triggers:
+      - "first_lesson"
+      - "skill_mastered_together"
+      - "master_in_peril"
+      - "surpassed_master"
+    # 拡張フィールド
+    romance_potential: 0.05     # 師弟関係では低い恋愛可能性
+    betrayal_risk: 0.08         # やや低い裏切りリスク（義理堅い）
+    mentorship_value: 0.9       # 非常に高い知識共有価値
+    faction_influence: 0.2      # 師の派閥影響力を継承
+
+  # 新規テンプレート：恋愛関係
+  lovers:
+    id: "lovers"
+    name: "恋人同士"
+    relationship_types:
+      - favorability
+      - romance
+      - friendship
+    initial_levels:
+      favorability: 50
+      romance: 70   # 恋愛関係は初期から強い
+      friendship: 30
+    decay_rates:
+      favorability: 0.005
+      romance: 0.003 # 恋愛は比較的持続するが注意必要
+      friendship: 0.004
+    interaction_effects:
+      - action: "date"
+        effects:
+          favorability: 10
+          romance: 15
+          friendship: 8
+          mood_delta: 20
+          stress_reduce: 15
+      - action: "gift"
+        effects:
+          favorability: 12
+          romance: 18
+          friendship: 6
+          special_mood: 25
+      - action: "argument"
+        effects:
+          favorability: -8
+          romance: -12
+          friendship: -5
+          trust_delta: -10
+      - action: "support_in_crisis"
+        effects:
+          favorability: 20
+          romance: 25
+          friendship: 15
+          bond_strength: 20
+      - action: "betray"  # 恋人への裏切り
+        effects:
+          favorability: -40
+          romance: -50
+          friendship: -30
+          trauma: 30
+    benefits_at_levels:
+      favorability:
+        level_1: "affectionate"         # 好感度30以上
+        level_2: "deep_caring"          # 好感度60以上
+        level_3: "soulmate"             # 好感度90以上
+      romance:
+        level_1: "romantic_interest"    # ロマンス20以上
+        level_2: "deep_affection"       # ロマンス40以上
+        level_3: "true_love"            # ロマンス60以上
+        level_4: "eternal_bond"         # ロマンス80以上：永遠の絆
+      friendship:
+        level_1: "close_friend"         # 友情20以上
+        level_2: "confidant"            # 友情50以上
+        level_3: "best_friend"          # 友情80以上
+    memory_triggers:
+      - "first_kiss"
+      - "confession_day"
+      - "overcame_crisis_together"
+      - "betrayal_discovered"
+      - "reconciliation"
+    # 拡張フィールド
+    romance_potential: 0.9      # 非常に高い恋愛可能性
+    betrayal_risk: 0.25         # 高い裏切りリスク（情動的関係ゆえ）
+    mentorship_value: 0.3       # 中程度の知識共有
+    faction_influence: 0.4      # 恋人同士は派閥に影響し合う
+
+  # 新規テンプレート：敵対関係（裏切り発生後の関係）
+  bitter_enemies:
+    id: "bitter_enemies"
+    name: "苦い敵対関係"
+    relationship_types:
+      - favorability
+      - enmity
+      - betrayal
+    initial_levels:
+      favorability: -60
+      enmity: 70    # 敵対関係は強い
+      betrayal: 40  # 裏切りの痕跡は残る
+    decay_rates:
+      favorability: 0.002 # ほぼ減衰しない（恨みは長い）
+      enmity: 0.001       # 敵対関係は非常に持続
+      betrayal: 0.005     # 裏切りの記憶は薄れにくい
+    interaction_effects:
+      - action: "encounter"
+        effects:
+          favorability: -5
+          enmity: 3
+          betrayal: 2
+          stress_increase: 15
+      - action: "seek_revenge"
+        effects:
+          favorability: -10
+          enmity: 8
+          betrayal: 5
+          violence_tendency: 10
+      - action: "apologize_sincerely"
+        effects:
+          favorability: 15
+          enmity: -10
+          betrayal: -15
+          guilt_reduce: 20
+      - action: "forgive"
+        effects:
+          favorability: 25
+          enmity: -20
+          betrayal: -25
+          healing: 30
+    benefits_at_levels:
+      favorability:
+        level_1: "cold_coexistence"     # 好感度-30以上：最低限の共存
+        level_2: "tense_neutral"        # 好感度0以上：緊張の中立
+        level_3: "reluctant_respect"    # 好感度30以上：嫌々の尊敬
+      enmity:
+        level_1: "wary_observation"     # 敵対10以上：用心深い観察
+        level_2: "active_avoidance"     # 敵対30以上：積極的回避
+        level_3: "open_hostility"       # 敵対60以上：公開的敵対
+        level_4: "vendetta"             # 敵対80以上：復讐心
+      betrayal:
+        level_1: "suspicion"            # 裏切り10以上：疑いの目
+        level_2: "distrust"             # 裏切り30以上：不信感
+        level_3: "betrayal_trauma"      # 裏切り50以上：裏切りトラウマ
+        level_4: "unforgivable"         # 裏切り70以上：許せない行為
+    memory_triggers:
+      - "betrayal_discovered"
+      - "revenge_attempted"
+      - "confrontation_occurred"
+      - "attempted_reconciliation"
+      - "mutual_destruction_avoided"
+    # 拡張フィールド
+    romance_potential: 0.01     # 残念だが非常に低い恋愛可能性
+    betrayal_risk: 0.4          # 非常に高い裏切りリスク（悪循環）
+    mentorship_value: 0.05      # ほぼない知識共有
+    faction_influence: 0.6      # 高い派閥影響力（派閥抗争の中心）
+
+  # 新規テンプレート：家族関係
+  family_bonds:
+    id: "family_bonds"
+    name: "家族の絆"
+    relationship_types:
+      - favorability
+      - family
+      - mentorship  # 親子では知識継承もある
+    initial_levels:
+      favorability: 70
+      family: 80    # 家族関係は非常に強い
+      mentorship: 20 # 親子では若干の知識伝達
+    decay_rates:
+      favorability: 0.001 # ほぼ減衰しない
+      family: 0.0005      # 家族の絆は極端に持続
+      mentorship: 0.008
+    interaction_effects:
+      - action: "family_gathering"
+        effects:
+          favorability: 12
+          family: 8
+          mentorship: 3
+          joy: 18
+      - action: "inherit_heirloom"
+        effects:
+          favorability: 20
+          family: 15
+          mentorship: 10
+          legacy_bonus: 25
+      - action: "family_disgrace"
+        effects:
+          favorability: -30
+          family: -40
+          mentorship: -15
+          shame: 35
+      - action: "care_for_elder"
+        effects:
+          favorability: 18
+          family: 12
+          mentorship: 5
+          respect_gain: 20
+    benefits_at_levels:
+      favorability:
+        level_1: "familiar"             # 好感度50以上
+        level_2: "close_kin"            # 好感度70以上
+        level_3: "blood_bond"           # 好感度90以上：血の絆
+      family:
+        level_1: "acknowledged"         # 家族10以上：関係認識
+        level_2: "accepted_member"      # 家族30以上：正式メンバー
+        level_3: "protected_relative"   # 家族50以上：保護義務
+        level_4: "legacy_bearer"        # 家族70以上：遺産継承者
+        level_5: "patriarch_matriarch"  # 家族90以上：家族の中心
+      mentorship:
+        level_1: "basic_upbringing"     # 師弟10以上：基本教育
+        level_2: "trade_knowledge"      # 師弟30以上：家業の知識
+        level_3: "family_secrets"       # 師弟60以上：家の秘伝
+        level_4: "ancestral_wisdom"     # 師弟80以上：祖先の知恵
+    memory_triggers:
+      - "birthday_celebration"
+      - "family_reunion"
+      - "inheritance_ceremony"
+      - "funeral_rites"
+      - "coming_of_age"
+    # 拡張フィールド
+    romance_potential: 0.001    # ほぼゼロ（近親相姦のタブー）
+    betrayal_risk: 0.02         # 非常に低い裏切りリスク（血の絆）
+    mentorship_value: 0.7       # 高い知識共有（家業・伝統）
+    faction_influence: 0.8      # 非常に高い派閥影響力（家族は派閥の中心）
+
+  # 新規テンプレート：ビジネス・取引関係
+  business_partners:
+    id: "business_partners"
+    name: "ビジネスパートナー"
+    relationship_types:
+      - favorability
+      - business
+      - friendship
+    initial_levels:
+      favorability: 15
+      business: 25  # ビジネス関係は初期からある程度
+      friendship: 0
+    decay_rates:
+      favorability: 0.01
+      business: 0.007 # ビジネス関係は中程度の持続
+      friendship: 0.012
+    interaction_effects:
+      - action: "successful_trade"
+        effects:
+          favorability: 8
+          business: 12
+          friendship: 4
+          profit_share: 10
+      - action: "failed_deal"
+        effects:
+          favorability: -6
+          business: -10
+          friendship: -2
+          loss_tolerance: -5
+      - action: "extend_credit"
+        effects:
+          favorability: 10
+          business: 15
+          friendship: 5
+          trust_investment: 20
+      - action: "default_payment"
+        effects:
+          favorability: -15
+          business: -20
+          friendship: -8
+          credit_damage: 25
+      - action: "joint_venture"
+        effects:
+          favorability: 18
+          business: 22
+          friendship: 10
+          innovation_bonus: 15
+    benefits_at_levels:
+      favorability:
+        level_1: "acquaintance"         # 好感度10以上
+        level_2: "reliable_contact"     # 好感度30以上
+        level_3: "trusted_partner"      # 好感度60以上
+      business:
+        level_1: "basic_trade"          # ビジネス10以上：基本取引
+        level_2: "preferred_partner"    # ビジネス30以上：優先取引相手
+        level_3: "strategic_alliance"   # ビジネス60以上：戦略的同盟
+        level_4: "monopoly_control"     # ビジネス80以上：市場支配力
+      friendship:
+        level_1: "casual_friend"        # 友情5以上
+        level_2: "good_friend"          # 友情20以上
+        level_3: "close_ally"           # 友情50以上
+    memory_triggers:
+      - "profitable_year"
+      - "market_crisis_survived"
+      - "contract_dispute_resolved"
+      - "merger_acquisition"
+      - "bankruptcy_avoided"
+    # 拡張フィールド
+    romance_potential: 0.15     # 低いがゼロではない恋愛可能性
+    betrayal_risk: 0.18         # 中程度の裏切りリスク（利害関係）
+    mentorship_value: 0.25      # 低いが存在する知識共有（業界知識）
+    faction_influence: 0.5      # 中程度の派閥影響力（経済派閥）
+
+# グローバル設定
+global_settings:
+  # 関係変化の制限
+  max_single_change: 25       # 1回のインタラクションでの最大変化量
+  min_relationship_level: -100 # 関係レベルの最小値
+  max_relationship_level: 100  # 関係レベルの最大�ue
+  
+  # 時間ベースの設定
+  decay_check_interval: 3600   # 1時間ごとに減衰をチェック（秒）
+  memory_fade_rate: 0.0001     # 記憶の自然な薄れ率（時間単位）
+  
+  # しきい値設定
+  relationship_thresholds:
+    very_negative: -80
+    negative: -40
+    neutral: 0
+    positive: 40
+    very_positive: 80
+    
+  # イベント重み係数
+  event_weights:
+    personal_interaction: 1.0   # 個人的な会話等
+    gift_exchange: 1.5          # 贈り物
+    crisis_support: 2.5         # 危機時の支援
+    betrayal: 3.0               # 裏切り（大きな影響）
+    reconciliation: 2.0         # 和解
+    shared_victory: 2.0         # 共同勝利
+    shared_defeat: 1.5          # 共同敗北
+    
+  # デフォルト値（テンプレートに指定がない場合）
+  defaults:
+    decay_rate: 0.01
+    romance_potential: 0.0
+    betrayal_risk: 0.0
+    mentorship_value: 0.0
+    faction_influence: 0.0

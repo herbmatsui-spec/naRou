@@ -6,7 +6,6 @@ import sys
 import os
 import yaml
 import ast
-from pathlib import Path
 
 # Add project root to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -48,7 +47,7 @@ def test_all_72_steps_pet_contract_evolution_fusion():
     print("[OK] Steps 7-13, 36 (data/pet_evolutions.yaml)")
 
     # Step 14 - 18, 65, 66, 69: entity.py PetAI & Entity fields
-    from entity import Entity, PetAI
+    from entity import Entity
     tree = ast.parse(open("entity.py", encoding="utf-8").read())
     petai_class = [n for n in ast.walk(tree) if isinstance(n, ast.ClassDef) and n.name == "PetAI"][0]
     fields = [n.target.id for n in petai_class.body if isinstance(n, ast.AnnAssign)]
@@ -153,7 +152,6 @@ def test_all_72_steps_pet_contract_evolution_fusion():
     print("[OK] Steps 59-64 (pet_fusion_system.py & manager)")
 
     # Step 70: SaveSystem pet logic
-    from advanced_systems import SaveSystem
     save_file = "save_system.py" if os.path.exists("save_system.py") else "advanced_systems.py"
     save_tree = ast.parse(open(save_file, encoding="utf-8").read())
     save_class = [n for n in ast.walk(save_tree) if isinstance(n, ast.ClassDef) and n.name == "SaveSystem"][0]

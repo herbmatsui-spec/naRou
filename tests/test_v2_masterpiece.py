@@ -3,11 +3,10 @@ Test suite for Elona Masterpiece Edition (v2.0)
 Validates DataManager, AdvancedAISystem, and Canvas Web API data serialization.
 """
 
-import pytest
 from game import Engine
 from data_manager import DataManager
-from ai_system import AdvancedAISystem, TACTIC_AGGRESSIVE, TACTIC_DEFENSIVE
-from constants import QUALITY_GOD, QUALITY_MIRACLE, QUALITY_NORMAL
+from ai_system import AdvancedAISystem, TACTIC_AGGRESSIVE
+from constants import QUALITY_GOD
 
 
 def test_data_manager_item_generation():

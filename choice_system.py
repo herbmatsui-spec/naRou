@@ -5,12 +5,11 @@ Story Choice and Consequence System Module (Steps 41-46)
 from __future__ import annotations
 import os
 import yaml
-from typing import Dict, List, Optional, Any, Tuple, TYPE_CHECKING
+from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
     from entity import Entity
-    from game import Engine
 
 
 # Step 42: ChoiceConsequenceData

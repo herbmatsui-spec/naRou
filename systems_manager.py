@@ -4,7 +4,16 @@ Step 1, 2: システムの動的登録・取得・ライフサイクル管理
 """
 
 from __future__ import annotations
-from typing import Dict, Any, Optional, Iterator
+from typing import Dict, Any, Optional, Iterator, TypeVar, Protocol, overload
+
+
+class SystemProtocol(Protocol):
+    """システムの最小プロトコル。initialize/update を持つ任意のオブジェクトを許容する。"""
+    def initialize(self, engine: Any) -> None: ...
+    def update(self, engine: Any, delta_time: float) -> None: ...
+
+
+SystemT = TypeVar("SystemT", bound=SystemProtocol)
 
 
 class SystemManager:
@@ -14,7 +23,7 @@ class SystemManager:
     def __init__(self):
         self.systems: Dict[str, Any] = {}
 
-    def register(self, name: str, system: Any) -> Any:
+    def register(self, name: str, system: SystemT) -> SystemT:
         """システムを登録する"""
         self.systems[name] = system
         return system
@@ -23,9 +32,22 @@ class SystemManager:
         """システムを登録解除する"""
         return self.systems.pop(name, None)
 
-    def get(self, name: str, default: Any = None) -> Any:
-        """登録されたシステムを取得する"""
-        return self.systems.get(name, default)
+    @overload
+    def get(self, name: str, system_type: type[SystemT]) -> SystemT | None: ...
+    @overload
+    def get(self, name: str, system_type: None = None, default: Any = None) -> Any: ...
+
+    def get(self, name: str, system_type: type[SystemT] | None = None, default: Any = None) -> Any:
+        """登録されたシステムを取得する。
+
+        Args:
+            name: システム名
+            system_type: 型ヒント用のシステムクラス。指定すると型安全な取得が可能。
+            default: 見つからなかった場合のデフォルト値（system_type未指定時のみ有効）
+        """
+        result = self.systems.get(name, default)
+        # 実行時の型チェックは行わず、型ヒントのみを提供
+        return result
 
     def has(self, name: str) -> bool:
         """システムの存在確認"""

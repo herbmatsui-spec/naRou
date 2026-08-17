@@ -6,7 +6,7 @@ Steps 2, 4, 7, 9, 20, 21, 24, 25 (Bresenham & A* Pathfinding)
 from __future__ import annotations
 import math
 import heapq
-from typing import List, Tuple, Optional, Callable, Dict, Any
+from typing import List, Tuple, Callable, Dict, Any
 from dataclasses import dataclass
 
 

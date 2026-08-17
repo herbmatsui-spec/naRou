@@ -5,12 +5,11 @@ Dynamic World State System Module (Steps 47-53)
 from __future__ import annotations
 import os
 import yaml
-from typing import Dict, List, Optional, Any, Tuple, TYPE_CHECKING
+from typing import Dict, List, Optional, Any, Set, TYPE_CHECKING
 from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
     from entity import Entity
-    from game import Engine
 
 
 from enum import Enum, auto
@@ -36,6 +35,10 @@ class WorldStateTemplate:
     faction_relations: Dict[str, Any] = field(default_factory=dict)
     global_events: List[str] = field(default_factory=list)
     player_legacy: Dict[str, Any] = field(default_factory=dict)
+    # Vertical World Extension: プレイヤーの層情報
+    player_layer_history: List[Dict[str, Any]] = field(default_factory=list)
+    visited_layers: Set[str] = field(default_factory=set)  # ゾーン:バイオーム:深度:次元形式
+    layer_discoveries: Dict[str, Any] = field(default_factory=dict)
 
 
 # Step 49, 50: WorldStateRegistry
@@ -75,7 +78,11 @@ class WorldStateRegistry:
             location_states=t_dict.get("location_states", {}),
             faction_relations=t_dict.get("faction_relations", {}),
             global_events=t_dict.get("global_events", []),
-            player_legacy=t_dict.get("player_legacy", {})
+            player_legacy=t_dict.get("player_legacy", {}),
+            # Vertical World Extension
+            player_layer_history=t_dict.get("player_layer_history", []),
+            visited_layers=set(t_dict.get("visited_layers", [])),
+            layer_discoveries=t_dict.get("layer_discoveries", {})
         )
 
     def get_template(self) -> WorldStateTemplate:
@@ -158,3 +165,52 @@ class WorldStateManager:
 
     def update_faction_relation(self, player: "Entity", relation_key: str, delta: int) -> None:
         pass
+
+    # Vertical World Extension Methods
+    def record_layer_visit(self, player: "Entity", zone: str, biome: str, depth: int, dimension: str) -> None:
+        """レイヤー訪問を記録する"""
+        layer_key = f"{zone}:{biome}:{depth}:{dimension}"
+        visit_record = {
+            "layer": layer_key,
+            "zone": zone,
+            "biome": biome,
+            "depth": depth,
+            "dimension": dimension,
+            "timestamp": __import__('time').time(),
+            "discoveries": []  # ここで発見したアイテムやイベントを記録
+        }
+        
+        tpl = self.registry.get_template()
+        tpl.player_layer_history.append(visit_record)
+        tpl.visited_layers.add(layer_key)
+        
+    def get_visited_layers(self) -> Set[str]:
+        """訪問済みレイヤーのセットを取得"""
+        tpl = self.registry.get_template()
+        return tpl.visited_layers.copy()
+    
+    def is_layer_visited(self, zone: str, biome: str, depth: int, dimension: str) -> bool:
+        """指定されたレイヤーが訪問済みかチェック"""
+        layer_key = f"{zone}:{biome}:{depth}:{dimension}"
+        return layer_key in self.get_visited_layers()
+    
+    def add_layer_discovery(self, zone: str, biome: str, depth: int, dimension: str, 
+                          discovery_type: str, discovery_data: Any) -> None:
+        """レイヤー発見を記録"""
+        tpl = self.registry.get_template()
+        layer_key = f"{zone}:{biome}:{depth}:{dimension}"
+        
+        if layer_key not in tpl.layer_discoveries:
+            tpl.layer_discoveries[layer_key] = []
+            
+        tpl.layer_discoveries[layer_key].append({
+            "type": discovery_type,
+            "data": discovery_data,
+            "timestamp": __import__('time').time()
+        })
+    
+    def get_layer_discoveries(self, zone: str, biome: str, depth: int, dimension: str) -> List[Dict[str, Any]]:
+        """レイヤーの発見を取得"""
+        tpl = self.registry.get_template()
+        layer_key = f"{zone}:{biome}:{depth}:{dimension}"
+        return tpl.layer_discoveries.get(layer_key, [])

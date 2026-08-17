@@ -5,6 +5,7 @@ Decouples visual effects (particles, floating text, screen shake) from game logi
 
 from __future__ import annotations
 import random
+import math
 from typing import List, Tuple, Optional, Any
 from ui_fx_systems import FloatingText, Particle, ScreenShake
 from core_framework import EventBus

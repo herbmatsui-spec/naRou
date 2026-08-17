@@ -1,6 +1,8 @@
 __pycache__/
 *.pyc
+.mypy_cache/
 .pytest_cache/
+*.bak
 savegame.bin*
 logs/
 scratch/

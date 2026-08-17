@@ -3,9 +3,8 @@ Elona Roguelike Clone - Rich Game Content, Items, Unique NPCs, & Dialogue
 """
 
 from __future__ import annotations
-from typing import List, Dict, Tuple, Optional, Any
+from typing import List, Tuple, Optional
 from dataclasses import dataclass
-import random
 
 
 # アイテムエンチャント (Elona名物)

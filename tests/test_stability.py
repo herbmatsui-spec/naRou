@@ -1,7 +1,5 @@
 import os
 import sys
-import pytest
-import hashlib
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -10,7 +8,7 @@ if hasattr(sys.stdout, 'reconfigure'):
 
 from game import Engine
 from save_system import SaveSystem
-from exceptions import ElonaError, SaveDataCorruptedError
+from exceptions import ElonaError
 from tests.balance_simulator import BalanceSimulator
 
 def test_balance_simulator_execution():

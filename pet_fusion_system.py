@@ -12,7 +12,7 @@ import random
 from pathlib import Path
 
 if TYPE_CHECKING:
-    from entity import PetAI, Entity
+    from entity import Entity
 
 
 @dataclass
