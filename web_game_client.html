@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Sans+JP:wght@400;500;700;900&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.pixijs.com/pixi.js"></script>
   <style>
     :root {
       --bg-dark: #0a0b10;
@@ -640,153 +639,133 @@
     const TILE_SIZE = 24;
 
     function render() {
-      animTime += 0.05;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+animTime += 0.05;
+       if (!gameState) {
+         ctx.fillStyle = "#8b9bb4";
+         ctx.font = "16px var(--font-main)";
+         ctx.textAlign = "center";
+         ctx.fillText("サーバーに接続中……", canvas.width / 2, canvas.height / 2);
+       } else {
+         // Clear layers each frame (except background which is static)
+         tileLayer.removeChildren();
+         entityLayer.removeChildren();
+         effectLayer.removeChildren();
+         
+         const map = gameState.map || [];
+         const lightMap = gameState.light_map || [];
+         const viewH = map.length;
+         const viewW = viewH > 0 ? map[0].length : 0;
 
-      if (!gameState) {
-        ctx.fillStyle = "#8b9bb4";
-        ctx.font = "16px var(--font-main)";
-        ctx.textAlign = "center";
-        ctx.fillText("サーバーに接続中……", canvas.width / 2, canvas.height / 2);
-        requestAnimationFrame(render);
-        return;
-      }
+         // 画面中央オフセット
+         const offsetX = Math.max(0, (canvas.width - viewW * TILE_SIZE) / 2);
+         const offsetY = Math.max(0, (canvas.height - viewH * TILE_SIZE) / 2);
 
-      const map = gameState.map || [];
-      const lightMap = gameState.light_map || [];
-      const viewH = map.length;
-      const viewW = viewH > 0 ? map[0].length : 0;
+         // 1. タイル描画 (床・壁・階段) - デバッグ用に色付き矩形で仮実装
+         for (let y = 0; y < viewH; y++) {
+           for (let x = 0; x < viewW; x++) {
+             const tile = map[y][x];
+             const light = lightMap[y] ? lightMap[y][x] : 0;
 
-      // 画面中央オフセット
-      const offsetX = Math.max(0, (canvas.width - viewW * TILE_SIZE) / 2);
-      const offsetY = Math.max(0, (canvas.height - viewH * TILE_SIZE) / 2);
+             const px = offsetX + x * TILE_SIZE;
+             const py = offsetY + y * TILE_SIZE;
 
-      ctx.save();
-      if (gameState.screen_shake) {
-        ctx.translate((Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6);
-      }
+             // タイルのグラフィックを作成
+             const tileGraphics = new PIXI.Graphics();
+             
+             // 地形ベースカラー
+             if (tile === "#") {
+               // 壁
+               tileGraphics.beginFill(light > 0 ? 0x3d4253 : 0x1a1d26);
+               tileGraphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
+               tileGraphics.endFill();
+               // 壁ベベル（簡易版）
+               tileGraphics.lineStyle(1, light > 0 ? 0x5a627a : 0x282c3a);
+               tileGraphics.drawRect(1, 1, TILE_SIZE - 2, TILE_SIZE - 2);
+             } else if (tile === "." || tile === " " || tile === "⛩️") {
+               // 床または空白または祭壇
+               tileGraphics.beginFill(light > 0 ? 0x1c2230 : 0x0f121a);
+               tileGraphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
+               tileGraphics.endFill();
+               // グリッド線（簡易版）
+               tileGraphics.lineStyle(1, 0xffffff * 0.03); // rgba(255,255,255,0.03)
+               tileGraphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
+             } else if (tile === ">") {
+               // 階段下
+               tileGraphics.beginFill(0x27ae60);
+               tileGraphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
+               tileGraphics.endFill();
+             }
+             
+             // タイルを配置
+             tileGraphics.x = px;
+             tileGraphics.y = py;
+             tileLayer.addChild(tileGraphics);
+           }
+         }
+         
+         // 2. エンティティ描画 (プレイヤー・ペット・モンスター) - デバッグ用に色付き矩形で仮実装
+         const entities = gameState.entities || [];
+         entities.forEach(ent => {
+           const px = offsetX + ent.x * TILE_SIZE;
+           const py = offsetY + ent.y * TILE_SIZE;
 
-      // 1. タイル描画 (床・壁・階段)
-      for (let y = 0; y < viewH; y++) {
-        for (let x = 0; x < viewW; x++) {
-          const tile = map[y][x];
-          const light = lightMap[y] ? lightMap[y][x] : 0;
+           // 息遣いアニメーション
+           const bounce = Math.sin(animTime * 4 + ent.x) * 1.5;
 
-          const px = offsetX + x * TILE_SIZE;
-          const py = offsetY + y * TILE_SIZE;
-
-          if (light === -1.0 || tile === " ") {
-            ctx.fillStyle = "#050608";
-            ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-            continue;
-          }
-
-          // 地形ベースカラー
-          if (tile === "#") {
-            ctx.fillStyle = light > 0 ? "#3d4253" : "#1a1d26";
-            ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-            // 壁ベベル
-            ctx.strokeStyle = light > 0 ? "#5a627a" : "#282c3a";
-            ctx.strokeRect(px + 1, py + 1, TILE_SIZE - 2, TILE_SIZE - 2);
-          } else if (tile === "." || tile === " " || tile === "⛩️") {
-            ctx.fillStyle = light > 0 ? "#1c2230" : "#0f121a";
-            ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-            // グリッド線
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
-            ctx.strokeRect(px, py, TILE_SIZE, TILE_SIZE);
-          } else if (tile === ">") {
-            ctx.fillStyle = "#27ae60";
-            ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-          }
-
-          // 祭壇
-          if (tile === "⛩️") {
-            ctx.font = "18px serif";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText("⛩️", px + TILE_SIZE / 2, py + TILE_SIZE / 2);
-          }
-        }
-      }
-
-      // 2. 地面アイテム描画
-      const items = gameState.items || [];
-      items.forEach(itm => {
-        const px = offsetX + itm.x * TILE_SIZE;
-        const py = offsetY + itm.y * TILE_SIZE;
-        ctx.font = "16px serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(itm.char, px + TILE_SIZE / 2, py + TILE_SIZE / 2);
-      });
-
-      // 3. エンティティ描画 (プレイヤー・ペット・モンスター)
-      const entities = gameState.entities || [];
-      entities.forEach(ent => {
-        const px = offsetX + ent.x * TILE_SIZE;
-        const py = offsetY + ent.y * TILE_SIZE;
-
-        // 息遣いアニメーション
-        const bounce = Math.sin(animTime * 4 + ent.x) * 1.5;
-
-        // HPバー
-        if (!ent.is_player && ent.max_hp > 0) {
-          const hpRatio = Math.max(0, Math.min(1, ent.hp / ent.max_hp));
-          ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
-          ctx.fillRect(px + 2, py - 4, TILE_SIZE - 4, 3);
-          ctx.fillStyle = hpRatio > 0.5 ? "#2ecc71" : hpRatio > 0.2 ? "#f39c12" : "#e74c3c";
-          ctx.fillRect(px + 2, py - 4, (TILE_SIZE - 4) * hpRatio, 3);
-        }
-
-        // キャラクター絵文字
-        ctx.font = ent.is_player ? "20px serif" : "18px serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(ent.char, px + TILE_SIZE / 2, py + TILE_SIZE / 2 + bounce);
-      });
-
-      // 4. 動的ライティング & Fog of War レイヤー
-      const lightSources = gameState.light_sources || [];
-      lightSources.forEach(src => {
-        const lx = offsetX + src.x * TILE_SIZE + TILE_SIZE / 2;
-        const ly = offsetY + src.y * TILE_SIZE + TILE_SIZE / 2;
-        const radius = src.radius * TILE_SIZE;
-
-        const grad = ctx.createRadialGradient(lx, ly, 2, lx, ly, radius);
-        const [r, g, b] = src.color;
-        grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.25)`);
-        grad.addColorStop(0.6, `rgba(${r}, ${g}, ${b}, 0.08)`);
-        grad.addColorStop(1, "rgba(0, 0, 0, 0)");
-
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(lx, ly, radius, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      // 5. 浮遊ダメージ・テキスト描画
-      const floatings = gameState.floating_texts || [];
-      floatings.forEach(ft => {
-        const fx = offsetX + ft.x * TILE_SIZE + TILE_SIZE / 2;
-        const fy = offsetY + ft.y * TILE_SIZE;
-        ctx.font = "bold 13px var(--font-main)";
-        ctx.fillStyle = `rgb(${ft.color.join(",")})`;
-        ctx.textAlign = "center";
-        ctx.fillText(ft.text, fx, fy);
-      });
-
-      // 6. パーティクル描画
-      const particles = gameState.particles || [];
-      particles.forEach(pt => {
-        const px = offsetX + pt.x * TILE_SIZE + TILE_SIZE / 2;
-        const py = offsetY + pt.y * TILE_SIZE + TILE_SIZE / 2;
-        ctx.font = "16px serif";
-        ctx.textAlign = "center";
-        ctx.fillText(pt.char, px, py);
-      });
-
-      ctx.restore();
-      requestAnimationFrame(render);
+           // エンティティのグラフィックを作成
+           const entityGraphics = new PIXI.Graphics();
+           
+           // エンティティタイプ別の色と形状
+           if (ent.is_player) {
+             // プレイヤー: 白い円
+             entityGraphics.beginFill(0xffffff);
+             entityGraphics.drawCircle(0, 0, TILE_SIZE * 0.4);
+             entityGraphics.endFill();
+           } else if (ent.is_pet) {
+             // ペット: ピンクの円
+             entityGraphics.beginFill(0xffb6c1);
+             entityGraphics.drawCircle(0, 0, TILE_SIZE * 0.4);
+             entityGraphics.endFill();
+           } else {
+             // モンスター: 赤い三角形（簡易表現）
+             entityGraphics.beginFill(0xff0000);
+             entityGraphics.moveTo(0, -TILE_SIZE * 0.3);
+             entityGraphics.lineTo(-TILE_SIZE * 0.3, TILE_SIZE * 0.3);
+             entityGraphics.lineTo(TILE_SIZE * 0.3, TILE_SIZE * 0.3);
+             entityGraphics.closePath();
+             entityGraphics.endFill();
+           }
+           
+           // HPバー（プレイヤーとペット以外のエンティティに対して）
+           if (!ent.is_player && !ent.is_pet && ent.max_hp > 0) {
+             const hpRatio = Math.max(0, Math.min(1, ent.hp / ent.max_hp));
+             // HPバーの背景
+             entityGraphics.beginFill(0x000000, 0.6);
+             entityGraphics.drawRect(-TILE_SIZE * 0.5 + 2, -TILE_SIZE * 0.5 - 4, TILE_SIZE - 4, 3);
+             entityGraphics.endFill();
+             // HPバーの前景
+             const hpColor = hpRatio > 0.5 ? 0x2ecc71 : hpRatio > 0.2 ? 0xf39c12 : 0xe74c3c;
+             entityGraphics.beginFill(hpColor);
+             entityGraphics.drawRect(-TILE_SIZE * 0.5 + 2, -TILE_SIZE * 0.5 - 4, (TILE_SIZE - 4) * hpRatio, 3);
+             entityGraphics.endFill();
+           }
+           
+           // キャラクター表示（簡易版：エンティティの中心に小さな点）
+           entityGraphics.beginFill(0xffffff);
+           entityGraphics.drawCircle(0, 0, 2);
+           entityGraphics.endFill();
+           
+           // エンティティを配置（息遣いアニメーションを適用）
+           entityGraphics.x = px;
+           entityGraphics.y = py + bounce;
+           entityLayer.addChild(entityGraphics);
+         });
+         
+         // TODO: エンティティ描画
+         // TODO: エフェクト描画
+       }
+       // それ以外の場合は何もしない（PixiJSに任せる）
+       requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
 
