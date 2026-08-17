@@ -11,6 +11,8 @@
   <script type="module" src="demos/lib/TextureAtlas.js"></script>
   <script type="module" src="demos/lib/LightingSystem.js"></script>
   <script type="module" src="demos/lib/ParticleSystem.js"></script>
+  <script type="module" src="demos/lib/PostProcessManager.js"></script>
+  <script type="module" src="demos/lib/ScreenShake.js"></script>
   <style>
     :root {
       --bg-dark: #0a0b10;
@@ -685,6 +687,13 @@
     // パーティクルシステムを初期化
     const particleSystem = new ParticleSystem(pixiApp, effectLayer);
 
+    // ポストプロセスマネージャーを初期化
+    const postProcessManager = new PostProcessManager(pixiApp);
+    pixiApp.stage.addChild(postProcessManager.getEffectsContainer());
+
+    // スクリーンシェイクを初期化
+    const screenShake = new ScreenShake(pixiApp.stage, 5, 0.5);
+
     // リサイズ処理
     function resize() {
         const width = window.innerWidth;
@@ -778,6 +787,12 @@
       
       // パーティクルシステムを更新
       particleSystem.update(0.016); // 約60fps想定
+      
+      // ポストプロセスを更新
+      postProcessManager.update(0.016);
+      
+      // スクリーンシェイクを更新
+      screenShake.update(0.016);
       
       if (!gameState) {
         // サーバーに接続中... はPixiJSレイヤーには表示しない
@@ -895,6 +910,8 @@
               offsetY + player.y * TILE_SIZE,
               5
             );
+            // スクリーンシェイク
+            screenShake.shake('medium');
           } else if (player.hp > prevPlayerHp) {
             // 回復した
             particleSystem.emitEffect('heal',
