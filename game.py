@@ -4,7 +4,6 @@ Steps 1-72 all systems unified: Speed Tick, A* AI, LOS, UUID Items, Cursed Items
 Food Rot, AoE+FriendlyFire, Bleeding, Crafting, Wish Parser, CompressedSave, DebugConsole,
 Status Screen, Tabbed Inventory, Colored Logs, Faction/Aggro
 """
-
 from __future__ import annotations
 import sys
 import os
@@ -57,6 +56,8 @@ from guild_quest_system import GuildQuestRegistry, GuildQuestManager
 from faction_war_system import FactionWarRegistry, FactionWarManager
 from guild_skill_system import GuildSkillRegistry, GuildSkillManager
 from pet_contract_system import PetContractRegistry, PetContractManager
+from config_manager import ConfigManager, get_config_manager
+from renderer import Renderer, NullRenderer, get_renderer, set_renderer
 from pet_evolution_system import PetEvolutionRegistry, PetEvolutionManager
 from pet_fusion_system import PetFusionRegistry, PetFusionManager
 from dialogue_system import DialogueManager
@@ -65,19 +66,38 @@ from systems_manager import SystemManager
 
 class Engine:
     """計画書1〜72ステップ完全統合エンジン (商用疎結合アーキテクチャ)"""
-    def __init__(self):
+    def __init__(self, renderer: Renderer | None = None):
+        # --- レンダラ設定 (Step 3) ---
+        if renderer is not None:
+            self.renderer = renderer
+            set_renderer(renderer)
+        else:
+            self.renderer = get_renderer()
+
+        # --- 設定管理 (Step 4) ---
+        self.config_mgr = get_config_manager()
+        player_cfg = self.config_mgr.get_player_config()
+        pet_cfg = self.config_mgr.get_pet_config()
+
+        # --- 設定管理 (Step 4) ---
+        self.config_mgr = get_config_manager()
+        player_cfg = self.config_mgr.get_player_config()
+        pet_cfg = self.config_mgr.get_pet_config()
+
         # --- 依存性注入 & SystemManager 初期化 (Phase 1: Step 1-7, 8) ---
         self.systems_mgr = SystemManager()
         self.setup_systems()
 
-        # --- プレイヤー ---
+        # --- プレイヤー (設定駆動) ---
         self.player = Entity(
-            x=20, y=20, char="@", color=(255, 255, 255),
-            name="名無しの冒険者", is_player=True, speed=85,
-            attributes=Attributes(
-                strength=14, endurance=13, dexterity=14,
-                perception=12, learning=11, will=13, magic=12, charisma=15
-            )
+            x=player_cfg.get("start_x", 20),
+            y=player_cfg.get("start_y", 20),
+            char=player_cfg.get("char", "@"),
+            color=tuple(player_cfg.get("color", [255, 255, 255])),
+            name=player_cfg.get("name", "名無しの冒険者"),
+            is_player=True,
+            speed=player_cfg.get("speed", 85),
+            attributes=player_cfg.get("attributes", {}),
         )
         self.meta_progression_manager.recalculate_and_apply_bonuses(self.player)
 
@@ -91,11 +111,16 @@ class Engine:
         self.player.faction = "player"
         self.player.aggro = AggroList()
 
-        # --- ペット ---
+        # --- ペット (設定駆動) ---
         self.pet = Entity(
-            x=21, y=20, char="p", color=COLOR_PET_PINK,
-            name="妹分『シエル』", is_pet=True, speed=90,
-            attributes=Attributes(strength=11, endurance=11, dexterity=15, perception=12, learning=9, will=11, magic=7, charisma=18)
+            x=pet_cfg.get("start_x", 21),
+            y=pet_cfg.get("start_y", 20),
+            char=pet_cfg.get("char", "p"),
+            color=tuple(pet_cfg.get("color", [255, 180, 210])),
+            name=pet_cfg.get("name", "妹分『シエル』"),
+            is_pet=True,
+            speed=pet_cfg.get("speed", 90),
+            attributes=pet_cfg.get("attributes", {}),
         )
         self.pet.status_effects = []
         self.pet.resistances = ResistanceSet()
@@ -161,13 +186,20 @@ class Engine:
         self.wish_input = ""
         self.debug_input = ""
         self.turns = 0
+        # 考古学 解釈プロンプト状態 (改善②)
+        self.arch_interpret_active = False
+        self.arch_interpret_groups_cache: List[Dict[str, Any]] = []
+        self.arch_interpret_truth_idx = 0
+        self.arch_interpret_ending_idx = 0
 
-        # --- Visual FX & UI システム (Phase 1-9, FXManager委譲) ---
+# --- Visual FX & UI システム (Phase 1-9, FXManager委譲) ---
         self.look_cursor = LookCursor(self.player.x, self.player.y)
         self.context_menu = ContextMenu()
         self.tutorial_manager = TutorialManager()
         self.notification_manager = NotificationManager()
         self.web_server = start_web_server(self, port=8080)
+        print("DEBUG: Web server started")
+        print("DEBUG: Web server started")
 
         # --- 初期ログ ---
         self.log("『naRou: Masterpiece Edition』の世界へようこそ！", (255, 255, 120), level="SUCCESS")
@@ -178,6 +210,14 @@ class Engine:
 
         self.game_map.compute_fov(self.player.x, self.player.y, radius=8)
         self.check_tutorial_triggers("game_start")
+
+        # Step 6.4: 既定の入力アクションを ActionRegistry に登録
+        from input_handler import InputHandler
+        InputHandler.register_default_actions()
+
+        # Step 7: Renderer インターフェースの保持 (後方互換: 既定は NullRenderer)
+        from renderer import get_renderer
+        self.renderer = get_renderer()
 
     def setup_systems(self) -> None:
         """各種マネージャーとサブシステムの生成・初期化 (Step 8)"""
@@ -205,6 +245,10 @@ class Engine:
         from relationship_system import RelationshipRegistry, RelationshipManager
         from world_event_system import WorldEventRegistry, WorldEventManager
         from meta_progression_system import MetaProgressionRegistry, MetaProgressionManager
+        from procedural_quest_generator import (
+            QuestGenerationRegistry, ProceduralQuestGenerator, ProceduralQuestManager
+        )
+        from archaeology_system import ArchaeologyRegistry, ArchaeologyManager
 
         self.event_bus = EventBus()
         self.fx_manager = FXManager(event_bus=self.event_bus)
@@ -341,6 +385,19 @@ class Engine:
         self.world_event_registry = WorldEventRegistry()
         self.world_event_registry.load()
         self.world_event_manager = self.systems_mgr.register("world_event_manager", WorldEventManager(self.world_event_registry))
+
+        # Procedural Quest Generation (Steps 15-36)
+        self.quest_generation_registry = QuestGenerationRegistry()
+        self.quest_generation_registry.load()
+        self.procedural_quest_generator = ProceduralQuestGenerator(self.quest_generation_registry)
+        self.procedural_quest_manager = self.systems_mgr.register(
+            "procedural_quest_manager", ProceduralQuestManager(self.procedural_quest_generator))
+
+        # 考古学・発掘・解読メタゲーム (Steps 25, 15)
+        self.archaeology_registry = ArchaeologyRegistry()
+        self.archaeology_registry.load()
+        self.archaeology_manager = self.systems_mgr.register(
+            "archaeology_manager", ArchaeologyManager(self.archaeology_registry))
 
         # Meta Progression
         self.meta_progression_registry = MetaProgressionRegistry()
@@ -601,6 +658,8 @@ class Engine:
             )
             for log in logs:
                 self.message_log.add(log, level="SUCCESS")
+        # プロシージャル・クエスト（依頼ボード/ダンジョン/NPC）の討伐進捗を通知
+        self._progress_generated_quests("kill", entity.name, 1)
         self.log(f"★{entity.name}を撃破！", (255, 215, 0), level="SUCCESS")
         SoundManager.play_se("kill")
         if hasattr(self, "screen_shake"):
@@ -702,6 +761,15 @@ class Engine:
             self.meta_progression_manager.add_memory_fragment(self.player, frag, self)
 
 
+
+    def _progress_generated_quests(self, event_type: str, target_id: str, amount: int = 1) -> None:
+        """プロシージャル生成クエストの進捗をゲームイベントから通知 (Steps 34, 36)"""
+        mgr = getattr(self, "procedural_quest_manager", None)
+        if mgr is None or self.player is None:
+            return
+        msgs = mgr.update_progress(self.player, event_type, target_id, amount, self)
+        for m in msgs:
+            self.log(m, (255, 215, 0), level="SUCCESS")
 
     def advance_world(self) -> None:
         """速度Tick制による全NPCターン処理 (ステップ10-15)"""
@@ -938,6 +1006,8 @@ class Engine:
                     ok, add_msg = self.inventory.add_item(itm)
                     self.log(add_msg, (200, 255, 200))
                     self.floating_texts.append(FloatingText(f"+{itm.name}", self.player.x, self.player.y - 0.3, (100, 255, 150)))
+                    # プロシージャル・クエスト: 採取進捗を通知
+                    self._progress_generated_quests("collect", itm.name, 1)
                 self.player.energy -= ENERGY_THRESHOLD
                 self.advance_world()
                 return
@@ -1001,6 +1071,84 @@ class Engine:
                 self.advance_world()
                 return
         self.log("近くに掘れる壁がない。")
+
+    def excavate(self) -> None:
+        """考古学メタゲーム: 現在の深度で遺跡を発掘する (Steps 25, 26)"""
+        mgr = getattr(self, "archaeology_manager", None)
+        if mgr is None:
+            self.log("考古学システムが利用できない。")
+            return
+        depth = getattr(self, "dungeon_level", 1)
+        site_id = mgr.registry.pick_site_for_excavation(depth)
+        if not site_id:
+            self.log(f"地下{depth}階には発掘できる遺跡がない。", (180, 180, 180))
+            return
+        if site_id not in self.player.archaeology.excavated_sites:
+            self.player.archaeology.excavated_sites.append(site_id)
+        frag_id, key_id = mgr.resolve_excavation(site_id)
+        if frag_id:
+            mgr.collect_fragment(self.player, frag_id, self)
+        if key_id:
+            mgr.acquire_key(self.player, key_id, self)
+        # 入手直後に解読を試みる（鍵があれば解読される）
+        if frag_id:
+            mgr.decode_fragment(self.player, frag_id, self)
+        self.player.energy -= ENERGY_THRESHOLD
+        self.advance_world()
+
+    # ---- 改善②: 解釈選択プロンプト（ジャーナル内インタラクティブ） ----
+    def _arch_interpret_groups(self) -> List[Dict[str, Any]]:
+        """到達真理ごとに候補エンディングをグループ化"""
+        mgr = getattr(self, "archaeology_manager", None)
+        if mgr is None:
+            return []
+        groups: Dict[str, Dict[str, Any]] = {}
+        for tid, eid in mgr.suggest_endings(self.player):
+            g = groups.setdefault(tid, {"tid": tid, "name": "", "endings": []})
+            g["endings"].append(eid)
+        # 名称付与
+        for tid, g in groups.items():
+            t = mgr.registry.get_truth(tid)
+            g["name"] = t.get("name", tid) if t else tid
+        return list(groups.values())
+
+    def open_interpret_prompt(self) -> None:
+        """ジャーナル内で解釈プロンプトを開始（[e]）"""
+        groups = self._arch_interpret_groups()
+        if not groups:
+            self.log("まだ真理に到達していないので、解釈を記録できない。", (200, 160, 120))
+            return
+        self.arch_interpret_active = True
+        self.arch_interpret_groups_cache = groups
+        self.arch_interpret_truth_idx = 0
+        self.arch_interpret_ending_idx = 0
+        self.log("💭 解釈プロンプト: ↑↓で真理、←→でエンディング、Enterで決定、Escで取消。", (220, 200, 255))
+
+    def interpret_move_truth(self, delta: int) -> None:
+        if not getattr(self, "arch_interpret_active", False):
+            return
+        n = len(self.arch_interpret_groups_cache)
+        self.arch_interpret_truth_idx = (self.arch_interpret_truth_idx + delta) % max(n, 1)
+        self.arch_interpret_ending_idx = 0
+
+    def interpret_move(self, delta: int) -> None:
+        if not getattr(self, "arch_interpret_active", False):
+            return
+        g = self.arch_interpret_groups_cache[self.arch_interpret_truth_idx]
+        n = len(g["endings"])
+        self.arch_interpret_ending_idx = (self.arch_interpret_ending_idx + delta) % max(n, 1)
+
+    def confirm_interpret(self) -> None:
+        if not getattr(self, "arch_interpret_active", False):
+            return
+        g = self.arch_interpret_groups_cache[self.arch_interpret_truth_idx]
+        eid = g["endings"][self.arch_interpret_ending_idx]
+        mgr = self.archaeology_manager
+        mgr.interpret_truth(self.player, g["tid"], eid, engine=self)
+        self.arch_interpret_active = False
+
+    def cancel_interpret(self) -> None:
+        self.arch_interpret_active = False
 
     def play_music(self) -> None:
         """演奏 - 視界内のNPCのみおひねり (ステップ52)"""
@@ -1106,6 +1254,8 @@ class Engine:
 
             self.dungeon_level += 1
             self.log(f"★ダンジョン地下{self.dungeon_level}階へ降り立った！", (255, 200, 100))
+            # プロシージャル・クエスト: 探索(深度到達)進捗を通知
+            self._progress_generated_quests("explore", "depth", 1)
             self.game_map = GameMap(MAP_WIDTH, MAP_HEIGHT, floor_level=self.dungeon_level)
             self.game_map.generate_dungeon()
             self.player.x, self.player.y = self.game_map.start_pos
@@ -1182,6 +1332,45 @@ class Engine:
         if hasattr(self, 'achievement_manager'):
             self.achievement_manager.check_all_achievements(self.player, self)
 
+    # -------------------------------------------------------------
+    # ゲームループ分離: 更新と描画 (Step 5)
+    # -------------------------------------------------------------
+    def update(self, delta_time: float = 1.0) -> None:
+        """ゲームロジック更新 (描画を行わない)"""
+        # ターン処理
+        if hasattr(self, 'turn_queue') and self.turn_queue:
+            self.turn_queue.process(self, delta_time)
+
+        # システム更新
+        if hasattr(self, 'systems_mgr'):
+            self.systems_mgr.update_all(self, delta_time)
+
+        # FX更新
+        if hasattr(self, 'fx_manager'):
+            self.fx_manager.update(delta_time)
+
+        # チュートリアル更新
+        if hasattr(self, 'tutorial_manager'):
+            self.tutorial_manager.update(delta_time)
+
+        # 通知更新
+        if hasattr(self, 'notification_manager'):
+            self.notification_manager.update(delta_time)
+
+        # アニメーションタイル更新
+        if hasattr(self, 'game_map'):
+            self.game_map.update_animations(delta_time)
+
+        self.turns += 1
+
+    def render(self, console: Any) -> None:
+        """描画処理 (ゲームロジックを含まない)"""
+        from render_system import RenderSystem
+        from renderer import TcodRenderer
+        # Step 7: Renderer インターフェースをコンソール実装で活用
+        self.renderer = TcodRenderer(console)
+        RenderSystem.render_all(console, self)
+
 
 def get_tabbed_items(engine: Engine) -> List[Item]:
     """RenderSystem への委譲 (後方互換性)"""
@@ -1196,27 +1385,36 @@ def render_all(console: tcod.console.Console, engine: Engine) -> None:
 
 
 def main() -> None:
-    from render_system import RenderSystem
     from input_handler import InputHandler
 
     engine = Engine()
+    print("DEBUG: Engine created successfully")
 
-    with tcod.context.new(
-        columns=SCREEN_WIDTH,
-        rows=SCREEN_HEIGHT,
-        title="naRou: Masterpiece Edition - Steps 1~72 Complete",
-        vsync=True,
-    ) as context:
-        root_console = tcod.console.Console(SCREEN_WIDTH, SCREEN_HEIGHT, order="F")
+    try:
+        with tcod.context.new(
+            columns=SCREEN_WIDTH,
+            rows=SCREEN_HEIGHT,
+            title="naRou: Masterpiece Edition - Steps 1~72 Complete",
+            vsync=True,
+        ) as context:
+            root_console = tcod.console.Console(SCREEN_WIDTH, SCREEN_HEIGHT, order="F")
 
+            while True:
+                engine.update()
+                engine.render(root_console)
+                context.present(root_console)
+                # Step 6.5: 入力を ActionRegistry 経由で処理
+                for event in tcod.event.get(timeout=0):
+                    InputHandler.handle_event(event, engine)
+    except Exception as e:
+        # If we can't initialize the SDL context (e.g., in headless environment),
+        # we can still run the web server for testing
+        print(f"Warning: Could not initialize SDL context: {e}")
+        print("Web server is still running. Access it at http://localhost:8080")
+        # Keep the process running to maintain the web server
+        import time
         while True:
-            root_console.clear()
-            RenderSystem.render_all(root_console, engine)
-            context.present(root_console)
-
-            for event in tcod.event.wait():
-                InputHandler.handle_event(event, engine)
-
+            time.sleep(1)
 
 if __name__ == "__main__":
     main()
