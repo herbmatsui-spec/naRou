@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ライティングシステム デモ</title>
+  <script src="https://cdn.pixijs.com/pixi.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: #0a0b10;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      color: #f0f4fc;
+    }
+    #container {
+      position: relative;
+    }
+    canvas {
+      border: 1px solid #333;
+    }
+    .controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 8px;
+    }
+    button {
+      background: #e5a93b;
+      border: none;
+      color: #000;
+      padding: 8px 16px;
+      margin: 4px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #ffb74d;
+    }
+    .info {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #8b9bb4;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div class="controls">
+      <button onclick="addTorch()">松明を追加</button>
+      <button onclick="addMagic()">魔法光源を追加</button>
+      <button onclick="clearLights()">光源をクリア</button>
+      <div class="info">
+        光源数: <span id="lightCount">0</span><br>
+        FPS: <span id="fps">0</span>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { LightingSystem } from './demos/lib/LightingSystem.js';
+    
+    // PixiJSアプリケーションの初期化
+    const app = new PIXI.Application({
+      width: 960,
+      height: 576,
+      backgroundColor: 0x0a0b10,
+      antialias: true
+    });
+    
+    document.getElementById('container').appendChild(app.view);
+    
+    // 背景レイヤー
+    const backgroundLayer = new PIXI.Container();
+    app.stage.addChild(backgroundLayer);
+    
+    // タイルレイヤー
+    const tileLayer = new PIXI.Container();
+    app.stage.addChild(tileLayer);
+    
+    // ライティングシステムを初期化
+    const viewW = 40;
+    const viewH = 24;
+    const TILE_SIZE = 24;
+    const lightingSystem = new LightingSystem(app, tileLayer, viewW * TILE_SIZE, viewH * TILE_SIZE);
+    
+    // ダミーマップを生成
+    const map = [];
+    const lightMap = [];
+    for (let y = 0; y < viewH; y++) {
+      const row = [];
+      const lightRow = [];
+      for (let x = 0; x < viewW; x++) {
+        // ランダムな地形
+        if (Math.random() < 0.2) {
+          row.push('#');
+        } else {
+          row.push('.');
+        }
+        lightRow.push(1.0);
+      }
+      map.push(row);
+      lightMap.push(lightRow);
+    }
+    
+    // ダミータイルを描画
+    for (let y = 0; y < viewH; y++) {
+      for (let x = 0; x < viewW; x++) {
+        const tile = map[y][x];
+        const graphics = new PIXI.Graphics();
+        
+        if (tile === '#') {
+          graphics.beginFill(0x3d4253);
+          graphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
+          graphics.endFill();
+        } else {
+          graphics.beginFill(0x1c2230);
+          graphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
+          graphics.endFill();
+        }
+        
+        graphics.x = x * TILE_SIZE;
+        graphics.y = y * TILE_SIZE;
+        tileLayer.addChild(graphics);
+      }
+    }
+    
+    // マウス位置
+    let mouseX = 480;
+    let mouseY = 288;
+    
+    app.view.addEventListener('mousemove', (e) => {
+      const rect = app.view.getBoundingClientRect();
+      mouseX = e.clientX - rect.left;
+      mouseY = e.clientY - rect.top;
+    });
+    
+    app.view.addEventListener('click', (e) => {
+      const rect = app.view.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / TILE_SIZE;
+      const y = (e.clientY - rect.top) / TILE_SIZE;
+      
+      // クリック位置に魔法光源を追加
+      lightingSystem.addLightSource({
+        x: x,
+        y: y,
+        radius: 5.0,
+        color: [100, 200, 255],
+        intensity: 0.8
+      });
+      
+      updateLightCount();
+    });
+    
+    // ライトカウント更新
+    function updateLightCount() {
+      document.getElementById('lightCount').textContent = 
+        lightingSystem.lightSources.length;
+    }
+    
+    // 松明を追加
+    window.addTorch = () => {
+      const x = Math.random() * viewW;
+      const y = Math.random() * viewH;
+      lightingSystem.addLightSource({
+        x: x,
+        y: y,
+        radius: 4.0,
+        color: [255, 180, 100],
+        intensity: 0.7
+      });
+      updateLightCount();
+    };
+    
+    // 魔法光源を追加
+    window.addMagic = () => {
+      const x = Math.random() * viewW;
+      const y = Math.random() * viewH;
+      lightingSystem.addLightSource({
+        x: x,
+        y: y,
+        radius: 6.0,
+        color: [150, 100, 255],
+        intensity: 1.0
+      });
+      updateLightCount();
+    };
+    
+    // 光源をクリア
+    window.clearLights = () => {
+      lightingSystem.clearLightSources();
+      updateLightCount();
+    };
+    
+    // ゲームループ
+    app.ticker.add((delta) => {
+      // ライトマップを更新
+      lightingSystem.updateLightMap(lightMap);
+      lightingSystem.applyLighting(app.stage);
+      
+      // 情報を更新
+      document.getElementById('fps').textContent = Math.round(app.ticker.FPS);
+    });
+    
+    // 初期光源を追加
+    setTimeout(() => {
+      addTorch();
+      addTorch();
+    }, 500);
+  </script>
+</body>
+</html>
