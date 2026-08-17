@@ -4,6 +4,21 @@
 
 ---
 
+## 🎬 ゲームプレイ・デモ
+
+<div align="center">
+  <img src="demo_gameplay.gif" alt="naRou: Masterpiece Edition ゲームプレイデモ" width="700">
+  <p><em>▲ 拠点〜ダンジョン探索〜ボス戦〜輪廻転生 NG+ のループプレビュー</em></p>
+</div>
+
+### 🎥 インタラクティブ実況プレイ & シーンギャラリー
+ブラウザで直接動かして体験できる完全再現デモを提供しています：
+- **実況プレイデモ（全24章・初心者ガイド付き）**: [`elona_playthrough.html`](elona_playthrough.html)
+- **24シーン グランドショーケース**: [`demos/gallery_24_scenes.html`](demos/gallery_24_scenes.html)
+- **絵文字グラフィックモード**: [`emoji_showcase.html`](emoji_showcase.html)
+
+---
+
 ## 🎮 主な機能と特徴
 
 1. **ECS & 疎結合アーキテクチャ (`SystemManager`, `BaseSystem`)**
