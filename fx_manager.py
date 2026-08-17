@@ -40,7 +40,10 @@ class FXManager:
         self.add_floating_text(f"-{dmg}", x, y - 0.2, color)
         
         if is_crit:
-            self.trigger_shake(intensity=1.5, duration=4)
+            # 衝撃方向を計算 (攻撃側から対象側へ)
+            # 本来は攻撃者の座標が必要だが、ここでは簡易的にランダム方向または固定方向
+            direction = (random.uniform(-1, 1), random.uniform(-1, 1))
+            self.trigger_shake(intensity=1.5, duration=4, direction=direction)
             self.trigger_hit_stop(duration=6)
             self.spawn_shockwave(x, y, color=(255, 255, 200))
 
@@ -120,6 +123,32 @@ class FXManager:
                     life=random.randint(5, 10),
                     vx=random.uniform(-0.3, 0.3),
                     vy=random.uniform(-0.5, -0.1)
+                )
+            )
+
+    def spawn_material_particles(self, x: float, y: float, material: str, count: int = 5) -> None:
+        """材質に基づいた偏執的なパーティクル散布 (Proposal 2)"""
+        # 材質別定義: (文字リスト, 色リスト, 速度範囲, 生存期間)
+        mat_map = {
+            "stone": (["#", "·", "."], [(120, 120, 120), (100, 100, 100), (150, 150, 150)], (0.2, 0.6), (3, 6)),
+            "metal": (["*", "✧", "·"], [(200, 200, 220), (255, 255, 255), (180, 180, 200)], (0.4, 0.8), (2, 5)),
+            "flesh": (["o", "·", "."], [(200, 0, 0), (150, 0, 0), (100, 0, 0)], (0.1, 0.4), (4, 8)),
+            "crystal": (["✦", "✧", "✨"], [(100, 200, 255), (200, 100, 255), (150, 255, 150)], (0.3, 0.7), (5, 10)),
+            "default": (["·", "."], [(150, 150, 150), (100, 100, 100)], (0.2, 0.5), (3, 6)),
+        }
+        cfg = mat_map.get(material, mat_map["default"])
+        chars, colors, speed_range, life_range = cfg
+        
+        for _ in range(count):
+            self.particles.append(
+                Particle(
+                    char=random.choice(chars),
+                    x=x,
+                    y=y,
+                    color=random.choice(colors),
+                    life=random.randint(*life_range),
+                    vx=random.uniform(-speed_range[1], speed_range[1]),
+                    vy=random.uniform(-speed_range[1], speed_range[1])
                 )
             )
 

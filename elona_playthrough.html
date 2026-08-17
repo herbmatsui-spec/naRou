@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Elona: Masterpiece Edition ― 実況プレイ動画（初心者ガイド付き）</title>
+<title>naRou: Masterpiece Edition ― 実況プレイ動画（初心者ガイド付き）</title>
 <style>
   :root{ --bg:#070913; --panel:#0b1220; --line:rgba(120,160,200,.18); --sky:#38bdf8; --gold:#fbbf24; --txt:#cbd5e1; }
   *{box-sizing:border-box}
@@ -60,7 +60,7 @@
 </style>
 </head>
 <body>
-  <h1>Elona: Masterpiece Edition ― 実況プレイ動画</h1>
+  <h1>naRou: Masterpiece Edition ― 実況プレイ動画</h1>
   <div class="sub">本プロジェクトの実際の仕様（ステータス・クエスト・戦闘計算式・カルマ・転生・ネフィア等）に基づくシミュレーション。右側の「初心者ガイド」で仕組みを解説しながら、開始からクリアまで自動進行します。</div>
 
   <div class="wrap">
@@ -139,7 +139,7 @@ const INVENTORY_INIT=[
   {name:'★願いの杖', note:'価値3000Gのロッド', kind:'その他'}
 ];
 const GUIDE={
-  intro:{tag:'概要',title:'この動画について',body:'<p>これは本プロジェクト「<span class="k">Elona: Masterpiece Edition</span>」の<span class="k">実際のゲーム仕様</span>をもとに再現したプレイ動画です。</p><p>画面は本物と同じ<span class="k">ターミナル形式</span>（マップ＋3段HUD＋カラーログ）。右のガイドで「なぜそう動くか」を都度解説します。</p><ul><li>@ あなた ・ p 妹分シエル</li><li># 壁 ・ . 床 ・ &gt; 下り階段 ・ _ 祭壇</li><li>x 敵 ・ ! ポーション ・ $ 鉱石 ・ % 薬草</li></ul><p>操作は矢印/hjklで移動、スペースで実行、gで拾う、といった本物と同じ配置です。</p>'},
+  intro:{tag:'概要',title:'この動画について',body:'<p>これは本プロジェクト「<span class="k">naRou: Masterpiece Edition</span>」の<span class="k">実際のゲーム仕様</span>をもとに再現したプレイ動画です。</p><p>画面は本物と同じ<span class="k">ターミナル形式</span>（マップ＋3段HUD＋カラーログ）。右のガイドで「なぜそう動くか」を都度解説します。</p><ul><li>@ あなた ・ p 妹分シエル</li><li># 壁 ・ . 床 ・ &gt; 下り階段 ・ _ 祭壇</li><li>x 敵 ・ ! ポーション ・ $ 鉱石 ・ % 薬草</li></ul><p>操作は矢印/hjklで移動、スペースで実行、gで拾う、といった本物と同じ配置です。</p>'},
   create:{tag:'キャラメイク',title:'冒険者のステータス',body:'<p>本物は牢獄ではなく<span class="k">ダンジョン内で開始</span>します。名前は「名無しの冒険者」。</p><p>8つの能力値を持ちます：</p><ul><li><span class="k">筋力(STR)</span> 攻撃力・HPに影響</li><li><span class="k">耐久(END)</span> HPの基礎</li><li><span class="k">器用(DEX)</span>命中率に影響</li><li><span class="k">感覚(PER)</span>クリティカル率</li><li>習得/意思/魔力/魅力</li></ul><p>HP = 耐久×2 + 筋力 + レベル×5 + (ジュア信仰なら+10)。レベルアップで能力値2つ+5とスキルポイントを得ます。</p>'},
   combat:{tag:'戦闘',title:'戦闘のしくみ',body:'<p>命中率 ＝ <span class="k">75 + 攻×攻 − 防×防 + 武器hit×5</span>（10〜95に補正）。</p><p>クリティカル率 ＝ <span class="k">5 + 感覚/5</span>。ダメージ ＝ 武器ダイス和 + 武器補正 + 筋力/3。</p><p>ダメージが8を超えかつ5%で<span class="k">出血</span>状態に。出血中は自然回復が止まります。</p><p>敵は隣接すると攻めてきます。倒すと経験値・ゴールドを得て、クエスト対象なら討伐数が増えます。</p>'},
   level:{tag:'成長',title:'レベルとスキル',body:'<p>経験値が溜まると<span class="k">レベルアップ</span>。スキル（長剣・回避・治癒・採掘など）は使うと「潜在能力(%)」に応じて上がります。</p><p>例：長剣Lv3 → 命中・ダメージが向上。スキルLv20ごとに潜在が下がり（最小10）、上がりにくくなります。</p>'},
@@ -459,7 +459,7 @@ function updateLog(){ $("msglog").innerHTML=sim.log.slice(-6).map(l=>'<div class
 function setGuide(topic){ const g=GUIDE[topic]||GUIDE.intro; $("gTag").textContent=g.tag; $("gTitle").textContent=g.title; $("gBody").innerHTML=g.body; }
 function openModal(type){
   const m=$("modal"); let html='';
-  if(type==='title'){ html='<div class="big">Elona: Masterpiece Edition</div><div class="sm">イルヴァ大陸を舞台とした本格ローグライク。この動画はプロジェクトの実際の仕様で進行を再現します。</div><div class="box">操作：矢印/hjkl 移動 ・ スペース 実行 ・ g 拾う ・ i インベントリ ・ c 詠唱 ・ p 祈り ・ ? ガイド<br>右の「初心者ガイド」で仕組みを随時解説。</div>'; }
+  if(type==='title'){ html='<div class="big">naRou: Masterpiece Edition</div><div class="sm">本格ローグライクRPG。この動画はプロジェクトの実際の仕様で進行を再現します。</div><div class="box">操作：矢印/hjkl 移動 ・ スペース 実行 ・ g 拾う ・ i インベントリ ・ c 詠唱 ・ p 祈り ・ ? ガイド<br>右の「初心者ガイド」で仕組みを随時解説。</div>'; }
   else if(type==='status'){ let at=''; for(const k in P.attrs){ at+='<span class="at">'+k+'</span> '+P.attrs[k]+'　'; } let sk=''; for(const k in P.skills){ sk+=k+' Lv'+P.skills[k]+'　'; }
     html='<div class="big">ステータス</div><div class="box"><b>'+P.name+'</b>　Lv.'+P.level+'<br>HP '+P.hp+'/'+P.maxhp+'　MP '+P.mp+'/'+P.maxmp+'<br>'+at+'<br>スキル：'+sk+'<br>信仰 '+P.god+'（piety '+P.piety+'）　カルマ '+P.karma+'</div>'; }
   else if(type==='inv'){ let it=''; INVENTORY_INIT.forEach(x=>{ it+='・'+x.name+'（'+x.mat+' / '+x.note+'）<br>'; });

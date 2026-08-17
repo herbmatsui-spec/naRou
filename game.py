@@ -170,7 +170,7 @@ class Engine:
         self.web_server = start_web_server(self, port=8080)
 
         # --- 初期ログ ---
-        self.log("『Elona: Masterpiece Edition』の世界へようこそ！", (255, 255, 120), level="SUCCESS")
+        self.log("『naRou: Masterpiece Edition』の世界へようこそ！", (255, 255, 120), level="SUCCESS")
         self.log("妹分シエル「お兄ちゃん、今日も一緒に頑張ろうね！」", COLOR_PET_PINK, level="INFO")
         self.log("【初心者ガイド】[?]または[h]キーでいつでもヘルプを確認できます！", (120, 255, 200), level="INFO")
         self.log("【操作】矢印:移動 [Space]:行動 [l]:調査 [i]:カバン [c]:能力 [j]:職業 [Shift+S]:ツリー [Shift+G]:ギルド", (180, 220, 255), level="INFO")
@@ -1204,7 +1204,7 @@ def main() -> None:
     with tcod.context.new(
         columns=SCREEN_WIDTH,
         rows=SCREEN_HEIGHT,
-        title="Elona: Masterpiece Edition - Steps 1~72 Complete",
+        title="naRou: Masterpiece Edition - Steps 1~72 Complete",
         vsync=True,
     ) as context:
         root_console = tcod.console.Console(SCREEN_WIDTH, SCREEN_HEIGHT, order="F")

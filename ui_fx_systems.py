@@ -360,10 +360,12 @@ class ScreenShake:
     def __init__(self):
         self.intensity: float = 0.0
         self.duration: int = 0
+        self.direction: Tuple[float, float] = (0.0, 0.0) # 衝撃の方向ベクトル (dx, dy)
 
-    def trigger(self, intensity: float = 1.0, duration: int = 4) -> None:
+    def trigger(self, intensity: float = 1.0, duration: int = 4, direction: Tuple[float, float] = (0.0, 0.0)) -> None:
         self.intensity = intensity
         self.duration = duration
+        self.direction = direction
 
     def update(self) -> bool:
         if self.duration > 0:

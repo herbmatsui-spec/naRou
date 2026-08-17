@@ -13,17 +13,17 @@ def run_script(script_name):
 def show_help():
     help_text = """
 ========================================
-  Elona Clone 統合システム - ヘルプ
+  naRou: Masterpiece Edition 統合システム - ヘルプ
 ========================================
-このシステムは、Elonaクローンと関連ツールを起動するためのメニューです。
+このシステムは、naRou: Masterpiece Editionと関連ツールを起動するためのメニューです。
 
-1. Elona クローン（ゲーム本編）を起動
-   - ローグライクゲーム「Elona」のクローン版を起動します。
+1. naRou: Masterpiece Edition（ゲーム本編）を起動
+   - ローグライクゲーム「naRou: Masterpiece Edition」を起動します。
    - ダンジョン探索、クエスト達成、キャラ育成などを楽しめます。
    - ゲーム内で [?] または [h] キーを押すと詳細なヘルプを参照できます。
 
 2. 経済シミュレーションを実行 (economy_sim.py)
-   - Elonaの経済システムをシミュレートするスクリプトを実行します。
+   - 経済システムをシミュレートするスクリプトを実行します。
    - 価格変動、取引、インフレなどの経済現象を観察できます。
 
 3. ワークフローを実行 (orchestrator.py)
@@ -38,7 +38,7 @@ def show_help():
 - 数字以外の入力はエラーとなります。
 
 初心者へのアドバイス:
-まずは「1. Elona クローン（ゲーム本編）を起動」を選んでゲームを始めてみてください。
+まずは「1. naRou: Masterpiece Edition（ゲーム本編）を起動」を選んでゲームを始めてみてください。
 ゲーム開始直後は画面左下に操作ガイドが表示されるので、それに従ってください。
 さらに詳細なヘルプが必要な場合は、ゲーム内で [?] キーを押してください。
 ========================================
@@ -48,9 +48,9 @@ def show_help():
 def main():
     while True:
         print("========================================")
-        print("  Elona Clone 統合システムメニュー")
+        print("  naRou: Masterpiece Edition 統合システムメニュー")
         print("========================================")
-        print("1. Elona クローン（ゲーム本編）を起動")
+        print("1. naRou: Masterpiece Edition（ゲーム本編）を起動")
         print("2. 経済シミュレーションを実行 (economy_sim.py)")
         print("3. ワークフローを実行 (orchestrator.py)")
         print("4. バトルバランス自動検証を実行 (tests/balance_simulator.py)")
