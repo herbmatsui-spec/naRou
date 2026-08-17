@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Sans+JP:wght@400;500;700;900&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.pixijs.com/pixi.js"></script>
   <script type="module" src="demos/lib/TextureAtlas.js"></script>
+  <script type="module" src="demos/lib/LightingSystem.js"></script>
+  <script type="module" src="demos/lib/ParticleSystem.js"></script>
   <style>
     :root {
       --bg-dark: #0a0b10;
@@ -669,6 +671,20 @@
     pixiApp.stage.addChild(entityLayer);
     pixiApp.stage.addChild(effectLayer);
 
+    // ライティングシステムを初期化
+    const viewW = 40;
+    const viewH = 24;
+    const TILE_SIZE = 24;
+    const lightingSystem = new LightingSystem(
+        pixiApp,
+        tileLayer,
+        viewW * TILE_SIZE,
+        viewH * TILE_SIZE
+    );
+
+    // パーティクルシステムを初期化
+    const particleSystem = new ParticleSystem(pixiApp, effectLayer);
+
     // リサイズ処理
     function resize() {
         const width = window.innerWidth;
@@ -752,11 +768,17 @@
 
     let gameState = null;
     let animTime = 0;
+    let prevPlayerPos = null;
+    let prevPlayerHp = null;
 
     const TILE_SIZE = 24;
 
     function render() {
       animTime += 0.05;
+      
+      // パーティクルシステムを更新
+      particleSystem.update(0.016); // 約60fps想定
+      
       if (!gameState) {
         // サーバーに接続中... はPixiJSレイヤーには表示しない
         // Canvas 2Dのまま表示（後でPixiJSに移行可能）
@@ -772,12 +794,18 @@
         
         const map = gameState.map || [];
         const lightMap = gameState.light_map || [];
+        const lightSources = gameState.light_sources || [];
         const viewH = map.length;
         const viewW = viewH > 0 ? map[0].length : 0;
 
         // 画面中央オフセット
         const offsetX = Math.max(0, (canvas.width - viewW * TILE_SIZE) / 2);
         const offsetY = Math.max(0, (canvas.height - viewH * TILE_SIZE) / 2);
+
+        // ライティングシステムを更新
+        lightingSystem.updateLightMap(lightMap);
+        lightingSystem.setLightSources(lightSources);
+        lightingSystem.applyLighting(pixiApp.stage);
 
         // 1. タイル描画 (床・壁・階段) - テクスチャアトラス使用
         for (let y = 0; y < viewH; y++) {
@@ -797,14 +825,9 @@
               tileSprite.width = TILE_SIZE;
               tileSprite.height = TILE_SIZE;
               
-              // ライティングによる色調補正
-              if (light > 0) {
-                // 明るい場合は元の色（白）を維持
-                tileSprite.tint = 0xffffff;
-              } else {
-                // 暗い場合は暗くする（黒に近いグレー）
-                tileSprite.tint = 0x333333;
-              }
+              // ライティングはライティングシステムで処理するため、
+              // ここでは基本色のみを設定
+              tileSprite.tint = 0xffffff;
               
               tileSprite.x = px;
               tileSprite.y = py;
@@ -847,6 +870,60 @@
         
         // 2. エンティティ描画 (プレイヤー・ペット・モンスター) - デバッグ用に色付き矩形で仮実装
         const entities = gameState.entities || [];
+        const player = gameState.player;
+        
+        // プレイヤーの移動パーティクル
+        if (player && prevPlayerPos) {
+          const dx = player.x - prevPlayerPos.x;
+          const dy = player.y - prevPlayerPos.y;
+          if (dx !== 0 || dy !== 0) {
+            // 移動時にほこりのパーティクルを発生
+            particleSystem.emitEffect('step', 
+              offsetX + player.x * TILE_SIZE, 
+              offsetY + player.y * TILE_SIZE, 
+              3
+            );
+          }
+        }
+        
+        // プレイヤーのHP変化パーティクル
+        if (player && prevPlayerHp !== null) {
+          if (player.hp < prevPlayerHp) {
+            // ダメージを受けた
+            particleSystem.emitEffect('damage',
+              offsetX + player.x * TILE_SIZE,
+              offsetY + player.y * TILE_SIZE,
+              5
+            );
+          } else if (player.hp > prevPlayerHp) {
+            // 回復した
+            particleSystem.emitEffect('heal',
+              offsetX + player.x * TILE_SIZE,
+              offsetY + player.y * TILE_SIZE,
+              8
+            );
+          }
+        }
+        
+        // プレイヤー位置を記録
+        if (player) {
+          prevPlayerPos = { x: player.x, y: player.y };
+          prevPlayerHp = player.hp;
+        }
+        
+        // フローティングテキストに応じたパーティクル
+        if (gameState.floating_texts) {
+          gameState.floating_texts.forEach(ft => {
+            if (ft.text && ft.text.includes('🔥') || ft.text && ft.text.includes('魔法')) {
+              particleSystem.emitEffect('magic_cast',
+                offsetX + ft.x * TILE_SIZE,
+                offsetY + ft.y * TILE_SIZE,
+                10
+              );
+            }
+          });
+        }
+        
         entities.forEach(ent => {
           const px = offsetX + ent.x * TILE_SIZE;
           const py = offsetY + ent.y * TILE_SIZE;
