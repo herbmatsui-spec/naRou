@@ -681,37 +681,63 @@
     // 初期リサイズ
     resize();
 
-    // テクスチャアトラス（プレースホルダー）
+    // テクスチャアトラス
     let textureAtlas = null;
     let tileTextures = {};
 
-    // テクスチャアトラスのロード（簡易版）
+    // テクスチャアトラスのロード
     async function loadTextureAtlas() {
         try {
-            // 実際の実装では、demos/assets/font_atlas.png と demos/assets/font_atlas.json をロード
-            // ここではプレースホルダーとして、1x1ピクセルの白いテクスチャを作成
-            const graphics = new PIXI.Graphics();
-            graphics.beginFill(0xffffff);
-            graphics.drawRect(0, 0, 1, 1);
-            graphics.endFill();
+            // アトラス画像をロード
+            const atlasImage = new Image();
+            atlasImage.src = 'demos/assets/font_atlas.png';
             
-            // テクスチャキャンバスからテクスチャを作成
-            const texture = graphics.generateCanvasTexture();
+            await new Promise((resolve, reject) => {
+                atlasImage.onload = resolve;
+                atlasImage.onerror = reject;
+            });
             
-            // タイル文字と色のマッピング（簡易版）
-            // 実際にはアトラスからUVを取得してテクスチャを切り出す
+            // アトラスメタデータをロード
+            const metadataResponse = await fetch('demos/assets/font_atlas.json');
+            const metadata = await metadataResponse.json();
+            
+            // PixiJSテクスチャを作成
+            const baseTexture = new PIXI.BaseTexture(atlasImage);
+            textureAtlas = new TextureAtlas(baseTexture, metadata);
+            
+            // タイル文字と色のマッピング（テクスチャアトラスを使用）
             tileTextures = {
-                '#': createColoredTexture(texture, 0x3d4253),
-                '.': createColoredTexture(texture, 0x1c2230),
-                '>': createColoredTexture(texture, 0x27ae60),
-                ' ': createColoredTexture(texture, 0x0f121a),
-                '⛩️': createColoredTexture(texture, 0x1c2230)
+                '#': textureAtlas.getTexture('#'),
+                '.': textureAtlas.getTexture('.'),
+                '>': textureAtlas.getTexture('>'),
+                ' ': textureAtlas.getTexture(' '),
+                '⛩️': textureAtlas.getTexture('⛩️')
             };
             
-            console.log('Texture atlas loaded (placeholder)');
+            console.log('Texture atlas loaded successfully');
         } catch (error) {
             console.error('Failed to load texture atlas:', error);
+            // フォールバック: プレースホルダーテクスチャを使用
+            createPlaceholderTextures();
         }
+    }
+
+    // プレースホルダーテクスチャを作成（フォールバック用）
+    function createPlaceholderTextures() {
+        const graphics = new PIXI.Graphics();
+        graphics.beginFill(0xffffff);
+        graphics.drawRect(0, 0, 1, 1);
+        graphics.endFill();
+        const texture = graphics.generateCanvasTexture();
+        
+        tileTextures = {
+            '#': createColoredTexture(texture, 0x3d4253),
+            '.': createColoredTexture(texture, 0x1c2230),
+            '>': createColoredTexture(texture, 0x27ae60),
+            ' ': createColoredTexture(texture, 0x0f121a),
+            '⛩️': createColoredTexture(texture, 0x1c2230)
+        };
+        console.log('Using placeholder textures');
     }
 
     // 色付きテクスチャを作成するヘルパー関数
@@ -753,7 +779,7 @@
         const offsetX = Math.max(0, (canvas.width - viewW * TILE_SIZE) / 2);
         const offsetY = Math.max(0, (canvas.height - viewH * TILE_SIZE) / 2);
 
-        // 1. タイル描画 (床・壁・階段) - デバッグ用に色付き矩形で仮実装
+        // 1. タイル描画 (床・壁・階段) - テクスチャアトラス使用
         for (let y = 0; y < viewH; y++) {
           for (let x = 0; x < viewW; x++) {
             const tile = map[y][x];
@@ -762,37 +788,60 @@
             const px = offsetX + x * TILE_SIZE;
             const py = offsetY + y * TILE_SIZE;
 
-            // タイルのグラフィックを作成
-            const tileGraphics = new PIXI.Graphics();
+            // タイルのテクスチャを取得
+            const texture = tileTextures[tile];
             
-            // 地形ベースカラー
-            if (tile === "#") {
-              // 壁
-              tileGraphics.beginFill(light > 0 ? 0x3d4253 : 0x1a1d26);
-              tileGraphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
-              tileGraphics.endFill();
-              // 壁ベベル（簡易版）
-              tileGraphics.lineStyle(1, light > 0 ? 0x5a627a : 0x282c3a);
-              tileGraphics.drawRect(1, 1, TILE_SIZE - 2, TILE_SIZE - 2);
-            } else if (tile === "." || tile === " " || tile === "⛩️") {
-              // 床または空白または祭壇
-              tileGraphics.beginFill(light > 0 ? 0x1c2230 : 0x0f121a);
-              tileGraphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
-              tileGraphics.endFill();
-              // グリッド線（簡易版）
-              tileGraphics.lineStyle(1, 0xffffff * 0.03); // rgba(255,255,255,0.03)
-              tileGraphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
-            } else if (tile === ">") {
-              // 階段下
-              tileGraphics.beginFill(0x27ae60);
-              tileGraphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
-              tileGraphics.endFill();
+            if (texture) {
+              // テクスチャアトラスからテクスチャを使用
+              const tileSprite = new PIXI.Sprite(texture.texture || texture);
+              tileSprite.width = TILE_SIZE;
+              tileSprite.height = TILE_SIZE;
+              
+              // ライティングによる色調補正
+              if (light > 0) {
+                // 明るい場合は元の色（白）を維持
+                tileSprite.tint = 0xffffff;
+              } else {
+                // 暗い場合は暗くする（黒に近いグレー）
+                tileSprite.tint = 0x333333;
+              }
+              
+              tileSprite.x = px;
+              tileSprite.y = py;
+              tileLayer.addChild(tileSprite);
+            } else {
+              // フォールバック: テクスチャが見つからない場合はGraphicsで描画
+              const tileGraphics = new PIXI.Graphics();
+              
+              // 地形ベースカラー
+              if (tile === "#") {
+                // 壁
+                tileGraphics.beginFill(light > 0 ? 0x3d4253 : 0x1a1d26);
+                tileGraphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
+                tileGraphics.endFill();
+                // 壁ベベル（簡易版）
+                tileGraphics.lineStyle(1, light > 0 ? 0x5a627a : 0x282c3a);
+                tileGraphics.drawRect(1, 1, TILE_SIZE - 2, TILE_SIZE - 2);
+              } else if (tile === "." || tile === " " || tile === "⛩️") {
+                // 床または空白または祭壇
+                tileGraphics.beginFill(light > 0 ? 0x1c2230 : 0x0f121a);
+                tileGraphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
+                tileGraphics.endFill();
+                // グリッド線（簡易版）
+                tileGraphics.lineStyle(1, 0xffffff * 0.03); // rgba(255,255,255,0.03)
+                tileGraphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
+              } else if (tile === ">") {
+                // 階段下
+                tileGraphics.beginFill(0x27ae60);
+                tileGraphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
+                tileGraphics.endFill();
+              }
+              
+              // タイルを配置
+              tileGraphics.x = px;
+              tileGraphics.y = py;
+              tileLayer.addChild(tileGraphics);
             }
-            
-            // タイルを配置
-            tileGraphics.x = px;
-            tileGraphics.y = py;
-            tileLayer.addChild(tileGraphics);
           }
         }
         
