@@ -638,6 +638,25 @@
 // ==================== PIXI.JS WEBGL RENDER ENGINE ====================
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+    
+    // モジュールロード待機
+    function waitForModules(callback, maxAttempts = 50) {
+      let attempts = 0;
+      const check = () => {
+        attempts++;
+        if (window.LightingSystem && window.ParticleSystem && 
+            window.PostProcessManager && window.ScreenShake && window.TextureAtlas) {
+          callback();
+        } else if (attempts < maxAttempts) {
+          setTimeout(check, 100);
+        } else {
+          console.error('Module loading timeout');
+        }
+      };
+      check();
+    }
+    
+    waitForModules(() => {
 
     // PixiJSアプリケーションの初期化
     const pixiApp = new PIXI.Application({
@@ -1233,6 +1252,7 @@
         e.preventDefault();
         sendAction(keyMap[e.code]);
       }
+    });
     });
   </script>
 </body>
