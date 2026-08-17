@@ -1,0 +1,32 @@
+# スキル覚醒設定 (Steps 5, 6)
+
+awakenings:
+  dragon_slaying_awakening:
+    id: "dragon_slaying_awakening"
+    name: "竜殺しの覚醒"
+    description: "格闘または剣術を極めし者が竜の血を浴びて真の覚醒を遂げる。"
+    base_skill: "swordsmanship"
+    requirements:
+      skill_level:
+        swordsmanship: 30
+      dragon_kills: 5
+    awakened_skill: "true_dragon_slayer"
+    visual_effect: "dragon_aura_crimson"
+    passive_effects:
+      dragon_dmg_multiplier: 2.0
+      fire_res_bonus: 50
+
+  divine_magic_awakening:
+    id: "divine_magic_awakening"
+    name: "神聖魔導の覚醒"
+    description: "深遠なる魔力探求により神聖術と融合した超越魔導。"
+    base_skill: "magic_cast"
+    requirements:
+      skill_level:
+        magic_cast: 30
+      piety: 100
+    awakened_skill: "divine_arcanum"
+    visual_effect: "divine_halo_gold"
+    passive_effects:
+      spell_power_boost: 0.30
+      mp_cost_reduction: 0.20

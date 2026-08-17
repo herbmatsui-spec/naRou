@@ -1,0 +1,42 @@
+# ダンジョンテーマ設定 (Steps 7, 8)
+
+dungeon_themes:
+  goblin_cave:
+    theme_id: "goblin_cave"
+    name: "ゴブリンの洞窟"
+    base_layout: "cavern"
+    difficulty_modifier: 1.0
+    enemy_pools:
+      common:
+        - "goblin"
+        - "slime"
+      elite:
+        - "goblin_warrior"
+        - "goblin_shaman"
+    environmental_hazards:
+      - "spikepits"
+      - "poison_gas"
+    special_rooms:
+      - "treasure_vault"
+      - "shaman_altar"
+    story_hooks:
+      - "rescue_captive"
+      - "find_stolen_goods"
+
+  ancient_ruins:
+    theme_id: "ancient_ruins"
+    name: "古代遺跡"
+    base_layout: "dungeon_grid"
+    difficulty_modifier: 1.5
+    enemy_pools:
+      common:
+        - "skeleton"
+        - "gargoyle"
+      elite:
+        - "lich"
+    environmental_hazards:
+      - "mana_burn_tile"
+    special_rooms:
+      - "relic_chamber"
+    story_hooks:
+      - "discover_lost_magic"

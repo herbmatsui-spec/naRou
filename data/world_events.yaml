@@ -1,0 +1,32 @@
+# ワールドイベント設定 (Steps 11, 12)
+
+world_events:
+  blood_moon:
+    id: "blood_moon"
+    name: "血の月"
+    description: "天球が紅く染まり、あらゆる魔物の凶暴性と出現頻度が増大する怪異。"
+    trigger_conditions:
+      turns_interval: 500
+      chance: 0.15
+    duration: 100
+    effects:
+      enemy_dmg_mult: 1.30
+      exp_gain_mult: 1.50
+      night_vision_penalty: 2
+    story_triggers:
+      - "nightmare_dreams"
+      - "undead_uprising"
+
+  abundant_harvest:
+    id: "abundant_harvest"
+    name: "豊穣の祝祭"
+    description: "大地の神の祝福により農作物と採取ノードの収穫量が倍増する。"
+    trigger_conditions:
+      turns_interval: 800
+      chance: 0.20
+    duration: 150
+    effects:
+      harvest_yield_mult: 2.0
+      food_nutrition_mult: 1.25
+    story_triggers:
+      - "festival_merchant_visit"

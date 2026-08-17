@@ -1,0 +1,63 @@
+guild_skills:
+  adventurers_guild:
+    unlock_conditions:
+      guild_level: 2
+    skills:
+      - id: "guild_lore"
+        name: "ギルドの知識"
+        description: "先輩冒険者たちの蓄積された知見により獲得経験値が増加する。"
+        type: "passive"
+        cost: 0
+        cooldown: 0
+        effects:
+          - type: "exp_bonus"
+            value: 0.15
+            target: "all"
+      - id: "guild_storage"
+        name: "ギルドの財宝"
+        description: "ギルド専用倉庫の利用枠が拡大し、保管食料の腐敗が抑制される。"
+        type: "passive"
+        cost: 0
+        cooldown: 0
+        effects:
+          - type: "storage_capacity"
+            value: 50
+          - type: "rot_resistance"
+            value: 0.20
+      - id: "guild_network"
+        name: "ギルドのネットワーク"
+        description: "離れた場所からでもギルドの連絡網を通じてアイテム倉庫にアクセスする。"
+        type: "active"
+        cost: 10
+        cooldown: 600
+        effects:
+          - type: "remote_storage"
+            value: 1
+
+  mages_guild:
+    unlock_conditions:
+      guild_level: 2
+    skills:
+      - id: "mana_resonance"
+        name: "魔力共鳴"
+        description: "周囲のマナを吸収し、呪文の消費MPを低減させる。"
+        type: "passive"
+        cost: 0
+        cooldown: 0
+        effects:
+          - type: "mp_cost_reduction"
+            value: 0.20
+
+  thieves_guild:
+    unlock_conditions:
+      guild_level: 2
+    skills:
+      - id: "shadow_veil"
+        name: "暗影の帳"
+        description: "周囲の影に溶け込み、敵の索敵から逃れる。"
+        type: "active"
+        cost: 15
+        cooldown: 300
+        effects:
+          - type: "stealth_boost"
+            value: 50

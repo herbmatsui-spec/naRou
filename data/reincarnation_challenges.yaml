@@ -1,0 +1,26 @@
+# 転生チャレンジ定義 (Steps 67-69)
+
+reincarnation_challenges:
+  speed_ascension:
+    id: "speed_ascension"
+    name: "迅雷の転生"
+    description: "前回転生から3000ターン以内に再度レベル50に到達する。"
+    requirements:
+      turns_limit: 3000
+      level_target: 50
+    rewards:
+      gold: 50000
+      skill_points: 50
+      title: "lightning_reincarnator"
+
+  pacifist_rebirth:
+    id: "pacifist_rebirth"
+    name: "不殺の転生"
+    description: "モンスターを1体も倒さずにレベル30以上で転生する。"
+    requirements:
+      kill_count_max: 0
+      level_target: 30
+    rewards:
+      gold: 100000
+      title: "pacifist_saint"
+      item: "halo_of_peace"

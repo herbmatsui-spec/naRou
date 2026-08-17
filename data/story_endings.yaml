@@ -1,0 +1,28 @@
+# ストーリーエンディング設定 (Steps 15, 16)
+
+story_endings:
+  goblin_peace_bringer:
+    id: "goblin_peace_bringer"
+    name: "ゴブリンの和平使者"
+    description: "武力による殲滅ではなく対話と共存を選び、人と魔物の間に新たな架け橋を築いた。"
+    unlock_conditions:
+      - "spared_cubs_resolved"
+      - "karma_good_50"
+    ending_scene: "scene_peace_banquet"
+    rewards:
+      title: "peace_envoy"
+      gold: 50000
+      item: "pendant_of_unity"
+
+  ruthless_slayer_conqueror:
+    id: "ruthless_slayer_conqueror"
+    name: "冷徹なる殲滅覇者"
+    description: "一片の慈悲も無く全ての脅威を滅ぼし尽くし、絶対的恐怖による平穏をもたらした。"
+    unlock_conditions:
+      - "ruthless_extermination_resolved"
+      - "kill_counts_total_500"
+    ending_scene: "scene_iron_reign"
+    rewards:
+      title: "absolute_conqueror"
+      gold: 100000
+      item: "crown_of_domination"

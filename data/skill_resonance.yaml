@@ -1,0 +1,28 @@
+# スキル共鳴セット設定 (Steps 9, 10)
+
+resonance_sets:
+  flame_knight_set:
+    id: "flame_knight_set"
+    name: "炎の騎士セット"
+    description: "剣術と火炎魔術を同時に修めることで発生する灼熱の共鳴。"
+    required_skills:
+      - "swordsmanship"
+      - "magic_cast"
+    min_count: 2
+    resonance_effects:
+      fire_dmg_boost: 0.25
+      melee_fire_infuse: 0.15
+    visual_effect: "flame_blade_glow"
+
+  divine_guardian_set:
+    id: "divine_guardian_set"
+    name: "聖堂守護者セット"
+    description: "格闘術と神聖信仰が共鳴し、鉄壁の守護を展開する。"
+    required_skills:
+      - "martial_arts"
+      - "holy_blessing"
+    min_count: 2
+    resonance_effects:
+      pv_bonus: 20
+      healing_efficiency: 0.30
+    visual_effect: "sacred_barrier_shield"

@@ -1,0 +1,64 @@
+pet_contracts:
+  default:
+    name: "標準契約"
+    icon: "🤝"
+    max_bond: 1000
+    bond_gain:
+      feeding: 10
+      gift: 25
+      combat_together: 5
+      walking: 1
+    bond_decay:
+      neglected: 2
+      defeated: 50
+      dismissed: 100
+    bond_effects:
+      - threshold: 200
+        effects:
+          - type: "stat_bonus"
+            value:
+              strength: 2
+              agility: 2
+      - threshold: 500
+        effects:
+          - type: "skill_unlock"
+            value: "combat_assist"
+          - type: "exp_bonus"
+            value: 0.15
+      - threshold: 800
+        effects:
+          - type: "evolution_bonus"
+            value: "all_stats_boost"
+          - type: "skill_unlock"
+            value: "miracle_rescue"
+
+  soulmate:
+    name: "魂の絆契約"
+    icon: "💖"
+    max_bond: 1500
+    bond_gain:
+      feeding: 15
+      gift: 35
+      combat_together: 8
+      walking: 2
+    bond_decay:
+      neglected: 1
+      defeated: 30
+      dismissed: 200
+    bond_effects:
+      - threshold: 300
+        effects:
+          - type: "stat_bonus"
+            value:
+              strength: 4
+              agility: 4
+      - threshold: 700
+        effects:
+          - type: "skill_unlock"
+            value: "soul_resonance"
+          - type: "exp_bonus"
+            value: 0.25
+      - threshold: 1200
+        effects:
+          - type: "evolution_bonus"
+            value: "divine_awakening"

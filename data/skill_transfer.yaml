@@ -1,0 +1,33 @@
+# スキル特性転移設定 (Steps 7, 8)
+
+transfer_traits:
+  critical_boost:
+    id: "critical_boost"
+    name: "急所看破の転移"
+    description: "あるスキルの会心補正特性を別の戦闘スキルへと不可逆転移する。"
+    source_traits:
+      - "crit_bonus"
+    target_skills:
+      - "martial_arts"
+      - "swordsmanship"
+      - "magic_cast"
+    transfer_ratio: 0.80
+    cost:
+      skill_points: 20
+      gold: 5000
+    irreversible: true
+
+  life_steal_transfer:
+    id: "life_steal_transfer"
+    name: "吸血特性の転移"
+    description: "与ダメージの一部をHPとして吸収する特性を転移付与する。"
+    source_traits:
+      - "lifesteal_ratio"
+    target_skills:
+      - "martial_arts"
+      - "swordsmanship"
+    transfer_ratio: 0.70
+    cost:
+      skill_points: 30
+      gold: 10000
+    irreversible: true

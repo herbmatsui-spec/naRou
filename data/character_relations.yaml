@@ -1,0 +1,36 @@
+# キャラクター関係性テンプレート (Steps 9, 10)
+
+relationship_templates:
+  saved_villager:
+    id: "saved_villager"
+    name: "助けた村人"
+    relationship_type: "gratitude"
+    decay_rate: 0.01
+    interaction_effects:
+      - action: "talk"
+        trust_delta: 5
+        mood_delta: 10
+      - action: "gift"
+        trust_delta: 15
+        mood_delta: 20
+    benefits_at_levels:
+      level_1: "shop_discount_5"
+      level_2: "free_inn_stay"
+      level_3: "unique_quest_unlock"
+    memory_triggers:
+      - "rescue_anniversary"
+
+  rival_adventurer:
+    id: "rival_adventurer"
+    name: "好敵手の冒険者"
+    relationship_type: "rivalry"
+    decay_rate: 0.0
+    interaction_effects:
+      - action: "duel"
+        trust_delta: 10
+        mood_delta: 5
+    benefits_at_levels:
+      level_1: "combat_advice"
+      level_2: "joint_incursion"
+    memory_triggers:
+      - "boss_defeat_comparison"

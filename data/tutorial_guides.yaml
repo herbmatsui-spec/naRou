@@ -1,0 +1,37 @@
+tutorial_guides:
+  first_depth_10:
+    action_required: explore
+    id: first_depth_10
+    message: 地下10階に到達しました！敵の強さが跳ね上がります。ペットとの連携や神への祈りを駆使して突破しましょう。
+    title: 深層ダンジョンへの到達
+    trigger_condition: reach_depth_10
+  first_hunger:
+    action_required: eat_food
+    id: first_hunger
+    message: お腹が空いてきました。空腹状態ではHP自然回復が止まります。[i]のインベントリから食料を食べましょう。
+    title: 空腹への対処
+    trigger_condition: hunger_hungry
+  first_low_hp:
+    action_required: heal
+    id: first_low_hp
+    message: HPが低下しています！[Space]で安全な場所で待機して自然回復するか、[i]で回復ポーションを使いましょう。
+    title: 生命の危機
+    trigger_condition: hp_below_50
+  first_reincarnation:
+    action_required: select_legacy
+    id: first_reincarnation
+    message: 前世の記憶や能力を引き継ぎ、次世代の冒険者へと魂を転生させます。獲得した特異点と記憶の欠片を確認してください。
+    title: 輪廻転生と継承
+    trigger_condition: reincarnate_ready
+  first_skill_fusion:
+    action_required: fuse_skill
+    id: first_skill_fusion
+    message: 素材を消費してスキルを合成・強化できます。より上位の秘術やパッシブ覚醒を目指しましょう。
+    title: スキル合成の極意
+    trigger_condition: open_menu_fusion
+  welcome_start:
+    action_required: move
+    id: welcome_start
+    message: ようこそイルヴァの世界へ！まずは周囲を探索し、右下の階段 [>] からダンジョンを降りてみましょう。
+    title: 冒険の始まり
+    trigger_condition: game_start

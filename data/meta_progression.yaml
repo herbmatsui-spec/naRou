@@ -1,0 +1,41 @@
+# メタ進行システム 定義データ (Steps 4-5)
+
+meta_progression:
+  total_monsters_slain:
+    name: "総討伐数"
+    description: "冒険者生涯における全モンスター討伐数の累計"
+    icon: "💀"
+    milestones:
+      - count: 10
+        reward_gold: 500
+        reward_bonus: "damage_boost_1"
+      - count: 50
+        reward_gold: 2500
+        reward_bonus: "damage_boost_2"
+      - count: 200
+        reward_gold: 10000
+        reward_bonus: "damage_boost_3"
+
+  total_gold_accumulated:
+    name: "総獲得ゴールド"
+    description: "手に入れた総資産の累計"
+    icon: "💰"
+    milestones:
+      - count: 10000
+        reward_gold: 1000
+        reward_bonus: "gold_gain_5"
+      - count: 100000
+        reward_gold: 10000
+        reward_bonus: "gold_gain_10"
+
+  total_dungeon_depth:
+    name: "最深到達階層"
+    description: "踏破したダンジョンの最大階層"
+    icon: "🧗"
+    milestones:
+      - count: 5
+        reward_gold: 1000
+      - count: 20
+        reward_gold: 5000
+      - count: 50
+        reward_gold: 20000

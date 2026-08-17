@@ -1,0 +1,65 @@
+# スキル融合レシピ設定 (Steps 1, 2, 64-67)
+
+fusion_recipes:
+  fireball_fusion:
+    id: "fireball_fusion"
+    name: "火炎爆砕合成"
+    description: "魔矢の魔法書と火炎のエッセンスを合成し、強化版「メガファイアボール」を創出する。"
+    inputs:
+      - "magic_dart"
+      - "fire_essence"
+    output: "mega_fireball"
+    requirements:
+      player_level: 10
+      skill_level:
+        magic_cast: 5
+    success_rate: 0.85
+    failure_penalty: "lose_material"
+
+  holy_strike_fusion:
+    id: "holy_strike_fusion"
+    name: "聖光撃合成"
+    description: "格闘術と光の祈祷を融合させ、アンデッド特効の聖打撃を生み出す。"
+    inputs:
+      - "martial_arts"
+      - "holy_blessing"
+    output: "holy_strike"
+    requirements:
+      player_level: 15
+      skill_level:
+        martial_arts: 10
+    success_rate: 0.80
+    failure_penalty: "lose_material"
+
+# スキルツリー・ジョブシステム用 融合設定 (互換性確保)
+fusions:
+  spellblade:
+    name: "魔導剣"
+    description: "剣技と魔術の融合による属性斬撃"
+    required_skills: ["swordsmanship", "magic_cast"]
+    required_job: null
+    required_level: 10
+    results: ["flame_slash", "ice_slash"]
+    effects:
+      - type: "elemental_damage"
+        value: 20
+  holy_knight:
+    name: "聖騎士の加護"
+    description: "戦士と聖職の融合による攻防一体の加護"
+    required_skills: ["martial_arts", "holy_blessing"]
+    required_job: "warrior"
+    required_level: 15
+    results: ["divine_shield", "smite"]
+    effects:
+      - type: "pv_boost"
+        value: 15
+  shadow_assassin:
+    name: "影殺の極意"
+    description: "盗賊と暗殺術の融合による致命の一撃"
+    required_skills: ["short_sword", "evasion"]
+    required_job: "rogue"
+    required_level: 15
+    results: ["shadow_step", "fatal_strike"]
+    effects:
+      - type: "crit_rate"
+        value: 10

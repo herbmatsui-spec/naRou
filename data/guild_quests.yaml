@@ -1,0 +1,77 @@
+guild_quests:
+  adventurers_guild:
+    daily:
+      - id: "slay_goblins"
+        name: "ゴブリン討伐令"
+        description: "周辺に出没する凶暴なゴブリンを5体討伐せよ。"
+        requirements:
+          monster_kills:
+            goblin: 5
+        reward:
+          contribution: 50
+          gold: 100
+          item: "heal_herb"
+      - id: "slay_slimes"
+        name: "ぷちの駆除"
+        description: "畑を荒らすぷちを3体退治せよ。"
+        requirements:
+          monster_kills:
+            slime: 3
+        reward:
+          contribution: 30
+          gold: 60
+          item: "bread"
+    weekly:
+      - id: "explore_dungeon"
+        name: "迷宮の深層調査"
+        description: "ダンジョンの地下10階層まで踏破せよ。"
+        requirements:
+          dungeon_depth: 10
+        reward:
+          contribution: 300
+          gold: 1000
+          item: "steel_ingot"
+
+  mages_guild:
+    daily:
+      - id: "harvest_herbs"
+        name: "調合素材の採取"
+        description: "魔法薬の原料となる薬草を採取せよ。"
+        requirements:
+          harvest_herbs: 3
+        reward:
+          contribution: 40
+          gold: 80
+          item: "potion_heal"
+    weekly:
+      - id: "decode_spellbooks"
+        name: "古文書の読解"
+        description: "失われた古代魔導書を読み解け。"
+        requirements:
+          read_books: 5
+        reward:
+          contribution: 350
+          gold: 1200
+          item: "book_fire"
+
+  thieves_guild:
+    daily:
+      - id: "pickpocket_targets"
+        name: "夜霧の収穫"
+        description: "街の通行人から気づかれずに財布を抜き取れ。"
+        requirements:
+          pickpocket_count: 3
+        reward:
+          contribution: 60
+          gold: 200
+          item: "lockpick"
+    weekly:
+      - id: "shadow_contract"
+        name: "闇の密輸取引"
+        description: "ブラックマーケットを通じて高額な盗品を換金せよ。"
+        requirements:
+          black_market_deals: 3
+        reward:
+          contribution: 400
+          gold: 2500
+          item: "shadow_cloak"

@@ -1,0 +1,35 @@
+# プロシージャルシナリオ設定 (Steps 1, 2)
+
+scenario_templates:
+  goblin_invasion:
+    id: "goblin_invasion"
+    name: "ゴブリンの侵略"
+    description: "周辺農村を襲撃するゴブリン部隊と、その背後で蠢く不気味な呪術師の脅威。"
+    chapters:
+      - id: "chapter_1_outpost"
+        name: "第1章: 前哨地の襲撃"
+        type: "dungeon_incursion"
+        objectives:
+          kill_target: "ゴブリン"
+          count: 5
+        choices:
+          - id: "save_farm_survivors"
+            description: "囚われた農民たちを救出する"
+            consequence: "farm_survivor_saved"
+          - id: "rush_boss"
+            description: "救出を無視して敵指揮官を強襲する"
+            consequence: "boss_slain_early"
+
+      - id: "chapter_2_shaman"
+        name: "第2章: 邪悪なる儀式"
+        type: "ritual_disruption"
+        objectives:
+          kill_target: "ゴブリン呪術師"
+          count: 1
+        choices:
+          - id: "purify_altar"
+            description: "祭壇を浄化し呪いを解く"
+            consequence: "altar_purified"
+          - id: "absorb_power"
+            description: "邪悪な魔力を自らに吸収する"
+            consequence: "dark_power_absorbed"

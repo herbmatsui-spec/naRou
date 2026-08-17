@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elona Masterpiece - チュートリアル</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+            background-color: #0b0d17;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            background-image: radial-gradient(circle at top right, #1a1525, #0b0d17);
+        }
+        
+        .game-container {
+            width: 1000px;
+            height: 600px;
+            background: rgba(20, 24, 38, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .map-area {
+            flex-grow: 1;
+            font-family: monospace;
+            font-size: 20px;
+            line-height: 1;
+            padding: 20px;
+            position: relative;
+        }
+
+        .entity {
+            position: absolute;
+            transition: all 0.3s ease;
+        }
+        .player { color: #ffffff; text-shadow: 0 0 8px #ffffff; }
+        .pet { color: #ff99cc; text-shadow: 0 0 8px #ff99cc; }
+        .item { color: #a0a0a0; }
+
+        .ui-panel {
+            background: rgba(10, 12, 16, 0.95);
+            border-top: 1px solid #3c465a;
+            padding: 15px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 180px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #d2d2d2;
+        }
+        
+        .log-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            font-size: 14px;
+            overflow: hidden;
+        }
+
+        .log-line {
+            margin: 2px 0;
+            opacity: 0.8;
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        .inventory-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            background: rgba(20, 20, 30, 0.95);
+            border: 1px solid #4a4a6a;
+            border-radius: 8px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.8);
+            padding: 20px;
+            display: none;
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+
+        .inventory-modal.pet-mode {
+            background: rgba(30, 20, 25, 0.95);
+            border-color: #ff99cc;
+            box-shadow: 0 15px 50px rgba(255, 153, 204, 0.1);
+        }
+
+        .inv-header {
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #c8c8ff;
+        }
+        .pet-mode .inv-header { color: #ff99cc; }
+
+        .inv-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .inv-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 10px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .inv-item.selected {
+            background: rgba(255,255,180,0.2);
+            color: #ffffb4;
+            border-left: 3px solid #ffffb4;
+        }
+        
+        .inv-item .equip-tag {
+            color: #82ff82;
+            font-size: 12px;
+            display: none;
+        }
+        
+        .inv-item.equipped .equip-tag {
+            display: inline;
+        }
+
+        /* チュートリアル指示パネル */
+        .tutorial-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 320px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid #38bdf8;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+            z-index: 20;
+        }
+        
+        .tutorial-title {
+            color: #38bdf8;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-next {
+            background: #38bdf8;
+            color: #0f172a;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        .btn-next:hover {
+            background: #7dd3fc;
+            box-shadow: 0 0 10px #7dd3fc;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .highlight-text {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <!-- マップ描画エリア -->
+        <div class="map-area" id="mapArea">
+            <!-- 背景の適当なドット -->
+            <div style="color: #333; position:absolute; top:20px; left:20px;">........<br>........<br>........<br>........</div>
+            <!-- エンティティ -->
+            <div class="entity player" id="player" style="left: 60px; top: 60px;">@</div>
+            <div class="entity pet" id="pet" style="left: 80px; top: 60px;">p</div>
+        </div>
+
+        <!-- インベントリモーダル -->
+        <div class="inventory-modal" id="inventoryModal">
+            <div class="inv-header" id="invTitle">所持品 [ 全て ]</div>
+            <div class="inv-list" id="invList">
+                <div class="inv-item selected" id="itemSword">
+                    <span>a) 使い古しの長剣 <span class="equip-tag">[装]</span></span>
+                    <span style="color:#888;">2.5s</span>
+                </div>
+                <div class="inv-item" id="itemPotion">
+                    <span>b) 軽傷治癒のポーション</span>
+                    <span style="color:#888;">0.2s</span>
+                </div>
+            </div>
+            <div style="font-size: 12px; color: #82ff82;" id="invFooter">重量:2.7/60.0s (左右:タブ e:使 d:置 x:装備 g:渡)</div>
+        </div>
+
+        <!-- 下部UIパネル -->
+        <div class="ui-panel">
+            <div class="status-bar">
+                <span style="color:#ffffa0;">名無しの冒険者 [普通]</span>
+                <span style="color:#50ff50;">HP:85/85</span>
+                <span style="color:#50a0ff;">MP:30/30</span>
+                <span style="color:#ffd700;">Lv:5 1200G</span>
+            </div>
+            <div class="status-bar">
+                <span style="color:#ff99cc;">【妹分】シエル HP:60/60</span>
+                <span style="color:#b4ffff;">カルマ:0 Turn:154</span>
+            </div>
+            <div class="log-area" id="logArea">
+                <div class="log-line" style="color: #ffff78;">『Elona: Masterpiece Edition』の世界へようこそ！</div>
+            </div>
+        </div>
+
+        <!-- チュートリアル指示 -->
+        <div class="tutorial-overlay">
+            <div class="tutorial-title">Tutorial <span id="stepCounter">1/4</span></div>
+            <div id="tutorialDesc" class="text-sm text-gray-200 leading-relaxed">
+                ようこそ！このチュートリアルでは、新機能<span class="highlight-text">「ペットの武装化」</span>を体験します。<br><br>
+                まずは自分のインベントリを開き、シエルに武器を渡してみましょう。
+            </div>
+            <button class="btn-next" id="btnNext">【i】キーでカバンを開く (Next)</button>
+        </div>
+    </div>
+
+    <script>
+        const steps = [
+            {
+                // Step 1: Open Inventory
+                title: "Tutorial 2/4",
+                desc: "あなたのカバンが開きました。<br><br>「使い古しの長剣」を選び、<span class='highlight-text'>[g]キー(渡す)</span>で隣にいるシエルにプレゼントしましょう。",
+                btnText: "【g】キーで渡す (Next)",
+                action: () => {
+                    document.getElementById('inventoryModal').style.display = 'block';
+                    addLog("インベントリを開いた。", "#cccccc");
+                }
+            },
+            {
+                // Step 2: Give Item
+                title: "Tutorial 3/4",
+                desc: "長剣をシエルに渡しました！<br><br>次は<span class='highlight-text'>[P]キー(Shift+P)</span>を押して、シエルのカバンを開いてみましょう。",
+                btnText: "【P】キーでシエルのカバンを開く (Next)",
+                action: () => {
+                    document.getElementById('itemSword').style.display = 'none';
+                    addLog("使い古しの長剣をシエルに渡した。", "#c8ffc8");
+                }
+            },
+            {
+                // Step 3: Open Pet Inventory
+                title: "Tutorial 4/4",
+                desc: "シエルのカバン（ピンク色）が開きました！<br><br>長剣を選んで<span class='highlight-text'>[x]キー(装備)</span>を押すと、シエルが武器を構えます！",
+                btnText: "【x】キーで装備させる (Next)",
+                action: () => {
+                    const modal = document.getElementById('inventoryModal');
+                    modal.classList.add('pet-mode');
+                    document.getElementById('invTitle').innerText = "妹分 シエルの所持品 [ 全て ]";
+                    document.getElementById('invFooter').innerText = "重量:2.5/30.0s (左右:タブ e:使 d:置 x:装備 g:渡)";
+                    document.getElementById('invFooter').style.color = "#ffb4c8";
+                    
+                    // Show item again in pet inventory, not equipped yet
+                    const sword = document.getElementById('itemSword');
+                    sword.style.display = 'flex';
+                    sword.classList.remove('equipped');
+                    document.getElementById('itemPotion').style.display = 'none'; // Pet doesn't have potion
+                    
+                    addLog("シエルのインベントリを確認する。", "#ff99cc");
+                }
+            },
+            {
+                // Step 4: Equip and Finish
+                title: "Tutorial Complete!",
+                desc: "完璧です！シエルが長剣を装備しました。<br>これでシエルの近接攻撃力が格段に上がり、戦闘で大活躍してくれます！<br><br>本編をお楽しみください！",
+                btnText: "チュートリアル終了 (Finish)",
+                action: () => {
+                    document.getElementById('itemSword').classList.add('equipped');
+                    addLog("シエルは 使い古しの長剣 を装備した！", "#c8c8ff");
+                    addLog("【シエル】「お兄ちゃん、ありがとう！この剣でやっつけるね！」", "#ff99cc");
+                }
+            }
+        ];
+
+        let currentStep = 0;
+
+        function addLog(text, color) {
+            const logArea = document.getElementById('logArea');
+            const el = document.createElement('div');
+            el.className = 'log-line';
+            el.style.color = color;
+            el.innerText = text;
+            logArea.appendChild(el);
+            if (logArea.children.length > 5) {
+                logArea.removeChild(logArea.firstChild);
+            }
+        }
+
+        document.getElementById('btnNext').addEventListener('click', () => {
+            if (currentStep < steps.length) {
+                const step = steps[currentStep];
+                step.action();
+                document.getElementById('tutorialDesc').innerHTML = step.desc;
+                document.getElementById('btnNext').innerText = step.btnText;
+                document.getElementById('stepCounter').innerText = step.title.replace('Tutorial ', '');
+                currentStep++;
+            } else {
+                document.getElementById('btnNext').innerText = "完了 (Recorded!)";
+                document.getElementById('btnNext').style.background = "#22c55e";
+                document.getElementById('inventoryModal').style.display = 'none';
+                addLog("チュートリアルを終了しました。", "#aaaaaa");
+            }
+        });
+    </script>
+</body>
+</html>

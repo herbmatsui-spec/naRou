@@ -1,0 +1,29 @@
+# レガシースキル定義 (Steps 60-62)
+
+legacy_skills:
+  soul_memory:
+    id: "soul_memory"
+    min_reincarnation: 1
+    name: "魂の記憶"
+    description: "前世の記憶によりスキル経験値獲得量が15%増加する。"
+    effect_type: "skill_exp_boost"
+    effect_value: 0.15
+    unlock_condition: "reincarnation_1"
+
+  reincarnated_might:
+    id: "reincarnated_might"
+    min_reincarnation: 2
+    name: "転生の膂力"
+    description: "転生を重ねた肉体により全物理近接ダメージが20%増加する。"
+    effect_type: "physical_dmg_boost"
+    effect_value: 0.20
+    unlock_condition: "reincarnation_2"
+
+  eternal_will:
+    id: "eternal_will"
+    min_reincarnation: 3
+    name: "不滅の意思"
+    description: "致死ダメージを受けた際にHP1で踏みとどまる（1日1回）。"
+    effect_type: "death_resist"
+    effect_value: 1.0
+    unlock_condition: "reincarnation_3"

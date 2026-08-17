@@ -1,0 +1,21 @@
+karma:
+  alignment:
+    law_chaos:
+      range: [-100, 100]
+      neutral: 0
+    good_evil:
+      range: [-100, 100]
+      neutral: 0
+  actions:
+    defeat_monster:
+      law_chaos: 0
+      good_evil: 1
+    donate_to_temple:
+      law_chaos: 1
+      good_evil: 2
+    steal:
+      law_chaos: -1
+      good_evil: -2
+    murder_innocent:
+      law_chaos: -2
+      good_evil: -5

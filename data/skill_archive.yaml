@@ -1,0 +1,19 @@
+# スキルアーカイブ設定 (Steps 17, 18)
+
+archive_categories:
+  elemental_spells:
+    id: "elemental_spells"
+    name: "元素魔法アーカイブ"
+    description: "世界に伝わる四大元素魔法の記録とコンプリート報酬。"
+    skills:
+      - "magic_dart"
+      - "fireball"
+      - "ice_bolt"
+      - "lightning"
+    completion_rewards:
+      gold: 20000
+      title: "element_master"
+      item: "elemental_orb"
+    archive_entries:
+      fire_mastery: "火炎の真理を修めし者"
+      ice_mastery: "絶対零度を操りし者"

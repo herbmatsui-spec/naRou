@@ -1,0 +1,55 @@
+{
+  "summary": "PASS",
+  "scenarios": {
+    "lvl1_vs_slime": {
+      "player_level": 1,
+      "monster_type": "slime",
+      "trials": 100,
+      "win_rate": 1.0,
+      "expected_win_rate": 0.95,
+      "win_rate_alert": false,
+      "avg_turns": 3.46,
+      "std_dev_turns": 1.2,
+      "avg_dmg_dealt": 17.58,
+      "avg_dmg_taken": 4.41,
+      "one_shot_count": 8,
+      "stalled_count": 0,
+      "is_balanced": true
+    },
+    "lvl3_vs_goblin": {
+      "player_level": 3,
+      "monster_type": "goblin",
+      "trials": 100,
+      "win_rate": 1.0,
+      "expected_win_rate": 0.85,
+      "win_rate_alert": false,
+      "avg_turns": 4.69,
+      "std_dev_turns": 1.16,
+      "avg_dmg_dealt": 27.52,
+      "avg_dmg_taken": 7.52,
+      "one_shot_count": 0,
+      "stalled_count": 0,
+      "is_balanced": true
+    },
+    "lvl5_vs_orc": {
+      "player_level": 5,
+      "monster_type": "orc",
+      "trials": 100,
+      "win_rate": 1.0,
+      "expected_win_rate": 0.7,
+      "win_rate_alert": false,
+      "avg_turns": 7.36,
+      "std_dev_turns": 1.31,
+      "avg_dmg_dealt": 48.6,
+      "avg_dmg_taken": 16.19,
+      "one_shot_count": 0,
+      "stalled_count": 0,
+      "is_balanced": true
+    }
+  },
+  "balance_standards": {
+    "status": "PASS",
+    "issues": [],
+    "standards_loaded": true
+  }
+}

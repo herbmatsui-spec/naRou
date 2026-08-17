@@ -1,0 +1,21 @@
+# スキル専門化パス設定 (Steps 13, 14)
+
+specialization_paths:
+  fireball_specialization:
+    id: "fireball_specialization"
+    name: "火炎魔導専門化パス"
+    description: "基礎魔法から破壊力特化または範囲殲滅特化へと分岐進化する。"
+    base_skill: "magic_cast"
+    branches:
+      - id: "inferno_burst"
+        name: "業火破裂特化"
+        description: "単体火力と爆発力を極限まで高めた火炎術。"
+        bonuses:
+          single_target_dmg: 0.50
+          burn_duration: 3
+      - id: "hellfire_storm"
+        name: "紅蓮烈風特化"
+        description: "広範囲の敵を同時に焼き尽くす殲滅火炎術。"
+        bonuses:
+          aoe_radius: 2
+          aoe_dmg: 0.35

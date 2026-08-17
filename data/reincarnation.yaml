@@ -1,0 +1,6 @@
+reincarnation:
+  base_requirements:
+    min_level: 50
+    max_level: 200
+    stat_bonus_per_reincarnation: 5
+    level_reset_multiplier: 0.1

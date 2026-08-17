@@ -1,0 +1,14 @@
+npc_types:
+  monster:
+    aggressive: true
+    trade: false
+  villager:
+    aggressive: false
+    trade: true
+relationships:
+  monster:
+    monster: 20
+    villager: -100
+  villager:
+    monster: -50
+    villager: 10

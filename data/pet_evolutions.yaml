@@ -1,0 +1,81 @@
+pet_evolutions:
+  puppy:
+    name: "子犬"
+    evolutions:
+      - id: "hound"
+        name: "猟犬"
+        requirements:
+          level: 15
+          bond: 300
+          items: ["leather", "meat"]
+          location: "forest"
+        stat_changes:
+          strength: 5
+          agility: 8
+          hp: 20
+        skill_changes:
+          add: ["tracking", "bite"]
+          remove: ["playful_bark"]
+        evolution_bonus:
+          type: "permanent_exp_bonus"
+          value: 0.10
+
+      - id: "guard_dog"
+        name: "警備犬"
+        requirements:
+          level: 15
+          bond: 400
+          items: ["metal_ingot", "magic_crystal"]
+          location: "town"
+        stat_changes:
+          strength: 10
+          constitution: 5
+          hp: 30
+        skill_changes:
+          add: ["guard_bark", "intercept"]
+          remove: ["playful_bark"]
+        evolution_bonus:
+          type: "permanent_gold_find"
+          value: 0.15
+
+      - id: "magic_hound"
+        name: "魔導猟犬"
+        requirements:
+          level: 20
+          bond: 500
+          items: ["magic_herb", "mana_potion"]
+          location: "magic_tower"
+          skills: ["magic_basic"]
+        stat_changes:
+          intelligence: 8
+          agility: 5
+          mp: 25
+        skill_changes:
+          add: ["magic_bite", "mana_sense"]
+          remove: ["bite"]
+        evolution_bonus:
+          type: "hybrid_bonus"
+          value:
+            strength: 3
+            intelligence: 3
+
+  kitten:
+    name: "子猫"
+    evolutions:
+      - id: "panther"
+        name: "黒豹"
+        requirements:
+          level: 15
+          bond: 300
+          items: ["fish", "shadow_stone"]
+          location: "cave"
+        stat_changes:
+          agility: 10
+          strength: 4
+          hp: 15
+        skill_changes:
+          add: ["stealth_pounce", "night_eye"]
+          remove: ["purr"]
+        evolution_bonus:
+          type: "critical_bonus"
+          value: 0.10

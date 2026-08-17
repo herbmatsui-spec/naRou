@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elona Masterpiece - Emoji Visual Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+            background-color: #080a10;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            background-image: radial-gradient(circle at top right, #1d192f, #080a10);
+        }
+
+        .game-window {
+            width: 1020px;
+            height: 620px;
+            background: rgba(18, 22, 34, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(255,255,255,0.06);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            backdrop-filter: blur(12px);
+            overflow: hidden;
+        }
+
+        .dungeon-grid {
+            flex-grow: 1;
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            gap: 2px;
+            padding: 20px;
+            font-size: 24px;
+            user-select: none;
+            background: #0d111a;
+            position: relative;
+        }
+
+        .tile {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.25s ease;
+        }
+
+        .tile-wall {
+            background: rgba(40, 30, 30, 0.4);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        .tile-floor {
+            color: #4b5563;
+            font-size: 14px;
+        }
+
+        .entity-cell {
+            position: relative;
+            transform: scale(1.15);
+            filter: drop-shadow(0 0 6px rgba(255,255,255,0.3));
+            animation: pulse 1.5s infinite alternate ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1.1); }
+            100% { transform: scale(1.25); }
+        }
+
+        .ui-dock {
+            background: rgba(10, 13, 20, 0.95);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 14px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            height: 180px;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .log-box {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            font-size: 14px;
+            overflow: hidden;
+            gap: 4px;
+        }
+
+        .log-msg {
+            animation: slideUp 0.3s ease-out forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .showcase-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 330px;
+            background: rgba(15, 23, 42, 0.94);
+            border: 1px solid #38bdf8;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(56, 189, 248, 0.25);
+            z-index: 30;
+        }
+
+        .btn-demo {
+            background: linear-gradient(135deg, #38bdf8, #2563eb);
+            color: #ffffff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-demo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(56, 189, 248, 0.6);
+        }
+
+        .highlight {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-window">
+        <!-- 20x10 マップグリッド -->
+        <div class="dungeon-grid" id="grid">
+            <!-- JavaScriptで動的生成 -->
+        </div>
+
+        <!-- 下部ステータス/ログUI -->
+        <div class="ui-dock">
+            <div class="status-row">
+                <span class="text-yellow-200">🧙 名無しの冒険者 [満腹]</span>
+                <span class="text-green-400">HP: 110/110</span>
+                <span class="text-blue-400">MP: 45/45</span>
+                <span class="text-yellow-400">Lv:6  2,450G 🪙</span>
+                <span class="text-purple-300">信仰: 癒しのジュア ⛩️</span>
+            </div>
+            <div class="status-row">
+                <span class="text-pink-300">👧【妹分】シエル HP: 75/75 (武器: 🗡️長剣)</span>
+                <span class="text-cyan-300">カルマ: +20  Turn: 248</span>
+                <span class="text-gray-400">1年目 8月15日 B1F ⏬</span>
+            </div>
+            <div class="log-box" id="logBox">
+                <div class="log-msg text-yellow-300">『Elona: Masterpiece Edition』絵文字ビジュアルモード起動！</div>
+            </div>
+        </div>
+
+        <!-- デモ進行パネル -->
+        <div class="showcase-overlay">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-sky-400 tracking-wider uppercase">Visual Showcase</span>
+                <span class="text-xs bg-sky-900/60 text-sky-300 px-2 py-0.5 rounded-full" id="stepTag">Step 1/4</span>
+            </div>
+            <h3 class="text-base font-bold text-white mb-2" id="stepTitle">ダンジョン地形とオブジェクト</h3>
+            <p class="text-sm text-gray-300 leading-relaxed mb-1" id="stepDesc">
+                壁が <span class="highlight">🧱</span>、階段が <span class="highlight">⏬</span>、祭壇が <span class="highlight">⛩️</span>、採取ポイントが <span class="highlight">🌿 🍄 💎</span> で鮮やかに描画されています！
+            </p>
+            <button class="btn-demo" id="btnNext">モンスターと遭遇する (Next ➔)</button>
+        </div>
+    </div>
+
+    <script>
+        // 20x10 マップ定義 (初期)
+        const MAP_W = 20;
+        const MAP_H = 10;
+        let gridData = [
+            ["🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱"],
+            ["🧱","▫️","▫️","▫️","🧱","▫️","▫️","▫️","▫️","▫️","▫️","▫️","🧱","▫️","▫️","▫️","▫️","▫️","⛩️","🧱"],
+            ["🧱","▫️","🧙","👧","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","🧱"],
+            ["🧱","▫️","▫️","▫️","🧱","▫️","▫️","▫️","🌿","▫️","▫️","▫️","🧱","▫️","▫️","▫️","▫️","▫️","▫️","🧱"],
+            ["🧱","🧱","▫️","🧱","🧱","🧱","▫️","🧱","🧱","🧱","🧱","🧱","🧱","🧱","▫️","🧱","🧱","🧱","🧱","🧱"],
+            ["🧱","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","🧱"],
+            ["🧱","▫️","🍄","▫️","▫️","▫️","▫️","▫️","▫️","▫️","💎","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","🧱"],
+            ["🧱","▫️","▫️","▫️","🌊","🌊","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","🪤","▫️","▫️","▫️","▫️","🧱"],
+            ["🧱","▫️","▫️","▫️","🌊","🌊","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","▫️","⏬","🧱"],
+            ["🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱"]
+        ];
+
+        function renderGrid() {
+            const container = document.getElementById('grid');
+            container.innerHTML = '';
+            for (let y = 0; y < MAP_H; y++) {
+                for (let x = 0; x < MAP_W; x++) {
+                    const char = gridData[y][x];
+                    const div = document.createElement('div');
+                    div.className = 'tile';
+                    if (char === "🧱") div.classList.add('tile-wall');
+                    else if (char === "▫️") div.classList.add('tile-floor');
+                    else div.classList.add('entity-cell');
+                    div.innerText = char;
+                    container.appendChild(div);
+                }
+            }
+        }
+
+        function addLog(text, color = "#ffffff") {
+            const logBox = document.getElementById('logBox');
+            const div = document.createElement('div');
+            div.className = 'log-msg';
+            div.style.color = color;
+            div.innerText = text;
+            logBox.appendChild(div);
+            if (logBox.children.length > 5) {
+                logBox.removeChild(logBox.firstChild);
+            }
+        }
+
+        const stages = [
+            {
+                tag: "Step 2/4",
+                title: "モンスターとNPCの登場",
+                desc: "部屋を進むと、スライムのぷち <span class='highlight'>🍮</span> やオーク <span class='highlight'>👹</span>、かたつむり少女グウェン <span class='highlight'>🐌</span> が現れました！",
+                btn: "シエルと一緒に戦闘する (Next ➔)",
+                action: () => {
+                    gridData[2][6] = "🍮";
+                    gridData[3][8] = "👹";
+                    gridData[1][14] = "🐌";
+                    gridData[2][2] = "▫️";
+                    gridData[2][3] = "▫️";
+                    gridData[2][4] = "🧙";
+                    gridData[2][5] = "👧";
+                    renderGrid();
+                    addLog("野生の 🍮ぷち と 👹オーク が現れた！", "#ff9999");
+                    addLog("かたつむり少女『グウェン』🐌「ふにゃ〜？」", "#ffb4d6");
+                }
+            },
+            {
+                tag: "Step 3/4",
+                title: "戦闘とドロップアイテム",
+                desc: "シエルが <span class='highlight'>🗡️長剣</span> でオークを一撃粉砕！床に <span class='highlight'>🧪ポーション</span> や <span class='highlight'>🍞パン</span>、<span class='highlight'>🪙金貨</span> がドロップしました！",
+                btn: "採掘と採取を体験する (Next ➔)",
+                action: () => {
+                    gridData[2][6] = "▫️"; // ぷち撃破
+                    gridData[3][8] = "🧪"; // オークがポーションをドロップ
+                    gridData[3][9] = "🍞"; // パン
+                    gridData[3][7] = "🪙"; // 金貨
+                    gridData[2][5] = "▫️";
+                    gridData[2][6] = "👧"; // シエル前進
+                    renderGrid();
+                    addLog("シエル「えいっ！」🗡️ 👹オーク に 48ダメージ！撃破！", "#ff99cc");
+                    addLog("床に 🧪軽傷治療のポーション と 🍞パン が落ちた！", "#c8ffc8");
+                }
+            },
+            {
+                tag: "Step 4/4",
+                title: "採掘・採取と最深部への階段",
+                desc: "壁を掘って <span class='highlight'>🪨鉄鉱石</span> を入手し、ハーブ <span class='highlight'>🌿</span> を採取！奥の階段 <span class='highlight'>⏬</span> から次なる階層へ！",
+                btn: "デモ完了 (Complete!)",
+                action: () => {
+                    gridData[3][8] = "▫️";
+                    gridData[3][9] = "▫️";
+                    gridData[3][7] = "▫️";
+                    gridData[2][4] = "▫️";
+                    gridData[2][6] = "▫️";
+                    gridData[7][17] = "🧙";
+                    gridData[7][18] = "👧";
+                    gridData[4][2] = "🪨"; // 掘り出した鉱石
+                    renderGrid();
+                    addLog("壁を掘り崩した！ 🪨鉄鉱石 を発見！", "#e0e0ff");
+                    addLog("🌿薬草 を採取した！ (所持品に追加)", "#99ff99");
+                    addLog("階段 ⏬ を発見した！ 次のフロアへ進めます。", "#ffd700");
+                }
+            }
+        ];
+
+        let currentStage = 0;
+        renderGrid();
+
+        document.getElementById('btnNext').addEventListener('click', () => {
+            if (currentStage < stages.length) {
+                const s = stages[currentStage];
+                s.action();
+                document.getElementById('stepTag').innerText = s.tag;
+                document.getElementById('stepTitle').innerText = s.title;
+                document.getElementById('stepDesc').innerHTML = s.desc;
+                document.getElementById('btnNext').innerText = s.btn;
+                currentStage++;
+            } else {
+                document.getElementById('btnNext').innerText = "🎉 All Emojis Verified!";
+                document.getElementById('btnNext').style.background = "linear-gradient(135deg, #10b981, #059669)";
+                addLog("絵文字ビジュアルデモが正常に完了しました！", "#34d399");
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+guilds:
+  adventurers_guild:
+    name: "冒険者ギルド"
+    icon: "🏰"
+    description: "モンスター討伐や遺跡探索を担う冒険者たちの互助組織。"
+    hall_location: "vernis"
+    facilities:
+      - "quest_board"
+      - "storage"
+      - "training_ground"
+    membership_benefits:
+      - type: "daily_quest_bonus"
+        value: 0.20
+      - type: "item_discount"
+        value: 0.10
+    rank_requirements:
+      novice: 0
+      member: 100
+      veteran: 500
+      officer: 2000
+      leader: 5000
+    max_members: 100
+
+  mages_guild:
+    name: "魔術士ギルド"
+    icon: "🔮"
+    description: "魔導書の解読や古代魔法の探求を行う魔導士の集会所。"
+    hall_location: "lumiest"
+    facilities:
+      - "spell_lab"
+      - "library"
+    membership_benefits:
+      - type: "spellbook_read_bonus"
+        value: 0.25
+    rank_requirements:
+      novice: 0
+      member: 150
+      veteran: 600
+      officer: 2500
+      leader: 6000
+    max_members: 60
+
+  thieves_guild:
+    name: "盗賊ギルド"
+    icon: "🗡"
+    description: "裏社会の掟と情報を取り仕切る夜の住人たちの組織。"
+    hall_location: "derphy"
+    facilities:
+      - "black_market"
+      - "fence"
+    membership_benefits:
+      - type: "stolen_goods_sell_bonus"
+        value: 0.30
+    rank_requirements:
+      novice: 0
+      member: 100
+      veteran: 500
+      officer: 2000
+      leader: 5000
+    max_members: 80

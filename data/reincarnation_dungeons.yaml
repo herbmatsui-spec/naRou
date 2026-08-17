@@ -1,0 +1,13 @@
+dungeons:
+  first_life_trial:
+    min_reincarnation: 1
+    max_reincarnation: 5
+    name: 最初の試練
+    description: 転生1回目のプレイヤーのための試練ダンジョン
+    floors: 5
+    rewards:
+      - small_gold_pouch
+      - healing_herb
+    unlock_condition:
+      reincarnation_count: 1
+    is_arena: false

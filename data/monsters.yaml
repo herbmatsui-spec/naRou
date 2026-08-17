@@ -1,0 +1,245 @@
+# ==============================================================================
+# Elona Masterpiece Edition - Complete Monsters Catalog (data/monsters.yaml)
+# AI Types: aggressive, coward, tactical, caster, support, boss
+# ==============================================================================
+
+# --- 初級モンスター (Tier 1: Floor 1-3) ---
+slime:
+  name: "ぷち"
+  char: "🍮"
+  color: [100, 255, 100]
+  speed: 50
+  max_hp: 14
+  min_floor: 1
+  max_floor: 4
+  ai_type: "coward"
+  skills: []
+  attributes:
+    strength: 5
+    endurance: 6
+    dexterity: 6
+    perception: 5
+    learning: 4
+    will: 5
+    magic: 3
+    charisma: 8
+
+red_slime:
+  name: "ベスぷち"
+  char: "🍮"
+  color: [255, 100, 100]
+  speed: 60
+  max_hp: 22
+  min_floor: 2
+  max_floor: 6
+  ai_type: "aggressive"
+  skills: []
+  attributes:
+    strength: 8
+    endurance: 8
+    dexterity: 7
+    perception: 6
+    learning: 4
+    will: 6
+    magic: 4
+    charisma: 8
+
+snail:
+  name: "かたつむり"
+  char: "🐌"
+  color: [200, 180, 140]
+  speed: 35
+  max_hp: 10
+  min_floor: 1
+  max_floor: 3
+  ai_type: "coward"
+  attributes:
+    strength: 3
+    endurance: 4
+    dexterity: 3
+    perception: 5
+    learning: 3
+    will: 3
+    magic: 2
+    charisma: 10
+
+goblin:
+  name: "ゴブリン"
+  char: "👺"
+  color: [200, 100, 50]
+  speed: 70
+  max_hp: 24
+  min_floor: 1
+  max_floor: 5
+  ai_type: "aggressive"
+  skills: ["throw_stone"]
+  attributes:
+    strength: 8
+    endurance: 8
+    dexterity: 8
+    perception: 7
+    learning: 5
+    will: 6
+    magic: 4
+    charisma: 4
+
+kobold:
+  name: "コボルト"
+  char: "🐺"
+  color: [180, 130, 80]
+  speed: 80
+  max_hp: 20
+  min_floor: 1
+  max_floor: 5
+  ai_type: "tactical"
+  attributes:
+    strength: 7
+    endurance: 6
+    dexterity: 10
+    perception: 9
+    learning: 5
+    will: 5
+    magic: 3
+    charisma: 4
+
+# --- 中級モンスター (Tier 2: Floor 4-8) ---
+orc:
+  name: "オーク"
+  char: "👹"
+  color: [150, 150, 50]
+  speed: 65
+  max_hp: 45
+  min_floor: 3
+  max_floor: 9
+  ai_type: "aggressive"
+  skills: ["power_bash"]
+  attributes:
+    strength: 14
+    endurance: 12
+    dexterity: 6
+    perception: 6
+    learning: 4
+    will: 8
+    magic: 3
+    charisma: 3
+
+hound_fire:
+  name: "ファイアハウンド"
+  char: "🐕"
+  color: [255, 80, 20]
+  speed: 95
+  max_hp: 36
+  min_floor: 4
+  max_floor: 10
+  ai_type: "tactical"
+  skills: ["fire_breath"]
+  attributes:
+    strength: 10
+    endurance: 9
+    dexterity: 14
+    perception: 12
+    learning: 5
+    will: 8
+    magic: 8
+    charisma: 5
+
+rogue_thief:
+  name: "辻強盗"
+  char: "🥷"
+  color: [120, 120, 160]
+  speed: 85
+  max_hp: 40
+  min_floor: 4
+  max_floor: 12
+  ai_type: "tactical"
+  skills: ["steal_gold", "backstab"]
+  attributes:
+    strength: 11
+    endurance: 10
+    dexterity: 15
+    perception: 13
+    learning: 8
+    will: 7
+    magic: 5
+    charisma: 6
+
+novice_wizard:
+  name: "見習い魔法使い"
+  char: "🧙"
+  color: [100, 150, 255]
+  speed: 70
+  max_hp: 28
+  min_floor: 3
+  max_floor: 9
+  ai_type: "caster"
+  skills: ["cast_dart", "heal_self"]
+  attributes:
+    strength: 6
+    endurance: 6
+    dexterity: 8
+    perception: 11
+    learning: 14
+    will: 12
+    magic: 15
+    charisma: 8
+
+# --- 上級モンスター・ボス (Tier 3: Floor 8+) ---
+minotaur:
+  name: "ミノタウロス"
+  char: "🐂"
+  color: [200, 60, 40]
+  speed: 80
+  max_hp: 95
+  min_floor: 7
+  max_floor: 20
+  ai_type: "aggressive"
+  skills: ["heavy_cleave", "roar"]
+  attributes:
+    strength: 22
+    endurance: 20
+    dexterity: 10
+    perception: 10
+    learning: 5
+    will: 12
+    magic: 4
+    charisma: 4
+
+lich:
+  name: "リッチ"
+  char: "💀"
+  color: [160, 80, 255]
+  speed: 85
+  max_hp: 80
+  min_floor: 9
+  max_floor: 30
+  ai_type: "caster"
+  skills: ["cast_fireball", "summon_undead", "drain_mp"]
+  attributes:
+    strength: 8
+    endurance: 10
+    dexterity: 12
+    perception: 16
+    learning: 20
+    will: 18
+    magic: 24
+    charisma: 10
+
+dragon_red:
+  name: "レッドドラゴン"
+  char: "🐉"
+  color: [255, 40, 40]
+  speed: 90
+  max_hp: 220
+  min_floor: 12
+  max_floor: 50
+  ai_type: "boss"
+  skills: ["inferno_breath", "tail_swipe", "intimidate"]
+  attributes:
+    strength: 30
+    endurance: 28
+    dexterity: 14
+    perception: 18
+    learning: 12
+    will: 20
+    magic: 18
+    charisma: 16

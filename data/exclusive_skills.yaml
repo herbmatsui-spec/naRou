@@ -1,0 +1,42 @@
+exclusive_skills:
+  shield_bash:
+    id: "shield_bash"
+    name: "シールドバッシュ"
+    job: "warrior"
+    type: "active"
+    mp_cost: 6
+    cooldown: 4
+    description: "盾を構えて突撃し、敵に大打撃とスタンを与える。"
+    effects:
+      damage_formula: "str * 1.5"
+      status: "paralysis"
+      duration: 3
+    inherit_chance: 0.3
+
+  iaijutsu:
+    id: "iaijutsu"
+    name: "居合術"
+    job: "swordmaster"
+    type: "active"
+    mp_cost: 12
+    cooldown: 5
+    description: "神速の抜刀術。敵の防御を無視し、確実に致命傷を負わせる。"
+    effects:
+      damage_formula: "dex * 2.5 + str * 1.2"
+      crit_guaranteed: true
+      ignore_defense: true
+    inherit_chance: 0.2
+
+  meteor:
+    id: "meteor"
+    name: "メテオ"
+    job: "archmage"
+    type: "active"
+    mp_cost: 45
+    cooldown: 12
+    description: "天空より巨大隕石を召喚し、広範囲を壊滅させる超位魔法。"
+    effects:
+      damage_formula: "magic * 4.0"
+      aoe_radius: 3
+      status: "burn"
+    inherit_chance: 0.1

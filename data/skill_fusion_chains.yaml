@@ -1,0 +1,20 @@
+# スキル融合連鎖設定 (Steps 15, 16)
+
+fusion_chains:
+  ultimate_dragon_slayer:
+    id: "ultimate_dragon_slayer"
+    name: "究極竜殺し融合連鎖"
+    description: "複数の段階的なスキル融合を経て完成する最強の対竜戦闘術。"
+    stages:
+      - stage: 1
+        name: "竜鱗砕き"
+        recipe_id: "dragon_scale_breaker"
+        output_skill: "dragon_breaker"
+      - stage: 2
+        name: "真・竜討伐刃"
+        recipe_id: "true_dragon_blade"
+        output_skill: "true_dragon_slayer_edge"
+      - stage: 3
+        name: "天魔竜覇斬"
+        recipe_id: "celestial_dragon_slayer"
+        output_skill: "celestial_dragon_slayer"

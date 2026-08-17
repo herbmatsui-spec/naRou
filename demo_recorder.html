@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>デモ動画作成ツール（スタート→クリア）</title>
+<style>
+  :root { --bg:#0f1220; --panel:#1a1f3a; --accent:#4f9dff; --ok:#3ddc84; --txt:#e8ecff; }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; font-family:system-ui,"Segoe UI",sans-serif;
+    background:var(--bg); color:var(--txt);
+    display:flex; flex-direction:column; align-items:center; gap:14px; padding:20px;
+  }
+  h1 { font-size:18px; margin:0; font-weight:600; }
+  canvas { background:#0a0d18; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,.4); max-width:100%; }
+  .controls { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  button {
+    background:var(--panel); color:var(--txt); border:1px solid #2c3566;
+    padding:10px 18px; border-radius:10px; font-size:14px; cursor:pointer; transition:.15s;
+  }
+  button:hover:not(:disabled) { border-color:var(--accent); transform:translateY(-1px); }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#06122a; font-weight:600; }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  .status { font-size:13px; color:#9aa6d6; min-height:18px; }
+  .hint { font-size:12px; color:#6b76a8; max-width:560px; text-align:center; line-height:1.6; }
+  a#download { display:none; }
+</style>
+</head>
+<body>
+  <h1>デモ動画作成ツール（スタート → クリア）</h1>
+  <canvas id="cv" width="640" height="360"></canvas>
+
+  <div class="controls">
+    <button id="startBtn" class="primary">▶ デモ開始＆録画</button>
+    <button id="stopBtn" disabled>■ 録画停止</button>
+    <a id="download">⬇ 動画を保存</a>
+  </div>
+  <div class="status" id="status">「デモ開始＆録画」を押すと、スタートからクリアまで自動再生しながら動画を記録します。</div>
+  <div class="hint">
+    単一のHTMLファイルだけで動作します（外部依存なし）。録画はブラウザの MediaRecorder でキャンバスを撮り、
+    終了後に .webm 動画としてダウンロードできます。MP4化したい場合は任意の変換ツールへどうぞ。
+  </div>
+
+<script>
+(() => {
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn  = document.getElementById('stopBtn');
+  const statusEl = document.getElementById('status');
+  const download = document.getElementById('download');
+
+  const W = cv.width, H = cv.height;
+  let raf = null, t0 = 0, running = false;
+  let recorder = null, chunks = [];
+
+  // デモの進行（0〜1）。0=スタート, 1=クリア
+  function progress(p) {
+    // 背景
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#10183a'); g.addColorStop(1,'#0a0d18');
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+
+    // ステージ表示（3区間）
+    const stages = ['START','STAGE 1','STAGE 2','CLEAR'];
+    const idx = Math.min(3, Math.floor(p*3.999));
+    ctx.fillStyle = '#9aa6d6'; ctx.font = '16px system-ui';
+    ctx.textAlign = 'left'; ctx.fillText('進行: ' + stages[idx], 20, 30);
+
+    // 進捗バー
+    ctx.fillStyle = '#222a52'; ctx.fillRect(20, 200, 600, 14);
+    ctx.fillStyle = '#4f9dff'; ctx.fillRect(20, 200, 600*p, 14);
+
+    // キャラクターが左から右へ移動
+    const x = 40 + (W-80)*p;
+    const y = 160 + Math.sin(p*Math.PI*6)*8;
+    ctx.beginPath(); ctx.arc(x, y, 16, 0, Math.PI*2);
+    ctx.fillStyle = '#3ddc84'; ctx.fill();
+    ctx.fillStyle = '#06122a'; ctx.font = '12px system-ui'; ctx.textAlign='center';
+    ctx.fillText('▶', x, y+4);
+
+    // ゴール
+    ctx.fillStyle = p>=1 ? '#3ddc84' : '#445'; 
+    ctx.fillRect(W-56, 144, 16, 40);
+
+    // クリアメッセージ
+    if (p >= 1) {
+      ctx.fillStyle = '#3ddc84'; ctx.font = 'bold 40px system-ui'; ctx.textAlign='center';
+      ctx.fillText('CLEAR!', W/2, H/2+10);
+    }
+  }
+
+  function tick(now) {
+    if (!t0) t0 = now;
+    const elapsed = (now - t0) / 1000;      // 秒
+    const DURATION = 8;                      // デモ秒数
+    const p = Math.min(1, elapsed / DURATION);
+    progress(p);
+    if (p < 1) { raf = requestAnimationFrame(tick); }
+    else {
+      running = false;
+      statusEl.textContent = 'クリアしました。録画を停止して動画を保存できます。';
+      stopBtn.disabled = false;
+    }
+  }
+
+  async function start() {
+    download.style.display = 'none';
+    chunks = [];
+    running = true; t0 = 0;
+    statusEl.textContent = 'デモ再生＆録画中…（約8秒）';
+
+    // 録画準備
+    const stream = cv.captureStream(30);
+    let mime = 'video/webm;codecs=vp9';
+    if (!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm';
+    recorder = new MediaRecorder(stream, { mimeType: mime });
+    recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    recorder.onstop = () => {
+      const blob = new Blob(chunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      download.href = url;
+      download.download = 'demo_' + Date.now() + '.webm';
+      download.style.display = 'inline-block';
+      statusEl.textContent = '動画の作成が完了しました。⬇ 動画を保存 からダウンロードしてください。';
+      startBtn.disabled = false; stopBtn.disabled = true;
+    };
+    recorder.start();
+
+    startBtn.disabled = true; stopBtn.disabled = false;
+    raf = requestAnimationFrame(tick);
+  }
+
+  function stop() {
+    if (recorder && recorder.state !== 'inactive') recorder.stop();
+    if (raf) cancelAnimationFrame(raf);
+    running = false;
+    stopBtn.disabled = true;
+  }
+
+  startBtn.addEventListener('click', start);
+  stopBtn.addEventListener('click', stop);
+
+  // 初期描画
+  progress(0);
+})();
+</script>
+</body>
+</html>

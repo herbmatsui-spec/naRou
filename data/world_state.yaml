@@ -1,0 +1,24 @@
+# ワールド状態テンプレート (Steps 5, 6)
+
+world_state_template:
+  version: "1.0"
+  last_updated: "2026-08-17"
+  persistent_variables:
+    goblin_threat_level: 50
+    bandit_activity: 30
+    kingdom_prosperity: 70
+    plague_outbreak: false
+  location_states:
+    vernis:
+      defense: 80
+      morale: 75
+    palmia:
+      defense: 95
+      morale: 90
+  faction_relations:
+    kingdom_vs_mages: 0
+    thieves_vs_guards: -100
+  global_events: []
+  player_legacy:
+    titles_won: []
+    sacrifices_made: 0

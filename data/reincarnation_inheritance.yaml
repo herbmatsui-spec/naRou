@@ -1,0 +1,5 @@
+inheritance:
+  always_keep:
+    - titles
+  selective_keep:
+    points_per_reincarnation: 100

@@ -1,0 +1,29 @@
+# スキル継承ルール設定 (Steps 11, 12)
+
+inheritance_rules:
+  bloodline_skills:
+    id: "bloodline_skills"
+    name: "血統スキル継承"
+    description: "祖先や前世から受け継がれる固有技能の継承ルール。"
+    inheritance_type: "passive_traits"
+    eligible_skills:
+      - "martial_arts"
+      - "swordsmanship"
+      - "magic_cast"
+    inheritance_rate: 0.50
+    level_bonus: 5
+    requirements:
+      reincarnation_count: 1
+
+  mastery_inheritance:
+    id: "mastery_inheritance"
+    name: "極意の継承"
+    description: "転生時に鍛え上げたスキルの潜在能力と熟練度を保持する。"
+    inheritance_type: "potential_retention"
+    eligible_skills:
+      - "swordsmanship"
+      - "magic_cast"
+    inheritance_rate: 0.75
+    level_bonus: 10
+    requirements:
+      reincarnation_count: 2

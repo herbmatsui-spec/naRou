@@ -1,0 +1,103 @@
+jobs:
+  novice:
+    id: "novice"
+    name: "見習い"
+    tier: 0
+    description: "冒険者としての第一歩を踏み出したばかりの無職・見習い状態。"
+    stat_modifiers: {}
+    equipment_restrictions: {}
+    exclusive_skills: []
+    unlock_conditions: {}
+
+  warrior:
+    id: "warrior"
+    name: "戦士"
+    tier: 1
+    description: "卓越した筋力と重装甲で前線を支える百戦錬磨の武人。"
+    stat_modifiers:
+      strength: 10
+      endurance: 5
+      speed: -2
+    equipment_restrictions:
+      can_wear_heavy_armor: true
+      can_use_shield: true
+    exclusive_skills:
+      - "shield_bash"
+      - "taunt"
+      - "whirlwind"
+    unlock_conditions:
+      level: 10
+      skills:
+        basic_sword: 30
+        shield: 20
+      stats:
+        strength: 15
+
+  swordmaster:
+    id: "swordmaster"
+    name: "剣聖"
+    tier: 2
+    description: "剣の道を極限まで極めし達人。あらゆる敵を瞬時に両断する。"
+    stat_modifiers:
+      strength: 18
+      dexterity: 12
+      speed: 5
+    equipment_restrictions:
+      can_wear_heavy_armor: true
+      can_dual_wield: true
+    exclusive_skills:
+      - "iaijutsu"
+      - "blade_storm"
+    unlock_conditions:
+      job: "warrior"
+      level: 25
+      skills:
+        sword_mastery: 50
+      stats:
+        strength: 25
+        dexterity: 20
+
+  mage:
+    id: "mage"
+    name: "魔法使い"
+    tier: 1
+    description: "深遠なる魔導の知識を操り、強力な属性魔法を紡ぎ出す。"
+    stat_modifiers:
+      magic: 12
+      will: 6
+      strength: -4
+    equipment_restrictions:
+      can_use_staff: true
+      can_wear_robe: true
+    exclusive_skills:
+      - "mana_burn"
+      - "teleport_other"
+    unlock_conditions:
+      level: 10
+      skills:
+        magic_cast: 25
+      stats:
+        magic: 15
+
+  archmage:
+    id: "archmage"
+    name: "大賢者"
+    tier: 2
+    description: "世界を満たすマナの理を掌握した至高の魔導士。"
+    stat_modifiers:
+      magic: 22
+      will: 14
+      learning: 10
+      strength: -6
+    equipment_restrictions:
+      can_use_artifact_staff: true
+    exclusive_skills:
+      - "meteor"
+      - "time_stop"
+    unlock_conditions:
+      job: "mage"
+      level: 25
+      skills:
+        magic_cast: 50
+      stats:
+        magic: 30

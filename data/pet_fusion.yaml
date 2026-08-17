@@ -1,0 +1,83 @@
+pet_fusion:
+  fusion_recipes:
+    - id: "dragon_hound"
+      name: "ドラゴンハウンド"
+      icon: "🐉🐕"
+      description: "猛々しい猟犬と幼龍の遺伝子を融合"
+      required_pets:
+        - "hound"
+        - "drake"
+      required_bond:
+        - 400
+        - 350
+      required_level:
+        - 20
+        - 15
+      required_items:
+        - "dragon_scale"
+        - "magic_crystal"
+        - "philosophers_stone"
+      required_facility: "alchemy_lab"
+      result_pet: "dragon_hound"
+      inheritance_rate: 0.70
+      mutation_chance: 0.20
+      stat_template:
+        strength: 18
+        agility: 16
+        constitution: 14
+        intelligence: 10
+        hp: 120
+        mp: 40
+      skill_inheritance:
+        - from: "hound"
+          skills: ["tracking", "bite"]
+          rate: 0.80
+        - from: "drake"
+          skills: ["fire_breath", "wing_flutter"]
+          rate: 0.60
+      possible_mutations:
+        - type: "ice_breath"
+          chance: 0.30
+          replaces: "fire_breath"
+        - type: "two_heads"
+          chance: 0.10
+          effects:
+            attack_bonus: 0.20
+            hp_bonus: 0.15
+
+    - id: "unicorn_pegasus"
+      name: "ユニコーンペガサス"
+      icon: "🦄🪽"
+      description: "聖なる角と天馬の翼を併せ持つ神獣"
+      required_pets:
+        - "unicorn"
+        - "pegasus"
+      required_bond:
+        - 500
+        - 500
+      required_level:
+        - 25
+        - 25
+      required_items:
+        - "holy_water"
+        - "feather_of_angel"
+        - "unicorn_horn"
+      required_facility: "shrine"
+      result_pet: "unicorn_pegasus"
+      inheritance_rate: 0.75
+      mutation_chance: 0.15
+      stat_template:
+        strength: 15
+        agility: 22
+        constitution: 15
+        intelligence: 18
+        hp: 140
+        mp: 80
+      skill_inheritance:
+        - from: "unicorn"
+          skills: ["holy_cure", "horn_thrust"]
+          rate: 0.80
+        - from: "pegasus"
+          skills: ["sky_dive", "wind_shield"]
+          rate: 0.80
+      possible_mutations: []

@@ -1,0 +1,28 @@
+# 想定HP/攻撃力/コスト対効果の基準値 (Step 43)
+standards:
+  levels:
+    1:
+      min_hp: 20
+      max_hp: 50
+      min_attack: 3
+      max_attack: 12
+    5:
+      min_hp: 50
+      max_hp: 120
+      min_attack: 10
+      max_attack: 30
+    10:
+      min_hp: 120
+      max_hp: 300
+      min_attack: 25
+      max_attack: 70
+
+economy:
+  max_gold_per_dungeon_floor: 5000
+  item_value_weight_ratio_max: 2000.0
+
+skills:
+  efficiency_threshold_ratio: 5.0
+
+reincarnation:
+  max_stat_growth_factor_per_cycle: 1.5

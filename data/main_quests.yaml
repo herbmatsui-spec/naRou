@@ -1,0 +1,50 @@
+main_quests:
+  - quest_id: "prologue_01"
+    title: "運命の始まり"
+    description: "村の長から古文書を受け取り、世界の異変について知る。"
+    required_phase: "BEGINNING"
+    objectives:
+      - objective_id: "talk_elder"
+        description: "村の長に話しかける"
+        target_type: "visit"
+        target_id: "village_elder"
+        required_count: 1
+    rewards:
+      gold: 100
+      world_phase: "AWAKENING"
+    next_quest_id: "awakening_01"
+
+  - quest_id: "awakening_01"
+    title: "目覚めの試練"
+    description: "封印された洞窟へ向かい、古の守護者を倒して世界の断片を回収せよ。"
+    required_phase: "AWAKENING"
+    objectives:
+      - objective_id: "kill_guardian"
+        description: "古の守護者を討伐する"
+        target_type: "kill"
+        target_id: "ancient_guardian"
+        required_count: 1
+      - objective_id: "collect_fragment"
+        description: "世界の断片を回収する"
+        target_type: "collect"
+        target_id: "world_fragment"
+        required_count: 1
+    rewards:
+      gold: 1000
+      world_phase: "EXPLORATION"
+    next_quest_id: "exploration_01"
+
+  - quest_id: "exploration_01"
+    title: "失われた記憶の探索"
+    description: "各地に散らばる世界の断片をさらに収集し、世界の真実を解き明かせ。"
+    required_phase: "EXPLORATION"
+    objectives:
+      - objective_id: "collect_fragments_more"
+        description: "世界の断片をさらに収集する"
+        target_type: "collect"
+        target_id: "world_fragment"
+        required_count: 3
+    rewards:
+      gold: 5000
+      world_phase: "CONFRONTATION"
+    next_quest_id: "confrontation_01"

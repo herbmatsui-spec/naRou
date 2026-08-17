@@ -1,0 +1,7 @@
+workflow:
+  - name: "check_complexity"
+    script: "complexity_checker.py"
+    args: ["task_manager.py"]
+  - name: "organize_files"
+    script: "file_organizer.py"
+    args: ["."]

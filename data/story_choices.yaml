@@ -1,0 +1,55 @@
+# 選択肢と結果設定 (Steps 3, 4)
+
+choice_consequences:
+  farm_survivor_saved:
+    id: "farm_survivor_saved"
+    description: "農民たちを無事救出した。彼らは感謝し村での評判が上昇した。"
+    immediate_effects:
+      - type: "gain_gold"
+        value: 1500
+      - type: "gain_karma"
+        value: 15
+    long_term_effects:
+      - type: "shop_discount"
+        value: 0.10
+    world_state_changes:
+      rescued_villagers_count: 5
+      vernis_safety_index: 20
+
+  boss_slain_early:
+    id: "boss_slain_early"
+    description: "農民の犠牲を顧みず迅速に敵将を討ち取った。"
+    immediate_effects:
+      - type: "gain_exp"
+        value: 500
+      - type: "gain_karma"
+        value: -10
+    long_term_effects: []
+    world_state_changes:
+      goblin_morale: -50
+
+  altar_purified:
+    id: "altar_purified"
+    description: "祭壇の闇を浄化し、神々の恩寵を得た。"
+    immediate_effects:
+      - type: "gain_piety"
+        value: 30
+    long_term_effects:
+      - type: "holy_blessing_aura"
+        value: 1
+    world_state_changes:
+      altar_purified_flag: true
+
+  dark_power_absorbed:
+    id: "dark_power_absorbed"
+    description: "邪悪な呪詛の魔力を自らの力へと変えた。"
+    immediate_effects:
+      - type: "gain_mp_max"
+        value: 20
+      - type: "gain_karma"
+        value: -30
+    long_term_effects:
+      - type: "dark_damage_boost"
+        value: 0.20
+    world_state_changes:
+      corrupted_power_unlocked: true

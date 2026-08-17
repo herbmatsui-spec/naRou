@@ -1,0 +1,126 @@
+skill_trees:
+  sword:
+    name: "剣術"
+    icon: "⚔"
+    tiers:
+      - id: "basic_sword"
+        name: "剣の基礎"
+        description: "剣の扱いに関する基礎的な訓練。近接攻撃力が増加する。"
+        cost: 5
+        prerequisites: []
+        effects:
+          - type: "damage_bonus"
+            value: 3
+            target: "melee"
+      - id: "sword_mastery"
+        name: "剣術熟練"
+        description: "刃筋を見極め、致命的な斬撃を繰り出す。"
+        cost: 10
+        prerequisites:
+          - "basic_sword"
+        effects:
+          - type: "damage_bonus"
+            value: 7
+            target: "melee"
+          - type: "unlock_skill"
+            value: "thrust"
+            target: "active"
+      - id: "sword_essence"
+        name: "剣の極意"
+        description: "剣と一体となり、あらゆる装甲を断ち切る境地。"
+        cost: 20
+        prerequisites:
+          - "sword_mastery"
+        effects:
+          - type: "damage_bonus"
+            value: 15
+            target: "melee"
+          - type: "crit_chance"
+            value: 10
+            target: "melee"
+          - type: "unlock_skill"
+            value: "sword_dance"
+            target: "active"
+
+  magic:
+    name: "魔法"
+    icon: "✨"
+    tiers:
+      - id: "basic_magic"
+        name: "魔法の基礎"
+        description: "マナの流れを感じ取り、魔力を効率的に操る。"
+        cost: 5
+        prerequisites: []
+        effects:
+          - type: "damage_bonus"
+            value: 4
+            target: "magic"
+      - id: "magic_mastery"
+        name: "魔法熟練"
+        description: "より高純度なマナを紡ぎ出し、魔法威力を高める。"
+        cost: 10
+        prerequisites:
+          - "basic_magic"
+        effects:
+          - type: "damage_bonus"
+            value: 8
+            target: "magic"
+          - type: "unlock_skill"
+            value: "mana_shield"
+            target: "active"
+      - id: "magic_essence"
+        name: "魔法の極意"
+        description: "理の深淵に触れ、絶大な魔力を解き放つ。"
+        cost: 20
+        prerequisites:
+          - "magic_mastery"
+        effects:
+          - type: "damage_bonus"
+            value: 16
+            target: "magic"
+          - type: "unlock_skill"
+            value: "arcane_burst"
+            target: "active"
+
+  martial_arts:
+    name: "体術"
+    icon: "🥋"
+    tiers:
+      - id: "basic_martial_arts"
+        name: "体術の基礎"
+        description: "肉体を鍛え上げ、徒手空拳の威力を引き出す。"
+        cost: 5
+        prerequisites: []
+        effects:
+          - type: "damage_bonus"
+            value: 3
+            target: "unarmed"
+      - id: "martial_arts_mastery"
+        name: "体術熟練"
+        description: "気合を込め、敵の体勢を崩す強烈な一撃を放つ。"
+        cost: 10
+        prerequisites:
+          - "basic_martial_arts"
+        effects:
+          - type: "damage_bonus"
+            value: 7
+            target: "unarmed"
+          - type: "unlock_skill"
+            value: "counter_strike"
+            target: "passive"
+      - id: "martial_arts_essence"
+        name: "体術の極意"
+        description: "剛柔一体の究極の肉体境地。"
+        cost: 20
+        prerequisites:
+          - "martial_arts_mastery"
+        effects:
+          - type: "damage_bonus"
+            value: 15
+            target: "unarmed"
+          - type: "crit_chance"
+            value: 8
+            target: "unarmed"
+          - type: "unlock_skill"
+            value: "dragon_kick"
+            target: "active"

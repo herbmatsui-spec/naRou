@@ -1,0 +1,22 @@
+# 転生スケーリング設定 (Steps 9, 10)
+
+scaling:
+  enemy_stats_multiplier:
+    base: 1.0
+    per_reincarnation: 0.15
+    max_multiplier: 5.0
+
+  enemy_hp_multiplier:
+    base: 1.0
+    per_reincarnation: 0.20
+    max_multiplier: 6.0
+
+  item_drop_rate_bonus:
+    base: 1.0
+    per_reincarnation: 0.10
+    max_multiplier: 3.0
+
+  xp_penalty_rate:
+    base: 1.0
+    per_reincarnation: 0.05
+    max_penalty: 0.50

@@ -1,0 +1,95 @@
+# ==============================================================================
+# Elona Masterpiece Edition - Spells Catalog (data/spells.yaml)
+# ==============================================================================
+
+magic_dart:
+  name: "魔矢"
+  mp_cost: 4
+  element: "magic"
+  range: 6
+  dice_num: 1
+  dice_side: 10
+  dmg_bonus: 2
+  target_type: "single"
+  sound: "spell_dart"
+  description: "魔力の矢を放ち、必中で単体の敵にダメージを与える。"
+
+fireball:
+  name: "火炎球"
+  mp_cost: 12
+  element: "fire"
+  range: 5
+  radius: 1
+  dice_num: 2
+  dice_side: 12
+  dmg_bonus: 5
+  target_type: "area"
+  sound: "spell_fireball"
+  description: "目標地点に爆発する火炎球を放ち、周囲の敵を巻き込む。"
+
+ice_bolt:
+  name: "氷の矢"
+  mp_cost: 9
+  element: "cold"
+  range: 6
+  dice_num: 2
+  dice_side: 8
+  dmg_bonus: 3
+  target_type: "beam"
+  sound: "spell_ice"
+  description: "直線上の敵を貫く氷晶の光線を放つ。"
+
+lightning_bolt:
+  name: "雷撃"
+  mp_cost: 15
+  element: "lightning"
+  range: 5
+  dice_num: 3
+  dice_side: 8
+  dmg_bonus: 4
+  target_type: "beam"
+  sound: "spell_lightning"
+  description: "鋭い稲妻を放ち、感電とダメージを与える。"
+
+heal_light:
+  name: "軽傷治癒"
+  mp_cost: 6
+  element: "heal"
+  range: 0
+  dice_num: 2
+  dice_side: 8
+  dmg_bonus: 10
+  target_type: "self"
+  sound: "heal"
+  description: "術者の傷を癒やし、HPを回復する。"
+
+heal_heavy:
+  name: "重傷治癒"
+  mp_cost: 18
+  element: "heal"
+  range: 0
+  dice_num: 4
+  dice_side: 12
+  dmg_bonus: 30
+  target_type: "self"
+  sound: "heal"
+  description: "術者の深い傷を大幅に回復する。"
+
+teleport:
+  name: "テレポート"
+  mp_cost: 8
+  element: "utility"
+  range: 0
+  target_type: "self"
+  sound: "teleport"
+  description: "ダンジョン内の安全なランダムな場所へ瞬間移動する。"
+
+haste:
+  name: "加速"
+  mp_cost: 16
+  element: "buff"
+  range: 0
+  duration: 30
+  target_type: "self"
+  sound: "buff"
+  description: "自身の行動速度を一時的に劇的に上昇させる。"

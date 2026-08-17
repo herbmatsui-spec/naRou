@@ -1,0 +1,33 @@
+# Audio Configuration
+bgm:
+  town:
+    track: 'bgm_town_peaceful'
+    volume: 0.8
+    fade_time: 1.5
+  dungeon:
+    track: 'bgm_dungeon_dark'
+    volume: 0.7
+    fade_time: 2.0
+  forest:
+    track: 'bgm_forest_ambient'
+    volume: 0.75
+    fade_time: 1.0
+  crisis:
+    track: 'bgm_combat_crisis'
+    volume: 0.9
+    fade_time: 0.5
+  victory:
+    track: 'fanfare_victory'
+    volume: 0.85
+    fade_time: 0.0
+
+ambient:
+  town:
+    sound: 'amb_town_chatter'
+    volume: 0.4
+  dungeon:
+    sound: 'amb_water_drop'
+    volume: 0.5
+  cave:
+    sound: 'amb_cave_wind'
+    volume: 0.6

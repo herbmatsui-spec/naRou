@@ -1,0 +1,35 @@
+# スキル進化チェーン設定 (Steps 3, 4)
+
+evolution_chains:
+  sword_mastery:
+    id: "sword_mastery"
+    name: "剣術の進化の道"
+    stages:
+      - id: "sword_stage_1"
+        name: "剣術の心得"
+        unlock_condition:
+          skill_level:
+            swordsmanship: 10
+        bonuses:
+          physical_dmg_boost: 0.10
+
+      - id: "sword_stage_2"
+        name: "百戦錬磨の刃"
+        unlock_condition:
+          skill_level:
+            swordsmanship: 25
+          player_level: 20
+        bonuses:
+          physical_dmg_boost: 0.25
+          crit_bonus: 5
+
+      - id: "sword_stage_3"
+        name: "神速の剣聖"
+        unlock_condition:
+          skill_level:
+            swordsmanship: 50
+          player_level: 40
+        bonuses:
+          physical_dmg_boost: 0.50
+          crit_bonus: 15
+          speed_bonus: 10

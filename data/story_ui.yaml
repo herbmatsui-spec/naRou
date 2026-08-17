@@ -1,0 +1,24 @@
+# ストーリーUI要素設定 (Steps 17, 18)
+
+ui_elements:
+  story_notification:
+    id: "story_notification"
+    name: "ストーリー通知"
+    display_priority: "high"
+    duration: 5
+    animation: "fade_in_slide_down"
+    sound_effect: "quest_update"
+    visual_elements:
+      border_color: [255, 215, 0]
+      icon: "📜"
+
+  choice_prompt_modal:
+    id: "choice_prompt_modal"
+    name: "運命の選択プロンプト"
+    display_priority: "critical"
+    duration: 0
+    animation: "modal_popup"
+    sound_effect: "choice_appear"
+    visual_elements:
+      border_color: [180, 100, 255]
+      icon: "⚖️"

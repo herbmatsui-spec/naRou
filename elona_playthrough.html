@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elona: Masterpiece Edition ― 実況プレイ動画（初心者ガイド付き）</title>
+<style>
+  :root{ --bg:#070913; --panel:#0b1220; --line:rgba(120,160,200,.18); --sky:#38bdf8; --gold:#fbbf24; --txt:#cbd5e1; }
+  *{box-sizing:border-box}
+  body{ margin:0; min-height:100vh; color:var(--txt); font-family:ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;
+    background:radial-gradient(circle at 50% 0%, #14203a, #070913 70%); display:flex; flex-direction:column; align-items:center; padding:14px; }
+  h1{font-size:15px; margin:0 0 3px; color:var(--sky); letter-spacing:.5px}
+  .sub{font-size:11px; color:#8aa0bd; margin-bottom:12px; text-align:center; max-width:920px}
+  .wrap{ width:min(940px,97vw); display:flex; gap:12px; align-items:flex-start; }
+  .left{ flex:1 1 auto; min-width:0; }
+  .stage{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; position:relative; overflow:hidden; box-shadow:0 18px 50px rgba(0,0,0,.5); }
+  .head{display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,.07); padding-bottom:8px; gap:10px}
+  .head .left2{display:flex; align-items:center; gap:10px}
+  .icon{font-size:26px}
+  .title{font-size:14px; font-weight:700; color:var(--sky)}
+  .desc{font-size:10px; color:#8aa0bd; margin-top:2px}
+  .badge{font-size:10px; background:rgba(56,189,248,.16); color:var(--sky); padding:3px 9px; border-radius:999px; font-weight:700; white-space:nowrap}
+  .chapter-now{font-size:10px; color:#9fb3d0}
+  canvas{display:block; background:#05080f; border:1px solid rgba(255,255,255,.06); border-radius:10px; max-width:100%; height:auto; image-rendering:pixelated}
+  .hud{ background:#05080f; border:1px solid rgba(255,255,255,.06); border-radius:8px; padding:6px 9px; font-size:11.5px; line-height:1.7; color:#cbd5e1 }
+  .hud .row{ display:flex; flex-wrap:wrap; gap:6px 12px; align-items:center }
+  .hud b{ color:#fff }
+  .track{ display:inline-block; width:74px; height:8px; background:#1e2638; border-radius:4px; overflow:hidden; vertical-align:middle; margin:0 3px }
+  .track i{ display:block; height:100%; background:#22c55e }
+  .track i.mp{ background:#38bdf8 } .track i.pe{ background:#f9a8d4 }
+  .hint{ color:#7dd3fc; font-size:10.5px }
+  .log{ background:#05080f; border:1px solid rgba(255,255,255,.06); border-radius:8px; padding:6px 9px; height:96px; overflow:hidden; font-size:11px; line-height:1.55; color:#cbd5e1; display:flex; flex-direction:column; justify-content:flex-end }
+  .log div{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  .log .hi{color:#fbbf24} .log .bad{color:#f87171} .log .lv{color:#c084fc} .log .pe{color:#f9a8d4} .log .sys{color:#7dd3fc}
+  .controls{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:2px}
+  button{font-family:inherit; cursor:pointer; border:1px solid var(--line); background:#111a2e; color:var(--txt); padding:7px 12px; border-radius:9px; font-size:12px; transition:.15s}
+  button:hover{background:#1c2842; border-color:var(--sky)}
+  button.primary{background:var(--sky); color:#04121f; font-weight:700; border-color:transparent}
+  button.active{outline:2px solid var(--sky)}
+  .scrub{flex:1; min-width:160px; display:flex; align-items:center; gap:8px}
+  input[type=range]{flex:1; accent-color:var(--sky); height:6px}
+  .clock{font-variant-numeric:tabular-nums; font-size:12px; color:#cbd5e1; min-width:92px; text-align:right}
+  .chapters{display:flex; flex-wrap:wrap; gap:5px; margin-top:6px}
+  .chapters button{font-size:9.5px; padding:4px 7px; border-radius:7px; color:#9aa6bd}
+  .chapters button.cur{background:var(--sky); color:#04121f; font-weight:700}
+  .guide{ flex:0 0 270px; align-self:stretch; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px; position:sticky; top:14px; max-height:560px; overflow:auto }
+  .guide h3{ margin:0 0 6px; font-size:13px; color:var(--gold); border-bottom:1px solid rgba(255,255,255,.08); padding-bottom:6px }
+  .guide .gtag{ display:inline-block; font-size:9px; background:rgba(251,191,36,.15); color:var(--gold); padding:2px 7px; border-radius:999px; margin-bottom:6px }
+  .guide p{ font-size:11px; line-height:1.7; color:#b9c6dd; margin:0 0 8px }
+  .guide .k{ color:var(--sky); font-weight:700 }
+  .guide ul{ margin:0 0 8px; padding-left:16px; font-size:11px; line-height:1.65; color:#b9c6dd }
+  .modal{ position:absolute; inset:0; background:rgba(3,7,18,.93); display:none; flex-direction:column; align-items:center; justify-content:center; gap:10px; z-index:6; padding:18px; text-align:center }
+  .modal.show{ display:flex }
+  .modal .big{ font-size:26px; font-weight:900; color:var(--gold); text-shadow:0 3px 18px #000 }
+  .modal .sm{ font-size:12px; color:#cbd5e1; max-width:520px; line-height:1.7 }
+  .modal .box{ background:#05080f; border:1px solid var(--line); border-radius:10px; padding:14px 18px; font-size:12px; color:#cbd5e1; text-align:left; max-width:560px; line-height:1.8 }
+  .modal .box b{ color:#fff }
+  .modal .box .at{ color:#7dd3fc }
+  @media (max-width:760px){ .wrap{ flex-direction:column } .guide{ flex:none; width:100%; position:static; max-height:none } }
+</style>
+</head>
+<body>
+  <h1>Elona: Masterpiece Edition ― 実況プレイ動画</h1>
+  <div class="sub">本プロジェクトの実際の仕様（ステータス・クエスト・戦闘計算式・カルマ・転生・ネフィア等）に基づくシミュレーション。右側の「初心者ガイド」で仕組みを解説しながら、開始からクリアまで自動進行します。</div>
+
+  <div class="wrap">
+    <div class="left">
+      <div class="stage">
+        <div class="head">
+          <div class="left2">
+            <span class="icon" id="icon">🗡️</span>
+            <div>
+              <div class="title" id="title">1. 冒険の始まり</div>
+              <div class="desc" id="desc">洞窟の我が家で冒険の準備を整える</div>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <span class="badge">SCENE <span id="chapNo">1</span>/24</span>
+            <div class="chapter-now" id="chapNow">第1章 / 全24章</div>
+          </div>
+        </div>
+
+        <canvas id="view" width="572" height="390"></canvas>
+
+        <div class="hud">
+          <div class="row" id="hud1"></div>
+          <div class="row" id="hud2"></div>
+          <div class="row"><span class="hint" id="hud3">💡 ―</span></div>
+        </div>
+
+        <div class="log" id="msglog"></div>
+
+        <div class="controls">
+          <button class="primary" id="playBtn" onclick="togglePlay()">▶ 再生</button>
+          <button onclick="restart()">↺ 先頭へ</button>
+          <button onclick="seekBy(-15)">⏪ -15s</button>
+          <button onclick="seekBy(15)">⏩ +15s</button>
+          <div class="scrub">
+            <input type="range" id="scrub" min="0" max="900" step="0.1" value="0" oninput="onScrub(this.value)">
+            <span class="clock" id="clock">0:00 / 15:00</span>
+          </div>
+          <button id="sp1" class="active" onclick="setSpeed(1)">1x</button>
+          <button id="sp2" onclick="setSpeed(2)">2x</button>
+          <button id="sp4" onclick="setSpeed(4)">4x</button>
+          <button onclick="openHelp()">？ ガイド</button>
+          <button id="muteBtn" onclick="toggleMute()">🔊</button>
+        </div>
+
+        <div class="chapters" id="chapters"></div>
+
+        <div class="modal" id="modal"></div>
+      </div>
+    </div>
+
+    <div class="guide" id="guide">
+      <span class="gtag" id="gTag">ガイド</span>
+      <h3 id="gTitle">ようこそ</h3>
+      <div id="gBody"></div>
+    </div>
+  </div>
+
+<script>
+/* ===================== 実際のプロジェクト仕様に基づくデータ ===================== */
+const MOBTYPES={
+  slime:{name:'ぷち',ch:'x',color:'#7ee787',hp:14,atkMin:2,atkMax:4,xp:4,gold:5},
+  goblin:{name:'ゴブリン',ch:'x',color:'#f0883e',hp:24,atkMin:4,atkMax:7,xp:8,gold:10},
+  orc:{name:'オーク',ch:'x',color:'#ff6b6b',hp:42,atkMin:5,atkMax:9,xp:14,gold:18},
+  wolf:{name:'狼',ch:'x',color:'#a5b4fc',hp:18,atkMin:4,atkMax:7,xp:10,gold:8},
+  thief:{name:'盗賊',ch:'x',color:'#94a3b8',hp:18,atkMin:5,atkMax:8,xp:12,gold:25},
+  dragon:{name:'古龍',ch:'D',color:'#f472b6',hp:140,atkMin:10,atkMax:18,xp:300,gold:600}
+};
+const INVENTORY_INIT=[
+  {name:'使い古しの長剣', mat:'鉄', dice:'2d6', note:'hit+2 / dmg+1', kind:'武器'},
+  {name:'バックラー', mat:'鋼鉄', note:'pv2 / dv4', kind:'防具'},
+  {name:'軽傷治療のポーション', note:'HP回復35 ×8', kind:'消費'},
+  {name:'パン', note:'栄養1500 ×5', kind:'消費'},
+  {name:'魔矢の魔法書', note:'詠唱魔法 magic_dart (50回)', kind:'魔法書'},
+  {name:'★ストラディバリウス', note:'価値800Gの楽器', kind:'その他'},
+  {name:'★願いの杖', note:'価値3000Gのロッド', kind:'その他'}
+];
+const GUIDE={
+  intro:{tag:'概要',title:'この動画について',body:'<p>これは本プロジェクト「<span class="k">Elona: Masterpiece Edition</span>」の<span class="k">実際のゲーム仕様</span>をもとに再現したプレイ動画です。</p><p>画面は本物と同じ<span class="k">ターミナル形式</span>（マップ＋3段HUD＋カラーログ）。右のガイドで「なぜそう動くか」を都度解説します。</p><ul><li>@ あなた ・ p 妹分シエル</li><li># 壁 ・ . 床 ・ &gt; 下り階段 ・ _ 祭壇</li><li>x 敵 ・ ! ポーション ・ $ 鉱石 ・ % 薬草</li></ul><p>操作は矢印/hjklで移動、スペースで実行、gで拾う、といった本物と同じ配置です。</p>'},
+  create:{tag:'キャラメイク',title:'冒険者のステータス',body:'<p>本物は牢獄ではなく<span class="k">ダンジョン内で開始</span>します。名前は「名無しの冒険者」。</p><p>8つの能力値を持ちます：</p><ul><li><span class="k">筋力(STR)</span> 攻撃力・HPに影響</li><li><span class="k">耐久(END)</span> HPの基礎</li><li><span class="k">器用(DEX)</span>命中率に影響</li><li><span class="k">感覚(PER)</span>クリティカル率</li><li>習得/意思/魔力/魅力</li></ul><p>HP = 耐久×2 + 筋力 + レベル×5 + (ジュア信仰なら+10)。レベルアップで能力値2つ+5とスキルポイントを得ます。</p>'},
+  combat:{tag:'戦闘',title:'戦闘のしくみ',body:'<p>命中率 ＝ <span class="k">75 + 攻×攻 − 防×防 + 武器hit×5</span>（10〜95に補正）。</p><p>クリティカル率 ＝ <span class="k">5 + 感覚/5</span>。ダメージ ＝ 武器ダイス和 + 武器補正 + 筋力/3。</p><p>ダメージが8を超えかつ5%で<span class="k">出血</span>状態に。出血中は自然回復が止まります。</p><p>敵は隣接すると攻めてきます。倒すと経験値・ゴールドを得て、クエスト対象なら討伐数が増えます。</p>'},
+  level:{tag:'成長',title:'レベルとスキル',body:'<p>経験値が溜まると<span class="k">レベルアップ</span>。スキル（長剣・回避・治癒・採掘など）は使うと「潜在能力(%)」に応じて上がります。</p><p>例：長剣Lv3 → 命中・ダメージが向上。スキルLv20ごとに潜在が下がり（最小10）、上がりにくくなります。</p>'},
+  faith:{tag:'信仰',title:'信仰と祭壇',body:'<p>デフォルトの神は<span class="k">癒やしのジュア</span>（治癒・愛・鉱石）。</p><p>祭壇<span class="k">_</span>で祈ると信仰度(piety)が50以上なら<span class="k">HP/MPが全快</span>。鉱石やパンを供物すると信仰度+30。</p><p>他にルルウィ(風/速度)、マニ(銃/機械)、イツパロトル(魔法)、クミロミ(農業)などの神がいます。</p>'},
+  pet:{tag:'ペット',title:'妹分シエル',body:'<p>最初から一緒の<span class="k">妹分『シエル』(p)</span>。戦闘で味方として敵を攻撃し、主人公に付き従います。</p><p>作戦（突撃/追従/支援/待避）を切り替えられ、一緒に戦うと絆が深まります。これも本物の仕様です。</p>'},
+  karma:{tag:'カルマ',title:'カルマ（道徳）',body:'<p>2つの仕組みがあります。</p><ul><li><span class="k">スカラー値</span>：无辜を攻撃で−15。−30以下で衛兵に追われる。</li><li><span class="k">2軸</span>：秩序↔混沌(law_chaos) と 善↔悪(good_evil)、各−100〜100。</li></ul><p>神殿への寄付で＋、盗み・殺人で−。カルマはエンディングやNPC反応に影響します。</p>'},
+  nefia:{tag:'ネフィア',title:'ネフィア（ダンジョン）',body:'<p><span class="k">ネフィア</span>は手続き生成されるランダムダンジョン。階段<span class="k">&gt;</span>で更深く下り、階を下りるほど敵が強く報酬も増えます。</p><p>「混沌のネフィア最深層」が<span class="k">古龍との決戦場</span>。クリアがこの物語の山場です。</p>'},
+  scaling:{tag:'バランス',title:'レベルスケーリング',body:'<p>クエスト報酬や敵の強さは<span class="k">プレイヤーレベル</span>に連動して伸びます（報酬 ≒ 基礎×(1+Lv×0.2)）。</p><p>これで低レベルでも高レベルでも適度な緊張感が保てるように調整されています。</p>'},
+  economy:{tag:'経済',title:'経済と街',body:'<p>街（ヴェルニース/パルミア/ルミエスト）では<span class="k">需要供給</span>で価格が変動します。</p><p>価格 ≒ 基準×(1.5 − 供給/100)×需要。戦争で×1.2、祭りで×0.8。安く買って高く売るのが基本です。</p>'},
+  jobs:{tag:'ジョブ',title:'ジョブ（職業）',body:'<p>見習い → <span class="k">戦士 → 剣聖</span>、魔法使い → <span class="k">大賢者</span>と転職できます。</p><p>各ジョブに専用スキル（居合/隕石など）と能力補正があります。これも本物の仕様です。</p>'},
+  titles:{tag:'称号',title:'称号と実績',body:'<p>行動で<span class="k">称号</span>（例：ゴブリンスレイヤー、竜殺し、達人）を得て、装備すると能力up。</p><p><span class="k">実績</span>も豊富（first_blood、スピードランナー、転生英雄…）。収集・挑戦のやり込み要素です。</p>'},
+  reinc:{tag:'転生',title:'輪廻転生（真の終盤）',body:'<p>Lv50〜200で<span class="k">輪廻転生（New Game+）</span>可能。レベルは1に戻りますが……</p><ul><li>敵が転生回数ぶん強く（最大×5ステ/×6HP）</li><li>ドロップ率アップ</li><li><span class="k">レガシースキル</span>を獲得</li></ul><p>レガシースキル：魂の記憶(スキルXP+15%)・転生の膂力(物理+20%)・不滅の意思(1日1回致死回避)。</p><p>「クリア」は一区切り。転生で何周も遊べるのが本作の真髄です。</p>'}
+};
+
+const TOTAL=900;
+const DUR=[40,40,40,40,40,40, 35,35,35,35,35,35,35,35,35,35,35,35, 38,38,38,38,38, 50];
+const STD=[]; let acc=0; for(let i=0;i<DUR.length;i++){ STD.push(acc); acc+=DUR[i]; }
+
+const SCENES=[
+ {title:"1. 冒険の始まり (我が家)",desc:"洞窟の拠点で冒険の準備を整える",icon:"🏡",dungeon:"拠点",rooms:4,mobs:[],guide:"create",log:"『Elona: Masterpiece Edition』の世界へようこそ！",
+   beats:[{at:2,modal:"title"},{at:7,modal:"status"},{at:14,modal:"inv"},{at:22,modal:"help"}]},
+ {title:"2. 鉱山町ヴェルニス",desc:"活気ある鉱山町と人々の日常",icon:"🏘️",dungeon:"ヴェルニース",rooms:6,mobs:[],guide:"economy",log:"鉱山町ヴェルニースに降り立った。",
+   beats:[{at:6,log:"かたつむり少女『グウェン』「あ、冒険者さん！こんにちは〜！」",cls:"pe"},{at:18,log:"【初心者ガイド】[?]キーでいつでもヘルプを確認できます！",cls:"sys"}]},
+ {title:"3. 子犬の洞窟 (ぷち討伐)",desc:"迷子の子犬を探してスライムの巣窟へ",icon:"🐶",dungeon:"子犬の洞窟",rooms:5,mobs:[["slime",3]],guide:"combat",log:"ぷち掃討の依頼を受けた。",
+   beats:[{at:3,log:"依頼『ぷち掃討の栄誉』 ぷち×3 → 350G+2P",cls:"hi"}]},
+ {title:"4. 死線レシマス地下",desc:"凶悪なオークとゴブリンが徘徊する迷宮",icon:"💀",dungeon:"死線レシマス地下",rooms:6,mobs:[["goblin",2],["orc",2]],guide:"level",log:"凶悪なオークが徘徊する迷宮へ。",
+   beats:[{at:3,log:"依頼『オーク討伐令』 オーク×2 → 750G+3P",cls:"hi"}]},
+ {title:"5. 癒しのジュアの祭壇",desc:"パンと鉱石を捧げて神の恩恵を授かる",icon:"⛩️",dungeon:"ジュアの神殿",rooms:5,mobs:[],guide:"faith",log:"癒しのジュアの祭壇を訪れた。",
+   beats:[{at:8,log:"神【ジュア】の御手があなたを包み込み、傷と魔力が全快した！",cls:"sys"}]},
+ {title:"6. 酒場の演奏会",desc:"ストラディバリウスを奏でておひねりを稼ぐ",icon:"🎻",dungeon:"ヴェルニース",rooms:5,mobs:[],guide:"economy",log:"酒場で演奏しておひねりを稼ぐ。",
+   beats:[{at:6,log:"演奏スキルで観客の心を掴んだ！",cls:"hi"}]},
+ {title:"7. 深部鉱脈の採掘",desc:"ツルハシで壁を掘り希少鉱石を発見",icon:"⛏️",dungeon:"深部鉱脈",rooms:5,mobs:[],guide:"scaling",log:"深部鉱脈で希少鉱石を採掘。",
+   beats:[{at:6,log:"採掘スキルで鉄鉱石/金鉱石を入手！",cls:"hi"}]},
+ {title:"8. 鍛冶工房と武具強化",desc:"灼熱の炉で長剣を鍛え上げる",icon:"🔨",dungeon:"鍛冶工房",rooms:5,mobs:[],guide:"jobs",log:"鍛冶工房で武具を強化した。",
+   beats:[{at:6,log:"★長剣を良質に強化！ 命中・ダメージ向上",cls:"hi"}]},
+ {title:"9. 厨房のご馳走料理",desc:"新鮮な肉とハーブで一流の料理を調理",icon:"🍳",dungeon:"厨房",rooms:5,mobs:[],guide:"pet",log:"厨房でご馳走を料理した。",
+   beats:[{at:6,log:"料理スキルで満腹度と能力を回復！",cls:"hi"}]},
+ {title:"10. ペット闘技場",desc:"シエルが強敵オークと1対1の真剣勝負",icon:"🏟️",dungeon:"ペット闘技場",rooms:3,mobs:[["orc",1]],guide:"pet",log:"闘技場でオークと決闘！",
+   beats:[{at:3,log:"シエル「お兄ちゃん、見ててね！」",cls:"pe"}]},
+ {title:"11. のどかな牧場経営",desc:"羊や牛を飼育し良質なミルクと卵を収穫",icon:"🚜",dungeon:"牧場",rooms:6,mobs:[],guide:"economy",log:"のどかな牧場で家畜を育てる。",
+   beats:[{at:6,log:"栽培・採取スキルで資源を確保。",cls:"hi"}]},
+ {title:"12. 遺伝子複合機",desc:"高度なバイオ技術でスキルの移植",icon:"🧬",dungeon:"研究所",rooms:5,mobs:[],guide:"reinc",log:"遺伝子複合機で能力を継承。",
+   beats:[{at:6,log:"レガシースキルの仕組みを学んだ（転生で解放）。",cls:"hi"}]},
+ {title:"13. 猛威を振るうエーテル風",desc:"緑の嵐が吹き荒れる中シェルターへ",icon:"🌪️",dungeon:"荒野",rooms:6,mobs:[],guide:"nefia",log:"エーテル風が吹き荒れる中、避難。",
+   beats:[{at:6,log:"【世界の噂】遠くで誰かが「うみみゃぁ！」と叫ぶ声が聞こえた…",cls:"sys"}]},
+ {title:"14. 盗賊ギルドのアジト",desc:"薄暗い地下街で盗品売買と取引",icon:"🎭",dungeon:"盗賊ギルド",rooms:6,mobs:[["thief",3]],guide:"karma",log:"盗賊ギルドのアジトへ潜入。",
+   beats:[{at:6,log:"カルマ：無辜を襲えば−15。善行で＋。",cls:"hi"}]},
+ {title:"15. 魔術士ギルドの書庫",desc:"古文書の解読と魔法のストック補充",icon:"🔮",dungeon:"魔術士ギルド",rooms:5,mobs:[],guide:"jobs",log:"魔術士ギルドで秘術を研究。",
+   beats:[{at:6,log:"詠唱スキルで魔法の成功率アップ。",cls:"hi"}]},
+ {title:"16. 幸運のカジノパレス",desc:"カジノチップを賭けてスロット挑戦",icon:"🎰",dungeon:"カジノ",rooms:6,mobs:[],guide:"economy",log:"カジノで大勝負！",
+   beats:[{at:6,log:"運試し…景品を獲得！",cls:"hi"}]},
+ {title:"17. 静寂の湖畔釣り",desc:"釣り竿を垂らして大魚と財宝を狙う",icon:"🎣",dungeon:"湖畔",rooms:6,mobs:[],guide:"scaling",log:"静寂の湖畔で釣りを楽しむ。",
+   beats:[{at:6,log:"釣りスキルで大漁！",cls:"hi"}]},
+ {title:"18. 栄光の大博物館",desc:"討伐モンスターの剥製を飾って名声向上",icon:"🏛️",dungeon:"博物館",rooms:6,mobs:[],guide:"titles",log:"大博物館で名声を高めた。",
+   beats:[{at:6,log:"称号『ダンジョン探検家』を獲得！",cls:"hi"}]},
+ {title:"19. 納税と郵便局",desc:"給料箱を受け取り滞納なく納税",icon:"📮",dungeon:"役場",rooms:6,mobs:[],guide:"karma",log:"給料箱で納税を済ませた。",
+   beats:[{at:6,log:"善行でカルマ上昇。衛兵も友好的に。",cls:"hi"}]},
+ {title:"20. 混沌のネフィア最深層",desc:"灼熱のマグマ地帯で古龍と最終決戦",icon:"🌋",dungeon:"混沌のネフィア最深層",rooms:7,mobs:[["wolf",2],["dragon",1]],guide:"nefia",log:"ネフィア最深層、古龍との決戦！",
+   beats:[{at:3,log:"★ダンジョン地下10階へ降り立った！",cls:"sys"},{at:8,log:"古龍「この大陸を統べるのは我だ」",cls:"bad"}]},
+ {title:"21. 神秘の願いの祠",desc:"願いの杖を振って神託を呼び出す",icon:"🌟",dungeon:"願いの祠",rooms:5,mobs:[],guide:"reinc",log:"願いの祠で神託を呼んだ。",
+   beats:[{at:6,log:"★願いの杖「何を望む？」→ 大陸の平和を願った。",cls:"hi"}]},
+ {title:"22. 貴族の豪邸パーティー",desc:"晩餐会で乱入者を撃退し護衛",icon:"🥂",dungeon:"豪邸",rooms:5,mobs:[["goblin",2]],guide:"karma",log:"パーティーで乱入者を撃退！",
+   beats:[{at:6,log:"護衛成功で称号『調教師』に近づいた。",cls:"hi"}]},
+ {title:"23. 秘宝の眠る宝物庫",desc:"神々のアーティファクトを発見",icon:"🗝️",dungeon:"宝物庫",rooms:5,mobs:[],guide:"titles",log:"秘宝の宝物庫を開けた！",
+   beats:[{at:6,log:"★神器を獲得！ 能力が大きく向上。",cls:"hi"}]},
+ {title:"24. 英雄の凱旋 (グランドフィナーレ)",desc:"イルヴァ大陸を救い祝福される",icon:"👑",dungeon:"王都",rooms:6,mobs:[],guide:"reinc",log:"王都で英雄として祝福された！",
+   beats:[{at:6,log:"★クリア！ だが本物の終盤は『輪廻転生』。",cls:"hi"},{at:14,log:"【転生デモ】Lv→1、敵強化、レガシースキル解放！",cls:"lv"}]}
+];
+
+/* ===================== プレイヤー状態（プロジェクト仕様） ===================== */
+const P={ name:"名無しの冒険者",
+  attrs:{STR:14,END:13,DEX:14,PER:12,LEA:11,WIL:13,MAG:12,CHA:15},
+  level:1, exp:0, expNext:100, hp:30, maxhp:30, mp:10, maxmp:10,
+  gold:1500, plat:12, hunger:8000, karma:20, god:"ジュア", piety:80,
+  dungeonLevel:1, atkMin:9, atkMax:16,
+  skills:{long_sword:3, evasion:2, healing:1, mining:1, performance:1, cooking:1, fishing:1, negotiation:1},
+  quests:[
+    {title:"ぷち掃討の栄誉",target:"ぷち",need:3,cur:0,gold:350,plat:2,done:false},
+    {title:"オーク討伐令",target:"オーク",need:2,cur:0,gold:750,plat:3,done:false}
+  ],
+  titles:[], killCounts:{}, reinc:0
+};
+function recalcVitals(){
+  P.maxhp=Math.max(10, P.attrs.END*2+P.attrs.STR+P.level*5+(P.god==="ジュア"?10:0));
+  P.maxmp=Math.max(10, P.attrs.MAG*2+P.attrs.WIL+P.level*4+(P.god==="イツパロトル"?15:0));
+  if(P.hp>P.maxhp)P.hp=P.maxhp; if(P.mp>P.maxmp)P.mp=P.maxmp;
+}
+function checkLevel(){
+  while(P.exp>=P.expNext){
+    P.exp-=P.expNext; P.level++; P.maxhp+=8; P.hp=P.maxhp; P.maxmp+=3; P.mp=P.maxmp;
+    P.expNext=Math.floor(P.expNext*1.6);
+    pushLog("レベルが"+P.level+"になった！","lv");
+    if(P.level>=5 && !P.titles.includes("達人")) P.titles.push("達人");
+  }
+}
+
+/* ===================== エンジン ===================== */
+const W=22,H=15,TS=26,CW=W*TS,CH=H*TS, TURN_BASE=0.16;
+const cv=$("view"), ctx=cv.getContext('2d');
+function $(id){return document.getElementById(id);}
+function clamp(v,a,b){return v<a?a:v>b?b:v;}
+function lerp(a,b,k){return a+(b-a)*k;}
+function randInt(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
+function shuffle(arr,rng){for(let i=arr.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}}
+
+let playing=false,t=0,speed=1,muted=false,curIdx=-1,lastTs=0;
+let sim=null, modal=null;
+
+function genDungeon(sc){
+  const rng=mulberry32(sc.seed||(sc.title.length*131+7));
+  const g=[]; for(let y=0;y<H;y++) g.push(new Array(W).fill('#'));
+  const centers=[]; const n=sc.rooms||6;
+  for(let i=0;i<n;i++){
+    const rw=3+Math.floor(rng()*4), rh=3+Math.floor(rng()*3);
+    const rx=1+Math.floor(rng()*(W-rw-2)), ry=1+Math.floor(rng()*(H-rh-2));
+    for(let y=ry;y<ry+rh;y++)for(let x=rx;x<rx+rw;x++) g[y][x]='.';
+    centers.push({x:Math.floor(rx+rw/2),y:Math.floor(ry+rh/2)});
+  }
+  const carve=(a,b)=>{ let x=a.x,y=a.y; while(x!==b.x){g[y][x]='.';x+=x<b.x?1:-1;} while(y!==b.y){g[y][x]='.';y+=y<b.y?1:-1;} g[b.y][b.x]='.'; };
+  for(let i=1;i<centers.length;i++) carve(centers[i-1],centers[i]);
+  const st=centers[centers.length-1]; g[st.y][st.x]='>';
+  g[centers[0].y][Math.min(W-2,centers[0].x+2)]='_';
+  return {g,start:centers[0],stairs:st,centers};
+}
+function bfsNext(g,sx,sy,gx,gy){
+  if(sx===gx&&sy===gy) return null;
+  const key=(x,y)=>y*W+x; const prev=new Map(); prev.set(key(sx,sy),null);
+  const q=[{x:sx,y:sy}]; let qi=0; const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+  while(qi<q.length){ const c=q[qi++]; if(c.x===gx&&c.y===gy) break;
+    for(const d of dirs){ const nx=c.x+d[0],ny=c.y+d[1];
+      if(nx<0||ny<0||nx>=W||ny>=H) continue;
+      if(g[ny][nx]==='#') continue;
+      const k=key(nx,ny); if(prev.has(k)) continue; prev.set(k,c); q.push({x:nx,y:ny}); } }
+  if(!prev.has(key(gx,gy))) return null;
+  const path=[]; let cur={x:gx,y:gy};
+  while(cur && prev.get(key(cur.x,cur.y))){ path.push(cur); cur=prev.get(key(cur.x,cur.y)); }
+  path.reverse(); return path[0];
+}
+function isMobAt(x,y){ return sim.mobs.some(m=>!m.dead && m.px===x && m.py===y); }
+function isPetAt(x,y){ return sim.pet && !sim.pet.dead && sim.pet.px===x && sim.pet.py===y; }
+function isPlayerAt(x,y){ return sim.hero.px===x && sim.py===y; }
+
+function buildSim(idx){
+  const sc=SCENES[idx];
+  const map=genDungeon(sc);
+  sim={ g:map.g, start:map.start, stairs:map.stairs, centers:map.centers,
+        mobs:[], items:[], route:[], routeIdx:0, floaters:[], turn:0, turnAcc:0, shake:0, log:[], descended:false, healed:0 };
+  recalcVitals();
+  sim.hero={px:map.start.x, py:map.start.y, lpx:map.start.x, lpy:map.start.y, anim:null, atkMin:P.atkMin, atkMax:P.atkMax};
+  sim.pet={name:'妹分『シエル』',ch:'p',color:'#f9a8d4',hp:40,maxhp:40,atkMin:6,atkMax:11,px:clamp(map.start.x+1,0,W-1),py:map.start.y,lpx:0,lpy:0,anim:null,dead:false,spawn:{x:map.start.x+1,y:map.start.y},moveCd:0};
+  sim.pet.lpx=sim.pet.px; sim.pet.lpy=sim.pet.py;
+  const rng=mulberry32((sc.seed||1)*7+3);
+  const floors=[]; for(let y=0;y<H;y++)for(let x=0;x<W;x++) if(map.g[y][x]==='.') floors.push({x,y});
+  shuffle(floors,rng);
+  let fi=0;
+  (sc.mobs||[]).forEach(([type,count])=>{ const tp=MOBTYPES[type];
+    for(let k=0;k<count;k++){ let p; do{ p=floors[fi++ % floors.length]; }while(Math.abs(p.x-map.start.x)+Math.abs(p.y-map.start.y)<5);
+      sim.mobs.push({name:tp.name,ch:tp.ch,color:tp.color,hp:tp.hp,maxhp:tp.hp,atkMin:tp.atkMin,atkMax:tp.atkMax,xp:tp.xp,gold:tp.gold,px:p.x,py:p.y,lpx:p.x,lpy:p.y,anim:null,dead:false,spawn:{x:p.x,y:p.y},aggro:false,flinch:0,moveCd:0,moveEvery:(type==='slime')?2:1}); } });
+  for(let k=0;k<3;k++){ let p; do{ p=floors[fi++ % floors.length]; }while(Math.abs(p.x-map.start.x)+Math.abs(p.y-map.start.y)<3 && fi<floors.length*3);
+    sim.items.push({x:p.x,y:p.y,ch:'$',amount:5+Math.floor(rng()*20)}); }
+  for(let k=0;k<2;k++){ let p; do{ p=floors[fi++ % floors.length]; }while(Math.abs(p.x-map.start.x)+Math.abs(p.y-map.start.y)<3 && fi<floors.length*3);
+    sim.items.push({x:p.x,y:p.y,ch:'!',amount:35}); }
+  const others=map.centers.filter(c=>!(c.x===map.start.x&&c.y===map.start.y)).sort((a,b)=>(Math.abs(a.x-map.start.x)+Math.abs(a.y-map.start.y))-(Math.abs(b.x-map.start.x)+Math.abs(b.y-map.start.y)));
+  sim.route=others.slice(0,3).concat([map.stairs]);
+  sc.seed=(sc.seed||0)+1;
+  pushLog('― 第'+(idx+1)+'章: '+sc.title+' ―','hi');
+  pushLog(sc.log);
+  renderScene(idx);
+}
+function pushLog(text,cls){ sim.log.push({t:text,c:cls||''}); if(sim.log.length>40) sim.log.shift(); }
+
+function nearestAdjMob(ox,oy){
+  let best=null,bd=1e9;
+  for(const m of sim.mobs){ if(m.dead) continue; const c=Math.max(Math.abs(m.px-ox),Math.abs(m.py-oy)); if(c===1 && m.hp<bd){bd=m.hp;best=m;} }
+  return best;
+}
+function floater(e,text,color){ sim.floaters.push({x:e.px,y:e.py,text,color,age:0}); }
+function dealToMob(m,dmg,who){
+  m.hp-=dmg; floater(m,'-'+dmg, who==='pet'?'#f9a8d4':'#fbbf24');
+  if(m.hp<=0){
+    m.dead=true; P.exp+=m.xp; P.gold+=m.gold;
+    P.killCounts[m.name]=(P.killCounts[m.name]||0)+1;
+    pushLog('★'+m.name+'を撃破！','hi');
+    P.quests.forEach(q=>{ if(!q.done && q.target===m.name){ q.cur++; if(q.cur>=q.need){ q.done=true; P.gold+=q.gold; P.plat+=q.plat; pushLog('★依頼達成！ '+q.gold+'G + '+q.plat+'P 獲得！','lv'); } } });
+    checkLevel();
+  } else { pushLog((who==='pet'?'シエルが':'あなたが')+m.name+'を攻撃。('+dmg+')'); }
+}
+function heroAttack(m){ const dmg=randInt(P.atkMin,P.atkMax); heroAnim(m); dealToMob(m,dmg,'hero'); }
+function petAttack(m){ const dmg=randInt(sim.pet.atkMin,sim.pet.atkMax); petAnim(m); dealToMob(m,dmg,'pet'); }
+function heroAnim(m){ sim.hero.anim={dx:Math.sign(m.px-sim.hero.px),dy:Math.sign(m.py-sim.hero.py)}; }
+function petAnim(m){ sim.pet.anim={dx:Math.sign(m.px-sim.pet.px),dy:Math.sign(m.py-sim.pet.py)}; }
+function mobAttack(m){ const dmg=randInt(m.atkMin,m.atkMax); m.anim={dx:Math.sign(sim.hero.px-m.px),dy:Math.sign(sim.hero.py-m.py)}; P.hp-=dmg; floater(sim.hero,'-'+dmg,'#f87171'); sim.shake=0.22; if(P.hp<=1){ P.hp=1; pushLog(m.name+'の攻撃！('+dmg+') 瀕死だが持ちこたえた！','bad'); } else pushLog(m.name+'の攻撃！('+dmg+')','bad'); }
+
+function stepTurn(){
+  sim.hero.lpx=sim.hero.px; sim.hero.lpy=sim.hero.py;
+  const adj=nearestAdjMob(sim.hero.px,sim.hero.py);
+  if(adj){ heroAttack(adj); }
+  else {
+    const alive=sim.mobs.filter(m=>!m.dead);
+    let goal;
+    if(alive.length){
+      let best=null,bd=1e9;
+      for(const m of alive){ const c=Math.abs(m.px-sim.hero.px)+Math.abs(m.py-sim.hero.py); if(c<bd){ bd=c; best=m; } }
+      goal={x:best.px,y:best.py};
+    } else {
+      goal=sim.route[sim.routeIdx];
+      if(sim.hero.px===goal.x && sim.hero.py===goal.y){ sim.routeIdx=(sim.routeIdx+1)%sim.route.length; goal=sim.route[sim.routeIdx]; }
+    }
+    const step=bfsNext(sim.g,sim.hero.px,sim.hero.py,goal.x,goal.y);
+    if(step && !isMobAt(step.x,step.y)){ sim.hero.px=step.x; sim.hero.py=step.y; pickItem(sim.hero.px,sim.hero.py); }
+  }
+  // descend
+  if(sim.g[sim.hero.py][sim.hero.px]==='>'){
+    if(!sim.descended){ sim.descended=true; P.dungeonLevel++; pushLog('★ダンジョン地下'+P.dungeonLevel+'階へ降り立った！','sys'); }
+  } else sim.descended=false;
+  // altar heal
+  if(sim.g[sim.hero.py][sim.hero.px]==='_' || (sim.hero.px>0 && sim.g[sim.hero.py] && sim.g[sim.hero.py][sim.hero.px-1]==='_')){
+    if(P.piety>=50 && sim.hero.lpx!==sim.hero.px){ P.hp=P.maxhp; P.mp=P.maxmp; sim.heal=1; pushLog('神【'+P.god+'】の御手があなたを包み込み、傷と魔力が全快した！','sys'); }
+  }
+  if(sim.turn%6===0 && P.hp<P.maxhp){ P.hp=Math.min(P.maxhp,P.hp+1); }
+  // pet
+  stepPet();
+  // mobs
+  for(const m of sim.mobs){ if(m.dead) continue;
+    m.lpx=m.px; m.lpy=m.py;
+    if(m.flinch>0){ m.flinch--; continue; }
+    const c=Math.abs(m.px-sim.hero.px)+Math.abs(m.py-sim.hero.py);
+    if(!m.aggro && c<=6) m.aggro=true;
+    if(m.aggro && c>11) m.aggro=false;
+    let moved=false;
+    if(c<=1 && m.aggro){ mobAttack(m); }
+    else if(m.moveCd<=0){
+      if(m.aggro){
+        const step=bfsNext(sim.g,m.px,m.py,sim.hero.px,sim.hero.py);
+        if(step && !isPlayerAt(step.x,step.y) && !isMobAt(step.x,step.y)){ m.px=step.x; m.py=step.y; moved=true; }
+      } else {
+        const sd=Math.abs(m.px-m.spawn.x)+Math.abs(m.py-m.spawn.y);
+        if(sd>2){ const step=bfsNext(sim.g,m.px,m.py,m.spawn.x,m.spawn.y); if(step && !isPlayerAt(step.x,step.y) && !isMobAt(step.x,step.y)){ m.px=step.x; m.py=step.y; moved=true; } }
+        else { const dirs=[[1,0],[-1,0],[0,1],[0,-1]]; const d=dirs[Math.floor(Math.random()*4)]; const nx=m.px+d[0], ny=m.py+d[1];
+          if(nx>=0&&ny>=0&&nx<W&&ny<H && sim.g[ny][nx]!=='#' && !isPlayerAt(nx,ny) && !isMobAt(nx,ny)){ m.px=nx; m.py=ny; moved=true; } }
+      }
+      if(moved) m.moveCd=m.moveEvery-1;
+    }
+    if(m.moveCd>0) m.moveCd--;
+  }
+  sim.turn++;
+}
+function stepPet(){
+  const pe=sim.pet; if(pe.dead) return;
+  pe.lpx=pe.px; pe.lpy=pe.py;
+  if(P.hp<P.maxhp && sim.turn%8===0){ P.hp=Math.min(P.maxhp,P.hp+1); }
+  const adj=nearestAdjMob(pe.px,pe.py);
+  if(adj){ petAttack(adj); }
+  else {
+    const step=bfsNext(sim.g,pe.px,pe.py,sim.hero.px,sim.hero.py);
+    if(step && !isMobAt(step.x,step.y) && !isPlayerAt(step.x,step.y)){ pe.px=step.x; pe.py=step.y; }
+  }
+}
+function pickItem(x,y){
+  const i=sim.items.findIndex(it=>it.x===x&&it.y===y);
+  if(i>=0){ const it=sim.items[i]; if(it.ch==='$'){ P.gold+=it.amount; pushLog('金貨 '+it.amount+'G を拾った。'); } else { pushLog('ポーションを拾った。'); } sim.items.splice(i,1); }
+}
+
+/* ===================== 描画 ===================== */
+function draw(){
+  if(!sim) return;
+  const frac=clamp(sim.turnAcc/TURN_BASE,0,1);
+  ctx.clearRect(0,0,CW,CH);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const ch=sim.g[y][x]; const px=x*TS, py=y*TS;
+    if(ch==='#'){ ctx.fillStyle='#14101f'; ctx.fillRect(px,py,TS,TS); ctx.fillStyle='#221b33'; ctx.fillRect(px+1,py+1,TS-2,TS-2); }
+    else {
+      ctx.fillStyle='#070b14'; ctx.fillRect(px,py,TS,TS);
+      if(ch==='>'){ ctx.fillStyle='#38bdf8'; ctx.font='bold '+(TS*0.72)+'px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('>',px+TS/2,py+TS/2); }
+      else if(ch==='_'){ ctx.fillStyle='#fbbf24'; ctx.font='bold '+(TS*0.72)+'px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('_',px+TS/2,py+TS/2); }
+      else if(ch==='$'){ ctx.fillStyle='#fbbf24'; ctx.font='bold '+(TS*0.66)+'px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('$',px+TS/2,py+TS/2); }
+      else if(ch==='!'){ ctx.fillStyle='#f87171'; ctx.font='bold '+(TS*0.66)+'px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('!',px+TS/2,py+TS/2); }
+      else if(ch==='%'){ ctx.fillStyle='#86efac'; ctx.font='bold '+(TS*0.6)+'px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('%',px+TS/2,py+TS/2); }
+    }
+  }
+  const screen=(e)=>{ const ix=lerp(e.lpx,e.px,frac), iy=lerp(e.lpy,e.py,frac); let ox=0,oy=0; if(e.anim){ ox=e.anim.dx*Math.sin(frac*Math.PI)*0.5; oy=e.anim.dy*Math.sin(frac*Math.PI)*0.5; } return {x:(ix+0.5+ox)*TS, y:(iy+0.5+oy)*TS}; };
+  for(const m of sim.mobs){ if(m.dead) continue; const s=screen(m);
+    ctx.fillStyle=m.color; ctx.font='bold '+(TS*0.82)+'px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(m.ch,s.x,s.y);
+    if(m.hp<m.maxhp){ const bw=TS*0.7; ctx.fillStyle='rgba(0,0,0,.6)'; ctx.fillRect(s.x-bw/2-1,s.y-TS*0.5-1,bw+2,5); ctx.fillStyle='#ef4444'; ctx.fillRect(s.x-bw/2,s.y-TS*0.5,bw*clamp(m.hp/m.maxhp,0,1),3); }
+  }
+  if(sim.pet && !sim.pet.dead){ const s=screen(sim.pet); ctx.fillStyle=sim.pet.color; ctx.font='bold '+(TS*0.82)+'px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(sim.pet.ch,s.x,s.y); }
+  const hs=screen(sim.hero); ctx.fillStyle='#fde047'; ctx.font='bold '+(TS*0.86)+'px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('@',hs.x,hs.y);
+  for(const f of sim.floaters){ const a=clamp(1-f.age/0.9,0,1); ctx.globalAlpha=a; ctx.font='bold 14px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.lineWidth=3; ctx.strokeStyle='rgba(0,0,0,.85)'; ctx.strokeText(f.text,f.x*TS+TS/2,f.y*TS+TS/2-f.age*26); ctx.fillStyle=f.color; ctx.fillText(f.text,f.x*TS+TS/2,f.y*TS+TS/2-f.age*26); ctx.globalAlpha=1; }
+  ctx.save();
+  if(sim.shake>0){ const s=sim.shake*14; ctx.translate((Math.random()*2-1)*s,(Math.random()*2-1)*s); }
+  ctx.restore();
+  updateHUD(); updateLog();
+}
+function updateHUD(){
+  const hungerStr = P.hunger<1000 ? '★飢餓' : (P.hunger<3000?'腹減り':'');
+  $("hud1").innerHTML = '<span><b>'+P.name+'</b> '+(hungerStr?'<span style="color:#f87171">['+hungerStr+']</span>':'')+'</span>'
+    + ' HP:<span class="track"><i style="width:'+(P.hp/P.maxhp*100)+'%"></i></span> <b>'+P.hp+'/'+P.maxhp+'</b>'
+    + ' MP:<span class="track"><i class="mp" style="width:'+(P.mp/P.maxmp*100)+'%"></i></span> <b>'+P.mp+'/'+P.maxmp+'</b>'
+    + ' Lv.<b>'+P.level+'</b> <b>'+P.gold+'G</b> '+P.plat+'P';
+  $("hud2").innerHTML = '<span>【仲間】<b style="color:#f9a8d4">シエル</b> HP:<span class="track"><i class="pe" style="width:'+(sim.pet.hp/sim.pet.maxhp*100)+'%"></i></span></span>'
+    + ' 信仰:<b>'+P.god+'</b>('+P.piety+')'
+    + ' <b>B'+P.dungeonLevel+'F</b>'
+    + ' 転生:<b>'+P.reinc+'</b>';
+  // context hint
+  let hint='💡 ―';
+  const hx=sim.hero.px, hy=sim.hero.py;
+  if(sim.g[hy][hx]==='>') hint='💡 下り階段の上：[>]で次の地下階層へ';
+  else if(sim.g[hy][hx]==='_'||(hx>0&&sim.g[hy][hx-1]==='_')) hint='💡 祭壇の上：[o]で祈り全快 / [p]で供物';
+  else { const it=sim.items.find(i=>i.x===hx&&i.y===hy); if(it) hint='💡 足元: ['+(it.ch==='$'?'金貨':'ポーション')+'] がある ([g]で拾う)'; }
+  $("hud3").textContent=hint;
+}
+function updateLog(){ $("msglog").innerHTML=sim.log.slice(-6).map(l=>'<div class="'+l.c+'">'+l.t+'</div>').join(''); }
+
+/* ===================== ガイド / モーダル ===================== */
+function setGuide(topic){ const g=GUIDE[topic]||GUIDE.intro; $("gTag").textContent=g.tag; $("gTitle").textContent=g.title; $("gBody").innerHTML=g.body; }
+function openModal(type){
+  const m=$("modal"); let html='';
+  if(type==='title'){ html='<div class="big">Elona: Masterpiece Edition</div><div class="sm">イルヴァ大陸を舞台とした本格ローグライク。この動画はプロジェクトの実際の仕様で進行を再現します。</div><div class="box">操作：矢印/hjkl 移動 ・ スペース 実行 ・ g 拾う ・ i インベントリ ・ c 詠唱 ・ p 祈り ・ ? ガイド<br>右の「初心者ガイド」で仕組みを随時解説。</div>'; }
+  else if(type==='status'){ let at=''; for(const k in P.attrs){ at+='<span class="at">'+k+'</span> '+P.attrs[k]+'　'; } let sk=''; for(const k in P.skills){ sk+=k+' Lv'+P.skills[k]+'　'; }
+    html='<div class="big">ステータス</div><div class="box"><b>'+P.name+'</b>　Lv.'+P.level+'<br>HP '+P.hp+'/'+P.maxhp+'　MP '+P.mp+'/'+P.maxmp+'<br>'+at+'<br>スキル：'+sk+'<br>信仰 '+P.god+'（piety '+P.piety+'）　カルマ '+P.karma+'</div>'; }
+  else if(type==='inv'){ let it=''; INVENTORY_INIT.forEach(x=>{ it+='・'+x.name+'（'+x.mat+' / '+x.note+'）<br>'; });
+    html='<div class="big">インベントリ</div><div class="box">'+it+'<br>所持金 '+P.gold+'G / '+P.plat+'P</div>'; }
+  else if(type==='quest'){ let q=''; P.quests.forEach(x=>{ q+='・'+x.title+'：'+x.target+' '+x.cur+'/'+x.need+' → '+x.gold+'G+'+x.plat+'P'+(x.done?' ✓':'')+'<br>'; });
+    html='<div class="big">依頼一覧</div><div class="box">'+q+'</div>'; }
+  else if(type==='help'){ html='<div class="big">初心者ガイド</div><div class="box">この動画は本プロジェクトの仕様を再現しています。<br>・マップはターミナル形式（@=あなた, p=シエル, x=敵, &gt;=階段, _=祭壇）<br>・戦闘は「命中率＝75+DEX差+武器hit×5」「ダメージ＝ダイス和+補正+STR/3」<br>・カルマ・転生・ネフィアなど、右ガイドで順に解説<br>・クリア後は「輪廻転生」が真の終盤</div>'; }
+  else if(type==='reinc'){ html='<div class="big">輪廻転生デモ</div><div class="box">転生回数：'+P.reinc+' → 1<br>・レベルが1に戻るが敵が強化（最大×5ステ/×6HP）<br>・ドロップ率アップ<br>・レガシースキル解放：魂の記憶 / 転生の膂力 / 不滅の意思<br>→ 何周も遊べるのが本作の真髄。</div>'; }
+  m.innerHTML=html+'<button class="primary" onclick="closeModal()">閉じる</button>'; m.classList.add('show');
+}
+function closeModal(){ modal=null; $("modal").classList.remove("show"); }
+
+/* ===================== タイムライン / 再生 ===================== */
+function fmt(s){ s=Math.max(0,Math.floor(s)); return Math.floor(s/60)+":"+String(s%60).padStart(2,'0'); }
+function currentIndex(){ for(let i=SCENES.length-1;i>=0;i--){ if(t>=STD[i]) return i; } return 0; }
+function syncUI(){ $("scrub").value=t; $("clock").textContent=fmt(t)+" / "+fmt(TOTAL); }
+function renderScene(i){
+  const sc=SCENES[i];
+  $("icon").textContent=sc.icon; $("title").textContent=sc.title; $("desc").textContent=sc.desc;
+  $("chapNo").textContent=(i+1); $("chapNow").textContent="第"+(i+1)+"章 / 全24章";
+  setGuide(sc.guide);
+  [...$("chapters").children].forEach((b,bi)=>b.classList.toggle("cur",bi===i));
+  blip();
+}
+function processBeats(idx, lt){
+  const sc=SCENES[idx];
+  (sc.beats||[]).forEach(b=>{ if(!b._done && lt>=b.at){ b._done=true;
+    if(b.modal) openModal(b.modal);
+    if(b.log) pushLog(b.log, b.cls);
+  } });
+}
+function buildChapters(){
+  const c=$("chapters"); c.innerHTML="";
+  SCENES.forEach((sc,i)=>{ const b=document.createElement("button"); b.textContent=(i+1); b.title=sc.title;
+    b.onclick=()=>{ seek(STD[i]+0.05); if(!playing) togglePlay(); }; c.appendChild(b); });
+}
+function loop(ts){
+  if(!playing){ lastTs=ts; return; }
+  const dt=Math.min(0.05,(ts-lastTs)/1000); lastTs=ts;
+  t+=dt*speed;
+  if(t>=TOTAL){ t=TOTAL; playing=false; $("playBtn").textContent="▶ 再生"; showEnd(); }
+  ensureSim(currentIndex());
+  sim.turnAcc+=dt*speed;
+  let guard=0; while(sim.turnAcc>=TURN_BASE && guard<200){ stepTurn(); sim.turnAcc-=TURN_BASE; guard++; }
+  for(const f of sim.floaters) f.age+=dt*speed;
+  sim.floaters=sim.floaters.filter(f=>f.age<0.9);
+  if(sim.shake>0) sim.shake-=dt*speed;
+  const idx=currentIndex(); processBeats(idx, t-STD[idx]);
+  syncUI(); draw();
+  if(playing) requestAnimationFrame(loop);
+}
+function ensureSim(idx){ if(curIdx!==idx){ curIdx=idx; buildSim(idx); modal=null; $("modal").classList.remove("show"); } }
+function togglePlay(){
+  if(playing){ playing=false; $("playBtn").textContent="▶ 再生"; return; }
+  if(t>=TOTAL) t=0;
+  playing=true; $("playBtn").textContent="⏸ 一時停止"; hideEnd();
+  ensureSim(currentIndex()); lastTs=performance.now(); requestAnimationFrame(loop);
+}
+function restart(){ t=0; curIdx=-1; hideEnd(); syncUI(); if(playing){ playing=false; $("playBtn").textContent="▶ 再生"; } ensureSim(0); draw(); }
+function seek(sec){ t=Math.min(TOTAL,Math.max(0,sec)); ensureSim(currentIndex()); syncUI(); draw(); }
+function onScrub(v){ seek(parseFloat(v)); }
+function seekBy(d){ seek(t+d); }
+function setSpeed(s){ speed=s; ["sp1","sp2","sp4"].forEach(id=>$(id).classList.remove("active")); $(s===1?"sp1":s===2?"sp2":"sp4").classList.add("active"); }
+function showEnd(){ openModal('reinc'); $("endStats")&&($("endStats").textContent="LV "+P.level+" ・ 転生"+P.reinc+" ・ 全24章クリア"); }
+function hideEnd(){ }
+function openHelp(){ openModal('help'); }
+
+let actx=null;
+function blip(){ if(muted) return; try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(), g=actx.createGain(); o.type="sine"; o.frequency.value=520; g.gain.value=0.04;
+  o.connect(g); g.connect(actx.destination); o.start(); o.frequency.exponentialRampToValueAtTime(780,actx.currentTime+0.12);
+  g.gain.exponentialRampToValueAtTime(0.0001,actx.currentTime+0.22); o.stop(actx.currentTime+0.24); }catch(e){} }
+function toggleMute(){ muted=!muted; $("muteBtn").textContent=muted?"🔇":"🔊"; }
+
+buildChapters();
+ensureSim(0);
+draw();
+</script>
+</body>
+</html>

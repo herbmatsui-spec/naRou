@@ -1,0 +1,192 @@
+# 実績・トロフィーシステム 定義データ (Steps 1-3, 32, 36, 37, 41, 45, 48, 51, 55, 59, 63, 65, 66)
+
+achievements:
+  # 基本実績 (Step 2)
+  first_blood:
+    name: "最初の血"
+    description: "初めてモンスターを討伐する。"
+    icon: "⚔️"
+    reward_title: "first_slayer"
+    reward_gold: 100
+    reward_item: "potion_heal"
+    reward_skill_points: 5
+    hidden: false
+    condition:
+      type: "kill_count"
+      target: 1
+
+  # 称号連動実績 (Step 3)
+  goblin_slayer:
+    name: "ゴブリンスレイヤー"
+    description: "ゴブリン種を累計10体討伐する。"
+    icon: "👺"
+    reward_title: "goblin_slayer"
+    reward_gold: 500
+    reward_item: "iron_helmet"
+    reward_skill_points: 10
+    auto_equip_title: true
+    status_bonus:
+      strength: 2
+    hidden: false
+    condition:
+      type: "monster_type_kill"
+      monster_key: "goblin"
+      target: 10
+
+  # ダンジョン探検家実績 (Step 32)
+  dungeon_explorer:
+    name: "ダンジョン探検家"
+    description: "累計10フロア以上の異なるダンジョン階層を踏破する。"
+    icon: "🗺️"
+    reward_title: "dungeon_explorer"
+    reward_gold: 1000
+    reward_item: "scroll_teleport"
+    reward_skill_points: 50
+    hidden: false
+    condition:
+      type: "dungeon_floors"
+      target: 10
+
+  # コレクション実績枠組み (Step 36) & モンスター収集家 (Step 45)
+  monster_collector:
+    name: "モンスター収集家"
+    description: "5種類以上の異なるモンスターを討伐して生態を調査する。"
+    icon: "📖"
+    collection_type: "monsters"
+    target_count: 5
+    reward_title: "naturalist"
+    reward_gold: 2000
+    reward_item: "monster_book"
+    reward_skill_points: 30
+    hidden: false
+    condition:
+      type: "unique_monsters_killed"
+      target: 5
+
+  # アイテム収集家実績 (Step 48)
+  item_collector:
+    name: "アイテム収集家"
+    description: "5種類以上のユニークまたは希少アイテムを入手する。"
+    icon: "💎"
+    collection_type: "items"
+    target_count: 5
+    reward_title: "hoarder"
+    reward_gold: 3000
+    reward_item: "magic_chest"
+    reward_skill_points: 20
+    hidden: false
+    condition:
+      type: "unique_items_obtained"
+      target: 5
+
+  # スピードランナー実績 (Step 37)
+  speed_runner:
+    name: "スピードランナー"
+    description: "プレイ時間1時間(3600秒)以内に深層またはボスを撃破する。"
+    icon: "⚡"
+    time_limit: 3600
+    reward_title: "speed_demon"
+    reward_gold: 5000
+    reward_item: "boots_of_speed"
+    reward_skill_points: 40
+    status_bonus:
+      speed: 20
+    hidden: false
+    condition:
+      type: "speedrun"
+      time_limit_seconds: 3600
+
+  # 祭り参加者実績 (Step 41)
+  festival_participant:
+    name: "祭り参加者"
+    description: "特別な祝日(01-01, 08-15, 12-25)にゲームをプレイする。"
+    icon: "🏮"
+    available_dates:
+      - "01-01"
+      - "08-15"
+      - "12-25"
+    reward_title: "festival_goer"
+    reward_gold: 777
+    reward_item: "festival_firework"
+    reward_skill_points: 15
+    hidden: false
+    condition:
+      type: "festival_date"
+
+  # 週間チャンピオン実績 (Step 51)
+  weekly_champion:
+    name: "週間チャンピオン"
+    description: "週間プレイタイムが一定基準(1800秒/30分以上)に到達する。"
+    icon: "👑"
+    social_based: true
+    reward_title: "weekly_champ"
+    reward_gold: 4000
+    reward_item: "champion_crown"
+    reward_skill_points: 25
+    hidden: false
+    condition:
+      type: "weekly_time"
+      target: 1800
+
+  # 友達助っ人実績 (Step 55)
+  friend_helper:
+    name: "友達助っ人"
+    description: "仲間やフレンドの救援・協力を5回以上行う。"
+    icon: "🤝"
+    social_based: true
+    reward_title: "loyal_friend"
+    reward_gold: 1500
+    reward_item: "friendship_ring"
+    reward_skill_points: 20
+    hidden: false
+    condition:
+      type: "friend_helps"
+      target: 5
+
+  # 転生英雄実績 (Step 59)
+  reincarnation_hero:
+    name: "転生英雄"
+    description: "累計5回以上の転生と累計獲得レベル1000を達成する。"
+    icon: "🕊️"
+    requirement:
+      reincarnation_count: 5
+      total_level_earned: 1000
+    reward_title: "eternal_hero"
+    reward_gold: 10000
+    reward_item: "ancient_relic"
+    reward_skill_points: 100
+    hidden: false
+    condition:
+      type: "reincarnation"
+      reincarnation_count: 5
+      total_level_earned: 1000
+
+  # メタマスター実績 (Step 63)
+  meta_master:
+    name: "メタマスター"
+    description: "すべてのメタ進行項目でマイルストーンを達成する。"
+    icon: "🌌"
+    meta_progression_based: true
+    reward_title: "transcendent"
+    reward_gold: 50000
+    reward_item: "infinity_core"
+    reward_skill_points: 200
+    hidden: false
+    condition:
+      type: "meta_progression_all"
+
+  # 隠し実績枠組み (Step 65) & 秘密の牛レベル (Step 66)
+  the_secret_cow_level:
+    name: "秘密の牛レベル"
+    description: "モーモー！ 伝説の牛たちの秘密領域へ足を踏み入れた。"
+    icon: "🐮"
+    hidden: true
+    reward_title: "cow_king"
+    reward_gold: 8888
+    reward_item: "holy_hand_grenade"
+    reward_skill_points: 77
+    condition:
+      type: "special_combo"
+      required_items:
+        - "wirts_leg"
+        - "tome_of_town_portal"

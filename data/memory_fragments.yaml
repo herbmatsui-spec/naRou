@@ -1,0 +1,27 @@
+# 記憶フラグメント設定 (Steps 13, 14)
+
+memory_fragments:
+  goblin_child_screams:
+    id: "goblin_child_screams"
+    name: "ゴブリン子どもの悲鳴"
+    description: "洞窟の奥から響いた微かな幼き声。魔物にも家族や命の重みがあるのか…？"
+    trigger_conditions:
+      - "kill_goblin_count_10"
+    unlock_requirement: "dungeon_goblin_depth_3"
+    effects:
+      karma_dilemma: true
+    resolution_paths:
+      - "spared_cubs"
+      - "ruthless_extermination"
+
+  ancient_hero_memory:
+    id: "ancient_hero_memory"
+    name: "古の英雄の残響"
+    description: "かつてこの世界を救った無名の戦士の最後の祈り。"
+    trigger_conditions:
+      - "descend_stairs_depth_10"
+    unlock_requirement: "depth_10"
+    effects:
+      skill_potential_boost: 10
+    resolution_paths:
+      - "inherit_will"

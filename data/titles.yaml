@@ -1,0 +1,186 @@
+# 称号・二つ名システム 定義データ
+# カテゴリ: kill, explore, skill, survival, faith, wealth, pet, craft, special, milestone
+
+titles:
+  # === キル系 ===
+  goblin_slayer:
+    id: "goblin_slayer"
+    name: "ゴブリンスレイヤー"
+    epithet: "緑皮の悪夢"
+    category: "kill"
+    condition:
+      type: "kill_count"
+      target: "goblin"
+      count: 100
+    effects:
+      - {attr: "strength", value: 2}
+      - {attr: "damage_vs_goblin", value: 1.2, is_multiplier: true}
+    message: "ゴブリンを100体討伐した！「ゴブリンスレイヤー」の称号を得た！"
+    is_hidden: false
+
+  dragon_slayer:
+    id: "dragon_slayer"
+    name: "竜殺し"
+    epithet: "竜の墓標"
+    category: "kill"
+    condition:
+      type: "kill_count"
+      target: "dragon"
+      count: 10
+    effects:
+      - {attr: "strength", value: 5}
+      - {attr: "charisma", value: 3}
+      - {attr: "fear_resist", value: 50}
+    message: "竜を10体討伐した！「竜殺し」の称号を得た！"
+    is_hidden: false
+
+  # === 探索系 ===
+  deep_delver:
+    id: "deep_delver"
+    name: "深淵の探索者"
+    epithet: "奈落を歩む者"
+    category: "explore"
+    condition:
+      type: "dungeon_depth"
+      min_depth: 50
+    effects:
+      - {attr: "perception", value: 3}
+      - {attr: "evasion", value: 5}
+    message: "ダンジョン50階層に到達した！「深淵の探索者」の称号を得た！"
+    is_hidden: false
+
+  # === スキル系 ===
+  master_swordsman:
+    id: "master_swordsman"
+    name: "剣聖"
+    epithet: "一閃無双"
+    category: "skill"
+    condition:
+      type: "skill_level"
+      skill: "long_sword"
+      level: 50
+    effects:
+      - {attr: "dexterity", value: 4}
+      - {attr: "critical_rate", value: 10}
+    message: "長剣スキルがLv50に達した！「剣聖」の称号を得た！"
+    is_hidden: false
+
+  # === 生存系 ===
+  survivor:
+    id: "survivor"
+    name: "生還者"
+    epithet: "死線を越えし者"
+    category: "survival"
+    condition:
+      type: "near_death_count"
+      count: 5
+    effects:
+      - {attr: "endurance", value: 3}
+      - {attr: "will", value: 3}
+      - {attr: "hp_regen", value: 2}
+    message: "瀕死から5回生還した！「生還者」の称号を得た！"
+    is_hidden: false
+
+  # === 信仰系 ===
+  devout_believer:
+    id: "devout_believer"
+    name: "篤き信者"
+    epithet: "神の代弁者"
+    category: "faith"
+    condition:
+      type: "piety"
+      value: 1000
+    effects:
+      - {attr: "magic", value: 3}
+      - {attr: "piety_gain", value: 1.5, is_multiplier: true}
+    message: "信仰度1000に達した！「篤き信者」の称号を得た！"
+    is_hidden: false
+
+  # === 富豪系 ===
+  millionaire:
+    id: "millionaire"
+    name: "大富豪"
+    epithet: "黄金の主"
+    category: "wealth"
+    condition:
+      type: "gold_owned"
+      value: 1000000
+    effects:
+      - {attr: "charisma", value: 5}
+      - {attr: "shop_discount", value: 10}
+    message: "所持金100万ゴールド達成！「大富豪」の称号を得た！"
+    is_hidden: false
+
+  # === ペット系 ===
+  beast_master:
+    id: "beast_master"
+    name: "調教師"
+    epithet: "獣の王"
+    category: "pet"
+    condition:
+      type: "pet_count"
+      count: 5
+    effects:
+      - {attr: "charisma", value: 4}
+      - {attr: "pet_stat_bonus", value: 1.2, is_multiplier: true}
+    message: "ペットを5体従えた！「調教師」の称号を得た！"
+    is_hidden: false
+
+  # === クラフト系 ===
+  legendary_smith:
+    id: "legendary_smith"
+    name: "伝説の鍛冶師"
+    epithet: "鋼の魔術師"
+    category: "craft"
+    condition:
+      type: "craft_count"
+      category: "weapon"
+      count: 100
+    effects:
+      - {attr: "learning", value: 3}
+      - {attr: "craft_quality", value: 1.3, is_multiplier: true}
+    message: "武器を100個鍛造した！「伝説の鍛冶師」の称号を得た！"
+    is_hidden: false
+
+  # === 特殊・隠し ===
+  speedrunner:
+    id: "speedrunner"
+    name: "疾風の如く"
+    epithet: "時間を超える者"
+    category: "special"
+    condition:
+      type: "game_clear_time"
+      max_turns: 10000
+    effects:
+      - {attr: "speed", value: 20}
+      - {attr: "dexterity", value: 5}
+    message: "驚異的な速さでクリアした！「疾風の如く」の称号を得た！"
+    is_hidden: true
+
+  # === マイルストーン ===
+  level_50:
+    id: "level_50"
+    name: "達人"
+    epithet: "極めし者"
+    category: "milestone"
+    condition:
+      type: "level"
+      value: 50
+    effects:
+      - {attr: "all_attributes", value: 2}
+    message: "レベル50に到達した！「達人」の称号を得た！"
+    is_hidden: false
+
+  level_100:
+    id: "level_100"
+    name: "超越者"
+    epithet: "常識を超えし者"
+    category: "milestone"
+    condition:
+      type: "level"
+      value: 100
+    effects:
+      - {attr: "all_attributes", value: 5}
+      - {attr: "exp_gain", value: 1.5, is_multiplier: true}
+    message: "レベル100に到達した！「超越者」の称号を得た！"
+    is_hidden: false

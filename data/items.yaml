@@ -1,0 +1,430 @@
+# ==============================================================================
+# Elona Masterpiece Edition - Complete Items Catalog (data/items.yaml)
+# Categories: weapon, shield, helm, armor, ring, potion, scroll, food, spellbook, tool, rod, ore
+# ==============================================================================
+
+# --- 近接武器 (Weapons: Melee) ---
+longsword:
+  name: "長剣"
+  category: "weapon"
+  char: "🗡️"
+  color: [200, 200, 200]
+  base_weight: 3.5
+  base_value: 120
+  dice_num: 2
+  dice_side: 6
+  hit_bonus: 2
+  dmg_bonus: 0
+  pv: 0
+  dv: 0
+  material: "iron"
+
+shortsword:
+  name: "短剣"
+  category: "weapon"
+  char: "🗡️"
+  color: [200, 200, 255]
+  base_weight: 1.2
+  base_value: 80
+  dice_num: 1
+  dice_side: 8
+  hit_bonus: 4
+  dmg_bonus: 0
+  pv: 0
+  dv: 0
+  material: "iron"
+
+katana:
+  name: "刀"
+  category: "weapon"
+  char: "⚔️"
+  color: [220, 220, 240]
+  base_weight: 2.8
+  base_value: 280
+  dice_num: 2
+  dice_side: 7
+  hit_bonus: 5
+  dmg_bonus: 2
+  pv: 0
+  dv: 1
+  material: "steel"
+
+claymore:
+  name: "大剣"
+  category: "weapon"
+  char: "🗡️"
+  color: [180, 180, 210]
+  base_weight: 5.8
+  base_value: 340
+  dice_num: 3
+  dice_side: 8
+  hit_bonus: -1
+  dmg_bonus: 6
+  pv: 1
+  dv: -2
+  material: "steel"
+
+dagger:
+  name: "ダガー"
+  category: "weapon"
+  char: "🗡️"
+  color: [190, 190, 190]
+  base_weight: 0.8
+  base_value: 45
+  dice_num: 1
+  dice_side: 6
+  hit_bonus: 5
+  dmg_bonus: 0
+  material: "iron"
+
+spear:
+  name: "槍"
+  category: "weapon"
+  char: "🔱"
+  color: [190, 190, 150]
+  base_weight: 4.0
+  base_value: 160
+  dice_num: 2
+  dice_side: 5
+  hit_bonus: 3
+  dmg_bonus: 1
+  material: "iron"
+
+battle_axe:
+  name: "戦斧"
+  category: "weapon"
+  char: "🪓"
+  color: [170, 170, 170]
+  base_weight: 4.8
+  base_value: 200
+  dice_num: 2
+  dice_side: 8
+  hit_bonus: 0
+  dmg_bonus: 4
+  material: "iron"
+
+warhammer:
+  name: "ウォーハンマー"
+  category: "weapon"
+  char: "🔨"
+  color: [150, 150, 160]
+  base_weight: 6.2
+  base_value: 250
+  dice_num: 3
+  dice_side: 6
+  hit_bonus: -2
+  dmg_bonus: 5
+  material: "steel"
+
+# --- 遠隔・杖 (Weapons: Ranged & Staves) ---
+short_bow:
+  name: "短弓"
+  category: "weapon"
+  char: "🏹"
+  color: [180, 140, 80]
+  base_weight: 1.5
+  base_value: 110
+  dice_num: 1
+  dice_side: 7
+  hit_bonus: 3
+  dmg_bonus: 1
+  material: "wood"
+
+magic_staff:
+  name: "魔術士の杖"
+  category: "weapon"
+  char: "🪄"
+  color: [160, 100, 220]
+  base_weight: 2.0
+  base_value: 320
+  dice_num: 1
+  dice_side: 5
+  hit_bonus: 2
+  dmg_bonus: 0
+  material: "wood"
+
+# --- 防具: 盾 (Shields) ---
+shield:
+  name: "バックラー"
+  category: "shield"
+  char: "🛡️"
+  color: [180, 180, 180]
+  base_weight: 2.0
+  base_value: 90
+  pv: 2
+  dv: 4
+  material: "steel"
+
+kite_shield:
+  name: "カイトシールド"
+  category: "shield"
+  char: "🛡️"
+  color: [200, 200, 220]
+  base_weight: 4.5
+  base_value: 220
+  pv: 6
+  dv: 2
+  material: "steel"
+
+tower_shield:
+  name: "タワーシールド"
+  category: "shield"
+  char: "🛡️"
+  color: [160, 160, 180]
+  base_weight: 8.0
+  base_value: 450
+  pv: 12
+  dv: -4
+  material: "steel"
+
+# --- 防具: 頭・鎧・装飾品 (Armor & Helm & Ring) ---
+leather_armor:
+  name: "皮の鎧"
+  category: "armor"
+  char: "🥋"
+  color: [160, 110, 60]
+  base_weight: 4.5
+  base_value: 150
+  pv: 4
+  dv: 2
+  material: "wood"
+
+chain_mail:
+  name: "チェインメイル"
+  category: "armor"
+  char: "🥋"
+  color: [180, 180, 200]
+  base_weight: 8.5
+  base_value: 420
+  pv: 9
+  dv: -1
+  material: "iron"
+
+plate_armor:
+  name: "プレートアーマー"
+  category: "armor"
+  char: "🥋"
+  color: [220, 220, 230]
+  base_weight: 16.0
+  base_value: 950
+  pv: 18
+  dv: -6
+  material: "steel"
+
+robe_of_mana:
+  name: "魔導師の法衣"
+  category: "armor"
+  char: "👘"
+  color: [100, 180, 255]
+  base_weight: 1.8
+  base_value: 600
+  pv: 3
+  dv: 8
+  material: "wood"
+
+iron_helm:
+  name: "鉄兜"
+  category: "helm"
+  char: "🪖"
+  color: [170, 170, 170]
+  base_weight: 2.2
+  base_value: 140
+  pv: 3
+  dv: 0
+  material: "iron"
+
+ring_of_speed:
+  name: "スピードの指輪"
+  category: "ring"
+  char: "💍"
+  color: [100, 255, 200]
+  base_weight: 0.1
+  base_value: 800
+  pv: 0
+  dv: 5
+  material: "emerald"
+
+ring_of_protection:
+  name: "守りの指輪"
+  category: "ring"
+  char: "💍"
+  color: [255, 215, 0]
+  base_weight: 0.1
+  base_value: 650
+  pv: 4
+  dv: 2
+  material: "rubynus"
+
+# --- ポーション (Potions) ---
+potion_heal:
+  name: "軽傷治療のポーション"
+  category: "potion"
+  char: "🧪"
+  color: [255, 100, 100]
+  base_weight: 0.3
+  base_value: 40
+  heal_amount: 35
+  identified: true
+
+potion_heal_major:
+  name: "重傷治療のポーション"
+  category: "potion"
+  char: "🧪"
+  color: [255, 50, 50]
+  base_weight: 0.3
+  base_value: 140
+  heal_amount: 100
+  identified: true
+
+potion_mana:
+  name: "魔力回復のポーション"
+  category: "potion"
+  char: "🧪"
+  color: [80, 150, 255]
+  base_weight: 0.3
+  base_value: 80
+  heal_amount: 40
+  identified: true
+
+potion_cure_poison:
+  name: "毒消しのポーション"
+  category: "potion"
+  char: "🧪"
+  color: [100, 255, 120]
+  base_weight: 0.3
+  base_value: 30
+  identified: true
+
+# --- 巻物 (Scrolls) ---
+scroll_teleport:
+  name: "瞬間移動の巻物"
+  category: "scroll"
+  char: "📜"
+  color: [200, 180, 255]
+  base_weight: 0.2
+  base_value: 90
+  spell_id: "teleport"
+  identified: true
+
+scroll_identify:
+  name: "鑑定の巻物"
+  category: "scroll"
+  char: "📜"
+  color: [255, 230, 150]
+  base_weight: 0.2
+  base_value: 60
+  spell_id: "identify"
+  identified: true
+
+scroll_unbaron:
+  name: "解呪の巻物"
+  category: "scroll"
+  char: "📜"
+  color: [255, 255, 180]
+  base_weight: 0.2
+  base_value: 150
+  spell_id: "unbaron"
+  identified: true
+
+# --- 食料 (Food) ---
+bread:
+  name: "パン"
+  category: "food"
+  char: "🍞"
+  color: [210, 180, 100]
+  base_weight: 0.5
+  base_value: 15
+  nutrition: 1500
+
+ration:
+  name: "旅糧"
+  category: "food"
+  char: "🍖"
+  color: [180, 150, 80]
+  base_weight: 1.0
+  base_value: 25
+  nutrition: 3200
+
+apple:
+  name: "りんご"
+  category: "food"
+  char: "🍎"
+  color: [255, 60, 60]
+  base_weight: 0.3
+  base_value: 10
+  nutrition: 800
+
+meat_ration:
+  name: "干し肉"
+  category: "food"
+  char: "🥓"
+  color: [160, 60, 60]
+  base_weight: 0.6
+  base_value: 35
+  nutrition: 2400
+
+# --- 魔法書 (Spellbooks) ---
+book_fire:
+  name: "魔矢の魔法書"
+  category: "spellbook"
+  char: "📘"
+  color: [200, 100, 255]
+  base_weight: 1.5
+  base_value: 300
+  spell_id: "magic_dart"
+  sp_stock: 50
+
+book_heal:
+  name: "治癒の魔法書"
+  category: "spellbook"
+  char: "📗"
+  color: [100, 255, 150]
+  base_weight: 1.5
+  base_value: 350
+  spell_id: "heal_light"
+  sp_stock: 40
+
+book_fireball:
+  name: "火炎球の魔法書"
+  category: "spellbook"
+  char: "📙"
+  color: [255, 120, 50]
+  base_weight: 1.8
+  base_value: 600
+  spell_id: "fireball"
+  sp_stock: 30
+
+# --- 杖・道具・鉱石 (Rods, Tools, Ore) ---
+rod_wishing:
+  name: "★願いの杖"
+  category: "rod"
+  char: "🪄"
+  color: [100, 255, 255]
+  base_weight: 0.8
+  base_value: 3500
+  sp_stock: 1
+
+rod_lightning:
+  name: "稲妻の杖"
+  category: "rod"
+  char: "🪄"
+  color: [255, 255, 100]
+  base_weight: 0.8
+  base_value: 450
+  sp_stock: 5
+
+gold_nugget:
+  name: "金塊"
+  category: "ore"
+  char: "🪙"
+  color: [255, 215, 0]
+  base_weight: 2.0
+  base_value: 500
+
+mythril_ore:
+  name: "ミスリル原石"
+  category: "ore"
+  char: "💎"
+  color: [150, 220, 255]
+  base_weight: 1.5
+  base_value: 300

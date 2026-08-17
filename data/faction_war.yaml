@@ -1,0 +1,36 @@
+faction_war_conditions:
+  kingdom_garde:
+    name: "ガルド王国"
+    color: [0, 100, 200]
+    territories:
+      - "vernis"
+      - "palmia"
+      - "pael"
+    allied_factions:
+      - "church_of_lumiest"
+    rival_factions:
+      - "shadow_hand"
+    influence: 65
+
+  church_of_lumiest:
+    name: "ルミエスト教会"
+    color: [255, 215, 0]
+    territories:
+      - "lumiest"
+      - "noyel"
+    allied_factions:
+      - "kingdom_garde"
+    rival_factions:
+      - "shadow_hand"
+    influence: 50
+
+  shadow_hand:
+    name: "シャドウハンド"
+    color: [150, 0, 50]
+    territories:
+      - "derphy"
+    allied_factions: []
+    rival_factions:
+      - "kingdom_garde"
+      - "church_of_lumiest"
+    influence: 40

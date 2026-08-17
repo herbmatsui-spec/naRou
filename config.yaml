@@ -1,0 +1,4 @@
+settings:
+  log_level: "INFO"
+  default_output_dir: "output"
+  version: "1.0.0"

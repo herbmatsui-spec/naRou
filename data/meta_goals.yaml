@@ -1,0 +1,101 @@
+# メタゴール（長期目標）および周回特異点・記憶生成テンプレート定義
+meta_goals:
+  total_depth_1000:
+    id: "total_depth_1000"
+    name: "深淵の踏破者"
+    description: "全周回を通して累計ダンジョン深度1000Fを踏破する"
+    target_metric: "cumulative_depth"
+    target_value: 1000
+    permanent_bonus:
+      max_hp: 25
+      max_mp: 15
+      speed: 2
+  fragment_collector_10:
+    id: "fragment_collector_10"
+    name: "記憶を紡ぐ者"
+    description: "通算10個以上の前世の記憶の欠片を収集する"
+    target_metric: "collected_fragments_count"
+    target_value: 10
+    permanent_bonus:
+      exp_bonus: 0.15
+      potential_bonus: 10
+  reincarnation_master:
+    id: "reincarnation_master"
+    name: "輪廻の超越者"
+    description: "転生を累計5回以上達成する"
+    target_metric: "reincarnation_count"
+    target_value: 5
+    permanent_bonus:
+      all_attributes: 5
+      karma_gain_multiplier: 1.2
+  elemental_mastery:
+    id: "elemental_mastery"
+    name: "全属性の記憶"
+    description: "4種類以上の異なる属性カテゴリの記憶の欠片を獲得する"
+    target_metric: "unique_fragment_categories"
+    target_value: 4
+    permanent_bonus:
+      magic_power: 10
+      resistance_all: 5
+
+cycle_modifier_pool:
+  - id: "mod_mana_surge"
+    name: "魔力奔流の時代"
+    description: "魔法威力+30% だが消費MPが1.5倍になる"
+    target_goal: "cast_magic_100"
+    reward_meta_points: 50
+    positive_effects:
+      magic_damage_multiplier: 0.3
+    negative_effects:
+      mp_cost_multiplier: 0.5
+  - id: "mod_lone_wolf"
+    name: "孤高の誓い"
+    description: "単独行動時、全主能力+10% かつクリティカル率+15%"
+    target_goal: "clear_dungeon_solo"
+    reward_meta_points: 80
+    positive_effects:
+      solo_attribute_boost: 0.10
+      critical_rate: 15.0
+    negative_effects: {}
+  - id: "mod_ironclad"
+    name: "鋼鉄の紀元"
+    description: "被物理ダメージ-20% だが移動速度-5"
+    target_goal: "block_damage_1000"
+    reward_meta_points: 40
+    positive_effects:
+      physical_damage_cut: 0.20
+    negative_effects:
+      speed: -5
+  - id: "mod_fortune_tide"
+    name: "黄金の満ち干"
+    description: "獲得ゴールド+50%、レアアイテムドロップ率+25% だが敵の攻撃力+15%"
+    target_goal: "earn_gold_50000"
+    reward_meta_points: 60
+    positive_effects:
+      gold_multiplier: 0.50
+      drop_rate_boost: 0.25
+    negative_effects:
+      enemy_damage_multiplier: 0.15
+  - id: "mod_astral_resonance"
+    name: "星辰の共鳴"
+    description: "スキル経験値獲得量+30% だがHP自然回復量-20%"
+    target_goal: "level_up_skills_20"
+    reward_meta_points: 70
+    positive_effects:
+      skill_exp_multiplier: 0.30
+    negative_effects:
+      hp_regen_multiplier: -0.20
+
+fragment_templates:
+  prefixes:
+    combat: ["豪傑たる", "血戦を潜りし", "修羅の如き", "無敗を誇りし", "鋼の意志宿す"]
+    magic: ["星詠みの", "禁忌を識りし", "元素を統べる", "深淵を覗きし", "霊光纏いし"]
+    survival: ["不死鳥の如き", "死線を越えし", "幾千の傷負いし", "森羅を巡りし", "執念深き"]
+    exploration: ["果てなき路の", "秘境を踏破せし", "迷宮の覇者たる", "風の旅人たる", "天蓋を見上げし"]
+    social: ["民に愛されし", "盟友と契りし", "黄金を紡ぎし", "仁義を重んじし", "栄華を極めし"]
+  roots:
+    combat: ["武勇の記憶", "剣閃の残照", "剛腕の記憶", "討伐の追憶", "覇道の刻印"]
+    magic: ["詠唱の記憶", "魔導の叡智", "真理の残光", "秘術の記憶", "魔導の刻印"]
+    survival: ["生存の記憶", "強靭なる魂", "蘇生の追憶", "頑健の記憶", "生命の残影"]
+    exploration: ["探求の記憶", "踏破の残響", "発見の記憶", "道標の記憶", "千里行の追憶"]
+    social: ["絆の記憶", "盟約の追憶", "信望の残照", "交易の記憶", "絆の刻印"]
