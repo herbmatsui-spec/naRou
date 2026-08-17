@@ -245,3 +245,6 @@ export class PostProcessManager {
         }
     }
 }
+
+// グローバルスコープにもエクスポート（後方互換性のため）
+window.PostProcessManager = PostProcessManager;

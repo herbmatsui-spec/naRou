@@ -172,3 +172,6 @@ export class ScreenShake {
         return this.isShaking ? this.shakeTime : 0;
     }
 }
+
+// グローバルスコープにもエクスポート（後方互換性のため）
+window.ScreenShake = ScreenShake;

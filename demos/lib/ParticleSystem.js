@@ -330,3 +330,6 @@ export class ParticleSystem {
         }
     }
 }
+
+// グローバルスコープにもエクスポート（後方互換性のため）
+window.ParticleSystem = ParticleSystem;

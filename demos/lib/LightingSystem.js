@@ -247,3 +247,6 @@ export class LightingSystem {
         }
     }
 }
+
+// グローバルスコープにもエクスポート（後方互換性のため）
+window.LightingSystem = LightingSystem;
