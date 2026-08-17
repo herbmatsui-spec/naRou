@@ -948,53 +948,131 @@
           // 息遣いアニメーション
           const bounce = Math.sin(animTime * 4 + ent.x) * 1.5;
 
-          // エンティティのグラフィックを作成
-          const entityGraphics = new PIXI.Graphics();
+          // エンティティのテクスチャを取得
+          const entityTexture = tileTextures[ent.char];
           
-          // エンティティタイプ別の色と形状
-          if (ent.is_player) {
-            // プレイヤー: 白い円
-            entityGraphics.beginFill(0xffffff);
-            entityGraphics.drawCircle(0, 0, TILE_SIZE * 0.4);
-            entityGraphics.endFill();
-          } else if (ent.is_pet) {
-            // ペット: ピンクの円
-            entityGraphics.beginFill(0xffb6c1);
-            entityGraphics.drawCircle(0, 0, TILE_SIZE * 0.4);
-            entityGraphics.endFill();
+          if (entityTexture) {
+            // テクスチャアトラスからテクスチャを使用
+            const entitySprite = new PIXI.Sprite(entityTexture.texture || entityTexture);
+            entitySprite.width = TILE_SIZE;
+            entitySprite.height = TILE_SIZE;
+            
+            // エンティティタイプ別の色調
+            if (ent.is_player) {
+              entitySprite.tint = 0xffffff; // プレイヤー：白
+            } else if (ent.is_pet) {
+              entitySprite.tint = 0xffb6c1; // ペット：ピンク
+            } else {
+              entitySprite.tint = 0xff6666; // モンスター：赤系
+            }
+            
+            entitySprite.x = px;
+            entitySprite.y = py + bounce;
+            entityLayer.addChild(entitySprite);
           } else {
-            // モンスター: 赤い三角形（簡易表現）
-            entityGraphics.beginFill(0xff0000);
-            entityGraphics.moveTo(0, -TILE_SIZE * 0.3);
-            entityGraphics.lineTo(-TILE_SIZE * 0.3, TILE_SIZE * 0.3);
-            entityGraphics.lineTo(TILE_SIZE * 0.3, TILE_SIZE * 0.3);
-            entityGraphics.closePath();
-            entityGraphics.endFill();
+            // フォールバック: テクスチャが見つからない場合はGraphicsで描画
+            const entityGraphics = new PIXI.Graphics();
+            
+            // エンティティタイプ別の色と形状
+            if (ent.is_player) {
+              // プレイヤー: 白い円
+              entityGraphics.beginFill(0xffffff);
+              entityGraphics.drawCircle(0, 0, TILE_SIZE * 0.4);
+              entityGraphics.endFill();
+            } else if (ent.is_pet) {
+              // ペット: ピンクの円
+              entityGraphics.beginFill(0xffb6c1);
+              entityGraphics.drawCircle(0, 0, TILE_SIZE * 0.4);
+              entityGraphics.endFill();
+            } else {
+              // モンスター: 赤い三角形（簡易表現）
+              entityGraphics.beginFill(0xff0000);
+              entityGraphics.moveTo(0, -TILE_SIZE * 0.3);
+              entityGraphics.lineTo(-TILE_SIZE * 0.3, TILE_SIZE * 0.3);
+              entityGraphics.lineTo(TILE_SIZE * 0.3, TILE_SIZE * 0.3);
+              entityGraphics.closePath();
+              entityGraphics.endFill();
+            }
+            
+            // エンティティを配置
+            entityGraphics.x = px;
+            entityGraphics.y = py + bounce;
+            entityLayer.addChild(entityGraphics);
           }
           
           // HPバー（プレイヤーとペット以外のエンティティに対して）
           if (!ent.is_player && !ent.is_pet && ent.max_hp > 0) {
             const hpRatio = Math.max(0, Math.min(1, ent.hp / ent.max_hp));
+            
             // HPバーの背景
-            entityGraphics.beginFill(0x000000, 0.6);
-            entityGraphics.drawRect(-TILE_SIZE * 0.5 + 2, -TILE_SIZE * 0.5 - 4, TILE_SIZE - 4, 3);
-            entityGraphics.endFill();
+            const hpBarBg = new PIXI.Graphics();
+            hpBarBg.beginFill(0x000000, 0.6);
+            hpBarBg.drawRect(-TILE_SIZE * 0.5 + 2, -TILE_SIZE * 0.5 - 4, TILE_SIZE - 4, 3);
+            hpBarBg.endFill();
+            hpBarBg.x = px;
+            hpBarBg.y = py + bounce;
+            entityLayer.addChild(hpBarBg);
+            
             // HPバーの前景
             const hpColor = hpRatio > 0.5 ? 0x2ecc71 : hpRatio > 0.2 ? 0xf39c12 : 0xe74c3c;
-            entityGraphics.beginFill(hpColor);
-            entityGraphics.drawRect(-TILE_SIZE * 0.5 + 2, -TILE_SIZE * 0.5 - 4, (TILE_SIZE - 4) * hpRatio, 3);
-            entityGraphics.endFill();
+            const hpBarFg = new PIXI.Graphics();
+            hpBarFg.beginFill(hpColor);
+            hpBarFg.drawRect(-TILE_SIZE * 0.5 + 2, -TILE_SIZE * 0.5 - 4, (TILE_SIZE - 4) * hpRatio, 3);
+            hpBarFg.endFill();
+            hpBarFg.x = px;
+            hpBarFg.y = py + bounce;
+            entityLayer.addChild(hpBarFg);
           }
+        });
+        
+        // 3. アイテム描画
+        const items = gameState.items || [];
+        items.forEach(item => {
+          const px = offsetX + item.x * TILE_SIZE;
+          const py = offsetY + item.y * TILE_SIZE;
+
+          // アイテムのテクスチャを取得
+          const itemTexture = tileTextures[item.char];
           
-          // キャラクター表示（簡易版：エンティティの中心に小さな点）
-          entityGraphics.beginFill(0xffffff);
-          entityGraphics.drawCircle(0, 0, 2);
-          entityGraphics.endFill();
-          
-          // エンティティを配置（息遣いアニメーションを適用）
-          entityGraphics.x = px;
-          entityGraphics.y = py + bounce;
-          entityLayer.addChild(entityGraphics);
+          if (itemTexture) {
+            // テクスチャアトラスからテクスチャを使用
+            const itemSprite = new PIXI.Sprite(itemTexture.texture || itemTexture);
+            itemSprite.width = TILE_SIZE;
+            itemSprite.height = TILE_SIZE;
+            
+            // 品質に応じて色調を変更
+            const qualityColors = {
+              'common': 0xcccccc,
+              'uncommon': 0x33ff33,
+              'rare': 0x3366ff,
+              'epic': 0x9933ff,
+              'legendary': 0xffaa00
+            };
+            const tint = qualityColors[item.quality] || 0xffffff;
+            itemSprite.tint = tint;
+            
+            itemSprite.x = px;
+            itemSprite.y = py;
+            entityLayer.addChild(itemSprite);
+          } else {
+            // フォールバック: テクスチャが見つからない場合はGraphicsで描画
+            const itemGraphics = new PIXI.Graphics();
+            
+            // アイテムの背景
+            itemGraphics.beginFill(0x000000, 0.5);
+            itemGraphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
+            itemGraphics.endFill();
+            
+            // アイテム文字を表示
+            itemGraphics.beginFill(0xffffff);
+            itemGraphics.drawRect(4, 4, TILE_SIZE - 8, TILE_SIZE - 8);
+            itemGraphics.endFill();
+            
+            // アイテムを配置
+            itemGraphics.x = px;
+            itemGraphics.y = py;
+            entityLayer.addChild(itemGraphics);
+          }
         });
         
         // TODO: エフェクト描画（パーティクル、ライティング等）
