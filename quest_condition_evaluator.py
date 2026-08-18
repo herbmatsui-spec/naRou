@@ -17,6 +17,26 @@ if TYPE_CHECKING:
     from entity import Entity
     from game import Engine
     from world_state_system import WorldStateManager, WorldPhase
+@dataclass
+class DictContext:
+    """入れ子辞書で状態を保持する標準コンテキスト実装 (後方互換性)。"""
+
+    _state: Dict[str, Any]
+
+    def __post_init__(self):
+        if not isinstance(self._state, dict):
+            raise TypeError("DictContext state must be a dictionary")
+
+    def resolve(self, key: str) -> Any:
+        """ドット区切りパス (例: ``player.level``) を状態値に解決する。"""
+        node: Any = self._state
+        for part in key.split("."):
+            if isinstance(node, dict) and part in node:
+                node = node[part]
+            else:
+                return None
+        return node
+
 
 
 @dataclass
@@ -89,6 +109,10 @@ class EvaluationContext:
             return self._resolve_world_state_key(key[12:])  # Remove "world_state."
         elif key.startswith("extra."):
             return self._resolve_extra_key(key[6:])  # Remove "extra."
+        elif key.startswith("flags."):
+            # フラグはストーリー変数の中で管理される
+            flag_key = key[6:]  # Remove "flags."
+            return self._resolve_player_key(f"story_variables.{flag_key}")
         else:
             # デフォルトはプレイヤーキーとして扱う
             return self._resolve_player_key(key)
@@ -219,6 +243,13 @@ def _apply_operator(op: str, left: Any, right: Any) -> bool:
         return bool(left)
     raise ValueError(f"未対応の演算子: {op!r}")
 
+def evaluate(node: ConditionNode, context: Any) -> bool:
+    """
+    後方互換性のための評価関数。
+    条件ノードを評価し、真偽を返す（ノードの evaluate に委譲）。
+    """
+    return node.evaluate(context)
+
 
 def evaluate_condition(
     node: ConditionNode,
@@ -233,7 +264,7 @@ def evaluate_condition(
     Usage:
         result = evaluate_condition(ast, player=player, engine=engine)
     """
-    context = EvaluationContext(player, engine, world_state, extra_vars)
+    context = EvaluationContext(player, engine, world_state, extra_vars or {})
     return node.evaluate(context)
 
 

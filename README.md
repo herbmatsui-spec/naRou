@@ -94,7 +94,64 @@ python -m pytest
 | **[F5] / 自動** | セーブ実行 |
 
 ---
+## 📝 最近の変更 (Recent Changes)
 
+- 変更されたファイル: 28件
+- 新規追加ファイル: 111件
+
+### 変更されたファイル
+<details>
+<summary>詳細を表示</summary>
+
+archaeology_system.py
+balance_report.html
+balance_report.json
+components.py
+core_framework.py
+data/procedural_scenarios.yaml
+data/skill_trees.yaml
+data_manager.py
+entity.py
+game.py
+input_handler.py
+meta_progression_system.py
+pet_evolution_system.py
+pet_fusion_system.py
+procedural_dungeon_generator.py
+procedural_quest_generator.py
+quest_condition_evaluator.py
+render_context.py
+skill_tree_system.py
+systems.py
+
+</details>
+
+### 新規追加ファイル
+<details>
+<summary>詳細を表示</summary>
+
+.coveragerc
+.github/
+COMMERCIAL_EVALUATION_REPORT.md
+QUEST_SYSTEM_IMPLEMENTATION_SUMMARY.md
+STEP_01_COMPLETED.md
+assets/source/
+assets/src/
+auto_repair.py
+auto_repair_management.py
+backup.py
+backup_management.py
+baseline.json
+build.py
+config.py
+config_management.py
+conftest.py
+core/
+data/faction_war_quests.yaml
+data/pet_quests.yaml
+data/quest_dungeon_specs.yaml
+
+</details>
 ## 📄 ライセンス & クレジット
 - **Version**: 1.0.0 (Commercial Edition)
 - **Engine Architecture**: SystemManager ECS-coupled Engine

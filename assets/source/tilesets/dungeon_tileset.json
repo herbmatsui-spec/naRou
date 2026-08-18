@@ -1,0 +1,119 @@
+{
+  "tile_size": 16,
+  "padding": 1,
+  "max_atlas_size": 2048,
+  "tiles": {
+    "FLOOR_DUNGEON": {
+      "path": "terrain/floor_dungeon.png",
+      "frame": 0,
+      "animated": false,
+      "variants": 1,
+      "frames": 1
+    },
+    "WALL_DUNGEON": {
+      "path": "terrain/wall_dungeon.png",
+      "frame": 0,
+      "animated": false,
+      "variants": 1,
+      "frames": 1
+    },
+    "WATER": {
+      "path": "terrain/water.png",
+      "frame": 0,
+      "animated": true,
+      "frames": 3,
+      "fps": 5
+    },
+    "STAIRS_DOWN": {
+      "path": "terrain/stairs_down.png",
+      "frame": 0,
+      "animated": true,
+      "frames": 2,
+      "fps": 4
+    },
+    "STAIRS_UP": {
+      "path": "terrain/stairs_up.png",
+      "frame": 0,
+      "animated": true,
+      "frames": 2,
+      "fps": 4
+    },
+    "TRAP": {
+      "path": "terrain/trap.png",
+      "frame": 0,
+      "animated": false,
+      "variants": 1,
+      "frames": 1
+    },
+    "PLAYER": {
+      "path": "entities/player.png",
+      "frame": 0,
+      "animated": true,
+      "frames": 4,
+      "directions": 4
+    },
+    "PET": {
+      "path": "entities/pet.png",
+      "frame": 0,
+      "animated": true,
+      "frames": 4,
+      "directions": 4
+    },
+    "ENEMY_GOBLIN": {
+      "path": "entities/enemy_goblin.png",
+      "frame": 0,
+      "animated": true,
+      "frames": 4,
+      "directions": 4
+    },
+    "ITEM_GOLD": {
+      "path": "objects/item_gold.png",
+      "frame": 0,
+      "animated": true,
+      "frames": 4,
+      "fps": 4
+    },
+    "ITEM_POTION": {
+      "path": "objects/item_potion.png",
+      "frame": 0,
+      "animated": false,
+      "variants": 1,
+      "frames": 1
+    },
+    "ITEM_WEAPON": {
+      "path": "objects/item_weapon.png",
+      "frame": 0,
+      "animated": false,
+      "variants": 1,
+      "frames": 1
+    },
+    "ITEM_ARMOR": {
+      "path": "objects/item_armor.png",
+      "frame": 0,
+      "animated": false,
+      "variants": 1,
+      "frames": 1
+    },
+    "TORCH": {
+      "path": "effects/torch.png",
+      "frame": 0,
+      "animated": true,
+      "frames": 4,
+      "fps": 8
+    },
+    "BLOOD_SPLAT": {
+      "path": "effects/blood_splat.png",
+      "frame": 0,
+      "animated": true,
+      "frames": 3,
+      "fps": 6
+    },
+    "MAGIC_CAST": {
+      "path": "effects/magic_cast.png",
+      "frame": 0,
+      "animated": true,
+      "frames": 3,
+      "fps": 6
+    }
+  }
+}

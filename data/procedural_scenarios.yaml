@@ -93,6 +93,14 @@ quest_generation:
       reward_weight: 0.7
       base_complexity: 1
 
+    excavation:
+      name: "発掘"
+      objective_type: "explore"
+      title_template: "{setting}の遺跡発掘"
+      desc_template: "{setting}の古代遺跡を{required_count}階層まで発掘せよ。"
+      reward_weight: 1.2
+      base_complexity: 2
+
   # Step 3: 難易度ティア (6段階, 指数スケーリング)
   difficulty_tiers:
     tutorial:

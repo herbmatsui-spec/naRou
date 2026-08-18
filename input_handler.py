@@ -62,6 +62,16 @@ class InputHandler:
     _actions_registered = False
 
     # ------------------------------------------------------------------
+    # LocalizationManager 統合 (i18n, Step 44)
+    # ------------------------------------------------------------------
+    @classmethod
+    def localize(cls, key: str, language: str = None, manager=None) -> str:
+        """入力関連の文字列をローカライズして返す。"""
+        from localization_manager import LocalizationManager
+        mgr = manager or LocalizationManager()
+        return mgr.get_text(key, language)
+
+    # ------------------------------------------------------------------
     # エントリポイント
     # ------------------------------------------------------------------
     @classmethod
@@ -545,3 +555,15 @@ class InputHandler:
         if dx != 0 or dy != 0:
             if engine.player_act(dx, dy):
                 engine.advance_world()
+
+
+# --- LocalizationManager integration (i18n, Step 3.x) ---
+def localize(key: str, language: str = None, manager=None) -> str:
+    """Return localized text for *key* using LocalizationManager.
+
+    Provides a thin, dependency-free wrapper so callers can localize UI
+    strings without importing the manager directly.
+    """
+    from localization_manager import LocalizationManager
+    mgr = manager or LocalizationManager()
+    return mgr.get_text(key, language)

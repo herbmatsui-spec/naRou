@@ -13,6 +13,7 @@ from ui_fx_systems import MiniMapRenderer, DynamicLighting, GaugeBar, WeatherAtm
 from turn_manager import TimeSystem
 from message_log import MessageLog
 from notification_manager import NotificationManager
+from localization_manager import LocalizationManager
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, MAP_WIDTH, MAP_HEIGHT, VIEW_WIDTH, VIEW_HEIGHT, TILE_STAIRS_DOWN, COLOR_WALL_DARK, COLOR_WALL_LIT, COLOR_FLOOR_DARK, COLOR_FLOOR_LIT, COLOR_ALTAR, COLOR_HP_GREEN, COLOR_MP_BLUE, COLOR_GOLD_YELLOW, COLOR_PET_PINK
 from game_state import GameState
 
@@ -45,7 +46,8 @@ class RenderContext:
                  inventory_tab: int,
                  inventory_cursor: int,
                  pet_inventory: List[Item],
-                 altar_pos: Tuple[int, int]):
+                 altar_pos: Tuple[int, int],
+                 localization_manager: LocalizationManager = None):
         self.game_map = game_map
         self.player = player
         self.pet = pet
@@ -71,3 +73,4 @@ class RenderContext:
         self.inventory_cursor = inventory_cursor
         self.pet_inventory = pet_inventory
         self.altar_pos = altar_pos
+        self.localization_manager = localization_manager

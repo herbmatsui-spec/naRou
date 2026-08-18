@@ -181,3 +181,17 @@ class ArchaeologyComponent:
     leaned_endings: Dict[str, str] = field(default_factory=dict)       # truth_id -> 寄り先 ending_id
     interpretation_notes: Dict[str, str] = field(default_factory=dict) # truth_id -> プレイヤー解釈文
     decoder_hints_seen: List[str] = field(default_factory=list)       # 蓄積された解読ヒント（気づき）
+    decipherment_gauge: int = 0                                       # 解読ゲージ（破片収集で上昇）
+    truth_pieces: List[str] = field(default_factory=list)             # 獲得した真実の一片
+
+
+# --- LocalizationManager integration (i18n, Step 3.x) ---
+def localize(key: str, language: str = None, manager=None) -> str:
+    """Return localized text for *key* using LocalizationManager.
+
+    Provides a thin, dependency-free wrapper so callers can localize UI
+    strings without importing the manager directly.
+    """
+    from localization_manager import LocalizationManager
+    mgr = manager or LocalizationManager()
+    return mgr.get_text(key, language)

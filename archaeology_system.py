@@ -152,6 +152,7 @@ class ArchaeologyManager(BaseSystem):
         if fragment_id in comp.collected_fragments:
             return False
         comp.collected_fragments.append(fragment_id)
+        comp.decipherment_gauge += 1
         frag = self.registry.get_fragment(fragment_id)
         # 他システム連携: 既存 memory_fragments リストにも名前を同期
         if frag:

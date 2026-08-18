@@ -582,6 +582,9 @@ class Entity:
     # スキルツリー・ジョブプロパティ (SkillTreeJobComponent への委譲)
     # -------------------------------------------------------------
 
+    skill_tree_progress: Dict[str, List[str]] = field(default_factory=dict)
+    skill_points: int = 0
+    total_skill_points_earned: int = 0
     @property
     def skill_tree_progress(self) -> Dict[str, List[str]]: return self.get_component(SkillTreeJobComponent).skill_tree_progress
     @skill_tree_progress.setter

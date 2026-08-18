@@ -62,10 +62,12 @@ from pet_fusion_system import PetFusionRegistry, PetFusionManager
 from dialogue_system import DialogueManager
 from systems_manager import SystemManager
 from quest_scheduler import QuestScheduler, ScheduleContext
+from localization_manager import LocalizationManager
 
 
 class Engine:
     """計画書1〜72ステップ完全統合エンジン (商用疎結合アーキテクチャ)"""
+    skill_tree_manager: SkillTreeManager
     def __init__(self, renderer: Renderer | None = None):
         # --- レンダラ設定 (Step 3) ---
         if renderer is not None:
@@ -79,8 +81,19 @@ class Engine:
         player_cfg = self.config_mgr.get_player_config()
         pet_cfg = self.config_mgr.get_pet_config()
 
+        # --- LocalizationManager (Phase 3: Step 41) ---
+        self.localization_manager = LocalizationManager()
+
         # --- 依存性注入 & SystemManager 初期化 (Phase 1: Step 1-7, 8) ---
         self.systems_coordinator = SystemCoordinator(self)
+        # Skill & Job
+        self.skill_tree_registry = SkillTreeRegistry()
+        self.skill_tree_registry.load()
+        self.skill_tree_manager = self.systems_coordinator.register_system("skill_tree_manager", SkillTreeManager(self.skill_tree_registry))
+
+        self.job_registry = JobRegistry()
+        self.job_registry.load()
+        self.job_manager = self.systems_coordinator.register_system("job_manager", JobManager(self.job_registry))
         self.setup_systems()
 
 # --- ゲーム状態データの初期化 ---
@@ -144,7 +157,7 @@ class Engine:
             Quest(title="オーク討伐令",   target_monster="オーク", target_count=2, reward_gold=750, reward_platinum=3),
         ]
         self.game_state_data.current_state = GameState.EXPLORING  # Step 6.1, 6.2
-        self.game_state_data.game_state = "play"  # 旧互換用: "play","inventory","status","debug","wish","look","context","help"
+        self.game_state_data.game_state = "play"  # 旧互換用: "play","inventory","status","debug","wish","look","context","help","skill_tree"
         self.game_state_data.help_tab = 0         # 0..3 ヘルプ画面タブ
         self.game_state_data.inventory_target = "player"
         self.game_state_data.inventory_cursor = 0
@@ -518,14 +531,6 @@ class Engine:
         self.quest_scheduler = QuestScheduler()
         self.journal_ui = JournalUI()
 
-        # Skill & Job
-        self.skill_tree_registry = SkillTreeRegistry()
-        self.skill_tree_registry.load()
-        self.skill_tree_manager = self.systems_coordinator.register_system("skill_tree_manager", SkillTreeManager(self.skill_tree_registry))
-
-        self.job_registry = JobRegistry()
-        self.job_registry.load()
-        self.job_manager = self.systems_coordinator.register_system("job_manager", JobManager(self.job_registry))
 
         self.fusion_registry = FusionRegistry()
         self.fusion_registry.load()
@@ -1116,9 +1121,7 @@ class Engine:
         if self.turns % SKILL_TREE_CHECK_INTERVAL == 0 and self.player.skill_points >= SKILL_POINTS_NOTIFICATION_THRESHOLD:
             avail = self.skill_tree_manager.get_available_skills(self.player)
             if avail:
-                # 習得可能スキルがある旨を通知
-                pass
-
+                self.log("スキルポイントが利用可能です！ Sキーでスキルツリーを開いて習得できます。", (255, 255, 0))
         # === ギルドクエスト日次リセット (Step 41) ===
         # 1000ターンを1日としてリセット判定
         if self.turns % GUILD_QUEST_RESET_INTERVAL == 0 and self.player and hasattr(self.player, 'guild_quest_progress'):
@@ -1634,6 +1637,14 @@ class Engine:
 
     def render(self, console: Any) -> None:
         """描画処理 (ゲームロジックを含まない)"""
+        if self.game_state_data.game_state == "skill_tree":
+            from ui_fx_systems import format_skill_tree_display
+            skill_tree_text = format_skill_tree_display(self.skill_tree_registry)
+            y = 1
+            for line in skill_tree_text.splitlines():
+                console.print(x=1, y=y, string=line, fg=(255, 255, 255))
+                y += 1
+            return
         from render_system import RenderSystem
         from renderer import TcodRenderer
         from render_context import RenderContext
@@ -1707,6 +1718,14 @@ def get_tabbed_items(engine: Engine) -> List[Item]:
 
 def render_all(console: tcod.console.Console, engine: Engine) -> None:
     """RenderSystem への委譲 (後方互換性)"""
+    if engine.game_state_data.game_state == "skill_tree":
+        from ui_fx_systems import format_skill_tree_display
+        skill_tree_text = format_skill_tree_display(engine.skill_tree_registry)
+        y = 1
+        for line in skill_tree_text.splitlines():
+            console.print(x=1, y=y, string=line, fg=(255, 255, 255))
+            y += 1
+        return
     from render_system import RenderSystem
     from render_context import RenderContext
     # Create render context
@@ -1735,7 +1754,8 @@ def render_all(console: tcod.console.Console, engine: Engine) -> None:
         inventory_tab=engine.inventory_tab,
         inventory_cursor=engine.inventory_cursor,
         pet_inventory=engine.game_state_data.pet_inventory,
-        altar_pos=engine.game_state_data.altar_pos
+        altar_pos=engine.game_state_data.altar_pos,
+        localization_manager=engine.localization_manager
     )
     RenderSystem.render_all(console, render_context)
 
@@ -1761,6 +1781,17 @@ def main() -> None:
                 context.present(root_console)
                 # Step 6.5: 入力を ActionRegistry 経由で処理
                 for event in tcod.event.get(timeout=0):
+                    if isinstance(event, tcod.event.KeyDown):
+                        if event.sym == tcod.event.KeySym.S:
+                            engine.game_state = "skill_tree"
+                            continue
+                        elif event.sym == tcod.event.KeySym.ESCAPE:
+                            if engine.game_state == "skill_tree":
+                                engine.game_state = "play"
+                            else:
+                                # keep existing ESC handling for other states
+                                pass
+                            continue
                     InputHandler.handle_event(event, engine)
     except Exception as e:
         # If we can't initialize the SDL context (e.g., in headless environment),

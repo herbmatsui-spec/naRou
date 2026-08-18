@@ -11,11 +11,12 @@ import os
 import random
 import yaml
 from dataclasses import dataclass, field
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Set
 
 from components import (
     ReincarnationComponent, AchievementComponent, StorytellerComponent, TitleComponent
 )
+from archaeology_system import ArchaeologyRegistry
 
 
 @dataclass
@@ -97,6 +98,7 @@ class MetaProgressionRegistry:
             cls._instance.meta_goals: Dict[str, MetaGoalData] = {}
             cls._instance.cycle_modifiers: List[CycleModifierData] = []
             cls._instance.fragment_templates: Dict[str, Any] = {}
+            cls._instance._awarded_truth_piece_categories: Set[str] = set()
         return cls._instance
 
     def load(self, path: str = "data/meta_goals.yaml") -> None:
@@ -254,6 +256,42 @@ class MetaProgressionManager:
         self.registry = registry or REGISTRY
         if not self.registry.meta_goals:
             self.registry.load()
+        self._awarded_truth_piece_categories: Set[str] = set()
+
+    def check_and_award_truth_piece_sets(self, player: Any, engine: Optional[Any] = None) -> None:
+        """カテゴリごとの断片セットが完了したら真実の一片を付与"""
+        arch_reg = ArchaeologyRegistry()
+        # すべての断片を取得し、カテゴリごとにグループ化
+        fragments_by_category: Dict[str, List[str]] = {}
+        for frag_id, frag_data in arch_reg._fragments.items():
+            category = frag_data.get("category", "unknown")
+            if category not in fragments_by_category:
+                fragments_by_category[category] = []
+            fragments_by_category[category].append(frag_id)
+        
+        # プレイヤーが収集した断片IDリストを取得
+        reinc_comp = player.get_component(ReincarnationComponent)
+        collected_fragment_ids = set()
+        for frag_dict in reinc_comp.collected_fragments:
+            if isinstance(frag_dict, dict):
+                fid = frag_dict.get("fragment_id")
+                if fid:
+                    collected_fragment_ids.add(fid)
+        
+        # 各カテゴリについて、すべての断片を収集していたら真実の一片を付与
+        for category, fragment_ids in fragments_by_category.items():
+            if not fragment_ids:
+                continue
+            # すべての断片を収集しているかチェック
+            if all(fid in collected_fragment_ids for fid in fragment_ids):
+                # まだこのカテゴリの真実の一片を付与していない場合のみ付与
+                if category not in self._awarded_truth_piece_categories:
+                    # 真実の一片を付与
+                    archaeology_comp = player.get_component(ArchaeologyComponent)
+                    archaeology_comp.truth_pieces.append(f"TruthPiece_{category}")
+                    self._awarded_truth_piece_categories.add(category)
+                    if engine and hasattr(engine, "log"):
+                        engine.log(f"★★★【真実の一片】{category}の断片セットをコンプリート！", (255, 215, 0))
 
     def roll_cycle_modifiers(self, count: int = 2, seed: Optional[int] = None) -> List[Dict[str, Any]]:
         """転生時に付与するランダムな周回特異点を抽選"""
@@ -285,6 +323,7 @@ class MetaProgressionManager:
             return False
 
         reinc_comp.collected_fragments.append(frag_dict)
+        self.check_and_award_truth_piece_sets(player, engine)
 
         # StorytellerComponent にも断片として連携
         story_comp = player.get_component(StorytellerComponent)

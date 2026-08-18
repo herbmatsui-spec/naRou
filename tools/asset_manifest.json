@@ -1,0 +1,96 @@
+{
+  "$schema": "./asset_manifest.schema.json",
+  "version": "1.0.0",
+  "generated_at": "2026-08-18T07:27:00+00:00",
+  "assets": {
+    "tilesets": [
+      {
+        "name": "dungeon_tileset",
+        "sizes": [16, 32, 64],
+        "tiles": {
+          "terrain": {
+            "floor_dungeon": {
+              "frame": 0,
+              "animated": false
+            },
+            "wall_dungeon": {
+              "frame": 0,
+              "animated": false
+            },
+            "water": {
+              "frame": 0,
+              "animated": true,
+              "frames": 4
+            },
+            "stairs_down": {
+              "frame": 0,
+              "animated": false
+            },
+            "stairs_up": {
+              "frame": 0,
+              "animated": false
+            },
+            "trap": {
+              "frame": 0,
+              "animated": false
+            }
+          },
+          "entities": {
+            "player": {
+              "frame": 0,
+              "animated": true,
+              "frames": 4
+            },
+            "enemy_goblin": {
+              "frame": 0,
+              "animated": true,
+              "frames": 4
+            },
+            "pet": {
+              "frame": 0,
+              "animated": true,
+              "frames": 4
+            }
+          },
+          "objects": {
+            "item_gold": {
+              "frame": 0,
+              "animated": true,
+              "frames": 3
+            },
+            "item_potion": {
+              "frame": 0,
+              "animated": true,
+              "frames": 2
+            },
+            "item_weapon": {
+              "frame": 0,
+              "animated": false
+            },
+            "item_armor": {
+              "frame": 0,
+              "animated": false
+            }
+          },
+          "effects": {
+            "torch": {
+              "frame": 0,
+              "animated": true,
+              "frames": 6
+            },
+            "blood_splat": {
+              "frame": 0,
+              "animated": true,
+              "frames": 4
+            },
+            "magic_cast": {
+              "frame": 0,
+              "animated": true,
+              "frames": 5
+            }
+          }
+        }
+      }
+    ]
+  }
+}

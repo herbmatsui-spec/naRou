@@ -263,7 +263,52 @@ def test_all_36_steps_procedural_quest_generation():
 
     print("[OK] Step 36 (Engine 統合 / 決定論 / 組み合わせ爆発 >1000 / 永続化)")
 
-    print("\nALL 36 STEPS OF PROCEDURAL QUEST GENERATION SYSTEM VERIFIED 100% SUCCESSFULLY!")
+    # ---------------------------------------------------------
+    # フェーズI: Phase 5 - Procedural Dungeon Interlock (Steps 37-40)
+    # ---------------------------------------------------------
+    # Step 37: ダンジョン仕様ロード
+    spec = gen._load_dungeon_spec("standard_exploration")
+    assert spec is not None, "Step 37 Failed: dungeon spec load"
+    assert spec.spec_id == "standard_exploration", "Step 37 Failed: spec_id"
+    assert spec.name == "標準探索ダンジョン", "Step 37 Failed: name"
+    print("[OK] Step 37 (ダンジョン仕様ロード)")
+
+    # Step 38: ダンジョン同期クエスト生成
+    from entity import Entity
+    p = Entity()
+    synced_quest = gen.generate_dungeon_synced_quest(
+        spec_id="standard_exploration",
+        quest_id="test_synced_001",
+        title="テストダンジョンクエスト",
+        description="テスト用のダンジョン同期クエスト",
+        player=p,
+        seed=12345
+    )
+    assert synced_quest is not None, "Step 38 Failed: quest generation returned None"
+    assert synced_quest.quest_id == "test_synced_001", "Step 38 Failed: quest_id mismatch"
+    assert synced_quest.title == "テストダンジョンクエスト", "Step 38 Failed: title mismatch"
+    assert synced_quest.description == "テスト用のダンジョン同期クエスト", "Step 38 Failed: description mismatch"
+    assert synced_quest.source_type == "dungeon_synced", "Step 38 Failed: source_type"
+    print("[OK] Step 38 (ダンジョン同期クエスト生成)")
+
+    # Step 39: クエスト目的がダンジョン生成結果に基づいて更新されている
+    assert len(synced_quest.objectives) > 0, "Step 39 Failed: no objectives"
+    # 目的の説明がダンジョン仕様に基づいていることを確認（簡易チェック）
+    obj_desc = " ".join([obj.description for obj in synced_quest.objectives])
+    assert ("階層" in obj_desc or "部屋" in obj_desc or "ボス" in obj_desc or "入口" in obj_desc or "出口" in obj_desc), \
+        "Step 39 Failed: objective description not dungeon-related"
+    print("[OK] Step 39 (クエスト目的のダンジョン同期)")
+
+    # Step 40: フィードバック情報が報酬に含まれている
+    assert "dungeon_feedback" in synced_quest.reward, "Step 40 Failed: dungeon_feedback in reward"
+    feedback = synced_quest.reward["dungeon_feedback"]
+    assert "spec_id" in feedback, "Step 40 Failed: spec_id in feedback"
+    assert feedback["spec_id"] == "standard_exploration", "Step 40 Failed: feedback spec_id"
+    assert "generated_floors" in feedback, "Step 40 Failed: generated_floors in feedback"
+    assert isinstance(feedback["generated_floors"], int) and feedback["generated_floors"] > 0, "Step 40 Failed: generated_floors positive"
+    print("[OK] Step 40 (ダンジョンフィードバック情報)")
+
+    print("\nALL 40 STEPS OF PROCEDURAL QUEST GENERATION SYSTEM VERIFIED 100% SUCCESSFULLY!")
 
 
 if __name__ == "__main__":

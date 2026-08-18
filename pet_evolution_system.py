@@ -152,3 +152,44 @@ class PetEvolutionManager:
             pet_entity.name = f"{evolution_data.name}（進化形態）"
 
         return True
+
+    def generate_evolution_quest(self, pet: 'PetAI', evolution_data: PetEvolutionData, pet_entity: Optional['Entity'] = None) -> Optional[Dict[str, Any]]:
+        """進化後に関連クエストを生成"""
+        # 簡易実装：進化後のペットに基づいてクエストを生成
+        # 実際には、pet_quest_analyzer と pet_quests.yaml を使用する
+        from pet_quest_analyzer import analyze_active_pet
+        from entity import Entity
+        if pet_entity is None:
+            return None
+        pet_profile = analyze_active_pet(pet_entity)
+        if pet_profile is None:
+            return None
+        # ここで pet_profile に基づいてクエストを生成するロジックを書く
+        # 簡易的には、固定のクエストを返す
+        return {
+            "quest_id": f"evolution_quest_{pet_profile.species}_{evolution_data.id}",
+            "title": f"{pet_profile.species}の進化試練",
+            "description": f"{pet_profile.species}としてさらに強くなるため、{evolution_data.name}の力を試せ。",
+            "objective_type": "kill",
+            "required_count": 5,
+            "reward": {
+                "gold": 100,
+                "exp": 200,
+                "item": "evolution_stone"
+            }
+        }
+
+    def apply_quest_completion_reward(self, pet: 'PetAI', quest_reward: Dict[str, Any], pet_entity: Optional['Entity'] = None) -> None:
+        """クエスト完了報酬をペットに適用"""
+        if pet_entity is None:
+            return
+        # 経験値をペットに与える（簡易実装）
+        if "exp" in quest_reward:
+            pet_exp = getattr(pet, 'exp', 0)
+            pet.exp = pet_exp + quest_reward["exp"]
+        # アイテムをペットのインベントリに与える（簡易実装）
+        if "item" in quest_reward:
+            # ペットにアイテムを与えるロジック（省略）
+            pass
+
+        return True

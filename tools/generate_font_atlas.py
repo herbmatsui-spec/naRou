@@ -1,129 +1,134 @@
 #!/usr/bin/env python3
 """
-フォントテクスチャアトラス生成スクリプト
-PIL/Pillowを使用して、指定された文字からテクスチャアトラスを生成
+Font atlas generator for rendering text with bitmap fonts.
+Generates font atlases with character metrics and UV coordinates.
 """
 
-import json
 import os
+import json
+import argparse
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 from PIL import Image, ImageDraw, ImageFont
 
-# 対象文字リスト
-CHARACTERS = [
-    # 基本タイル文字
-    '@', 'p', '#', '.', '>', '⛩️',
-    # アイテム文字
-    '%', '?', '$', '*', '!',
-    # 数字
-    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-    # 大文字アルファベット
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-    # 小文字アルファベット
-    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
-]
 
-def get_font(size):
-    """フォントを取得"""
-    try:
-        # システムフォントを試す
-        return ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf", size)
-    except:
-        try:
-            return ImageFont.truetype("/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf", size)
-        except:
-            try:
-                return ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeMono.ttf", size)
-            except:
-                # デフォルトフォントにフォールバック
-                return ImageFont.load_default()
-
-def generate_font_atlas(atlas_size=512, glyph_size=24, padding=2, output_dir="demos/assets"):
-    """フォントテクスチャアトラスを生成"""
-    
-    # 出力ディレクトリを作成
+def generate_font_atlas(
+    font_path: str,
+    output_dir: str,
+    font_size: int = 16,
+    chars: str = None,
+    padding: int = 2
+) -> Dict:
+    """Generate a font atlas from a TrueType font."""
     os.makedirs(output_dir, exist_ok=True)
     
-    # フォントを取得
-    font = get_font(glyph_size)
+    if chars is None:
+        chars = ''.join(chr(i) for i in range(32, 127))  # ASCII printable
     
-    # キャンバスを作成（透明背景）
-    atlas = Image.new('RGBA', (atlas_size, atlas_size), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(atlas)
+    font = ImageFont.truetype(font_path, font_size)
     
-    # グリフマップを初期化
-    glyph_map = {}
+    char_images = {}
+    max_width = 0
+    max_height = 0
     
-    # 1行に配置可能なグリフ数を計算
-    glyphs_per_row = (atlas_size + padding) // (glyph_size + padding)
+    for char in chars:
+        try:
+            bbox = font.getbbox(char)
+            if bbox[2] > 0 and bbox[3] > 0:
+                img = Image.new('RGBA', (bbox[2], bbox[3]), (0, 0, 0, 0))
+                draw = ImageDraw.Draw(img)
+                draw.text((0, 0), char, font=font, fill=(255, 255, 255, 255))
+                char_images[char] = img
+                max_width = max(max_width, bbox[2])
+                max_height = max(max_height, bbox[3])
+            else:
+                char_images[char] = Image.new('RGBA', (1, 1), (0, 0, 0, 0))
+        except Exception:
+            char_images[char] = Image.new('RGBA', (1, 1), (0, 0, 0, 0))
     
-    # グリフを配置
-    for i, char in enumerate(CHARACTERS):
-        row = i // glyphs_per_row
-        col = i % glyphs_per_row
+    cols = int(len(chars) ** 0.5) + 1
+    rows = (len(chars) + cols - 1) // cols
+    
+    cell_width = max_width + padding
+    cell_height = max_height + padding
+    
+    atlas_width = cols * cell_width
+    atlas_height = rows * cell_height
+    
+    atlas = Image.new('RGBA', (atlas_width, atlas_height), (0, 0, 0, 0))
+    metrics = {}
+    
+    for idx, char in enumerate(chars):
+        row = idx // cols
+        col = idx % cols
+        x = col * cell_width
+        y = row * cell_height
         
-        x = col * (glyph_size + padding) + padding
-        y = row * (glyph_size + padding) + padding
+        char_img = char_images[char]
+        atlas.paste(char_img, (x + padding // 2, y + padding // 2))
         
-        # グリフの位置とサイズを記録
-        glyph_map[char] = {
-            "x": x,
-            "y": y,
-            "width": glyph_size,
-            "height": glyph_size
+        u = x / atlas_width
+        v = y / atlas_height
+        uw = cell_width / atlas_width
+        vh = cell_height / atlas_height
+        
+        bbox = font.getbbox(char)
+        advance = font.getlength(char) if hasattr(font, 'getlength') else cell_width
+        
+        metrics[char] = {
+            'x': x,
+            'y': y,
+            'width': char_img.width,
+            'height': char_img.height,
+            'u': u,
+            'v': v,
+            'uw': uw,
+            'vh': vh,
+            'advance': advance,
+            'bearing_x': bbox[0] if bbox else 0,
+            'bearing_y': bbox[1] if bbox else 0
         }
-        
-        # グリフを描画
-        draw.text((x + glyph_size // 2, y + glyph_size // 2), char, 
-                 fill=(255, 255, 255, 255), font=font, anchor="mm")
     
-    # アトラス画像を保存
-    atlas_path = os.path.join(output_dir, "font_atlas.png")
-    atlas.save(atlas_path)
-    print(f"Font atlas saved to: {atlas_path}")
+    font_name = Path(font_path).stem
+    base_name = f"font_{font_name}_{font_size}"
     
-    # メタデータを生成
-    metadata = {
-        "format": "font_atlas",
-        "textureSize": {
-            "width": atlas_size,
-            "height": atlas_size
-        },
-        "glyphSize": {
-            "width": glyph_size,
-            "height": glyph_size
-        },
-        "padding": padding,
-        "glyphs": glyph_map
+    png_path = os.path.join(output_dir, f"{base_name}.png")
+    json_path = os.path.join(output_dir, f"{base_name}.json")
+    
+    atlas.save(png_path)
+    
+    output_data = {
+        'font_path': font_path,
+        'font_size': font_size,
+        'atlas_width': atlas_width,
+        'atlas_height': atlas_height,
+        'cell_width': cell_width,
+        'cell_height': cell_height,
+        'padding': padding,
+        'chars': chars,
+        'metrics': metrics
     }
     
-    # メタデータを保存
-    metadata_path = os.path.join(output_dir, "font_atlas.json")
-    with open(metadata_path, 'w', encoding='utf-8') as f:
-        json.dump(metadata, f, ensure_ascii=False, indent=2)
-    print(f"Font atlas metadata saved to: {metadata_path}")
+    with open(json_path, 'w') as f:
+        json.dump(output_data, f, indent=2)
     
-    return atlas_path, metadata_path
+    print(f"Generated {png_path} and {json_path}")
+    return output_data
 
-if __name__ == "__main__":
-    import argparse
-    
-    parser = argparse.ArgumentParser(description="Generate font texture atlas")
-    parser.add_argument("--size", type=int, default=512, help="Atlas size in pixels (default: 512)")
-    parser.add_argument("--glyph-size", type=int, default=24, help="Glyph size in pixels (default: 24)")
-    parser.add_argument("--padding", type=int, default=2, help="Padding between glyphs in pixels (default: 2)")
-    parser.add_argument("--output", type=str, default="demos/assets", help="Output directory (default: demos/assets)")
+
+def main():
+    parser = argparse.ArgumentParser(description='Generate font atlas')
+    parser.add_argument('--font', required=True, help='Path to TTF font file')
+    parser.add_argument('--output', default='assets/fonts', help='Output directory')
+    parser.add_argument('--size', type=int, default=16, help='Font size in pixels')
+    parser.add_argument('--chars', default='', help='Characters to include (default: ASCII printable)')
+    parser.add_argument('--padding', type=int, default=2, help='Padding between characters')
     
     args = parser.parse_args()
     
-    print("Generating font texture atlas...")
-    atlas_path, metadata_path = generate_font_atlas(
-        atlas_size=args.size,
-        glyph_size=args.glyph_size,
-        padding=args.padding,
-        output_dir=args.output
-    )
-    print("Done!")
-    print(f"  Atlas image: {atlas_path}")
-    print(f"  Metadata: {metadata_path}")
+    chars = args.chars if args.chars else None
+    generate_font_atlas(args.font, args.output, args.size, chars, args.padding)
+
+
+if __name__ == '__main__':
+    main()

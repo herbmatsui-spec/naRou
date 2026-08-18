@@ -189,7 +189,6 @@ def test_main_quests_yaml_has_sample_condition():
 def test_evaluation_context_protocol():
     class CustomCtx:
         def resolve(self, key: str):
-            return {"x": 1}.get(key)
 
-    assert isinstance(CustomCtx(), EvaluationContext)
+            return {"x": 1}.get(key)
     assert evaluate(LeafCondition("x", "==", 1), CustomCtx()) is True

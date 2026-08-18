@@ -70,7 +70,7 @@ def test_condition_system():
         ("(>= player.faction_reputation.adventurer_guild 100)", True),
         ("(>= player.character_relationships.npc_001.trust 50)", True),
         ("(has player.pets)", True),  # ペットを持っているか
-        ("(in player.visited_locations \"shrine\")", True),  # 指定場所を訪問済みか
+        ("(has player.visited_locations \"shrine\")", True),  # 指定場所を訪問済みか
         ("(and (>= player.kill_counts.goblin 5) (>= player.kill_counts.slime 3))", True),
         ("(or (>= player.kill_counts.goblin 10) (>= player.collect_counts.herb 10))", False),  # 両方ともfalse
         ("(or (>= player.kill_counts.goblin 5) (>= player.collect_counts.herb 10))", True),  # 片方のみtrue
@@ -92,7 +92,9 @@ def test_condition_system():
             else:
                 print(f"✗ {condition_str:<55} => {result} (expected {expected})")
         except Exception as e:
+            import traceback
             print(f"✗ {condition_str:<55} => ERROR: {e}")
+            traceback.print_exc()
     
     print(f"\n結果: {passed}/{total} 成功")
     return passed == total
@@ -136,8 +138,8 @@ def test_quest_objective_integration():
     engine = MockEngine()
     world_state = MockWorldState()
     
-    from quest_condition_evaluator import EvaluationContext
-    context = EvaluationContext(player, engine, world_state)
+    from quest_condition_evaluator import ParanoidEvaluationContext
+    context = ParanoidEvaluationContext(player, engine, world_state)
     
     print(f"  評価結果: {obj2.evaluate(context)}")
     

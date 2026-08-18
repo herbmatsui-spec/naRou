@@ -1,0 +1,96 @@
+{
+  "$schema": "./asset_pipeline_schema.json",
+  "version": "1.0.0",
+  "name": "naRou Asset Build Pipeline",
+  "description": "Configuration for the naRou game asset build pipeline",
+  "generated_at": "2026-08-18T07:13:27+00:00",
+  
+  "directories": {
+    "source": "assets/src",
+    "output": "assets/build",
+    "temp": "assets/temp",
+    "cache": "assets/cache",
+    "logs": "assets/logs"
+  },
+  
+  "tileset": {
+    "default_size": 32,
+    "sizes": [16, 32, 64],
+    "padding": 1,
+    "max_atlas_size": 2048,
+    "formats": ["png"],
+    "compression": {
+      "enabled": true,
+      "level": 6
+    }
+  },
+  
+  "font": {
+    "default_size": 16,
+    "sizes": [8, 16, 24, 32],
+    "padding": 2,
+    "character_set": "ASCII",
+    "formats": ["png"]
+  },
+  
+  "sound": {
+    "sample_rate": 44100,
+    "bit_depth": 16,
+    "channels": 2,
+    "formats": ["ogg", "mp3"],
+    "quality": {
+      "music": {"bitrate": "192k", "vbr": true},
+      "sfx": {"bitrate": "128k", "vbr": false}
+    },
+    "conversion": {
+      "ogg_quality": 5,
+      "mp3_quality": 2
+    }
+  },
+  
+  "models": {
+    "formats": ["gltf", "glb", "obj"],
+    "optimization": {
+      "vertex_cache_optimization": true,
+      "overdraw_optimization": true,
+      "vertex_compression": true,
+      "texture_compression": true
+    },
+    "validation": {
+      "check_winding": true,
+      "check_normals": true,
+      "check_uvs": true,
+      "check_materials": true
+    }
+  },
+  
+  "pipeline": {
+    "steps": [
+      "validate_source",
+      "process_tilesets",
+      "process_fonts", 
+      "process_sounds",
+      "process_models",
+      "optimize_assets",
+      "package_assets",
+      "validate_output"
+    ],
+    "parallel_processing": true,
+    "max_workers": 4,
+    "continue_on_error": false
+  },
+  
+  "logging": {
+    "level": "INFO",
+    "file": "assets/logs/pipeline.log",
+    "max_size": "10MB",
+    "backup_count": 5
+  },
+  
+  "cache": {
+    "enabled": true,
+    "directory": "assets/cache",
+    "ttl": 86400,
+    "size_limit": "1GB"
+  }
+}

@@ -20,6 +20,7 @@ from constants import (
     MAP_WIDTH, VIEW_HEIGHT,
     COLOR_PET_PINK
 )
+from skill_tree_system import SkillTreeRegistry
 
 @dataclass
 class FloatingText:
@@ -866,3 +867,36 @@ class CinematicLogVisualizer:
 
 
 
+
+def format_skill_tree_display(registry: SkillTreeRegistry) -> str:
+    """スキルツリーデータを簡単なテキスト形式で返す"""
+    lines = []
+    lines.append("=== スキルツリー ===")
+    for tree_id, tree in registry.all().items():
+        lines.append(f"{tree.icon} {tree.name}")
+        for tier in tree.tiers:
+            learned_marker = "[ ]"  # placeholder; actual learned status would need player data
+            lines.append(f"  {learned_marker} {tier.name} (コスト: {tier.cost})")
+            for effect in tier.effects:
+                if effect.type == "damage_bonus":
+                    lines.append(f"    ダメージ+{effect.value} ({effect.target})")
+                elif effect.type == "crit_chance":
+                    lines.append(f"    会心率+{int(effect.value*100)}% ({effect.target})")
+                elif effect.type == "unlock_skill":
+                    lines.append(f"    スキル解放: {effect.value}")
+                else:
+                    lines.append(f"    {effect.type}: {effect.value} ({effect.target})")
+        lines.append("")
+    return "\n".join(lines)
+
+
+# --- LocalizationManager integration (i18n, Step 3.x) ---
+def localize(key: str, language: str = None, manager=None) -> str:
+    """Return localized text for *key* using LocalizationManager.
+
+    Provides a thin, dependency-free wrapper so callers can localize UI
+    strings without importing the manager directly.
+    """
+    from localization_manager import LocalizationManager
+    mgr = manager or LocalizationManager()
+    return mgr.get_text(key, language)
