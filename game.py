@@ -116,12 +116,6 @@ class Engine:
         self.entity_manager.add_entity(self.game_state_data.pet)
         # アイテムとリソースノードのリストは空で初期化（EntityManager内で管理）
 
-        # プレイヤーとペットの初期化
-        self._initialize_player_and_pet()
-
-        # --- インベントリアイテムの設定 ---
-        self._setup_initial_inventory()
-
         # --- マップ ---
         self.game_state_data.dungeon_level = 1
         self.game_state_data.game_map = GameMap(MAP_WIDTH, MAP_HEIGHT, floor_level=self.game_state_data.dungeon_level)
@@ -132,6 +126,12 @@ class Engine:
 
         rx, ry = self.game_state_data.game_map.rooms[0].center
         self.game_state_data.altar_pos = (rx + 2, ry)
+
+        # プレイヤーとペットの初期化
+        self._initialize_player_and_pet()
+
+        # --- インベントリアイテムの設定 ---
+        self._setup_initial_inventory()
 
         # エンティティマネージャーに初期エンティティを設定（すでに追加済み）
         # アイテムとリソースノードのリストは空で初期化済み
@@ -1160,16 +1160,16 @@ class Engine:
                     dmg, _, msg = CombatSystem.calculate_melee_attack(self.pet, nearest, weapon=weapon)
                     self.log(f"【シエル】「えいっ！」-> {nearest.name}に{dmg}ダメージ！", COLOR_PET_PINK)
                     nearest.hp -= dmg
-if nearest.hp <= 0:
-                self.log(f"【シエル】が{nearest.name}を倒した！", (255, 200, 220))
-                for l in self.pet.gain_exp(40): self.log(l, COLOR_PET_PINK)
-                self.entity_manager.remove_entity(nearest)
-            else:
-                path = AStar.get_path(Point(self.pet.x, self.pet.y), Point(nearest.x, nearest.y), lambda x, y: self.is_tile_free(x, y, blocked))
-                if path:
-                    self.pet.x, self.pet.y = path[0].x, path[0].y
-                self.pet.energy -= ENERGY_THRESHOLD
-                return
+                    if nearest.hp <= 0:
+                        self.log(f"【シエル】が{nearest.name}を倒した！", (255, 200, 220))
+                        for l in self.pet.gain_exp(40): self.log(l, COLOR_PET_PINK)
+                        self.entity_manager.remove_entity(nearest)
+                else:
+                    path = AStar.get_path(Point(self.pet.x, self.pet.y), Point(nearest.x, nearest.y), lambda x, y: self.is_tile_free(x, y, blocked))
+                    if path:
+                        self.pet.x, self.pet.y = path[0].x, path[0].y
+                    self.pet.energy -= ENERGY_THRESHOLD
+                    return
 
         goal = Point(self.player.x, self.player.y)
         path = AStar.get_path(Point(self.pet.x, self.pet.y), goal, lambda x, y: self.is_tile_free(x, y, blocked))
@@ -1307,10 +1307,10 @@ if nearest.hp <= 0:
                 self.game_map.tiles[nx][ny] = TILE_FLOOR
                 self.player.gain_skill_exp("mining", 25)
                 roll = random.random()
-if roll < 0.25:
-            ore = Item("鉄鉱石", "ore", "🪨", (160,160,160), nx, ny, base_weight=1.5, base_value=50)
-            self.entity_manager.add_item(ore)
-            self.log("壁を掘り崩した！ 鉄鉱石を発見！", (200, 200, 255))
+                if roll < 0.25:
+                    ore = Item("鉄鉱石", "ore", "🪨", (160,160,160), nx, ny, base_weight=1.5, base_value=50)
+                    self.entity_manager.add_item(ore)
+                    self.log("壁を掘り崩した！ 鉄鉱石を発見！", (200, 200, 255))
                 elif roll < 0.40:
                     g = random.randint(50, 200)
                     self.survival.gold += g

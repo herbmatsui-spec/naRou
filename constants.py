@@ -55,6 +55,21 @@ class ItemCategory(Enum):
     ORE = "ore"
     GOLD = "gold"
 
+# アイテムカテゴリ定数（後方互換用）
+CAT_WEAPON = "weapon"
+CAT_SHIELD = "shield"
+CAT_ARMOR = "armor"
+CAT_FOOD = "food"
+CAT_POTION = "potion"
+CAT_ORE = "ore"
+CAT_HELM = "helm"
+CAT_RING = "ring"
+CAT_SCROLL = "scroll"
+CAT_SPELLBOOK = "spellbook"
+CAT_TOOL = "tool"
+CAT_ROD = "rod"
+CAT_GOLD = "gold"
+
 # カラーパレット (RGB)
 COLOR_WALL_DARK = (35, 35, 45)
 COLOR_WALL_LIT = (145, 120, 90)

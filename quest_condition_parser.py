@@ -195,4 +195,9 @@ def parse_condition(dsl: str) -> ConditionNodeBase:
     return ConditionParser().parse(dsl)
 
 
-__all__ = ["ConditionParser", "parse_condition", "ConditionParseError"]
+__all__ = ["ConditionParser", "parse_condition", "parse_condition_from_yaml", "ConditionParseError"]
+
+
+def parse_condition_from_yaml(dsl: str):
+    """YAML設定からのDSL文字列を条件ASTに変換する便利関数（後方互換用）。"""
+    return parse_condition(dsl)

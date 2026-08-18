@@ -119,7 +119,7 @@ class RenderSystem:
             sanity_ratio=1.0
         )
 
-UIRenderer.render(console, context, cam_x, cam_y)
+        UIRenderer.render(console, context, cam_x, cam_y)
 
         # Proposal 9: 究極のログ・ビジュアライザー (文字別アニメーション・衝撃波・発光)
         tick = context.frame_count

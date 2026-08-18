@@ -3,12 +3,8 @@ Community Goal Manager Module
 Handles community goals and rewards for world events.
 """
 from __future__ import annotations
-<<<<<<< ours
-from typing import Dict, Any
-=======
 from typing import Dict, Any, Optional
 from entity import Entity  # For type hinting
->>>>>>> theirs
 
 class CommunityGoalManager:
     def __init__(self):

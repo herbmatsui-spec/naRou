@@ -9,6 +9,9 @@ from typing import List, Optional, Tuple, Dict, Any, Set
 from dataclasses import dataclass, field
 
 from constants import GameState as GameStateEnum
+
+# Export GameState for backward compatibility
+GameState = GameStateEnum
 from entity import Entity
 from item_system import Item, Inventory
 from core_framework import Point
