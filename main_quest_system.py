@@ -34,7 +34,7 @@ class QuestStatus(Enum):
 
 @dataclass
 class QuestObjective:
-    """クエストの達成条件 (設計書 2.2 + CQCT拡張)"""
+    """クエストの達成条件 (設計書 2.2 + CQCT拡張 + ナラティブDAG拡張)"""
     objective_id: str
     description: str
     target_type: str = ""           # 従来互換: "kill", "visit", "collect", "variable"
@@ -46,6 +46,9 @@ class QuestObjective:
     condition_tree: Optional["ConditionNode"] = None  # 複合条件AST
     condition_dsl: str = ""         # DSL文字列（YAML保存用）
     auto_evaluate: bool = True      # イベント駆動で自動評価するか
+    # ナラティブDAG拡張 (Phase 4 Step 17)
+    narrative_dag_id: str = ""      # 関連ナラティブDAG ID
+    narrative_started: bool = False # ナラティブ開始済みフラグ
 
     def update(self, target: str, amount: int = 1) -> bool:
         """従来互換：単純カウント更新"""
@@ -103,7 +106,7 @@ class QuestObjective:
 
 @dataclass
 class MainQuest:
-    """メインクエスト定義 (設計書 2.2 + CQCT拡張)"""
+    """メインクエスト定義 (設計書 2.2 + CQCT拡張 + ナラティブDAG拡張)"""
     quest_id: str
     title: str
     description: str
@@ -115,6 +118,8 @@ class MainQuest:
     # CQCT拡張: クエスト全体の解放条件
     unlock_condition: Optional["ConditionNode"] = None
     unlock_dsl: str = ""
+    # ナラティブDAG拡張 (Phase 4 Step 17)
+    narrative_dag_id: str = ""      # クエスト全体のナラティブDAG
 
     def check_unlock(self, context: "EvaluationContext") -> bool:
         """解放条件チェック"""
@@ -167,7 +172,8 @@ class MainQuestSystem:
                     objectives=objectives,
                     rewards=q_data.get("rewards", {}),
                     next_quest_id=q_data.get("next_quest_id"),
-                    unlock_dsl=q_data.get("unlock_condition", "")
+                    unlock_dsl=q_data.get("unlock_condition", ""),
+                    narrative_dag_id=q_data.get("narrative_dag_id", ""),
                 )
                 self.quests[quest.quest_id] = quest
         
@@ -182,9 +188,10 @@ class MainQuestSystem:
             title="運命の始まり",
             description="村の長から古文書を受け取り、世界の異変について知る。",
             required_phase="BEGINNING",
-            objectives=[QuestObjective("talk_elder", "村の長に話しかける", "visit", "village_elder")],
+            objectives=[QuestObjective("talk_elder", "村の長に話しかける", "visit", "village_elder", narrative_dag_id="prologue_branching")],
             rewards={"gold": 100, "world_phase": "AWAKENING"},
-            next_quest_id="awakening_01"
+            next_quest_id="awakening_01",
+            narrative_dag_id="prologue_branching"
         )
         self.quests[q1.quest_id] = q1
 
@@ -273,3 +280,96 @@ class MainQuestSystem:
         self.active_quest_id = None # 次の更新タイミングで _try_activate_next_quest が呼ばれる
         if quest.next_quest_id and quest.next_quest_id in self.quests:
             self.quests[quest.next_quest_id].status = QuestStatus.AVAILABLE
+
+        # クエスト完了時にナラティブDAGがある場合は自動開始
+        if quest.narrative_dag_id and engine:
+            self._start_quest_narrative(quest.narrative_dag_id, player, engine)
+
+    def _start_quest_narrative(self, dag_id: str, player: "Entity", engine: "Engine") -> List[str]:
+        """クエスト関連ナラティブを開始"""
+        try:
+            from narrative_executor import NARRATIVE_EXECUTOR
+            state = NARRATIVE_EXECUTOR.start_narrative(dag_id, player)
+            if state:
+                return [f"【ナラティブ開始】{dag_id}"]
+        except Exception as e:
+            return [f"ナラティブ開始エラー: {e}"]
+        return []
+
+    def make_narrative_choice(self, player: "Entity", edge_id: str) -> List[str]:
+        """ナラティブ選択肢を実行"""
+        try:
+            from narrative_executor import NARRATIVE_EXECUTOR
+            return NARRATIVE_EXECUTOR.make_choice(player, edge_id)
+        except Exception as e:
+            return [f"ナラティブ選択エラー: {e}"]
+
+    def get_active_narrative_node(self, player: "Entity"):
+        """現在のアクティブなナラティブノードを取得"""
+        try:
+            from narrative_executor import NARRATIVE_EXECUTOR
+            return NARRATIVE_EXECUTOR.get_current_node(player)
+        except Exception:
+            return None
+
+    def get_narrative_choices(self, player: "Entity") -> List[Dict[str, Any]]:
+        """現在のナラティブで選択可能な選択肢一覧を取得"""
+        try:
+            from narrative_executor import NARRATIVE_EXECUTOR
+            edges = NARRATIVE_EXECUTOR.get_available_choices(player)
+            return [
+                {
+                    "edge_id": e.edge_id,
+                    "choice_text": e.choice_text,
+                    "edge_type": e.edge_type.name,
+                }
+                for e in edges
+            ]
+        except Exception:
+            return []
+
+    def get_available_endings(self, player: "Entity") -> List[Dict[str, Any]]:
+        """解放可能なエンディング一覧を取得"""
+        try:
+            from narrative_executor import NARRATIVE_EXECUTOR
+            state = NARRATIVE_EXECUTOR.get_active_state(player)
+            if not state:
+                return []
+            dag = NARRATIVE_EXECUTOR.get_dag(state.dag_id)
+            if not dag:
+                return []
+            context = NARRATIVE_EXECUTOR.NarrativeContext(
+                flags=state.flags,
+                variables=state.variables,
+            )
+            endings = NARRATIVE_EXECUTOR.get_available_endings(context)
+            return [
+                {
+                    "ending_id": e.id,
+                    "name": e.name,
+                    "description": e.description,
+                    "rewards": e.rewards,
+                }
+                for e in endings
+            ]
+        except Exception:
+            return []
+
+    def get_narrative_state(self, player: "Entity") -> Optional[Dict[str, Any]]:
+        """ナラティブ状態をシリアライズして取得"""
+        try:
+            from narrative_executor import NARRATIVE_EXECUTOR
+            state = NARRATIVE_EXECUTOR.get_active_state(player)
+            if state:
+                return state.to_dict()
+        except Exception:
+            pass
+        return None
+
+    def load_narrative_state(self, player: "Entity", data: Dict[str, Any]) -> bool:
+        """ナラティブ状態を復元"""
+        try:
+            from narrative_executor import NARRATIVE_EXECUTOR
+            return NARRATIVE_EXECUTOR.load_state(player, data)
+        except Exception:
+            return False
