@@ -98,3 +98,5 @@ python -m pytest
 ## 📄 ライセンス & クレジット
 - **Version**: 1.0.0 (Commercial Edition)
 - **Engine Architecture**: SystemManager ECS-coupled Engine
+
+※ スキルツリー・ジョブシステムは、72段階の詳細実装計画に従って完全実装済み。
