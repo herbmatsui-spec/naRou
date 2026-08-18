@@ -11,7 +11,8 @@ import random
 from components import (
     TitleComponent, GuildFactionComponent, AchievementComponent,
     ReincarnationComponent, SkillTreeJobComponent, SkillFusionComponent,
-    StorytellerComponent
+    StorytellerComponent, AttributesComponent, ProceduralQuestComponent,
+    ArchaeologyComponent
 )
 
 T = TypeVar('T')
@@ -185,7 +186,7 @@ class Entity:
         is_player: bool = False,
         is_pet: bool = False,
         speed: int = 70,
-        attributes: Optional[Attributes] = None,
+        attributes: Optional[Attributes | Dict[str, int]] = None,
     ):
         self.x = x
         self.y = y
@@ -197,8 +198,8 @@ class Entity:
         self.speed = speed
         self.energy = 0
 
-        # 主能力
-        self.attributes = attributes or Attributes()
+        # 主能力（コンポーネント初期化後に設定）
+        self._init_attributes = attributes
 
         # レベルと経験値
         self.level = 1
@@ -241,6 +242,9 @@ class Entity:
         self.components: Dict[Type, Any] = {}
         self._init_components()
 
+        # 主能力コンポーネントに初期値を適用
+        self._apply_init_attributes()
+
         # 派生ステータス初期化
         self.max_hp = self.calculate_max_hp()
         self.hp = self.max_hp
@@ -248,6 +252,21 @@ class Entity:
         self.mp = self.max_mp
         self.max_stamina = self.calculate_max_stamina()
         self.stamina = self.max_stamina
+
+    def _apply_init_attributes(self) -> None:
+        """初期能力値をコンポーネントに適用"""
+        attrs_comp = self.get_component(AttributesComponent)
+        if self._init_attributes is not None:
+            if isinstance(self._init_attributes, dict):
+                for k, v in self._init_attributes.items():
+                    if hasattr(attrs_comp, k):
+                        setattr(attrs_comp, k, v)
+            else:
+                # 既存の Attributes オブジェクトからコピー
+                for k in attrs_comp.to_dict().keys():
+                    if hasattr(self._init_attributes, k):
+                        setattr(attrs_comp, k, getattr(self._init_attributes, k))
+        delattr(self, '_init_attributes')
 
     def _init_components(self) -> None:
         """サブシステムごとのコンポーネントを初期化"""
@@ -258,6 +277,9 @@ class Entity:
         self.components[SkillTreeJobComponent] = SkillTreeJobComponent()
         self.components[SkillFusionComponent] = SkillFusionComponent()
         self.components[StorytellerComponent] = StorytellerComponent()
+        self.components[AttributesComponent] = AttributesComponent()
+        self.components[ProceduralQuestComponent] = ProceduralQuestComponent()
+        self.components[ArchaeologyComponent] = ArchaeologyComponent()
 
     def get_component(self, component_type: Type[T]) -> T:
         """指定されたコンポーネントを取得（存在しなければ初期化して登録）"""
@@ -316,6 +338,59 @@ class Entity:
     def gold(self) -> int: return self.get_component(TitleComponent).gold
     @gold.setter
     def gold(self, val: int): self.get_component(TitleComponent).gold = val
+
+    # -------------------------------------------------------------
+    # 主能力プロパティ (AttributesComponent への委譲) - Step 2
+    # -------------------------------------------------------------
+    @property
+    def attributes(self) -> AttributesComponent:
+        """主能力コンポーネントを取得（後方互換性のため直接アクセス可能にする）"""
+        return self.get_component(AttributesComponent)
+
+    @attributes.setter
+    def attributes(self, val: AttributesComponent):
+        self.components[AttributesComponent] = val
+
+    # 個別能力値へのアクセス用ヘルパー（後方互換性）
+    @property
+    def strength(self) -> int: return self.attributes.strength
+    @strength.setter
+    def strength(self, val: int): self.attributes.strength = val
+
+    @property
+    def endurance(self) -> int: return self.attributes.endurance
+    @endurance.setter
+    def endurance(self, val: int): self.attributes.endurance = val
+
+    @property
+    def dexterity(self) -> int: return self.attributes.dexterity
+    @dexterity.setter
+    def dexterity(self, val: int): self.attributes.dexterity = val
+
+    @property
+    def perception(self) -> int: return self.attributes.perception
+    @perception.setter
+    def perception(self, val: int): self.attributes.perception = val
+
+    @property
+    def learning(self) -> int: return self.attributes.learning
+    @learning.setter
+    def learning(self, val: int): self.attributes.learning = val
+
+    @property
+    def will(self) -> int: return self.attributes.will
+    @will.setter
+    def will(self, val: int): self.attributes.will = val
+
+    @property
+    def magic(self) -> int: return self.attributes.magic
+    @magic.setter
+    def magic(self, val: int): self.attributes.magic = val
+
+    @property
+    def charisma(self) -> int: return self.attributes.charisma
+    @charisma.setter
+    def charisma(self, val: int): self.attributes.charisma = val
 
     # -------------------------------------------------------------
     # ギルド・派閥プロパティ (GuildFactionComponent への委譲)
@@ -507,6 +582,9 @@ class Entity:
     # スキルツリー・ジョブプロパティ (SkillTreeJobComponent への委譲)
     # -------------------------------------------------------------
 
+    skill_tree_progress: Dict[str, List[str]] = field(default_factory=dict)
+    skill_points: int = 0
+    total_skill_points_earned: int = 0
     @property
     def skill_tree_progress(self) -> Dict[str, List[str]]: return self.get_component(SkillTreeJobComponent).skill_tree_progress
     @skill_tree_progress.setter
@@ -615,6 +693,14 @@ class Entity:
     @story_flags.setter
     def story_flags(self, val: Dict[str, bool]): self.get_component(StorytellerComponent).story_flags = val
 
+    # -------------------------------------------------------------
+    # プロシージャル・クエスト生成プロパティ (ProceduralQuestComponent への委譲)
+    # -------------------------------------------------------------
+    @property
+    def procedural_quest(self) -> "ProceduralQuestComponent": return self.get_component(ProceduralQuestComponent)
+    @procedural_quest.setter
+    def procedural_quest(self, val: "ProceduralQuestComponent"): self.components[ProceduralQuestComponent] = val
+
     @property
     def story_variables(self) -> Dict[str, Any]: return self.get_component(StorytellerComponent).story_variables
     @story_variables.setter
@@ -674,6 +760,34 @@ class Entity:
     def ending_progress(self) -> Dict[str, int]: return self.get_component(StorytellerComponent).ending_progress
     @ending_progress.setter
     def ending_progress(self, val: Dict[str, int]): self.get_component(StorytellerComponent).ending_progress = val
+
+    # 考古学・発掘・解読メタゲーム (ArchaeologyComponent への委譲, Steps 11, 24)
+    @property
+    def archaeology(self) -> ArchaeologyComponent: return self.get_component(ArchaeologyComponent)
+    @property
+    def excavated_sites(self) -> List[str]: return self.get_component(ArchaeologyComponent).excavated_sites
+    @excavated_sites.setter
+    def excavated_sites(self, val: List[str]): self.get_component(ArchaeologyComponent).excavated_sites = val
+    @property
+    def decoded_fragments(self) -> List[str]: return self.get_component(ArchaeologyComponent).decoded_fragments
+    @decoded_fragments.setter
+    def decoded_fragments(self, val: List[str]): self.get_component(ArchaeologyComponent).decoded_fragments = val
+    @property
+    def owned_keys(self) -> List[str]: return self.get_component(ArchaeologyComponent).owned_keys
+    @owned_keys.setter
+    def owned_keys(self, val: List[str]): self.get_component(ArchaeologyComponent).owned_keys = val
+    @property
+    def reached_truths(self) -> List[str]: return self.get_component(ArchaeologyComponent).reached_truths
+    @reached_truths.setter
+    def reached_truths(self, val: List[str]): self.get_component(ArchaeologyComponent).reached_truths = val
+    @property
+    def leaned_endings(self) -> Dict[str, str]: return self.get_component(ArchaeologyComponent).leaned_endings
+    @leaned_endings.setter
+    def leaned_endings(self, val: Dict[str, str]): self.get_component(ArchaeologyComponent).leaned_endings = val
+    @property
+    def interpretation_notes(self) -> Dict[str, str]: return self.get_component(ArchaeologyComponent).interpretation_notes
+    @interpretation_notes.setter
+    def interpretation_notes(self, val: Dict[str, str]): self.get_component(ArchaeologyComponent).interpretation_notes = val
 
     def _init_default_skills(self) -> Dict[str, Skill]:
         return {

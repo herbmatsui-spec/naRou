@@ -5,8 +5,6 @@
 import sys
 import os
 import yaml
-import ast
-from pathlib import Path
 
 # Add project root to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -253,7 +251,7 @@ def test_all_72_steps_skill_synthesis_system():
     print("[OK] Steps 65-69 (skill_inheritance_system.py Data/Registry/Manager)")
 
     # Steps 70-71: skill_specialization_system.py
-    from skill_specialization_system import SkillSpecializationData, SkillSpecializationRegistry, SkillSpecializationManager, REGISTRY as SPEC_REG
+    from skill_specialization_system import SkillSpecializationData, SkillSpecializationManager, REGISTRY as SPEC_REG
     assert SkillSpecializationData is not None, "Step 71 Failed"
     SPEC_REG.load()
     assert len(SPEC_REG.all()) >= 1, "Step 71 Failed: registry load"

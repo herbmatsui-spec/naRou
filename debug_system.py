@@ -3,7 +3,7 @@ Debug and Wish System Module
 """
 
 from __future__ import annotations
-from typing import Dict, List, Any, Optional, TYPE_CHECKING
+from typing import Dict, List, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from entity import Entity

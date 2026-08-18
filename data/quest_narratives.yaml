@@ -1,0 +1,525 @@
+# Quest Narrative DAG Definitions (偏執的クエストシステム / 設計書 Phase 4 Step 14)
+# ナラティブ分岐 DAG: 選択肢 -> 分岐 -> サブ目的 -> 報酬/次クエスト
+
+narrative_dags:
+  # メインクエスト「運命の始まり」の分岐
+  prologue_branching:
+    dag_id: "prologue_branching"
+    title: "序章：分岐する運命"
+    description: "村の長からの依頼で、古文書を受け取るか拒否するかで運命が分かれる"
+    nodes:
+      prologue_start:
+        type: "START"
+        title: "村の長の依頼"
+        description: "村の長「古文書を届けてくれないか？」"
+        actions: []
+        rewards: {}
+
+      prologue_accept:
+        type: "CHOICE"
+        title: "引き受ける"
+        description: "「承知した。古文書を届けよう。」"
+        actions: []
+        rewards: {}
+        set_flags: ["accepted_elder_request"]
+
+      prologue_decline:
+        type: "CHOICE"
+        title: "断る"
+        description: "「すまない、今は手一杯だ。」"
+        actions: []
+        rewards: {}
+        set_flags: ["declined_elder_request"]
+
+      prologue_accept_path:
+        type: "EVENT"
+        title: "古文書の受け取り"
+        description: "村の長から古文書を受け取り、世界の異変を知る。"
+        actions: []
+        rewards:
+          gold: 100
+          world_phase: "AWAKENING"
+        set_flags: ["has_ancient_script"]
+
+      prologue_decline_path:
+        type: "EVENT"
+        title: "後悔の夜"
+        description: "依頼を断った夜、村が何者かに襲われる夢を見る。"
+        actions: []
+        rewards:
+          karma: -10
+        set_flags: ["nightmare_village_attack"]
+
+      prologue_merge:
+        type: "MERGE"
+        title: "旅立ち"
+        description: "どちらの選択をしても、旅は始まる。"
+        actions: []
+        rewards: {}
+
+      prologue_end_accept:
+        type: "END"
+        title: "覚醒への道"
+        description: "古文書を持って旅立つ。世界は覚醒期へ。"
+        actions: []
+        rewards:
+          next_quest_id: "awakening_01"
+
+      prologue_end_decline:
+        type: "END"
+        title: "贖罪の旅"
+        description: "断ったことを悔い、村を救うため旅立つ。"
+        actions: []
+        rewards:
+          next_quest_id: "redemption_01"
+
+    edges:
+      - edge_id: "accept"
+        source: "prologue_start"
+        target: "prologue_accept"
+        type: "CHOICE"
+        choice_text: "引き受ける"
+
+      - edge_id: "decline"
+        source: "prologue_start"
+        target: "prologue_decline"
+        type: "CHOICE"
+        choice_text: "断る"
+
+      - edge_id: "accept_continue"
+        source: "prologue_accept"
+        target: "prologue_accept_path"
+        type: "AUTO"
+
+      - edge_id: "decline_continue"
+        source: "prologue_decline"
+        target: "prologue_decline_path"
+        type: "AUTO"
+
+      - edge_id: "accept_to_merge"
+        source: "prologue_accept_path"
+        target: "prologue_merge"
+        type: "AUTO"
+
+      - edge_id: "decline_to_merge"
+        source: "prologue_decline_path"
+        target: "prologue_merge"
+        type: "AUTO"
+
+      - edge_id: "merge_to_accept_end"
+        source: "prologue_merge"
+        target: "prologue_end_accept"
+        type: "CONDITION_TRUE"
+        condition_dsl: "(has flags.accepted_elder_request)"
+
+      - edge_id: "merge_to_decline_end"
+        source: "prologue_merge"
+        target: "prologue_end_decline"
+        type: "CONDITION_TRUE"
+        condition_dsl: "(has flags.declined_elder_request)"
+
+  # 覚醒期クエストの分岐：守護者へのアプローチ
+  awakening_approach:
+    dag_id: "awakening_approach"
+    title: "目覚めの試練：アプローチの選択"
+    description: "古の守護者と戦うか、対話を試みるか、回避するか"
+    nodes:
+      awakening_start:
+        type: "START"
+        title: "封印された洞窟の前"
+        description: "洞窟の奥に古の守護者がいる。どう挑む？"
+        actions: []
+
+      awakening_fight:
+        type: "CHOICE"
+        title: "正面から戦う"
+        description: "剣を抜き、守護者に挑む。"
+        set_flags: ["chose_fight"]
+        rewards:
+          fame: 20
+
+      awakening_talk:
+        type: "CHOICE"
+        title: "対話を試みる"
+        description: "古の言葉で守護者に語りかける。"
+        set_flags: ["chose_talk"]
+        rewards:
+          piety: 15
+
+      awakening_sneak:
+        type: "CHOICE"
+        title: "こっそり通過"
+        description: "影に隠れ、守護者の目を盗んで進む。"
+        set_flags: ["chose_sneak"]
+        rewards:
+          karma: -5
+
+      awakening_fight_result:
+        type: "EVENT"
+        title: "激闘の末"
+        description: "守護者を倒したが、深手を負った。"
+        actions: []
+        rewards:
+          gold: 500
+          world_fragment: 1
+        condition_dsl: "(has flags.chose_fight)"
+
+      awakening_talk_result:
+        type: "EVENT"
+        title: "守護者の試練"
+        description: "守護者は言葉を理解し、試練を与えた。"
+        actions: []
+        rewards:
+          world_fragment: 1
+          unique_skill: "ancient_wisdom"
+        condition_dsl: "(has flags.chose_talk)"
+
+      awakening_sneak_result:
+        type: "EVENT"
+        title: "影の如く"
+        description: "気づかれずに通過したが、守護者の視線を感じる。"
+        actions: []
+        rewards:
+          world_fragment: 1
+          stealth_bonus: 10
+        condition_dsl: "(has flags.chose_sneak)"
+
+      awakening_merge:
+        type: "MERGE"
+        title: "世界の断片獲得"
+        description: "いずれの道も、断片へと繋がる。"
+        actions: []
+
+      awakening_end:
+        type: "END"
+        title: "探索期へ"
+        description: "断片を手に、次の段階へ進む。"
+        rewards:
+          world_phase: "EXPLORATION"
+          next_quest_id: "exploration_01"
+
+    edges:
+      - edge_id: "fight"
+        source: "awakening_start"
+        target: "awakening_fight"
+        type: "CHOICE"
+        choice_text: "正面から戦う"
+
+      - edge_id: "talk"
+        source: "awakening_start"
+        target: "awakening_talk"
+        type: "CHOICE"
+        choice_text: "対話を試みる"
+
+      - edge_id: "sneak"
+        source: "awakening_start"
+        target: "awakening_sneak"
+        type: "CHOICE"
+        choice_text: "こっそり通過"
+
+      - edge_id: "fight_to_result"
+        source: "awakening_fight"
+        target: "awakening_fight_result"
+        type: "AUTO"
+
+      - edge_id: "talk_to_result"
+        source: "awakening_talk"
+        target: "awakening_talk_result"
+        type: "AUTO"
+
+      - edge_id: "sneak_to_result"
+        source: "awakening_sneak"
+        target: "awakening_sneak_result"
+        type: "AUTO"
+
+      - edge_id: "fight_result_to_merge"
+        source: "awakening_fight_result"
+        target: "awakening_merge"
+        type: "AUTO"
+
+      - edge_id: "talk_result_to_merge"
+        source: "awakening_talk_result"
+        target: "awakening_merge"
+        type: "AUTO"
+
+      - edge_id: "sneak_result_to_merge"
+        source: "awakening_sneak_result"
+        target: "awakening_merge"
+        type: "AUTO"
+
+      - edge_id: "merge_to_end"
+        source: "awakening_merge"
+        target: "awakening_end"
+        type: "AUTO"
+
+  # 派閥抗争クエスト：三つ巴の選択
+  faction_war_choice:
+    dag_id: "faction_war_choice"
+    title: "派閥抗争：立場の選択"
+    description: "王国・教会・闇の手、いずれかの派閥に与するか、中立を貫くか"
+    nodes:
+      faction_start:
+        type: "START"
+        title: "三つ巴の会議"
+        description: "三派閥の代表が集う。あなたは誰を支持する？"
+        actions: []
+
+      faction_kingdom:
+        type: "CHOICE"
+        title: "ガルド王国を支持"
+        description: "秩序と法を重んじ、王国軍に加わる。"
+        set_flags: ["faction_kingdom"]
+        rewards:
+          faction_rep:
+            kingdom_garde: 30
+
+      faction_church:
+        type: "CHOICE"
+        title: "ルミエスト教会を支持"
+        description: "信仰と慈愛を掲げ、教会の聖職者となる。"
+        set_flags: ["faction_church"]
+        rewards:
+          faction_rep:
+            church_of_lumiest: 30
+
+      faction_shadow:
+        type: "CHOICE"
+        title: "シャドウハンドを支持"
+        description: "闇の力を信じ、暗躍する組織に加わる。"
+        set_flags: ["faction_shadow"]
+        rewards:
+          faction_rep:
+            shadow_hand: 30
+
+      faction_neutral:
+        type: "CHOICE"
+        title: "中立を貫く"
+        description: "どの派閥にも属さず、独自の道を行く。"
+        set_flags: ["faction_neutral"]
+        rewards:
+          karma: 10
+
+      faction_kingdom_path:
+        type: "EVENT"
+        title: "王国の騎士"
+        description: "王国軍の一員として前線へ赴く。"
+        condition_dsl: "(has flags.faction_kingdom)"
+        rewards:
+          title: "王国の盾"
+
+      faction_church_path:
+        type: "EVENT"
+        title: "教会の聖職者"
+        description: "教会の教えを広め、民を救う。"
+        condition_dsl: "(has flags.faction_church)"
+        rewards:
+          title: "光の導き手"
+
+      faction_shadow_path:
+        type: "EVENT"
+        title: "闇の刺客"
+        description: "影となり、敵を暗殺する。"
+        condition_dsl: "(has flags.faction_shadow)"
+        rewards:
+          title: "闇の歩み手"
+
+      faction_neutral_path:
+        type: "EVENT"
+        title: "孤高の旅人"
+        description: "どの派閥にも属さず、真実を追う。"
+        condition_dsl: "(has flags.faction_neutral)"
+        rewards:
+          title: "孤高の求道者"
+
+      faction_end:
+        type: "END"
+        title: "抗争の渦中へ"
+        description: "選んだ道の果てに、何が待つのか。"
+        rewards:
+          next_quest_id: "faction_war_02"
+
+    edges:
+      - edge_id: "kingdom"
+        source: "faction_start"
+        target: "faction_kingdom"
+        type: "CHOICE"
+        choice_text: "ガルド王国を支持"
+
+      - edge_id: "church"
+        source: "faction_start"
+        target: "faction_church"
+        type: "CHOICE"
+        choice_text: "ルミエスト教会を支持"
+
+      - edge_id: "shadow"
+        source: "faction_start"
+        target: "faction_shadow"
+        type: "CHOICE"
+        choice_text: "シャドウハンドを支持"
+
+      - edge_id: "neutral"
+        source: "faction_start"
+        target: "faction_neutral"
+        type: "CHOICE"
+        choice_text: "中立を貫く"
+
+      - edge_id: "kingdom_to_path"
+        source: "faction_kingdom"
+        target: "faction_kingdom_path"
+        type: "AUTO"
+
+      - edge_id: "church_to_path"
+        source: "faction_church"
+        target: "faction_church_path"
+        type: "AUTO"
+
+      - edge_id: "shadow_to_path"
+        source: "faction_shadow"
+        target: "faction_shadow_path"
+        type: "AUTO"
+
+      - edge_id: "neutral_to_path"
+        source: "faction_neutral"
+        target: "faction_neutral_path"
+        type: "AUTO"
+
+      - edge_id: "kingdom_path_to_end"
+        source: "faction_kingdom_path"
+        target: "faction_end"
+        type: "AUTO"
+
+      - edge_id: "church_path_to_end"
+        source: "faction_church_path"
+        target: "faction_end"
+        type: "AUTO"
+
+      - edge_id: "shadow_path_to_end"
+        source: "faction_shadow_path"
+        target: "faction_end"
+        type: "AUTO"
+
+      - edge_id: "neutral_path_to_end"
+        source: "faction_neutral_path"
+        target: "faction_end"
+        type: "AUTO"
+
+# 条件分岐の例：プレイヤーのビルドに応じた分岐
+build_specialized_branching:
+  dag_id: "build_specialized_branching"
+  title: "ビルド特化分岐"
+  description: "職業/スキル/覚醒に応じて専用ルートへ"
+  nodes:
+    build_start:
+      type: "START"
+      title: "試練の扉"
+      description: "君の歩んできた道に応じて、扉が開く。"
+      actions: []
+
+    build_warrior:
+      type: "CONDITION"
+      title: "戦士の道"
+      description: "剛腕の持ち主には、力の試練が待つ。"
+      condition_dsl: "(has job.warrior)"
+
+    build_mage:
+      type: "CONDITION"
+      title: "魔導士の道"
+      description: "知恵の持ち主には、知の試練が待つ。"
+      condition_dsl: "(has job.mage)"
+
+    build_rogue:
+      type: "CONDITION"
+      title: "盗賊の道"
+      description: "敏捷の持ち主には、技の試練が待つ。"
+      condition_dsl: "(has job.rogue)"
+
+    build_warrior_trial:
+      type: "EVENT"
+      title: "力の試練"
+      description: "巨大な岩を動かし、通路を開く。"
+      condition_dsl: "(has job.warrior)"
+      rewards:
+        unique_skill: "mountain_splitter"
+
+    build_mage_trial:
+      type: "EVENT"
+      title: "知の試練"
+      description: "古代の謎解きを解き、禁書庫を開く。"
+      condition_dsl: "(has job.mage)"
+      rewards:
+        unique_skill: "arcane_insight"
+
+    build_rogue_trial:
+      type: "EVENT"
+      title: "技の試練"
+      description: "罠だらけの通路を無傷で抜ける。"
+      condition_dsl: "(has job.rogue)"
+      rewards:
+        unique_skill: "shadow_step"
+
+    build_merge:
+      type: "MERGE"
+      title: "試練の果て"
+      description: "それぞれの道が、ここに交わる。"
+      actions: []
+
+    build_end:
+      type: "END"
+      title: "真の力"
+      description: "己の道を極め、新たな力を得た。"
+      rewards:
+        title: "道極めし者"
+
+    edges:
+      - edge_id: "warrior_cond"
+        source: "build_start"
+        target: "build_warrior"
+        type: "CONDITION_TRUE"
+        condition_dsl: "(has job.warrior)"
+
+      - edge_id: "mage_cond"
+        source: "build_start"
+        target: "build_mage"
+        type: "CONDITION_TRUE"
+        condition_dsl: "(has job.mage)"
+
+      - edge_id: "rogue_cond"
+        source: "build_start"
+        target: "build_rogue"
+        type: "CONDITION_TRUE"
+        condition_dsl: "(has job.rogue)"
+
+      - edge_id: "warrior_to_trial"
+        source: "build_warrior"
+        target: "build_warrior_trial"
+        type: "AUTO"
+
+      - edge_id: "mage_to_trial"
+        source: "build_mage"
+        target: "build_mage_trial"
+        type: "AUTO"
+
+      - edge_id: "rogue_to_trial"
+        source: "build_rogue"
+        target: "build_rogue_trial"
+        type: "AUTO"
+
+      - edge_id: "warrior_trial_to_merge"
+        source: "build_warrior_trial"
+        target: "build_merge"
+        type: "AUTO"
+
+      - edge_id: "mage_trial_to_merge"
+        source: "build_mage_trial"
+        target: "build_merge"
+        type: "AUTO"
+
+      - edge_id: "rogue_trial_to_merge"
+        source: "build_rogue_trial"
+        target: "build_merge"
+        type: "AUTO"
+
+      - edge_id: "merge_to_end"
+        source: "build_merge"
+        target: "build_end"
+        type: "AUTO"

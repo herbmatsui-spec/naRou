@@ -1,0 +1,378 @@
+# Dungeon Spec Definitions (偏執的クエストシステム / 設計書 Phase 5 Step 18)
+# クエスト→ダンジョン要求仕様 DSL
+
+dungeon_specs:
+  # 標準探索ダンジョン
+  standard_exploration:
+    spec_id: "standard_exploration"
+    name: "標準探索ダンジョン"
+    description: "3-5階層の標準的な探索ダンジョン"
+    min_floors: 3
+    max_floors: 5
+    width: 60
+    height: 60
+    theme_id: "goblin_cave"
+    quest_id: ""
+    objective_mapping:
+      reach_boss: "boss_room_coords"
+      explore_floors: "generated_floors"
+      count_rooms: "total_rooms"
+      find_entrance: "entrance_coords"
+      defeat_boss: "boss_room_id"
+    global_constraints:
+      min_total_rooms: 10
+      max_total_traps: 15
+    floors:
+      - floor_number: 1
+        min_rooms: 3
+        max_rooms: 5
+        entrance_from_above: true
+        exit_to_below: true
+        required_rooms:
+          - room_id: "floor1_entrance"
+            room_type: "ENTRANCE"
+            min_x: 0
+            min_y: 0
+            max_x: 8
+            max_y: 8
+            is_required: true
+            traps: []
+            enemies:
+              - enemy_id: "floor1_guard_1"
+                monster_id: "goblin"
+                role: "GUARD"
+                position: [4, 4]
+                level_modifier: 0
+        optional_rooms:
+          - room_id: "floor1_treasure"
+            room_type: "TREASURE"
+            min_x: 0
+            min_y: 0
+            max_x: 6
+            max_y: 6
+            is_required: false
+            items:
+              - item_id: "healing_potion"
+                count: 2
+          - room_id: "floor1_trap_room"
+            room_type: "TRAP"
+            min_x: 0
+            min_y: 0
+            max_x: 8
+            max_y: 8
+            is_required: false
+            traps:
+              - trap_id: "floor1_spike"
+                trap_type: "SPIKE"
+                position: [3, 3]
+                damage: 15
+                trigger_condition: "enter"
+                disarm_difficulty: 8
+            enemies:
+              - enemy_id: "floor1_trap_guard"
+                monster_id: "bat"
+                role: "AMBUSH"
+                position: [2, 2]
+
+      - floor_number: 2
+        min_rooms: 3
+        max_rooms: 5
+        entrance_from_above: true
+        exit_to_below: true
+        required_rooms:
+          - room_id: "floor2_chamber"
+            room_type: "CHAMBER"
+            min_x: 0
+            min_y: 0
+            max_x: 10
+            max_y: 10
+            is_required: true
+            enemies:
+              - enemy_id: "floor2_elite"
+                monster_id: "cave_bear"
+                role: "ELITE"
+                position: [5, 5]
+                level_modifier: 1
+        optional_rooms:
+          - room_id: "floor2_puzzle"
+            room_type: "PUZZLE"
+            min_x: 0
+            min_y: 0
+            max_x: 8
+            max_y: 8
+            is_required: false
+            items:
+              - item_id: "ancient_key"
+                count: 1
+            metadata:
+              puzzle_type: "pressure_plate"
+
+      - floor_number: 3
+        min_rooms: 2
+        max_rooms: 4
+        is_boss_floor: true
+        entrance_from_above: true
+        exit_to_below: false
+        required_rooms:
+          - room_id: "floor3_pre_boss"
+            room_type: "CHAMBER"
+            min_x: 0
+            min_y: 0
+            max_x: 12
+            max_y: 12
+            is_required: true
+            enemies:
+              - enemy_id: "floor3_miniboss"
+                monster_id: "skeleton"
+                role: "MINIBOSS"
+                position: [6, 6]
+                level_modifier: 2
+        boss_room:
+          room_id: "floor3_boss_room"
+          room_type: "BOSS"
+          min_x: 0
+          min_y: 0
+          max_x: 15
+          max_y: 15
+          is_required: true
+          enemies:
+            - enemy_id: "goblin_king"
+              monster_id: "goblin_king"
+              role: "BOSS"
+              position: [7, 7]
+              level_modifier: 3
+              ai_hints: ["protect_boss", "summon_minions"]
+            - enemy_id: "goblin_shaman"
+              monster_id: "goblin_shaman"
+              role: "ELITE"
+              position: [5, 7]
+              level_modifier: 2
+              ai_hints: ["heal_boss", "cast_debuff"]
+          traps:
+            - trap_id: "boss_room_gas"
+              trap_type: "POISON_GAS"
+              position: [3, 3]
+              damage: 20
+              effect_duration: 5
+              trigger_condition: "timer"
+              disarm_difficulty: 15
+          items:
+            - item_id: "goblin_crown"
+              count: 1
+            - item_id: "ancient_script"
+              count: 1
+
+  # ボスラッシュ型ダンジョン
+  boss_rush_dungeon:
+    spec_id: "boss_rush_dungeon"
+    name: "ボスラッシュダンジョン"
+    description: "連続ボス戦が待ち受ける短いダンジョン"
+    min_floors: 2
+    max_floors: 3
+    width: 40
+    height: 40
+    theme_id: "volcanic_cave"
+    quest_id: ""
+    objective_mapping:
+      defeat_boss: "boss_room_id"
+      count_rooms: "total_rooms"
+    global_constraints:
+      force_boss_every_floor: true
+    floors:
+      - floor_number: 1
+        min_rooms: 1
+        max_rooms: 1
+        is_boss_floor: true
+        entrance_from_above: true
+        exit_to_below: true
+        required_rooms: []
+        boss_room:
+          room_id: "floor1_boss"
+          room_type: "BOSS"
+          min_x: 0
+          min_y: 0
+          max_x: 20
+          max_y: 20
+          is_required: true
+          enemies:
+            - enemy_id: "fire_lizard_king"
+              monster_id: "fire_lizard"
+              role: "BOSS"
+              position: [10, 10]
+              level_modifier: 2
+              ai_hints: ["area_attack", "fire_immunity"]
+          traps:
+            - trap_id: "lava_pool"
+              trap_type: "SPIKE"
+              position: [5, 5]
+              damage: 25
+              trigger_condition: "enter"
+              disarm_difficulty: 12
+
+      - floor_number: 2
+        min_rooms: 1
+        max_rooms: 1
+        is_boss_floor: true
+        entrance_from_above: true
+        exit_to_below: false
+        required_rooms: []
+        boss_room:
+          room_id: "floor2_final_boss"
+          room_type: "BOSS"
+          min_x: 0
+          min_y: 0
+          max_x: 25
+          max_y: 25
+          is_required: true
+          enemies:
+            - enemy_id: "ifrit"
+              monster_id: "ifrit"
+              role: "BOSS"
+              position: [12, 12]
+              level_modifier: 4
+              ai_hints: ["summon_minions", "fire_storm", "phase_transition"]
+            - enemy_id: "magma_elemental_1"
+              monster_id: "magma_elemental"
+              role: "MINIBOSS"
+              position: [8, 12]
+              level_modifier: 2
+            - enemy_id: "magma_elemental_2"
+              monster_id: "magma_elemental"
+              role: "MINIBOSS"
+              position: [16, 12]
+              level_modifier: 2
+          traps:
+            - trap_id: "lava_wave"
+              trap_type: "SPIKE"
+              position: [12, 5]
+              damage: 30
+              trigger_condition: "timer"
+              disarm_difficulty: 18
+          items:
+            - item_id: "ifrit_heart"
+              count: 1
+            - item_id: "volcanic_ore"
+              count: 5
+
+  # 宝物庫ダンジョン
+  treasure_vault_dungeon:
+    spec_id: "treasure_vault_dungeon"
+    name: "宝物庫ダンジョン"
+    description: "多くの宝物庫とトラップがあるダンジョン"
+    min_floors: 2
+    max_floors: 4
+    width: 50
+    height: 50
+    theme_id: "ancient_ruins"
+    quest_id: ""
+    objective_mapping:
+      count_rooms: "total_rooms"
+      find_entrance: "entrance_coords"
+    global_constraints:
+      min_treasure_rooms: 3
+    floors:
+      - floor_number: 1
+        min_rooms: 4
+        max_rooms: 6
+        entrance_from_above: true
+        exit_to_below: true
+        required_rooms:
+          - room_id: "vault_entrance"
+            room_type: "ENTRANCE"
+            min_x: 0
+            min_y: 0
+            max_x: 8
+            max_y: 8
+            is_required: true
+        optional_rooms:
+          - room_id: "vault_treasure_1"
+            room_type: "TREASURE"
+            min_x: 0
+            min_y: 0
+            max_x: 8
+            max_y: 8
+            is_required: false
+            is_locked: true
+            lock_key_id: "vault_key_1"
+            items:
+              - item_id: "gold_bar"
+                count: 10
+            traps:
+              - trap_id: "vault_alarm"
+                trap_type: "ALARM"
+                position: [4, 4]
+                damage: 0
+                trigger_condition: "enter"
+                disarm_difficulty: 10
+          - room_id: "vault_treasure_2"
+            room_type: "TREASURE"
+            min_x: 0
+            min_y: 0
+            max_x: 8
+            max_y: 8
+            is_required: false
+            is_locked: true
+            lock_key_id: "vault_key_2"
+            items:
+              - item_id: "magic_gem"
+                count: 3
+          - room_id: "vault_trap_hall"
+            room_type: "TRAP"
+            min_x: 0
+            min_y: 0
+            max_x: 12
+            max_y: 12
+            is_required: false
+            traps:
+              - trap_id: "floor_spikes"
+                trap_type: "SPIKE"
+                position: [6, 6]
+                damage: 20
+                trigger_condition: "enter"
+                disarm_difficulty: 12
+              - trap_id: "poison_gas_trap"
+                trap_type: "POISON_GAS"
+                position: [3, 9]
+                damage: 15
+                effect_duration: 3
+                trigger_condition: "timer"
+                disarm_difficulty: 10
+
+      - floor_number: 2
+        min_rooms: 3
+        max_rooms: 5
+        is_boss_floor: true
+        entrance_from_above: true
+        exit_to_below: false
+        required_rooms:
+          - room_id: "master_vault"
+            room_type: "TREASURE"
+            min_x: 0
+            min_y: 0
+            max_x: 15
+            max_y: 15
+            is_required: true
+            is_locked: true
+            lock_key_id: "master_key"
+            items:
+              - item_id: "legendary_sword"
+                count: 1
+              - item_id: "ancient_armor"
+                count: 1
+              - item_id: "vault_master_seal"
+                count: 1
+            enemies:
+              - enemy_id: "vault_guardian"
+                monster_id: "golem"
+                role: "BOSS"
+                position: [7, 7]
+                level_modifier: 3
+                ai_hints: ["guard_treasure", "high_defense"]
+            traps:
+              - trap_id: "master_vault_gas"
+                trap_type: "POISON_GAS"
+                position: [5, 5]
+                damage: 25
+                effect_duration: 5
+                trigger_condition: "interact"
+                disarm_difficulty: 20

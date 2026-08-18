@@ -4,10 +4,9 @@ Implements rich AI decision-making for monsters, pets, and neutral NPCs.
 """
 
 from __future__ import annotations
-import math
 import random
-from typing import Optional, Tuple, List, Dict, Any, TYPE_CHECKING
-from core_framework import Point, bresenham_line, AStar, BaseSystem
+from typing import Optional, List, Dict, TYPE_CHECKING
+from core_framework import Point, AStar, BaseSystem
 from constants import ENERGY_THRESHOLD
 
 if TYPE_CHECKING:

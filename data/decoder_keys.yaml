@@ -1,0 +1,30 @@
+# デコーダー鍵（言語族の解読鍵）定義 (Step 8)
+# 各 cipher_type に対応する鍵。獲得手段 acquire は drop_from_site / quest_reward / trade。
+
+decoder_keys:
+  goblin_rune_key:
+    id: "goblin_rune_key"
+    name: "ゴブリン文字の鍵"
+    cipher_type: "goblin_rune"
+    description: "ゴブリンの唄と刻印を読み解く青写真。"
+    acquire:
+      method: "drop_from_site"
+      source: "goblin_ruins"
+
+  heroic_glyph_key:
+    id: "heroic_glyph_key"
+    name: "英雄文字の鍵"
+    cipher_type: "heroic_glyph"
+    description: "碑文と星図の祈りを解く定規。"
+    acquire:
+      method: "drop_from_site"
+      source: "hero_sanctum"
+
+  abyssal_script_key:
+    id: "abyssal_script_key"
+    name: "深淵文字の鍵"
+    cipher_type: "abyssal_script"
+    description: "波と記憶を結ぶ二重写しを解く透写板。"
+    acquire:
+      method: "drop_from_site"
+      source: "abyssal_dig"

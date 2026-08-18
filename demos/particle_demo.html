@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>パーティクルシステム デモ</title>
+  <script src="https://cdn.pixijs.com/pixi.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: #0a0b10;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      color: #f0f4fc;
+    }
+    #container {
+      position: relative;
+    }
+    canvas {
+      border: 1px solid #333;
+    }
+    .controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 8px;
+    }
+    button {
+      background: #e5a93b;
+      border: none;
+      color: #000;
+      padding: 8px 16px;
+      margin: 4px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #ffb74d;
+    }
+    .info {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #8b9bb4;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div class="controls">
+      <button onclick="emitStep()">歩行（ほこり）</button>
+      <button onclick="emitHit()">ヒット（火花）</button>
+      <button onclick="emitMagic()">魔法（マジック）</button>
+      <button onclick="emitHeal()">回復（ヒール）</button>
+      <button onclick="emitDamage()">ダメージ</button>
+      <button onclick="emitLevelUp()">レベルアップ</button>
+      <button onclick="clearParticles()">クリア</button>
+      <div class="info">
+        パーティクル数: <span id="particleCount">0</span><br>
+        FPS: <span id="fps">0</span>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { ParticleSystem } from './demos/lib/ParticleSystem.js';
+    
+    // PixiJSアプリケーションの初期化
+    const app = new PIXI.Application({
+      width: 960,
+      height: 576,
+      backgroundColor: 0x0a0b10,
+      antialias: true
+    });
+    
+    document.getElementById('container').appendChild(app.view);
+    
+    // パーティクルシステムを初期化
+    const particleSystem = new ParticleSystem(app, app.stage);
+    
+    // マウス位置
+    let mouseX = 480;
+    let mouseY = 288;
+    
+    app.view.addEventListener('mousemove', (e) => {
+      const rect = app.view.getBoundingClientRect();
+      mouseX = e.clientX - rect.left;
+      mouseY = e.clientY - rect.top;
+    });
+    
+    app.view.addEventListener('click', (e) => {
+      const rect = app.view.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      // クリック位置にランダムなエフェクト
+      const effects = ['step', 'hit', 'magic_cast', 'heal', 'damage'];
+      const randomEffect = effects[Math.floor(Math.random() * effects.length)];
+      particleSystem.emitEffect(randomEffect, x, y, 10);
+    });
+    
+    // ゲームループ
+    app.ticker.add((delta) => {
+      particleSystem.update(delta / 60);
+      
+      // 情報を更新
+      document.getElementById('particleCount').textContent = particleSystem.getActiveCount();
+      document.getElementById('fps').textContent = Math.round(app.ticker.FPS);
+    });
+    
+    // エフェクト発火関数
+    window.emitStep = () => {
+      particleSystem.emitEffect('step', mouseX, mouseY, 5);
+    };
+    
+    window.emitHit = () => {
+      particleSystem.emitEffect('hit', mouseX, mouseY, 10);
+    };
+    
+    window.emitMagic = () => {
+      particleSystem.emitEffect('magic_cast', mouseX, mouseY, 15);
+    };
+    
+    window.emitHeal = () => {
+      particleSystem.emitEffect('heal', mouseX, mouseY, 12);
+    };
+    
+    window.emitDamage = () => {
+      particleSystem.emitEffect('damage', mouseX, mouseY, 8);
+    };
+    
+    window.emitLevelUp = () => {
+      particleSystem.emitEffect('level_up', mouseX, mouseY, 30);
+    };
+    
+    window.clearParticles = () => {
+      particleSystem.clear();
+    };
+    
+    // 自動デモ
+    setInterval(() => {
+      const x = Math.random() * 960;
+      const y = Math.random() * 576;
+      const effects = ['step', 'hit', 'magic_cast'];
+      const effect = effects[Math.floor(Math.random() * effects.length)];
+      particleSystem.emitEffect(effect, x, y, 5);
+    }, 500);
+  </script>
+</body>
+</html>

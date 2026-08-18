@@ -6,3 +6,5 @@ logs/
 scratch/
 archive/
 .system_generated/
+node_modules/
+package-lock.json

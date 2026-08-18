@@ -22,15 +22,10 @@ def show_help():
    - ダンジョン探索、クエスト達成、キャラ育成などを楽しめます。
    - ゲーム内で [?] または [h] キーを押すと詳細なヘルプを参照できます。
 
-2. 経済シミュレーションを実行 (economy_sim.py)
-   - 経済システムをシミュレートするスクリプトを実行します。
-   - 価格変動、取引、インフレなどの経済現象を観察できます。
+ 2. バトルバランス自動検証を実行 (tests/balance_simulator.py)
+    - 戦闘バランスを自動検証し、HTML/JSON レポートを出力します。
 
-3. ワークフローを実行 (orchestrator.py)
-   - 複数のタスクを自動的に実行するオーケストレーターを起動します。
-   - 設定されたワークフローに従って、さまざまなユーティリティを順次実行します。
-
-0. 終了
+ 0. 終了
    - システムを終了します。
 
 その他の操作:
@@ -51,9 +46,7 @@ def main():
         print("  naRou: Masterpiece Edition 統合システムメニュー")
         print("========================================")
         print("1. naRou: Masterpiece Edition（ゲーム本編）を起動")
-        print("2. 経済シミュレーションを実行 (economy_sim.py)")
-        print("3. ワークフローを実行 (orchestrator.py)")
-        print("4. バトルバランス自動検証を実行 (tests/balance_simulator.py)")
+        print("2. バトルバランス自動検証を実行 (tests/balance_simulator.py)")
         print("0. 終了")
         print("========================================")
         
@@ -73,10 +66,6 @@ def main():
                 log_file = err.log_to_file()
                 print(f"詳細ログを保存しました: {log_file}\n")
         elif choice == '2':
-            run_script("economy_sim.py")
-        elif choice == '3':
-            run_script("orchestrator.py")
-        elif choice == '4':
             run_script("tests/balance_simulator.py")
         elif choice == '0':
             print("システムを終了します。")

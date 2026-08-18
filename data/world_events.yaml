@@ -30,3 +30,42 @@ world_events:
       food_nutrition_mult: 1.25
     story_triggers:
       - "festival_merchant_visit"
+
+  interworld_invasion:
+    id: "interworld_invasion"
+    name: "異界の侵攻"
+    description: "異世界の門が開き、強大な敵が襲来する。"
+    trigger_conditions:
+      turns_interval: 1000
+      chance: 0.1
+    duration: 200
+    effects:
+      enemy_spawn_mult: 1.5
+      rare_item_drop_chance: 0.2
+    story_triggers:
+      - "interworld_war"
+    quarter: 1
+    rewards:
+      special_currency: "interworld_points"
+      item_drops:
+        "interworld_key": 0.1
+        "alien_technology": 0.05
+    rankings:
+      type: "points"
+      point_sources:
+        "alien_soldier": 100
+        "alien_commander": 500
+    titles:
+      - condition: "points >= 1000"
+        title: "異世界の征服者"
+        description: "異界の侵攻で1000ポイント以上を獲得した証"
+      - condition: "points >= 5000"
+        title: "星間の英雄"
+        description: "異界の侵攻で5000ポイント以上を獲得した伝説の戦士"
+    community_goal:
+      type: "total_points"
+      target: 100000
+      reward: "global_exp_boost_2x"
+    announcement_period: 50
+    start_turn: 1000
+    end_turn: 1200

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>UI Design System Test Page</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="UIProvider.js"></script>
+    <style>
+        body {
+            background-color: var(--colors-surface-background);
+            color: var(--colors-content-text-main);
+            font-family: var(--typography-font-family-main);
+            margin: 0;
+            padding: var(--spacing-8);
+            transition: background-color var(--motion-duration-standard) var(--motion-easing-smooth);
+        }
+        .token-card {
+            background-color: var(--colors-surface-surface-low);
+            border: 1px solid var(--colors-surface-border);
+            padding: var(--spacing-4);
+            border-radius: 8px;
+            margin-bottom: var(--spacing-4);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-2);
+        }
+        .color-swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        h1 {
+            font-size: var(--typography-size-h1);
+            font-weight: var(--typography-weight-bold);
+            color: var(--colors-brand-primary);
+            margin-bottom: var(--spacing-6);
+        }
+        .text-muted { color: var(--colors-content-text-muted); }
+    </style>
+</head>
+<body>
+    <h1>🎨 UI Design System Validation</h1>
+    <p class="text-muted" style="margin-bottom: var(--spacing-8);">Checking if design-tokens.json is correctly injected via UIProvider.js</p>
+
+    <div id="token-tests">
+        <h3>Colors</h3>
+        <div id="color-tests"></div>
+        
+        <h3 style="margin-top: var(--spacing-8)">Typography & Spacing</h3>
+        <div class="token-card">
+            <span>Spacing-4 test: </span>
+            <div style="width: var(--spacing-4); height: var(--spacing-4); background: white;"></div>
+        </div>
+    </div>
+
+    <script>
+        async function runTests() {
+            await window.UIProvider.init();
+            
+            const colors = window.UIProvider.tokens.colors;
+            const colorContainer = document.getElementById('color-tests');
+            
+            const flattenColors = (obj, prefix = '') => {
+                let results = [];
+                for (const [key, value] of Object.entries(obj)) {
+                    const name = prefix ? `${prefix}-${key}` : key;
+                    if (typeof value === 'object') {
+                        results = results.concat(flattenColors(value, name));
+                    } else {
+                        results.push({ name, value });
+                    }
+                }
+                return results;
+            };
+
+            flattenColors(colors).forEach(color => {
+                const div = document.createElement('div');
+                div.className = 'token-card';
+                div.innerHTML = `
+                    <div class="color-swatch" style="background-color: ${color.value}"></div>
+                    <span class="text-muted">${color.name}:</span>
+                    <span style="color: ${color.value}">${color.value}</span>
+                `;
+                colorContainer.appendChild(div);
+            });
+        }
+        runTests();
+    </script>
+</body>
+</html>

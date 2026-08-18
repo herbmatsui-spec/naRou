@@ -9,9 +9,8 @@ Accurately renders:
 6. In-game features: Exploration -> Combat -> God Prayer -> Inventory/Skill Tree -> NG+ Reincarnation
 """
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 import math
-import os
 
 # Screen dimensions matching terminal/canvas ratio (800x480)
 W, H = 840, 500

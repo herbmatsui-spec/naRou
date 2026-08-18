@@ -1,0 +1,39 @@
+# 考古学遺跡サイト定義 (Step 7)
+# 発掘によって memory_fragments の断片と decoder_key をドロップする。
+# fragment_pool: 重み付きでドロップする断片。decoder_key_pool: 同様に鍵。
+
+archaeology_sites:
+  goblin_ruins:
+    id: "goblin_ruins"
+    name: "ゴブリンの廃都"
+    min_depth: 3
+    max_depth: 99
+    description: "崩れかけた城壁の下に、かつての主の遺言が眠る。"
+    fragment_pool:
+      goblin_child_screams: 3
+      traitor_kings_will: 2
+    decoder_key_pool:
+      goblin_rune_key: 2
+
+  hero_sanctum:
+    id: "hero_sanctum"
+    name: "英雄の聖域"
+    min_depth: 10
+    max_depth: 99
+    description: "祈りの残響が今も響く聖堂。星の欠片が散らばる。"
+    fragment_pool:
+      ancient_hero_memory: 3
+      star_chart_shard: 2
+    decoder_key_pool:
+      heroic_glyph_key: 2
+
+  abyssal_dig:
+    id: "abyssal_dig"
+    name: "深淵の発掘坑"
+    min_depth: 20
+    max_depth: 99
+    description: "海が飲み込んだ文明の最下層。波の記号が壁を覆う。"
+    fragment_pool:
+      sunken_civ_tablet: 3
+    decoder_key_pool:
+      abyssal_script_key: 2

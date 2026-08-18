@@ -1,7 +1,6 @@
 import sys
 import os
 import yaml
-from pathlib import Path
 
 # Add project root to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -29,7 +28,7 @@ def test_all_72_steps():
     print("[OK] Steps 1-8 (skill_trees.yaml)")
 
     # Step 9 - 10: entity.py fields
-    from entity import Entity, Attributes
+    from entity import Entity
     p = Entity(0, 0, "@")
     assert hasattr(p, "skill_tree_progress") and isinstance(p.skill_tree_progress, dict), "Step 9 Failed"
     assert hasattr(p, "skill_points") and hasattr(p, "total_skill_points_earned"), "Step 10 Failed"

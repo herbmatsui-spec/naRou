@@ -10,7 +10,6 @@ from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
     from entity import Entity
-    from game import Engine
 
 
 # Step 67: ReincarnationChallengeData

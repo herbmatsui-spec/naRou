@@ -10,24 +10,82 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from typing import Optional, Dict, Any, TYPE_CHECKING
 import os
 
+from ui_event_panel import get_current_event_info, get_event_ranking, get_player_event_score
+from ui_ranking_panel import get_all_event_rankings
+
 if TYPE_CHECKING:
     from game import Engine
 
 _ENGINE_INSTANCE: Optional["Engine"] = None
 
+# 開発環境ではlocalhostを許可、本番環境では適切なドメインに制限する
+ALLOWED_ORIGINS = [
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    # 本番環境ではここに実際のドメインを追加
+]
+
+def _is_origin_allowed(origin: str) -> bool:
+    """オリジンが許可リストに含まれているかチェック"""
+    return origin in ALLOWED_ORIGINS
+
+
+# レート制限のスケルトン実装（本番では適切なストレージに置き換える）
+_REQUEST_HISTORY: Dict[str, list] = {}
+_RATE_LIMIT_WINDOW = 60  # 1分間隔
+_RATE_LIMIT_MAX_REQUESTS = 100  # 窓内最大リクエスト数
+
+
+def _is_rate_allowed(client_ip: str) -> bool:
+    """レート制限チェックのスケルトン実装"""
+    import time
+    now = time.time()
+    
+    if client_ip not in _REQUEST_HISTORY:
+        _REQUEST_HISTORY[client_ip] = []
+    
+    # 古いリクエストを削除
+    _REQUEST_HISTORY[client_ip] = [
+        req_time for req_time in _REQUEST_HISTORY[client_ip]
+        if now - req_time < _RATE_LIMIT_WINDOW
+    ]
+    
+    # リクエスト数をチェック
+    if len(_REQUEST_HISTORY[client_ip]) >= _RATE_LIMIT_MAX_REQUESTS:
+        return False
+    
+    # 現在のリクエストを記録
+    _REQUEST_HISTORY[client_ip].append(now)
+    return True
+
+
 class GameHTTPRequestHandler(BaseHTTPRequestHandler):
     def _set_headers(self, content_type="application/json"):
         self.send_response(200)
+        # セキュリティ強化: オリジンチェックを実装
+        origin = self.headers.get('Origin')
+        if origin and _is_origin_allowed(origin):
+            self.send_header("Access-Control-Allow-Origin", origin)
+        else:
+            # デフォルトは同一オリジンポリシー（何も送信しない）
+            pass
         self.send_header("Content-Type", content_type)
-        self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 
     def do_OPTIONS(self):
         self._set_headers()
-
     def do_GET(self):
+        # レート制限チェック
+        client_ip = self.client_address[0]
+        if not _is_rate_allowed(client_ip):
+            self.send_response(429)  # Too Many Requests
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": "Rate limit exceeded"}).encode('utf-8'))
+            return
+
         global _ENGINE_INSTANCE
         if self.path == "/api/state":
             if _ENGINE_INSTANCE is None:
@@ -38,6 +96,44 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             state = self._serialize_engine_state(_ENGINE_INSTANCE)
             self._set_headers("application/json; charset=utf-8")
             self.wfile.write(json.dumps(state, ensure_ascii=False).encode('utf-8'))
+        elif self.path == "/api/event/info":
+            # イベント情報を取得
+            query = self.path.split('?', 1)[1] if '?' in self.path else ''
+            params = dict(qc.split('=') for qc in query.split('&') if qc)
+            turn = int(params.get('turn', 0))
+            info = get_current_event_info(turn)
+            self._set_headers("application/json; charset=utf-8")
+            self.wfile.write(json.dumps(info, ensure_ascii=False).encode('utf-8'))
+        elif self.path == "/api/event/ranking":
+            query = self.path.split('?', 1)[1] if '?' in self.path else ''
+            params = dict(qc.split('=') for qc in query.split('&') if qc)
+            event_id = params.get('event_id', '')
+            top_n = int(params.get('top_n', 10))
+            ranking = get_event_ranking(event_id, top_n)
+            self._set_headers("application/json; charset=utf-8")
+            self.wfile.write(json.dumps(ranking, ensure_ascii=False).encode('utf-8'))
+        elif self.path == "/api/event/score":
+            query = self.path.split('?', 1)[1] if '?' in self.path else ''
+            params = dict(qc.split('=') for qc in query.split('&') if qc)
+            event_id = params.get('event_id', '')
+            player_id = params.get('player_id', '')
+            score = get_player_event_score(event_id, player_id)
+            self._set_headers("application/json; charset=utf-8")
+            self.wfile.write(json.dumps({"score": score}, ensure_ascii=False).encode('utf-8'))
+        elif self.path == "/api/event/titles":
+            query = self.path.split('?', 1)[1] if '?' in self.path else ''
+            params = dict(qc.split('=') for qc in query.split('&') if qc)
+            event_id = params.get('event_id', '')
+            player_id = params.get('player_id', '')
+            # プレイヤーオブジェクトを取得する必要があるが、ここでは簡易的に空リストを返す
+            # 実際には、エンジンからプレイヤーオブジェクトを取得する
+            titles = []  # プレースホルダー
+            self._set_headers("application/json; charset=utf-8")
+            self.wfile.write(json.dumps(titles, ensure_ascii=False).encode('utf-8'))
+        elif self.path == "/api/event/all_rankings":
+            all_rankings = get_all_event_rankings()
+            self._set_headers("application/json; charset=utf-8")
+            self.wfile.write(json.dumps(all_rankings, ensure_ascii=False).encode('utf-8'))
         elif self.path == "/" or self.path.endswith(".html") or self.path == "/index.html":
             html_path = os.path.join(os.path.dirname(__file__), "web_game_client.html")
             if os.path.exists(html_path):

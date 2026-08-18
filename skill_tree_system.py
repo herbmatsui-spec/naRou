@@ -53,6 +53,7 @@ class SkillTreeRegistry:
             cls._instance = super().__new__(cls)
             cls._trees = {}
             cls._loaded = False
+            cls._exclusive_skills = {}
         return cls._instance
 
     def load(self, path: str = "data/skill_trees.yaml") -> None:

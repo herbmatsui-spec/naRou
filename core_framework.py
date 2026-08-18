@@ -6,7 +6,7 @@ Steps 2, 4, 7, 9, 20, 21, 24, 25 (Bresenham & A* Pathfinding)
 from __future__ import annotations
 import math
 import heapq
-from typing import List, Tuple, Optional, Callable, Dict, Any
+from typing import List, Tuple, Callable, Dict, Any
 from dataclasses import dataclass
 
 
@@ -181,3 +181,15 @@ class BaseSystem:
         pass
 
 
+
+
+# --- LocalizationManager integration (i18n, Step 3.x) ---
+def localize(key: str, language: str = None, manager=None) -> str:
+    """Return localized text for *key* using LocalizationManager.
+
+    Provides a thin, dependency-free wrapper so callers can localize UI
+    strings without importing the manager directly.
+    """
+    from localization_manager import LocalizationManager
+    mgr = manager or LocalizationManager()
+    return mgr.get_text(key, language)

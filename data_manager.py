@@ -8,17 +8,15 @@ import os
 import yaml
 import json
 import random
-from typing import Dict, Any, Optional, List, Tuple, TYPE_CHECKING
+from typing import Dict, Any, Optional, List, TYPE_CHECKING
 
 from core_framework import BaseSystem
 from constants import (
-    QUALITY_BAD, QUALITY_NORMAL, QUALITY_GOOD, QUALITY_MIRACLE, QUALITY_GOD,
-    ItemCategory
+    QUALITY_BAD, QUALITY_NORMAL, QUALITY_GOOD, QUALITY_MIRACLE, QUALITY_GOD
 )
 from item_system import (
     Item, MATERIALS,
-    CAT_WEAPON, CAT_SHIELD, CAT_ARMOR, CAT_HELM, CAT_RING,
-    CAT_POTION, CAT_SCROLL, CAT_FOOD, CAT_SPELLBOOK, CAT_TOOL, CAT_ROD, CAT_ORE, CAT_GOLD
+    CAT_TOOL
 )
 from entity import Entity, Attributes
 
@@ -271,3 +269,15 @@ class DataManager(BaseSystem):
                 errors.append(f"Monster '{m_id}' missing 'max_hp'")
 
         return errors
+
+
+# --- LocalizationManager integration (i18n, Step 3.x) ---
+def localize(key: str, language: str = None, manager=None) -> str:
+    """Return localized text for *key* using LocalizationManager.
+
+    Provides a thin, dependency-free wrapper so callers can localize UI
+    strings without importing the manager directly.
+    """
+    from localization_manager import LocalizationManager
+    mgr = manager or LocalizationManager()
+    return mgr.get_text(key, language)

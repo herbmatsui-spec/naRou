@@ -5,12 +5,11 @@ Skill Trait Transfer System Module (Steps 50-56)
 from __future__ import annotations
 import os
 import yaml
-from typing import Dict, List, Optional, Any, Tuple, TYPE_CHECKING
+from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
     from entity import Entity
-    from game import Engine
 
 
 # Step 51: SkillTransferData

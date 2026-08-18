@@ -11,7 +11,7 @@ import yaml
 from pathlib import Path
 
 if TYPE_CHECKING:
-    from entity import PetAI, Entity
+    from entity import PetAI
 
 
 @dataclass

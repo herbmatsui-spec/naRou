@@ -1,0 +1,575 @@
+"""
+Narrative Executor Module (偏執的クエストシステム / 設計書 Phase 4 Step 15-16)
+DAG 実行エンジン：現在ノード管理・選択適用・フラグ更新。
+story_choices.yaml / story_endings.yaml 連携（Step 16）。
+"""
+
+from __future__ import annotations
+
+import os
+import yaml
+import random
+from typing import Any, Dict, List, Optional, Set, TYPE_CHECKING
+from dataclasses import dataclass, field
+from copy import deepcopy
+
+if TYPE_CHECKING:
+    from entity import Entity
+    from game import Engine
+
+from quest_narrative_dag import (
+    NarrativeDAG,
+    NarrativeNode,
+    NarrativeEdge,
+    NarrativeContext,
+    NarrativeNodeType,
+    NarrativeEdgeType,
+    build_dag_from_yaml,
+)
+
+
+@dataclass
+class NarrativeState:
+    """ナラティブ実行状態（セーブデータ用）"""
+    dag_id: str
+    current_node_id: str
+    flags: Set[str] = field(default_factory=set)
+    variables: Dict[str, Any] = field(default_factory=dict)
+    history: List[str] = field(default_factory=list)  # 通過したノードID履歴
+    completed: bool = False
+    ending_id: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "dag_id": self.dag_id,
+            "current_node_id": self.current_node_id,
+            "flags": list(self.flags),
+            "variables": self.variables,
+            "history": self.history,
+            "completed": self.completed,
+            "ending_id": self.ending_id,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "NarrativeState":
+        return cls(
+            dag_id=data["dag_id"],
+            current_node_id=data["current_node_id"],
+            flags=set(data.get("flags", [])),
+            variables=data.get("variables", {}),
+            history=data.get("history", []),
+            completed=data.get("completed", False),
+            ending_id=data.get("ending_id"),
+        )
+
+
+@dataclass
+class StoryChoiceConsequence:
+    """選択肢の結果（story_choices.yaml）"""
+    id: str
+    description: str = ""
+    immediate_effects: List[Dict[str, Any]] = field(default_factory=list)
+    long_term_effects: List[Dict[str, Any]] = field(default_factory=list)
+    world_state_changes: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class StoryEnding:
+    """ストーリー エンディング（story_endings.yaml）"""
+    id: str
+    name: str = ""
+    description: str = ""
+    unlock_conditions: List[str] = field(default_factory=list)
+    ending_scene: str = ""
+    rewards: Dict[str, Any] = field(default_factory=dict)
+
+
+class NarrativeExecutor:
+    """ナラティブ DAG 実行エンジン"""
+
+    def __init__(
+        self,
+        data_path: str = "data/quest_narratives.yaml",
+        choices_path: str = "data/story_choices.yaml",
+        endings_path: str = "data/story_endings.yaml",
+    ):
+        self.data_path = data_path
+        self.choices_path = choices_path
+        self.endings_path = endings_path
+        self._dags: Dict[str, NarrativeDAG] = {}
+        self._choices: Dict[str, StoryChoiceConsequence] = {}
+        self._endings: Dict[str, StoryEnding] = {}
+        self._active_states: Dict[str, NarrativeState] = {}  # player_id -> state
+        self.load_all()
+
+    def load_all(self) -> None:
+        """全データ読み込み"""
+        self.load_dags()
+        self.load_choices()
+        self.load_endings()
+
+    def load_dags(self) -> None:
+        """YAML から全 DAG を読み込み"""
+        self._dags = {}
+        if not os.path.exists(self.data_path):
+            return
+
+        with open(self.data_path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+
+        for dag_id, dag_data in data.get("narrative_dags", {}).items():
+            dag = build_dag_from_yaml(dag_id, dag_data)
+            errors = dag.validate()
+            if errors:
+                for err in errors:
+                    print(f"[NarrativeDAG Warning] {err}")
+            self._dags[dag_id] = dag
+
+    def load_choices(self) -> None:
+        """story_choices.yaml 読み込み"""
+        self._choices = {}
+        if not os.path.exists(self.choices_path):
+            return
+
+        with open(self.choices_path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+
+        for choice_id, choice_data in data.get("choice_consequences", {}).items():
+            self._choices[choice_id] = StoryChoiceConsequence(
+                id=choice_id,
+                description=choice_data.get("description", ""),
+                immediate_effects=choice_data.get("immediate_effects", []),
+                long_term_effects=choice_data.get("long_term_effects", []),
+                world_state_changes=choice_data.get("world_state_changes", {}),
+            )
+
+    def load_endings(self) -> None:
+        """story_endings.yaml 読み込み"""
+        self._endings = {}
+        if not os.path.exists(self.endings_path):
+            return
+
+        with open(self.endings_path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+
+        for ending_id, ending_data in data.get("story_endings", {}).items():
+            self._endings[ending_id] = StoryEnding(
+                id=ending_id,
+                name=ending_data.get("name", ""),
+                description=ending_data.get("description", ""),
+                unlock_conditions=ending_data.get("unlock_conditions", []),
+                ending_scene=ending_data.get("ending_scene", ""),
+                rewards=ending_data.get("rewards", {}),
+            )
+
+    def get_choice(self, choice_id: str) -> Optional[StoryChoiceConsequence]:
+        return self._choices.get(choice_id)
+
+    def get_ending(self, ending_id: str) -> Optional[StoryEnding]:
+        return self._endings.get(ending_id)
+
+    def apply_choice_consequence(
+        self,
+        choice_id: str,
+        context: NarrativeContext,
+    ) -> List[str]:
+        """選択肢の結果を適用（即時効果・長期効果・世界状態変更）"""
+        choice = self._choices.get(choice_id)
+        if not choice:
+            return [f"選択肢結果 {choice_id} が見つかりません"]
+
+        logs = []
+
+        # 即時効果
+        for effect in choice.immediate_effects:
+            eff_type = effect.get("type")
+            value = effect.get("value", 0)
+            if eff_type == "gain_gold":
+                context.variables["gold"] = context.variables.get("gold", 0) + value
+                logs.append(f"ゴールド獲得: +{value}")
+            elif eff_type == "gain_karma":
+                context.variables["karma"] = context.variables.get("karma", 0) + value
+                logs.append(f"カルマ変化: {value:+d}")
+            elif eff_type == "gain_exp":
+                context.variables["exp"] = context.variables.get("exp", 0) + value
+                logs.append(f"経験値獲得: +{value}")
+            elif eff_type == "gain_piety":
+                context.variables["piety"] = context.variables.get("piety", 0) + value
+                logs.append(f"信仰心変化: {value:+d}")
+            elif eff_type == "gain_mp_max":
+                context.variables["mp_max"] = context.variables.get("mp_max", 0) + value
+                logs.append(f"最大MP増加: +{value}")
+
+        # 長期効果
+        for effect in choice.long_term_effects:
+            eff_type = effect.get("type")
+            value = effect.get("value", 0)
+            context.variables[f"long_term_{eff_type}"] = value
+            logs.append(f"長期効果登録: {eff_type} = {value}")
+
+        # 世界状態変更
+        for key, value in choice.world_state_changes.items():
+            context.variables[f"world_{key}"] = value
+            logs.append(f"世界状態更新: {key} = {value}")
+
+        return logs
+
+    def check_ending_unlock(
+        self,
+        ending_id: str,
+        context: NarrativeContext,
+    ) -> bool:
+        """エンディング解放条件チェック"""
+        ending = self._endings.get(ending_id)
+        if not ending:
+            return False
+
+        # 全条件を満たす必要あり
+        for condition in ending.unlock_conditions:
+            if not self._check_condition(condition, context):
+                return False
+        return True
+
+    def _check_condition(self, condition: str, context: NarrativeContext) -> bool:
+        """条件チェック（簡易版）"""
+        # フラグチェック
+        if condition.startswith("has_flag:"):
+            flag = condition.split(":", 1)[1]
+            return flag in context.flags
+        # カルマチェック
+        if condition.startswith("karma_good_"):
+            threshold = int(condition.split("_")[-1])
+            return context.variables.get("karma", 0) >= threshold
+        if condition.startswith("karma_evil_"):
+            threshold = int(condition.split("_")[-1])
+            return context.variables.get("karma", 0) <= -threshold
+        # キル数チェック
+        if condition.startswith("kill_counts_total_"):
+            threshold = int(condition.split("_")[-1])
+            return context.variables.get("total_kills", 0) >= threshold
+        # フラグ直接指定
+        return condition in context.flags
+
+    def grant_ending_rewards(self, ending_id: str, context: NarrativeContext) -> List[str]:
+        """エンディング報酬付与"""
+        ending = self._endings.get(ending_id)
+        if not ending:
+            return [f"エンディング {ending_id} が見つかりません"]
+
+        logs = []
+        for key, value in ending.rewards.items():
+            if key == "title":
+                context.variables["title"] = value
+                logs.append(f"称号獲得: {value}")
+            elif key == "gold":
+                context.variables["gold"] = context.variables.get("gold", 0) + value
+                logs.append(f"ゴールド獲得: +{value}")
+            elif key == "item":
+                context.variables.setdefault("items", []).append(value)
+                logs.append(f"アイテム獲得: {value}")
+            elif key == "ending_scene":
+                context.variables["ending_scene"] = value
+                logs.append(f"エンディングシーン: {value}")
+        return logs
+
+    def get_available_endings(self, context: NarrativeContext) -> List[StoryEnding]:
+        """現在解放可能なエンディング一覧"""
+        return [e for e in self._endings.values() if self.check_ending_unlock(e.id, context)]
+
+    def get_dag(self, dag_id: str) -> Optional[NarrativeDAG]:
+        return self._dags.get(dag_id)
+
+    def start_narrative(
+        self,
+        dag_id: str,
+        player: "Entity",
+        initial_flags: Optional[Set[str]] = None,
+        initial_variables: Optional[Dict[str, Any]] = None,
+    ) -> Optional[NarrativeState]:
+        """ナラティブ開始"""
+        dag = self._dags.get(dag_id)
+        if not dag:
+            return None
+
+        start_node = dag.get_start_node()
+        if not start_node:
+            return None
+
+        # コンテキスト生成
+        context = NarrativeContext(
+            player=player,
+            flags=initial_flags or set(),
+            variables={},
+        )
+
+        # 開始ノードの自動遷移を適用
+        current_node_id = self._apply_auto_transitions(dag, start_node.node_id, context)
+
+        state = NarrativeState(
+            dag_id=dag_id,
+            current_node_id=current_node_id,
+            flags=context.flags,
+            variables=context.variables,
+            history=[start_node.node_id, current_node_id] if current_node_id != start_node.node_id else [start_node.node_id],
+        )
+
+        # プレイヤーIDで管理（簡易版：名前使用）
+        player_id = getattr(player, 'name', 'player')
+        self._active_states[player_id] = state
+
+        # フラグ・変数適用
+        self._apply_node_effects(dag.get_node(current_node_id), context)
+
+        return state
+
+    def get_active_state(self, player: "Entity") -> Optional[NarrativeState]:
+        player_id = getattr(player, 'name', 'player')
+        return self._active_states.get(player_id)
+
+    def get_current_node(self, player: "Entity") -> Optional[NarrativeNode]:
+        state = self.get_active_state(player)
+        if not state:
+            return None
+        dag = self._dags.get(state.dag_id)
+        if not dag:
+            return None
+        return dag.get_node(state.current_node_id)
+
+    def get_available_choices(self, player: "Entity") -> List[NarrativeEdge]:
+        """現在のノードで選択可能なエッジ一覧取得"""
+        state = self.get_active_state(player)
+        if not state or state.completed:
+            return []
+
+        dag = self._dags.get(state.dag_id)
+        if not dag:
+            return []
+
+        node = dag.get_node(state.current_node_id)
+        if not node:
+            return []
+
+        context = NarrativeContext(
+            flags=state.flags,
+            variables=state.variables,
+        )
+
+        # 手動選択タイプのみ返す（CHOICE タイプ）
+        available = []
+        for edge in node.get_available_edges(context):
+            if edge.edge_type == NarrativeEdgeType.CHOICE:
+                available.append(edge)
+
+        # 重み付きランダム順（決定的な順序が必要なら weight でソート）
+        available.sort(key=lambda e: (-e.weight, e.edge_id))
+        return available
+
+    def make_choice(self, player: "Entity", edge_id: str) -> List[str]:
+        """選択肢を選択して遷移実行。ログメッセージリストを返す。"""
+        state = self.get_active_state(player)
+        if not state or state.completed:
+            return ["ナラティブが進行中ではありません"]
+
+        dag = self._dags.get(state.dag_id)
+        if not dag:
+            return ["DAG が見つかりません"]
+
+        node = dag.get_node(state.current_node_id)
+        if not node:
+            return ["現在ノードが無効です"]
+
+        # エッジ検索
+        edge = None
+        for e in node.outgoing_edges:
+            if e.edge_id == edge_id:
+                edge = e
+                break
+
+        if not edge:
+            return ["指定された選択肢が見つかりません"]
+
+        # コンテキスト再構築
+        context = NarrativeContext(
+            flags=state.flags,
+            variables=state.variables,
+        )
+
+        # 遷移可能かチェック
+        if not edge.is_available(context):
+            return ["現在その選択肢は選べません"]
+
+        # 選択肢タイプの場合、選択肢の結果を適用
+        if edge.edge_type == NarrativeEdgeType.CHOICE:
+            choice_logs = self.apply_choice_consequence(edge.edge_id, context)
+            logs.extend(choice_logs)
+
+        # 遷移実行
+        logs = self._execute_transition(dag, edge, context, state)
+        return logs
+
+    def _execute_transition(
+        self,
+        dag: NarrativeDAG,
+        edge: NarrativeEdge,
+        context: NarrativeContext,
+        state: NarrativeState,
+    ) -> List[str]:
+        """エッジ遷移実行"""
+        logs = []
+
+        # エッジの効果適用
+        for key, value in edge.effects.items():
+            context.variables[key] = value
+            logs.append(f"効果適用: {key} = {value}")
+
+        # ターゲットノードへ移動
+        target_node = dag.get_node(edge.target_node_id)
+        if not target_node:
+            return ["遷移先ノードが存在しません"]
+
+        # 自動遷移チェイン適用
+        final_node_id = self._apply_auto_transitions(dag, edge.target_node_id, context)
+
+        # フラグ・変数更新
+        state.current_node_id = final_node_id
+        state.flags = context.flags
+        state.variables = context.variables
+        state.history.append(final_node_id)
+
+        # 到達ノードの効果適用
+        final_node = dag.get_node(final_node_id)
+        if final_node:
+            self._apply_node_effects(final_node, context)
+
+        # 完了判定
+        if final_node.node_type == NarrativeNodeType.END:
+            state.completed = True
+            state.ending_id = final_node.node_id
+            logs.append(f"★ ナラティブ「{dag.dag_id}」が完了しました: {final_node.title}")
+
+            # エンディング解放チェック・報酬付与
+            if self.check_ending_unlock(final_node.node_id, context):
+                ending_logs = self.grant_ending_rewards(final_node.node_id, context)
+                logs.extend(ending_logs)
+
+        return logs
+
+    def _apply_auto_transitions(
+        self,
+        dag: NarrativeDAG,
+        start_node_id: str,
+        context: NarrativeContext,
+    ) -> str:
+        """自動遷移（AUTO/CONDITION_TRUE 等）を連鎖適用"""
+        current_id = start_node_id
+        visited = set()  # 無限ループ防止
+
+        while True:
+            if current_id in visited:
+                break  # ループ検出
+            visited.add(current_id)
+
+            node = dag.get_node(current_id)
+            if not node:
+                break
+
+            # ノードの効果適用
+            self._apply_node_effects(node, context)
+
+            # 自動遷移可能なエッジを探す
+            auto_edge = None
+            for edge in node.outgoing_edges:
+                if edge.edge_type in (NarrativeEdgeType.AUTO, NarrativeEdgeType.CONDITION_TRUE):
+                    if edge.is_available(context):
+                        auto_edge = edge
+                        break
+
+            if not auto_edge:
+                break  # 自動遷移なし = ここで停止
+
+            # 遷移実行
+            for key, value in edge.effects.items():
+                context.variables[key] = value
+
+            current_id = auto_edge.target_node_id
+
+            # 終了ノードなら停止
+            target_node = dag.get_node(current_id)
+            if target_node and target_node.node_type == NarrativeNodeType.END:
+                break
+
+        return current_id
+
+    def _apply_node_effects(self, node: Optional[NarrativeNode], context: NarrativeContext) -> None:
+        """ノードのフラグ・変数・報酬効果を適用"""
+        if not node:
+            return
+
+        for flag in node.set_flags:
+            context.set_flag(flag)
+
+        for flag in node.clear_flags:
+            context.clear_flag(flag)
+
+        for key, value in node.rewards.items():
+            context.variables[key] = value
+
+    def save_state(self, player: "Entity") -> Optional[Dict[str, Any]]:
+        """状態をシリアライズ"""
+        state = self.get_active_state(player)
+        if not state:
+            return None
+        return state.to_dict()
+
+    def load_state(self, player: "Entity", data: Dict[str, Any]) -> bool:
+        """状態をデシリアライズ"""
+        try:
+            state = NarrativeState.from_dict(data)
+            dag = self._dags.get(state.dag_id)
+            if not dag:
+                return False
+
+            player_id = getattr(player, 'name', 'player')
+            self._active_states[player_id] = state
+            return True
+        except Exception:
+            return False
+
+    def force_transition(self, player: "Entity", target_node_id: str) -> List[str]:
+        """強制遷移（デバッグ・イベント連携用）"""
+        state = self.get_active_state(player)
+        if not state:
+            return ["アクティブなナラティブがありません"]
+
+        dag = self._dags.get(state.dag_id)
+        if not dag:
+            return ["DAG が見つかりません"]
+
+        target_node = dag.get_node(target_node_id)
+        if not target_node:
+            return ["対象ノードが存在しません"]
+
+        context = NarrativeContext(
+            flags=state.flags,
+            variables=state.variables,
+        )
+
+        # 強制遷移実行
+        final_id = self._apply_auto_transitions(dag, target_node_id, context)
+        state.current_node_id = final_id
+        state.flags = context.flags
+        state.variables = context.variables
+        state.history.append(final_id)
+
+        return [f"強制遷移: {target_node_id} -> {final_id}"]
+
+
+# グローバルシングルトン
+NARRATIVE_EXECUTOR = NarrativeExecutor()
+
+
+__all__ = [
+    "NarrativeState",
+    "NarrativeExecutor",
+    "NARRATIVE_EXECUTOR",
+]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            

@@ -5,13 +5,12 @@ Achievement and Trophy System Module (Steps 18-24, 35, 40, 44, 47, 50, 54, 58, 6
 from __future__ import annotations
 import os
 import yaml
-from typing import Dict, List, Optional, Any, Tuple, TYPE_CHECKING
+from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
 from datetime import datetime
 
 if TYPE_CHECKING:
     from entity import Entity
-    from game import Engine
 
 
 # Step 19: AchievementData クラス定義

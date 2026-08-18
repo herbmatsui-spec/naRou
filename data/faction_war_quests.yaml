@@ -1,0 +1,50 @@
+"""
+派閥戦争専用クエストテンプレート (偏執的クエストシステム / 設計書 Phase 9 Step 34)
+派閥戦争専用クエストテンプレート（前線/補給/スパイ）。
+"""
+
+faction_war_quests:
+  # 前線クエスト：敵拠点討伐
+  - war_type: "frontline"
+    objective_type: "kill"
+    title_template: "{faction_name}の前線：{enemy}拠点討伐"
+    desc_template: "{faction_name}の前線基地から、{enemy}の拠点を{required_count}箇所討伐せよ。"
+    reward_weight: 1.5
+    base_complexity: 3
+    required_faction: ["red", "blue"]  # 適用可能な派閥
+
+  # 補給クエスト：資源輸送
+  - war_type: "supply"
+    objective_type: "delivery"
+    title_template: "{faction_name}の補給線：資源輸送"
+    desc_template: "{faction_name}の拠点から前線へ、{item}を{required_count}個輸送せよ。"
+    reward_weight: 1.2
+    base_complexity: 2
+    required_faction: ["red", "blue"]
+
+  # スパイクエスト：情報収集
+  - war_type: "spy"
+    objective_type: "explore"
+    title_template: "{faction_name}の諜報活動：{setting}の情報収集"
+    desc_template: "{setting}地域で敵の動向を{required_count}箇所調査し、情報を本部に送れ。"
+    reward_weight: 1.3
+    base_complexity: 2
+    required_faction: ["red", "blue"]
+
+  # 派閥間戦争専用クエスト
+  - war_type: "inter_faction"
+    objective_type: "kill"
+    title_template: "{enemy_faction}への宣戦布告：{enemy}討伐"
+    desc_template: "敵派閥{enemy_faction}の{enemy}を{required_count}体討伐し、派閥間の均衡を崩せ。"
+    reward_weight: 2.0
+    base_complexity: 4
+    required_faction: ["red", "blue"]
+
+  # 共通の派閥戦争クエスト
+  - war_type: "*"
+    objective_type: "collect"
+    title_template: "{faction_name}の戦時産業生産"
+    desc_template: "{faction_name}の工場で{item}を{required_count}個生産し、戦争を支援せよ。"
+    reward_weight: 0.8
+    base_complexity: 1
+    required_faction: ["red", "blue"]

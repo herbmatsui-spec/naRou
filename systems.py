@@ -5,9 +5,8 @@ Steps 37-45: 属性耐性, 詠唱失敗率, AoEパターン, Faction/Aggro, 出�
 
 from __future__ import annotations
 import random
-import math
 from typing import List, Tuple, Optional, Dict, Any, TYPE_CHECKING
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from constants import Element
 
 if TYPE_CHECKING:
@@ -460,3 +459,15 @@ class MonsterPreset:
         e.status_effects = []
         return e
 
+
+
+# --- LocalizationManager integration (i18n, Step 3.x) ---
+def localize(key: str, language: str = None, manager=None) -> str:
+    """Return localized text for *key* using LocalizationManager.
+
+    Provides a thin, dependency-free wrapper so callers can localize UI
+    strings without importing the manager directly.
+    """
+    from localization_manager import LocalizationManager
+    mgr = manager or LocalizationManager()
+    return mgr.get_text(key, language)

@@ -1,8 +1,10 @@
 # ワールド状態テンプレート (Steps 5, 6)
+# 垂直ワールド拡張に関するフィールドを追加
 
 world_state_template:
   version: "1.0"
   last_updated: "2026-08-17"
+  current_phase: "BEGINNING"
   persistent_variables:
     goblin_threat_level: 50
     bandit_activity: 30
@@ -22,3 +24,7 @@ world_state_template:
   player_legacy:
     titles_won: []
     sacrifices_made: 0
+  # Vertical World Extension
+  player_layer_history: []
+  visited_layers: []
+  layer_discoveries: {}

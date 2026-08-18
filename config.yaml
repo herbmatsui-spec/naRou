@@ -2,3 +2,37 @@ settings:
   log_level: "INFO"
   default_output_dir: "output"
   version: "1.0.0"
+
+player:
+  name: "名無しの冒険者"
+  start_x: 20
+  start_y: 20
+  char: "@"
+  color: [255, 255, 255]
+  speed: 85
+  attributes:
+    strength: 14
+    endurance: 13
+    dexterity: 14
+    perception: 12
+    learning: 11
+    will: 13
+    magic: 12
+    charisma: 15
+
+pet:
+  name: "妹分『シエル』"
+  start_x: 21
+  start_y: 20
+  char: "p"
+  color: [255, 180, 210]
+  speed: 90
+  attributes:
+    strength: 11
+    endurance: 11
+    dexterity: 15
+    perception: 12
+    learning: 9
+    will: 11
+    magic: 7
+    charisma: 18

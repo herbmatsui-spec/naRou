@@ -11,7 +11,6 @@ from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
     from entity import Entity
-    from game import Engine
 
 
 @dataclass
@@ -162,5 +161,5 @@ class SkillFusionManager:
             return True, f"スキル融合に成功し、【{recipe.output}】を獲得した！"
         else:
             if engine:
-                engine.log(f"スキル融合に失敗した…素材が失われた。", (255, 100, 100))
+                engine.log("スキル融合に失敗した…素材が失われた。", (255, 100, 100))
             return False, "スキル融合に失敗しました。"

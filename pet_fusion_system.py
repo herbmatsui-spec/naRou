@@ -12,7 +12,7 @@ import random
 from pathlib import Path
 
 if TYPE_CHECKING:
-    from entity import PetAI, Entity
+    from entity import Entity
 
 
 @dataclass
@@ -190,3 +190,39 @@ class PetFusionManager:
             })
 
         return new_pet
+
+    def generate_fusion_quest(self, pet1: 'Entity', pet2: 'Entity', result_pet: 'Entity', player: Optional['Entity'] = None) -> Optional[Dict[str, Any]]:
+        """融合後に関連クエストを生成"""
+        from pet_quest_analyzer import analyze_active_pet
+        if player is None:
+            return None
+        pet_profile = analyze_active_pet(player)
+        if pet_profile is None:
+            return None
+        # ここで pet_profile に基づいてクエストを生成するロジックを書く
+        # 簡易的には、固定のクエストを返す
+        return {
+            "quest_id": f"fusion_quest_{pet_profile.species}_{result_pet.pet_type}",
+            "title": f"{pet_profile.species}の融合の試練",
+            "description": f"融合によって生まれた新たな力を{10}体の敵に試せ。",
+            "objective_type": "kill",
+            "required_count": 10,
+            "reward": {
+                "gold": 200,
+                "exp": 500,
+                "item": "fusion_core"
+            }
+        }
+
+    def apply_quest_completion_reward(self, pet: 'Entity', quest_reward: Dict[str, Any]) -> None:
+        """クエスト完了報酬をペットに適用"""
+        if pet is None:
+            return
+        # 経験値をペットに与える（簡易実装）
+        if "exp" in quest_reward:
+            pet_exp = getattr(pet, 'exp', 0)
+            pet.exp = pet_exp + quest_reward["exp"]
+        # アイテムをペットのインベントリに与える（簡易実装）
+        if "item" in quest_reward:
+            # ペットにアイテムを与えるロジック（省略）
+            pass

@@ -1,0 +1,280 @@
+{
+  "start_time": 1787037785.7951488,
+  "end_time": 1787037796.32311,
+  "duration": 10.527962684631348,
+  "metrics": [
+    {
+      "timestamp": "2026-08-18T07:23:05.802389",
+      "cpu_percent": 0.0,
+      "memory_percent": 46.7,
+      "memory_mb": 3711.63671875,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "network_sent_mb": 0.0,
+      "network_recv_mb": 0.0,
+      "response_time_ms": 6.850609999673907,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:06.303437",
+      "cpu_percent": 14.6,
+      "memory_percent": 46.7,
+      "memory_mb": 3710.640625,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0703125,
+      "network_sent_mb": 0.014229774475097656,
+      "network_recv_mb": 0.011618614196777344,
+      "response_time_ms": 8.65977000012208,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:06.804367",
+      "cpu_percent": 14.4,
+      "memory_percent": 46.7,
+      "memory_mb": 3712.36328125,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.203125,
+      "network_sent_mb": 0.02158355712890625,
+      "network_recv_mb": 0.025226593017578125,
+      "response_time_ms": 6.502199999886216,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:07.305193",
+      "cpu_percent": 31.1,
+      "memory_percent": 46.7,
+      "memory_mb": 3715.3203125,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.203125,
+      "network_sent_mb": 0.025999069213867188,
+      "network_recv_mb": 0.03670978546142578,
+      "response_time_ms": 7.664259999728529,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:07.806274",
+      "cpu_percent": 34.7,
+      "memory_percent": 46.8,
+      "memory_mb": 3718.765625,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.20703125,
+      "network_sent_mb": 0.031273841857910156,
+      "network_recv_mb": 0.05003070831298828,
+      "response_time_ms": 9.046049999597017,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:08.307353",
+      "cpu_percent": 35.6,
+      "memory_percent": 46.8,
+      "memory_mb": 3720.2421875,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.6328125,
+      "network_sent_mb": 0.03275775909423828,
+      "network_recv_mb": 0.05934906005859375,
+      "response_time_ms": 5.990260000544367,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:08.808180",
+      "cpu_percent": 24.0,
+      "memory_percent": 46.8,
+      "memory_mb": 3722.94921875,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.64453125,
+      "network_sent_mb": 0.058826446533203125,
+      "network_recv_mb": 0.08425331115722656,
+      "response_time_ms": 11.763419999624602,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:09.309332",
+      "cpu_percent": 78.2,
+      "memory_percent": 46.9,
+      "memory_mb": 3727.65625,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 1.859375,
+      "network_sent_mb": 0.14215469360351562,
+      "network_recv_mb": 0.1452188491821289,
+      "response_time_ms": 7.0432200000141165,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:09.810205",
+      "cpu_percent": 57.1,
+      "memory_percent": 47.1,
+      "memory_mb": 3746.3046875,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 1.8828125,
+      "network_sent_mb": 2.0499696731567383,
+      "network_recv_mb": 1.2115345001220703,
+      "response_time_ms": 8.59630000013567,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:10.311064",
+      "cpu_percent": 18.8,
+      "memory_percent": 47.1,
+      "memory_mb": 3746.3046875,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 1.8828125,
+      "network_sent_mb": 2.055004119873047,
+      "network_recv_mb": 1.2181215286254883,
+      "response_time_ms": 5.161589999261196,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:10.812289",
+      "cpu_percent": 12.7,
+      "memory_percent": 47.1,
+      "memory_mb": 3746.3046875,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 1.8828125,
+      "network_sent_mb": 2.199491500854492,
+      "network_recv_mb": 1.2191791534423828,
+      "response_time_ms": 5.585879999671306,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:11.313169",
+      "cpu_percent": 10.1,
+      "memory_percent": 47.1,
+      "memory_mb": 3746.3046875,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 1.890625,
+      "network_sent_mb": 2.200078010559082,
+      "network_recv_mb": 1.2204618453979492,
+      "response_time_ms": 5.324809999365243,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:11.814287",
+      "cpu_percent": 10.1,
+      "memory_percent": 47.1,
+      "memory_mb": 3746.3046875,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 1.90234375,
+      "network_sent_mb": 2.2036123275756836,
+      "network_recv_mb": 1.2241230010986328,
+      "response_time_ms": 5.8003300000564195,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:12.315209",
+      "cpu_percent": 7.9,
+      "memory_percent": 47.1,
+      "memory_mb": 3746.3046875,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 2.1171875,
+      "network_sent_mb": 2.2036752700805664,
+      "network_recv_mb": 1.2242364883422852,
+      "response_time_ms": 5.8394890002091415,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:12.816129",
+      "cpu_percent": 7.0,
+      "memory_percent": 47.1,
+      "memory_mb": 3746.3046875,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 2.1171875,
+      "network_sent_mb": 2.2038869857788086,
+      "network_recv_mb": 1.2244987487792969,
+      "response_time_ms": 5.757640000410902,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:13.317019",
+      "cpu_percent": 6.1,
+      "memory_percent": 47.1,
+      "memory_mb": 3746.3046875,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 2.1171875,
+      "network_sent_mb": 2.2039499282836914,
+      "network_recv_mb": 1.2246122360229492,
+      "response_time_ms": 7.811009999386442,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:13.817842",
+      "cpu_percent": 16.0,
+      "memory_percent": 47.1,
+      "memory_mb": 3746.30078125,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 2.1328125,
+      "network_sent_mb": 2.210085868835449,
+      "network_recv_mb": 1.2382535934448242,
+      "response_time_ms": 8.406109999668843,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:14.318830",
+      "cpu_percent": 43.4,
+      "memory_percent": 47.1,
+      "memory_mb": 3746.546875,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 2.15234375,
+      "network_sent_mb": 2.2150278091430664,
+      "network_recv_mb": 1.2504634857177734,
+      "response_time_ms": 10.036599999693863,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:14.819887",
+      "cpu_percent": 39.2,
+      "memory_percent": 47.2,
+      "memory_mb": 3752.453125,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 2.15234375,
+      "network_sent_mb": 2.2179441452026367,
+      "network_recv_mb": 1.2610359191894531,
+      "response_time_ms": 8.91432999924291,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:15.320779",
+      "cpu_percent": 39.0,
+      "memory_percent": 47.3,
+      "memory_mb": 3756.390625,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 2.1640625,
+      "network_sent_mb": 2.24259090423584,
+      "network_recv_mb": 1.2882299423217773,
+      "response_time_ms": 10.473979999915173,
+      "latency_ms": 0.0
+    },
+    {
+      "timestamp": "2026-08-18T07:23:15.822877",
+      "cpu_percent": 27.3,
+      "memory_percent": 47.3,
+      "memory_mb": 3758.83984375,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 2.53515625,
+      "network_sent_mb": 2.311123847961426,
+      "network_recv_mb": 1.3373384475708008,
+      "response_time_ms": 0.0,
+      "latency_ms": 0.0
+    }
+  ],
+  "summary": {
+    "cpu": {
+      "avg": 25.109523809523807,
+      "max": 78.2,
+      "min": 0.0
+    },
+    "memory": {
+      "avg": 46.99523809523809,
+      "max": 47.3,
+      "min": 46.7
+    },
+    "response_time": {
+      "avg": 7.561392949810397,
+      "max": 11.763419999624602
+    },
+    "latency": {
+      "avg": 0,
+      "max": 0
+    },
+    "samples": 21
+  }
+}
