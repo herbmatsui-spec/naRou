@@ -44,6 +44,12 @@ main_quests:
         target_type: "collect"
         target_id: "world_fragment"
         required_count: 3
+      - objective_id: "prove_resolve"
+        description: "試練: Lv5以上 または 既に守護者を討伐済み"
+        target_type: "variable"
+        target_id: "prove_resolve"
+        required_count: 1
+        condition_dsl: "(or (>= player.level 5) (has flags.slew_guardian))"
     rewards:
       gold: 5000
       world_phase: "CONFRONTATION"
