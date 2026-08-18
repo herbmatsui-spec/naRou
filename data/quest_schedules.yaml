@@ -1,0 +1,223 @@
+# Quest Schedule Definitions (偏執的クエストシステム / 設計書 Phase 3 Step 9)
+# 5軸スケジューラ: 時間・天候・季節・月齢・フェーズ
+
+# グローバル設定
+global_settings:
+  # 時間単位
+  time_unit: "turn"           # turn | hour | day
+  # デフォルトタイムゾーン（ワールド全体共通）
+  default_timezone: "world"
+
+schedule_templates:
+  # 定期スケジュールテンプレート（再利用用）
+  daily_dawn:
+    name: "夜明け"
+    time_windows:
+      - start: "05:00"
+        end: "07:00"
+    description: "毎朝の時間帯"
+
+  daily_noon:
+    name: "正午"
+    time_windows:
+      - start: "11:00"
+        end: "13:00"
+
+  daily_dusk:
+    name: "夕暮れ"
+    time_windows:
+      - start: "17:00"
+        end: "19:00"
+
+  daily_midnight:
+    name: "真夜中"
+    time_windows:
+      - start: "23:00"
+        end: "03:00"
+
+  weekly_market_day:
+    name: "週末市"
+    day_of_week: 6            # 0=日曜 ... 6=土曜
+    time_windows:
+      - start: "09:00"
+        end: "18:00"
+
+  monthly_full_moon:
+    name: "満月"
+    moon_phase: "full"        # new | waxing | full | waning
+    duration_days: 3          # 前後1日ずつ
+
+  seasonal_spring_festival:
+    name: "春祭り"
+    season: "spring"          # spring | summer | autumn | winter
+    start_day: 1
+    end_day: 7
+
+  seasonal_summer_festival:
+    name: "夏祭り"
+    season: "summer"
+    start_day: 1
+    end_day: 7
+
+  seasonal_autumn_festival:
+    name: "秋祭り"
+    season: "autumn"
+    start_day: 1
+    end_day: 7
+
+  seasonal_winter_festival:
+    name: "冬祭り"
+    season: "winter"
+    start_day: 1
+    end_day: 7
+
+  weather_rainy:
+    name: "雨天時"
+    weather: "rain"           # clear | rain | storm | snow | fog
+    min_duration_hours: 2
+
+  weather_storm:
+    name: "嵐"
+    weather: "storm"
+
+  world_phase_awakening:
+    name: "覚醒期"
+    world_phase: "AWAKENING"
+
+  world_phase_exploration:
+    name: "探索期"
+    world_phase: "EXPLORATION"
+
+  world_phase_confrontation:
+    name: "対決期"
+    world_phase: "CONFRONTATION"
+
+# 個別クエストスケジュール
+quest_schedules:
+  # 例: 特定NPCから特定時間のみ受注可能
+  - quest_id: "dawn_prayer"
+    title: "夜明けの祈り"
+    description: "夜明けに神殿で祈りを捧げる"
+    schedule:
+      template: "daily_dawn"
+      npcs:
+        - "temple_priest"
+    requirements:
+      min_favorability: 10
+    rewards:
+      piety: 20
+
+  - quest_id: "market_delivery"
+    title: "市場への納品"
+    description: "週末市に合わせて商品を納品する"
+    schedule:
+      template: "weekly_market_day"
+      npcs:
+        - "merchant_guild_master"
+    requirements:
+      min_favorability: 20
+    rewards:
+      gold: 500
+      faction_rep:
+        merchant_guild: 10
+
+  - quest_id: "full_moon_ritual"
+    title: "満月の儀式"
+    description: "満月の夜に古の祭壇で儀式を行う"
+    schedule:
+      template: "monthly_full_moon"
+      location: "ancient_altar"
+    requirements:
+      min_level: 15
+    rewards:
+      artifact: "moonstone_amulet"
+
+  - quest_id: "spring_festival_dance"
+    title: "春祭りの舞"
+    description: "春祭り期間中に舞を披露する"
+    schedule:
+      template: "seasonal_spring_festival"
+      npcs:
+        - "festival_organizer"
+    requirements:
+      skill_performance: 30
+    rewards:
+      fame: 100
+      title: "春の舞姫"
+
+  - quest_id: "rainy_day_herbs"
+    title: "雨の日の薬草採集"
+    description: "雨の日にしか育たない薬草を採集する"
+    schedule:
+      template: "weather_rainy"
+      location: "misty_forest"
+    requirements:
+      skill_herbalism: 20
+    rewards:
+      items:
+        - "rare_herb": 3
+
+  - quest_id: "storm_rescue"
+    title: "嵐の中の救出"
+    description: "嵐で遭難した旅人を救出する"
+    schedule:
+      template: "weather_storm"
+      location: "mountain_pass"
+    requirements:
+      min_level: 25
+    rewards:
+      gold: 2000
+      faction_rep:
+        kingdom_garde: 20
+
+  - quest_id: "awakening_trial"
+    title: "覚醒の試練"
+    description: "覚醒期にのみ挑める試練"
+    schedule:
+      template: "world_phase_awakening"
+    requirements:
+      main_quest: "prologue_01"
+    rewards:
+      world_phase_unlock: "EXPLORATION"
+
+  # 組み合わせ条件（複数軸AND）
+  - quest_id: "autumn_harvest_moon"
+    title: "秋の収穫月"
+    description: "秋の満月の夜に収穫祭の手伝いをする"
+    schedule:
+      conditions:
+        - template: "seasonal_autumn_festival"
+        - template: "monthly_full_moon"
+      logic: "AND"  # AND | OR
+    requirements:
+      min_favorability: 30
+    rewards:
+      unique_item: "harvest_crown"
+
+  # 組み合わせ条件（OR）
+  - quest_id: "festival_or_market"
+    title: "祭りか市か"
+    description: "祭り期間中か週末市のどちらかで手伝う"
+    schedule:
+      conditions:
+        - template: "seasonal_spring_festival"
+        - template: "weekly_market_day"
+      logic: "OR"
+    requirements:
+      min_level: 10
+    rewards:
+      gold: 300
+
+# 例外・特殊スケジュール（上書き・キャンセル用）
+schedule_overrides:
+  - quest_id: "dawn_prayer"
+    date: "year_1_month_3_day_15"  # 特定日に無効化
+    enabled: false
+    reason: "神祭休日"
+
+  - quest_id: "market_delivery"
+    date_range:
+      start: "year_1_month_6_day_1"
+      end: "year_1_month_6_day_7"
+    enabled: false
+    reason: "商業停止期間"

@@ -46,6 +46,8 @@ from input_actions import (
     SaveAction,
     LoadAction,
     DebugAction,
+    WaitAction,
+    SleepAction,
 )
 
 if TYPE_CHECKING:
@@ -126,6 +128,8 @@ class InputHandler:
         reg.register("play", KeyBinding(KS.Z, HarvestAction(), description="採取"))
         reg.register("play", KeyBinding(KS.W, WishRodAction(), description="願いの杖"))
         reg.register("play", KeyBinding(KS.PERIOD, DescendStairsAction(), SHIFT, description="階段を下りる"))
+        reg.register("play", KeyBinding(KS.PERIOD, WaitAction(), description="待機 (1ターン経過)"))
+        reg.register("play", KeyBinding(KS.COMMA, SleepAction(), description="睡眠 (HP/MP全快 + 時間経過)"))
         reg.register("play", KeyBinding(KS.S, SaveAction(), description="セーブ"))
         reg.register("play", KeyBinding(KS.R, LoadAction(), description="ロード"))
         reg.register("play", KeyBinding(KS.GRAVE, DebugAction(), description="デバッグ"))

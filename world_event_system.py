@@ -18,6 +18,13 @@ from title_manager import TitleManager
 from event_scheduler import EventScheduler
 from community_goal_manager import COMMUNITY_GOAL_MANAGER
 
+# Phase 3 Step 12: QuestScheduler 連携
+try:
+    from quest_scheduler import QuestScheduler, QuestSchedule, ScheduleCondition, TimeWindow, LogicOperator
+    _HAS_QUEST_SCHEDULER = True
+except ImportError:
+    _HAS_QUEST_SCHEDULER = False
+
 
 # Step 68: WorldEventData
 @dataclass
@@ -139,6 +146,10 @@ class WorldEventManager:
             # イベント発生時に報酬を付与（基本実装）
             REWARD_MANAGER.grant_event_rewards(player, edata)
 
+            # Phase 3 Step 12: 動的スケジュール注入
+            if hasattr(engine, 'quest_scheduler'):
+                self.inject_event_schedule(event_id, engine.quest_scheduler, duration_turns=edata.duration)
+
         return True
 
     def add_event_points(self, player: "Entity", event_id: str, action_type: str, amount: int = 1) -> None:
@@ -157,3 +168,104 @@ class WorldEventManager:
     def update_active_events(self, player: "Entity", engine: Optional[Any] = None) -> None:
         """アクティブイベントの進行 (Step 71)"""
         pass
+
+    # Phase 3 Step 12: ワールドイベント連携 - 動的スケジュール注入
+    def inject_event_schedule(
+        self,
+        event_id: str,
+        scheduler: "QuestScheduler",
+        duration_turns: int = 100,
+    ) -> bool:
+        """ワールドイベント発生時に対応するクエストスケジュールを動的注入"""
+        if not _HAS_QUEST_SCHEDULER:
+            return False
+
+        event_data = self.registry.get(event_id)
+        if not event_data:
+            return False
+
+        # イベントタイプに基づくスケジュール生成
+        schedule = self._create_event_schedule(event_data, duration_turns)
+        if schedule:
+            scheduler._schedules[schedule.quest_id] = schedule
+            return True
+        return False
+
+    def _create_event_schedule(
+        self,
+        event_data: "WorldEventData",
+        duration_turns: int,
+    ) -> Optional["QuestSchedule"]:
+        """イベントデータからスケジュール生成"""
+        if not _HAS_QUEST_SCHEDULER:
+            return None
+
+        # イベント名からスケジュールタイプ判定
+        name_lower = event_data.name.lower()
+
+        # 季節祭り系
+        if any(kw in name_lower for kw in ["祭り", "festival", "祭典"]):
+            season = "spring"
+            if "夏" in event_data.name or "summer" in name_lower:
+                season = "summer"
+            elif "秋" in event_data.name or "autumn" in name_lower:
+                season = "autumn"
+            elif "冬" in event_data.name or "winter" in name_lower:
+                season = "winter"
+
+            return QuestSchedule(
+                quest_id=f"event_{event_data.id}_festival",
+                title=f"{event_data.name} 限定クエスト",
+                description=f"{event_data.name} 開催期間中の特別依頼",
+                conditions=[
+                    ScheduleCondition(season=season, duration_days=duration_turns // 24),
+                ],
+                logic=LogicOperator.AND,
+                rewards=event_data.rewards or {"gold": 1000, "fame": 50},
+            )
+
+        # 月齢系 (蝕・満月等)
+        if any(kw in name_lower for kw in ["蝕", "eclipse", "月食", "日食", "満月", "full_moon"]):
+            moon_phase = "full"
+            if "新月" in event_data.name or "new_moon" in name_lower:
+                moon_phase = "new"
+            elif "上弦" in event_data.name or "waxing" in name_lower:
+                moon_phase = "waxing"
+            elif "下弦" in event_data.name or "waning" in name_lower:
+                moon_phase = "waning"
+
+            return QuestSchedule(
+                quest_id=f"event_{event_data.id}_moon",
+                title=f"{event_data.name} の儀式",
+                description=f"{event_data.name} の夜にのみ実行可能な儀式",
+                conditions=[
+                    ScheduleCondition(moon_phase=moon_phase, duration_days=3),
+                ],
+                logic=LogicOperator.AND,
+                rewards=event_data.rewards or {"artifact": "moon_fragment", "piety": 30},
+            )
+
+        # 流星群・天体系
+        if any(kw in name_lower for kw in ["流星", "meteor", "星", "星屑"]):
+            return QuestSchedule(
+                quest_id=f"event_{event_data.id}_meteor",
+                title=f"{event_data.name} 採集",
+                description=f"{event_data.name} の夜に落ちる星屑を拾う",
+                conditions=[
+                    ScheduleCondition(time_windows=[TimeWindow("20:00", "04:00")], duration_days=2),
+                ],
+                logic=LogicOperator.AND,
+                rewards=event_data.rewards or {"items": {"star_dust": 5}, "exp": 500},
+            )
+
+        # 汎用: 時間帯限定
+        return QuestSchedule(
+            quest_id=f"event_{event_data.id}_general",
+            title=f"{event_data.name} 関連依頼",
+            description=event_data.description or f"{event_data.name} に関連する依頼",
+            conditions=[
+                ScheduleCondition(time_windows=[TimeWindow("06:00", "22:00")], duration_days=duration_turns // 24),
+            ],
+            logic=LogicOperator.AND,
+            rewards=event_data.rewards or {"gold": 500},
+        )

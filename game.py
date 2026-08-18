@@ -61,6 +61,7 @@ from pet_evolution_system import PetEvolutionRegistry, PetEvolutionManager
 from pet_fusion_system import PetFusionRegistry, PetFusionManager
 from dialogue_system import DialogueManager
 from systems_manager import SystemManager
+from quest_scheduler import QuestScheduler, ScheduleContext
 
 
 class Engine:
@@ -513,6 +514,8 @@ class Engine:
         self.unique_mgr = UniqueItemManager()
         self.debug = DebugConsole()
         self.main_quest_system = MainQuestSystem()
+        # Quest Scheduler (Phase 3 Step 10)
+        self.quest_scheduler = QuestScheduler()
         self.journal_ui = JournalUI()
 
         # Skill & Job
@@ -1055,6 +1058,19 @@ class Engine:
         # サバイバル
         for l in self.survival.pass_turn(self.player):
             self.log(l, (255, 180, 100))
+
+        # Quest Scheduler: 時間経過でスケジュール再評価 (Phase 3 Step 11)
+        if hasattr(self, 'quest_scheduler'):
+            context = ScheduleContext.from_engine(self)
+            available = self.quest_scheduler.get_available_quests(context, self.player)
+            for schedule in available:
+                # メインクエストシステムと連携: スケジュール許可クエストを AVAILABLE に
+                from main_quest_system import QuestStatus
+                if schedule.quest_id in self.main_quest_system.quests:
+                    quest = self.main_quest_system.quests[schedule.quest_id]
+                    if quest.status == QuestStatus.LOCKED:
+                        quest.status = QuestStatus.AVAILABLE
+                        self.log(f"【スケジュール】クエスト「{schedule.title}」が利用可能になりました。", (100, 200, 255))
 
         # 自然回復(出血中は停止: ステップ45)
         self.turns += 1

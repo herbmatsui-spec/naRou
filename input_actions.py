@@ -389,6 +389,38 @@ class DebugAction:
         return True
 
 
+class WaitAction:
+    """待機 (1ターン経過) - スケジューラ再評価トリガー (Phase 3 Step 11)"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.log("待機した。", (200, 200, 200))
+        engine.advance_world()
+        return True
+
+
+class SleepAction:
+    """睡眠 (HP/MP全快 + 長時間経過) - スケジューラ再評価トリガー (Phase 3 Step 11)"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        logs = engine.survival.sleep(engine.player)
+        for l in logs:
+            engine.log(l, (150, 150, 255))
+        # 睡眠は複数ターン経過させる (例: 8時間 = 数百ターン相当)
+        for _ in range(20):
+            engine.advance_world()
+        return True
+
+
 class QuitAction:
     """終了"""
 
