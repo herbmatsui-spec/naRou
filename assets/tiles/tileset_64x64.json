@@ -1,13 +1,13 @@
 {
-  "tile_size": 32,
-  "atlas_width": 296,
-  "atlas_height": 296,
+  "tile_size": 64,
+  "atlas_width": 584,
+  "atlas_height": 584,
   "tiles": {
     "FLOOR_DUNGEON": {
       "x": 0,
       "y": 0,
-      "width": 32,
-      "height": 32,
+      "width": 64,
+      "height": 64,
       "variants": 1,
       "animated": false,
       "frames": 1,
@@ -15,10 +15,10 @@
       "directions": 1
     },
     "WALL_DUNGEON": {
-      "x": 33,
+      "x": 65,
       "y": 0,
-      "width": 32,
-      "height": 32,
+      "width": 64,
+      "height": 64,
       "variants": 1,
       "animated": false,
       "frames": 1,
@@ -26,10 +26,10 @@
       "directions": 1
     },
     "WATER": {
-      "x": 66,
+      "x": 130,
       "y": 0,
-      "width": 32,
-      "height": 32,
+      "width": 64,
+      "height": 64,
       "variants": 1,
       "animated": true,
       "frames": 3,
@@ -37,10 +37,10 @@
       "directions": 1
     },
     "STAIRS_DOWN": {
-      "x": 165,
+      "x": 325,
       "y": 0,
-      "width": 32,
-      "height": 32,
+      "width": 64,
+      "height": 64,
       "variants": 1,
       "animated": true,
       "frames": 2,
@@ -48,10 +48,10 @@
       "directions": 1
     },
     "STAIRS_UP": {
-      "x": 231,
+      "x": 455,
       "y": 0,
-      "width": 32,
-      "height": 32,
+      "width": 64,
+      "height": 64,
       "variants": 1,
       "animated": true,
       "frames": 2,
@@ -60,9 +60,9 @@
     },
     "TRAP": {
       "x": 0,
-      "y": 33,
-      "width": 32,
-      "height": 32,
+      "y": 65,
+      "width": 64,
+      "height": 64,
       "variants": 1,
       "animated": false,
       "frames": 1,
@@ -70,10 +70,10 @@
       "directions": 1
     },
     "PLAYER": {
-      "x": 33,
-      "y": 33,
-      "width": 32,
-      "height": 32,
+      "x": 65,
+      "y": 65,
+      "width": 64,
+      "height": 64,
       "variants": 1,
       "animated": true,
       "frames": 4,
@@ -81,10 +81,10 @@
       "directions": 4
     },
     "PET": {
-      "x": 264,
-      "y": 66,
-      "width": 32,
-      "height": 32,
+      "x": 520,
+      "y": 130,
+      "width": 64,
+      "height": 64,
       "variants": 1,
       "animated": true,
       "frames": 4,
@@ -92,10 +92,10 @@
       "directions": 4
     },
     "ENEMY_GOBLIN": {
-      "x": 198,
-      "y": 132,
-      "width": 32,
-      "height": 32,
+      "x": 390,
+      "y": 260,
+      "width": 64,
+      "height": 64,
       "variants": 1,
       "animated": true,
       "frames": 4,
@@ -103,10 +103,10 @@
       "directions": 4
     },
     "ITEM_GOLD": {
-      "x": 132,
-      "y": 198,
-      "width": 32,
-      "height": 32,
+      "x": 260,
+      "y": 390,
+      "width": 64,
+      "height": 64,
       "variants": 1,
       "animated": true,
       "frames": 4,
@@ -114,10 +114,10 @@
       "directions": 1
     },
     "ITEM_POTION": {
-      "x": 264,
-      "y": 198,
-      "width": 32,
-      "height": 32,
+      "x": 520,
+      "y": 390,
+      "width": 64,
+      "height": 64,
       "variants": 1,
       "animated": false,
       "frames": 1,
@@ -126,9 +126,9 @@
     },
     "ITEM_WEAPON": {
       "x": 0,
-      "y": 231,
-      "width": 32,
-      "height": 32,
+      "y": 455,
+      "width": 64,
+      "height": 64,
       "variants": 1,
       "animated": false,
       "frames": 1,
@@ -136,10 +136,10 @@
       "directions": 1
     },
     "ITEM_ARMOR": {
-      "x": 33,
-      "y": 231,
-      "width": 32,
-      "height": 32,
+      "x": 65,
+      "y": 455,
+      "width": 64,
+      "height": 64,
       "variants": 1,
       "animated": false,
       "frames": 1,
@@ -147,10 +147,10 @@
       "directions": 1
     },
     "TORCH": {
-      "x": 66,
-      "y": 231,
-      "width": 32,
-      "height": 32,
+      "x": 130,
+      "y": 455,
+      "width": 64,
+      "height": 64,
       "variants": 1,
       "animated": true,
       "frames": 4,
@@ -158,10 +158,10 @@
       "directions": 1
     },
     "BLOOD_SPLAT": {
-      "x": 198,
-      "y": 231,
-      "width": 32,
-      "height": 32,
+      "x": 390,
+      "y": 455,
+      "width": 64,
+      "height": 64,
       "variants": 1,
       "animated": true,
       "frames": 3,
@@ -170,9 +170,9 @@
     },
     "MAGIC_CAST": {
       "x": 0,
-      "y": 264,
-      "width": 32,
-      "height": 32,
+      "y": 520,
+      "width": 64,
+      "height": 64,
       "variants": 1,
       "animated": true,
       "frames": 3,

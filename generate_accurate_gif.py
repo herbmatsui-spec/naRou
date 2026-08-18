@@ -250,7 +250,7 @@ for sc_idx, sc in enumerate(scenes):
         frames.append(img)
 
 # Save high quality GIF
-out_gif = "e:/notedesk/elona/demo_gameplay.gif"
+out_gif = "demo_gameplay.gif"
 frames[0].save(
     out_gif,
     save_all=True,

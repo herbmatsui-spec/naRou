@@ -3,7 +3,7 @@ Color palette conversion from design tokens to tcod RGB tuples.
 Provides consistent color definitions between web and tcod rendering.
 """
 
-from typing import Dict, Tuple, NamedTuple
+from typing import Dict, Tuple
 
 # RGB Color tuple for tcod (values 0-255)
 RGB = Tuple[int, int, int]
@@ -26,8 +26,7 @@ COLORS: Dict[str, RGB] = {
     # Rarity
     "legendary": (212, 175, 55),  # #d4af37
     "epic": (168, 85, 247),       # #a855f7
-    "rare": (59, 130, 246),       # #3b82f6
-    "rare": (59, 130, 246),       # #3b82f6
+    "rare": (59, 130, 246),      # #3b82f6
     "uncommon": (16, 185, 129),   # #10b981
     "common": (107, 114, 128),    # #6b7280
     
