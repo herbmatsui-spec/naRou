@@ -25,7 +25,7 @@ from .faction import FactionRelationshipSystem, FactionNode, FactionRelation
 from .romance import RomanceMechanics, RomanceState, RomanceStage, RomanceEventType
 from .mentorship import MentorshipMechanics, MentorshipState, MentorshipStage
 from .betrayal import BetrayalConflictSystem, BetrayalType, ConflictState
-from .decay_memory import MemorySystem, RelationshipDecaySystem, MemoryFragment, MemoryType, MemoryImportance
+from .decay_memory import MemorySystem, RelationshipDecaySystem, MemoryFragment, MemoryType
 from .personality import (
     PersonalitySystem, PersonalityProfile, PersonalityTrait, CharacterArchetype
 )
@@ -57,7 +57,7 @@ __all__ = [
     # Betrayal
     'BetrayalConflictSystem', 'BetrayalType', 'ConflictState',
     # Memory
-    'MemorySystem', 'RelationshipDecaySystem', 'MemoryFragment', 'MemoryType', 'MemoryImportance',
+    'MemorySystem', 'RelationshipDecaySystem', 'MemoryFragment', 'MemoryType',
     # Personality
     'PersonalitySystem', 'PersonalityProfile', 'PersonalityTrait', 'CharacterArchetype',
     # Dialogue

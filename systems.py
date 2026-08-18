@@ -11,7 +11,6 @@ from constants import Element
 
 if TYPE_CHECKING:
     from entity import Entity
-    from item_system import Item
 
 # 状態異常
 STATUS_POISON    = "毒"

@@ -5,11 +5,8 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Any, TYPE_CHECKING
+from typing import Dict, List, Optional, Any
 import yaml
-
-if TYPE_CHECKING:
-    from entity import Entity
 
 
 @dataclass

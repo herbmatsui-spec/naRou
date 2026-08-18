@@ -7,16 +7,13 @@ Vertical World Extension: Steps 13-18
 from __future__ import annotations
 import random
 import json
-from typing import List, Tuple, Optional, Dict, Any, TYPE_CHECKING
+from typing import List, Tuple, Optional, Dict, Any
 import math
 from pathlib import Path
 
 from constants import (
     TILE_STAIRS_DOWN, TILE_STAIRS_UP
 )
-
-if TYPE_CHECKING:
-    from world_map_manager import WorldMapManager
 
 # ワールドレイヤーシステムのインポート（オプション）
 try:

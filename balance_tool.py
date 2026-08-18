@@ -3,7 +3,13 @@ Balance Tool Module
 Provides tools for balancing world events based on collected data.
 """
 from __future__ import annotations
+<<<<<<< ours
 from typing import Dict, Any
+=======
+import json
+import os
+from typing import Dict, Any, List, Optional
+>>>>>>> theirs
 from feedback_system import FEEDBACK_SYSTEM
 from world_event_system import REGISTRY
 from world_event_system import RANKING_MANAGER

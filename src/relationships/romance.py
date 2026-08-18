@@ -4,7 +4,7 @@ Step 9: Romance relationship mechanics
 """
 
 from __future__ import annotations
-from typing import Dict, List, Optional, Tuple, Any, Callable
+from typing import Dict, List, Optional, Tuple, Any
 from collections import defaultdict
 import time
 import random

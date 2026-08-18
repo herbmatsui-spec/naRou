@@ -18,19 +18,74 @@ if TYPE_CHECKING:
 
 _ENGINE_INSTANCE: Optional["Engine"] = None
 
+# 開発環境ではlocalhostを許可、本番環境では適切なドメインに制限する
+ALLOWED_ORIGINS = [
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    # 本番環境ではここに実際のドメインを追加
+]
+
+def _is_origin_allowed(origin: str) -> bool:
+    """オリジンが許可リストに含まれているかチェック"""
+    return origin in ALLOWED_ORIGINS
+
+
+# レート制限のスケルトン実装（本番では適切なストレージに置き換える）
+_REQUEST_HISTORY: Dict[str, list] = {}
+_RATE_LIMIT_WINDOW = 60  # 1分間隔
+_RATE_LIMIT_MAX_REQUESTS = 100  # 窓内最大リクエスト数
+
+
+def _is_rate_allowed(client_ip: str) -> bool:
+    """レート制限チェックのスケルトン実装"""
+    import time
+    now = time.time()
+    
+    if client_ip not in _REQUEST_HISTORY:
+        _REQUEST_HISTORY[client_ip] = []
+    
+    # 古いリクエストを削除
+    _REQUEST_HISTORY[client_ip] = [
+        req_time for req_time in _REQUEST_HISTORY[client_ip]
+        if now - req_time < _RATE_LIMIT_WINDOW
+    ]
+    
+    # リクエスト数をチェック
+    if len(_REQUEST_HISTORY[client_ip]) >= _RATE_LIMIT_MAX_REQUESTS:
+        return False
+    
+    # 現在のリクエストを記録
+    _REQUEST_HISTORY[client_ip].append(now)
+    return True
+
+
 class GameHTTPRequestHandler(BaseHTTPRequestHandler):
     def _set_headers(self, content_type="application/json"):
         self.send_response(200)
+        # セキュリティ強化: オリジンチェックを実装
+        origin = self.headers.get('Origin')
+        if origin and _is_origin_allowed(origin):
+            self.send_header("Access-Control-Allow-Origin", origin)
+        else:
+            # デフォルトは同一オリジンポリシー（何も送信しない）
+            pass
         self.send_header("Content-Type", content_type)
-        self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 
     def do_OPTIONS(self):
         self._set_headers()
-
     def do_GET(self):
+        # レート制限チェック
+        client_ip = self.client_address[0]
+        if not _is_rate_allowed(client_ip):
+            self.send_response(429)  # Too Many Requests
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": "Rate limit exceeded"}).encode('utf-8'))
+            return
+
         global _ENGINE_INSTANCE
         if self.path == "/api/state":
             if _ENGINE_INSTANCE is None:

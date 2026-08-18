@@ -51,7 +51,7 @@ class SaveSystem:
         'skill_archive_progress': dict, 'story_flags': dict, 'story_variables': dict,
         'player_legacy': dict, 'character_relationships': dict, 'ending_progress': dict,
         'skill_tree_progress': dict, 'faction_reputation': dict, 'guild_quest_progress': dict,
-        'excavated_sites': list, 'decoded_fragments': list,
+        'excavated_sites': list, 'collected_fragments': list, 'decoded_fragments': list,
         'owned_keys': list, 'reached_truths': list, 'leaned_endings': dict, 'interpretation_notes': dict,
         'decoder_hints_seen': list,
         # 数値型

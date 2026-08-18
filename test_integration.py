@@ -38,7 +38,7 @@ def test_integration():
         # レイヤーをロード
         game_map = world_manager.load_layer(zone, biome, depth, dimension)
         if not game_map:
-            print("     エラー: マップのロードに失敗")
+            print(f"     エラー: マップのロードに失敗")
             continue
             
         loaded_maps.append((game_map, zone, biome, depth, dimension))
@@ -100,20 +100,20 @@ def test_integration():
     # 共通部分をチェック
     common = adj_types & expected_adj_types
     if len(common) >= 2:  # 少なくとも2つは一致しているべき
-        print("   ✓ 隣接計算: 期待通りの結果")
+        print(f"   ✓ 隣接計算: 期待通りの結果")
     else:
-        print("   ⚠ 隣接計算: 予期せぬ結果（詳細調整が必要な場合あり）")
+        print(f"   ⚠ 隣接計算: 予期せぬ結果（詳細調整が必要な場合あり）")
     print()
     
     print("5. 統計情報")
     world_stats = world_manager.get_statistics()
-    print("   ワールドマネージャー:")
+    print(f"   ワールドマネージャー:")
     for key, value in world_stats.items():
         print(f"     {key}: {value}")
     
     # WorldStateの統計も表示（利用可能な場合）
     state_tpl = state_manager.registry.get_template()
-    print("   ワールドステート:")
+    print(f"   ワールドステート:")
     print(f"     ヒストリエントリ数: {len(state_tpl.player_layer_history)}")
     print(f"     訪問済みレイヤー数: {len(state_tpl.visited_layers)}")
     print(f"     発見記録数: {sum(len(v) for v in state_tpl.layer_discoveries.values())}")
@@ -132,9 +132,9 @@ def test_integration():
             print(f"   関連レイヤー: {test_map.world_layer.zone}:{test_map.world_layer.biome}:{test_map.world_layer.depth}:{test_map.world_layer.dimension}")
             print(f"   レイヤー名: {test_map.world_layer.theme_data.get('name')}")
         else:
-            print("   警告: ワールドレイヤーへの参照がありません")
+            print(f"   警告: ワールドレイヤーへの参照がありません")
     else:
-        print("   エラー: テストマップの生成に失敗")
+        print(f"   エラー: テストマップの生成に失敗")
     print()
     
     print("=== 統合テスト完了 ===")

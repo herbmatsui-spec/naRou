@@ -13,7 +13,7 @@ from enum import Enum
 
 from .models import RelationshipType
 from .engine import RelationshipManager
-from .personality import PersonalityTrait, CharacterArchetype, PersonalitySystem
+from .personality import PersonalityTrait, CharacterArchetype
 
 
 class DialogueMood(Enum):

@@ -187,7 +187,7 @@ class DynamicLighting:
     ) -> Tuple[Tuple[int, int, int], float]:
         if ambient_color is None:
             # バイオームに基づいたデフォルト環境光の決定
-            # 本来は engine.current_biome 等から取得するが、ここでは座標ベースの擬似バイオームで実装
+            # 本来は context.current_biome 等から取得するが、ここでは座標ベースの擬似バイオームで実装
             # 0: 深い森 (緑がかった暗闇), 1: 洞窟 (青白い暗闇), 2: 溶岩地帯 (赤みがかった暗闇)
             biome_type = (x // 50 + y // 50) % 3
             biome_ambients = {
@@ -221,39 +221,39 @@ class DynamicLighting:
         return (lit_r, lit_g, lit_b), min(1.0, total_intensity)
 
     @classmethod
-    def get_light_sources_for_engine(cls, engine: Any) -> List[LightSource]:
+    def get_light_sources_for_engine(cls, context: RenderContext) -> List[LightSource]:
         """現在のゲーム状態から動的光源リストを抽出"""
         sources: List[LightSource] = []
-        if not hasattr(engine, "player") or not engine.player:
+        if not hasattr(engine, "player") or not context.player:
             return sources
 
         # 1. プレイヤーの松明 / 光 (手持ち光源)
-        p = engine.player
+        p = context.player
         sources.append(LightSource(x=p.x, y=p.y, radius=8.0, color=(255, 235, 190), intensity=1.0, source_type="player"))
 
         # 2. ペットの淡い守護光
-        if hasattr(engine, "pet") and engine.pet and engine.pet.hp > 0:
-            sources.append(LightSource(x=engine.pet.x, y=engine.pet.y, radius=4.5, color=(255, 200, 230), intensity=0.75, source_type="pet"))
+        if hasattr(engine, "pet") and context.pet and context.pet.hp > 0:
+            sources.append(LightSource(x=context.pet.x, y=context.pet.y, radius=4.5, color=(255, 200, 230), intensity=0.75, source_type="pet"))
 
         # 3. 祭壇の神聖な黄金光
-        if hasattr(engine, "altar_pos") and engine.altar_pos:
-            ax, ay = engine.altar_pos
+        if hasattr(engine, "altar_pos") and context.altar_pos:
+            ax, ay = context.altar_pos
             sources.append(LightSource(x=ax, y=ay, radius=6.0, color=(255, 225, 100), intensity=1.2, source_type="altar"))
 
         # 4. 下り階段 / ポータルの神秘的な青光
-        if hasattr(engine, "game_map") and engine.game_map and engine.game_map.stairs_down_pos:
-            sx, sy = engine.game_map.stairs_down_pos
+        if hasattr(engine, "game_map") and context.game_map and context.game_map.stairs_down_pos:
+            sx, sy = context.game_map.stairs_down_pos
             sources.append(LightSource(x=sx, y=sy, radius=5.0, color=(120, 220, 255), intensity=0.9, source_type="portal"))
 
         # 5. 鉱石脈・採取ノードの微光
         if hasattr(engine, "resource_nodes"):
-            for node in engine.resource_nodes:
+            for node in context.resource_nodes:
                 if not getattr(node, "depleted", False):
                     sources.append(LightSource(x=node.x, y=node.y, radius=3.0, color=(100, 255, 180), intensity=0.6, source_type="resource"))
 
         # 6. 光る魔法パーティクル
         if hasattr(engine, "particles"):
-            for pt in engine.particles[:5]:
+            for pt in context.particles[:5]:
                 sources.append(LightSource(x=int(pt.x), y=int(pt.y), radius=2.5, color=pt.color, intensity=0.8, source_type="magic"))
 
         return sources

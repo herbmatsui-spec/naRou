@@ -1,10 +1,10 @@
 __pycache__/
 *.pyc
-.mypy_cache/
 .pytest_cache/
-*.bak
 savegame.bin*
 logs/
 scratch/
 archive/
 .system_generated/
+node_modules/
+package-lock.json

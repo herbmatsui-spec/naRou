@@ -47,12 +47,11 @@ class RankingManager:
         """プレイヤーの指定イベントにおける現在のスコアを取得"""
         return self.rankings.get(event_id, {}).get(player_id, 0)
 
-
-# 共有シングルトンインスタンス (ui_event_panel 等が利用)
-RANKING_MANAGER = RankingManager()
-
-
 def clear_event_ranking(self, event_id: str) -> None:
         """イベント終了時にランキングデータをクリア"""
         if event_id in self.rankings:
             del self.rankings[event_id]
+
+
+# グローバルインスタンス（エラー回避のため追加）
+RANKING_MANAGER = RankingManager()

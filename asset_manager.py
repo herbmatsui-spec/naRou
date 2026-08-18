@@ -4,7 +4,7 @@ Manages assets (images, sounds, stories) for world events.
 """
 from __future__ import annotations
 import os
-from typing import Dict, Optional, List
+from typing import Dict, Optional
 
 class AssetManager:
     def __init__(self, base_path: str = "assets"):

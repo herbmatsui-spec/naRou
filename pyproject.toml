@@ -29,14 +29,7 @@ narou = "game:main"
 [tool.pytest.ini_options]
 testpaths = "tests"
 addopts = "-v"
-
-[tool.ruff]
-target-version = "py38"
-
-[tool.ruff.lint]
-# 以下はスタイル系・意図的パターンのため非検査:
-# - E701/E702: 1行複文は requirements.txt の black フォーマッタが整形する担当
-# - E402: 循環インポート回避のための関数内遅延 import を許容
-# - F841: 呼び出し側の戻り値 (changed = ...) を意図的に破棄するパターンを許容
-# - E741: ループ変数 l (ログ行・リスナーID等) の短縮名を許容
-ignore = ["E701", "E702", "E402", "F841", "E741"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning"
+]

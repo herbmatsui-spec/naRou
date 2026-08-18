@@ -29,13 +29,13 @@ def get_font(size):
     try:
         # システムフォントを試す
         return ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf", size)
-    except Exception:
+    except:
         try:
             return ImageFont.truetype("/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf", size)
-        except Exception:
+        except:
             try:
                 return ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeMono.ttf", size)
-            except Exception:
+            except:
                 # デフォルトフォントにフォールバック
                 return ImageFont.load_default()
 

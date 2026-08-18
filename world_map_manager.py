@@ -6,13 +6,10 @@
 from __future__ import annotations
 import heapq
 import time
-from typing import Dict, List, Optional, Tuple, Any, TYPE_CHECKING
+from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
 
 from world_layer import WorldLayer
-
-if TYPE_CHECKING:
-    from map_engine import GameMap
 
 
 @dataclass

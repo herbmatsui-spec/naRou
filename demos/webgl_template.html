@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elona WebGL Scene Demo - Template</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+            background: #070913;
+            color: #ffffff;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            background-image: radial-gradient(circle at top center, #1b2038, #070913);
+        }
+        .stage-box {
+            width: 820px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            overflow: hidden;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        #webgl-canvas {
+            width: 100%;
+            height: 400px;
+            border-radius: 12px;
+            background: #030712;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05);
+            color: #e0e7ff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: #38bdf8;
+        }
+        .btn.active {
+            background: #38bdf8;
+            color: #070913;
+            border-color: #38bdf8;
+        }
+        .info-panel {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 13px;
+            font-family: monospace;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="stage-box">
+        <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl" id="scene-icon">🏡</span>
+                <div>
+                    <h1 class="text-xl font-bold text-sky-400" id="scene-title">Scene Title</h1>
+                    <p class="text-xs text-slate-400" id="scene-desc">Scene description</p>
+                </div>
+            </div>
+            <span class="bg-sky-500/20 text-sky-300 px-3 py-1 rounded-full text-xs font-semibold">WebGL2 Demo</span>
+        </div>
+
+        <canvas id="webgl-canvas"></canvas>
+
+        <div class="controls" id="scene-controls">
+            <!-- Scene buttons will be inserted here -->
+        </div>
+
+        <div class="info-panel">
+            <div class="stat-row"><span>FPS:</span><span id="fps">--</span></div>
+            <div class="stat-row"><span>Draw Calls:</span><span id="drawCalls">--</span></div>
+            <div class="stat-row"><span>Triangles:</span><span id="triangles">--</span></div>
+            <div class="stat-row"><span>GPU Memory:</span><span id="gpuMemory">--</span></div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 text-sm flex items-center justify-between">
+            <span class="text-yellow-300 font-medium" id="scene-log">📜 Scene log</span>
+            <span class="text-xs text-slate-500">Elona WebGL Renderer</span>
+        </div>
+    </div>
+
+    <script type="module">
+        import { WebGLRenderer, loadSceneData, SceneGridData } from '/src/render/Renderer.ts';
+        
+        // Scene definitions (from generate_24_scenes.py)
+        const SCENES: SceneGridData[] = [
+            {
+                title: "1. 冒険の始まり (我が家)",
+                desc: "洞窟の我が家で冒険の準備を整える",
+                icon: "🏡",
+                grid: [
+                    ["🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱"],
+                    ["🧱","▫️","▫️","▫️","▫️","▫️","▫️","▫️","📦","🧱"],
+                    ["🧱","▫️","🧙","👧","▫️","▫️","▫️","▫️","▫️","🧱"],
+                    ["🧱","▫️","▫️","▫️","▫️","🛏️","▫️","▫️","▫️","🧱"],
+                    ["🧱","🧱","🧱","🧱","🚪","🧱","🧱","🧱","🧱","🧱"]
+                ],
+                log: "冒険者🧙とシエル👧が我が家🏡で旅立ちの準備を整えた！"
+            },
+            {
+                title: "2. 鉱山町ヴェルニス",
+                desc: "活気あふれる鉱山町とNPCたちの日常",
+                icon: "🏘️",
+                grid: [
+                    ["🧱","🧱","🧱","🧱","🚪","🧱","🧱","🧱","🧱","🧱"],
+                    ["🧱","🍻","▫️","▫️","▫️","▫️","▫️","🧑‍🌾","▫️","🧱"],
+                    ["🧱","▫️","🧙","▫️","▫️","💂","▫️","▫️","🐕","🧱"],
+                    ["🧱","▫️","▫️","👧","▫️","▫️","▫️","▫️","🐌","🧱"],
+                    ["🧱","🧱","🧱","🧱","▫️","🧱","🧱","🧱","🧱","🧱"]
+                ],
+                log: "ヴェルニスの酒場🍻と街路。衛兵💂と犬🐕がかたつむり少女🐌を見守る。"
+            },
+            {
+                title: "3. 子犬の洞窟 (ぷち討伐)",
+                desc: "迷子の子犬を探してスライムの巣窟へ",
+                icon: "🐶",
+                grid: [
+                    ["🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱"],
+                    ["🧱","▫️","▫️","🍮","▫️","▫️","🍮","▫️","🐶","🧱"],
+                    ["🧱","▫️","🧙","▫️","▫️","▫️","▫️","▫️","▫️","🧱"],
+                    ["🧱","▫️","▫️","👧","🗡️","▫️","🍮","▫️","▫️","🧱"],
+                    ["🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱"]
+                ],
+                log: "ぷち🍮の群れに立ち向かうシエル👧！奥には迷子の子犬🐶が！"
+            },
+            {
+                title: "4. 死線レシマス地下",
+                desc: "凶悪なオークとゴブリンが徘徊する迷宮",
+                icon: "💀",
+                grid: [
+                    ["🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱"],
+                    ["🧱","👹","▫️","▫️","▫️","▫️","👺","▫️","💀","🧱"],
+                    ["🧱","▫️","💥","🧙","▫️","▫️","▫️","▫️","▫️","🧱"],
+                    ["🧱","▫️","▫️","👧","🗡️","▫️","👺","▫️","⏬","🧱"],
+                    ["🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱"]
+                ],
+                log: "オーク👹とゴブリン👺が襲来！爆発💥と剣閃🗡️が交差する！"
+            },
+            {
+                title: "5. 癒しのジュアの祭壇",
+                desc: "パンと鉱石を捧げて神の恩恵を授かる",
+                icon: "⛩️",
+                grid: [
+                    ["🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱"],
+                    ["🧱","▫️","▫️","▫️","⛩️","▫️","▫️","▫️","🕊️","🧱"],
+                    ["🧱","▫️","▫️","🧙","✨","▫️","▫️","▫️","▫️","🧱"],
+                    ["🧱","▫️","🍞","💎","👧","▫️","▫️","▫️","▫️","🧱"],
+                    ["🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱","🧱"]
+                ],
+                log: "祭壇⛩️に供物🍞💎を捧げ、癒しのジュアの神罰を逃れ光✨に包まれる。"
+            }
+        ];
+
+        let renderer: WebGLRenderer;
+        let currentSceneIndex = 0;
+        let frameCount = 0;
+        let lastTime = performance.now();
+        let fps = 0;
+
+        const canvas = document.getElementById('webgl-canvas') as HTMLCanvasElement;
+        const controls = document.getElementById('scene-controls') as HTMLDivElement;
+        const fpsEl = document.getElementById('fps') as HTMLElement;
+        const drawCallsEl = document.getElementById('drawCalls') as HTMLElement;
+        const trianglesEl = document.getElementById('triangles') as HTMLElement;
+        const gpuMemoryEl = document.getElementById('gpuMemory') as HTMLElement;
+
+        async function init() {
+            try {
+                renderer = new WebGLRenderer(document.body, 820, 400);
+                // Move canvas to our container
+                const webglCanvas = renderer.getRenderer().domElement;
+                webglCanvas.id = 'webgl-canvas';
+                webglCanvas.style.width = '100%';
+                webglCanvas.style.height = '400px';
+                canvas.replaceWith(webglCanvas);
+                
+                // Create scene buttons
+                SCENES.forEach((scene, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn' + (index === 0 ? ' active' : '');
+                    btn.textContent = `${index + 1}`;
+                    btn.onclick = () => loadScene(index);
+                    controls.appendChild(btn);
+                });
+                
+                // Load first scene
+                await loadScene(0);
+                
+                // Start animation loop
+                animate();
+            } catch (error) {
+                console.error('Failed to initialize WebGL renderer:', error);
+                document.body.innerHTML = `
+                    <div style="padding: 40px; text-align: center; color: #f87171;">
+                        <h2>WebGL2 Initialization Failed</h2>
+                        <p>${error.message}</p>
+                        <p>Please use a WebGL2-compatible browser.</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadScene(index: number) {
+            currentSceneIndex = index;
+            const scene = SCENES[index];
+            
+            // Update UI
+            document.getElementById('scene-title')!.textContent = scene.title;
+            document.getElementById('scene-desc')!.textContent = scene.desc;
+            document.getElementById('scene-icon')!.textContent = scene.icon;
+            document.getElementById('scene-log')!.textContent = `📜 ${scene.log}`;
+            
+            // Update active button
+            controls.querySelectorAll('.btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i === index);
+            });
+            
+            // Render scene
+            renderer.renderScene(scene);
+        }
+
+        function animate() {
+            const now = performance.now();
+            frameCount++;
+            
+            if (now - lastTime >= 1000) {
+                fps = Math.round(frameCount * 1000 / (now - lastTime));
+                frameCount = 0;
+                lastTime = now;
+                
+                // Update stats
+                const gl = renderer.getRenderer().getContext() as WebGL2RenderingContext;
+                const info = renderer.getRenderer().info;
+                
+                fpsEl.textContent = fps.toString();
+                drawCallsEl.textContent = info.render.calls.toString();
+                trianglesEl.textContent = info.render.triangles.toString();
+                
+                // GPU memory (if available)
+                if ('memory' in performance) {
+                    const mem = (performance as any).memory;
+                    gpuMemoryEl.textContent = `${(mem.usedJSHeapSize / 1024 / 1024).toFixed(1)} MB`;
+                }
+            }
+            
+            renderer.animate();
+        }
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            const container = document.querySelector('.stage-box') as HTMLElement;
+            if (container && renderer) {
+                const width = container.clientWidth;
+                renderer.setSize(width, 400);
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>

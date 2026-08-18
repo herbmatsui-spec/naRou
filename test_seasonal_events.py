@@ -2,12 +2,23 @@
 テスト: シーズンイベントの統合テスト
 """
 from __future__ import annotations
+<<<<<<< ours
 import json
 from world_event_system import REGISTRY, EVENT_SCHEDULER, RANKING_MANAGER, WorldEventManager
+=======
+import time
+import json
+from world_event_system import REGISTRY, EVENT_SCHEDULER, REWARD_MANAGER, RANKING_MANAGER, TITLE_MANAGER, WorldEventManager
+>>>>>>> theirs
 from community_goal_manager import COMMUNITY_GOAL_MANAGER
 from feedback_system import FEEDBACK_SYSTEM
 from balance_tool import BALANCE_TOOL
 from asset_manager import ASSET_MANAGER
+<<<<<<< ours
+=======
+from entity import Entity  # We need to define a mock entity
+from typing import Dict, Any
+>>>>>>> theirs
 
 class MockEntity:
     """テスト用のモックエンティティ"""

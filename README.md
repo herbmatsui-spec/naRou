@@ -2,10 +2,10 @@
 
 『naRou: Masterpiece Edition』は、本格ローグライクRPGの深遠なゲーム性と自由度をベースに、疎結合アーキテクチャ・ECS（Entity Component System）・スキルツリー・ジョブ・ギルド・派閥戦争・輪廻転生・ペット進化/融合・ストーリーテラー・Webクライアント連携を完全統合した商用クオリティのローグライクゲームです。
 
----
-
 ## 🎬 ゲームプレイ・デモ
 
+<div align="center">
+  <img src="demo_gameplay.gif" alt="naRou: Masterpiece Edition ゲームプレイデモ" width="700">
 <div align="center">
   <img src="demo_gameplay.gif" alt="naRou: Masterpiece Edition ゲームプレイデモ" width="700">
   <p><em>▲ 拠点〜ダンジョン探索〜ボス戦〜輪廻転生 NG+ のループプレビュー</em></p>
@@ -98,38 +98,3 @@ python -m pytest
 ## 📄 ライセンス & クレジット
 - **Version**: 1.0.0 (Commercial Edition)
 - **Engine Architecture**: SystemManager ECS-coupled Engine
-
----
-
-## 🌟 WebGLポストプロセス・ライティング拡張（ブランチ: feature/webgl-postprocess）
-
-現在、`feature/webgl-postprocess` ブランチで、Webクライアントの没入感向上を目的とした拡張を開発中です。主な実装済み・検討中内容は以下の通りです。
-
-### ✅ 実装済み
-- **PixiJS v7 導入**: WebGLレンダラーへ移行し、レイヤー分離レンダリングを構築
-- **レイヤー分離**: `backgroundLayer`, `tileLayer`, `entityLayer`, `effectLayer` を分離し、描画順を最適化
-- **フォントテクスチャアトラス**: `tools/generate_font_atlas.py` で `demos/assets/font_atlas.png` / `font_atlas.json` を生成。`TextureAtlas.js` でグリフテクスチャを提供
-- **タイル・エンティティ・アイテムのテクスチャ描画**: `TextureAtlas` を用いた Sprite 描画に置き換え、未使用時は Graphics フォールバック
-- **動的ライティング**: `LightingSystem.js` によりサーバー側 `light_map` / `light_sources` を視覚化
-- **パーティクルシステム**: `ParticleSystem.js` で移動・ヒット・魔法・回復・ダメージ演出を発生
-- **ポストプロセス**: `PostProcessManager.js` でブルーム、グレイン、ビネットを提供
-- **スクリーンシェイク**: `ScreenShake.js` でダメージ・爆発時の振動演出を実装
-- **デモ**: `demos/particle_demo.html`, `demos/lighting_demo.html`, `demos/bloom_shake_demo.html` を追加
-
-### 🚧 未反映の変更（未マージ・未反映）
-現在、`feature/webgl-postprocess` ブランチ上にありますが、main ブランチへはまだマージされていません。
-
-- **web_game_client.html**: PixiJS初期化、レイヤー定義、テクスチャアトラス読込、各システム統合
-- **demos/lib/**: `TextureAtlas.js`, `LightingSystem.js`, `ParticleSystem.js`, `PostProcessManager.js`, `ScreenShake.js`
-- **demos/assets/**: `font_atlas.png`, `font_atlas.json`
-- **tools/**: `generate_font_atlas.py`
-- **デモHTML**: `demos/particle_demo.html`, `demos/lighting_demo.html`, `demos/bloom_shake_demo.html`
-- **Python バックエンド**: 本拡張では未変更（既存 `/api/state` JSON API を利用）
-
-### ⚠️ 既知の注意点
-- Python テスト一式は、本拡張とは無関係な既存インポートエラー（例: `title_manager.TITLE_MANAGER`）のために現在実行不可。Web クライアント単体では PixiJS CDN + モジュールロード後に初期化される構造に修正済み
-- フォントアトラスは自動生成済みだが、より高度なタイルセット・モンスター固有グリフの追加は今後の拡張候補
-
----
-
-## 🔧 開発者向け情報
