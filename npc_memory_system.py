@@ -69,6 +69,7 @@ class NPCMemoryManager:
         source_npc_id: Optional[str] = None,
         tags: Optional[List[str]] = None,
         decay_rate: float = 0.0,
+        timestamp: Optional[float] = None,
     ) -> MemoryEntry:
         """記憶を追加"""
         entry = MemoryEntry(
@@ -79,6 +80,8 @@ class NPCMemoryManager:
             tags=tags or [],
             decay_rate=decay_rate,
         )
+        if timestamp is not None:
+            entry.timestamp = timestamp
         self._memories.append(entry)
         # 同一タグの古い記憶を統合・圧縮（オプション：実装時に最適化）
         return entry

@@ -13,6 +13,13 @@ from pathlib import Path
 if TYPE_CHECKING:
     pass
 
+# Phase 2 連携：遅延インポート
+try:
+    from npc_memory_system import GLOBAL_MEMORY_REGISTRY, MemoryType, MemoryImportance
+    _HAS_NPC_MEMORY = True
+except ImportError:
+    _HAS_NPC_MEMORY = False
+
 
 @dataclass
 class FactionWarData:
@@ -115,4 +122,64 @@ class FactionWarManager:
         faction = self.registry.get(faction_id)
         if not faction:
             return
+        old_influence = faction.influence
         faction.influence = max(0, min(100, faction.influence + change))
+
+        # Phase 2 連携：派閥影響力変動を NPC 記憶に記録
+        if _HAS_NPC_MEMORY and change != 0:
+            for npc_id, mgr in GLOBAL_MEMORY_REGISTRY.all_managers().items():
+                # 同派閥 NPC に記録
+                if getattr(mgr.npc, 'faction_id', None) == faction_id:
+                    mgr.record_reputation_event(
+                        subject_id=faction_id,
+                        event_type="faction_influence_change",
+                        delta=change,
+                        source="faction_system",
+                        importance=MemoryImportance.SIGNIFICANT if abs(change) > 5 else MemoryImportance.NOTABLE,
+                    )
+
+    # Phase 2 連携メソッド
+    def get_faction_reputation_for_gate(self, player: "Entity", faction_id: str) -> int:
+        """ReputationGate 用派閥評判値取得（0-100 -> -100 to 100）"""
+        faction = self.registry.get(faction_id)
+        if not faction:
+            return -50
+        # 派閥影響力 0-100 を -100 to 100 にマッピング
+        # プレイヤーの faction_reputation も加味
+        player_rep = player.faction_reputation.get(faction_id, 0)
+        return (faction.influence - 50) + player_rep
+
+    def get_all_faction_reputations(self, player: "Entity") -> Dict[str, int]:
+        """全派閥評判取得（噂伝播・評判ゲート用）"""
+        result = {}
+        for fid, faction in self.registry.all().items():
+            result[fid] = self.get_faction_reputation_for_gate(player, fid)
+        return result
+
+    def apply_rumor_influence(
+        self,
+        faction_id: str,
+        delta: int,
+        source: str = "rumor",
+    ) -> bool:
+        """噂伝播による派閥影響力変動（Phase 2 Step 6 連携）"""
+        faction = self.registry.get(faction_id)
+        if not faction:
+            return False
+        old = faction.influence
+        faction.influence = max(0, min(100, faction.influence + delta))
+        return faction.influence != old
+
+    def get_rumor_spread_modifier(self, from_faction: str, to_faction: str) -> float:
+        """噂伝播修正値取得（同盟=+0.2, 敵対=-0.3, 中立=0）"""
+        if from_faction == to_faction:
+            return 0.2
+        f1 = self.registry.get(from_faction)
+        f2 = self.registry.get(to_faction)
+        if not f1 or not f2:
+            return 0.0
+        if self.check_war_conditions(from_faction, to_faction):
+            return -0.3
+        if to_faction in f1.allied_factions:
+            return 0.2
+        return 0.0

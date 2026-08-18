@@ -11,6 +11,13 @@ from dataclasses import dataclass, field
 if TYPE_CHECKING:
     from entity import Entity
 
+# Phase 2 連携：遅延インポート用
+try:
+    from npc_memory_system import GLOBAL_MEMORY_REGISTRY, MemoryType, MemoryImportance
+    _HAS_NPC_MEMORY = True
+except ImportError:
+    _HAS_NPC_MEMORY = False
+
 
 # Step 61: RelationshipTemplateData
 @dataclass
@@ -100,3 +107,54 @@ class RelationshipManager:
     def get_relationship_benefits(self, player: "Entity", npc_id: str) -> List[str]:
         lvl = self.get_relationship_level(player, npc_id)
         return [f"benefit_level_{lvl}"] if lvl > 0 else []
+
+    # Phase 2 連携メソッド
+    def update_relationship_with_memory(
+        self,
+        player: "Entity",
+        npc: "Entity",
+        npc_id: str,
+        action: str = "talk",
+        delta_trust: int = 5,
+        delta_mood: int = 5,
+        importance: Optional["MemoryImportance"] = None,
+    ) -> Tuple[int, int]:
+        """関係性更新＋NPC 記憶記録（Phase 2 Step 5/6 連携）"""
+        trust, mood = self.update_relationship(player, npc_id, action, delta_trust, delta_mood)
+
+        if _HAS_NPC_MEMORY:
+            # プレイヤー側の NPC 記憶（クエストシステム連携用）
+            mgr = GLOBAL_MEMORY_REGISTRY.get(npc)
+            mgr.record_personal_interaction(
+                action=action,
+                delta_trust=delta_trust,
+                delta_mood=delta_mood,
+                importance=importance or MemoryImportance.NOTABLE,
+            )
+        return (trust, mood)
+
+    def get_reputation_for_gate(self, player: "Entity", npc_id: str) -> int:
+        """ReputationGate 用評判値取得（-100 to 100）"""
+        level = self.get_relationship_level(player, npc_id)
+        # レベル 0-3 -> -50, -10, 30, 70
+        return level * 40 - 50
+
+    def get_all_relationships(self, player: "Entity") -> Dict[str, Dict[str, int]]:
+        """全関係性取得（噂伝播・評判ゲート用）"""
+        return dict(player.character_relationships)
+
+    def apply_rumor_effect(
+        self,
+        player: "Entity",
+        npc_id: str,
+        event_type: str,
+        delta: int,
+        source: str = "rumor",
+    ) -> Tuple[int, int]:
+        """噂伝播による評判変動適用（Phase 2 Step 6 連携）"""
+        return self.update_relationship_with_memory(
+            player, None, npc_id,
+            action=f"rumor:{event_type}",
+            delta_trust=delta,
+            delta_mood=delta,
+        )
