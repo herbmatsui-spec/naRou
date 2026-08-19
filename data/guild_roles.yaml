@@ -1,0 +1,27 @@
+guild_roles:
+  default_roles:
+    member:
+      permissions: []
+      promotions_to: ["elder"]
+      demotions_from: []
+    elder:
+      permissions: ["invite_members", "view_vault"]
+      promotions_to: ["officer"]
+      demotions_from: ["member"]
+    officer:
+      permissions: ["kick_members", "manage_quests", "withdraw_funds"]
+      promotions_to: ["guildmaster"]
+      demotions_from: ["elder"]
+    guildmaster:
+      permissions: ["all"]
+      promotions_to: []
+      demotions_from: ["officer"]
+  custom_roles:
+    recruiter:
+      permissions: ["invite_members", "view_members"]
+      promotions_to: []
+      demotions_from: []
+    treasurer:
+      permissions: ["view_funds", "withdraw_funds", "manage_tax"]
+      promotions_to: []
+      demotions_from: []

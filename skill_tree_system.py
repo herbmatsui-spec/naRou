@@ -10,6 +10,11 @@ import yaml
 import logging
 from pathlib import Path
 
+try:
+    from components import SkillTreeJobComponent
+except Exception:  # pragma: no cover - optional dependency
+    SkillTreeJobComponent = None
+
 
 logger = logging.getLogger(__name__)
 
@@ -258,10 +263,263 @@ def get_skill_tree_manager() -> SkillTreeManager:
     return SkillTreeManager(registry)
 
 
+# ============================================================
+# Proposal 6: Passive Skills System
+# ============================================================
+
+@dataclass
+class PassiveSkill:
+    """A passive skill that applies constant effects when learned."""
+    id: str
+    name: str
+    tree: str
+    tier: int
+    cost: int
+    prerequisites: List[str] = field(default_factory=list)
+    effects: List[SkillTreeEffect] = field(default_factory=list)
+
+
+class PassiveSkillRegistry:
+    """Loads and stores passive skill definitions from YAML."""
+
+    _instance: Optional['PassiveSkillRegistry'] = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
+    def __init__(self):
+        if self._initialized:
+            return
+        self._skills: Dict[str, PassiveSkill] = {}
+        self._initialized = True
+
+    def load(self, path: str = "data/passive_skills.yaml") -> None:
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                data = yaml.safe_load(f)
+        except FileNotFoundError:
+            logger.warning(f"Passive skill file not found: {path}")
+            return
+        except Exception as e:
+            logger.error(f"Failed to load passive skills: {e}")
+            return
+
+        if not data or 'passive_skills' not in data:
+            logger.warning("No passive_skills key found in YAML")
+            return
+
+        self._skills.clear()
+        for sid, sdata in data['passive_skills'].items():
+            effects = [
+                SkillTreeEffect(
+                    type=e.get('type', ''),
+                    value=e.get('value', 0),
+                    target=e.get('target')
+                )
+                for e in sdata.get('effects', [])
+            ]
+            self._skills[sid] = PassiveSkill(
+                id=sid,
+                name=sdata.get('name', ''),
+                tree=sdata.get('tree', ''),
+                tier=sdata.get('tier', 1),
+                cost=sdata.get('cost', 0),
+                prerequisites=sdata.get('prerequisites', []),
+                effects=effects
+            )
+        logger.info(f"Loaded {len(self._skills)} passive skills")
+
+    def all(self) -> Dict[str, PassiveSkill]:
+        return self._skills.copy()
+
+    def get(self, skill_id: str) -> Optional[PassiveSkill]:
+        return self._skills.get(skill_id)
+
+
+class PassiveSkillManager:
+    """Manages learning passive skills and aggregating their effects."""
+
+    def __init__(self, registry: PassiveSkillRegistry):
+        self.registry = registry
+
+    def can_learn(self, player, skill_id: str) -> bool:
+        skill = self.registry.get(skill_id)
+        if skill is None:
+            return False
+        if skill_id in player.learned_passive_skills:
+            return False
+        if player.skill_points < skill.cost:
+            return False
+        comp = self._get_component(player)
+        for prereq in skill.prerequisites:
+            if prereq not in comp.learned_passive_skills:
+                return False
+        return True
+
+    def learn(self, player, skill_id: str) -> bool:
+        if not self.can_learn(player, skill_id):
+            return False
+        skill = self.registry.get(skill_id)
+        comp = self._get_component(player)
+        comp.learned_passive_skills.append(skill_id)
+        player.skill_points -= skill.cost
+        player.total_skill_points_earned += skill.cost
+        return True
+
+    def _get_component(self, player):
+        # Entity exposes learned_passive_skills via SkillTreeJobComponent delegation
+        if hasattr(player, "learned_passive_skills"):
+            return player
+        raise AttributeError("player has no learned_passive_skills")
+
+    def aggregate_bonuses(self, player) -> Dict[str, float]:
+        """Sum all numeric passive effects for the player.
+
+        Returns a dict of effect_type -> summed value. For chance-style
+        effects (auto_revive), the value/sum is accumulated under its own key.
+        """
+        bonuses: Dict[str, float] = {}
+        learned = getattr(player, "learned_passive_skills", [])
+        for sid in learned:
+            skill = self.registry.get(sid)
+            if skill is None:
+                continue
+            for eff in skill.effects:
+                key = eff.type
+                try:
+                    val = float(eff.value)
+                except (TypeError, ValueError):
+                    continue
+                bonuses[key] = bonuses.get(key, 0.0) + val
+        return bonuses
+
+
+_passive_registry: Optional[PassiveSkillRegistry] = None
+
+
+def get_passive_skill_registry(path: str = "data/passive_skills.yaml") -> PassiveSkillRegistry:
+    global _passive_registry
+    if _passive_registry is None:
+        _passive_registry = PassiveSkillRegistry()
+        _passive_registry.load(path)
+    return _passive_registry
+
+
+def get_passive_skill_manager() -> PassiveSkillManager:
+    return PassiveSkillManager(get_passive_skill_registry())
+
+
+# ============================================================
+# Proposal 7: Skill Inheritance / Reincarnation Bonuses
+# ============================================================
+
+@dataclass
+class InheritanceRule:
+    """A single reincarnation inheritance rule."""
+    id: str
+    name: str
+    description: str
+    inheritance_type: str
+    eligible_skills: List[str] = field(default_factory=list)
+    inheritance_rate: float = 0.0
+    level_bonus: int = 0
+    requirements: Dict[str, Any] = field(default_factory=dict)
+
+
+class SkillInheritanceManager:
+    """Loads inheritance rules and computes reincarnation bonuses."""
+
+    def __init__(self, path: str = "data/skill_inheritance.yaml"):
+        self._rules: Dict[str, InheritanceRule] = {}
+        self._path = path
+        self.load(path)
+
+    def load(self, path: str = "data/skill_inheritance.yaml") -> None:
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                data = yaml.safe_load(f)
+        except FileNotFoundError:
+            logger.warning(f"Inheritance file not found: {path}")
+            return
+        except Exception as e:
+            logger.error(f"Failed to load inheritance rules: {e}")
+            return
+
+        self._rules.clear()
+        for rid, rdata in (data or {}).get('inheritance_rules', {}).items():
+            self._rules[rid] = InheritanceRule(
+                id=rid,
+                name=rdata.get('name', ''),
+                description=rdata.get('description', ''),
+                inheritance_type=rdata.get('inheritance_type', ''),
+                eligible_skills=rdata.get('eligible_skills', []),
+                inheritance_rate=float(rdata.get('inheritance_rate', 0.0)),
+                level_bonus=int(rdata.get('level_bonus', 0)),
+                requirements=rdata.get('requirements', {}) or {}
+            )
+        logger.info(f"Loaded {len(self._rules)} inheritance rules")
+
+    def all_rules(self) -> Dict[str, InheritanceRule]:
+        return self._rules.copy()
+
+    def available_rules(self, reincarnation_count: int) -> List[InheritanceRule]:
+        """Rules whose reincarnation requirement is met."""
+        out = []
+        for rule in self._rules.values():
+            req = rule.requirements.get('reincarnation_count', 0)
+            if reincarnation_count >= int(req):
+                out.append(rule)
+        return out
+
+    def compute_inheritance_points(self, level: int, mastered_jobs: int,
+                                   awakened_skills: int) -> int:
+        """Compute total inheritance points (mirrors proposal formula)."""
+        points = 10
+        points += (level // 10) * 2
+        points += mastered_jobs * 5
+        points += awakened_skills * 10
+        return points
+
+    def apply_rule(self, player, rule_id: str) -> bool:
+        """Apply an inheritance rule's starting bonus to a (new) player.
+
+        Returns True if applied. Effects supported:
+          - base_stat_bonus: adds level_bonus to a base stat (default 'level')
+          - start_with_skill / start_with_job: recorded in inherited_skills
+        """
+        rule = self._rules.get(rule_id)
+        if rule is None:
+            return False
+        comp = player.get_component(SkillTreeJobComponent) if hasattr(player, 'get_component') else player
+        if rule.inheritance_type == "potential_retention":
+            # level_bonus becomes an inherited skill level head-start
+            for sid in rule.eligible_skills:
+                if sid not in comp.inherited_skills:
+                    comp.inherited_skills.append(sid)
+        elif rule.inheritance_type == "passive_traits":
+            for sid in rule.eligible_skills:
+                if sid not in comp.inherited_skills:
+                    comp.inherited_skills.append(sid)
+        # generic base stat bonus
+        if rule.level_bonus:
+            comp.inherited_stat_bonus = getattr(comp, 'inherited_stat_bonus', 0) + rule.level_bonus
+        return True
+
+
 __all__ = [
     "SkillTreeEffect",
     "SkillTreeTier",
     "SkillTree",
     "SkillTreeRegistry",
     "SkillTreeManager",
+    "PassiveSkill",
+    "PassiveSkillRegistry",
+    "PassiveSkillManager",
+    "get_passive_skill_registry",
+    "get_passive_skill_manager",
+    "InheritanceRule",
+    "SkillInheritanceManager",
 ]

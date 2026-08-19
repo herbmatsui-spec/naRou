@@ -1,0 +1,17 @@
+{
+  "text-sky-400": "text-accent",
+  "text-sky-300": "text-accent-soft",
+  "text-slate-400": "text-muted",
+  "text-slate-500": "text-muted",
+  "text-slate-950": "text-strong",
+  "text-yellow-300": "text-gold",
+  "bg-slate-900": "bg-dark",
+  "bg-sky-500/20": "bg-accent-soft",
+  "border-slate-700": "border-dark",
+  "border-slate-700/80": "border-dark-soft",
+  "border-slate-800": "border-darker",
+  "from-sky-400": "from-accent",
+  "to-amber-300": "to-gold",
+  "from-amber-500": "from-warning",
+  "to-orange-500": "to-warning"
+}

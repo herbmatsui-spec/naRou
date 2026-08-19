@@ -1,0 +1,50 @@
+faction_events:
+  church_of_lumiest:
+    - id: "heresy_trial"
+      name: "異端審問"
+      description: "教会に異端の噂が広がった。真相を究明せよ"
+      requirements:
+        faction_reputation:
+          church_of_lumiest: 75
+      choices:
+        - id: "innocent"
+          text: "無実を主張する"
+          consequences:
+            faction_reputation:
+              church_of_lumiest: 20
+              shadow_hand: -10
+            rewards:
+              - type: "skill_unlock"
+                value: "divine_protection"
+              - type: "item"
+                value: "holy_symbol"
+        - id: "guilty"
+          text: "有罪を認めて懺悔する"
+          consequences:
+            faction_reputation:
+              church_of_lumiest: 10
+            rewards:
+              - type: "title"
+                value: "penitent"
+              - type: "item"
+                value: "blessed_vestment"
+  shadow_hand:
+    - id: "infiltration_mission"
+      name: "潜入作戦"
+      description: "王城に潜入し、機密文書を盗み出せ"
+      requirements:
+        faction_reputation:
+          shadow_hand: 80
+        stealth_skill: 50
+      effects:
+        - type: "dungeon_generate"
+          value: "shadow_infiltration"
+        - type: "time_limit"
+          value: 600
+      rewards:
+        - type: "unique_item"
+          value: "shadow_documents"
+        - type: "faction_reputation_bonus"
+          value:
+            shadow_hand: 50
+            kingdom_garde: -30

@@ -1,0 +1,193 @@
+{
+  "$schema": "./design_tokens.schema.json",
+  "version": "1.0.0",
+  "name": "naRou Design Tokens",
+  "description": "Design tokens for consistent visual language across platforms",
+  "color": {
+    "semantic": {
+      "danger": "#b33f2a",
+      "warning": "#b87500",
+      "success": "#1a7a3a",
+      "info": "#2a6bd4",
+      "mana": "#4a7ae6",
+      "stamina": "#d43f3f",
+      "health": "#1a8a3a",
+      "gold": "#d49b00",
+      "experience": "#5a5aeb",
+      "legendary": "#d4af37",
+      "epic": "#a855f7",
+      "rare": "#3b82f6",
+      "uncommon": "#10b981",
+      "common": "#6b7280",
+      "text": {
+        "primary": "#1f2937",
+        "secondary": "#6b7280",
+        "muted": "#9ca3af",
+        "inverse": "#ffffff"
+      },
+      "background": {
+        "primary": "#ffffff",
+        "secondary": "#f9fafb",
+        "muted": "#f3f4f6",
+        "dark": "#111827"
+      },
+      "border": {
+        "light": "#e5e7eb",
+        "medium": "#d1d5db",
+        "dark": "#9ca3af"
+      }
+    },
+    "system": {
+      "shadow": "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+      "focus": "0 0 0 3px rgba(66, 153, 225, 0.5)"
+    },
+    "tiles": {
+      "wall": "#2c3e50",
+      "floor": "#1c2230",
+      "water": "#2980b9",
+      "player": "#ecf0f1",
+      "enemy": "#e74c3c",
+      "pet": "#f8b500",
+      "accent": "#d4af37"
+    }
+  },
+  "spacing": {
+    "xs": "4px",
+    "sm": "8px",
+    "md": "12px",
+    "lg": "16px",
+    "xl": "20px",
+    "xxl": "24px",
+    "xxxl": "32px"
+  },
+  "radius": {
+    "none": "0px",
+    "sm": "4px",
+    "md": "8px",
+    "lg": "12px",
+    "full": "9999px"
+  },
+  "typography": {
+    "fontFamily": {
+      "primary": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      "secondary": "'JetBrains Mono', 'Courier New', monospace",
+      "ui": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      "mono": "'JetBrains Mono', 'Courier New', monospace"
+    },
+    "fontSize": {
+      "xs": "0.75rem",
+      "sm": "0.875rem",
+      "base": "1rem",
+      "lg": "1.125rem",
+      "xl": "1.25rem",
+      "xxl": "1.5rem",
+      "xxxl": "1.875rem"
+    },
+    "fontWeight": {
+      "light": "300",
+      "regular": "400",
+      "medium": "500",
+      "semibold": "600",
+      "bold": "700",
+      "extrabold": "800"
+    },
+    "lineHeight": {
+      "none": "1",
+      "sm": "1.25",
+      "base": "1.5",
+      "lg": "1.75"
+    }
+  },
+  "shadow": {
+    "sm": "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+    "md": "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+    "lg": "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+    "xl": "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+  },
+  "zIndex": {
+    "base": 0,
+    "dropdown": 1000,
+    "sticky": 1020,
+    "fixed": 1030,
+    "modalBackdrop": 1040,
+    "modal": 1050,
+    "popover": 1060,
+    "tooltip": 1070
+  },
+  "animation": {
+    "duration": {
+      "fast": "150ms",
+      "normal": "250ms",
+      "slow": "350ms"
+    },
+    "easing": {
+      "linear": "linear",
+      "ease": "cubic-bezier(0.25, 0.1, 0.25, 1.0)",
+      "easeIn": "cubic-bezier(0.4, 0, 1, 1)",
+      "easeOut": "cubic-bezier(0, 0, 0.2, 1)",
+      "easeInOut": "cubic-bezier(0.4, 0, 0.2, 1)"
+    }
+  },
+  "accessibility": {
+    "colorBlind": {
+      "protan": {
+        "danger": "#b33f2a",
+        "warning": "#b87500",
+        "success": "#1a7a3a",
+        "info": "#2a6bd4",
+        "mana": "#4a7ae6",
+        "stamina": "#d43f3f",
+        "health": "#1a8a3a",
+        "gold": "#d49b00",
+        "experience": "#5a5aeb"
+      },
+      "deutan": {
+        "danger": "#b33f2a",
+        "warning": "#b87500",
+        "success": "#1a7a3a",
+        "info": "#2a6bd4",
+        "mana": "#4a7ae6",
+        "stamina": "#d43f3f",
+        "health": "#1a8a3a",
+        "gold": "#d49b00",
+        "experience": "#5a5aeb"
+      },
+      "tritan": {
+        "danger": "#b33f2a",
+        "warning": "#b87500",
+        "success": "#1a7a3a",
+        "info": "#2a6bd4",
+        "mana": "#4a7ae6",
+        "stamina": "#d43f3f",
+        "health": "#1a8a3a",
+        "gold": "#d49b00",
+        "experience": "#5a5aeb"
+      }
+    },
+    "highContrast": {
+      "text": {
+        "primary": "#000000",
+        "secondary": "#333333",
+        "muted": "#666666",
+        "inverse": "#ffffff"
+      },
+      "background": {
+        "primary": "#ffffff",
+        "secondary": "#f0f0f0",
+        "muted": "#e0e0e0",
+        "dark": "#000000"
+      },
+      "border": {
+        "light": "#cccccc",
+        "medium": "#999999",
+        "dark": "#666666"
+      }
+    },
+    "fontScale": {
+      "minimum": 0.8,
+      "maximum": 2.0,
+      "step": 0.1,
+      "default": 1.0
+    }
+  }
+}

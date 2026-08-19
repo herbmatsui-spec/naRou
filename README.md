@@ -61,82 +61,224 @@
 
 ---
 
-## 🎮 主な機能と特徴
+## 🎬 ゲームプレイ動画
 
-1. **ECS & 疎結合アーキテクチャ (`SystemManager`, `BaseSystem`)**
-   - 責務分離されたモジュール構成による高保守性・高拡張性。
-2. **商用セーブデータシステム (`SaveSystem`, `MigrationManager`)**
-   - SHA256チェックサム検証付き JSON/Gzip シリアライズ。
-   - 自動バックアップローテーション（最大3世代）およびデータスキーママイグレーション。
-3. **奥深いキャラクタービルド & メタ進行**
-   - **スキルツリー & ジョブシステム**: スキル合成・進化・覚醒・特化。
-   - **輪廻転生 & ニューゲーム+**: 周回ごとのボーナス、カルマ変動、固有ダンジョン開放。
-   - **ペット契約・進化・融合**: 相棒ペットの育成と多段進化。
-4. **自動生成ストーリー & ギルド・派閥システム**
-   - ランダムイベント、派閥戦争、NPC関係性システム。
-5. **デュアルUI環境**
-   - **tcod (コンソール/GUI)** & **モダンWebクライアント (`web_game_client.html`, WebSocket/HTTP)**。
-6. **自動バトルバランス検証システム (`BalanceSimulator`)**
-   - YAML基準値による自動戦闘シミュレーションと HTML レポート出力。
+### 1. メインゲームプレイ循環
+探索 → 戦闘 → 祈り → スキル/インベントリ → 輪廻転生のフルループ
+
+![Gameplay Demo](demo_gameplay.gif)
+
+### 2. スキルツリー・ジョブシステム
+70種類以上のスキル、15職業の転職、融合・覚醒・継承システム
+
+![Skill Tree Demo](demo_skill_tree.gif)
+
+### 3. ペットシステム & Webブラウザ版
+契約・進化・融合で相棒を育成、インストール不要のブラウザプレイ
+
+![Pet & Web Demo](demo_pet_web.gif)
 
 ---
 
-## 🚀 インストールと起動方法
+## 🚀 クイックスタート（最初にこれだけやれば遊べます）
 
-### 1. 動作環境・必要要件
-- Python 3.10 以上 (Python 3.11〜3.14 対応)
-- Windows / macOS / Linux
+### 1. 必要なもの
+- **Python 3.10 以上** （3.11〜3.14 推奨）
+- **Git**（ソースコード取得用）
 
-### 2. 依存パッケージのインストール
+### 2. インストール・起動
+
 ```bash
+# リポジトリをクローン
+git clone <このリポジトリのURL>
+cd naRou
+
+# 依存パッケージをインストール
 pip install -r requirements.txt
-```
 
-### 3. ゲームの起動
-
-#### メニューからの起動 (推奨)
-```bash
+# ゲーム起動！
 python main.py
 ```
-メニューから `1` を選択してゲームを開始します。
 
-#### Webクライアントでのプレイ
-ゲーム起動後、ブラウザで以下にアクセスします：
-```
-http://localhost:8080
-```
+起動するとメニューが表示されるので、**`1` を入力して Enter** でゲーム開始です。
 
-#### バトルバランス検証の実行
+### 3. Webブラウザで遊ぶ場合
+
 ```bash
-python tests/balance_simulator.py
-```
-実行後、`balance_report.json` および `balance_report.html` が出力されます。
+# 1. ゲームを起動（メニューで 1 を選択）
+python main.py
 
-#### 自動テストの実行
+# 2. 別のターミナルでWebサーバーを起動
+python web_server.py
+
+# 3. ブラウザでアクセス
+# http://localhost:8080
+```
+
+---
+
+## ⌨️ 基本操作（ゲーム内で `[?]` または `[h]` でも確認可能）
+
+| キー | アクション |
+|------|------------|
+| **矢印キー / テンキー** | 移動・通常攻撃（敵の方向へ移動で攻撃） |
+| **Space** | 文脈アクション（拾う・会話・食べる・祈る等） |
+| **i** | インベントリ開く（タブで装備/アイテム切替、Enterで使用/装備、dで捨てる） |
+| **c** | キャラクターステータス・能力値・スキル確認 |
+| **j** | ジョブ管理・転職メニュー |
+| **Shift + S** | スキルツリー画面 |
+| **Shift + G** | ギルド・派閥メニュー |
+| **l** | 周囲調査（ルックモード） |
+| **> / <** | 階段を下りる / 上がる |
+| **? / h** | ヘルプ画面表示 |
+| **F5** | セーブ実行（自動セーブもあり） |
+
+---
+
+## 📁 プロジェクト構成（開発者向け）
+
+```
+naRou/
+├── main.py                    # エントリーポイント（メニュー表示）
+├── game.py                    # ゲーム本体エンジン（1800行超）
+├── requirements.txt           # Python依存パッケージ
+├── pyproject.toml             # パッケージ設定
+├── config.yaml                # ゲーム設定
+├── constants.py               # 定数定義
+├── core/                      # コアフレームワーク
+│   ├── __init__.py
+│   ├── palette.py             # カラーパレット
+│   └── ...                    # ECS基盤、イベントバス等
+├── systems/                   # ゲームシステム（戦闘、生存等）
+├── entity.py                  # エンティティ定義
+├── map_engine.py              # マップ生成・描画
+├── skill_tree_system.py       # スキルツリー
+├── job_system.py              # ジョブシステム
+├── pet_*_system.py            # ペット関連システム
+├── guild_*_system.py          # ギルド関連システム
+├── faction_war_system.py      # 派閥戦争
+├── save_system.py             # セーブ/ロード
+├── web_server.py              # WebSocket/HTTPサーバー
+├── web_game_client.html       # ブラウザ版クライアント
+├── demos/                     # デモHTMLファイル群
+├── tests/                     # テストコード（多数）
+├── tools/                     # 開発用ツール
+├── assets/                    # タイルセット、フォント等
+└── data/                      # ゲームデータ（YAML等）
+```
+
+---
+
+## 🛠️ 開発者向けコマンド
+
 ```bash
+# テスト実行
 python -m pytest
+
+# 特定テストのみ実行
+python -m pytest tests/test_gi.py -v
+
+# バトルバランス検証（HTML/JSONレポート出力）
+python tests/balance_simulator.py
+
+# リンター・フォーマッター
+python -m flake8 .
+python -m black .
+python -m mypy .
+
+# デモシーン生成
+python generate_24_scenes.py
+
+# アセットビルド
+python tools/build_assets.py
+
+# データスキーマ → Pydantic/dataclass 自動生成
+python tools/codegen.py
+
+# YAML データのスキーマ検証
+python tools/codegen.py --validate-data
+
+# スキーマ構文検証
+python tools/codegen.py --validate-only
+
+# リポジトリ層テスト
+python -m pytest tests/test_repositories.py -q
 ```
 
 ---
 
-## ⌨️ 基本操作一覧
+## 🗂️ 現在の未コミット変更（作業進捗）
 
-| 操作キー | アクション |
-| :--- | :--- |
-| **矢印キー / テンキー** | 移動・通常攻撃 |
-| **[Space]** | 文脈アクション（アイテム拾い、会話、食事、祈り等） |
-| **[i]** | インベントリを開く（タブ切り替え、装備、使用、破棄） |
-| **[c]** | キャラクターステータス・能力・スキル確認 |
-| **[j]** | ジョブ管理・転職メニュー |
-| **[Shift + S]** | スキルツリー画面 |
-| **[Shift + G]** | ギルド・派閥メニュー |
-| **[l]** | 周囲調査（ルックモード） |
-| **[>] / [<]** | 階段を下りる / 上がる |
-| **[?] / [h]** | ヘルプ画面表示 |
-| **[F5] / 自動** | セーブ実行 |
+このブランチには、まだコミットに反映されていない変更が多数含まれています。
+
+### データ駆動アーキテクチャ（schema → モデル → リポジトリ）
+- `data/schemas/` : アイテム/モンスター/スキル/クエスト/ダンジョン/派閥/ジョブ/神/ギルド/称号/実績/呪文/スキル融合/スキルツリーの JSON Schema
+- `data/generated/` : `tools/codegen.py` が生成した Pydantic モデル（strict 型検証・`DataModel` 基底）
+- `data/generated_dc/` : 同上から生成した frozen dataclass
+- `data/repositories/` : リポジトリパターン（各ドメインの検索・インデックス・クエリ）
+- `tools/codegen.py` : JSON Schema → Pydantic/dataclass 自動生成 ＋ YAML 検証ツール
+- `data_manager.py` : スキーマ検証付きロード・リポジトリ構築へ書き直し（`DataManager()` で即利用可）
+- `tests/test_repositories.py` : リポジトリ層のテスト（38検証）
+- `.github/workflows/data-pipeline.yml` : スキーマ検証＋リポジトリテストの CI
+
+> ⚠️ 既知の課題: `main_quests.yaml` / `dungeon_themes.yaml` はスキーマと構造が異なるため、DataManager は tolerant ロード（型を緩やかに構築）で対応。スキーマとの統合が残務。
+
+### 描画・ビジュアル（WebGL / ポストプロセス / パレット）
+- `core/lighting.py` `core/palette.py` `core/renderer_base.py` `core/tcod_renderer.py` : ライティング・パレット・レンダラ基盤の刷新
+- `core/entity_renderer.py` `core/tile_atlas.py` `core/palette_generated.py` : エンティティ描画・タイルアトラス・生成パレット（新規）
+- `core/gi.py` : 削除（機能を他へ統合）
+- `entity.py` `game.py` `system_coordinator.py` `web_game_client.html` `web_server.py` : 描画統合・Web クライアント反映
+- `assets/tiles/tileset_def.json` `assets/css/` `design_tokens*.json` : タイルセット・CSS・カラーブラインド対応パレット
+- `demos/*` : 24 シーンデモのテンプレート化・刷新（`tools/convert_demos_to_template.py` 等）
+- `webgpu/lpv.wgsl` : WebGPU ライトプロパゲーションシェーダ
+
+### 開発ツール・ドキュメント
+- `tools/` : パレット生成/検証、タイルパリティ、視覚回帰、デモ変換などの新規ツール
+- `docs/` : エンティティ描画・視覚統一・ターミナル照明などの実装提案/解説
 
 ---
-## 📝 最近の変更 (Recent Changes)
+
+## 🌐 Webクライアントについて
+
+`web_game_client.html` と `web_server.py` でブラウザプレイに対応しています。
+
+- **WebSocket** でリアルタイム通信
+- **ローカルネットワーク内**ならスマホからも接続可能
+- `web/theme.css` でテーマカスタマイズ可能
+
+### 🎮 Web版デモ手順
+
+```bash
+# ターミナル1: ゲームサーバー起動
+python main.py
+# → メニューで 1 を選択してゲーム開始
+
+# ターミナル2: WebSocketサーバー起動
+python web_server.py
+
+# ブラウザでアクセス
+# http://localhost:8080
+# スマホから: http://<PCのローカルIP>:8080
+```
+
+**Web版の特徴:**
+- ターミナル版と**完全同一のゲームロジック**で動作
+- タッチ操作対応（スマホ/タブレットで快適プレイ）
+- バーチャルキーパッド、ハンバーガーメニューで全機能アクセス
+- ダーク/ライトテーマ切替、PWA対応でオフライン・ホーム画面追加可能
+
+---
+
+## 📚 学習リソース（初心者向け）
+
+ローグライク開発に興味がある方へ：
+
+1. **Python基礎** → [Python公式チュートリアル](https://docs.python.org/ja/3/tutorial/)
+2. **tcodライブラリ** → [python-tcod ドキュメント](https://python-tcod.readthedocs.io/)
+3. **ローグライク開発** → [Roguelike Tutorial (Python+tcod)](https://rogueliketutorials.com/tutorials/tcod/)
+4. **ECSアーキテクチャ** → [Entity Component System 解説](https://en.wikipedia.org/wiki/Entity_component_system)
+
+---
 
 ### 🌟 偏執的グラフィック強化 & 2.5D レンダリングパイプライン
 - **法線マップ動的ライティング (`LightingSystem.js`)**: `normal_atlas.png` と 2.5D法線マップシェーダーによる微細な凹凸陰影、SDF影生成、ボリュメトリックフォグ光線（ゴッドレイ）、フリッカー光源を実装。
@@ -167,24 +309,24 @@ python -m pytest
 - `demos/gallery_24_scenes.html` を再生成（ブランディングを naRou: Masterpiece Edition に統一）。
 - 新規追加：実装計画書 `plans/gameplay_demo_24_scenes_implementation_plan_japanese.md`。
 
-### 🖼️ ゲームプレイGIFの再生成
-- `generate_accurate_gif.py` の出力パスを修正し、`demo_gameplay.gif` を再生成。
+- **Issue報告**: バグや要望は GitHub Issues へ
+- **プルリクエスト**: 改善提案歓迎です
+- **動作確認**: Windows/macOS/Linux で動作確認済み
 
-### 🧩 アセットパイプライン & タイルセット
-- 64×64 タイルセットを新規追加（`assets/tiles/tileset_64x64.json` / `.png`）。
-- 16×16・32×32 個別PNGタイルを削除しアトラス化を推進。
-- `core/palette.py`、`tools/build_assets.py`、`tools/generate_theme.py`、`tools/generate_tileset_atlas.py`、`tools/validate_assets.py` を更新。
+---
 
-### 🌐 Webクライアント & テーマ
-- `web_game_client.html`、`web/theme.css` を更新。
+## 📄 ライセンス
 
-### 🧪 テスト
-- `tests/test_token_parity.py` を新規追加。
+MIT License - 詳細は `LICENSE` ファイル参照（または pyproject.toml の license フィールド）
 
-> 詳細なファイル差分は `git status` / `git diff` を参照。本セクションは主要な変更グループをまとめたものです。
+---
 
-## 📄 ライセンス & クレジット
-- **Version**: 1.0.0 (Commercial Edition)
-- **Engine Architecture**: SystemManager ECS-coupled Engine
+## 🙏 謝辞
 
-※ スキルツリー・ジョブシステムは、72段階の詳細実装計画に従って完全実装済み。
+- **Elona** (by Noa) - インスピレーションの源
+- **python-tcod** - ローグライク開発の強力な基盤
+- **コントリビューターの皆様**
+
+---
+
+> **初心者の方へ**: まずは `python main.py` でゲームを起動して、`1` を選んで遊んでみてください！わからないことはゲーム内の `[?]` キーや、この README の「基本操作」を見てください。楽しんでください！

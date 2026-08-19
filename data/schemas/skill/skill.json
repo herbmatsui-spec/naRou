@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "skill.json",
+  "title": "Skill Definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "category", "cost", "effects"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^sk_[a-z_][a-z0-9_]*$",
+      "description": "Unique skill ID with 'sk_' prefix"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Display name in Japanese"
+    },
+    "description": {
+      "type": "string",
+      "description": "Skill description"
+    },
+    "category": {
+      "$ref": "#/$defs/skill_category"
+    },
+    "icon": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2,
+      "description": "Display icon (emoji)"
+    },
+    "cost": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Skill point cost to acquire"
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^sk_[a-z_][a-z0-9_]*$"
+      },
+      "default": [],
+      "description": "Required skill IDs (must be learned first)"
+    },
+    "effects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/effect"
+      },
+      "minItems": 1,
+      "description": "Skill effects"
+    },
+    "tree_id": {
+      "type": "string",
+      "description": "Skill tree this skill belongs to"
+    },
+    "tier": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Tier in skill tree (0 = root)"
+    },
+    "max_level": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 1,
+      "description": "Maximum skill level"
+    },
+    "cooldown": {
+      "type": "integer",
+      "default": 0,
+      "description": "Cooldown in turns (0 = passive/no cooldown)"
+    },
+    "mp_cost": {
+      "type": "integer",
+      "default": 0,
+      "description": "MP cost to activate"
+    },
+    "range": {
+      "type": "integer",
+      "default": 1,
+      "description": "Effect range in tiles"
+    },
+    "target_type": {
+      "type": "string",
+      "enum": ["self", "single", "area", "line", "cone"],
+      "default": "single",
+      "description": "Targeting type"
+    }
+  },
+  "$defs": {
+    "skill_category": {
+      "enum": ["combat", "magic", "craft", "social"],
+      "description": "Skill category for UI grouping"
+    },
+    "effect": {
+      "type": "object",
+      "required": ["type", "value", "target"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "damage_bonus", "crit_chance", "mp_cost_reduction", "unlock_skill",
+            "heal_amount", "stat_bonus", "resistance", "unlock_recipe",
+            "speed_bonus", "evasion_bonus", "accuracy_bonus", "lifesteal",
+            "mana_shield", "reflect_damage", "poison_immunity", "stun_chance"
+          ]
+        },
+        "value": {
+          "type": "number",
+          "description": "Effect magnitude"
+        },
+        "target": {
+          "type": "string",
+          "enum": ["melee", "spell", "self", "ranged", "pet", "all", "enemy", "ally"],
+          "description": "Effect target type"
+        },
+        "condition": {
+          "type": "string",
+          "description": "Optional condition (e.g., 'hp < 30%', 'equipped:weapon')"
+        },
+        "duration": {
+          "type": "integer",
+          "default": 0,
+          "description": "Duration in turns (0 = permanent/passive)"
+        }
+      }
+    }
+  }
+}

@@ -64,11 +64,33 @@ from systems_manager import SystemManager
 from quest_scheduler import QuestScheduler, ScheduleContext
 from localization_manager import LocalizationManager
 
+# Feature Package Architecture
+from packages.core.kernel.kernel import Kernel
+from packages.core.package import CorePackage
+from packages.gameplay.package import GameplayPackage
+from packages.character.package import CharacterPackage
+from packages.social.package import SocialPackage
+from packages.meta.package import MetaPackage
+from packages.world.package import WorldPackage
+from packages.narrative.package import NarrativePackage
+from packages.platform.package import PlatformPackage
+
 
 class Engine:
     """計画書1〜72ステップ完全統合エンジン (商用疎結合アーキテクチャ)"""
     skill_tree_manager: SkillTreeManager
     def __init__(self, renderer: Renderer | None = None):
+        # --- Kernel 初期化 & CorePackage ロード ---
+        self.kernel = Kernel()
+        self.kernel.load_package(CorePackage())
+        self.kernel.load_package(GameplayPackage())
+        self.kernel.load_package(CharacterPackage())
+        self.kernel.load_package(SocialPackage())
+        self.kernel.load_package(MetaPackage())
+        self.kernel.load_package(WorldPackage())
+        self.kernel.load_package(NarrativePackage())
+        self.kernel.load_package(PlatformPackage())
+
         # --- レンダラ設定 (Step 3) ---
         if renderer is not None:
             self.renderer = renderer
@@ -86,14 +108,6 @@ class Engine:
 
         # --- 依存性注入 & SystemManager 初期化 (Phase 1: Step 1-7, 8) ---
         self.systems_coordinator = SystemCoordinator(self)
-        # Skill & Job
-        self.skill_tree_registry = SkillTreeRegistry()
-        self.skill_tree_registry.load()
-        self.skill_tree_manager = self.systems_coordinator.register_system("skill_tree_manager", SkillTreeManager(self.skill_tree_registry))
-
-        self.job_registry = JobRegistry()
-        self.job_registry.load()
-        self.job_manager = self.systems_coordinator.register_system("job_manager", JobManager(self.job_registry))
         self.setup_systems()
 
 # --- ゲーム状態データの初期化 ---
@@ -123,8 +137,7 @@ class Engine:
             survival=SurvivalSystem(),
         )
 
-        # --- エンティティマネージャーの初期化 ---
-        self.entity_manager = EntityManager()
+        # --- エンティティマネージャーは Kernel から取得 ---
         # 初期エンティティを追加
         self.entity_manager.add_entity(self.game_state_data.player)
         self.entity_manager.add_entity(self.game_state_data.pet)
@@ -141,8 +154,8 @@ class Engine:
         rx, ry = self.game_state_data.game_map.rooms[0].center
         self.game_state_data.altar_pos = (rx + 2, ry)
 
-        # プレイヤーとペットの初期化
-        self._initialize_player_and_pet()
+        # プレイヤーとペットの初期化 (CharacterPackage 経由)
+        self.player_pet_initializer(self.kernel, self)
 
         # --- インベントリアイテムの設定 ---
         self._setup_initial_inventory()
@@ -201,28 +214,12 @@ class Engine:
         self.game_state_data.pet.faction = "player"
 
     def _setup_initial_inventory(self) -> None:
-        """初期インベントリアイテムの設定"""
-        starter_sword = create_sample_item("longsword")
-        starter_sword.name = "使い古しの長剣"
-        starter_sword.material = "iron"
-        starter_sword.quality = QUALITY_NORMAL
-        starter_sword.hit_bonus = 0
-        starter_sword.dmg_bonus = 1
-
-        shield = create_sample_item("shield")
-        potion = create_sample_item("potion_heal")
-        potion.count = 8
-        bread = create_sample_item("bread")
-        bread.count = 5
-        spellbook = create_sample_item("book_fire")
-        instrument = Item("★ストラディバリウス", "tool", "🎻", (255, 215, 0), base_weight=1.5, base_value=800)
-        wish_rod = Item("★願いの杖", "rod", "🪄", (100, 255, 255), base_weight=0.8, base_value=3000)
-
-        for itm in [starter_sword, shield, potion, bread, spellbook, instrument, wish_rod]:
+        """初期インベントリアイテムの設定 (GameplayPackage 経由)"""
+        starter_items = self.starter_items_factory(self.kernel)
+        for itm in starter_items:
             self.game_state_data.inventory.add_item(itm)
-        self.game_state_data.inventory.equip(starter_sword, "main_hand")
-        self.game_state_data.inventory.equip(shield, "off_hand")
-        print("DEBUG: Web server started")
+        self.game_state_data.inventory.equip(starter_items[0], "main_hand")
+        self.game_state_data.inventory.equip(starter_items[1], "off_hand")
 
         # --- 初期ログ ---
         self.log("『naRou: Masterpiece Edition』の世界へようこそ！", (255, 255, 120), level="SUCCESS")
@@ -488,195 +485,253 @@ class Engine:
         """考古学解釈エンディングインデックスを設定"""
         self.game_state_data.arch_interpret_ending_idx = value
 
+    # --- Kernel システムアクセス用プロパティ (Feature Package Architecture) ---
+    @property
+    def event_bus(self):
+        return self.kernel.get_system("event_bus")
+
+    @property
+    def time_system(self):
+        return self.kernel.get_system("time_system")
+
+    @property
+    def turn_queue(self):
+        return self.kernel.get_system("turn_queue")
+
+    @property
+    def entity_manager(self):
+        return self.kernel.get_system("entity_manager")
+
+    @property
+    def renderer(self):
+        return self.kernel.get_system("renderer")
+
+    @renderer.setter
+    def renderer(self, value):
+        self.kernel._systems["renderer"] = value
+        set_renderer(value)
+
+    @property
+    def message_log(self):
+        return self.kernel.get_system("message_log")
+
+    @property
+    def msg_log(self):
+        return self.kernel.get_system("message_log")
+
+    @property
+    def debug_console(self):
+        return self.kernel.get_system("debug_console")
+
+    # Gameplay package systems
+    @property
+    def combat_system(self):
+        return self.kernel.get_system("combat_system")
+
+    @property
+    def survival_system(self):
+        return self.kernel.get_system("survival_system")
+
+    @property
+    def starter_items_factory(self):
+        return self.kernel.get_system("starter_items_factory")
+
+    @property
+    def dungeon_spawner(self):
+        return self.kernel.get_system("dungeon_spawner")
+
+    @property
+    def gameplay_loop(self):
+        return self.kernel.get_system("gameplay_loop")
+
+    # Character package systems
+    @property
+    def skill_tree_manager(self):
+        return self.kernel.get_system("skill_tree_manager")
+
+    @property
+    def job_manager(self):
+        return self.kernel.get_system("job_manager")
+
+    @property
+    def skill_fusion_manager(self):
+        return self.kernel.get_system("skill_fusion_manager")
+
+    @property
+    def skill_evolution_manager(self):
+        return self.kernel.get_system("skill_evolution_manager")
+
+    @property
+    def skill_awakening_manager(self):
+        return self.kernel.get_system("skill_awakening_manager")
+
+    @property
+    def skill_transfer_manager(self):
+        return self.kernel.get_system("skill_transfer_manager")
+
+    @property
+    def skill_resonance_manager(self):
+        return self.kernel.get_system("skill_resonance_manager")
+
+    @property
+    def skill_inheritance_manager(self):
+        return self.kernel.get_system("skill_inheritance_manager")
+
+    @property
+    def skill_specialization_manager(self):
+        return self.kernel.get_system("skill_specialization_manager")
+
+    @property
+    def player_pet_initializer(self):
+        return self.kernel.get_system("player_pet_initializer")
+
+    # Social package systems
+    @property
+    def guild_manager(self):
+        return self.kernel.get_system("guild_manager")
+
+    @property
+    def guild_quest_manager(self):
+        return self.kernel.get_system("guild_quest_manager")
+
+    @property
+    def faction_war_manager(self):
+        return self.kernel.get_system("faction_war_manager")
+
+    @property
+    def guild_skill_manager(self):
+        return self.kernel.get_system("guild_skill_manager")
+
+    @property
+    def pet_contract_manager(self):
+        return self.kernel.get_system("pet_contract_manager")
+
+    @property
+    def pet_evolution_manager(self):
+        return self.kernel.get_system("pet_evolution_manager")
+
+    @property
+    def pet_fusion_manager(self):
+        return self.kernel.get_system("pet_fusion_manager")
+
+    @property
+    def relationship_manager(self):
+        return self.kernel.get_system("relationship_manager")
+
+    @property
+    def procedural_quest_manager(self):
+        return self.kernel.get_system("procedural_quest_manager")
+
+    @property
+    def quest_scheduler(self):
+        return self.kernel.get_system("quest_scheduler")
+
+    # Meta package systems
+    @property
+    def achievement_manager(self):
+        return self.kernel.get_system("achievement_manager")
+
+    @property
+    def reincarnation_manager(self):
+        return self.kernel.get_system("reincarnation_manager")
+
+    @property
+    def inheritance_manager(self):
+        return self.kernel.get_system("inheritance_manager")
+
+    @property
+    def karma_manager(self):
+        return self.kernel.get_system("karma_manager")
+
+    @property
+    def reincarnation_dungeon_manager(self):
+        return self.kernel.get_system("reincarnation_dungeon_manager")
+
+    @property
+    def legacy_skill_manager(self):
+        return self.kernel.get_system("legacy_skill_manager")
+
+    @property
+    def challenge_manager(self):
+        return self.kernel.get_system("challenge_manager")
+
+    @property
+    def meta_progression_manager(self):
+        return self.kernel.get_system("meta_progression_manager")
+
+    @property
+    def title_manager(self):
+        return self.kernel.get_system("title_manager")
+
+    # World package systems
+    @property
+    def procedural_dungeon_generator(self):
+        return self.kernel.get_system("procedural_dungeon_generator")
+
+    @property
+    def world_event_manager(self):
+        return self.kernel.get_system("world_event_manager")
+
+    @property
+    def archaeology_manager(self):
+        return self.kernel.get_system("archaeology_manager")
+
+    @property
+    def world_state_manager(self):
+        return self.kernel.get_system("world_state_manager")
+
+    @property
+    def dungeon_theme_registry(self):
+        return self.kernel.get_system("dungeon_theme_registry")
+
+    # Narrative package systems
+    @property
+    def storyteller_manager(self):
+        return self.kernel.get_system("storyteller_manager")
+
+    @property
+    def choice_manager(self):
+        return self.kernel.get_system("choice_manager")
+
+    @property
+    def dialogue_manager(self):
+        return self.kernel.get_system("dialogue_manager")
+
+    @property
+    def main_quest_system(self):
+        return self.kernel.get_system("main_quest_system")
+
+    @property
+    def journal_ui(self):
+        return self.kernel.get_system("journal_ui")
+
+    # Platform package systems
+    @property
+    def web_server_factory(self):
+        return self.kernel.get_system("web_server_factory")
+
+    @property
+    def input_handler(self):
+        return self.kernel.get_system("input_handler")
+
     def setup_systems(self) -> None:
         """各種マネージャーとサブシステムの生成・初期化 (Step 8)"""
-        from main_quest_system import MainQuestSystem
-        from world_state_system import WorldStateManager
-        from journal_ui import JournalUI
-        from achievement_system import AchievementRegistry, AchievementManager
-        from reincarnation_system import ReincarnationRegistry, ReincarnationManager
-        from inheritance_system import InheritanceRegistry, InheritanceManager
-        from karma_system import KarmaRegistry, KarmaManager
-        from reincarnation_dungeon_system import ReincarnationDungeonRegistry, ReincarnationDungeonManager
-        from legacy_skill_system import LegacySkillRegistry, LegacySkillManager
-        from reincarnation_challenge_system import ReincarnationChallengeRegistry, ReincarnationChallengeManager
-        from skill_fusion_system import SkillFusionRegistry, SkillFusionManager
-        from skill_evolution_system import SkillEvolutionRegistry, SkillEvolutionManager
-        from skill_awakening_system import SkillAwakeningRegistry, SkillAwakeningManager
-        from skill_transfer_system import SkillTransferRegistry, SkillTransferManager
-        from skill_resonance_system import SkillResonanceRegistry, SkillResonanceManager
-        from skill_inheritance_system import SkillInheritanceRegistry, SkillInheritanceManager
-        from skill_specialization_system import SkillSpecializationRegistry, SkillSpecializationManager
-        from storyteller_system import StorytellerRegistry, StorytellerManager
-        from choice_system import ChoiceRegistry, ChoiceManager
-        from world_state_system import WorldStateRegistry, WorldStateManager
-        from procedural_dungeon_generator import DungeonThemeRegistry, ProceduralDungeonGenerator
-        from relationship_system import RelationshipRegistry, RelationshipManager
-        from world_event_system import WorldEventRegistry, WorldEventManager
-        from meta_progression_system import MetaProgressionRegistry, MetaProgressionManager
-        from procedural_quest_generator import (
-            QuestGenerationRegistry, ProceduralQuestGenerator, ProceduralQuestManager
-        )
-        from archaeology_system import ArchaeologyRegistry, ArchaeologyManager
+        from data_manager import DataManager
+        from ai_system import AdvancedAISystem
 
-        self.event_bus = EventBus()
+        # Core systems are now provided by CorePackage via Kernel
         self.fx_manager = FXManager(event_bus=self.event_bus)
-        self.msg_log = MessageLog(max_history=200)
-        self.time_system = TimeSystem(event_bus=self.event_bus)
-        self.turn_queue = TurnQueue(self.time_system)
         self.unique_mgr = UniqueItemManager()
-        self.debug = DebugConsole()
-        self.main_quest_system = MainQuestSystem()
-        # Quest Scheduler (Phase 3 Step 10)
-        self.quest_scheduler = QuestScheduler()
-        self.journal_ui = JournalUI()
-
 
         self.fusion_registry = FusionRegistry()
         self.fusion_registry.load()
 
-        # Guild & Faction
-        self.guild_registry = GuildRegistry()
-        self.guild_registry.load()
-        self.guild_manager = self.systems_coordinator.register_system("guild_manager", GuildManager(self.guild_registry))
-
-        self.guild_quest_registry = GuildQuestRegistry()
-        self.guild_quest_registry.load()
-        self.guild_quest_manager = self.systems_coordinator.register_system("guild_quest_manager", GuildQuestManager(self.guild_quest_registry))
-
-        self.faction_war_registry = FactionWarRegistry()
-        self.faction_war_registry.load()
-        self.faction_war_manager = self.systems_coordinator.register_system("faction_war_manager", FactionWarManager(self.faction_war_registry))
-
-        self.guild_skill_registry = GuildSkillRegistry()
-        self.guild_skill_registry.load()
-        self.guild_skill_manager = self.systems_coordinator.register_system("guild_skill_manager", GuildSkillManager(self.guild_skill_registry))
-
-        # Pets
-        self.pet_contract_registry = PetContractRegistry()
-        self.pet_contract_registry.load()
-        self.pet_contract_manager = self.systems_coordinator.register_system("pet_contract_manager", PetContractManager(self.pet_contract_registry))
-
-        self.pet_evolution_registry = PetEvolutionRegistry()
-        self.pet_evolution_registry.load()
-        self.pet_evolution_manager = self.systems_coordinator.register_system("pet_evolution_manager", PetEvolutionManager(self.pet_evolution_registry))
-
-        self.pet_fusion_registry = PetFusionRegistry()
-        self.pet_fusion_registry.load()
-        self.pet_fusion_manager = self.systems_coordinator.register_system("pet_fusion_manager", PetFusionManager(self.pet_fusion_registry))
-
-        # Achievements
-        self.achievement_registry = AchievementRegistry()
-        self.achievement_registry.load()
-        self.achievement_manager = self.systems_coordinator.register_system("achievement_manager", AchievementManager(self.achievement_registry))
-
-        # Reincarnation
-        self.reincarnation_registry = ReincarnationRegistry()
-        self.reincarnation_registry.load()
-        self.reincarnation_manager = self.systems_coordinator.register_system("reincarnation_manager", ReincarnationManager(self.reincarnation_registry))
-
-        self.inheritance_registry = InheritanceRegistry()
-        self.inheritance_registry.load()
-        self.inheritance_manager = self.systems_coordinator.register_system("inheritance_manager", InheritanceManager(self.inheritance_registry))
-
-        self.karma_registry = KarmaRegistry()
-        self.karma_registry.load()
-        self.karma_manager = self.systems_coordinator.register_system("karma_manager", KarmaManager(self.karma_registry))
-
-        self.reincarnation_dungeon_registry = ReincarnationDungeonRegistry()
-        self.reincarnation_dungeon_registry.load()
-        self.reincarnation_dungeon_manager = self.systems_coordinator.register_system("reincarnation_dungeon_manager", ReincarnationDungeonManager(self.reincarnation_dungeon_registry))
-
-        self.legacy_skill_registry = LegacySkillRegistry()
-        self.legacy_skill_registry.load()
-        self.legacy_skill_manager = self.systems_coordinator.register_system("legacy_skill_manager", LegacySkillManager(self.legacy_skill_registry))
-
-        self.challenge_registry = ReincarnationChallengeRegistry()
-        self.challenge_registry.load()
-        self.challenge_manager = self.systems_coordinator.register_system("challenge_manager", ReincarnationChallengeManager(self.challenge_registry))
-
-        # Skill Fusion & Evolution
-        self.skill_fusion_registry = SkillFusionRegistry()
-        self.skill_fusion_registry.load()
-        self.skill_fusion_manager = self.systems_coordinator.register_system("skill_fusion_manager", SkillFusionManager(self.skill_fusion_registry))
-
-        self.skill_evolution_registry = SkillEvolutionRegistry()
-        self.skill_evolution_registry.load()
-        self.skill_evolution_manager = self.systems_coordinator.register_system("skill_evolution_manager", SkillEvolutionManager(self.skill_evolution_registry))
-
-        self.skill_awakening_registry = SkillAwakeningRegistry()
-        self.skill_awakening_registry.load()
-        self.skill_awakening_manager = self.systems_coordinator.register_system("skill_awakening_manager", SkillAwakeningManager(self.skill_awakening_registry))
-
-        self.skill_transfer_registry = SkillTransferRegistry()
-        self.skill_transfer_registry.load()
-        self.skill_transfer_manager = self.systems_coordinator.register_system("skill_transfer_manager", SkillTransferManager(self.skill_transfer_registry))
-
-        self.skill_resonance_registry = SkillResonanceRegistry()
-        self.skill_resonance_registry.load()
-        self.skill_resonance_manager = self.systems_coordinator.register_system("skill_resonance_manager", SkillResonanceManager(self.skill_resonance_registry))
-
-        self.skill_inheritance_registry = SkillInheritanceRegistry()
-        self.skill_inheritance_registry.load()
-        self.skill_inheritance_manager = self.systems_coordinator.register_system("skill_inheritance_manager", SkillInheritanceManager(self.skill_inheritance_registry))
-
-        self.skill_specialization_registry = SkillSpecializationRegistry()
-        self.skill_specialization_registry.load()
-        self.skill_specialization_manager = self.systems_coordinator.register_system("skill_specialization_manager", SkillSpecializationManager(self.skill_specialization_registry))
-
-        # Storyteller & World
-        self.storyteller_registry = StorytellerRegistry()
-        self.storyteller_registry.load()
-        self.storyteller_manager = self.systems_coordinator.register_system("storyteller_manager", StorytellerManager(self.storyteller_registry))
-
-        self.choice_registry = ChoiceRegistry()
-        self.choice_registry.load()
-        self.choice_manager = self.systems_coordinator.register_system("choice_manager", ChoiceManager(self.choice_registry))
-
-        self.world_state_registry = WorldStateRegistry()
-        self.world_state_registry.load()
-        self.world_state_manager = self.systems_coordinator.register_system("world_state_manager", WorldStateManager(self.world_state_registry))
-
-        self.dungeon_theme_registry = DungeonThemeRegistry()
-        self.dungeon_theme_registry.load()
-        self.procedural_dungeon_generator = self.systems_coordinator.register_system("procedural_dungeon_generator", ProceduralDungeonGenerator(self.dungeon_theme_registry))
-
-        self.relationship_registry = RelationshipRegistry()
-        self.relationship_registry.load()
-        self.relationship_manager = self.systems_coordinator.register_system("relationship_manager", RelationshipManager(self.relationship_registry))
-
-        self.world_event_registry = WorldEventRegistry()
-        self.world_event_registry.load()
-        self.world_event_manager = self.systems_coordinator.register_system("world_event_manager", WorldEventManager(self.world_event_registry))
-
-        # Procedural Quest Generation (Steps 15-36)
-        self.quest_generation_registry = QuestGenerationRegistry()
-        self.quest_generation_registry.load()
-        self.procedural_quest_generator = ProceduralQuestGenerator(self.quest_generation_registry)
-        self.procedural_quest_manager = self.systems_coordinator.register_system(
-            "procedural_quest_manager", ProceduralQuestManager(self.procedural_quest_generator))
-
-        # 考古学・発掘・解読メタゲーム (Steps 25, 15)
-        self.archaeology_registry = ArchaeologyRegistry()
-        self.archaeology_registry.load()
-        self.archaeology_manager = self.systems_coordinator.register_system(
-            "archaeology_manager", ArchaeologyManager(self.archaeology_registry))
-
-        # Meta Progression
-        self.meta_progression_registry = MetaProgressionRegistry()
-        self.meta_progression_registry.load()
-        self.meta_progression_manager = self.systems_coordinator.register_system("meta_progression_manager", MetaProgressionManager(self.meta_progression_registry))
-
         # Data & AI Systems
-        from data_manager import DataManager
-        from ai_system import AdvancedAISystem
         self.data_manager = self.systems_coordinator.register_system("data_manager", DataManager())
         self.ai_system = self.systems_coordinator.register_system("ai_system", AdvancedAISystem())
 
         # 一括初期化 (Step 14)
         self.systems_coordinator.initialize_all(self)
-
-
     @property
     def floating_texts(self) -> List[FloatingText]:
         return self.fx_manager.floating_texts
@@ -810,36 +865,8 @@ class Engine:
         return None
 
     def _spawn_dungeon(self) -> None:
-        for room in self.game_map.rooms[1:]:
-            if random.random() < SPAWN_SNAIL_CHANCE:
-                gx = random.randint(room.x1 + 1, room.x2 - 1)
-                gy = random.randint(room.y1 + 1, room.y2 - 1)
-                gwen = Entity(gx, gy, "🐌", SNAIL_COLOR, "かたつむり少女『グウェン』", speed=SNAIL_SPEED)
-                gwen.status_effects = []
-                gwen.faction = "townsfolk"
-                self.entity_manager.add_entity(gwen)
-
-            if random.random() < SPAWN_MONSTER_CHANCE:
-                mx, my = random.randint(room.x1+1, room.x2-1), random.randint(room.y1+1, room.y2-1)
-                if hasattr(self, "data_manager"):
-                    mob = self.data_manager.get_random_monster_for_floor(self.dungeon_level, mx, my)
-                else:
-                    mob = MonsterPreset.create(random.choice(["slime","slime","goblin","orc"]), mx, my)
-                self.entity_manager.add_entity(mob)
-
-            if random.random() < SPAWN_ITEM_CHANCE:
-                ix, iy = random.randint(room.x1+1, room.x2-1), random.randint(room.y1+1, room.y2-1)
-                if hasattr(self, "data_manager"):
-                    itm = self.data_manager.get_random_item_for_floor(self.dungeon_level, ix, iy)
-                else:
-                    itm = create_sample_item(random.choice(["potion_heal","bread","ration","shortsword","leather_armor"]), ix, iy)
-                self.entity_manager.add_item(itm)
-
-            # 採取ポイント (ステップ46)
-            if random.random() < SPAWN_RESOURCE_NODE_CHANCE:
-                rx, ry = random.randint(room.x1+1, room.x2-1), random.randint(room.y1+1, room.y2-1)
-                ntype = random.choice(["herb","mushroom","ore_vein"])
-                self.entity_manager.add_resource_node(ResourceNode(rx, ry, ntype))
+        """ダンジョン内のエンティティ生成 (GameplayPackage 経由)"""
+        self.dungeon_spawner(self.kernel, self)
 
     def has_los(self, p1: Point, p2: Point) -> bool:
         """射線判定 (ステップ21)"""
@@ -865,48 +892,8 @@ class Engine:
         return self.entity_manager.get_entity_at(x, y)
 
     def player_act(self, dx: int, dy: int) -> bool:
-        tx, ty = self.player.x + dx, self.player.y + dy
-        target = self.get_entity_at(tx, ty)
-
-        if target and target not in (self.player, self.pet):
-            if "グウェン" in target.name:
-                self.survival.karma -= 15
-                self.log("【悪行】グウェンを攻撃した！ (Karma -15)", (255, 80, 80))
-            weapon = self.inventory.equipment.get("main_hand")
-            dmg, is_crit, msg = CombatSystem.calculate_melee_attack(self.player, target, weapon)
-            self.log(msg, (255, 130, 130) if is_crit else (240, 240, 240))
-            SoundManager.play_se("hit")
-
-            # 画面シェイク & ポップアップ (Step 2.3)
-            if is_crit:
-                if hasattr(self, "screen_shake"):
-                    self.screen_shake.trigger(intensity=1.5, duration=4)
-
-            # ポップアップダメージ (Phase 6)
-            self.floating_texts.append(FloatingText(f"-{dmg}", target.x, target.y - 0.2, (255, 100, 100) if not is_crit else (255, 230, 80)))
-
-            for l in self.player.gain_skill_exp("long_sword", 18):
-                self.log(l, (150, 255, 150))
-            target.hp -= dmg
-            if target.hp <= 0:
-                self._on_kill(target)
-            self.player.energy -= ENERGY_THRESHOLD
-            return True
-
-        elif self.game_map.is_walkable(tx, ty) and not self.get_entity_at(tx, ty):
-            self.player.x, self.player.y = tx, ty
-            if (tx, ty) == self.altar_pos:
-                self.log(f"神【{GodInfo.GODS[self.player.god_id]['name']}】の祭壇。([p]祈る [o]捧げる)", (255, 215, 0))
-            tile = self.game_map.tiles[tx][ty]
-            if tile == TILE_TRAP:
-                self.player.hp -= 6
-                if hasattr(self, "screen_shake"):
-                    self.screen_shake.trigger(intensity=1.0, duration=3)
-                self.floating_texts.append(FloatingText("-6", self.player.x, self.player.y - 0.2, (255, 80, 80)))
-                self.log("トラップ発動！ 毒矢が急所を貫く！ (-6 HP)", (255, 80, 80), level="WARNING")
-            self.player.energy -= ENERGY_THRESHOLD
-            return True
-        return False
+        """プレイヤー行動 (GameplayPackage 経由)"""
+        return self.gameplay_loop(self.kernel, self).player_act(dx, dy)
 
     def _on_kill(self, entity: Entity) -> None:
         # メインクエストの進行を更新
@@ -1030,55 +1017,17 @@ class Engine:
             self.log(m, (255, 215, 0), level="SUCCESS")
 
     def advance_world(self) -> None:
-        """速度Tick制による全NPCターン処理 (ステップ10-15)"""
-        max_cycles = 200
-        cycle = 0
-        while self.player.energy < ENERGY_THRESHOLD and cycle < max_cycles:
-            cycle += 1
-            actor, _ = self.turn_queue.step_next_actor(self.entity_manager.get_living_entities())
-            if not actor or actor == self.player:
-                break
-            if actor == self.pet:
-                self._pet_ai()
-            else:
-                self._npc_ai(actor)
+        """速度Tick制による全NPCターン処理 (GameplayPackage 経由)"""
+        self.gameplay_loop(self.kernel, self).advance_world()
 
-        # 状態異常処理 (全エンティティ: ステップ16, 45)
-        player_bleeding = False
-        for entity in list(self.entity_manager.get_living_entities()):
-            if entity.hp > 0:
-                logs, is_bleeding = CombatSystem.process_status_effects(entity)
-                if entity == self.player:
-                    player_bleeding = is_bleeding
-                if logs and (entity == self.player or self.has_los(Point(self.player.x, self.player.y), Point(entity.x, entity.y))):
-                    for l in logs:
-                        self.log(l, (200, 80, 80))
-
-        # 食料腐敗 (インベントリ + 地面アイテム: ステップ35)
-        for msg in self.inventory.tick_food_rot(ticks=5):
-            self.log(msg, (180, 120, 60))
-        for item in self.entity_manager.items_on_ground:
-            item.tick_rot(ticks=5)
-
-        # サバイバル
-        for l in self.survival.pass_turn(self.player):
-            self.log(l, (255, 180, 100))
-
-        # Quest Scheduler: 時間経過でスケジュール再評価 (Phase 3 Step 11)
-        if hasattr(self, 'quest_scheduler'):
-            context = ScheduleContext.from_engine(self)
-            available = self.quest_scheduler.get_available_quests(context, self.player)
-            for schedule in available:
-                # メインクエストシステムと連携: スケジュール許可クエストを AVAILABLE に
-                from main_quest_system import QuestStatus
-                if schedule.quest_id in self.main_quest_system.quests:
-                    quest = self.main_quest_system.quests[schedule.quest_id]
-                    if quest.status == QuestStatus.LOCKED:
-                        quest.status = QuestStatus.AVAILABLE
-                        self.log(f"【スケジュール】クエスト「{schedule.title}」が利用可能になりました。", (100, 200, 255))
-
+        # 以下は Engine 固有の処理（自然回復、世界ニュース、オートセーブ等）
         # 自然回復(出血中は停止: ステップ45)
         self.turns += 1
+        # プレイヤー出血状態をチェック
+        player_bleeding = any(
+            isinstance(e, StatusEffect) and e.effect_type == "bleeding"
+            for e in self.player.status_effects
+        )
         if self.turns % 4 == 0 and self.survival.hunger > 1000 and not player_bleeding:
             self.player.hp = min(self.player.max_hp, self.player.hp + 1)
             self.player.mp = min(self.player.max_mp, self.player.mp + 1)
@@ -1653,12 +1602,138 @@ class Engine:
                 console.print(x=1, y=y, string=line, fg=(255, 255, 255))
                 y += 1
             return
+        
+        # Use new TCODRenderer with lighting and particle systems
+        from core.tcod_renderer import TCODRenderer
+        
+        # Create or reuse renderer
+        if not hasattr(self, '_tcod_renderer') or self._tcod_renderer is None:
+            self._tcod_renderer = TCODRenderer(console.width, console.height)
+            self._tcod_renderer.initialize_context(sdl_window=False)
+            # Use the existing console
+            self._tcod_renderer.console = console
+            self._tcod_renderer.context = None  # Will use console directly
+        
+        renderer = self._tcod_renderer
+        
+        # Frame time for lighting/particles
+        frame_time = 1.0 / 60.0  # Assume 60 FPS
+        if hasattr(self, '_last_render_time'):
+            import time
+            frame_time = time.time() - self._last_render_time
+        self._last_render_time = time.time() if 'time' in dir() else 0
+        
+        renderer.begin_frame()
+        
+        # Camera
+        cam_x = max(0, min(MAP_WIDTH - VIEW_WIDTH, self.game_state_data.player.x - VIEW_WIDTH // 2))
+        cam_y = max(0, min(MAP_HEIGHT - VIEW_HEIGHT, self.game_state_data.player.y - VIEW_HEIGHT // 2))
+        
+        # Prepare lighting data
+        from core.lighting import LightMap, LightSource, EnemyCone
+        import math
+        
+        # Light map from game_map
+        light_map = None
+        if hasattr(self.game_state_data, 'game_map'):
+            gm = self.game_state_data.game_map
+            # Build light map from visible/explored
+            intensity_grid = []
+            color_grid = []
+            for y in range(VIEW_HEIGHT):
+                my = cam_y + y
+                intensity_row = []
+                color_row = []
+                for x in range(VIEW_WIDTH):
+                    mx = cam_x + x
+                    if 0 <= mx < MAP_WIDTH and 0 <= my < MAP_HEIGHT:
+                        if gm.visible[my][mx]:
+                            intensity_row.append(1.0)
+                            color_row.append((255, 240, 210))
+                        elif gm.explored[my][mx]:
+                            intensity_row.append(0.0)
+                            color_row.append((40, 42, 55))
+                        else:
+                            intensity_row.append(-1.0)
+                            color_row.append((0, 0, 0))
+                    else:
+                        intensity_row.append(-1.0)
+                        color_row.append((0, 0, 0))
+                intensity_grid.append(intensity_row)
+                color_grid.append(color_row)
+            
+            light_map = LightMap(intensity=intensity_grid, color=color_grid)
+        
+        # Light sources (player lantern, torches, altar)
+        light_sources = []
+        p = self.game_state_data.player
+        # Player lantern
+        light_sources.append(LightSource(
+            x=p.x, y=p.y, radius=7.5, intensity=1.0, color=(255, 240, 210)
+        ))
+        # Torches on map
+        if hasattr(self, 'game_map') and hasattr(self.game_map, 'torches'):
+            for tx, ty in self.game_map.torches:
+                light_sources.append(LightSource(
+                    x=tx, y=ty, radius=7.5, intensity=0.8, color=(255, 180, 100)
+                ))
+        # Altar
+        if hasattr(self.game_state_data, 'altar_pos'):
+            ax, ay = self.game_state_data.altar_pos
+            if 0 <= ax < MAP_WIDTH and 0 <= ay < MAP_HEIGHT:
+                light_sources.append(LightSource(
+                    x=ax, y=ay, radius=4.0, intensity=0.8, color=(100, 200, 255)
+                ))
+        
+        # Enemy cones
+        enemy_cones = []
+        for ent in self.entity_manager.get_entities():
+            if not ent.is_player and ent.hp > 0 and self.game_state_data.game_map.visible[ent.x][ent.y]:
+                ang = math.atan2(p.y - ent.y, p.x - ent.x)
+                enemy_cones.append(EnemyCone(
+                    x=ent.x, y=ent.y, angle=ang, half_angle=0.6, range=6.0, color=(255, 60, 60)
+                ))
+        
+        # Particles from fx_manager
+        particles = []
+        if hasattr(self, 'fx_manager') and hasattr(self.fx_manager, 'particles'):
+            for pt in self.fx_manager.particles:
+                particles.append(type('Particle', (), {
+                    'type': 'dust',  # default
+                    'x': float(pt.x),
+                    'y': float(pt.y),
+                    'life': getattr(pt, 'life', 5),
+                    'max_life': getattr(pt, 'life', 5),
+                    'color': pt.color,
+                    'char': pt.char
+                })())
+        
+        # Send lighting/particle data to renderer
+        from core.renderer_base import LightingDrawCall, ParticleDrawCall
+        renderer.draw_lighting(LightingDrawCall(
+            light_map=light_map,
+            light_sources=light_sources,
+            enemy_cones=enemy_cones,
+            ambient_light=0.08,
+            time=getattr(self, '_render_time', 0.0)
+        ))
+        renderer.draw_particles(ParticleDrawCall(particles=particles))
+        
+        # Update render time
+        if not hasattr(self, '_render_time'):
+            self._render_time = 0.0
+        self._render_time += 1.0 / 60.0
+        
+        # Execute render passes in correct order:
+        # 1. Lighting pass (base + additive) - BEFORE tile/entity rendering
+        renderer.render_lighting_pass(cam_x, cam_y, VIEW_WIDTH, VIEW_HEIGHT,
+                                      visible=self.game_state_data.game_map.visible,
+                                      explored=self.game_state_data.game_map.explored,
+                                      time=self._render_time)
+        
+        # 2. Delegate to RenderSystem for map/items/entities (they will draw on top of lit background)
         from render_system import RenderSystem
-        from renderer import TcodRenderer
         from render_context import RenderContext
-        # Step 7: Renderer インターフェースをコンソール実装で活用
-        self.renderer = TcodRenderer(console)
-        # Create render context
         render_context = RenderContext(
             game_map=self.game_state_data.game_map,
             player=self.game_state_data.player,
@@ -1687,6 +1762,12 @@ class Engine:
             altar_pos=self.game_state_data.altar_pos
         )
         RenderSystem.render_all(console, render_context)
+        
+        # 3. Particle pass (topmost layer)
+        renderer.render_particles_pass(cam_x, cam_y)
+        
+        # End frame
+        renderer.end_frame(1/60)
 
 
 def get_tabbed_items(engine: Engine) -> List[Item]:

@@ -7,9 +7,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Sans+JP:wght@400;500;700;900&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/design_tokens.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+  <link rel="stylesheet" href="/assets/css/themes.css">
   <link rel="stylesheet" href="theme.css">
   <script src="https://cdn.pixijs.com/pixi.js"></script>
-  <script type="module" src="demos/lib/TextureAtlas.js"></script>
+  <script type="module" src="demos/lib/TileAtlas.js"></script>
   <script type="module" src="demos/lib/LightingSystem.js"></script>
   <script type="module" src="demos/lib/ParticleSystem.js"></script>
   <script type="module" src="demos/lib/PostProcessManager.js"></script>
@@ -488,6 +491,11 @@
     <!-- CANVAS VIEWPORT -->
     <div class="viewport-panel" id="viewportPanel">
       <canvas id="gameCanvas" width="960" height="576"></canvas>
+      <div id="gl-error-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); color:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:100; text-align:center; padding:20px;">
+        <h2 style="color:#e74c3c; margin-bottom:10px;">⚠️ グラフィックス初期化警告</h2>
+        <p id="gl-error-msg" style="margin-bottom:15px; max-width:500px;">WebGL2 / WebGPU の初期化に失敗したか、サポートされていません。フォールバック描画モードで動作しています。</p>
+        <button onclick="document.getElementById('gl-error-overlay').style.display='none'" style="background:var(--primary-accent,#3498db); color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">閉じる</button>
+      </div>
 
       <!-- HUD OVERLAY -->
       <div class="hud-overlay">
@@ -822,11 +830,12 @@
     resize();
 
     // テクスチャアトラス
-    let textureAtlas = null;
-    let tileTextures = {};
+    let tileAtlas = null;
+    let tileAnimCache = {};      // 静的タイルアニメーションキャッシュ
+    let entityAnimCache = {};    // エンティティアニメーションキャッシュ
 
-    // テクスチャアトラスのロード
-    async function loadTextureAtlas() {
+    // TileAtlasの初期化
+    async function initTileAtlas() {
         try {
             // アトラス画像をロード
             const atlasImage = new Image();
@@ -876,39 +885,115 @@
             
             console.log('Texture atlas and normal maps loaded successfully');
         } catch (error) {
-            console.error('Failed to load texture atlas:', error);
-            // フォールバック: プレースホルダーテクスチャを使用
-            createPlaceholderTextures();
+            console.error('Failed to load TileAtlas:', error);
         }
     }
 
-    // プレースホルダーテクスチャを作成（フォールバック用）
-    function createPlaceholderTextures() {
-        const graphics = new PIXI.Graphics();
-        graphics.beginFill(0xffffff);
-        graphics.drawRect(0, 0, 1, 1);
-        graphics.endFill();
-        const texture = graphics.generateCanvasTexture();
-        
-        tileTextures = {
-            '#': createColoredTexture(texture, 0x3d4253),
-            '.': createColoredTexture(texture, 0x1c2230),
-            '>': createColoredTexture(texture, 0x27ae60),
-            ' ': createColoredTexture(texture, 0x0f121a),
-            '⛩️': createColoredTexture(texture, 0x1c2230)
+    // タイル描画用ヘルパー: マップ配列からタイルIDを解決
+    function getTileDefId(mapTile) {
+        // マップから送られてくる文字をTileDef IDにマッピング
+        const map = {
+            '#': 'TILE_WALL',
+            '.': 'TILE_FLOOR',
+            '>': 'TILE_STAIRS_DOWN',
+            '<': 'TILE_STAIRS_UP',
+            '~': 'TILE_WATER',
+            '^': 'TILE_TRAP',
+            '⛩️': 'TILE_FLOOR',  // 祭壇は床扱い
         };
-        console.log('Using placeholder textures');
+        return map[mapTile] || 'TILE_FLOOR';
     }
 
-    // 色付きテクスチャを作成するヘルパー関数
-    function createColoredTexture(baseTexture, color) {
-        const sprite = new PIXI.Sprite(baseTexture);
-        sprite.tint = color;
-        return sprite;
+    // タイル描画用ヘルパー: アニメーションタイルかどうか判定
+    function isAnimatedTile(tileId) {
+        const td = tileAtlas?.defs[tileId];
+        return td && td.animated;
     }
 
-    // テクスチャアトラスを初期化
-    loadTextureAtlas();
+    // 向き計算ヘルパー (0:下, 1:左, 2:右, 3:上)
+    function calculateFacing(dx, dy) {
+        if (Math.abs(dx) > Math.abs(dy)) {
+            return dx > 0 ? 2 : 1;
+        } else {
+            return dy > 0 ? 0 : 3;
+        }
+    }
+
+    // 前フレーム位置から向き推定
+    function estimateFacing(ent, prevEntities) {
+        if (!prevEntities) return ent.facing || 0;
+        const prev = prevEntities.find(e => e.id === ent.id || (e.world_x === ent.world_x && e.world_y === ent.world_y));
+        if (!prev) return ent.facing || 0;
+        const dx = ent.x - prev.x;
+        const dy = ent.y - prev.y;
+        if (dx === 0 && dy === 0) return ent.facing || 0;
+        return calculateFacing(dx, dy);
+    }
+
+    // エンティティごとの攻撃タイマー管理
+    const entityAttackTimers = new Map(); // entity_id -> { timer, duration }
+
+    // 汎用エンティティTileDef ID解決
+    function getEntityTileId(ent) {
+        if (ent.is_player) return "PLAYER";
+        if (ent.is_pet) return "PET";
+        // 将来的に種別対応:
+        // if (ent.monster_type) return MONSTER_TYPE_MAP[ent.monster_type] || "ENEMY_GOBLIN";
+        return "ENEMY_GOBLIN";
+    }
+
+    function updateEntityAttackState(ent) {
+        // サーバーから attack_timer が来ていれば優先
+        if (ent.attack_timer > 0) {
+            const id = ent.id || `${ent.world_x},${ent.world_y}`;
+            entityAttackTimers.set(id, { timer: ent.attack_timer, duration: 0.5 });
+            return true;
+        }
+        return false;
+    }
+
+    // TileAtlas初期化
+    initTileAtlas();
+
+    // パフォーマンス監視
+    let lastFrameTime = performance.now();
+    let frameCount = 0;
+    let fps = 60;
+    let qualityReduced = false;
+
+    function monitorPerformance() {
+        const now = performance.now();
+        const dt = now - lastFrameTime;
+        lastFrameTime = now;
+        fps = Math.round(1000 / dt);
+        frameCount++;
+
+        if (frameCount % 60 === 0) {
+            console.log(`FPS: ${fps}, Draw calls: ${pixiApp.renderer.drawCount || 'N/A'}`);
+        }
+
+        if (fps < 30 && !qualityReduced) {
+            qualityReduced = true;
+            console.warn('Performance low, reducing quality');
+            if (particleSystem) particleSystem.maxParticles = 250;
+            if (postProcessManager) postProcessManager.setBloomEnabled(false);
+            if (tileAtlas) {
+                for (const anim of tileAtlas.animatedSpriteCache.values()) {
+                    anim.animationSpeed *= 0.5;
+                }
+            }
+        } else if (fps > 50 && qualityReduced) {
+            qualityReduced = false;
+            console.log('Performance recovered, restoring quality');
+            if (particleSystem) particleSystem.maxParticles = 500;
+            if (postProcessManager) postProcessManager.setBloomEnabled(true);
+            if (tileAtlas) {
+                for (const anim of tileAtlas.animatedSpriteCache.values()) {
+                    anim.animationSpeed *= 2;
+                }
+            }
+        }
+    }
 
     let gameState = null;
     let animTime = 0;
@@ -919,6 +1004,9 @@
 
     function render() {
       animTime += 0.05;
+      
+      // パフォーマンス監視
+      monitorPerformance();
       
       // パーティクルシステムを更新
       particleSystem.update(0.016); // 約60fps想定
@@ -1003,68 +1091,44 @@
             postProcessManager.setColorGrade(gameState.dungeon_level || 0);
         }
 
-        // 1. タイル描画 (床・壁・階段) - テクスチャアトラス使用
+        // 1. タイル描画 (床・壁・階段) - TileAtlas使用
         for (let y = 0; y < viewH; y++) {
           for (let x = 0; x < viewW; x++) {
-            const tile = map[y][x];
+            const mapTile = map[y][x];
+            const tileId = getTileDefId(mapTile);
             const light = lightMap[y] ? lightMap[y][x] : 0;
 
             const px = offsetX + x * TILE_SIZE;
             const py = offsetY + y * TILE_SIZE;
 
-            // タイルのテクスチャを取得
-            const texture = tileTextures[tile];
-            
-            if (texture) {
-              // テクスチャアトラスからテクスチャを使用
-              const tileSprite = new PIXI.Sprite(texture.texture || texture);
-              tileSprite.width = TILE_SIZE;
-              tileSprite.height = TILE_SIZE;
-              
-              // ライティングはライティングシステムで処理するため、
-              // ここでは基本色のみを設定
-              tileSprite.tint = 0xffffff;
-              
-              tileSprite.x = px;
-              tileSprite.y = py;
-              tileLayer.addChild(tileSprite);
-            } else {
-              // フォールバック: テクスチャが見つからない場合はGraphicsで描画
-              const tileGraphics = new PIXI.Graphics();
-              
-              // 地形ベースカラー
-              if (tile === "#") {
-                // 壁
-                tileGraphics.beginFill(light > 0 ? 0x3d4253 : 0x1a1d26);
-                tileGraphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
-                tileGraphics.endFill();
-                // 壁ベベル（簡易版）
-                tileGraphics.lineStyle(1, light > 0 ? 0x5a627a : 0x282c3a);
-                tileGraphics.drawRect(1, 1, TILE_SIZE - 2, TILE_SIZE - 2);
-              } else if (tile === "." || tile === " " || tile === "⛩️") {
-                // 床または空白または祭壇
-                tileGraphics.beginFill(light > 0 ? 0x1c2230 : 0x0f121a);
-                tileGraphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
-                tileGraphics.endFill();
-                // グリッド線（簡易版）
-                tileGraphics.lineStyle(1, 0xffffff * 0.03); // rgba(255,255,255,0.03)
-                tileGraphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
-              } else if (tile === ">") {
-                // 階段下
-                tileGraphics.beginFill(0x27ae60);
-                tileGraphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
-                tileGraphics.endFill();
+            // オートタイルバリアント計算（壁・床のみ）
+            let variant = 0;
+            if (tileId === "TILE_WALL" || tileId === "TILE_FLOOR") {
+              variant = tileAtlas.calculateNeighborMask(map, x, y, tileId);
+            }
+
+            // アニメーションタイル判定
+            const td = tileAtlas.defs[tileId];
+            let sprite;
+            if (td && td.animated) {
+              // アニメーションスプライト作成・キャッシュ
+              const animKey = `${tileId}_${variant}_${td.states?.[0]||'idle'}_${td.fps}`;
+              if (!tileAnimCache[animKey]) {
+                tileAnimCache[animKey] = tileAtlas.createAnimatedSprite(tileId, { variant, fps: td.fps });
               }
-              
-              // タイルを配置
-              tileGraphics.x = px;
-              tileGraphics.y = py;
-              tileLayer.addChild(tileGraphics);
+              sprite = tileAnimCache[animKey];
+              sprite.x = px; sprite.y = py;
+              if (sprite.parent !== tileLayer) tileLayer.addChild(sprite);
+            } else {
+              // 静的スプライト
+              sprite = tileAtlas.createSprite(tileId, { variant });
+              sprite.x = px; sprite.y = py;
+              tileLayer.addChild(sprite);
             }
           }
         }
         
-        // 2. エンティティ描画 (プレイヤー・ペット・モンスター) - デバッグ用に色付き矩形で仮実装
+        // 2. エンティティ描画 (プレイヤー・ペット・モンスター) - TileAtlasアニメーションスプライト使用
         const entities = gameState.entities || [];
         const player = gameState.player;
         
@@ -1135,6 +1199,9 @@
           prevPlayerHp = player.hp;
         }
         
+        // 前フレームエンティティ保存（向き推定用）
+        const prevEntities = entities.map(e => ({...e}));
+        
         // フローティングテキストに応じたパーティクル
         if (gameState.floating_texts) {
           gameState.floating_texts.forEach(ft => {
@@ -1155,57 +1222,64 @@
           // 息遣いアニメーション
           const bounce = Math.sin(animTime * 4 + ent.x) * 1.5;
 
-          // エンティティのテクスチャを取得
-          const entityTexture = tileTextures[ent.char];
+          // エンティティのTileDef ID決定
+          let tileId = getEntityTileId(ent);
           
-          if (entityTexture) {
-            // テクスチャアトラスからテクスチャを使用
-            const entitySprite = new PIXI.Sprite(entityTexture.texture || entityTexture);
-            entitySprite.width = TILE_SIZE;
-            entitySprite.height = TILE_SIZE;
-            
-            // エンティティタイプ別の色調
-            if (ent.is_player) {
-              entitySprite.tint = 0xffffff; // プレイヤー：白
-            } else if (ent.is_pet) {
-              entitySprite.tint = 0xffb6c1; // ペット：ピンク
-            } else {
-              entitySprite.tint = 0xff6666; // モンスター：赤系
-            }
-            
-            entitySprite.x = px;
-            entitySprite.y = py + bounce;
-            entityLayer.addChild(entitySprite);
-          } else {
-            // フォールバック: テクスチャが見つからない場合はGraphicsで描画
-            const entityGraphics = new PIXI.Graphics();
-            
-            // エンティティタイプ別の色と形状
-            if (ent.is_player) {
-              // プレイヤー: 白い円
-              entityGraphics.beginFill(0xffffff);
-              entityGraphics.drawCircle(0, 0, TILE_SIZE * 0.4);
-              entityGraphics.endFill();
-            } else if (ent.is_pet) {
-              // ペット: ピンクの円
-              entityGraphics.beginFill(0xffb6c1);
-              entityGraphics.drawCircle(0, 0, TILE_SIZE * 0.4);
-              entityGraphics.endFill();
-            } else {
-              // モンスター: 赤い三角形（簡易表現）
-              entityGraphics.beginFill(0xff0000);
-              entityGraphics.moveTo(0, -TILE_SIZE * 0.3);
-              entityGraphics.lineTo(-TILE_SIZE * 0.3, TILE_SIZE * 0.3);
-              entityGraphics.lineTo(TILE_SIZE * 0.3, TILE_SIZE * 0.3);
-              entityGraphics.closePath();
-              entityGraphics.endFill();
-            }
-            
-            // エンティティを配置
-            entityGraphics.x = px;
-            entityGraphics.y = py + bounce;
-            entityLayer.addChild(entityGraphics);
+          const td = tileAtlas.defs[tileId];
+          if (!td) return;
+
+          // 向き決定: サーバー優先 → 推定
+          const dir = ent.facing !== undefined ? ent.facing : estimateFacing(ent, prevEntities);
+          
+          // 状態決定: サーバー優先 → 推定
+          let state = ent.state || "idle";
+          const isAttacking = state === "attack";
+          
+          // 攻撃タイマー管理
+          if (isAttacking) {
+              const id = ent.id || `${ent.world_x},${ent.world_y}`;
+              entityAttackTimers.set(id, { timer: 0.5, duration: 0.5 });
           }
+          
+          // 攻撃中は強制的にattack状態維持
+          const attackInfo = entityAttackTimers.get(ent.id || `${ent.world_x},${ent.world_y}`);
+          if (attackInfo) {
+              state = "attack";
+              attackInfo.timer -= 1/60;
+              if (attackInfo.timer <= 0) {
+                  entityAttackTimers.delete(ent.id || `${ent.world_x},${ent.world_y}`);
+                  state = "idle";
+              }
+          } else if (ent.hp <= 0) {
+              state = "dead";
+          } else if (ent.moving || (ent.vx !== 0 || ent.vy !== 0)) {
+              state = "walk";
+          }
+
+          // アニメーションキー: tileId_direction_state
+          const animKey = `${tileId}_${dir}_${state}`;
+          if (!entityAnimCache[animKey]) {
+              const loop = state !== "attack" && state !== "dead";
+              const fps = state === "attack" ? 12 : td.fps;
+              entityAnimCache[animKey] = tileAtlas.createAnimatedSprite(tileId, {
+                  direction: dir, state, fps, loop
+              });
+          }
+          const sprite = entityAnimCache[animKey];
+          
+          // 攻撃・死亡アニメは最初から再生
+          if ((state === "attack" || state === "dead") && !sprite._playing) {
+              sprite.gotoAndPlay(0);
+              sprite._playing = true;
+              sprite.onComplete = () => {
+                  sprite._playing = false;
+                  if (state === "dead") sprite.visible = false;
+              };
+          }
+          
+          sprite.x = px;
+          sprite.y = py + bounce;
+          entityLayer.addChild(sprite);
           
           // HPバー（プレイヤーとペット以外のエンティティに対して）
           if (!ent.is_player && !ent.is_pet && ent.max_hp > 0) {
@@ -1232,53 +1306,52 @@
           }
         });
         
-        // 3. アイテム描画
+        // 3. アイテム描画 - TileAtlas使用
+        // 品質色マッピング
+        const qualityColors = {
+          'common': 0xcccccc,
+          'uncommon': 0x33ff33,
+          'rare': 0x3366ff,
+          'epic': 0x9933ff,
+          'legendary': 0xffaa00
+        };
+
         const items = gameState.items || [];
         items.forEach(item => {
           const px = offsetX + item.x * TILE_SIZE;
           const py = offsetY + item.y * TILE_SIZE;
 
-          // アイテムのテクスチャを取得
-          const itemTexture = tileTextures[item.char];
+          // アイテムのTileDef ID決定
+          let tileId = "ITEM_POTION";
+          if (item.tile_id && tileAtlas.defs[item.tile_id]) {
+            tileId = item.tile_id;
+          } else if (item.char === '$' || item.char === '💰') {
+            tileId = "ITEM_GOLD";
+          } else if (item.char === ')') {
+            tileId = "ITEM_WEAPON";
+          } else if (item.char === '[') {
+            tileId = "ITEM_ARMOR";
+          }
           
-          if (itemTexture) {
-            // テクスチャアトラスからテクスチャを使用
-            const itemSprite = new PIXI.Sprite(itemTexture.texture || itemTexture);
-            itemSprite.width = TILE_SIZE;
-            itemSprite.height = TILE_SIZE;
-            
-            // 品質に応じて色調を変更
-            const qualityColors = {
-              'common': 0xcccccc,
-              'uncommon': 0x33ff33,
-              'rare': 0x3366ff,
-              'epic': 0x9933ff,
-              'legendary': 0xffaa00
-            };
-            const tint = qualityColors[item.quality] || 0xffffff;
-            itemSprite.tint = tint;
-            
-            itemSprite.x = px;
-            itemSprite.y = py;
-            entityLayer.addChild(itemSprite);
+          const td = tileAtlas.defs[tileId];
+          if (!td) return;
+
+          let sprite;
+          if (td.animated) {
+            const animKey = `${tileId}_idle_${td.fps}`;
+            if (!tileAnimCache[animKey]) {
+              tileAnimCache[animKey] = tileAtlas.createAnimatedSprite(tileId, { fps: td.fps });
+            }
+            sprite = tileAnimCache[animKey];
+            sprite.x = px; sprite.y = py;
+            if (sprite.parent !== entityLayer) entityLayer.addChild(sprite);
           } else {
-            // フォールバック: テクスチャが見つからない場合はGraphicsで描画
-            const itemGraphics = new PIXI.Graphics();
-            
-            // アイテムの背景
-            itemGraphics.beginFill(0x000000, 0.5);
-            itemGraphics.drawRect(0, 0, TILE_SIZE, TILE_SIZE);
-            itemGraphics.endFill();
-            
-            // アイテム文字を表示
-            itemGraphics.beginFill(0xffffff);
-            itemGraphics.drawRect(4, 4, TILE_SIZE - 8, TILE_SIZE - 8);
-            itemGraphics.endFill();
-            
-            // アイテムを配置
-            itemGraphics.x = px;
-            itemGraphics.y = py;
-            entityLayer.addChild(itemGraphics);
+            sprite = tileAtlas.createSprite(tileId, { 
+                variant: item.variant || 0,
+                tint: qualityColors[item.quality] || 0xffffff
+            });
+            sprite.x = px; sprite.y = py;
+            entityLayer.addChild(sprite);
           }
         });
         

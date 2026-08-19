@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "spells.json",
+  "title": "Spells Definition",
+  "type": "object",
+  "additionalProperties": {
+    "$ref": "#/$defs/spell"
+  },
+  "$defs": {
+    "spell": {
+      "type": "object",
+      "required": ["name", "mp_cost", "element", "range", "target_type"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "mp_cost": { "type": "integer", "minimum": 0 },
+        "element": {
+          "enum": ["fire", "cold", "lightning", "magic", "acid", "poison", "dark", "holy", "physical", "heal", "utility", "buff"]
+        },
+        "range": { "type": "integer", "minimum": 0 },
+        "radius": { "type": "integer", "minimum": 0, "default": 0 },
+        "dice_num": { "type": "integer", "minimum": 0, "default": 0 },
+        "dice_side": { "type": "integer", "minimum": 1, "default": 1 },
+        "dmg_bonus": { "type": "integer", "default": 0 },
+        "duration": { "type": "integer", "minimum": 0, "default": 0 },
+        "target_type": {
+          "enum": ["single", "area", "beam", "cone", "self", "touch"]
+        },
+        "sound": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    }
+  }
+}

@@ -123,12 +123,27 @@ def main():
     parser.add_argument('--size', type=int, default=16, help='Font size in pixels')
     parser.add_argument('--chars', default='', help='Characters to include (default: ASCII printable)')
     parser.add_argument('--padding', type=int, default=2, help='Padding between characters')
+    parser.add_argument('--msdf', action='store_true', help='Generate MSDF atlas with distance field')
     
     args = parser.parse_args()
     
-    chars = args.chars if args.chars else None
-    generate_font_atlas(args.font, args.output, args.size, chars, args.padding)
+    chars = args.chars if args.chars else ''.join(chr(i) for i in range(32, 127))
+    
+    if args.msdf:
+        from core.msdf_atlas import MSDFAtlas
+        os.makedirs(args.output, exist_ok=True)
+        font_name = Path(args.font).stem
+        base_name = f"msdf_{font_name}_{args.size}"
+        png_path = os.path.join(args.output, f"{base_name}.png")
+        json_path = os.path.join(args.output, f"{base_name}.json")
+        
+        atlas = MSDFAtlas(padding=args.padding)
+        atlas.generate_atlas(args.font, chars, args.size, padding=args.padding)
+        atlas.save_atlas(png_path, json_path)
+        print(f"Generated MSDF {png_path} and {json_path}")
+    else:
+        generate_font_atlas(args.font, args.output, args.size, chars, args.padding)
 
 
 if __name__ == '__main__':
-    main()
+    main()

@@ -1,0 +1,54 @@
+pet_training:
+  courses:
+    - id: "combat_training"
+      name: "戦闘訓練"
+      icon: "⚔️"
+      description: "基本的な戦闘技術と命令従従性を習得"
+      required_bond: 100
+      required_level: 5
+      duration: 500
+      facilities: ["training_ground"]
+      rewards:
+        - type: "skill_unlock"
+          value: ["basic_commands", "attack_on_sight"]
+        - type: "stat_bonus"
+          value:
+            strength: 3
+            agility: 3
+        - type: "title"
+          value: "trained_companion"
+    - id: "magic_training"
+      name: "魔法補助訓練"
+      icon: "🔮📚"
+      description: "魔法詠唱の補助や魔力探知を学ぶ"
+      required_bond: 300
+      required_level: 15
+      required_skills: ["magic_basic"]
+      duration: 800
+      facilities: ["magic_tower", "library"]
+      rewards:
+        - type: "skill_unlock"
+          value: ["mana_sense", "spell_assist"]
+        - type: "stat_bonus"
+          value:
+            intelligence: 5
+            mp: 20
+        - type: "title"
+          value: "arcane_assistant"
+    - id: "hunting_training"
+      name: "狩猟訓練"
+      icon: "🎯🐾"
+      description: "追跡・罠仕掛け・獲物処理を学ぶ"
+      required_bond: 200
+      required_level: 10
+      duration: 600
+      facilities: ["forest", "hunting_lodge"]
+      rewards:
+        - type: "skill_unlock"
+          value: ["tracking", "trap_setting", "skinning"]
+        - type: "stat_bonus"
+          value:
+            agility: 8
+            perception: 5
+        - type: "title"
+          value: "master_hunter"

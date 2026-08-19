@@ -1,0 +1,36 @@
+synergies:
+  fire_tornado:
+    name: "火炎竜巻"
+    skills: ["fireball", "wind_blade"]
+    window: 3
+    effect:
+      - type: "aoe_damage"
+        radius: 3
+        formula: "(int + dex) * 2"
+        element: "fire_wind"
+      - type: "status"
+        effect: "burn"
+        duration: 3
+
+  holy_nova:
+    name: "ホーリーノヴァ"
+    skills: ["holy_slash", "heal"]
+    window: 2
+    effect:
+      - type: "heal_allies"
+        radius: 5
+        formula: "will * 3"
+      - type: "damage_enemies"
+        radius: 5
+        formula: "str * 2"
+        element: "holy"
+
+  shadow_clone:
+    name: "影分身の術"
+    skills: ["shadow_step", "dagger_throw"]
+    window: 1
+    effect:
+      - type: "summon_clone"
+        count: 3
+        duration: 5
+        stats_multiplier: 0.5

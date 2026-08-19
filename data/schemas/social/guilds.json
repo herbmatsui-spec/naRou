@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "guilds.json",
+  "title": "Guilds Definition",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["guilds"],
+  "properties": {
+    "guilds": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/guild"
+      }
+    },
+    "meta": {
+      "$ref": "#/$defs/meta"
+    }
+  },
+  "$defs": {
+    "guild": {
+      "type": "object",
+      "required": ["name", "icon", "description", "hall_location", "facilities", "membership_benefits", "rank_requirements", "max_members"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "icon": { "type": "string", "minLength": 1, "maxLength": 2 },
+        "description": { "type": "string" },
+        "hall_location": { "type": "string" },
+        "facilities": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "membership_benefits": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type", "value"],
+            "properties": {
+              "type": { "type": "string" },
+              "value": { "type": "number" }
+            }
+          }
+        },
+        "rank_requirements": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "max_members": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "version": { "type": "string" },
+        "last_updated": { "type": "string" }
+      }
+    }
+  }
+}

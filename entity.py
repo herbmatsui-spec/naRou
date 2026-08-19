@@ -671,6 +671,16 @@ class Entity:
     @total_skill_points_earned.setter
     def total_skill_points_earned(self, val: int): self.get_component(SkillTreeJobComponent).total_skill_points_earned = val
 
+    learned_passive_skills: List[str] = field(default_factory=list)
+    @property
+    def learned_passive_skills(self) -> List[str]: return self.get_component(SkillTreeJobComponent).learned_passive_skills
+    @learned_passive_skills.setter
+    def learned_passive_skills(self, val: List[str]): self.get_component(SkillTreeJobComponent).learned_passive_skills = val
+
+    passive_bonuses: Dict[str, float] = field(default_factory=dict)
+    passive_mp_regen: float = 0.0
+    recent_skills: List[Tuple[str, int]] = field(default_factory=list)
+
     @property
     def job(self) -> str: return self.get_component(SkillTreeJobComponent).job
     @job.setter
@@ -944,6 +954,21 @@ class Entity:
         self.max_hp = self.calculate_max_hp()
         self.max_mp = self.calculate_max_mp()
         self.max_stamina = self.calculate_max_stamina()
+
+        # パッシブスキル効果の適用 (Proposal 6)
+        try:
+            from skill_tree_system import get_passive_skill_manager
+            mgr = get_passive_skill_manager()
+            bonuses = mgr.aggregate_bonuses(self)
+            self.passive_bonuses = bonuses
+            if "max_hp_bonus" in bonuses:
+                self.max_hp += int(bonuses["max_hp_bonus"])
+                self.hp = min(self.hp, self.max_hp)
+            if "mp_regen_bonus" in bonuses:
+                self.passive_mp_regen = bonuses["mp_regen_bonus"]
+        except Exception:
+            self.passive_bonuses = getattr(self, "passive_bonuses", {})
+
         self.hp = min(self.hp, self.max_hp)
         self.mp = min(self.mp, self.max_mp)
         self.stamina = min(self.stamina, self.max_stamina)

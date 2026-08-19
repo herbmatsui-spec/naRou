@@ -1,0 +1,74 @@
+/* Shared UI component library */
+
+.btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-weight: var(--fontWeight-medium);
+  transition: background-color var(--transition-fast);
+}
+
+.btn-primary {
+  background-color: var(--color-semantic-info);
+  color: var(--color-text-inverse);
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-danger {
+  background-color: var(--color-semantic-danger);
+  color: #ffffff;
+}
+
+.card {
+  background-color: var(--color-background-secondary);
+  border: 1px solid var(--color-border-medium);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin: var(--spacing-sm) 0;
+}
+
+.badge {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: var(--fontWeight-semibold);
+}
+
+.badge-primary {
+  background-color: var(--color-semantic-info);
+  color: var(--color-text-inverse);
+}
+
+/* ===== Responsive breakpoints (Step 15) ===== */
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--spacing-md);
+  padding-right: var(--spacing-md);
+}
+
+@media (max-width: 640px) {
+  .container { padding-left: var(--spacing-xs); padding-right: var(--spacing-xs); }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .container { padding-left: var(--spacing-md); padding-right: var(--spacing-md); }
+}
+
+@media (min-width: 1025px) {
+  .container { max-width: 80rem; padding-left: var(--spacing-xxl); padding-right: var(--spacing-xxl); }
+}
+
+/* ===== Reduced motion (Step 17) ===== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

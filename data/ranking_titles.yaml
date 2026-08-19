@@ -1,0 +1,40 @@
+ranking_titles:
+  individual:
+    - rank_range: [1, 1]
+      title: "world_champion"
+      name: "世界チャンピオン"
+      effects:
+        - type: "stat_bonus"
+          value:
+            strength: 10
+            agility: 10
+            intelligence: 10
+        - type: "drop_rate_bonus"
+          value: 0.5
+    - rank_range: [2, 3]
+      title: "elite_warrior"
+      name: "エリートウォリアー"
+      effects:
+        - type: "stat_bonus"
+          value:
+            strength: 5
+        - type: "crit_chance"
+          value: 5
+  guild:
+    - rank_range: [1, 3]
+      title: "top_guild"
+      name: "上位ギルド"
+      effects:
+        - type: "guild_exp_bonus"
+          value: 0.2
+        - type: "member_capacity_bonus"
+          value: 10
+  faction:
+    - rank_range: [1, 1]
+      title: "dominant_faction"
+      name: "優勢派閥"
+      effects:
+        - type: "faction_influence_bonus"
+          value: 0.15
+        - type: "territory_gain_rate"
+          value: 0.1

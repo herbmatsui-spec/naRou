@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "titles.json",
+  "title": "Titles Definition",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["titles"],
+  "properties": {
+    "titles": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/title"
+      }
+    },
+    "meta": {
+      "$ref": "#/$defs/meta"
+    }
+  },
+  "$defs": {
+    "title": {
+      "type": "object",
+      "required": ["id", "name", "epithet", "category", "condition", "effects", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z_][a-z0-9_]*$" },
+        "name": { "type": "string", "minLength": 1 },
+        "epithet": { "type": "string" },
+        "category": {
+          "enum": ["kill", "explore", "skill", "survival", "faith", "wealth", "pet", "craft", "special", "milestone"]
+        },
+        "condition": {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": true,
+          "properties": {
+            "type": {
+              "enum": ["kill_count", "dungeon_depth", "skill_level", "gold_owned", "piety", "pet_evolution", "craft_count", "reincarnation_count", "game_clear_time", "near_death_count", "level", "pet_count"]
+            },
+            "target": { "type": "string" },
+            "count": { "type": "integer", "minimum": 1 },
+            "min_depth": { "type": "integer", "minimum": 1 },
+            "max_turns": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["attr", "value"],
+            "properties": {
+              "attr": { "type": "string" },
+              "value": { "type": "number" },
+              "is_multiplier": { "type": "boolean", "default": false }
+            }
+          }
+        },
+        "message": { "type": "string" },
+        "is_hidden": { "type": "boolean", "default": false }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "version": { "type": "string" },
+        "last_updated": { "type": "string" }
+      }
+    }
+  }
+}

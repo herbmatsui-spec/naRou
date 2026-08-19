@@ -1,0 +1,133 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "item.json",
+  "title": "Item Definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "category"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^it_[a-z_][a-z0-9_]*$",
+      "description": "Unique item ID with 'it_' prefix (optional, can be inferred from key)"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Display name in Japanese"
+    },
+    "description": {
+      "type": "string",
+      "description": "Flavor text"
+    },
+    "category": {
+      "$ref": "#/$defs/item_category"
+    },
+    "char": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2,
+      "description": "Display character (emoji or ASCII)"
+    },
+    "color": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "description": "RGB color tuple"
+    },
+    "base_weight": {
+      "type": "number",
+      "minimum": 0.01,
+      "description": "Base weight in 's' (stones)"
+    },
+    "base_value": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Base value in gold pieces"
+    },
+    "dice_num": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 1,
+      "description": "Number of damage dice"
+    },
+    "dice_side": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 6,
+      "description": "Damage die sides"
+    },
+    "hit_bonus": {
+      "type": "integer",
+      "default": 0,
+      "description": "Hit bonus modifier"
+    },
+    "dmg_bonus": {
+      "type": "integer",
+      "default": 0,
+      "description": "Damage bonus modifier"
+    },
+    "pv": {
+      "type": "integer",
+      "default": 0,
+      "description": "Protection value (armor)"
+    },
+    "dv": {
+      "type": "integer",
+      "default": 0,
+      "description": "Dodge value"
+    },
+    "material": {
+      "type": "string",
+      "default": "iron",
+      "description": "Material name (affects properties)"
+    },
+    "heal_amount": {
+      "type": "integer",
+      "default": 0,
+      "description": "Healing amount for potions/food"
+    },
+    "nutrition": {
+      "type": "integer",
+      "default": 0,
+      "description": "Nutrition value for food"
+    },
+    "spell_id": {
+      "type": "string",
+      "default": "",
+      "description": "Spell ID for spellbooks/rods"
+    },
+    "sp_stock": {
+      "type": "integer",
+      "default": 0,
+      "description": "Spell stock count for rods"
+    },
+    "flags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Special flags (cursed, blessed, etc.)"
+    },
+    "identified": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether item is identified"
+    }
+  },
+  "$defs": {
+    "item_category": {
+      "enum": [
+        "weapon", "shield", "helm", "armor", "ring",
+        "potion", "scroll", "food", "spellbook", "tool", "rod", "ore"
+      ],
+      "description": "Item category determines equipment slot and behavior"
+    }
+  }
+}

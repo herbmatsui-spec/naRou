@@ -47,6 +47,16 @@
     "system": {
       "shadow": "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
       "focus": "0 0 0 3px rgba(66, 153, 225, 0.5)"
+    },
+
+    "tiles": {
+      "wall": "#2c3e50",
+      "floor": "#1c2230",
+      "water": "#2980b9",
+      "player": "#ecf0f1",
+      "enemy": "#e74c3c",
+      "pet": "#f8b500",
+      "accent": "#d4af37"
     }
   },
   

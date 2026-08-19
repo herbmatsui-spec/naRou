@@ -1,0 +1,176 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "dungeon.json",
+  "title": "Dungeon Theme Definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "theme", "min_level", "max_level"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^dg_[a-z_][a-z0-9_]*$",
+      "description": "Unique dungeon theme ID with 'dg_' prefix"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Dungeon theme name in Japanese"
+    },
+    "description": {
+      "type": "string",
+      "description": "Flavor text"
+    },
+    "theme": {
+      "type": "string",
+      "description": "Visual theme identifier (cave, ruins, forest, etc.)"
+    },
+    "min_level": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Minimum floor level"
+    },
+    "max_level": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Maximum floor level"
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 20,
+      "maximum": 200,
+      "default": 80,
+      "description": "Map width in tiles"
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 20,
+      "maximum": 200,
+      "default": 60,
+      "description": "Map height in tiles"
+    },
+    "room_min_size": {
+      "type": "integer",
+      "minimum": 3,
+      "default": 4,
+      "description": "Minimum room dimension"
+    },
+    "room_max_size": {
+      "type": "integer",
+      "minimum": 5,
+      "default": 12,
+      "description": "Maximum room dimension"
+    },
+    "corridor_width": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3,
+      "default": 1,
+      "description": "Corridor width in tiles"
+    },
+    "monster_tables": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/monster_table"
+      },
+      "default": [],
+      "description": "Monster spawn tables by level range"
+    },
+    "item_tables": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/item_table"
+      },
+      "default": [],
+      "description": "Item spawn tables by level range"
+    },
+    "resource_nodes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Available resource node types"
+    },
+    "special_features": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Special features (traps, secrets, shops, etc.)"
+    },
+    "ambient_light": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 50,
+      "description": "Base light level (0-100)"
+    },
+    "music_track": {
+      "type": "string",
+      "description": "Background music track ID"
+    }
+  },
+  "$defs": {
+    "monster_table": {
+      "type": "object",
+      "required": ["monster_id", "weight", "min_level", "max_level"],
+      "additionalProperties": false,
+      "properties": {
+        "monster_id": {
+          "type": "string",
+          "pattern": "^mn_[a-z_][a-z0-9_]*$",
+          "description": "Monster ID"
+        },
+        "weight": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Spawn weight (relative probability)"
+        },
+        "min_level": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Minimum floor level for this entry"
+        },
+        "max_level": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum floor level for this entry"
+        },
+        "conditions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Special spawn conditions"
+        }
+      }
+    },
+    "item_table": {
+      "type": "object",
+      "required": ["item_id", "weight"],
+      "additionalProperties": false,
+      "properties": {
+        "item_id": {
+          "type": "string",
+          "pattern": "^it_[a-z_][a-z0-9_]*$",
+          "description": "Item ID"
+        },
+        "weight": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Spawn weight"
+        },
+        "min_level": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        },
+        "max_level": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 999
+        }
+      }
+    }
+  }
+}

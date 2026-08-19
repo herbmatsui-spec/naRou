@@ -1,0 +1,153 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "quest.json",
+  "title": "Quest Definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "type", "objectives"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^q_[a-z_][a-z0-9_]*$",
+      "description": "Unique quest ID with 'q_' prefix"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Quest title in Japanese"
+    },
+    "description": {
+      "type": "string",
+      "description": "Quest description/flavor text"
+    },
+    "type": {
+      "$ref": "#/$defs/quest_type"
+    },
+    "level_range": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "Recommended level range [min, max]"
+    },
+    "objectives": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/objective"
+      },
+      "minItems": 1,
+      "description": "Quest objectives (all must be completed)"
+    },
+    "rewards": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/reward"
+      },
+      "default": [],
+      "description": "Rewards for completion"
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/prerequisite"
+      },
+      "default": [],
+      "description": "Required quests/conditions to unlock"
+    },
+    "repeatable": {
+      "type": "boolean",
+      "default": false,
+      "description": "Can be repeated after completion"
+    },
+    "time_limit": {
+      "type": "integer",
+      "description": "Time limit in turns (0 = no limit)"
+    },
+    "giver": {
+      "type": "string",
+      "description": "NPC/entity ID who gives this quest"
+    },
+    "location": {
+      "type": "string",
+      "description": "Location hint for quest"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Tags for categorization (daily, weekly, chain, etc.)"
+    }
+  },
+  "$defs": {
+    "quest_type": {
+      "enum": ["main", "guild", "procedural", "faction", "pet", "event"],
+      "description": "Quest type for categorization"
+    },
+    "objective": {
+      "type": "object",
+      "required": ["type", "target", "count"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": ["kill", "collect", "visit", "harvest", "craft", "talk", "explore", "deliver"],
+          "description": "Objective type"
+        },
+        "target": {
+          "type": "string",
+          "description": "Target entity/item/location ID"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Required count"
+        },
+        "description": {
+          "type": "string",
+          "description": "Custom objective description"
+        }
+      }
+    },
+    "reward": {
+      "type": "object",
+      "required": ["type", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": ["gold", "platinum", "item", "exp", "skill_point", "faction_rep", "title", "pet", "recipe"],
+          "description": "Reward type"
+        },
+        "value": {
+          "type": ["string", "integer"],
+          "description": "Reward value (item ID, amount, etc.)"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      }
+    },
+    "prerequisite": {
+      "type": "object",
+      "required": ["type", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": ["quest_complete", "level", "skill", "faction_rep", "guild_rank", "item_owned", "stat"],
+          "description": "Prerequisite type"
+        },
+        "value": {
+          "type": "string",
+          "description": "Prerequisite value (quest ID, skill ID, etc.)"
+        },
+        "min_value": {
+          "type": "integer",
+          "description": "Minimum value for numeric prerequisites"
+        }
+      }
+    }
+  }
+}
