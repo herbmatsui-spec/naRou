@@ -1,36 +1,179 @@
-# 한국어 로컬라이즈 텍스트
-hello: "안녕하세요"
-welcome: "환영합니다"
-goodbye: "안녕히 가세요"
-yes: "예"
-no: "아니요"
-ok: "확인"
-cancel: "취소"
-save: "저장"
-load: "불러오기"
-settings: "설정"
-language: "언어"
-menu: "메뉴"
-play: "플레이"
-quit: "종료"
-continue: "계속"
-new_game: "새 게임"
-options: "옵션"
-credits: "크레딧"
-back: "뒤로"
-next: "다음"
-previous: "이전"
-close: "닫기"
-confirm: "확인"
-error: "오류"
-warning: "경고"
-info: "정보"
-success: "성공"
-failed: "실패"
-loading: "로딩 중..."
-saving: "저장 중..."
-please_wait: "잠시만 기다려주세요..."
-game_title: "게임 제목"
-version: "버전"
-author: "제작자"
-description: "설명"
+# 한국어
+meta:
+  language: "ko"
+  name: "Korean"
+  native_name: "한국어"
+  direction: "ltr"
+  font: "Noto Sans KR"
+  fallback: false
+
+ui:
+  menu:
+    new_game: "새 게임"
+    continue: "이어하기"
+    settings: "설정"
+    quit: "종료"
+    save: "저장"
+    load: "불러오기"
+    options: "옵션"
+    credits: "크레딧"
+    help: "도움말"
+  settings:
+    graphics: "그래픽"
+    audio: "오디오"
+    gameplay: "게임플레이"
+    language: "언어"
+    accessibility: "접근성"
+    controls: "조작 설정"
+  buttons:
+    confirm: "확인"
+    cancel: "취소"
+    back: "뒤로"
+    next: "다음"
+    previous: "이전"
+    apply: "적용"
+    reset: "초기화"
+    default: "기본값"
+  tooltips:
+    hover_save: "게임 저장"
+    hover_load: "저장된 게임 불러오기"
+    hover_settings: "설정 메뉴 열기"
+    hover_quit: "게임 종료"
+
+game:
+  status:
+    hp: "HP"
+    mp: "MP"
+    sp: "SP"
+    level: "레벨"
+    exp: "경험치"
+    gold: "골드"
+    turn: "턴"
+  combat:
+    attack: "공격"
+    defend: "방어"
+    skill: "스킬"
+    item: "아이템"
+    flee: "도망"
+    wait: "대기"
+    critical: "치명타!"
+    miss: "빗나감!"
+    dodge: "회피!"
+  messages:
+    victory: "승리!"
+    defeat: "패배..."
+    level_up: "레벨 업!"
+    item_found: "{item}을(를) 획득했습니다!"
+    gold_gained: "{amount} 골드를 획득했습니다"
+    exp_gained: "{amount} 경험치를 획득했습니다"
+    skill_learned: "{skill}을(를) 배웠습니다!"
+    game_over: "게임 오버"
+    saved: "저장되었습니다"
+    loaded: "불러오기 완료"
+  dungeon:
+    floor: "{floor}층"
+    stairs_up: "올라가는 계단"
+    stairs_down: "내려가는 계단"
+    trap: "함정이다!"
+    treasure: "보물 상자"
+
+items:
+  categories:
+    weapon: "무기"
+    armor: "방어구"
+    accessory: "장신구"
+    consumable: "소모품"
+    material: "재료"
+    quest: "퀘스트 아이템"
+  effects:
+    heal_hp: "HP {amount} 회복"
+    heal_mp: "MP {amount} 회복"
+    boost_atk: "공격력 {amount} 증가"
+    boost_def: "방어력 {amount} 증가"
+    boost_spd: "속도 {amount} 증가"
+    cure_poison: "독 치료"
+    cure_paralysis: "마비 치료"
+    revive: "동료 부활"
+
+skills:
+  types:
+    physical: "물리"
+    magical: "마법"
+    support: "지원"
+    passive: "패시브"
+  targeting:
+    single_enemy: "적 단일"
+    all_enemies: "적 전체"
+    single_ally: "아군 단일"
+    all_allies: "아군 전체"
+    self: "자신"
+  descriptions:
+    fireball: "적 하나에 화염 피해"
+    heal: "아군 하나의 HP 회복"
+    shield: "아군 하나의 방어력 증가"
+    poison: "적 하나를 중독"
+    stun: "적 하나 기절"
+
+classes:
+  warrior: "전사"
+  mage: "마법사"
+  rogue: "도적"
+  cleric: "성직자"
+  ranger: "레인저"
+  paladin: "성기사"
+  necromancer: "강령술사"
+  bard: "음유시인"
+
+enemies:
+  goblin: "고블린"
+  orc: "오크"
+  skeleton: "해골"
+  zombie: "좀비"
+  slime: "슬라임"
+  bat: "박쥐"
+  spider: "거미"
+  dragon: "드래곤"
+  demon: "악마"
+  boss: "보스"
+
+system:
+  errors:
+    save_failed: "저장 실패"
+    load_failed: "불러오기 실패"
+    file_corrupt: "저장 파일 손상"
+    no_save: "저장 파일 없음"
+    invalid_data: "잘못된 저장 데이터"
+  warnings:
+    low_hp: "HP 부족!"
+    low_mp: "MP 부족!"
+    inventory_full: "인벤토리 가득 참"
+    cannot_flee: "도망칠 수 없음"
+  confirmations:
+    quit_game: "정말 종료하시겠습니까?"
+    delete_save: "저장 파일 삭제?"
+    overwrite_save: "기존 저장 덮어쓰기?"
+    reset_settings: "설정 초기화?"
+
+accessibility:
+  color_blind:
+    protanopia: "제1색맹 (적색맹)"
+    deuteranopia: "제2색맹 (녹색맹)"
+    tritanopia: "제3색맹 (청색맹)"
+  text_scale:
+    small: "작게 (80%)"
+    normal: "기본 (100%)"
+    large: "크게 (125%)"
+    extra_large: "아주 크게 (150%)"
+  screen_reader:
+    enabled: "화면 낭독기 지원"
+    announcements: "게임 이벤트 알림"
+  input:
+    remap_keys: "키 재지정"
+    gamepad_support: "게임패드 지원"
+    vibration: "진동 피드백"
+
+meta_info:
+  version: "1.0.0"
+  last_updated: "2026-08-19"
+  translators: ["개발팀"]
+  notes: "영어 기본 파일을 기반으로 한 한국어 번역"

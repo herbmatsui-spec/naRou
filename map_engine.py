@@ -204,6 +204,9 @@ class GameMap:
         # タイルバリアント（オートタイル用）の追跡
         self.tile_variants: Dict[Tuple[int, int], int] = {}
 
+        # 松明（光源）位置 — ダイナミックライティング用 (Phase 2-A)
+        self.torch_positions: List[Tuple[int, int]] = []
+
         # 視界・探索済みフラグ (ステップ26, 27)
         self.visible = [[False for _ in range(height)] for _ in range(width)]
         self.explored = [[False for _ in range(height)] for _ in range(width)]
@@ -388,6 +391,42 @@ class GameMap:
         # Calculate variants for autotiling
         self.calculate_all_variants()
 
+        # 壁面に松明（光源）を配置 (Phase 2-A: ダイナミックライティング)
+        self._place_torches(max_per_room=2, global_cap=40)
+
+    def _place_torches(self, max_per_room: int = 2, global_cap: int = 40) -> None:
+        """壁でかつ床に接するタイルを松明（光源）として記録する。"""
+        self.torch_positions = []
+        seen: set = set()
+        candidates: List[Tuple[int, int]] = []
+        for room in self.rooms:
+            count = 0
+            # 部屋を囲む外壁のうち、内側に床を持つものを松明にする
+            border = []
+            for x in range(room.x1, room.x2):
+                border.append((x, room.y1))
+                border.append((x, room.y2 - 1))
+            for y in range(room.y1, room.y2):
+                border.append((room.x1, y))
+                border.append((room.x2 - 1, y))
+            for (tx, ty) in border:
+                if not self.is_in_bounds(tx, ty) or self.tiles[tx][ty] != "TILE_WALL":
+                    continue
+                # 隣接する床（明かりの届く先）があれば松明として成立
+                has_floor = any(
+                    self.is_in_bounds(nx, ny) and self.tiles[nx][ny] == "TILE_FLOOR"
+                    for (nx, ny) in ((tx + 1, ty), (tx - 1, ty), (tx, ty + 1), (tx, ty - 1))
+                )
+                if has_floor and (tx, ty) not in seen:
+                    seen.add((tx, ty))
+                    candidates.append((tx, ty))
+                    count += 1
+                    if count >= max_per_room:
+                        break
+            if len(self.torch_positions) >= global_cap:
+                break
+        self.torch_positions = candidates[:global_cap]
+
     def generate_town(self) -> None:
         """街マップ生成（ステップ25）"""
         self.map_type = "town"
@@ -419,6 +458,9 @@ class GameMap:
         
         # Calculate variants for autotiling
         self.calculate_all_variants()
+
+        # 街の建物外壁にも松明を配置 (Phase 2-A)
+        self._place_torches(max_per_room=1, global_cap=20)
 
     def compute_fov(self, center_x: int, center_y: int, radius: int = 8) -> None:
         """Raycasting による視界(FOV)計算 (ステップ26, 27)"""

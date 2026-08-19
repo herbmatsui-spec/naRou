@@ -1,289 +1,312 @@
 #!/usr/bin/env python3
-"""Performance monitoring tool for naRou project."""
+"""
+Performance Monitor for naRou
+Handles CPU, memory, disk I/O, network, and response time monitoring.
+"""
+
 import os
-import sys
 import time
-import json
 import psutil
 import threading
-import subprocess
-from datetime import datetime
+import json
+import logging
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, asdict
+from typing import Dict, List, Optional, Any, Callable
+from dataclasses import dataclass, field, asdict
+from datetime import datetime
+from contextlib import contextmanager
+
 
 @dataclass
 class PerformanceMetrics:
-    timestamp: str
-    cpu_percent: float
-    memory_percent: float
-    memory_mb: float
-    disk_read_mb: float
-    disk_write_mb: float
-    network_sent_mb: float
-    network_recv_mb: float
-    response_time_ms: float
-    latency_ms: float
+    """Container for performance metrics."""
+    timestamp: float = field(default_factory=time.time)
+    cpu_percent: float = 0.0
+    memory_mb: float = 0.0
+    memory_percent: float = 0.0
+    disk_read_mb: float = 0.0
+    disk_write_mb: float = 0.0
+    network_sent_mb: float = 0.0
+    network_recv_mb: float = 0.0
+    response_time_ms: float = 0.0
+    latency_ms: float = 0.0
+    footprint_mb: float = 0.0
+    energy_watts: float = 0.0
+
 
 class PerformanceMonitor:
-    def __init__(self, interval: float = 1.0):
+    """
+    Monitors system performance metrics including CPU, memory, disk I/O,
+    network, response time, and latency.
+    """
+    
+    def __init__(self, interval: float = 1.0, output_dir: str = "logs/performance"):
+        """
+        Initialize the PerformanceMonitor.
+        
+        Args:
+            interval: Sampling interval in seconds
+            output_dir: Directory for saving metrics logs
+        """
         self.interval = interval
-        self.metrics: List[PerformanceMetrics] = []
-        self.running = False
-        self.thread: Optional[threading.Thread] = None
-        self.start_time: Optional[float] = None
-        self.disk_io_start = psutil.disk_io_counters()
-        self.network_io_start = psutil.net_io_counters()
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        
+        self.logger = logging.getLogger(__name__)
+        self._monitoring = False
+        self._thread: Optional[threading.Thread] = None
+        self._metrics_history: List[PerformanceMetrics] = []
+        self._lock = threading.Lock()
+        
+        # Baseline for delta calculations
+        self._baseline_disk = psutil.disk_io_counters()
+        self._baseline_net = psutil.net_io_counters()
+        self._baseline_time = time.time()
+        
+        # Process reference
+        self._process = psutil.Process()
     
-    def start(self):
+    def start(self) -> None:
         """Start monitoring in background thread."""
-        self.running = True
-        self.start_time = time.time()
-        self.disk_io_start = psutil.disk_io_counters()
-        self.network_io_start = psutil.net_io_counters()
-        self.thread = threading.Thread(target=self._monitor_loop)
-        self.thread.daemon = True
-        self.thread.start()
-        print("Performance monitoring started")
+        if self._monitoring:
+            self.logger.warning("Monitoring already running")
+            return
+        
+        self._monitoring = True
+        self._metrics_history.clear()
+        self._baseline_disk = psutil.disk_io_counters()
+        self._baseline_net = psutil.net_io_counters()
+        self._baseline_time = time.time()
+        
+        self._thread = threading.Thread(target=self._monitor_loop, daemon=True)
+        self._thread.start()
+        self.logger.info("Performance monitoring started")
     
-    def stop(self):
+    def stop(self) -> None:
         """Stop monitoring."""
-        self.running = False
-        if self.thread:
-            self.thread.join(timeout=5)
-        print("Performance monitoring stopped")
+        if not self._monitoring:
+            return
+        
+        self._monitoring = False
+        if self._thread:
+            self._thread.join(timeout=2.0)
+        self.logger.info("Performance monitoring stopped")
     
-    def _monitor_loop(self):
+    def _monitor_loop(self) -> None:
         """Background monitoring loop."""
-        while self.running:
-            self._collect_metrics()
+        while self._monitoring:
+            metrics = self._collect_metrics()
+            with self._lock:
+                self._metrics_history.append(metrics)
             time.sleep(self.interval)
     
-    def _collect_metrics(self):
+    def _collect_metrics(self) -> PerformanceMetrics:
         """Collect current performance metrics."""
-        cpu = psutil.cpu_percent(interval=None)
-        memory = psutil.virtual_memory()
+        # CPU
+        cpu_percent = self._process.cpu_percent(interval=0.0)
         
+        # Memory
+        mem_info = self._process.memory_info()
+        memory_mb = mem_info.rss / (1024 * 1024)
+        memory_percent = self._process.memory_percent()
+        
+        # Disk I/O (delta from baseline)
         disk_io = psutil.disk_io_counters()
-        disk_read = (disk_io.read_bytes - self.disk_io_start.read_bytes) / (1024 * 1024)
-        disk_write = (disk_io.write_bytes - self.disk_io_start.write_bytes) / (1024 * 1024)
+        disk_read_mb = 0.0
+        disk_write_mb = 0.0
+        if self._baseline_disk and disk_io:
+            disk_read_mb = (disk_io.read_bytes - self._baseline_disk.read_bytes) / (1024 * 1024)
+            disk_write_mb = (disk_io.write_bytes - self._baseline_disk.write_bytes) / (1024 * 1024)
         
+        # Network (delta from baseline)
         net_io = psutil.net_io_counters()
-        net_sent = (net_io.bytes_sent - self.network_io_start.bytes_sent) / (1024 * 1024)
-        net_recv = (net_io.bytes_recv - self.network_io_start.bytes_recv) / (1024 * 1024)
+        network_sent_mb = 0.0
+        network_recv_mb = 0.0
+        if self._baseline_net and net_io:
+            network_sent_mb = (net_io.bytes_sent - self._baseline_net.bytes_sent) / (1024 * 1024)
+            network_recv_mb = (net_io.bytes_recv - self._baseline_net.bytes_recv) / (1024 * 1024)
         
-        metrics = PerformanceMetrics(
-            timestamp=datetime.now().isoformat(),
-            cpu_percent=cpu,
-            memory_percent=memory.percent,
-            memory_mb=memory.used / (1024 * 1024),
-            disk_read_mb=disk_read,
-            disk_write_mb=disk_write,
-            network_sent_mb=net_sent,
-            network_recv_mb=net_recv,
-            response_time_ms=0.0,
-            latency_ms=0.0
+        # Process footprint
+        footprint_mb = memory_mb
+        
+        return PerformanceMetrics(
+            cpu_percent=cpu_percent,
+            memory_mb=memory_mb,
+            memory_percent=memory_percent,
+            disk_read_mb=disk_read_mb,
+            disk_write_mb=disk_write_mb,
+            network_sent_mb=network_sent_mb,
+            network_recv_mb=network_recv_mb,
+            footprint_mb=footprint_mb,
         )
-        self.metrics.append(metrics)
     
-    def measure_response_time(self, func, *args, **kwargs):
-        """Measure response time of a function."""
+    @contextmanager
+    def measure_response_time(self, operation_name: str = "operation"):
+        """Context manager to measure response time of an operation."""
+        start = time.perf_counter()
+        try:
+            yield
+        finally:
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            self.logger.debug(f"{operation_name} took {elapsed_ms:.2f}ms")
+    
+    def measure_latency(self, func: Callable, *args, **kwargs) -> tuple:
+        """
+        Measure latency of a function call.
+        
+        Returns:
+            Tuple of (result, latency_ms)
+        """
         start = time.perf_counter()
         result = func(*args, **kwargs)
-        elapsed = (time.perf_counter() - start) * 1000
-        if self.metrics:
-            self.metrics[-1].response_time_ms = elapsed
-        return result, elapsed
+        latency_ms = (time.perf_counter() - start) * 1000
+        return result, latency_ms
     
-    def measure_latency(self, func, *args, **kwargs):
-        """Measure latency of a function."""
-        return self.measure_response_time(func, *args, **kwargs)
+    def get_current_metrics(self) -> PerformanceMetrics:
+        """Get current metrics snapshot."""
+        return self._collect_metrics()
     
-    def get_footprint(self) -> Dict[str, float]:
-        """Get memory footprint."""
-        process = psutil.Process()
-        mem_info = process.memory_info()
-        return {
-            "rss_mb": mem_info.rss / (1024 * 1024),
-            "vms_mb": mem_info.vms / (1024 * 1024),
-            "percent": process.memory_percent()
-        }
-    
-    def get_energy_consumption(self) -> Dict[str, float]:
-        """Estimate energy consumption (simplified)."""
-        cpu = psutil.cpu_percent()
-        return {
-            "estimated_watts": cpu * 0.1,
-            "cpu_percent": cpu
-        }
-    
-    def save_baseline(self, filepath: str = "baseline.json"):
-        """Save baseline data to file."""
-        data = {
-            "start_time": self.start_time,
-            "end_time": time.time(),
-            "duration": time.time() - self.start_time if self.start_time else 0,
-            "metrics": [asdict(m) for m in self.metrics],
-            "summary": self.get_summary()
-        }
-        with open(filepath, "w") as f:
-            json.dump(data, f, indent=2)
-        print(f"Baseline saved to {filepath}")
-        return data
-    
-    def load_baseline(self, filepath: str = "baseline.json") -> Dict:
-        """Load baseline data from file."""
-        with open(filepath) as f:
-            return json.load(f)
+    def get_history(self) -> List[PerformanceMetrics]:
+        """Get all collected metrics history."""
+        with self._lock:
+            return list(self._metrics_history)
     
     def get_summary(self) -> Dict[str, Any]:
-        """Get summary statistics."""
-        if not self.metrics:
-            return {}
+        """Get statistical summary of collected metrics."""
+        with self._lock:
+            if not self._metrics_history:
+                return {}
+            
+            history = self._metrics_history
+            return {
+                "samples": len(history),
+                "duration_seconds": history[-1].timestamp - history[0].timestamp if len(history) > 1 else 0,
+                "cpu": {
+                    "avg": sum(m.cpu_percent for m in history) / len(history),
+                    "max": max(m.cpu_percent for m in history),
+                    "min": min(m.cpu_percent for m in history),
+                },
+                "memory_mb": {
+                    "avg": sum(m.memory_mb for m in history) / len(history),
+                    "max": max(m.memory_mb for m in history),
+                    "min": min(m.memory_mb for m in history),
+                },
+                "disk_read_mb_total": sum(m.disk_read_mb for m in history),
+                "disk_write_mb_total": sum(m.disk_write_mb for m in history),
+                "network_sent_mb_total": sum(m.network_sent_mb for m in history),
+                "network_recv_mb_total": sum(m.network_recv_mb for m in history),
+                "footprint_mb": {
+                    "avg": sum(m.footprint_mb for m in history) / len(history),
+                    "max": max(m.footprint_mb for m in history),
+                },
+            }
+    
+    def save_baseline(self, filepath: Optional[str] = None) -> str:
+        """Save current metrics as baseline."""
+        if filepath is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filepath = str(self.output_dir / f"baseline_{timestamp}.json")
         
-        cpu_vals = [m.cpu_percent for m in self.metrics]
-        mem_vals = [m.memory_percent for m in self.metrics]
-        resp_vals = [m.response_time_ms for m in self.metrics if m.response_time_ms > 0]
-        lat_vals = [m.latency_ms for m in self.metrics if m.latency_ms > 0]
-        
-        return {
-            "cpu": {"avg": sum(cpu_vals)/len(cpu_vals), "max": max(cpu_vals), "min": min(cpu_vals)},
-            "memory": {"avg": sum(mem_vals)/len(mem_vals), "max": max(mem_vals), "min": min(mem_vals)},
-            "response_time": {"avg": sum(resp_vals)/len(resp_vals) if resp_vals else 0, "max": max(resp_vals) if resp_vals else 0},
-            "latency": {"avg": sum(lat_vals)/len(lat_vals) if lat_vals else 0, "max": max(lat_vals) if lat_vals else 0},
-            "samples": len(self.metrics)
+        summary = self.get_summary()
+        baseline_data = {
+            "timestamp": time.time(),
+            "summary": summary,
+            "raw_history": [asdict(m) for m in self.get_history()],
         }
-    
-    def analyze_baseline(self) -> Dict[str, Any]:
-        """Analyze baseline data."""
-        summary = self.get_summary()
-        return {
-            "cpu_analysis": "normal" if summary.get("cpu", {}).get("avg", 0) < 50 else "high",
-            "memory_analysis": "normal" if summary.get("memory", {}).get("avg", 0) < 70 else "high",
-            "performance_rating": self._calculate_rating(summary)
-        }
-    
-    def _calculate_rating(self, summary: Dict) -> str:
-        """Calculate performance rating."""
-        cpu_avg = summary.get("cpu", {}).get("avg", 100)
-        mem_avg = summary.get("memory", {}).get("avg", 100)
-        score = 100 - (cpu_avg * 0.5 + mem_avg * 0.5)
-        if score >= 80: return "Excellent"
-        elif score >= 60: return "Good"
-        elif score >= 40: return "Fair"
-        return "Poor"
-    
-    def validate_baseline(self, thresholds: Dict = None) -> Dict[str, bool]:
-        """Validate baseline against thresholds."""
-        if thresholds is None:
-            thresholds = {"cpu_max": 80, "memory_max": 85, "response_time_max": 1000}
         
-        summary = self.get_summary()
-        return {
-            "cpu_ok": summary.get("cpu", {}).get("max", 0) < thresholds.get("cpu_max", 80),
-            "memory_ok": summary.get("memory", {}).get("max", 0) < thresholds.get("memory_max", 85),
-            "response_time_ok": summary.get("response_time", {}).get("max", 0) < thresholds.get("response_time_max", 1000),
-        }
-    
-    def generate_report(self) -> str:
-        """Generate text report."""
-        summary = self.get_summary()
-        analysis = self.analyze_baseline()
-        validation = self.validate_baseline()
+        with open(filepath, 'w') as f:
+            json.dump(baseline_data, f, indent=2)
         
-        report = [
-            "=== Performance Baseline Report ===",
-            f"Generated: {datetime.now().isoformat()}",
-            f"Duration: {time.time() - self.start_time:.1f}s" if self.start_time else "",
-            f"Samples: {summary.get('samples', 0)}",
-            "",
-            "CPU:",
-            f"  Average: {summary.get('cpu', {}).get('avg', 0):.1f}%",
-            f"  Max: {summary.get('cpu', {}).get('max', 0):.1f}%",
-            "",
-            "Memory:",
-            f"  Average: {summary.get('memory', {}).get('avg', 0):.1f}%",
-            f"  Max: {summary.get('memory', {}).get('max', 0):.1f}%",
-            "",
-            "Response Time:",
-            f"  Average: {summary.get('response_time', {}).get('avg', 0):.1f}ms",
-            f"  Max: {summary.get('response_time', {}).get('max', 0):.1f}ms",
-            "",
-            "Analysis:",
-            f"  CPU: {analysis.get('cpu_analysis', 'unknown')}",
-            f"  Memory: {analysis.get('memory_analysis', 'unknown')}",
-            f"  Rating: {analysis.get('performance_rating', 'unknown')}",
-            "",
-            "Validation:",
-            f"  CPU: {'PASS' if validation.get('cpu_ok', False) else 'FAIL'}",
-            f"  Memory: {'PASS' if validation.get('memory_ok', False) else 'FAIL'}",
-            f"  Response Time: {'PASS' if validation.get('response_time_ok', False) else 'FAIL'}",
-        ]
-        return "\n".join(report)
+        self.logger.info(f"Baseline saved to {filepath}")
+        return filepath
     
-    def generate_html_report(self, filepath: str = "report.html"):
-        """Generate HTML report."""
-        summary = self.get_summary()
-        html = f"""
-<!DOCTYPE html>
-<html>
-<head><title>Performance Report</title>
-<style>body{{font-family:sans-serif;margin:20px;}} table{{border-collapse:collapse;width:100%;}} th,td{{border:1px solid #ddd;padding:8px;}} th{{background:#f2f2f2;}}</style></head>
-<body>
-<h1>Performance Baseline Report</h1>
-<p>Generated: {datetime.now().isoformat()}</p>
-<p>Samples: {summary.get('samples', 0)}</p>
-<table><tr><th>Metric</th><th>Average</th><th>Max</th><th>Min</th></tr>
-<tr><td>CPU %</td><td>{summary.get('cpu', {}).get('avg', 0):.1f}%</td><td>{summary.get('cpu', {}).get('max', 0):.1f}%</td><td>{summary.get('cpu', {}).get('min', 0):.1f}%</td></tr>
-<tr><td>Memory %</td><td>{summary.get('memory', {}).get('avg', 0):.1f}%</td><td>{summary.get('memory', {}).get('max', 0):.1f}%</td><td>{summary.get('memory', {}).get('min', 0):.1f}%</td></tr>
-<tr><td>Response Time (ms)</td><td>{summary.get('response_time', {}).get('avg', 0):.1f}</td><td>{summary.get('response_time', {}).get('max', 0):.1f}</td><td>{summary.get('response_time', {}).get('min', 0):.1f}</td></tr>
-</table>
-</body></html>
-"""
-        with open(filepath, "w") as f:
-            f.write(html)
-        print(f"HTML report saved to {filepath}")
+    def load_baseline(self, filepath: str) -> Dict[str, Any]:
+        """Load baseline from file."""
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+        self.logger.info(f"Baseline loaded from {filepath}")
+        return data
     
-    def backup_baseline(self, backup_dir: str = "backups"):
-        """Backup baseline data."""
-        Path(backup_dir).mkdir(exist_ok=True)
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.save_baseline(f"{backup_dir}/baseline_{timestamp}.json")
+    def compare_with_baseline(self, baseline_file: str) -> Dict[str, Any]:
+        """Compare current metrics with a saved baseline."""
+        baseline = self.load_baseline(baseline_file)
+        current = self.get_summary()
+        
+        comparison = {}
+        for key in ["cpu", "memory_mb", "footprint_mb"]:
+            if key in baseline.get("summary", {}) and key in current:
+                base_avg = baseline["summary"][key].get("avg", 0)
+                curr_avg = current[key].get("avg", 0)
+                if base_avg > 0:
+                    change_pct = ((curr_avg - base_avg) / base_avg) * 100
+                else:
+                    change_pct = 0
+                comparison[key] = {
+                    "baseline_avg": base_avg,
+                    "current_avg": curr_avg,
+                    "change_percent": change_pct,
+                }
+        
+        return comparison
     
-    def restore_baseline(self, filepath: str):
-        """Restore baseline from backup."""
-        return self.load_baseline(filepath)
+    def run_baseline_test(self, duration: float = 10.0) -> str:
+        """Run a baseline test for specified duration."""
+        self.logger.info(f"Running baseline test for {duration}s")
+        self.start()
+        time.sleep(duration)
+        self.stop()
+        return self.save_baseline()
+    
+    def generate_report(self, output_path: Optional[str] = None) -> str:
+        """Generate performance report."""
+        if output_path is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_path = str(self.output_dir / f"performance_report_{timestamp}.json")
+        
+        report = {
+            "generated_at": datetime.now().isoformat(),
+            "summary": self.get_summary(),
+            "history": [asdict(m) for m in self.get_history()],
+        }
+        
+        with open(output_path, 'w') as f:
+            json.dump(report, f, indent=2)
+        
+        self.logger.info(f"Report generated: {output_path}")
+        return output_path
 
 
-def run_baseline_test(duration: int = 10) -> Dict:
-    """Run a baseline test."""
+def get_performance_monitor(interval: float = 1.0, 
+                             output_dir: str = "logs/performance") -> PerformanceMonitor:
+    """Factory function for PerformanceMonitor."""
+    return PerformanceMonitor(interval, output_dir)
+
+
+def quick_cpu_test(duration: float = 5.0) -> Dict[str, float]:
+    """Quick CPU usage test."""
     monitor = PerformanceMonitor(interval=0.5)
     monitor.start()
-    
-    # Simulate some work
-    def dummy_work():
-        total = 0
-        for i in range(100000):
-            total += i * i
-        return total
-    
-    end_time = time.time() + duration
-    while time.time() < end_time:
-        monitor.measure_response_time(dummy_work)
-        time.sleep(0.1)
-    
+    time.sleep(duration)
     monitor.stop()
-    monitor.save_baseline()
-    monitor.generate_html_report()
-    print(monitor.generate_report())
-    return monitor.get_summary()
+    return monitor.get_summary().get("cpu", {})
+
+
+def quick_memory_test(duration: float = 5.0) -> Dict[str, float]:
+    """Quick memory usage test."""
+    monitor = PerformanceMonitor(interval=0.5)
+    monitor.start()
+    time.sleep(duration)
+    monitor.stop()
+    return monitor.get_summary().get("memory_mb", {})
 
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(description="Performance Monitor")
-    parser.add_argument("--duration", type=int, default=10, help="Test duration in seconds")
-    parser.add_argument("--interval", type=float, default=1.0, help="Sampling interval")
-    args = parser.parse_args()
+    import sys
     
-    run_baseline_test(args.duration)
+    if len(sys.argv) > 1 and sys.argv[1] == "test":
+        print("Running quick performance tests...")
+        print("CPU test:", quick_cpu_test(3.0))
+        print("Memory test:", quick_memory_test(3.0))
+    else:
+        print("PerformanceMonitor module loaded")
+        print("Usage: python performance_monitor.py test")

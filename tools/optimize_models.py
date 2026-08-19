@@ -7,6 +7,8 @@ Supports model scanning, optimization, compression, and format conversion.
 import os
 import json
 import argparse
+import time
+import shutil
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import struct
@@ -187,6 +189,53 @@ def create_model_statistics(model_files: List[str]) -> Dict:
         stats['formats'][fmt] = stats['formats'].get(fmt, 0) + 1
     
     return stats
+
+
+# ---------------------------------------------------------------------------
+# Phase 4 - Steps 68, 69, 70, 72: testing, documentation, logging, analysis
+# ---------------------------------------------------------------------------
+
+def test_model(model_file: str) -> Tuple[bool, List[str]]:
+    """Run validation tests on a single 3D model (Step 68)."""
+    return validate_model(model_file)
+
+
+def document_models(model_files: List[str], output_path: str) -> str:
+    """Generate a markdown document describing a set of 3D models (Step 69)."""
+    lines = ["# 3D Model Documentation\n"]
+    for f in model_files:
+        m = get_model_metadata(f)
+        lines.append(f"## {os.path.basename(f)}")
+        lines.append(f"- Path: {f}")
+        lines.append(f"- Vertices: {m.get('vertex_count', 0)}")
+        lines.append(f"- Faces: {m.get('face_count', 0)}")
+        lines.append(f"- Format: {m.get('format', 'unknown')}")
+        lines.append("")
+    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+    with open(output_path, 'w') as out:
+        out.write("\n".join(lines))
+    return output_path
+
+
+def log_model_event(message: str, log_path: Optional[str] = None, level: str = "INFO") -> str:
+    """Append a timestamped log entry for a model operation (Step 70)."""
+    log_path = log_path or os.path.join('assets', 'logs', 'model_build.log')
+    os.makedirs(os.path.dirname(os.path.abspath(log_path)), exist_ok=True)
+    entry = f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] [{level}] {message}\n"
+    with open(log_path, 'a') as f:
+        f.write(entry)
+    return entry
+
+
+def analyze_model(model_file: str) -> Dict:
+    """Analyze a single 3D model and produce optimization recommendations (Step 72)."""
+    m = get_model_metadata(model_file)
+    recommendations = []
+    if m.get('vertex_count', 0) > 50000:
+        recommendations.append("High vertex count; consider mesh decimation")
+    if m.get('face_count', 0) > 100000:
+        recommendations.append("High face count; consider LOD generation")
+    return {'metadata': m, 'recommendations': recommendations}
 
 
 def main():

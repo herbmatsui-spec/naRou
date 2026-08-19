@@ -1,0 +1,86 @@
+categories:
+  terrain:
+    base_prompt: |
+      {style} pixel art tile, {biome} terrain, {time_of_day} lighting,
+      16x16 grid, top-down view, {palette} color palette,
+      clean edges, seamless tiling, no noise, sharp details
+    params:
+      biome: [grassland, forest, desert, snow, swamp, volcanic, crystal, void, dungeon_stone, dungeon_wood]
+      time_of_day: [day, night, dawn, dusk, magical_gloom]
+      palette: [16color_standard, 16color_autumn, 16color_winter, 32color_rich, 64color_hd]
+    negative: "blurry, gradient, anti-aliasing, watermark, text, signature, 3d render, photo, realistic"
+    variants_per_combo: 4
+    size: "16x16"
+    
+  entity:
+    base_prompt: |
+      {style} pixel art character sprite, {race} {class} {gender},
+      {pose} pose, {equipment} equipment, {palette} color palette,
+      32x32 or 64x64, transparent background, distinct silhouette
+    params:
+      race: [human, elf, dwarf, beastkin, undead, construct, slime, dragonkin]
+      class: [warrior, mage, rogue, cleric, ranger, alchemist, summoner, berserker]
+      gender: [male, female, androgynous]
+      pose: [idle_front, idle_back, idle_side, walk_1, walk_2, walk_3, walk_4, attack_1, attack_2, hurt, die]
+      equipment: [none, sword, staff, bow, dagger, axe, hammer, shield, robe, armor_light, armor_heavy]
+      palette: [16color_standard, 32color_rich]
+    negative: "blurry, gradient, anti-aliasing, watermark, text, extra limbs, deformed, asymmetric"
+    variants_per_combo: 3
+    size: "32x32"
+    
+  effect:
+    base_prompt: |
+      {style} pixel art effect animation, {element} {effect_type},
+      {frame_count} frames, {palette} color palette,
+      transparent background, loopable, additive blend ready
+    params:
+      element: [fire, ice, lightning, poison, holy, dark, arcane, physical, blood, wind, earth, water]
+      effect_type: [explosion, projectile, aura, buff, debuff, heal, slash, pierce, blast, nova, ring, trail]
+      frame_count: [4, 6, 8, 12, 16]
+      palette: [16color_standard, 16color_glow, 32color_hdr]
+    negative: "blurry, gradient, anti-aliasing, watermark, text, static, non-loopable"
+    variants_per_combo: 4
+    size: "32x32"
+    
+  ui:
+    base_prompt: |
+      {style} pixel art UI element, {component_type}, {theme} theme,
+      {palette} color palette, 9-slice ready, sharp corners
+    params:
+      component_type: [panel, button, frame, icon_frame, progress_bar, slider, checkbox, radio, tab, tooltip, dialog, inventory_slot, hotbar_slot, skill_icon, item_icon]
+      theme: [default, dark, fantasy, magitech, ancient, corrupted, celestial]
+      palette: [16color_ui, 32color_ui]
+    negative: "blurry, gradient, anti-aliasing, watermark, text, 3d, realistic, photo"
+    variants_per_combo: 3
+    size: "variable"
+    
+  portrait:
+    base_prompt: |
+      {style} pixel art portrait, {race} {class} {gender},
+      {expression} expression, {lighting} lighting, {palette} color palette,
+      64x64 or 128x128, bust shot, transparent background
+    params:
+      race: [human, elf, dwarf, beastkin, undead, construct, dragonkin]
+      class: [warrior, mage, rogue, cleric, ranger, alchemist, summoner, berserker, noble, merchant, villain]
+      gender: [male, female, androgynous]
+      expression: [neutral, happy, angry, sad, surprised, determined, suspicious, confident, weary, maniacal]
+      lighting: [neutral, dramatic, rim_light, magical_glow, candlelight]
+      palette: [32color_rich, 64color_hd]
+    negative: "blurry, gradient, anti-aliasing, watermark, text, full_body, deformed, asymmetric_face"
+    variants_per_combo: 3
+    size: "64x64"
+    
+  background:
+    base_prompt: |
+      {style} pixel art background, {biome} {time_of_day} {weather},
+      parallax layers: {layer_count}, {palette} color palette,
+      seamless horizontal, atmospheric perspective
+    params:
+      biome: [overworld, forest, desert, snow, swamp, volcanic, crystal, void, dungeon, city, ruin, sky_island]
+      time_of_day: [day, night, dawn, dusk, eclipse, aurora]
+      weather: [clear, rain, snow, fog, sandstorm, ash, magical_storm]
+      layer_count: [3, 4, 5]
+      palette: [16color_standard, 32color_rich, 64color_hd]
+    negative: "blurry, gradient, anti-aliasing, watermark, text, characters, foreground_objects"
+    variants_per_combo: 2
+    size: "256x144"

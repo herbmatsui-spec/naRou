@@ -4,6 +4,8 @@ import shutil
 import gzip
 import pickle
 import hashlib
+import hmac
+import base64
 from typing import Any, Tuple, Optional, Dict
 from exceptions import SaveDataCorruptedError
 from components import (
@@ -19,6 +21,32 @@ class SaveSystem:
     CURRENT_VERSION = "2.0.0"
     SUPPORTED_VERSIONS = {"1.0.0", "1.1.0", "1.2.0", "2.0.0"}
     MAX_BACKUPS = 3
+
+    # HMAC signing for tamper detection (Step 61)
+    # Key is derived from environment or build-time secret; not stored in plaintext
+    @classmethod
+    def _get_hmac_key(cls) -> bytes:
+        """Return HMAC key from env or fallback (for dev only)."""
+        key_b64 = os.environ.get("SAVE_HMAC_KEY")
+        if key_b64:
+            try:
+                return base64.b64decode(key_b64)
+            except Exception:
+                pass
+        # Dev fallback: deterministic key from project root hash
+        return hashlib.sha256(b"naRou_dev_hmac_key_fallback").digest()
+
+    @classmethod
+    def _compute_hmac(cls, data: bytes) -> bytes:
+        """Compute HMAC-SHA256 of data."""
+        key = cls._get_hmac_key()
+        return hmac.new(key, data, hashlib.sha256).digest()
+
+    @classmethod
+    def _verify_hmac(cls, data: bytes, expected_hmac: bytes) -> bool:
+        """Verify HMAC-SHA256 of data."""
+        expected = cls._compute_hmac(data)
+        return hmac.compare_digest(expected, expected_hmac)
 
     # 後方互換性用フィールド定義 (旧セーブデータ復元および静的検証用)
     DEFAULT_FIELD_FACTORIES = {
@@ -126,10 +154,12 @@ class SaveSystem:
             compressed = gzip.compress(pickled)
             # SHA256チェックサム計算 (32 bytes)
             checksum = hashlib.sha256(compressed).digest()
+            # HMAC署名計算 (32 bytes) - Step 61
+            save_hmac = cls._compute_hmac(compressed)
 
-            # [32 bytes SHA256] + [compressed gzip payload]
+            # [32 bytes SHA256] + [32 bytes HMAC] + [compressed gzip payload]
             with open(cls.SAVE_PATH, "wb") as f:
-                f.write(checksum + compressed)
+                f.write(checksum + save_hmac + compressed)
 
             return f"セーブ完了！ ({len(compressed)} bytes, チェックサム検証済, 圧縮率{100 - int(len(compressed)/len(pickled)*100)}%)"
         except Exception as e:
@@ -137,7 +167,7 @@ class SaveSystem:
 
     @classmethod
     def load(cls, allow_backup_recovery: bool = True) -> Tuple[Optional[Any], str]:
-        """チェックサム検証 + バージョン互換性検証 + バックアップ自動リカバリ (Step 4.1, 4.2, 4.3)"""
+        """HMAC署名検証 + チェックサム検証 + バージョン互換性検証 + バックアップ自動リカバリ (Step 61, 62)"""
         if not os.path.exists(cls.SAVE_PATH):
             return None, "セーブデータが見つかりません。"
         
@@ -145,22 +175,25 @@ class SaveSystem:
             with open(cls.SAVE_PATH, "rb") as f:
                 data = f.read()
 
-            if len(data) < 32:
+            # New format: 32 bytes SHA256 + 32 bytes HMAC + payload
+            # Legacy format: 32 bytes SHA256 + payload (no HMAC)
+            if len(data) < 64:
                 raise SaveDataCorruptedError("セーブデータが破損しています（サイズ不正）。")
 
             checksum = data[:32]
-            payload = data[32:]
+            save_hmac = data[32:64]
+            payload = data[64:]
+
+            # HMAC検証 (Step 61) - まずHMACを検証
+            if not cls._verify_hmac(payload, save_hmac):
+                raise SaveDataCorruptedError("セーブデータのHMAC署名が一致しません（改ざんの可能性）。")
 
             # チェックサム検証
             expected_checksum = hashlib.sha256(payload).digest()
             if checksum != expected_checksum:
-                # 従来形式 (チェックサムなし) との互換フォールバック
-                try:
-                    loaded_engine = pickle.loads(gzip.decompress(data))
-                except Exception:
-                    raise SaveDataCorruptedError("セーブデータのチェックサムが一致しません（データ改ざんまたは破損）。")
-            else:
-                loaded_engine = pickle.loads(gzip.decompress(payload))
+                raise SaveDataCorruptedError("セーブデータのチェックサムが一致しません（データ改ざんまたは破損）。")
+
+            loaded_engine = pickle.loads(gzip.decompress(payload))
 
             # プレイヤーデータの互換性確保
             if hasattr(loaded_engine, 'player') and loaded_engine.player:

@@ -5,6 +5,7 @@ Provides HTTP server and REST/JSON API for HTML5 Canvas interactive rendering & 
 
 from __future__ import annotations
 import json
+import math
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from typing import Optional, Dict, Any, TYPE_CHECKING
@@ -12,6 +13,14 @@ import os
 
 from ui_event_panel import get_current_event_info, get_event_ranking, get_player_event_score
 from ui_ranking_panel import get_all_event_rankings
+
+# Dynamic-lighting foundation (Phase 2-A). Import is optional so the server still
+# runs if fov.py is unavailable.
+try:
+    from fov import compute_light_map as _compute_light_map
+    _FOV_AVAILABLE = True
+except Exception:  # pragma: no cover
+    _FOV_AVAILABLE = False
 
 if TYPE_CHECKING:
     from game import Engine
@@ -186,11 +195,52 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
         visible_tiles = []
         raw_tiles = []
         light_map = []
+        light_color = []
+
+        # --- Phase 2-A: 再帰的シャドウキャスティングによるライトマップ ---
+        # プレイヤー（ランタン）＋松明を光源とし、壁で光を遮断する。
+        light_intensity = None
+        light_rgb = None
+        client_light_sources = []
+        if _FOV_AVAILABLE:
+            try:
+                blocked = [
+                    [not engine.game_map.is_transparent(cam_x + vx, cam_y + vy)
+                     if (0 <= cam_x + vx < engine.game_map.width
+                         and 0 <= cam_y + vy < engine.game_map.height)
+                     else True
+                     for vx in range(view_w)]
+                    for vy in range(view_h)
+                ]
+                sources = [{
+                    "x": p.x - cam_x, "y": p.y - cam_y,
+                    "radius": 8.0, "intensity": 1.0,
+                    "color": (255, 240, 210),
+                }]
+                for (tx, ty) in getattr(engine.game_map, "torch_positions", []):
+                    lx, ly = tx - cam_x, ty - cam_y
+                    if 0 <= lx < view_w and 0 <= ly < view_h:
+                        sources.append({
+                            "x": lx, "y": ly,
+                            "radius": 5.0, "intensity": 0.9,
+                            "color": (255, 170, 80),
+                        })
+                client_light_sources = [
+                    {"x": s["x"], "y": s["y"],
+                     "radius": s["radius"], "intensity": s["intensity"],
+                     "color": [int(s["color"][0]), int(s["color"][1]), int(s["color"][2])]}
+                    for s in sources
+                ]
+                light_intensity, light_rgb = _compute_light_map(
+                    blocked, sources, view_w, view_h, ambient=0.06)
+            except Exception:
+                light_intensity = None
 
         for vy in range(view_h):
             row = []
             raw_row = []
             light_row = []
+            color_row = []
             for vx in range(view_w):
                 mx = cam_x + vx
                 my = cam_y + vy
@@ -205,25 +255,36 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                             row.append("⛩️")
                         else:
                             row.append(raw_tile)
-                        # プレイヤー周辺ライティング強度
-                        dist_sq = (mx - p.x) ** 2 + (my - p.y) ** 2
-                        intensity = max(0.15, 1.0 - (dist_sq / 64.0))
-                        light_row.append(round(intensity, 2))
+                        if light_intensity is not None:
+                            intensity = max(0.12, round(float(light_intensity[vy][vx]), 2))
+                            r, g, b = light_rgb[vy][vx]
+                            color_row.append(f"{r},{g},{b}")
+                        else:
+                            # フォールバック: プレイヤー距離ベース
+                            dist_sq = (mx - p.x) ** 2 + (my - p.y) ** 2
+                            intensity = max(0.15, 1.0 - (dist_sq / 64.0))
+                            color_row.append("255,240,210")
+                        light_row.append(intensity)
                     elif is_exp:
                         row.append(raw_tile)
-                        light_row.append(0.0) # 探索済みだが視界外 (Fog of war)
+                        light_row.append(0.0)  # 探索済みだが視界外 (Fog of war)
+                        color_row.append("40,42,55")
                     else:
                         row.append(" ")
-                        light_row.append(-1.0) # 未探索
+                        light_row.append(-1.0)  # 未探索
+                        color_row.append("0,0,0")
                 else:
                     row.append(" ")
                     raw_row.append(" ")
                     light_row.append(-1.0)
+                    color_row.append("0,0,0")
             visible_tiles.append(row)
             raw_tiles.append(raw_row)
             light_map.append(light_row)
+            light_color.append(color_row)
 
         entities_data = []
+        enemy_cones = []
         for e in engine.entities:
             if engine.game_map.visible[e.x][e.y] and e.hp > 0:
                 vx = e.x - cam_x
@@ -243,6 +304,14 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                         "faction": getattr(e, "faction", "neutral"),
                         "status_effects": [st.name for st in getattr(e, "status_effects", [])]
                     })
+                    # Phase 2-A: 敵の視界コーン（プレイヤー方向を向く）
+                    if not getattr(e, "is_player", False):
+                        ang = math.atan2(p.y - e.y, p.x - e.x)
+                        enemy_cones.append({
+                            "x": vx, "y": vy,
+                            "angle": ang, "half_angle": 0.6,
+                            "range": 6, "color": "255,60,60",
+                        })
 
         items_data = []
         for itm in engine.items_on_ground:
@@ -359,15 +428,15 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             "cha": p.attributes.charisma,
         }
 
-        # 光源リスト (Canvas Dynamic Lighting用)
-        light_sources = [
-            {"x": p.x - cam_x, "y": p.y - cam_y, "radius": 7.5, "color": [255, 220, 140], "intensity": 1.0}
-        ]
+        # 光源リスト (Canvas Dynamic Lighting用) — プレイヤー(ランタン)＋松明
+        # ＋祭壇(魔法光)を含む。FOV利用不可時はプレイヤーのみ。
+        light_sources = list(client_light_sources)
         if hasattr(engine, "altar_pos"):
             ax, ay = engine.altar_pos
             if engine.game_map.visible[ax][ay]:
                 light_sources.append({
-                    "x": ax - cam_x, "y": ay - cam_y, "radius": 4.0, "color": [100, 200, 255], "intensity": 0.8
+                    "x": ax - cam_x, "y": ay - cam_y, "radius": 4.0,
+                    "color": [100, 200, 255], "intensity": 0.8
                 })
 
         return {
@@ -400,7 +469,9 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             "map": visible_tiles,
             "raw_tiles": raw_tiles,
             "light_map": light_map,
+            "light_color": light_color,
             "light_sources": light_sources,
+            "enemy_cones": enemy_cones,
             "camera": {"cam_x": cam_x, "cam_y": cam_y, "view_w": view_w, "view_h": view_h},
             "map_size": {"width": engine.game_map.width, "height": engine.game_map.height},
             "entities": entities_data,

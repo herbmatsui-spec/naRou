@@ -1,127 +1,151 @@
+# Skill Trees Definition for naRou
+# Structure: skill_trees: { tree_id: { name, icon, tiers: [ { id, name, description, cost, prerequisites, effects } ] } }
+
 skill_trees:
   sword:
-    name: 剣術
-    icon: ⚔
+    name: "剣術"
+    icon: "⚔"
     tiers:
-      - id: basic_sword
-        name: 剣の基礎
-        description: 剣の基本的な扱い方を学ぶ
+      - id: "basic_sword"
+        name: "剣の基礎"
+        description: "剣の基本的な扱い方を学ぶ"
         cost: 10
         prerequisites: []
         effects:
-          - type: damage_bonus
+          - type: "damage_bonus"
             value: 5
-            target: melee
-      - id: sword_mastery
-        name: 剣術熟練
-        description: 剣術の熟練度を高め、より高度な技が使えるようになる
-        cost: 20
-        prerequisites:
-          - basic_sword
+            target: "melee"
+
+      - id: "sword_mastery"
+        name: "剣術熟練"
+        description: "剣の扱いに熟練し、より大きなダメージを与えられる"
+        cost: 25
+        prerequisites: ["basic_sword"]
         effects:
-          - type: damage_bonus
+          - type: "damage_bonus"
             value: 10
-            target: melee
-          - type: unlock_skill
-            value: sword_technique
-            target: unlocked
-      - id: sword_essence
-        name: 剣の極意
-        description: 剣の真髄を極め、絶大なダメージを与えることができる
-        cost: 30
-        prerequisites:
-          - sword_mastery
+            target: "melee"
+          - type: "unlock_skill"
+            value: "power_strike"
+            target: "self"
+
+      - id: "sword_essence"
+        name: "剣の極意"
+        description: "剣の真髄を極め、会心の一撃を放てるようになる"
+        cost: 50
+        prerequisites: ["sword_mastery"]
         effects:
-          - type: damage_bonus
+          - type: "damage_bonus"
+            value: 20
+            target: "melee"
+          - type: "crit_chance"
             value: 15
-            target: melee
-          - type: crit_chance
-            value: 0.1
-            target: melee
-          - type: unlock_skill
-            value: ultimate_slash
-            target: unlocked
+            target: "self"
+          - type: "unlock_skill"
+            value: "blade_dance"
+            target: "self"
+
   magic:
-    name: 魔法
-    icon: 🔮
+    name: "魔法"
+    icon: "✨"
     tiers:
-      - id: magic_basic
-        name: 魔法の基礎
-        description: 魔法の基本的な理論と詠唱方法を学ぶ
+      - id: "basic_magic"
+        name: "魔法の基礎"
+        description: "魔力の基本的な扱い方を学ぶ"
         cost: 10
         prerequisites: []
         effects:
-          - type: damage_bonus
+          - type: "damage_bonus"
             value: 5
-            target: magic
-      - id: magic_mastery
-        name: 魔法熟練
-        description: 魔法の詠唱速度と威力が向上する
-        cost: 20
-        prerequisites:
-          - magic_basic
+            target: "spell"
+
+      - id: "magic_mastery"
+        name: "魔法熟練"
+        description: "魔力の制御に熟練し、より強力な呪文を扱える"
+        cost: 25
+        prerequisites: ["basic_magic"]
         effects:
-          - type: damage_bonus
+          - type: "damage_bonus"
             value: 10
-            target: magic
-          - type: unlock_skill
-            value: magic_shot
-            target: unlocked
-      - id: magic_essence
-        name: 魔法の極意
-        description: 上級魔法を自在に操り、強力な呪文を唱えることができる
-        cost: 30
-        prerequisites:
-          - magic_mastery
+            target: "spell"
+          - type: "mp_cost_reduction"
+            value: 10
+            target: "self"
+          - type: "unlock_skill"
+            value: "fireball"
+            target: "self"
+
+      - id: "magic_essence"
+        name: "魔法の極意"
+        description: "魔法の真髄を極め、究極の呪文を操る"
+        cost: 50
+        prerequisites: ["magic_mastery"]
         effects:
-          - type: damage_bonus
-            value: 15
-            target: magic
-          - type: crit_chance
-            value: 0.1
-            target: magic
-          - type: unlock_skill
-            value: meteor_strike
-            target: unlocked
+          - type: "damage_bonus"
+            value: 20
+            target: "spell"
+          - type: "crit_chance"
+            value: 10
+            target: "spell"
+          - type: "mp_cost_reduction"
+            value: 20
+            target: "self"
+          - type: "unlock_skill"
+            value: "meteor"
+            target: "self"
+
   martial_arts:
-    name: 体術
-    icon: 🥊
+    name: "体術"
+    icon: "👊"
     tiers:
-      - id: physique_basic
-        name: 体術の基礎
-        description: 体術の基本的な構えと動きを学ぶ
+      - id: "basic_martial"
+        name: "体術の基礎"
+        description: "素手での戦い方の基本を学ぶ"
         cost: 10
         prerequisites: []
         effects:
-          - type: damage_bonus
+          - type: "damage_bonus"
             value: 5
-            target: unarmed
-      - id: physique_mastery
-        name: 体術熟練
-        description: 体術の技が磨かれ、より速く強い攻撃が可能になる
-        cost: 20
-        prerequisites:
-          - physique_basic
+            target: "unarmed"
+          - type: "dodge_chance"
+            value: 5
+            target: "self"
+
+      - id: "martial_mastery"
+        name: "体術熟練"
+        description: "体術に熟練し、素手でも武器並みの威力を発揮できる"
+        cost: 25
+        prerequisites: ["basic_martial"]
         effects:
-          - type: damage_bonus
+          - type: "damage_bonus"
             value: 10
-            target: unarmed
-          - type: unlock_skill
-            value: rushing_punch
-            target: unlocked
-      - id: physique_essence
-        name: 体術の極意
-        description: 体術の極みに到達し、閃光の如き連続攻撃を繰り出せる
-        cost: 30
-        prerequisites:
-          - physique_mastery
+            target: "unarmed"
+          - type: "dodge_chance"
+            value: 10
+            target: "self"
+          - type: "unlock_skill"
+            value: "counter_attack"
+            target: "self"
+
+      - id: "martial_essence"
+        name: "体術の極意"
+        description: "体術の極みに達し、拳一つで全てを砕く"
+        cost: 50
+        prerequisites: ["martial_mastery"]
         effects:
-          - type: damage_bonus
+          - type: "damage_bonus"
+            value: 20
+            target: "unarmed"
+          - type: "dodge_chance"
             value: 15
-            target: unarmed
-          - type: crit_chance
-            value: 0.1
-            target: unarmed
-          - type: unlock_skill
-            value: flash_fist
-            target: unlocked
+            target: "self"
+          - type: "counter_chance"
+            value: 20
+            target: "self"
+          - type: "unlock_skill"
+            value: "one_inch_punch"
+            target: "self"
+
+meta:
+  version: "1.0.0"
+  last_updated: "2026-08-19"

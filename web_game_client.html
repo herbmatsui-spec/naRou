@@ -858,7 +858,9 @@
         
         const map = gameState.map || [];
         const lightMap = gameState.light_map || [];
+        const lightColor = gameState.light_color || [];
         const lightSources = gameState.light_sources || [];
+        const enemyCones = gameState.enemy_cones || [];
         const viewH = map.length;
         const viewW = viewH > 0 ? map[0].length : 0;
 
@@ -866,10 +868,16 @@
         const offsetX = Math.max(0, (canvas.width - viewW * TILE_SIZE) / 2);
         const offsetY = Math.max(0, (canvas.height - viewH * TILE_SIZE) / 2);
 
-        // ライティングシステムを更新
-        lightingSystem.updateLightMap(lightMap);
-        lightingSystem.setLightSources(lightSources);
+        // ライティングシステムを更新（乗算ブレンド＋松明フリッカー＋敵視界コーン）
+        lightingSystem.updateLightMap(lightMap, lightColor);
+        lightingSystem.setLightSources(lightSources, animTime);
+        lightingSystem.setEnemyCones(enemyCones, animTime);
         lightingSystem.applyLighting(pixiApp.stage);
+
+        // 深度別カラーグレーディング（ポストプロセス）
+        if (postProcessManager && postProcessManager.setColorGrade) {
+            postProcessManager.setColorGrade(gameState.dungeon_level || 0);
+        }
 
         // 1. タイル描画 (床・壁・階段) - テクスチャアトラス使用
         for (let y = 0; y < viewH; y++) {

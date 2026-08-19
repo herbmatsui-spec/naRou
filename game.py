@@ -1645,6 +1645,14 @@ class Engine:
                 console.print(x=1, y=y, string=line, fg=(255, 255, 255))
                 y += 1
             return
+        if self.game_state_data.game_state == "job":
+            from ui_fx_systems import format_job_display
+            job_text = format_job_display(self.job_registry, self.player)
+            y = 1
+            for line in job_text.splitlines():
+                console.print(x=1, y=y, string=line, fg=(255, 255, 255))
+                y += 1
+            return
         from render_system import RenderSystem
         from renderer import TcodRenderer
         from render_context import RenderContext
@@ -1785,8 +1793,11 @@ def main() -> None:
                         if event.sym == tcod.event.KeySym.S:
                             engine.game_state = "skill_tree"
                             continue
+                        elif event.sym == tcod.event.KeySym.J:
+                            engine.game_state = "job"
+                            continue
                         elif event.sym == tcod.event.KeySym.ESCAPE:
-                            if engine.game_state == "skill_tree":
+                            if engine.game_state in ("skill_tree", "job"):
                                 engine.game_state = "play"
                             else:
                                 # keep existing ESC handling for other states

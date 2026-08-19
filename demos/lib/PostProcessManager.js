@@ -42,7 +42,16 @@ export class PostProcessManager {
         
         // ビネット用のグラフィック
         this.vignetteGraphics = new PIXI.Graphics();
-        
+
+        // 深度別カラーグレーディング（フェーズ2-A）：深層ほど青〜緑がかった
+        // 冷暗いトーンにシフトさせる。利用不可環境では無効化される。
+        this.colorGradeEnabled = false;
+        this.colorMatrix = null;
+        if (PIXI.filters && PIXI.filters.ColorMatrixFilter) {
+            this.colorMatrix = new PIXI.filters.ColorMatrixFilter();
+            this.colorGradeEnabled = true;
+        }
+
         // 初期化
         this._initEffects();
     }
@@ -119,7 +128,11 @@ export class PostProcessManager {
         if (this.vignetteEnabled) {
             filters.push(this.vignetteFilter);
         }
-        
+
+        if (this.colorGradeEnabled && this.colorMatrix) {
+            filters.push(this.colorMatrix);
+        }
+
         this.effectsContainer.filters = filters.length > 0 ? filters : null;
     }
     
@@ -183,6 +196,24 @@ export class PostProcessManager {
      */
     setVignetteEnabled(enabled) {
         this.vignetteEnabled = enabled;
+        this._applyFilters();
+    }
+
+    /**
+     * 深度別カラーグレーディングを設定（フェーズ2-A）。
+     * @param {number} depth - ダンジョン深度（0=地上、深いほど強く冷暗トーン）
+     */
+    setColorGrade(depth = 0) {
+        if (!this.colorGradeEnabled || !this.colorMatrix) return;
+        const t = Math.max(0, Math.min(1, depth / 50)); // 0..1 に正規化
+        this.colorMatrix.reset();
+        // 深層：青み・緑がかった冷色シフト + わずかな暗化
+        this.colorMatrix.tint((120 - t * 40) << 16 | (150 - t * 30) << 8 | (200 + t * 30), false);
+        this.colorMatrix.brightness(1 - t * 0.15, true);
+    }
+
+    setColorGradeEnabled(enabled) {
+        this.colorGradeEnabled = enabled && this.colorMatrix != null;
         this._applyFilters();
     }
     
