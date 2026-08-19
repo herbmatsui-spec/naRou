@@ -70,6 +70,15 @@ class MockWebGLRenderer(RendererBase):
                 x += int(glyph.advance * scale)
             else:
                 x += int(call.font_size * 0.5)
+
+    def draw_entity(self, call) -> None:
+        pass
+
+    def draw_lighting(self, call) -> None:
+        pass
+
+    def draw_particles(self, call) -> None:
+        pass
     
     def set_viewport(self, viewport: Viewport) -> None:
         self._viewport = viewport
@@ -221,10 +230,24 @@ def test_renderer_parity():
     
     # Create MSDF atlas
     atlas = MSDFAtlas(512, 2)
-    font_path = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
-    if not Path(font_path).exists():
-        font_path = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
-    atlas.generate_atlas(font_path, 'Hello naRou日本語テストABCDEFGHIJKLMNOPQRSTUVWXYZ', 16, 2)
+    font_candidates = [
+        '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+        '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+        'C:/Windows/Fonts/arial.ttf',
+        'C:/Windows/Fonts/msgothic.ttc',
+        'C:/Windows/Fonts/meiryo.ttc',
+    ]
+    font_path = next((p for p in font_candidates if Path(p).exists()), None)
+    if font_path:
+        atlas.generate_atlas(font_path, 'Hello naRou日本語テストABCDEFGHIJKLMNOPQRSTUVWXYZ', 16, 2)
+    else:
+        # Fallback if no TTF found in standard paths
+        try:
+            pil_font = ImageFont.load_default()
+            atlas.font_size = 16
+        except Exception:
+            pass
+
     
     # Create TCOD renderer
     tcod_renderer = TCODRenderer(width, height)

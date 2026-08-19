@@ -443,6 +443,11 @@
     <!-- CANVAS VIEWPORT -->
     <div class="viewport-panel" id="viewportPanel">
       <canvas id="gameCanvas" width="960" height="576"></canvas>
+      <div id="gl-error-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); color:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:100; text-align:center; padding:20px;">
+        <h2 style="color:#e74c3c; margin-bottom:10px;">⚠️ グラフィックス初期化警告</h2>
+        <p id="gl-error-msg" style="margin-bottom:15px; max-width:500px;">WebGL2 / WebGPU の初期化に失敗したか、サポートされていません。フォールバック描画モードで動作しています。</p>
+        <button onclick="document.getElementById('gl-error-overlay').style.display='none'" style="background:var(--primary-accent,#3498db); color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">閉じる</button>
+      </div>
 
       <!-- HUD OVERLAY -->
       <div class="hud-overlay">

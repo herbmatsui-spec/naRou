@@ -233,6 +233,48 @@ class MSDFAtlas {
         return output;
     }
 
+    async load_atlas(gl: WebGL2RenderingContext, texture_url: string, meta_url: string): Promise<void> {
+        const meta_res = await fetch(meta_url);
+        const meta = await meta_res.json();
+        
+        this.font_size = meta.font_size;
+        this.chars = meta.chars;
+        this.padding = meta.padding;
+        this.atlas_size = meta.atlas_size || 4096;
+        this.glyphs.clear();
+        
+        for (const [ch, gm] of Object.entries(meta.glyphs as Record<string, any>)) {
+            this.glyphs.set(ch, {
+                advance: gm.advance,
+                bearing_x: gm.bearing_x,
+                bearing_y: gm.bearing_y,
+                width: gm.width,
+                height: gm.height,
+                u0: gm.u0,
+                v0: gm.v0,
+                u1: gm.u1,
+                v1: gm.v1,
+            });
+        }
+        
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => {
+                this.texture = gl.createTexture();
+                gl.bindTexture(gl.TEXTURE_2D, this.texture);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                resolve();
+            };
+            img.onerror = (err) => reject(err);
+            img.src = texture_url;
+        });
+    }
+
     get_glyph(ch: string): GlyphMetrics | undefined {
         return this.glyphs.get(ch);
     }
@@ -411,6 +453,11 @@ export class WebGLRenderer {
     async load_msdf_atlas(font_path: string, chars: string, size: number, padding: number = 2): Promise<void> {
         this.msdf_atlas = new MSDFAtlas();
         await this.msdf_atlas.generate_atlas(this.gl, font_path, chars, size, padding);
+    }
+
+    async load_msdf_atlas_from_url(texture_url: string, meta_url: string): Promise<void> {
+        this.msdf_atlas = new MSDFAtlas();
+        await this.msdf_atlas.load_atlas(this.gl, texture_url, meta_url);
     }
 
     begin_frame(): void {
