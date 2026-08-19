@@ -190,12 +190,19 @@ class ConditionParser:
         return LeafCondition(key, op, value)
 
 
+PARSED_AST_CACHE: dict[str, ConditionNodeBase] = {}
+
+
 def parse_condition(dsl: str) -> ConditionNodeBase:
-    """DSL 文字列を条件 AST に変換する便利関数。"""
-    return ConditionParser().parse(dsl)
+    """DSL 文字列を条件 AST に変換する便利関数（キャッシュ対応）。"""
+    if dsl in PARSED_AST_CACHE:
+        return PARSED_AST_CACHE[dsl]
+    node = ConditionParser().parse(dsl)
+    PARSED_AST_CACHE[dsl] = node
+    return node
 
 
-__all__ = ["ConditionParser", "parse_condition", "parse_condition_from_yaml", "ConditionParseError"]
+__all__ = ["ConditionParser", "parse_condition", "parse_condition_from_yaml", "ConditionParseError", "PARSED_AST_CACHE"]
 
 
 def parse_condition_from_yaml(dsl: str):

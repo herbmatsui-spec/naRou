@@ -8,6 +8,7 @@ meta:
   fallback: true
 
 ui:
+  hello: "Hello"
   menu:
     new_game: "New Game"
     continue: "Continue"

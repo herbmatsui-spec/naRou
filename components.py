@@ -184,7 +184,30 @@ class ArchaeologyComponent:
     interpretation_notes: Dict[str, str] = field(default_factory=dict) # truth_id -> プレイヤー解釈文
     decoder_hints_seen: List[str] = field(default_factory=list)       # 蓄積された解読ヒント（気づき）
     decipherment_gauge: int = 0                                       # 解読ゲージ（破片収集で上昇）
-    truth_pieces: List[str] = field(default_factory=list)             # 獲得した真実の一片
+@dataclass
+class BaseStatsComponent:
+    """HP/MPの基本ステータス用ECSコンポーネント"""
+    hp: int = 50
+    max_hp: int = 50
+    mp: int = 20
+    max_mp: int = 20
+
+
+@dataclass
+class EconomyComponent:
+    """所持金・経済用ECSコンポーネント"""
+    gold: int = 0
+    platinum: int = 0
+
+
+@dataclass
+class LevelComponent:
+    """レベル・経験値・スキルポイント用ECSコンポーネント"""
+    level: int = 1
+    exp: int = 0
+    exp_next: int = 100
+    skill_points: int = 0
+    total_skill_points_earned: int = 0
 
 
 # --- LocalizationManager integration (i18n, Step 3.x) ---

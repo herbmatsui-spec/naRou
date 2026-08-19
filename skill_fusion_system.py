@@ -223,9 +223,16 @@ def get_fusion_manager() -> FusionManager:
     return FusionManager(registry)
 
 
+# Backward compatibility aliases
+SkillFusionRegistry = FusionRegistry
+SkillFusionManager = FusionManager
+
+
 __all__ = [
     "FusionEffect",
     "FusionData",
     "FusionRegistry",
     "FusionManager",
+    "SkillFusionRegistry",
+    "SkillFusionManager",
 ]

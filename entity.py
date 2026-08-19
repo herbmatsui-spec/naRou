@@ -12,7 +12,7 @@ from components import (
     TitleComponent, GuildFactionComponent, AchievementComponent,
     ReincarnationComponent, SkillTreeJobComponent, SkillFusionComponent,
     StorytellerComponent, AttributesComponent, ProceduralQuestComponent,
-    ArchaeologyComponent
+    ArchaeologyComponent, BaseStatsComponent, EconomyComponent, LevelComponent
 )
 
 T = TypeVar('T')
@@ -198,13 +198,9 @@ class Entity:
         self.speed = speed
         self.energy = 0
 
-        # Entity rendering fields (Step 1 of Proposal 2)
-        self.facing: int = 0           # 0:下, 1:左, 2:右, 3:上
-        self.state: str = "idle"       # "idle", "walk", "attack", "dead"
-        self.attack_timer: float = 0.0 # 攻撃アニメーション残り時間
-        self.moving: bool = False      # 移動中フラグ
-        self.prev_x: int = x           # 前フレーム位置（向き計算用）
-        self.prev_y: int = y           # 前フレーム位置
+        # === ECS コンポーネントコンテナ ===
+        self.components: Dict[Type, Any] = {}
+        self._init_components()
 
         # 主能力（コンポーネント初期化後に設定）
         self._init_attributes = attributes
@@ -212,7 +208,7 @@ class Entity:
         # ベース能力値（ジョブ補正前の生の値）
         self._base_attributes: Optional[AttributesComponent] = None
 
-        # レベルと経験値
+        # レベルと経験値 (LevelComponentへの委譲プロパティ)
         self.level = 1
         self.exp = 0
         self.exp_next = 100
@@ -248,10 +244,6 @@ class Entity:
         # チュートリアル完了履歴 (Step 1.2)
         self.completed_tutorials: Set[str] = set()
         self.pending_tutorial_popup: Optional[Dict[str, Any]] = None
-
-        # === ECS コンポーネントコンテナ ===
-        self.components: Dict[Type, Any] = {}
-        self._init_components()
 
         # 主能力コンポーネントに初期値を適用
         self._apply_init_attributes()
@@ -297,6 +289,9 @@ class Entity:
         self.components[AttributesComponent] = AttributesComponent()
         self.components[ProceduralQuestComponent] = ProceduralQuestComponent()
         self.components[ArchaeologyComponent] = ArchaeologyComponent()
+        self.components[BaseStatsComponent] = BaseStatsComponent()
+        self.components[EconomyComponent] = EconomyComponent()
+        self.components[LevelComponent] = LevelComponent()
 
     def get_component(self, component_type: Type[T]) -> T:
         """指定されたコンポーネントを取得（存在しなければ初期化して登録）"""
@@ -351,10 +346,69 @@ class Entity:
     @total_turns.setter
     def total_turns(self, val: int): self.get_component(TitleComponent).total_turns = val
 
+    # -------------------------------------------------------------
+    # 基本ステータスプロパティ (BaseStatsComponent への委譲)
+    # -------------------------------------------------------------
     @property
-    def gold(self) -> int: return self.get_component(TitleComponent).gold
+    def hp(self) -> int: return self.get_component(BaseStatsComponent).hp
+    @hp.setter
+    def hp(self, val: int): self.get_component(BaseStatsComponent).hp = val
+
+    @property
+    def max_hp(self) -> int: return self.get_component(BaseStatsComponent).max_hp
+    @max_hp.setter
+    def max_hp(self, val: int): self.get_component(BaseStatsComponent).max_hp = val
+
+    @property
+    def mp(self) -> int: return self.get_component(BaseStatsComponent).mp
+    @mp.setter
+    def mp(self, val: int): self.get_component(BaseStatsComponent).mp = val
+
+    @property
+    def max_mp(self) -> int: return self.get_component(BaseStatsComponent).max_mp
+    @max_mp.setter
+    def max_mp(self, val: int): self.get_component(BaseStatsComponent).max_mp = val
+
+    # -------------------------------------------------------------
+    # 経済プロパティ (EconomyComponent への委譲)
+    # -------------------------------------------------------------
+    @property
+    def gold(self) -> int: return self.get_component(EconomyComponent).gold
     @gold.setter
-    def gold(self, val: int): self.get_component(TitleComponent).gold = val
+    def gold(self, val: int): self.get_component(EconomyComponent).gold = val
+
+    @property
+    def platinum(self) -> int: return self.get_component(EconomyComponent).platinum
+    @platinum.setter
+    def platinum(self, val: int): self.get_component(EconomyComponent).platinum = val
+
+    # -------------------------------------------------------------
+    # レベル・経験値プロパティ (LevelComponent への委譲)
+    # -------------------------------------------------------------
+    @property
+    def level(self) -> int: return self.get_component(LevelComponent).level
+    @level.setter
+    def level(self, val: int): self.get_component(LevelComponent).level = val
+
+    @property
+    def exp(self) -> int: return self.get_component(LevelComponent).exp
+    @exp.setter
+    def exp(self, val: int): self.get_component(LevelComponent).exp = val
+
+    @property
+    def exp_next(self) -> int: return self.get_component(LevelComponent).exp_next
+    @exp_next.setter
+    def exp_next(self, val: int): self.get_component(LevelComponent).exp_next = val
+
+    @property
+    def skill_points(self) -> int: return self.get_component(LevelComponent).skill_points
+    @skill_points.setter
+    def skill_points(self, val: int): self.get_component(LevelComponent).skill_points = val
+
+    @property
+    def total_skill_points_earned(self) -> int: return self.get_component(LevelComponent).total_skill_points_earned
+    @total_skill_points_earned.setter
+    def total_skill_points_earned(self, val: int): self.get_component(LevelComponent).total_skill_points_earned = val
 
     # -------------------------------------------------------------
     # 主能力プロパティ (AttributesComponent への委譲) - Step 2

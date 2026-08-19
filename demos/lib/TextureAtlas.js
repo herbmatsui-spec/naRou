@@ -13,8 +13,10 @@ export class TextureAtlas {
         }
         
         this.baseTexture = baseTexture;
+        this.normalBaseTexture = null;
         this.metadata = metadata;
         this.textures = new Map();
+        this.normalTextures = new Map();
         
         // メタデータから個々のテクスチャを作成
         if (metadata && metadata.glyphs) {
@@ -29,6 +31,34 @@ export class TextureAtlas {
                 this.textures.set(char, texture);
             }
         }
+    }
+    
+    /**
+     * Step 10: ノーマルマップテクスチャをロード
+     * @param {PIXI.Texture} normalBaseTexture
+     */
+    loadNormalMap(normalBaseTexture) {
+        this.normalBaseTexture = normalBaseTexture;
+        if (this.metadata && this.metadata.glyphs) {
+            for (const [char, frame] of Object.entries(this.metadata.glyphs)) {
+                const normTex = new PIXI.Texture(normalBaseTexture, new PIXI.Rectangle(
+                    frame.x,
+                    frame.y,
+                    frame.width,
+                    frame.height
+                ));
+                this.normalTextures.set(char, normTex);
+            }
+        }
+    }
+
+    /**
+     * 指定された文字のノーマルテクスチャを取得
+     * @param {string} char
+     * @returns {PIXI.Texture|null}
+     */
+    getNormalTexture(char) {
+        return this.normalTextures.get(char) || null;
     }
     
     /**
