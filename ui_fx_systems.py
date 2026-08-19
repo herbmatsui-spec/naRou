@@ -881,12 +881,69 @@ def format_skill_tree_display(registry: SkillTreeRegistry) -> str:
                 if effect.type == "damage_bonus":
                     lines.append(f"    ダメージ+{effect.value} ({effect.target})")
                 elif effect.type == "crit_chance":
-                    lines.append(f"    会心率+{int(effect.value*100)}% ({effect.target})")
+                    lines.append(f"    会心率+{int(effect.value)}% ({effect.target})")
                 elif effect.type == "unlock_skill":
                     lines.append(f"    スキル解放: {effect.value}")
                 else:
                     lines.append(f"    {effect.type}: {effect.value} ({effect.target})")
         lines.append("")
+    return "\n".join(lines)
+
+
+def format_job_display(registry: JobRegistry, player) -> str:
+    """ジョブデータを簡単なテキスト形式で返す"""
+    lines = []
+    lines.append("=== 職業システム ===")
+    lines.append(f"現在の職業: {player.job} (Job Lv.{player.job_level}  EXP: {player.job_exp})")
+    lines.append("")
+    
+    # 現在の職業のステータス補正
+    current_job = registry.get(player.job)
+    if current_job and current_job.stat_modifiers:
+        lines.append("現在の職業補正:")
+        for attr, val in current_job.stat_modifiers.items():
+            sign = "+" if val >= 0 else ""
+            lines.append(f"  {attr}: {sign}{val}")
+        lines.append("")
+    
+    # 習得済みジョブ
+    if hasattr(player, 'mastered_jobs') and player.mastered_jobs:
+        lines.append("マスター済み職業:")
+        for job_id in player.mastered_jobs:
+            job = registry.get(job_id)
+            if job:
+                lines.append(f"  ✓ {job.name} (tier {job.tier})")
+        lines.append("")
+    
+    # 利用可能なジョブ
+    available = []
+    for job_id, job in registry.all().items():
+        if job_id == "novice":
+            continue
+        if job_id in getattr(player, "mastered_jobs", []) or job_id == player.job:
+            continue
+        # Check unlock conditions (simplified)
+        lines.append("転職可能な職業:")
+        break
+    
+    # Show all jobs with status
+    lines.append("職業一覧:")
+    for job_id, job in registry.all().items():
+        if job_id == "novice":
+            continue
+        status = ""
+        if job_id == player.job:
+            status = " (現在)"
+        elif job_id in getattr(player, "mastered_jobs", []):
+            status = " (マスター済み)"
+        icon = getattr(job, 'icon', '📋')
+        lines.append(f"  {icon} {job.name} (tier {job.tier}){status}")
+        if job.stat_modifiers:
+            for attr, val in job.stat_modifiers.items():
+                sign = "+" if val >= 0 else ""
+                lines.append(f"    {attr}: {sign}{val}")
+        lines.append("")
+    
     return "\n".join(lines)
 
 

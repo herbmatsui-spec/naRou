@@ -201,6 +201,9 @@ class Entity:
         # 主能力（コンポーネント初期化後に設定）
         self._init_attributes = attributes
 
+        # ベース能力値（ジョブ補正前の生の値）
+        self._base_attributes: Optional[AttributesComponent] = None
+
         # レベルと経験値
         self.level = 1
         self.exp = 0
@@ -254,7 +257,7 @@ class Entity:
         self.stamina = self.max_stamina
 
     def _apply_init_attributes(self) -> None:
-        """初期能力値をコンポーネントに適用"""
+        """初期能力値をコンポーネントに適用し、ベース値を保存"""
         attrs_comp = self.get_component(AttributesComponent)
         if self._init_attributes is not None:
             if isinstance(self._init_attributes, dict):
@@ -266,6 +269,12 @@ class Entity:
                 for k in attrs_comp.to_dict().keys():
                     if hasattr(self._init_attributes, k):
                         setattr(attrs_comp, k, getattr(self._init_attributes, k))
+        
+        # ベース能力値を保存（ジョブ補正前の生の値）
+        self._base_attributes = AttributesComponent()
+        for k, v in attrs_comp.to_dict().items():
+            setattr(self._base_attributes, k, v)
+        
         delattr(self, '_init_attributes')
 
     def _init_components(self) -> None:
@@ -835,17 +844,40 @@ class Entity:
 
     def recalculate_stats(self) -> None:
         # ジョブ補正適用 (Steps 48, 49)
-        try:
-            from job_system import JobRegistry
-            reg = JobRegistry()
-            reg.load()
-            job_data = reg.get(self.job)
-            if job_data and hasattr(job_data, "stat_modifiers"):
-                for attr_name, mod_val in job_data.stat_modifiers.items():
-                    if hasattr(self.attributes, attr_name):
-                        pass
-        except Exception:
-            pass
+        # ベース能力値から再計算（ベース値 + ジョブ補正）
+        if self._base_attributes is not None:
+            # ベース値を復元
+            for attr_name, base_val in self._base_attributes.to_dict().items():
+                if hasattr(self.attributes, attr_name):
+                    setattr(self.attributes, attr_name, base_val)
+            
+            # ジョブ補正を適用
+            try:
+                from job_system import JobRegistry
+                reg = JobRegistry()
+                reg.load()
+                job_data = reg.get(self.job)
+                if job_data and hasattr(job_data, "stat_modifiers"):
+                    for attr_name, mod_val in job_data.stat_modifiers.items():
+                        if hasattr(self.attributes, attr_name):
+                            current = getattr(self.attributes, attr_name)
+                            setattr(self.attributes, attr_name, current + mod_val)
+            except Exception:
+                pass
+        else:
+            # ベース値が未設定の場合は従来通り
+            try:
+                from job_system import JobRegistry
+                reg = JobRegistry()
+                reg.load()
+                job_data = reg.get(self.job)
+                if job_data and hasattr(job_data, "stat_modifiers"):
+                    for attr_name, mod_val in job_data.stat_modifiers.items():
+                        if hasattr(self.attributes, attr_name):
+                            current = getattr(self.attributes, attr_name)
+                            setattr(self.attributes, attr_name, current + mod_val)
+            except Exception:
+                pass
 
         self.max_hp = self.calculate_max_hp()
         self.max_mp = self.calculate_max_mp()
@@ -871,6 +903,9 @@ class Entity:
             grown = random.sample(attr_pool, 2)
             for chosen in grown:
                 setattr(self.attributes, chosen, getattr(self.attributes, chosen) + 1)
+                # ベース値も更新
+                if self._base_attributes is not None:
+                    setattr(self._base_attributes, chosen, getattr(self._base_attributes, chosen) + 1)
 
             # レベルアップ時スキルポイント付与 (Step 24)
             sp_gain = 5

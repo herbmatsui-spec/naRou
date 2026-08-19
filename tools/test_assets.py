@@ -5,6 +5,7 @@ Runs functional tests to ensure assets work correctly in the game context.
 """
 
 import os
+import sys
 import json
 import argparse
 from pathlib import Path

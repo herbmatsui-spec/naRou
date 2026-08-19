@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "generated_at": 1787101257.2319272,
+  "directories": {
+    "source": "assets/src",
+    "output": "assets/build",
+    "temp": "assets/temp",
+    "cache": "assets/cache",
+    "logs": "assets/logs"
+  },
+  "asset_counts": {
+    "tilesets": 0,
+    "fonts": 0,
+    "sounds": 0,
+    "models": 0
+  }
+}

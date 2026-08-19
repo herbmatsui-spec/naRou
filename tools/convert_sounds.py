@@ -7,6 +7,8 @@ Supports WAV to OGG/MP3 conversion, quality optimization, and metadata extractio
 import os
 import json
 import argparse
+import shutil
+import time
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import wave
@@ -172,6 +174,154 @@ def validate_sound(file_path: str) -> Tuple[bool, List[str]]:
         issues.append(f"Could not read file: {e}")
     
     return len(issues) == 0, issues
+
+
+def test_sounds(sound_files: List[str], output_dir: str = None) -> Tuple[bool, List[str]]:
+    """Step 50: Run validation tests on a list of sound files.
+
+    Returns (all_valid, issues) where issues lists per-file problems.
+    """
+    issues: List[str] = []
+    all_valid = True
+    for sf in sound_files:
+        ok, file_issues = validate_sound(sf)
+        if not ok:
+            all_valid = False
+            issues.append(f"{sf}: {', '.join(file_issues)}")
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+        report_path = os.path.join(output_dir, 'sound_test_report.json')
+        with open(report_path, 'w') as f:
+            json.dump({'all_valid': all_valid, 'issues': issues}, f, indent=2)
+    return all_valid, issues
+
+
+def document_sounds(sound_files: List[str], output_path: str) -> str:
+    """Step 51: Generate a Markdown document describing the sound library."""
+    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+    lines = [
+        "# Sound Asset Documentation",
+        "",
+        f"- **Total sounds**: {len(sound_files)}",
+        "",
+        "## Sounds",
+        "",
+        "| File | Size (bytes) | Format | Duration (s) |",
+        "|------|-------------|--------|-------------|",
+    ]
+    for sf in sound_files:
+        meta = get_sound_metadata(sf)
+        lines.append(f"| {os.path.basename(sf)} | {meta['file_size']} | "
+                     f"{meta['format']} | {meta['duration']:.2f} |")
+    with open(output_path, 'w') as f:
+        f.write("\n".join(lines) + "\n")
+    return output_path
+
+
+def log_sound_event(message: str, log_path: str = None, level: str = "INFO") -> str:
+    """Step 52: Append a timestamped log entry for a sound operation."""
+    if log_path is None:
+        log_path = os.path.join('assets', 'logs', 'sound_build.log')
+    os.makedirs(os.path.dirname(os.path.abspath(log_path)), exist_ok=True)
+    entry = f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] [{level}] {message}\n"
+    with open(log_path, 'a') as f:
+        f.write(entry)
+    return entry
+
+
+def create_sound_statistics(sound_files: List[str]) -> Dict:
+    """Step 53: Generate aggregate statistics for a set of sound files."""
+    stats = {
+        'total_files': len(sound_files),
+        'total_size': 0,
+        'formats': {},
+        'total_duration': 0.0,
+    }
+    for sf in sound_files:
+        meta = get_sound_metadata(sf)
+        stats['total_size'] += meta['file_size']
+        stats['total_duration'] += meta['duration']
+        fmt = meta['format']
+        stats['formats'][fmt] = stats['formats'].get(fmt, 0) + 1
+    return stats
+
+
+# ---------------------------------------------------------------------------
+# Phase 3 - Steps 54-60: analysis, batch optimization, backup/restore,
+# export/import, synchronization
+# ---------------------------------------------------------------------------
+
+def analyze_sounds(sound_files: List[str]) -> Dict:
+    """Analyze a list of sounds and produce optimization recommendations."""
+    stats = create_sound_statistics(sound_files)
+    recommendations = []
+    if stats['total_size'] > 50 * 1024 * 1024:
+        recommendations.append("Total sound size exceeds 50MB; consider compression")
+    if stats['formats'].get('wav', 0) > 0:
+        recommendations.append("WAV files detected; convert to OGG for smaller footprint")
+    return {'statistics': stats, 'recommendations': recommendations}
+
+
+def optimize_sounds_batch(sound_files: List[str], output_dir: str,
+                          quality: str = 'medium') -> Dict:
+    """Optimize a batch of sounds into an output directory (Step 55)."""
+    os.makedirs(output_dir, exist_ok=True)
+    results = {}
+    for f in sound_files:
+        out = os.path.join(output_dir, os.path.basename(f))
+        results[f] = optimize_sound_quality(f, out, quality)
+    return results
+
+
+def backup_sounds(sound_files: List[str], backup_dir: str) -> Dict:
+    """Copy sounds to a backup directory (Step 56)."""
+    import shutil
+    os.makedirs(backup_dir, exist_ok=True)
+    for f in sound_files:
+        shutil.copy2(f, os.path.join(backup_dir, os.path.basename(f)))
+    return {'backed_up': len(sound_files), 'backup_dir': backup_dir}
+
+
+def restore_sounds(backup_dir: str, output_dir: str) -> Dict:
+    """Restore sounds from a backup directory (Step 57)."""
+    import shutil
+    os.makedirs(output_dir, exist_ok=True)
+    count = 0
+    for f in scan_sound_files(backup_dir):
+        shutil.copy2(f, os.path.join(output_dir, os.path.basename(f)))
+        count += 1
+    return {'restored': count, 'output_dir': output_dir}
+
+
+def export_sounds(sound_files: List[str], export_dir: str,
+                  target_format: str = 'ogg') -> Dict:
+    """Export sounds converted to a target format (Step 58)."""
+    os.makedirs(export_dir, exist_ok=True)
+    results = {}
+    for f in sound_files:
+        out = os.path.join(export_dir,
+                           os.path.splitext(os.path.basename(f))[0] + '.' + target_format)
+        results[f] = convert_sound_format(f, out, target_format)
+    return results
+
+
+def import_sounds(source_dir: str, output_dir: str) -> List[str]:
+    """Import sounds from a source directory into the output directory (Step 59)."""
+    import shutil
+    os.makedirs(output_dir, exist_ok=True)
+    imported = []
+    for f in scan_sound_files(source_dir):
+        shutil.copy2(f, os.path.join(output_dir, os.path.basename(f)))
+        imported.append(f)
+    return imported
+
+
+def synchronize_sounds(local_dir: str, remote_dir: str) -> bool:
+    """Synchronize local sounds with a remote/backup directory (Step 60)."""
+    files = scan_sound_files(local_dir)
+    backup_sounds(files, remote_dir)
+    log_sound_event(f"Synchronized {len(files)} sounds to {remote_dir}", level="SYNC")
+    return len(files) >= 0
 
 
 def main():

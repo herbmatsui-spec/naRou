@@ -1,11 +1,11 @@
 [run]
+branch = True
 source = .
 omit =
     */tests/*
+    */tools/*
     */venv/*
-    */.venv/*
     */__pycache__/*
-    setup.py
 
 [report]
 exclude_lines =
@@ -14,7 +14,10 @@ exclude_lines =
     raise AssertionError
     raise NotImplementedError
     if __name__ == .__main__.:
-    pass
-
-[html]
-directory = htmlcov
+    if DEBUG
+    if settings.DEBUG
+    if settings.TESTING
+ignore_errors = True
+fail_under = 80
+show_missing = True
+skip_covered = False

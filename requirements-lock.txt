@@ -1,0 +1,9 @@
+# Core Dependencies
+tcod>=21.2.1
+PyYAML>=6.0.2
+
+# Testing & Quality Assurance
+pytest>=8.0.0
+mypy>=1.10.0
+flake8>=7.0.0
+black>=24.0.0

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>naRou Scene Demo - 18. ニューゲーム+ (NG+)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+            background: #070913;
+            color: #ffffff;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            background-image: radial-gradient(circle at top center, #1b2038, #070913);
+        }
+        .stage-box {
+            width: 820px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            overflow: hidden;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .grid-map {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 4px;
+            background: #030712;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.08);
+            font-size: 32px;
+            user-select: none;
+        }
+        .tile {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 48px;
+            border-radius: 6px;
+        }
+        .tile-wall { background: rgba(50, 40, 40, 0.5); }
+        .tile-floor { color: #4b5563; font-size: 16px; }
+        .anim-pulse { animation: pop 1.2s infinite alternate ease-in-out; }
+        @keyframes pop {
+            0% { transform: scale(1.0); }
+            100% { transform: scale(1.2); }
+        }
+    </style>
+</head>
+<body>
+    <div class="stage-box">
+        <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl">💫</span>
+                <div>
+                    <h1 class="text-xl font-bold text-sky-400">18. ニューゲーム+ (NG+)</h1>
+                    <p class="text-xs text-slate-400">周回ごとに敵強化・ドロップ増・カルマ変動</p>
+                </div>
+            </div>
+            <span class="bg-sky-500/20 text-sky-300 px-3 py-1 rounded-full text-xs font-semibold">Scene Demo</span>
+        </div>
+
+        <div class="grid-map">
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile anim-pulse">💫</div>
+            <div class="tile tile-floor">▫️</div>
+            <div class="tile anim-pulse">📈</div>
+            <div class="tile tile-floor">▫️</div>
+            <div class="tile anim-pulse">🔁</div>
+            <div class="tile tile-floor">▫️</div>
+            <div class="tile anim-pulse">💀</div>
+            <div class="tile tile-floor">▫️</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-floor">▫️</div>
+            <div class="tile anim-pulse">🧙</div>
+            <div class="tile anim-pulse">👧</div>
+            <div class="tile tile-floor">▫️</div>
+            <div class="tile anim-pulse">💰</div>
+            <div class="tile tile-floor">▫️</div>
+            <div class="tile anim-pulse">🎁</div>
+            <div class="tile tile-floor">▫️</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-floor">▫️</div>
+            <div class="tile anim-pulse">⚖️</div>
+            <div class="tile tile-floor">▫️</div>
+            <div class="tile tile-floor">▫️</div>
+            <div class="tile anim-pulse">🔥</div>
+            <div class="tile tile-floor">▫️</div>
+            <div class="tile tile-floor">▫️</div>
+            <div class="tile anim-pulse">⭐</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+            <div class="tile tile-wall">🧱</div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 text-sm flex items-center justify-between">
+            <span class="text-yellow-300 font-medium">📜 ニューゲーム+💫！周回毎に敵ステータス+15%/ドロップ+10% scaling、カルマ⚖️も変動する。</span>
+            <span class="text-xs text-slate-500">naRou: Masterpiece Edition</span>
+        </div>
+    </div>
+</body>
+</html>

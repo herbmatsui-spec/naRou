@@ -6,8 +6,6 @@
 
 <div align="center">
   <img src="demo_gameplay.gif" alt="naRou: Masterpiece Edition ゲームプレイデモ" width="700">
-<div align="center">
-  <img src="demo_gameplay.gif" alt="naRou: Masterpiece Edition ゲームプレイデモ" width="700">
   <p><em>▲ 拠点〜ダンジョン探索〜ボス戦〜輪廻転生 NG+ のループプレビュー</em></p>
 </div>
 
@@ -16,6 +14,48 @@
 - **実況プレイデモ（全24章・初心者ガイド付き）**: [`elona_playthrough.html`](elona_playthrough.html)
 - **24シーン グランドショーケース**: [`demos/gallery_24_scenes.html`](demos/gallery_24_scenes.html)
 - **絵文字グラフィックモード**: [`emoji_showcase.html`](emoji_showcase.html)
+- **Webクライアント（WebSocket/HTTP 実プレイ）**: [`web_game_client.html`](web_game_client.html)
+- **チュートリアルデモ**: [`tutorial_demo.html`](tutorial_demo.html)
+- **UI コンポーネントカタログ**: [`ui_catalog.html`](ui_catalog.html)
+
+### 🗺️ 個別シーン プレビュー（全24シーン）
+`demos/` 配下に各シーンの独立プレビューを用意しています：
+[`scene_01_base_home.html`](demos/scene_01_base_home.html) ·
+[`scene_02_adventurers_guild.html`](demos/scene_02_adventurers_guild.html) ·
+[`scene_03_job_system.html`](demos/scene_03_job_system.html) ·
+[`scene_04_skill_tree.html`](demos/scene_04_skill_tree.html) ·
+[`scene_05_skill_fusion.html`](demos/scene_05_skill_fusion.html) ·
+[`scene_06_skill_evolution_awakening.html`](demos/scene_06_skill_evolution_awakening.html) ·
+[`scene_07_skill_meta.html`](demos/scene_07_skill_meta.html) ·
+[`scene_08_pet_contract.html`](demos/scene_08_pet_contract.html) ·
+[`scene_09_pet_evolution.html`](demos/scene_09_pet_evolution.html) ·
+[`scene_10_pet_fusion.html`](demos/scene_10_pet_fusion.html) ·
+[`scene_11_procedural_dungeon.html`](demos/scene_11_procedural_dungeon.html) ·
+[`scene_12_combat_system.html`](demos/scene_12_combat_system.html) ·
+[`scene_13_monsters_ai.html`](demos/scene_13_monsters_ai.html) ·
+[`scene_14_gods_faith.html`](demos/scene_14_gods_faith.html) ·
+[`scene_15_faction_war.html`](demos/scene_15_faction_war.html) ·
+[`scene_16_guilds_detail.html`](demos/scene_16_guilds_detail.html) ·
+[`scene_17_reincarnation.html`](demos/scene_17_reincarnation.html) ·
+[`scene_18_ng_plus.html`](demos/scene_18_ng_plus.html) ·
+[`scene_19_meta_progression.html`](demos/scene_19_meta_progression.html) ·
+[`scene_20_storyteller.html`](demos/scene_20_storyteller.html) ·
+[`scene_21_procedural_quests.html`](demos/scene_21_procedural_quests.html) ·
+[`scene_22_save_migration.html`](demos/scene_22_save_migration.html) ·
+[`scene_23_balance_simulator.html`](demos/scene_23_balance_simulator.html) ·
+[`scene_24_ecs_architecture.html`](demos/scene_24_ecs_architecture.html)
+
+### ✨ ビジュアル・エフェクト デモ
+描画エンジンの演出を個別に確認できます：
+- **ブルーム＆シェイク演出**: [`demos/bloom_shake_demo.html`](demos/bloom_shake_demo.html)
+- **ライティング演出**: [`demos/lighting_demo.html`](demos/lighting_demo.html)
+- **パーティクル演出**: [`demos/particle_demo.html`](demos/particle_demo.html)
+- **WebGL テンプレート**: [`demos/webgl_template.html`](demos/webgl_template.html)
+- **フォントアトラス生成**: [`demos/font_atlas_generator.html`](demos/font_atlas_generator.html)
+
+### 🧪 開発・ツール用デモ
+- **デモ再生/録画**: [`demo_recorder.html`](demo_recorder.html) · [`demo.html`](demo.html) · [`ui_test.html`](ui_test.html)
+- **関係性システムデモ（Python）**: [`demos/relationship_demo.py`](demos/relationship_demo.py)
 
 ---
 
@@ -96,62 +136,28 @@ python -m pytest
 ---
 ## 📝 最近の変更 (Recent Changes)
 
-- 変更されたファイル: 28件
-- 新規追加ファイル: 111件
+### 🎬 ゲームプレイ・デモの再構築（実システム反映）
+- 旧24シーン（汎用「Elona」テーマ）を削除し、**実装済みの naRou システムに合わせた24シーン**を新規生成。
+- `generate_24_scenes.py` を書き直し：出力パスを相対 `demos/` に修正、同一データからギャラリーも自動生成するよう拡張。
+- `demos/gallery_24_scenes.html` を再生成（ブランディングを naRou: Masterpiece Edition に統一）。
+- 新規追加：実装計画書 `plans/gameplay_demo_24_scenes_implementation_plan_japanese.md`。
 
-### 変更されたファイル
-<details>
-<summary>詳細を表示</summary>
+### 🖼️ ゲームプレイGIFの再生成
+- `generate_accurate_gif.py` の出力パスを修正し、`demo_gameplay.gif` を再生成。
 
-archaeology_system.py
-balance_report.html
-balance_report.json
-components.py
-core_framework.py
-data/procedural_scenarios.yaml
-data/skill_trees.yaml
-data_manager.py
-entity.py
-game.py
-input_handler.py
-meta_progression_system.py
-pet_evolution_system.py
-pet_fusion_system.py
-procedural_dungeon_generator.py
-procedural_quest_generator.py
-quest_condition_evaluator.py
-render_context.py
-skill_tree_system.py
-systems.py
+### 🧩 アセットパイプライン & タイルセット
+- 64×64 タイルセットを新規追加（`assets/tiles/tileset_64x64.json` / `.png`）。
+- 16×16・32×32 個別PNGタイルを削除しアトラス化を推進。
+- `core/palette.py`、`tools/build_assets.py`、`tools/generate_theme.py`、`tools/generate_tileset_atlas.py`、`tools/validate_assets.py` を更新。
 
-</details>
+### 🌐 Webクライアント & テーマ
+- `web_game_client.html`、`web/theme.css` を更新。
 
-### 新規追加ファイル
-<details>
-<summary>詳細を表示</summary>
+### 🧪 テスト
+- `tests/test_token_parity.py` を新規追加。
 
-.coveragerc
-.github/
-COMMERCIAL_EVALUATION_REPORT.md
-QUEST_SYSTEM_IMPLEMENTATION_SUMMARY.md
-STEP_01_COMPLETED.md
-assets/source/
-assets/src/
-auto_repair.py
-auto_repair_management.py
-backup.py
-backup_management.py
-baseline.json
-build.py
-config.py
-config_management.py
-conftest.py
-core/
-data/faction_war_quests.yaml
-data/pet_quests.yaml
-data/quest_dungeon_specs.yaml
+> 詳細なファイル差分は `git status` / `git diff` を参照。本セクションは主要な変更グループをまとめたものです。
 
-</details>
 ## 📄 ライセンス & クレジット
 - **Version**: 1.0.0 (Commercial Edition)
 - **Engine Architecture**: SystemManager ECS-coupled Engine

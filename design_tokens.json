@@ -131,5 +131,68 @@
       "easeOut": "cubic-bezier(0, 0, 0.2, 1)",
       "easeInOut": "cubic-bezier(0.4, 0, 0.2, 1)"
     }
+  },
+
+  "accessibility": {
+    "colorBlind": {
+      "protan": {
+        "danger": "#b33f2a",
+        "warning": "#b87500",
+        "success": "#1a7a3a",
+        "info": "#2a6bd4",
+        "mana": "#4a7ae6",
+        "stamina": "#d43f3f",
+        "health": "#1a8a3a",
+        "gold": "#d49b00",
+        "experience": "#5a5aeb"
+      },
+      "deutan": {
+        "danger": "#b33f2a",
+        "warning": "#b87500",
+        "success": "#1a7a3a",
+        "info": "#2a6bd4",
+        "mana": "#4a7ae6",
+        "stamina": "#d43f3f",
+        "health": "#1a8a3a",
+        "gold": "#d49b00",
+        "experience": "#5a5aeb"
+      },
+      "tritan": {
+        "danger": "#b33f2a",
+        "warning": "#b87500",
+        "success": "#1a7a3a",
+        "info": "#2a6bd4",
+        "mana": "#4a7ae6",
+        "stamina": "#d43f3f",
+        "health": "#1a8a3a",
+        "gold": "#d49b00",
+        "experience": "#5a5aeb"
+      }
+    },
+    "highContrast": {
+      "text": {
+        "primary": "#000000",
+        "secondary": "#333333",
+        "muted": "#666666",
+        "inverse": "#ffffff"
+      },
+      "background": {
+        "primary": "#ffffff",
+        "secondary": "#f0f0f0",
+        "muted": "#e0e0e0",
+        "dark": "#000000"
+      },
+      "border": {
+        "light": "#cccccc",
+        "medium": "#999999",
+        "dark": "#666666"
+      }
+    },
+    "fontScale": {
+      "minimum": 0.8,
+      "maximum": 2.0,
+      "step": 0.1,
+      "default": 1.0
+    }
   }
 }

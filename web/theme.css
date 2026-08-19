@@ -1,3 +1,5 @@
+/* AUTO-GENERATED from design_tokens.json by tools/generate_theme.py.
+   Do not edit by hand; edit design_tokens.json and re-run. */
 :root {
   --color-danger: #dc2626;
   --color-warning: #d97706;
@@ -79,4 +81,73 @@
   --animation-easing-easeIn: cubic-bezier(0.4, 0, 1, 1);
   --animation-easing-easeOut: cubic-bezier(0, 0, 0.2, 1);
   --animation-easing-easeInOut: cubic-bezier(0.4, 0, 0.2, 1);
+  --bg-dark: #0a0b10;
+  --bg-gradient: radial-gradient(circle at 50% 20%, #151b2e 0%, #080a10 100%);
+  --panel-bg: rgba(18, 22, 36, 0.75);
+  --panel-border: rgba(99, 130, 210, 0.25);
+  --panel-border-glow: rgba(99, 130, 210, 0.5);
+  --primary-accent: #e5a93b;
+  --hp-color: #2ecc71;
+  --mp-color: #3498db;
+  --sp-color: #f39c12;
+  --text-main: #f0f4fc;
+  --text-muted: #8b9bb4;
+  --font-main: 'Noto Sans JP', 'Outfit', sans-serif;
+  --font-title: 'Cinzel', serif;
+}
+
+[data-theme="light"] {
+  --bg-dark: #eef1f7;
+  --bg-gradient: radial-gradient(circle at 50% 20%, #ffffff 0%, #dde3ee 100%);
+  --panel-bg: rgba(255, 255, 255, 0.85);
+  --panel-border: rgba(40, 60, 110, 0.25);
+  --panel-border-glow: rgba(40, 60, 110, 0.5);
+  --primary-accent: #b9791e;
+  --hp-color: #1f9e54;
+  --mp-color: #2274c4;
+  --sp-color: #c87a07;
+  --text-main: #1b2233;
+  --text-muted: #5a6b85;
+}
+
+[data-theme="high-contrast"] {
+  --bg-dark: #000000;
+  --bg-gradient: #000000;
+  --panel-bg: #000000;
+  --panel-border: #ffffff;
+  --panel-border-glow: #ffff00;
+  --primary-accent: #ffff00;
+  --hp-color: #00ff00;
+  --mp-color: #00bfff;
+  --sp-color: #ffae00;
+  --text-main: #ffffff;
+  --text-muted: #cccccc;
+}
+
+[data-theme="colorblind"] {
+  --bg-dark: #0c0f1a;
+  --bg-gradient: radial-gradient(circle at 50% 20%, #16233b 0%, #070a12 100%);
+  --panel-bg: rgba(20, 30, 52, 0.8);
+  --panel-border: rgba(120, 170, 255, 0.4);
+  --panel-border-glow: rgba(120, 170, 255, 0.8);
+  --primary-accent: #ffb000;
+  --hp-color: #0072ff;
+  --mp-color: #ff8c00;
+  --sp-color: #e0e0e0;
+  --text-main: #f2f6ff;
+  --text-muted: #9fb4d6;
+}
+
+[data-theme="sepia"] {
+  --bg-dark: #e9dcc3;
+  --bg-gradient: radial-gradient(circle at 50% 20%, #f3e9d2 0%, #d8c4a0 100%);
+  --panel-bg: rgba(245, 233, 210, 0.85);
+  --panel-border: rgba(120, 90, 50, 0.3);
+  --panel-border-glow: rgba(120, 90, 50, 0.6);
+  --primary-accent: #9c6b1f;
+  --hp-color: #3f7d3f;
+  --mp-color: #2f6d9c;
+  --sp-color: #a9711a;
+  --text-main: #3b2f1d;
+  --text-muted: #7a6849;
 }

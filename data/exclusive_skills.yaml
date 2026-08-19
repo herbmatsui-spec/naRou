@@ -1,42 +1,123 @@
+# Exclusive Skills Definition for naRou
+# Structure: exclusive_skills: { skill_id: { name, job, type, mp_cost, cooldown, description, effects, inherit_chance } }
+
 exclusive_skills:
   shield_bash:
-    id: "shield_bash"
     name: "シールドバッシュ"
     job: "warrior"
     type: "active"
-    mp_cost: 6
-    cooldown: 4
-    description: "盾を構えて突撃し、敵に大打撃とスタンを与える。"
+    mp_cost: 10
+    cooldown: 3
+    description: "盾で敵を殴りつけ、ダメージを与えてスタンさせる"
     effects:
-      damage_formula: "str * 1.5"
-      status: "paralysis"
-      duration: 3
+      - type: "damage"
+        formula: "str * 1.5"
+        target: "enemy"
+      - type: "status"
+        status: "stun"
+        duration: 2
+        chance: 50
     inherit_chance: 0.3
 
   iaijutsu:
-    id: "iaijutsu"
     name: "居合術"
     job: "swordmaster"
     type: "active"
-    mp_cost: 12
+    mp_cost: 20
     cooldown: 5
-    description: "神速の抜刀術。敵の防御を無視し、確実に致命傷を負わせる。"
+    description: "鞘から剣を一瞬で抜き放ち、確実に急所を突く"
     effects:
-      damage_formula: "dex * 2.5 + str * 1.2"
-      crit_guaranteed: true
-      ignore_defense: true
+      - type: "damage"
+        formula: "str * 2.0"
+        target: "enemy"
+      - type: "crit_guaranteed"
+        value: true
+        target: "self"
+      - type: "ignore_defense"
+        value: true
+        target: "self"
     inherit_chance: 0.2
 
   meteor:
-    id: "meteor"
     name: "メテオ"
     job: "archmage"
     type: "active"
-    mp_cost: 45
-    cooldown: 12
-    description: "天空より巨大隕石を召喚し、広範囲を壊滅させる超位魔法。"
+    mp_cost: 50
+    cooldown: 10
+    description: "空から隕石を呼び寄せ、広範囲を焼き尽くす"
     effects:
-      damage_formula: "magic * 4.0"
-      aoe_radius: 3
-      status: "burn"
+      - type: "aoe_damage"
+        formula: "magic * 3.0"
+        radius: 3
+        target: "area"
+      - type: "status"
+        status: "burn"
+        duration: 5
+        chance: 80
+        target: "area"
     inherit_chance: 0.1
+
+  divine_heal:
+    name: "神聖な癒し"
+    job: "archbishop"
+    type: "active"
+    mp_cost: 30
+    cooldown: 5
+    description: "神の加護で全味方のHPを大きく回復し、状態異常を治癒する"
+    effects:
+      - type: "heal"
+        formula: "magic * 2.0 + will"
+        target: "all_allies"
+      - type: "cure_all"
+        target: "all_allies"
+    inherit_chance: 0.15
+
+  backstab:
+    name: "バックスタブ"
+    job: "assassin"
+    type: "active"
+    mp_cost: 15
+    cooldown: 4
+    description: "敵の背後に回り込み、致命的な一撃を与える"
+    effects:
+      - type: "damage"
+        formula: "dex * 3.0"
+        target: "enemy"
+      - type: "crit_guaranteed"
+        value: true
+        target: "self"
+    inherit_chance: 0.25
+
+  shadow_step:
+    name: "シャドウステップ"
+    job: "assassin"
+    type: "active"
+    mp_cost: 20
+    cooldown: 6
+    description: "影に潜み、敵の背後に瞬時に移動する"
+    effects:
+      - type: "teleport"
+        target: "enemy_back"
+      - type: "stealth"
+        duration: 3
+        target: "self"
+    inherit_chance: 0.2
+
+  divine_heal:
+    name: "ディバインヒール"
+    job: "archbishop"
+    type: "active"
+    mp_cost: 30
+    cooldown: 5
+    description: "神聖な光で全味方のHPを大回復し、状態異常を全回復"
+    effects:
+      - type: "heal"
+        formula: "magic * 2.0 + will"
+        target: "all_allies"
+      - type: "cure_all"
+        target: "all_allies"
+    inherit_chance: 0.15
+
+meta:
+  version: "1.0.0"
+  last_updated: "2026-08-19"

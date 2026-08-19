@@ -1,6 +1,7 @@
 import yaml
 import os
 from typing import Any, Dict, Optional
+from cryptography.fernet import Fernet
 
 
 class DataCache:
@@ -27,9 +28,56 @@ class DataCache:
 
 
 class ConfigManager:
+    """ConfigManager with optional encryption for sensitive settings (Step 66)."""
+    _fernet: Optional[Fernet] = None
+
     def __init__(self, config_path: str = "config.yaml"):
         self.config_path = config_path
         self.config = self._load_config()
+        # Opt-in telemetry flag (proposal #1-B). Default OFF; explicit consent required.
+        self.telemetry_enabled = bool(
+            self.config.get("settings", {}).get("telemetry_enabled", False)
+        )
+
+    @classmethod
+    def _get_fernet(cls) -> Fernet:
+        """Return Fernet instance from env key or generate ephemeral (dev)."""
+        if cls._fernet:
+            return cls._fernet
+        key_b64 = os.environ.get("CONFIG_ENCRYPTION_KEY")
+        if key_b64:
+            try:
+                cls._fernet = Fernet(key_b64.encode())
+            except Exception:
+                pass
+        if not cls._fernet:
+            # Dev: ephemeral key (won't persist across restarts)
+            cls._fernet = Fernet(Fernet.generate_key())
+        return cls._fernet
+
+    def _encrypt_value(self, value: str) -> str:
+        """Encrypt a string value."""
+        f = self._get_fernet()
+        return f.encrypt(value.encode()).decode()
+
+    def _decrypt_value(self, token: str) -> str:
+        """Decrypt a string value."""
+        f = self._get_fernet()
+        return f.decrypt(token.encode()).decode()
+
+    def set_sensitive(self, key: str, value: str) -> None:
+        """Store a sensitive setting encrypted."""
+        self.config.setdefault("secure", {})[key] = self._encrypt_value(value)
+
+    def get_sensitive(self, key: str, default: str = "") -> str:
+        """Retrieve a sensitive setting (decrypted)."""
+        token = self.config.get("secure", {}).get(key)
+        if token:
+            try:
+                return self._decrypt_value(token)
+            except Exception:
+                return default
+        return default
 
     def _load_config(self) -> Dict[str, Any]:
         cached = DataCache.get_data(self.config_path)
@@ -51,6 +99,15 @@ class ConfigManager:
     def get_settings(self) -> Dict[str, Any]:
         """全設定を取得"""
         return self.config.get("settings", {})
+
+    def get_telemetry_enabled(self) -> bool:
+        """Return whether telemetry is opted-in."""
+        return self.telemetry_enabled
+
+    def set_telemetry_enabled(self, value: bool) -> None:
+        """Update telemetry opt-in state and persist to settings."""
+        self.telemetry_enabled = bool(value)
+        self.config.setdefault("settings", {})["telemetry_enabled"] = self.telemetry_enabled
 
 
 # グローバルインスタンス

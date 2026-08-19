@@ -5,6 +5,7 @@ Checks integrity, format compliance, and quality of all asset types.
 """
 
 import os
+import sys
 import json
 import argparse
 from pathlib import Path
@@ -36,24 +37,38 @@ def validate_tileset(tile_path: str, config: Dict) -> Tuple[bool, List[str]]:
                 metadata = json.load(f)
             
             # Validate required fields
-            required_fields = ['tile_size', 'atlas_width', 'atlas_height', 'tile_count']
+            required_fields = ['tile_size', 'atlas_width', 'atlas_height', 'tiles']
             for field in required_fields:
                 if field not in metadata:
                     issues.append(f"Missing required field in metadata: {field}")
             
-            # Validate tile size
-            expected_size = config['tileset']['default_size']
-            if 'tile_size' in metadata and metadata['tile_size'] != expected_size:
-                issues.append(f"Tile size mismatch: expected {expected_size}, got {metadata['tile_size']}")
+            # Validate tile size against the configured set of allowed sizes.
+            allowed_sizes = config['tileset'].get('sizes', [config['tileset']['default_size']])
+            if 'tile_size' in metadata and metadata['tile_size'] not in allowed_sizes:
+                issues.append(f"Tile size {metadata['tile_size']} not in allowed sizes {allowed_sizes}")
+
+            # Validate declared atlas dimensions match the actual PNG.
+            if {'atlas_width', 'atlas_height'} <= set(metadata):
+                try:
+                    from PIL import Image
+                    with Image.open(tile_path) as im:
+                        if (im.width, im.height) != (metadata['atlas_width'], metadata['atlas_height']):
+                            issues.append(
+                                f"Atlas dimension mismatch: png={im.size} "
+                                f"meta=({metadata['atlas_width']}, {metadata['atlas_height']})"
+                            )
+                        if im.width == 0 or im.height == 0:
+                            issues.append("Atlas image has zero dimensions")
+                except Exception as e:
+                    issues.append(f"Could not read atlas image: {e}")
                 
         except json.JSONDecodeError as e:
             issues.append(f"Invalid JSON in metadata: {e}")
         except Exception as e:
             issues.append(f"Error reading metadata: {e}")
     
-    # Validate image file
+    # Validate image file is non-empty.
     try:
-        # Would use PIL to validate image in real implementation
         file_size = os.path.getsize(tile_path)
         if file_size == 0:
             issues.append("Tileset image file is empty")
@@ -246,6 +261,71 @@ def validate_directory(directory: str, config: Dict, asset_type: str) -> Tuple[b
     return len(all_issues) == 0, all_issues, stats
 
 
+def validate_tileset_coverage(assets_dir: str, config: Dict) -> Tuple[bool, List[str]]:
+    """Verify every tile defined in a tileset definition exists in the atlas.
+
+    Implements the plan requirement: "定義済み全タイルIDがアトラスに存在するか".
+    """
+    issues: List[str] = []
+
+    # Locate the tileset definition(s).
+    def_dirs = [
+        os.path.join(config['directories']['source'], 'tilesets'),
+        os.path.join('assets', 'source', 'tilesets'),
+    ]
+    def_files: List[str] = []
+    for d in def_dirs:
+        if os.path.isdir(d):
+            for f in sorted(os.listdir(d)):
+                if f.endswith('.json'):
+                    def_files.append(os.path.join(d, f))
+
+    if not def_files:
+        issues.append("No tileset definition files found to validate against")
+        return False, issues
+
+    for def_path in def_files:
+        try:
+            with open(def_path, 'r') as fh:
+                definition = json.load(fh)
+        except Exception as e:
+            issues.append(f"Could not read tileset definition {def_path}: {e}")
+            continue
+
+        defined = definition.get('tiles', {})
+        if not isinstance(defined, dict) or not defined:
+            issues.append(f"Tileset definition {def_path} defines no tiles")
+            continue
+
+        # The generated atlas JSON for the definition's tile_size.
+        tile_size = int(definition.get('tile_size', config['tileset']['default_size']))
+        atlas_json = os.path.join(assets_dir, f"tileset_{tile_size}x{tile_size}.json")
+        if not os.path.exists(atlas_json):
+            issues.append(f"Missing generated atlas metadata: {atlas_json}")
+            continue
+
+        try:
+            with open(atlas_json, 'r') as fh:
+                atlas = json.load(fh)
+        except Exception as e:
+            issues.append(f"Could not read atlas metadata {atlas_json}: {e}")
+            continue
+
+        atlas_tiles = atlas.get('tiles', {})
+        for name, tdef in defined.items():
+            if name not in atlas_tiles:
+                issues.append(f"Tile '{name}' defined in {os.path.basename(def_path)} "
+                              f"is missing from {os.path.basename(atlas_json)}")
+                continue
+            expected_frames = int(tdef.get('frames', 1))
+            actual_frames = int(atlas_tiles[name].get('frames', 1))
+            if expected_frames != actual_frames:
+                issues.append(f"Tile '{name}' frame count mismatch: "
+                              f"def={expected_frames} atlas={actual_frames}")
+
+    return len(issues) == 0, issues
+
+
 def main():
     parser = argparse.ArgumentParser(description='Validate processed assets')
     parser.add_argument('--config', default='tools/asset_pipeline_config.json',
@@ -307,6 +387,13 @@ def main():
                 manifest_path = os.path.join(assets_dir, 'manifest.json')
                 valid, issues = validate_manifest(manifest_path, config)
                 stats = {}  # Manifest validation doesn't produce file stats
+            elif asset_type == 'tilesets':
+                # Atlas PNG/JSON files live directly under assets_dir.
+                valid, issues, stats = validate_directory(assets_dir, config, 'tilesets')
+                cov_valid, cov_issues = validate_tileset_coverage(assets_dir, config)
+                if not cov_valid:
+                    valid = False
+                    issues.extend(cov_issues)
             else:
                 asset_dir = os.path.join(assets_dir, asset_type)
                 valid, issues, stats = validate_directory(asset_dir, config, asset_type)

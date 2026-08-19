@@ -1,65 +1,91 @@
-# スキル融合レシピ設定 (Steps 1, 2, 64-67)
+# Skill Fusion Definition for naRou
+# Structure: fusions: { fusion_id: { name, description, required_skills, required_job, required_god, result_skills, bonus_effects } }
 
-fusion_recipes:
-  fireball_fusion:
-    id: "fireball_fusion"
-    name: "火炎爆砕合成"
-    description: "魔矢の魔法書と火炎のエッセンスを合成し、強化版「メガファイアボール」を創出する。"
-    inputs:
-      - "magic_dart"
-      - "fire_essence"
-    output: "mega_fireball"
-    requirements:
-      player_level: 10
-      skill_level:
-        magic_cast: 5
-    success_rate: 0.85
-    failure_penalty: "lose_material"
-
-  holy_strike_fusion:
-    id: "holy_strike_fusion"
-    name: "聖光撃合成"
-    description: "格闘術と光の祈祷を融合させ、アンデッド特効の聖打撃を生み出す。"
-    inputs:
-      - "martial_arts"
-      - "holy_blessing"
-    output: "holy_strike"
-    requirements:
-      player_level: 15
-      skill_level:
-        martial_arts: 10
-    success_rate: 0.80
-    failure_penalty: "lose_material"
-
-# スキルツリー・ジョブシステム用 融合設定 (互換性確保)
 fusions:
   spellblade:
-    name: "魔導剣"
-    description: "剣技と魔術の融合による属性斬撃"
-    required_skills: ["swordsmanship", "magic_cast"]
-    required_job: null
-    required_level: 10
-    results: ["flame_slash", "ice_slash"]
-    effects:
+    name: "魔剣術"
+    description: "剣術と魔法を融合させ、武器に魔力を宿す技術"
+    required_skills:
+      - "sword_mastery"
+      - "magic_basic"
+    required_job: "warrior"
+    result_skills:
+      - "elemental_slash"
+      - "mana_blade"
+    bonus_effects:
       - type: "elemental_damage"
         value: 20
+      - type: "mp_on_hit"
+        value: 5
+
   holy_knight:
-    name: "聖騎士の加護"
-    description: "戦士と聖職の融合による攻防一体の加護"
-    required_skills: ["martial_arts", "holy_blessing"]
+    name: "聖騎士"
+    description: "戦士の剛健さと信仰の力を融合させ、不死に対抗する聖なる騎士"
+    required_skills:
+      - "sword_mastery"
+      - "divine_heal"
     required_job: "warrior"
-    required_level: 15
-    results: ["divine_shield", "smite"]
-    effects:
-      - type: "pv_boost"
-        value: 15
-  shadow_assassin:
-    name: "影殺の極意"
-    description: "盗賊と暗殺術の融合による致命の一撃"
-    required_skills: ["short_sword", "evasion"]
-    required_job: "rogue"
-    required_level: 15
-    results: ["shadow_step", "fatal_strike"]
-    effects:
-      - type: "crit_rate"
+    required_god: "jure"
+    result_skills:
+      - "holy_slash"
+      - "divine_aegis"
+    bonus_effects:
+      - type: "undead_damage_bonus"
+        value: 50
+      - type: "heal_on_kill"
         value: 10
+
+  shadow_assassin:
+    name: "影の暗殺者"
+    description: "体術と影の力を融合させ、死を運ぶ暗殺者"
+    required_skills:
+      - "martial_mastery"
+      - "shadow_step"
+    required_job: "rogue"
+    required_god: "northwind"
+    result_skills:
+      - "death_mark"
+      - "shadow_clone"
+    bonus_effects:
+      - type: "crit_chance"
+        value: 20
+      - type: "backstab_multiplier"
+        value: 2.0
+
+  spellblade_archmage:
+    name: "魔剣賢者"
+    description: "魔法と剣術を極め、魔剣を操る賢者"
+    required_skills:
+      - "magic_mastery"
+      - "sword_mastery"
+    required_job: "archmage"
+    required_god: "ehekatl"
+    result_skills:
+      - "spellblade"
+      - "arcane_blade"
+    bonus_effects:
+      - type: "spell_power_on_melee"
+        value: 30
+      - type: "auto_reflect"
+        chance: 15
+
+  divine_fist:
+    name: "神拳"
+    description: "体術と信仰を融合させ、拳に神聖な力を宿す"
+    required_skills:
+      - "martial_mastery"
+      - "divine_heal"
+    required_job: "cleric"
+    required_god: "jure"
+    result_skills:
+      - "healing_strike"
+      - "divine_fist"
+    bonus_effects:
+      - type: "heal_on_hit"
+        value: 15
+      - type: "undead_bane"
+        value: 100
+
+meta:
+  version: "1.0.0"
+  last_updated: "2026-08-19"

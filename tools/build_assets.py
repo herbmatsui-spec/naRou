@@ -4,14 +4,13 @@ Main build script for the asset pipeline.
 Orchestrates the processing of all asset types through the pipeline.
 """
 
-import os
-import sys
-import json
 import argparse
-from pathlib import Path
-from typing import Dict, List, Optional
+import json
+import os
 import subprocess
+import sys
 import time
+from typing import Dict, List
 
 
 def load_config(config_path: str = "tools/asset_pipeline_config.json") -> Dict:
@@ -56,25 +55,40 @@ def process_tilesets(config: Dict) -> bool:
     """Process tileset assets."""
     print("Processing tilesets...")
     
-    # Create necessary directories
-    os.makedirs(os.path.join(config['directories']['output'], 'tilesets'), exist_ok=True)
+    # Tilesets are consumed directly from assets/tiles (where tileset_def.json
+    # and the web client expect them).
+    output_dir = 'assets/tiles'
+    os.makedirs(output_dir, exist_ok=True)
     
-    # Example: run tileset generation if definitions exist
-    tileset_def_dir = os.path.join(config['directories']['source'], 'tilesets')
-    if os.path.exists(tileset_def_dir):
-        def_files = [f for f in os.listdir(tileset_def_dir) if f.endswith('.json')]
-        for def_file in def_files:
-            def_path = os.path.join(tileset_def_dir, def_file)
+    # A tileset definition may live in either the configured source tree
+    # (assets/src/tilesets) or the legacy source tree (assets/source/tilesets).
+    candidate_dirs = [
+        os.path.join(config['directories']['source'], 'tilesets'),
+        os.path.join('assets', 'source', 'tilesets'),
+    ]
+    def_files: List[str] = []
+    for tileset_def_dir in candidate_dirs:
+        if os.path.isdir(tileset_def_dir):
+            for f in sorted(os.listdir(tileset_def_dir)):
+                if f.endswith('.json') and f not in [os.path.basename(p) for p in def_files]:
+                    def_files.append(os.path.join(tileset_def_dir, f))
+    
+    if not def_files:
+        print("No tileset definitions found, skipping tileset processing")
+        return True
+    
+    # Generate an atlas for every configured tile size.
+    sizes = config.get('tileset', {}).get('sizes', [config['tileset']['default_size']])
+    for def_path in def_files:
+        for size in sizes:
             cmd = [
                 sys.executable, 'tools/generate_tileset_atlas.py',
                 '--def', def_path,
-                '--output', os.path.join(config['directories']['output'], 'tilesets'),
-                '--size', str(config['tileset']['default_size'])
+                '--output', output_dir,
+                '--size', str(size),
             ]
-            if not run_command(cmd, f"Generating tileset from {def_file}"):
+            if not run_command(cmd, f"Generating {size}x{size} tileset from {os.path.basename(def_path)}"):
                 return False
-    else:
-        print("No tileset definitions found, skipping tileset processing")
     
     return True
 
@@ -328,7 +342,7 @@ def main():
     duration = end_time - start_time
     
     print(f"\n{'='*50}")
-    print(f"PIPELINE EXECUTION SUMMARY")
+    print("PIPELINE EXECUTION SUMMARY")
     print(f"{'='*50}")
     print(f"Total duration: {duration:.2f} seconds")
     print(f"Steps executed: {len(steps)}")

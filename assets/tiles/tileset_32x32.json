@@ -1,77 +1,77 @@
 {
   "tile_size": 32,
-  "atlas_width": 512,
-  "atlas_height": 32,
+  "atlas_width": 296,
+  "atlas_height": 296,
   "tiles": {
-    "TILE_WALL": {
+    "FLOOR_DUNGEON": {
       "x": 0,
       "y": 0,
       "width": 32,
       "height": 32,
-      "variants": 4,
+      "variants": 1,
       "animated": false,
       "frames": 1,
       "fps": 1,
       "directions": 1
     },
-    "TILE_FLOOR": {
-      "x": 32,
+    "WALL_DUNGEON": {
+      "x": 33,
       "y": 0,
       "width": 32,
       "height": 32,
-      "variants": 8,
+      "variants": 1,
       "animated": false,
       "frames": 1,
       "fps": 1,
       "directions": 1
     },
-    "TILE_STAIRS_DOWN": {
-      "x": 64,
-      "y": 0,
-      "width": 32,
-      "height": 32,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 4,
-      "directions": 1
-    },
-    "TILE_STAIRS_UP": {
-      "x": 96,
-      "y": 0,
-      "width": 32,
-      "height": 32,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 4,
-      "directions": 1
-    },
-    "TILE_WATER": {
-      "x": 128,
-      "y": 0,
-      "width": 32,
-      "height": 32,
-      "variants": 1,
-      "animated": true,
-      "frames": 8,
-      "fps": 8,
-      "directions": 1
-    },
-    "TILE_TRAP": {
-      "x": 160,
+    "WATER": {
+      "x": 66,
       "y": 0,
       "width": 32,
       "height": 32,
       "variants": 1,
       "animated": true,
       "frames": 3,
-      "fps": 6,
+      "fps": 5,
+      "directions": 1
+    },
+    "STAIRS_DOWN": {
+      "x": 165,
+      "y": 0,
+      "width": 32,
+      "height": 32,
+      "variants": 1,
+      "animated": true,
+      "frames": 2,
+      "fps": 4,
+      "directions": 1
+    },
+    "STAIRS_UP": {
+      "x": 231,
+      "y": 0,
+      "width": 32,
+      "height": 32,
+      "variants": 1,
+      "animated": true,
+      "frames": 2,
+      "fps": 4,
+      "directions": 1
+    },
+    "TRAP": {
+      "x": 0,
+      "y": 33,
+      "width": 32,
+      "height": 32,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
       "directions": 1
     },
     "PLAYER": {
-      "x": 192,
-      "y": 0,
+      "x": 33,
+      "y": 33,
       "width": 32,
       "height": 32,
       "variants": 1,
@@ -81,8 +81,8 @@
       "directions": 4
     },
     "PET": {
-      "x": 224,
-      "y": 0,
+      "x": 264,
+      "y": 66,
       "width": 32,
       "height": 32,
       "variants": 1,
@@ -92,8 +92,8 @@
       "directions": 4
     },
     "ENEMY_GOBLIN": {
-      "x": 256,
-      "y": 0,
+      "x": 198,
+      "y": 132,
       "width": 32,
       "height": 32,
       "variants": 1,
@@ -102,9 +102,20 @@
       "fps": 1,
       "directions": 4
     },
+    "ITEM_GOLD": {
+      "x": 132,
+      "y": 198,
+      "width": 32,
+      "height": 32,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 4,
+      "directions": 1
+    },
     "ITEM_POTION": {
-      "x": 288,
-      "y": 0,
+      "x": 264,
+      "y": 198,
       "width": 32,
       "height": 32,
       "variants": 1,
@@ -114,8 +125,8 @@
       "directions": 1
     },
     "ITEM_WEAPON": {
-      "x": 320,
-      "y": 0,
+      "x": 0,
+      "y": 231,
       "width": 32,
       "height": 32,
       "variants": 1,
@@ -125,8 +136,8 @@
       "directions": 1
     },
     "ITEM_ARMOR": {
-      "x": 352,
-      "y": 0,
+      "x": 33,
+      "y": 231,
       "width": 32,
       "height": 32,
       "variants": 1,
@@ -135,9 +146,9 @@
       "fps": 1,
       "directions": 1
     },
-    "ITEM_GOLD": {
-      "x": 384,
-      "y": 0,
+    "TORCH": {
+      "x": 66,
+      "y": 231,
       "width": 32,
       "height": 32,
       "variants": 1,
@@ -146,37 +157,26 @@
       "fps": 8,
       "directions": 1
     },
-    "DECOR_TORCH": {
-      "x": 416,
-      "y": 0,
+    "BLOOD_SPLAT": {
+      "x": 198,
+      "y": 231,
       "width": 32,
       "height": 32,
       "variants": 1,
       "animated": true,
-      "frames": 4,
-      "fps": 8,
+      "frames": 3,
+      "fps": 6,
       "directions": 1
     },
-    "DECOR_BLOOD": {
-      "x": 448,
-      "y": 0,
-      "width": 32,
-      "height": 32,
-      "variants": 4,
-      "animated": false,
-      "frames": 1,
-      "fps": 1,
-      "directions": 1
-    },
-    "EFFECT_MAGIC": {
-      "x": 480,
-      "y": 0,
+    "MAGIC_CAST": {
+      "x": 0,
+      "y": 264,
       "width": 32,
       "height": 32,
       "variants": 1,
       "animated": true,
-      "frames": 6,
-      "fps": 12,
+      "frames": 3,
+      "fps": 6,
       "directions": 1
     }
   }

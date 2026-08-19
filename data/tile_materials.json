@@ -1,0 +1,98 @@
+{
+  "floor": {
+    "albedo": "floor_albedo",
+    "normal": "floor_normal",
+    "roughness": 0.8,
+    "metallic": 0.0,
+    "emissive": 0.0,
+    "ao": 1.0
+  },
+  "wall": {
+    "albedo": "wall_albedo",
+    "normal": "wall_normal",
+    "roughness": 0.9,
+    "metallic": 0.0,
+    "emissive": 0.0,
+    "ao": 1.0
+  },
+  "water": {
+    "albedo": "water_albedo",
+    "normal": "water_normal",
+    "roughness": 0.1,
+    "metallic": 0.0,
+    "emissive": 0.0,
+    "ao": 1.0
+  },
+  "lava": {
+    "albedo": "lava_albedo",
+    "normal": "lava_normal",
+    "roughness": 0.3,
+    "metallic": 0.0,
+    "emissive": 1.0,
+    "ao": 1.0
+  },
+  "metal_floor": {
+    "albedo": "metal_floor_albedo",
+    "normal": "metal_floor_normal",
+    "roughness": 0.2,
+    "metallic": 1.0,
+    "emissive": 0.0,
+    "ao": 1.0
+  },
+  "crystal": {
+    "albedo": "crystal_albedo",
+    "normal": "crystal_normal",
+    "roughness": 0.1,
+    "metallic": 0.0,
+    "emissive": 0.5,
+    "ao": 1.0
+  },
+  "grass": {
+    "albedo": "grass_albedo",
+    "normal": "grass_normal",
+    "roughness": 0.9,
+    "metallic": 0.0,
+    "emissive": 0.0,
+    "ao": 0.8
+  },
+  "sand": {
+    "albedo": "sand_albedo",
+    "normal": "sand_normal",
+    "roughness": 0.85,
+    "metallic": 0.0,
+    "emissive": 0.0,
+    "ao": 1.0
+  },
+  "ice": {
+    "albedo": "ice_albedo",
+    "normal": "ice_normal",
+    "roughness": 0.05,
+    "metallic": 0.0,
+    "emissive": 0.0,
+    "ao": 1.0
+  },
+  "carpet": {
+    "albedo": "carpet_albedo",
+    "normal": "carpet_normal",
+    "roughness": 0.95,
+    "metallic": 0.0,
+    "emissive": 0.0,
+    "ao": 0.9
+  },
+  "stone": {
+    "albedo": "stone_albedo",
+    "normal": "stone_normal",
+    "roughness": 0.7,
+    "metallic": 0.0,
+    "emissive": 0.0,
+    "ao": 1.0
+  },
+  "wood": {
+    "albedo": "wood_albedo",
+    "normal": "wood_normal",
+    "roughness": 0.6,
+    "metallic": 0.0,
+    "emissive": 0.0,
+    "ao": 1.0
+  }
+}

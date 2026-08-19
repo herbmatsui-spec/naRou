@@ -15,20 +15,9 @@
   <script type="module" src="demos/lib/PostProcessManager.js"></script>
   <script type="module" src="demos/lib/ScreenShake.js"></script>
   <style>
-    :root {
-      --bg-dark: #0a0b10;
-      --panel-bg: rgba(18, 22, 36, 0.75);
-      --panel-border: rgba(99, 130, 210, 0.25);
-      --panel-border-glow: rgba(99, 130, 210, 0.5);
-      --primary-accent: #e5a93b;
-      --hp-color: #2ecc71;
-      --mp-color: #3498db;
-      --sp-color: #f39c12;
-      --text-main: #f0f4fc;
-      --text-muted: #8b9bb4;
-      --font-main: 'Noto Sans JP', 'Outfit', sans-serif;
-      --font-title: 'Cinzel', serif;
-    }
+    /* Brand UI variables and theme variants are provided by web/theme.css
+       (auto-generated from design_tokens.json). Theme switching sets
+       document.documentElement.dataset.theme. */
 
     * {
       box-sizing: border-box;
@@ -39,7 +28,7 @@
 
     body {
       background-color: var(--bg-dark);
-      background-image: radial-gradient(circle at 50% 20%, #151b2e 0%, #080a10 100%);
+      background-image: var(--bg-gradient);
       color: var(--text-main);
       font-family: var(--font-main);
       min-height: 100vh;
@@ -122,6 +111,39 @@
       background: var(--primary-accent);
       color: #000;
       box-shadow: 0 0 12px rgba(229, 169, 59, 0.6);
+    }
+
+    .theme-switch {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 3px 6px;
+    }
+    .theme-switch button {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      line-height: 1;
+      padding: 3px 5px;
+      transition: all 0.2s ease;
+      filter: grayscale(0.4);
+      opacity: 0.7;
+    }
+    .theme-switch button:hover {
+      opacity: 1;
+      filter: none;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .theme-switch button[aria-pressed="true"] {
+      opacity: 1;
+      filter: none;
+      border-color: var(--primary-accent);
+      box-shadow: 0 0 10px rgba(229, 169, 59, 0.5);
     }
 
     /* === MAIN LAYOUT === */
@@ -402,6 +424,13 @@
       <div class="status-chip" id="chipPlatinum">💎 0 P</div>
       <div class="status-chip" id="chipKarma">⚖️ 善悪: 0</div>
       <button class="audio-btn" id="btnAudioToggle" onclick="SoundEngine.toggleAudio()">🔊 サウンド起動</button>
+      <div class="theme-switch" id="themeSwitch" role="group" aria-label="テーマ切替">
+        <button type="button" data-theme-value="dark" title="ダーク">🌑</button>
+        <button type="button" data-theme-value="light" title="ライト">☀️</button>
+        <button type="button" data-theme-value="high-contrast" title="ハイコントラスト">🔆</button>
+        <button type="button" data-theme-value="colorblind" title="色覚サポート">👁️</button>
+        <button type="button" data-theme-value="sepia" title="セピア">📜</button>
+      </div>
     </div>
   </header>
 
@@ -829,7 +858,9 @@
         
         const map = gameState.map || [];
         const lightMap = gameState.light_map || [];
+        const lightColor = gameState.light_color || [];
         const lightSources = gameState.light_sources || [];
+        const enemyCones = gameState.enemy_cones || [];
         const viewH = map.length;
         const viewW = viewH > 0 ? map[0].length : 0;
 
@@ -837,10 +868,16 @@
         const offsetX = Math.max(0, (canvas.width - viewW * TILE_SIZE) / 2);
         const offsetY = Math.max(0, (canvas.height - viewH * TILE_SIZE) / 2);
 
-        // ライティングシステムを更新
-        lightingSystem.updateLightMap(lightMap);
-        lightingSystem.setLightSources(lightSources);
+        // ライティングシステムを更新（乗算ブレンド＋松明フリッカー＋敵視界コーン）
+        lightingSystem.updateLightMap(lightMap, lightColor);
+        lightingSystem.setLightSources(lightSources, animTime);
+        lightingSystem.setEnemyCones(enemyCones, animTime);
         lightingSystem.applyLighting(pixiApp.stage);
+
+        // 深度別カラーグレーディング（ポストプロセス）
+        if (postProcessManager && postProcessManager.setColorGrade) {
+            postProcessManager.setColorGrade(gameState.dungeon_level || 0);
+        }
 
         // 1. タイル描画 (床・壁・階段) - テクスチャアトラス使用
         for (let y = 0; y < viewH; y++) {
@@ -1255,6 +1292,45 @@
       }
     });
     });
+
+    // ==================== THEME MANAGER ====================
+    // Persists the selected visual theme (dark / light / high-contrast /
+    // colorblind / sepia) and applies it via <html data-theme="...">.
+    const ThemeManager = (() => {
+      const STORAGE_KEY = 'narou-theme';
+      const VALID = ['dark', 'light', 'high-contrast', 'colorblind', 'sepia'];
+      const root = document.documentElement;
+
+      function current() {
+        return root.dataset.theme || 'dark';
+      }
+
+      function apply(theme) {
+        if (!VALID.includes(theme)) theme = 'dark';
+        root.dataset.theme = theme;
+        try { localStorage.setItem(STORAGE_KEY, theme); } catch (e) {}
+        document.querySelectorAll('#themeSwitch button').forEach((btn) => {
+          const active = btn.dataset.themeValue === theme;
+          btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+      }
+
+      function init() {
+        let saved = 'dark';
+        try { saved = localStorage.getItem(STORAGE_KEY) || 'dark'; } catch (e) {}
+        apply(saved);
+        const sw = document.getElementById('themeSwitch');
+        if (sw) {
+          sw.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-theme-value]');
+            if (btn) apply(btn.dataset.themeValue);
+          });
+        }
+      }
+
+      return { apply, current, init };
+    })();
+    ThemeManager.init();
   </script>
 </body>
 </html>

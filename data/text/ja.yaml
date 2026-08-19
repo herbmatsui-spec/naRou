@@ -1,36 +1,179 @@
-# 日本語ローカライズテキスト
-hello: "こんにちは"
-welcome: "ようこそ"
-goodbye: "さようなら"
-yes: "はい"
-no: "いいえ"
-ok: "OK"
-cancel: "キャンセル"
-save: "セーブ"
-load: "ロード"
-settings: "設定"
-language: "言語"
-menu: "メニュー"
-play: "プレイ"
-quit: "終了"
-continue: "続ける"
-new_game: "新しいゲーム"
-options: "オプション"
-credits: "クレジット"
-back: "戻る"
-next: "次へ"
-previous: "前へ"
-close: "閉じる"
-confirm: "確認"
-error: "エラー"
-warning: "警告"
-info: "情報"
-success: "成功"
-failed: "失敗"
-loading: "読み込み中..."
-saving: "保存中..."
-please_wait: "お待ちください..."
-game_title: "ゲームタイトル"
-version: "バージョン"
-author: "作者"
-description: "説明"
+# 日本語
+meta:
+  language: "ja"
+  name: "Japanese"
+  native_name: "日本語"
+  direction: "ltr"
+  font: "Noto Sans CJK JP"
+  fallback: false
+
+ui:
+  menu:
+    new_game: "新規ゲーム"
+    continue: "続ける"
+    settings: "設定"
+    quit: "終了"
+    save: "セーブ"
+    load: "ロード"
+    options: "オプション"
+    credits: "クレジット"
+    help: "ヘルプ"
+  settings:
+    graphics: "グラフィック"
+    audio: "オーディオ"
+    gameplay: "ゲームプレイ"
+    language: "言語"
+    accessibility: "アクセシビリティ"
+    controls: "操作設定"
+  buttons:
+    confirm: "決定"
+    cancel: "キャンセル"
+    back: "戻る"
+    next: "次へ"
+    previous: "前へ"
+    apply: "適用"
+    reset: "リセット"
+    default: "デフォルト"
+  tooltips:
+    hover_save: "ゲームを保存します"
+    hover_load: "セーブデータを読み込みます"
+    hover_settings: "設定メニューを開きます"
+    hover_quit: "ゲームを終了します"
+
+game:
+  status:
+    hp: "HP"
+    mp: "MP"
+    sp: "SP"
+    level: "レベル"
+    exp: "経験値"
+    gold: "ゴールド"
+    turn: "ターン"
+  combat:
+    attack: "攻撃"
+    defend: "防御"
+    skill: "スキル"
+    item: "アイテム"
+    flee: "逃げる"
+    wait: "待機"
+    critical: "会心の一撃！"
+    miss: "外れた！"
+    dodge: "回避した！"
+  messages:
+    victory: "勝利！"
+    defeat: "敗北…"
+    level_up: "レベルアップ！"
+    item_found: "{item}を手に入れた！"
+    gold_gained: "{amount}ゴールドを手に入れた"
+    exp_gained: "{amount}の経験値を得た"
+    skill_learned: "{skill}を覚えた！"
+    game_over: "ゲームオーバー"
+    saved: "セーブしました"
+    loaded: "ロードしました"
+  dungeon:
+    floor: "{floor}階"
+    stairs_up: "上り階段"
+    stairs_down: "下り階段"
+    trap: "罠だ！"
+    treasure: "宝箱"
+
+items:
+  categories:
+    weapon: "武器"
+    armor: "防具"
+    accessory: "アクセサリ"
+    consumable: "消耗品"
+    material: "素材"
+    quest: "クエストアイテム"
+  effects:
+    heal_hp: "HPを{amount}回復"
+    heal_mp: "MPを{amount}回復"
+    boost_atk: "攻撃力が{amount}上昇"
+    boost_def: "防御力が{amount}上昇"
+    boost_spd: "素早さが{amount}上昇"
+    cure_poison: "毒を治す"
+    cure_paralysis: "麻痺を治す"
+    revive: "倒れた味方を蘇生"
+
+skills:
+  types:
+    physical: "物理"
+    magical: "魔法"
+    support: "支援"
+    passive: "パッシブ"
+  targeting:
+    single_enemy: "敵単体"
+    all_enemies: "敵全体"
+    single_ally: "味方単体"
+    all_allies: "味方全体"
+    self: "自分"
+  descriptions:
+    fireball: "敵単体に火炎ダメージ"
+    heal: "味方単体のHPを回復"
+    shield: "味方単体の防御力上昇"
+    poison: "敵単体を毒状態にする"
+    stun: "敵単体をスタンさせる"
+
+classes:
+  warrior: "戦士"
+  mage: "魔法使い"
+  rogue: "盗賊"
+  cleric: "僧侶"
+  ranger: "レンジャー"
+  paladin: "パラディン"
+  necromancer: "ネクロマンサー"
+  bard: "吟遊詩人"
+
+enemies:
+  goblin: "ゴブリン"
+  orc: "オーク"
+  skeleton: "スケルトン"
+  zombie: "ゾンビ"
+  slime: "スライム"
+  bat: "コウモリ"
+  spider: "クモ"
+  dragon: "ドラゴン"
+  demon: "デーモン"
+  boss: "ボス"
+
+system:
+  errors:
+    save_failed: "セーブに失敗しました"
+    load_failed: "ロードに失敗しました"
+    file_corrupt: "セーブデータが破損しています"
+    no_save: "セーブデータが見つかりません"
+    invalid_data: "無効なセーブデータです"
+  warnings:
+    low_hp: "HPが少ない！"
+    low_mp: "MPが少ない！"
+    inventory_full: "インベントリがいっぱいです"
+    cannot_flee: "この戦闘からは逃げられない"
+  confirmations:
+    quit_game: "本当に終了しますか？"
+    delete_save: "このセーブデータを削除しますか？"
+    overwrite_save: "既存のセーブを上書きしますか？"
+    reset_settings: "全設定をデフォルトに戻しますか？"
+
+accessibility:
+  color_blind:
+    protanopia: "1型色覚（赤色盲）"
+    deuteranopia: "2型色覚（緑色盲）"
+    tritanopia: "3型色覚（青色盲）"
+  text_scale:
+    small: "小 (80%)"
+    normal: "標準 (100%)"
+    large: "大 (125%)"
+    extra_large: "特大 (150%)"
+  screen_reader:
+    enabled: "スクリーンリーダー対応"
+    announcements: "ゲームイベントを読み上げ"
+  input:
+    remap_keys: "キー配置変更"
+    gamepad_support: "ゲームパッド対応"
+    vibration: "振動フィードバック"
+
+meta_info:
+  version: "1.0.0"
+  last_updated: "2026-08-19"
+  translators: ["開発チーム"]
+  notes: "基本言語ファイル（英語）に基づく日本語翻訳"

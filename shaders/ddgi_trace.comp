@@ -1,0 +1,181 @@
+// DDGI Probe Raytracing Shader
+// Updates a single probe's 6-face depth + radiance
+
+#version 460 core
+
+// Probe layout
+layout(set = 0, binding = 0) uniform ProbeData {
+    vec3 probe_position;
+    uint probe_index;
+    uint atlas_resolution;
+    uint frame_index;
+} probe;
+
+// G-Buffer
+layout(set = 0, binding = 1) uniform sampler2D u_albedo;
+layout(set = 0, binding = 2) uniform sampler2D u_normal;
+layout(set = 0, binding = 3) uniform sampler2D u_material;
+layout(set = 0, binding = 4) uniform sampler2D u_depth;
+
+// Scene
+layout(set = 0, binding = 5) uniform sampler2D u_shadow_atlas;
+layout(set = 0, binding = 6) uniform LightData {
+    vec3 position;
+    vec3 color;
+    float radius;
+    float intensity;
+    // ... other light params
+} lights[64];
+layout(set = 0, binding = 7) uniform uint u_light_count;
+
+uniform mat4 u_view[6];      // 6 face views
+uniform mat4 u_proj[6];      // 6 face projs
+uniform mat4 u_inv_view[6];
+uniform mat4 u_inv_proj[6];
+
+// Output atlas (6 faces × resolution × resolution)
+layout(rg16f, binding = 0) uniform image2DArray u_radiance_atlas;  // layer = probe*6 + face
+layout(r16f, binding = 1) uniform image2DArray u_depth_atlas;
+
+// Ray tracing
+layout(set = 0, binding = 8) accelerationStructureEXT top_level_as;
+
+const float PI = 3.14159265359;
+
+vec3 reconstruct_position(vec2 uv, float depth, int face) {
+    vec4 clip = vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+    vec4 view = u_inv_proj[face] * clip;
+    view.xyz /= view.w;
+    return view.xyz;
+}
+
+vec3 reconstruct_normal(vec2 packed_xy) {
+    float x = packed_xy.x;
+    float y = packed_xy.y;
+    float z_sq = 1.0 - x * x - y * y;
+    float z = sqrt(max(z_sq, 0.0));
+    return normalize(vec3(x, y, z));
+}
+
+float sample_shadow(vec3 light_pos, vec3 frag_pos, int light_idx) {
+    // Simplified shadow - would use shadow atlas
+    return 1.0;
+}
+
+// GGX BRDF (same as light_volume.frag)
+float ggx_distribution(float n_dot_h, float roughness) {
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float n_dot_h2 = n_dot_h * n_dot_h;
+    float denom = n_dot_h2 * (a2 - 1.0) + 1.0;
+    return a2 / (PI * denom * denom);
+}
+
+float ggx_geometry(float n_dot_v, float roughness) {
+    float r = roughness + 1.0;
+    float k = (r * r) / 8.0;
+    return n_dot_v / (n_dot_v * (1.0 - k) + k);
+}
+
+vec3 schlick_fresnel(vec3 f0, float v_dot_h) {
+    return f0 + (1.0 - f0) * pow(1.0 - v_dot_h, 5.0);
+}
+
+void trace_ray_for_probe_face(int face) {
+    // For each pixel in the probe face
+    // This would be invoked per-pixel via rayQueryEXT
+    
+    // Ray origin = probe position
+    vec3 ray_origin = probe_position;
+    
+    // Ray direction based on face and pixel UV
+    // +X, -X, +Y, -Y, +Z, -Z
+    vec3 face_dirs[6] = vec3[6](
+        vec3(1, 0, 0), vec3(-1, 0, 0),
+        vec3(0, 1, 0), vec3(0, -1, 0),
+        vec3(0, 0, 1), vec3(0, 0, -1)
+    );
+    
+    vec3 up_dirs[6] = vec3[6](
+        vec3(0, 1, 0), vec3(0, 1, 0),
+        vec3(0, 0, -1), vec3(0, 0, 1),
+        vec3(0, 1, 0), vec3(0, 1, 0)
+    );
+    
+    // Build face basis
+    vec3 forward = face_dirs[face];
+    vec3 up = up_dirs[face];
+    vec3 right = normalize(cross(up, forward));
+    up = cross(forward, right);
+    
+    // For each pixel (handled by ray query loop)
+    // This is a template - actual implementation uses rayQueryEXT
+}
+
+// Main compute shader for probe update
+#version 460 core
+layout(local_size_x = 8, local_size_y = 8) in;
+
+layout(set = 0, binding = 0) uniform ProbeData {
+    vec3 probe_position;
+    uint probe_index;
+    uint atlas_resolution;
+    uint frame_index;
+} probe;
+
+layout(set = 0, binding = 1) uniform sampler2D u_albedo;
+layout(set = 0, binding = 2) uniform sampler2D u_normal;
+layout(set = 0, binding = 3) uniform sampler2D u_material;
+layout(set = 0, binding = 4) uniform sampler2D u_depth;
+
+layout(rg16f, binding = 0) uniform image2DArray u_radiance_atlas;
+layout(r16f, binding = 1) uniform image2DArray u_depth_atlas;
+
+uniform mat4 u_view[6];
+uniform mat4 u_proj[6];
+uniform mat4 u_inv_view[6];
+uniform mat4 u_inv_proj[6];
+
+const float PI = 3.14159265359;
+
+vec3 reconstruct_position_from_depth(vec2 uv, float depth) {
+    vec4 clip = vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+    vec4 view = u_inv_proj[0] * clip;  // Simplified
+    return view.xyz / view.w;
+}
+
+void main() {
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    uint face = gl_GlobalInvocationID.z;
+    
+    if (pixel.x >= probe.atlas_resolution || pixel.y >= probe.atlas_resolution) return;
+    if (face >= 6) return;
+    
+    // UV for this face
+    vec2 uv = (vec2(pixel) + 0.5) / vec2(probe.atlas_resolution);
+    
+    // Ray direction for this face
+    vec3 face_dirs[6] = vec3[6](
+        vec3(1, 0, 0), vec3(-1, 0, 0),
+        vec3(0, 1, 0), vec3(0, -1, 0),
+        vec3(0, 0, 1), vec3(0, 0, -1)
+    );
+    
+    vec3 ray_dir = face_dirs[face];
+    
+    // Ray trace (simplified - would use acceleration structure)
+    // For now, sample G-Buffer at screen position projected from probe
+    
+    // Project probe position to screen for each face (simplified)
+    // Real implementation: trace rays into acceleration structure
+    
+    // Placeholder: output probe position as radiance
+    vec2 radiance = vec2(length(probe.probe_position), float(probe.frame_index));
+    float depth = 1.0;
+    
+    // Write to atlas
+    // Layer = probe_index * 6 + face
+    uint layer = probe.probe_index * 6 + face;
+    imageStore(u_radiance_atlas, ivec3(pixel, int(layer)), vec4(radiance, 0.0, 1.0));
+    imageStore(u_depth_atlas, ivec3(pixel, int(layer)), vec4(depth, 0.0, 0.0, 0.0));
+}

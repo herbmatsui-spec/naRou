@@ -1,36 +1,179 @@
-# 简体中文本地化文本
-hello: "你好"
-welcome: "欢迎"
-goodbye: "再见"
-yes: "是"
-no: "否"
-ok: "确定"
-cancel: "取消"
-save: "保存"
-load: "读取"
-settings: "设置"
-language: "语言"
-menu: "菜单"
-play: "开始"
-quit: "退出"
-continue: "继续"
-new_game: "新游戏"
-options: "选项"
-credits: "制作人员"
-back: "返回"
-next: "下一步"
-previous: "上一步"
-close: "关闭"
-confirm: "确认"
-error: "错误"
-warning: "警告"
-info: "信息"
-success: "成功"
-failed: "失败"
-loading: "加载中..."
-saving: "保存中..."
-please_wait: "请稍候..."
-game_title: "游戏标题"
-version: "版本"
-author: "作者"
-description: "描述"
+# 简体中文
+meta:
+  language: "zh-cn"
+  name: "Chinese (Simplified)"
+  native_name: "简体中文"
+  direction: "ltr"
+  font: "Noto Sans SC"
+  fallback: false
+
+ui:
+  menu:
+    new_game: "新游戏"
+    continue: "继续"
+    settings: "设置"
+    quit: "退出"
+    save: "保存"
+    load: "读取"
+    options: "选项"
+    credits: "制作人员"
+    help: "帮助"
+  settings:
+    graphics: "图形"
+    audio: "音频"
+    gameplay: "游戏性"
+    language: "语言"
+    accessibility: "无障碍"
+    controls: "控制设置"
+  buttons:
+    confirm: "确认"
+    cancel: "取消"
+    back: "返回"
+    next: "下一步"
+    previous: "上一步"
+    apply: "应用"
+    reset: "重置"
+    default: "默认"
+  tooltips:
+    hover_save: "保存游戏"
+    hover_load: "读取存档"
+    hover_settings: "打开设置"
+    hover_quit: "退出游戏"
+
+game:
+  status:
+    hp: "生命"
+    mp: "魔力"
+    sp: "SP"
+    level: "等级"
+    exp: "经验"
+    gold: "金币"
+    turn: "回合"
+  combat:
+    attack: "攻击"
+    defend: "防御"
+    skill: "技能"
+    item: "物品"
+    flee: "逃跑"
+    wait: "等待"
+    critical: "暴击！"
+    miss: "未命中！"
+    dodge: "闪避！"
+  messages:
+    victory: "胜利！"
+    defeat: "失败……"
+    level_up: "升级！"
+    item_found: "获得{item}！"
+    gold_gained: "获得{amount}金币"
+    exp_gained: "获得{amount}经验"
+    skill_learned: "学会{skill}！"
+    game_over: "游戏结束"
+    saved: "存档成功"
+    loaded: "读取成功"
+  dungeon:
+    floor: "第{floor}层"
+    stairs_up: "上楼梯"
+    stairs_down: "下楼梯"
+    trap: "陷阱！"
+    treasure: "宝箱"
+
+items:
+  categories:
+    weapon: "武器"
+    armor: "防具"
+    accessory: "饰品"
+    consumable: "消耗品"
+    material: "材料"
+    quest: "任务物品"
+  effects:
+    heal_hp: "恢复{amount}生命"
+    heal_mp: "恢复{amount}魔力"
+    boost_atk: "攻击力提升{amount}"
+    boost_def: "防御力提升{amount}"
+    boost_spd: "速度提升{amount}"
+    cure_poison: "解除中毒"
+    cure_paralysis: "解除麻痹"
+    revive: "复活队友"
+
+skills:
+  types:
+    physical: "物理"
+    magical: "魔法"
+    support: "辅助"
+    passive: "被动"
+  targeting:
+    single_enemy: "单体敌人"
+    all_enemies: "全体敌人"
+    single_ally: "单体友军"
+    all_allies: "全体友军"
+    self: "自身"
+  descriptions:
+    fireball: "对单体敌人造成火焰伤害"
+    heal: "恢复单体友军生命"
+    shield: "提升单体友军防御"
+    poison: "使单体敌人中毒"
+    stun: "使单体敌人眩晕"
+
+classes:
+  warrior: "战士"
+  mage: "法师"
+  rogue: "盗贼"
+  cleric: "牧师"
+  ranger: "游侠"
+  paladin: "圣骑士"
+  necromancer: "死灵法师"
+  bard: "吟游诗人"
+
+enemies:
+  goblin: "哥布林"
+  orc: "兽人"
+  skeleton: "骷髅"
+  zombie: "僵尸"
+  slime: "史莱姆"
+  bat: "蝙蝠"
+  spider: "蜘蛛"
+  dragon: "巨龙"
+  demon: "恶魔"
+  boss: "首领"
+
+system:
+  errors:
+    save_failed: "保存失败"
+    load_failed: "读取失败"
+    file_corrupt: "存档损坏"
+    no_save: "无存档文件"
+    invalid_data: "无效存档数据"
+  warnings:
+    low_hp: "生命值过低！"
+    low_mp: "魔力值过低！"
+    inventory_full: "背包已满"
+    cannot_flee: "无法逃跑"
+  confirmations:
+    quit_game: "确定要退出吗？"
+    delete_save: "删除此存档？"
+    overwrite_save: "覆盖现有存档？"
+    reset_settings: "重置所有设置？"
+
+accessibility:
+  color_blind:
+    protanopia: "红色盲"
+    deuteranopia: "绿色盲"
+    tritanopia: "蓝色盲"
+  text_scale:
+    small: "小 (80%)"
+    normal: "标准 (100%)"
+    large: "大 (125%)"
+    extra_large: "特大 (150%)"
+  screen_reader:
+    enabled: "屏幕阅读器支持"
+    announcements: "播报游戏事件"
+  input:
+    remap_keys: "按键重映射"
+    gamepad_support: "手柄支持"
+    vibration: "振动反馈"
+
+meta_info:
+  version: "1.0.0"
+  last_updated: "2026-08-19"
+  translators: ["开发团队"]
+  notes: "基于英语基础文件的简体中文翻译"

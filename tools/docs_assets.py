@@ -1005,8 +1005,7 @@ The build process is controlled by `asset_pipeline_config.json` which specifies:
 To customize the pipeline:
 1. Modify the configuration file
 2. Create custom processing scripts in the `tools/` directory
-3. Extend the build script (`build_assets.py`) for new asset types
-"""),
+3. Extend the build script (`build_assets.py`) for new asset types"""),
             ("validation.md", """# Asset Validation Procedures
 
 ## Overview
@@ -1029,8 +1028,7 @@ Asset validation ensures that all processed assets meet quality standards and ar
 - Incorrect metadata formatting
 - Assets exceeding size limits
 - Incompatible file formats
-- Texture atlases with poor packing efficiency
-"""),
+- Texture atlases with poor packing efficiency"""),
             ("deployment.md", """# Asset Deployment Guide
 
 ## Overview
@@ -1060,8 +1058,7 @@ This guide covers deploying processed assets to various target environments.
 1. [ ] Verify all files were transferred correctly
 2. [ ] Check that deployed assets match source in content (accounting for optimization)
 3. [ ] Test loading and rendering of key assets
-4. [ ] Monitor for any errors in initial usage
-"""),
+4. [ ] Monitor for any errors in initial usage"""),
             ("configuration.md", """# Asset Pipeline Configuration Reference
 
 ## Configuration File
@@ -1184,8 +1181,7 @@ Controls overall pipeline behavior:
 The following environment variables can override configuration settings:
 - `ASSET_PIPELINE_CONFIG`: Path to configuration file
 - `ASSET_SOURCE_DIR`: Override source directory
-- `ASSET_OUTPUT_DIR`: Override output directory
-""",
+- `ASSET_OUTPUT_DIR`: Override output directory"""),
             ("api_reference.md", """# Asset Pipeline API Reference
 
 ## Overview
@@ -1282,8 +1278,10 @@ Configuration can be accessed through the pipeline's config property:
 const maxAtlasSize = pipeline.config.tileset.max_atlas_size;
 const workerCount = pipeline.config.pipeline.max_workers;
 ```
-"""
+
+        ]"""),
         ]
+
         
         for filename, content in additional_docs:
             file_path = os.path.join(docs_dir, filename)
