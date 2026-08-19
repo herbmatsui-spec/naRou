@@ -1,0 +1,34 @@
+"on":
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+name: Data Schema Pipeline
+
+jobs:
+  schema-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install datamodel-code-generator jsonschema pyyaml pydantic pytest
+
+      - name: Validate schema syntax
+        run: python tools/codegen.py --validate-only
+
+      - name: Validate data files against schemas
+        run: python tools/codegen.py --validate-data
+
+      - name: Run repository & DataManager tests
+        run: pytest tests/test_repositories.py tests/test_v2_masterpiece.py -q

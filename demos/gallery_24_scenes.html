@@ -1,109 +1,7 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>naRou: Masterpiece Edition - 24 Scenes Grand Showcase</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Outfit', 'Noto Sans JP', sans-serif;
-            background-color: #060810;
-            color: #f8fafc;
-            margin: 0;
-            padding: var(--spacing-4);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            background-image: radial-gradient(circle at top right, #1a1630, #060810);
-        }
-
-        .gallery-container {
-            width: 1100px;
-            background: rgba(15, 23, 42, 0.94);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 20px;
-            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85);
-            padding: var(--spacing-6);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .screen-preview {
-            background: #020617;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            height: 380px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            position: relative;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
-        }
-
-        .grid-matrix {
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            gap: 6px;
-            font-size: 32px;
-            user-select: none;
-        }
-
-        .cell {
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-
-        .cell-wall { background: rgba(50, 40, 40, 0.4); }
-        .cell-floor { color: #475569; font-size: 16px; }
-        .cell-anim {
-            transform: scale(1.1);
-            filter: drop-shadow(0 0 8px rgba(255,255,255,0.4));
-            animation: pulse 1.2s infinite alternate ease-in-out;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1.05); }
-            100% { transform: scale(1.25); }
-        }
-
-        .scene-card-btn {
-            background: rgba(30, 41, 59, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-            padding: 8px 12px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .scene-card-btn:hover, .scene-card-btn.active {
-            background: #38bdf8;
-            color: #0f172a;
-            font-weight: bold;
-            border-color: #7dd3fc;
-            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.4);
-            transform: translateY(-2px);
-        }
-    </style>
-</head>
-<body>
-
-    <div class="gallery-container">
+{% extends "templates/base.html" %}
+{% block title %}naRou: Masterpiece Edition - 24 Scenes Grand Showcase{% endblock %}
+{% block content %}
+<div class="gallery-container">
         <!-- Header -->
         <div class="flex justify-between items-center border-b border-slate-700/80 pb-4">
             <div class="flex items-center gap-3">
@@ -221,5 +119,4 @@
 
         renderScene(0);
     </script>
-</body>
-</html>
+{% endblock %}

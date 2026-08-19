@@ -148,7 +148,50 @@ python generate_24_scenes.py
 
 # アセットビルド
 python tools/build_assets.py
+
+# データスキーマ → Pydantic/dataclass 自動生成
+python tools/codegen.py
+
+# YAML データのスキーマ検証
+python tools/codegen.py --validate-data
+
+# スキーマ構文検証
+python tools/codegen.py --validate-only
+
+# リポジトリ層テスト
+python -m pytest tests/test_repositories.py -q
 ```
+
+---
+
+## 🗂️ 現在の未コミット変更（作業進捗）
+
+このブランチには、まだコミットに反映されていない変更が多数含まれています。
+
+### データ駆動アーキテクチャ（schema → モデル → リポジトリ）
+- `data/schemas/` : アイテム/モンスター/スキル/クエスト/ダンジョン/派閥/ジョブ/神/ギルド/称号/実績/呪文/スキル融合/スキルツリーの JSON Schema
+- `data/generated/` : `tools/codegen.py` が生成した Pydantic モデル（strict 型検証・`DataModel` 基底）
+- `data/generated_dc/` : 同上から生成した frozen dataclass
+- `data/repositories/` : リポジトリパターン（各ドメインの検索・インデックス・クエリ）
+- `tools/codegen.py` : JSON Schema → Pydantic/dataclass 自動生成 ＋ YAML 検証ツール
+- `data_manager.py` : スキーマ検証付きロード・リポジトリ構築へ書き直し（`DataManager()` で即利用可）
+- `tests/test_repositories.py` : リポジトリ層のテスト（38検証）
+- `.github/workflows/data-pipeline.yml` : スキーマ検証＋リポジトリテストの CI
+
+> ⚠️ 既知の課題: `main_quests.yaml` / `dungeon_themes.yaml` はスキーマと構造が異なるため、DataManager は tolerant ロード（型を緩やかに構築）で対応。スキーマとの統合が残務。
+
+### 描画・ビジュアル（WebGL / ポストプロセス / パレット）
+- `core/lighting.py` `core/palette.py` `core/renderer_base.py` `core/tcod_renderer.py` : ライティング・パレット・レンダラ基盤の刷新
+- `core/entity_renderer.py` `core/tile_atlas.py` `core/palette_generated.py` : エンティティ描画・タイルアトラス・生成パレット（新規）
+- `core/gi.py` : 削除（機能を他へ統合）
+- `entity.py` `game.py` `system_coordinator.py` `web_game_client.html` `web_server.py` : 描画統合・Web クライアント反映
+- `assets/tiles/tileset_def.json` `assets/css/` `design_tokens*.json` : タイルセット・CSS・カラーブラインド対応パレット
+- `demos/*` : 24 シーンデモのテンプレート化・刷新（`tools/convert_demos_to_template.py` 等）
+- `webgpu/lpv.wgsl` : WebGPU ライトプロパゲーションシェーダ
+
+### 開発ツール・ドキュメント
+- `tools/` : パレット生成/検証、タイルパリティ、視覚回帰、デモ変換などの新規ツール
+- `docs/` : エンティティ描画・視覚統一・ターミナル照明などの実装提案/解説
 
 ---
 

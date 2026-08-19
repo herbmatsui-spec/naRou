@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://narou.example.com/schemas/_template.json",
+  "title": "Base Template for naRou Data Definitions",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z_][a-z0-9_]*$",
+      "description": "Unique identifier following naming convention (e.g., it_sword, mn_goblin, sk_fireball)"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Display name in default locale (Japanese)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Flavor text or description"
+    }
+  },
+  "definitions": {
+    "effect": {
+      "type": "object",
+      "required": ["type", "value", "target"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "damage_bonus", "crit_chance", "mp_cost_reduction", "unlock_skill",
+            "heal_amount", "stat_bonus", "resistance", "unlock_recipe"
+          ]
+        },
+        "value": {
+          "type": "number"
+        },
+        "target": {
+          "type": "string",
+          "enum": ["melee", "spell", "self", "ranged", "pet", "all"]
+        },
+        "condition": {
+          "type": "string",
+          "description": "Optional condition expression (e.g., 'hp < 50%')"
+        }
+      }
+    },
+    "localized_text": {
+      "type": "object",
+      "required": ["ja"],
+      "additionalProperties": { "type": "string" },
+      "properties": {
+        "ja": { "type": "string" },
+        "en": { "type": "string" },
+        "zh-cn": { "type": "string" },
+        "zh-tw": { "type": "string" },
+        "ko": { "type": "string" }
+      }
+    }
+  }
+}

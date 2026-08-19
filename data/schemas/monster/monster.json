@@ -1,0 +1,182 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "monster.json",
+  "title": "Monster Definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^mn_[a-z_][a-z0-9_]*$",
+      "description": "Unique monster ID with 'mn_' prefix (optional, can be inferred from key)"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Display name in Japanese"
+    },
+    "description": {
+      "type": "string",
+      "description": "Flavor text"
+    },
+    "char": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2,
+      "description": "Display character"
+    },
+    "color": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "description": "RGB color tuple"
+    },
+    "level": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monster level"
+    },
+    "speed": {
+      "type": "integer",
+      "minimum": 35,
+      "maximum": 200,
+      "default": 100,
+      "description": "Action speed (100 = normal)"
+    },
+    "hp": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Base HP (alias for max_hp)"
+    },
+    "max_hp": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Maximum HP"
+    },
+    "mp": {
+      "type": "integer",
+      "default": 0,
+      "description": "Base MP"
+    },
+    "min_floor": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Minimum floor level where this monster spawns"
+    },
+    "max_floor": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Maximum floor level where this monster spawns"
+    },
+    "melee_damage": {
+      "type": "string",
+      "pattern": "^\\d+d\\d+(\\+\\d+)?$",
+      "description": "Melee damage dice notation (e.g., '2d6+3')"
+    },
+    "hit_bonus": {
+      "type": "integer",
+      "default": 0,
+      "description": "Hit bonus modifier"
+    },
+    "pv": {
+      "type": "integer",
+      "default": 0,
+      "description": "Protection value"
+    },
+    "dv": {
+      "type": "integer",
+      "default": 0,
+      "description": "Dodge value"
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(sk_)?[a-z_][a-z0-9_]*$"
+      },
+      "default": [],
+      "description": "Known skill IDs (with or without 'sk_' prefix)"
+    },
+    "spells": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(sp_)?[a-z_][a-z0-9_]*$"
+      },
+      "default": [],
+      "description": "Known spell IDs (with or without 'sp_' prefix)"
+    },
+    "drops": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/drop_entry"
+      },
+      "default": [],
+      "description": "Drop table entries"
+    },
+    "faction": {
+      "type": "string",
+      "default": "monster",
+      "description": "Faction ID for reputation/aggro"
+    },
+    "ai_type": {
+      "$ref": "#/$defs/ai_type"
+    },
+    "resistances": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "default": {},
+      "description": "Element resistances (fire, cold, lightning, etc.)"
+    },
+    "attributes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "default": {},
+      "description": "Base attributes (str, dex, con, int, wis, cha)"
+    }
+  },
+  "$defs": {
+    "drop_entry": {
+      "type": "object",
+      "required": ["item_id", "chance"],
+      "additionalProperties": false,
+      "properties": {
+        "item_id": {
+          "type": "string",
+          "pattern": "^it_[a-z_][a-z0-9_]*$",
+          "description": "Item ID to drop"
+        },
+        "chance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Drop probability (0.0 - 1.0)"
+        },
+        "min_count": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        },
+        "max_count": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      }
+    },
+    "ai_type": {
+      "enum": ["melee", "ranged", "caster", "flee", "guard", "aggressive", "coward", "tactical", "boss", "support"],
+      "description": "AI behavior type"
+    }
+  }
+}

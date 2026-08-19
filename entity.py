@@ -198,6 +198,14 @@ class Entity:
         self.speed = speed
         self.energy = 0
 
+        # Entity rendering fields (Step 1 of Proposal 2)
+        self.facing: int = 0           # 0:下, 1:左, 2:右, 3:上
+        self.state: str = "idle"       # "idle", "walk", "attack", "dead"
+        self.attack_timer: float = 0.0 # 攻撃アニメーション残り時間
+        self.moving: bool = False      # 移動中フラグ
+        self.prev_x: int = x           # 前フレーム位置（向き計算用）
+        self.prev_y: int = y           # 前フレーム位置
+
         # 主能力（コンポーネント初期化後に設定）
         self._init_attributes = attributes
 

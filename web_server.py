@@ -290,9 +290,42 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 vx = e.x - cam_x
                 vy = e.y - cam_y
                 if 0 <= vx < view_w and 0 <= vy < view_h:
+                    # エンティティタイプからTileDef ID決定
+                    if e.is_player:
+                        tile_id = "PLAYER"
+                    elif getattr(e, "is_pet", False):
+                        tile_id = "PET"
+                    else:
+                        tile_id = "ENEMY_GOBLIN"
+                    
+                    # 向き計算 (移動ベクトルから推定)
+                    facing = getattr(e, "facing", 0)
+                    if facing == 0 and (hasattr(e, 'prev_x') and hasattr(e, 'prev_y')):
+                        dx = e.x - e.prev_x
+                        dy = e.y - e.prev_y
+                        if dx != 0 or dy != 0:
+                            if abs(dx) > abs(dy):
+                                facing = 2 if dx > 0 else 1
+                            else:
+                                facing = 0 if dy > 0 else 3
+                    
+                    # 状態判定
+                    state = "idle"
+                    if getattr(e, "attacking", False):
+                        state = "attack"
+                    elif getattr(e, "attack_timer", 0) > 0:
+                        state = "attack"
+                    elif e.hp <= 0:
+                        state = "dead"
+                    elif getattr(e, "moving", False) or getattr(e, "vx", 0) != 0 or getattr(e, "vy", 0) != 0:
+                        state = "walk"
+                    else:
+                        state = "idle"
+                    
                     entities_data.append({
                         "name": e.name,
                         "char": e.char,
+                        "tile_id": tile_id,
                         "x": vx,
                         "y": vy,
                         "world_x": e.x,
@@ -301,6 +334,10 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                         "max_hp": e.max_hp,
                         "is_player": e.is_player,
                         "is_pet": getattr(e, "is_pet", False),
+                        "facing": facing,
+                        "state": state,
+                        "attack_timer": getattr(e, "attack_timer", 0),
+                        "moving": getattr(e, "moving", False),
                         "faction": getattr(e, "faction", "neutral"),
                         "status_effects": [st.name for st in getattr(e, "status_effects", [])]
                     })

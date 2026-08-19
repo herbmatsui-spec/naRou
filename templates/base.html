@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}naRou{% endblock %}</title>
+  <link rel="stylesheet" href="/assets/css/design_tokens.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+  <link rel="stylesheet" href="/assets/css/themes.css">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-[var(--color-background-primary)] text-[var(--color-text-primary)] font-[var(--fontFamily-primary)]">
+  {% block content %}{% endblock %}
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "skill_trees.json",
+  "title": "Skill Trees Definition",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["skill_trees"],
+  "properties": {
+    "skill_trees": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/skill_tree"
+      }
+    },
+    "meta": {
+      "$ref": "#/$defs/meta"
+    }
+  },
+  "$defs": {
+    "skill_tree": {
+      "type": "object",
+      "required": ["name", "icon", "tiers"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "icon": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2
+        },
+        "tiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/skill_tier"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "skill_tier": {
+      "type": "object",
+      "required": ["id", "name", "description", "cost", "prerequisites", "effects"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z_][a-z0-9_]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "cost": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z_][a-z0-9_]*$"
+          },
+          "default": []
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/effect"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "effect": {
+      "type": "object",
+      "required": ["type", "value", "target"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "damage_bonus", "crit_chance", "mp_cost_reduction", "unlock_skill",
+            "heal_amount", "stat_bonus", "resistance", "unlock_recipe",
+            "speed_bonus", "evasion_bonus", "accuracy_bonus", "lifesteal",
+            "mana_shield", "reflect_damage", "poison_immunity", "stun_chance",
+            "dodge_chance", "counter_chance", "elemental_damage", "mp_on_hit",
+            "undead_damage_bonus", "heal_on_kill"
+          ]
+        },
+        "value": {
+          "type": ["number", "string"]
+        },
+        "target": {
+          "type": "string",
+          "enum": ["melee", "spell", "self", "ranged", "pet", "all", "enemy", "ally", "unarmed"]
+        },
+        "condition": {
+          "type": "string"
+        },
+        "duration": {
+          "type": "integer",
+          "default": 0
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "last_updated": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

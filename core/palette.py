@@ -8,6 +8,10 @@ from typing import Dict, Tuple
 # RGB Color tuple for tcod (values 0-255)
 RGB = Tuple[int, int, int]
 
+# Terminal 16-color palette generated from design_tokens.json (Step 11/12).
+# Regenerate with: python tools/generate_palette.py > core/palette_generated.py
+from core.palette_generated import PALETTE_16  # noqa: F401
+
 # Semantic colors from design_tokens.json
 COLORS: Dict[str, RGB] = {
     # Danger/Severity

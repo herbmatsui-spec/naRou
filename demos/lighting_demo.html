@@ -1,57 +1,7 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ライティングシステム デモ</title>
-  <script src="https://cdn.pixijs.com/pixi.js"></script>
-  <style>
-    body {
-      margin: 0;
-      background: #0a0b10;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      font-family: Arial, sans-serif;
-      color: #f0f4fc;
-    }
-    #container {
-      position: relative;
-    }
-    canvas {
-      border: 1px solid #333;
-    }
-    .controls {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 10px;
-      border-radius: 8px;
-    }
-    button {
-      background: #e5a93b;
-      border: none;
-      color: #000;
-      padding: 8px 16px;
-      margin: 4px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    button:hover {
-      background: #ffb74d;
-    }
-    .info {
-      margin-top: 10px;
-      font-size: 12px;
-      color: #8b9bb4;
-    }
-  </style>
-</head>
-<body>
-  <div id="container">
+{% extends "templates/base.html" %}
+{% block title %}ライティングシステム デモ{% endblock %}
+{% block content %}
+<div id="container">
     <div class="controls">
       <button onclick="addTorch()">松明を追加</button>
       <button onclick="addMagic()">魔法光源を追加</button>
@@ -214,5 +164,4 @@
       addTorch();
     }, 500);
   </script>
-</body>
-</html>
+{% endblock %}

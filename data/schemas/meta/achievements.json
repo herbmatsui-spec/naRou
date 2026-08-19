@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "achievements.json",
+  "title": "Achievements Definition",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["achievements"],
+  "properties": {
+    "achievements": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/achievement"
+      }
+    },
+    "meta": {
+      "$ref": "#/$defs/meta"
+    }
+  },
+  "$defs": {
+    "achievement": {
+      "type": "object",
+      "required": ["name", "description", "icon"],
+      "additionalProperties": true,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "icon": { "type": "string", "minLength": 1, "maxLength": 2 },
+        "reward_title": { "type": "string" },
+        "reward_gold": { "type": "integer", "minimum": 0 },
+        "reward_item": { "type": "string" },
+        "reward_skill_points": { "type": "integer", "minimum": 0 },
+        "hidden": { "type": "boolean", "default": false },
+        "auto_equip_title": { "type": "boolean", "default": false },
+        "social_based": { "type": "boolean", "default": false },
+        "status_bonus": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" }
+        },
+        "condition": {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": true,
+          "properties": {
+            "type": {
+              "enum": [
+                "kill_count", "monster_type_kill", "dungeon_floors", "item_collect",
+                "gold_earned", "level_reached", "skill_learned", "quest_completed",
+                "pet_evolved", "reincarnation_count", "god_piety", "guild_rank",
+                "weekly_time", "friend_helps", "special_combo", "speedrun", "reincarnation",
+                "unique_monsters_killed", "meta_progression_all", "unique_items_obtained",
+                "festival_date"
+              ]
+            },
+            "target": { "type": "integer", "minimum": 1 },
+            "monster_key": { "type": "string" },
+            "item_id": { "type": "string", "pattern": "^it_[a-z_][a-z0-9_]*$" },
+            "required_items": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "requirement": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "version": { "type": "string" },
+        "last_updated": { "type": "string" }
+      }
+    }
+  }
+}

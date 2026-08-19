@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "skill_fusion.json",
+  "title": "Skill Fusion Definition",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["fusions"],
+  "properties": {
+    "fusions": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/skill_fusion"
+      }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "version": { "type": "string" },
+        "last_updated": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "skill_fusion": {
+      "type": "object",
+      "required": ["name", "description", "required_skills", "result_skills", "bonus_effects"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "required_skills": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z_][a-z0-9_]*$"
+          },
+          "minItems": 1
+        },
+        "required_job": {
+          "type": "string"
+        },
+        "required_god": {
+          "type": "string"
+        },
+        "result_skills": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z_][a-z0-9_]*$"
+          },
+          "minItems": 1
+        },
+        "bonus_effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/effect"
+          }
+        }
+      }
+    },
+    "effect": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "elemental_damage", "mp_on_hit", "undead_damage_bonus", "heal_on_kill",
+            "crit_chance", "damage_bonus", "lifesteal", "speed_bonus",
+            "spell_power_on_melee", "auto_reflect", "heal_on_hit", "undead_bane",
+            "backstab_multiplier"
+          ]
+        },
+        "value": {
+          "type": ["number", "string"]
+        },
+        "chance": {
+          "type": "number"
+        },
+        "target": {
+          "type": "string",
+          "enum": ["melee", "spell", "self", "ranged", "pet", "all", "enemy", "ally"]
+        }
+      }
+    }
+  }
+}

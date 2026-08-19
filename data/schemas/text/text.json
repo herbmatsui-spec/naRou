@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "text.json",
+  "title": "Localization Text Definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["locale", "entries"],
+  "properties": {
+    "locale": {
+      "type": "string",
+      "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+      "description": "Locale code (ja, en, zh-CN, zh-TW, ko)"
+    },
+    "entries": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Key-value pairs for localized text"
+    }
+  }
+}

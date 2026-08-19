@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "factions.json",
+  "title": "Factions Definition",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["factions"],
+  "properties": {
+    "factions": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/faction"
+      }
+    },
+    "meta": {
+      "$ref": "#/$defs/meta"
+    }
+  },
+  "$defs": {
+    "faction": {
+      "type": "object",
+      "required": ["name", "color", "territories", "allied_factions", "rival_factions", "influence"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "color": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0, "maximum": 255 },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "territories": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "allied_factions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "rival_factions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "influence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "version": { "type": "string" },
+        "last_updated": { "type": "string" }
+      }
+    }
+  }
+}

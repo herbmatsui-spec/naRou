@@ -1,0 +1,27 @@
+/* Theme support (Step 16 of Proposal 5) */
+/* Default theme is dark; override via prefers-color-scheme / prefers-contrast. */
+
+:root {
+  --color-bg: var(--color-background-primary);
+  --color-surface: var(--color-background-secondary);
+  --color-text: var(--color-text-primary);
+  --color-text-muted: var(--color-text-secondary);
+  --color-border: var(--color-border-medium);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-bg: var(--color-background-secondary);
+    --color-surface: var(--color-background-primary);
+    --color-text: var(--color-text-primary);
+    --color-text-muted: var(--color-text-secondary);
+    --color-border: var(--color-border-light);
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --color-border: var(--color-text);
+    --color-text-muted: var(--color-text);
+  }
+}

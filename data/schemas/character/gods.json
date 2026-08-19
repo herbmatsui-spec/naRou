@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gods.json",
+  "title": "Gods Definition",
+  "type": "object",
+  "additionalProperties": {
+    "$ref": "#/$defs/god"
+  },
+  "$defs": {
+    "god": {
+      "type": "object",
+      "required": ["name", "domain", "favored_offer", "bonus_attr", "servant", "artifact"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "domain": { "type": "string" },
+        "favored_offer": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "bonus_attr": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" }
+        },
+        "servant": { "type": ["string", "null"] },
+        "artifact": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
