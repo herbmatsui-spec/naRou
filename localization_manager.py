@@ -76,8 +76,14 @@ class LocalizationManager:
     
     def _get_raw_text(self, key: str, language: str) -> Optional[str]:
         """Internal method to get text without fallback recursion."""
-        if language in self._cache and key in self._cache[language]:
-            return self._cache[language][key]
+        if language in self._cache:
+            cache_dict = self._cache[language]
+            if key in cache_dict:
+                return cache_dict[key]
+            # Try searching with prefix or suffix
+            for k, v in cache_dict.items():
+                if k.endswith(f".{key}") or k == key:
+                    return v
         return None
 
     def get_text(self, key: str, language: Optional[str] = None) -> str:
@@ -99,7 +105,7 @@ class LocalizationManager:
             return text
         
         # Try priority list if set
-        if hasattr(self, '_language_priority'):
+        if getattr(self, '_language_priority', None):
             for priority_lang in self._language_priority:
                 if priority_lang == lang:
                     continue  # Skip if same as requested (already tried)
@@ -185,8 +191,10 @@ class LocalizationManager:
     
     def get_stats(self) -> Dict[str, Any]:
         """Get statistics about loaded languages."""
+        total_entries = sum(len(entries) for entries in self._cache.values())
         return {
             "total_languages": len(self._cache),
+            "total_entries": total_entries,
             "current_language": self.current_language,
             "fallback_language": self.fallback_language,
             "default_language": self.default_language,

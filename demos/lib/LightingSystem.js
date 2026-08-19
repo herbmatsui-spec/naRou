@@ -38,6 +38,167 @@ export class LightingSystem {
         this.enemyCones = [];
 
         this.ambientLight = 0.08;
+        this.fogDensity = 0.35;
+
+        // Step 1 & 2: SDF & Volumetric Fog Shaders & Textures
+        this.sdfTexture = PIXI.RenderTexture.create({ width, height, resolution: 1 });
+        this.giTexture = PIXI.RenderTexture.create({ width, height, resolution: 1 });
+        this.giSprite = new PIXI.Sprite(this.giTexture);
+        this.giSprite.blendMode = PIXI.BLEND_MODES.SCREEN;
+
+        this.initShaders();
+    }
+
+    /**
+     * Step 1: シェーダー定義
+     */
+    initShaders() {
+        const volumeLightFrag = `
+            precision mediump float;
+            varying vec2 vTextureCoord;
+            uniform sampler2D uSampler;
+            uniform sampler2D uSDFTexture;
+            uniform vec2 uLightPos;
+            uniform vec3 uLightColor;
+            uniform float uLightIntensity;
+            uniform float uFogDensity;
+            uniform float uTime;
+
+            void main(void) {
+                vec4 baseColor = texture2D(uSampler, vTextureCoord);
+                vec2 rayDir = normalize(uLightPos - vTextureCoord);
+                float dist = length(uLightPos - vTextureCoord);
+                
+                float lightAccum = 0.0;
+                const int STEPS = 12;
+                for (int i = 0; i < STEPS; i++) {
+                    float t = float(i) / float(STEPS);
+                    vec2 samplePos = vTextureCoord + rayDir * dist * t;
+                    float shadow = texture2D(uSDFTexture, samplePos).r;
+                    if (shadow > 0.1) {
+                        lightAccum += (1.0 - t) * (1.0 + 0.1 * sin(uTime * 5.0 + samplePos.x * 20.0));
+                    }
+                }
+                lightAccum = clamp((lightAccum / float(STEPS)) * uFogDensity * uLightIntensity, 0.0, 1.0);
+                vec3 fog = uLightColor * lightAccum;
+                gl_FragColor = vec4(baseColor.rgb + fog, baseColor.a);
+            }
+        `;
+        this.volumeLightFilter = new PIXI.Filter(null, volumeLightFrag, {
+            uSDFTexture: this.sdfTexture,
+            uLightPos: [0.5, 0.5],
+            uLightColor: [1.0, 0.9, 0.6],
+            uLightIntensity: 1.0,
+            uFogDensity: this.fogDensity,
+            uTime: 0.0
+        });
+
+        // Step 11 & 13: 2.5D ノーマルマップ陰影計算シェーダー
+        const normalMapFrag = `
+            precision mediump float;
+            varying vec2 vTextureCoord;
+            uniform sampler2D uSampler;
+            uniform sampler2D uNormalSampler;
+            uniform vec2 uLightPos;
+            uniform vec3 uLightColor;
+            uniform vec3 uAmbientColor;
+            uniform vec2 uResolution;
+            uniform float uLightRadius;
+            uniform float uLightZ;
+
+            void main(void) {
+                vec4 diffuseColor = texture2D(uSampler, vTextureCoord);
+                if (diffuseColor.a < 0.01) discard;
+
+                vec3 normalRaw = texture2D(uNormalSampler, vTextureCoord).rgb;
+                vec3 N = normalize(normalRaw * 2.0 - 1.0);
+
+                vec2 pixelPos = vTextureCoord * uResolution;
+                vec2 lightPixelPos = uLightPos * uResolution;
+
+                vec3 lightDir = vec3(lightPixelPos - pixelPos, uLightZ);
+                float dist = length(lightDir.xy);
+                float attenuation = clamp(1.0 - dist / uLightRadius, 0.0, 1.0);
+                attenuation = attenuation * attenuation;
+
+                vec3 L = normalize(lightDir);
+                float NdotL = max(dot(N, L), 0.0);
+
+                vec3 diffuse = uLightColor * NdotL * attenuation;
+                vec3 finalLight = uAmbientColor + diffuse;
+
+                gl_FragColor = vec4(diffuseColor.rgb * finalLight, diffuseColor.a);
+            }
+        `;
+
+        this.normalMapFilter = new PIXI.Filter(null, normalMapFrag, {
+            uNormalSampler: PIXI.Texture.WHITE,
+            uLightPos: [0.5, 0.5],
+            uLightColor: [1.2, 1.1, 0.9],
+            uAmbientColor: [0.35, 0.35, 0.45],
+            uResolution: [this.width, this.height],
+            uLightRadius: 300.0,
+            uLightZ: 40.0
+        });
+    }
+
+    /**
+     * Step 11 & 15: ノーマルマップライティングの Uniform 更新
+     * @param {number} px プレイヤー/光源Xピクセル
+     * @param {number} py プレイヤー/光源Yピクセル
+     * @param {PIXI.Texture} normalTexture
+     */
+    updateNormalLighting(px, py, normalTexture) {
+        if (!this.normalMapFilter) return;
+        this.normalMapFilter.uniforms.uLightPos = [px / this.width, py / this.height];
+        if (normalTexture) {
+            this.normalMapFilter.uniforms.uNormalSampler = normalTexture;
+        }
+    }
+
+    /**
+     * Step 3: Jump Flood / SDF 更新
+     * @param {Array<Array<number>>} blockedGrid 障害物マップ (1=壁, 0=空間)
+     */
+    updateSDF(blockedGrid) {
+        if (!blockedGrid || blockedGrid.length === 0) return;
+        const h = blockedGrid.length;
+        const w = blockedGrid[0].length;
+        const tilePx = Math.max(1, Math.floor(this.width / w));
+        const g = new PIXI.Graphics();
+
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                if (blockedGrid[y][x] === 1) {
+                    g.beginFill(0x000000); // 遮蔽物は黒
+                } else {
+                    g.beginFill(0xffffff); // 通過可能空間は白
+                }
+                g.drawRect(x * tilePx, y * tilePx, tilePx, tilePx);
+                g.endFill();
+            }
+        }
+        this.app.renderer.render(g, { renderTexture: this.sdfTexture, clear: true });
+        g.destroy();
+    }
+
+    /**
+     * Step 4 & 6: 2D GI & ボリューメトリックフォグ描画
+     * @param {number} time
+     */
+    renderGI(time = 0) {
+        if (!this.lightSources || this.lightSources.length === 0) return;
+        const mainLight = this.lightSources[0];
+        const nx = (mainLight.x * 24) / this.width;
+        const ny = (mainLight.y * 24) / this.height;
+        const col = mainLight.color || [255, 220, 140];
+        const fog = (typeof window !== 'undefined' && window.fogDensity !== undefined) ? window.fogDensity : this.fogDensity;
+
+        this.volumeLightFilter.uniforms.uLightPos = [nx, ny];
+        this.volumeLightFilter.uniforms.uLightColor = [col[0] / 255, col[1] / 255, col[2] / 255];
+        this.volumeLightFilter.uniforms.uLightIntensity = mainLight.intensity || 1.0;
+        this.volumeLightFilter.uniforms.uFogDensity = fog;
+        this.volumeLightFilter.uniforms.uTime = time;
     }
 
     /**

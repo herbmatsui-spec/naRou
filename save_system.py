@@ -8,11 +8,7 @@ import hmac
 import base64
 from typing import Any, Tuple, Optional, Dict
 from exceptions import SaveDataCorruptedError
-from components import (
-    TitleComponent, GuildFactionComponent, AchievementComponent,
-    ReincarnationComponent, SkillTreeJobComponent, SkillFusionComponent,
-    StorytellerComponent, ProceduralQuestComponent
-)
+from migration_pipeline import MigrationPipeline, DEFAULT_FIELD_FACTORIES
 
 
 class SaveSystem:
@@ -48,48 +44,8 @@ class SaveSystem:
         expected = cls._compute_hmac(data)
         return hmac.compare_digest(expected, expected_hmac)
 
-    # 後方互換性用フィールド定義 (旧セーブデータ復元および静的検証用)
-    DEFAULT_FIELD_FACTORIES = {
-        # リスト型
-        'titles': list, 'title_notifications': list, 'pets': list,
-        'pet_fusion_history': list, 'achievements': list, 'unique_items_obtained': list,
-        'special_items_combo': list, 'achievement_notifications': list,
-        'legacy_skills': list, 'unlocked_reincarnation_dungeons': list,
-        'collected_fragments': list, 'awakened_skills': list, 'equipped_skills': list,
-        'inheritable_skills': list, 'story_choices_made': list, 'memory_fragments': list,
-        'active_world_events': list, 'completed_storylines': list,
-        'available_storylines': list, 'story_notifications': list,
-        'previous_jobs': list, 'mastered_jobs': list, 'mastered_exclusive_skills': list,
-        'inherited_skills': list, 'completed_faction_events': list, 'ranking_titles': list,
-        'cycle_modifiers': list, 'legacy_records': list,
-        # 集合型
-        'dungeon_floors_visited': set, 'completed_tutorials': set,
-        # None/文字列
-        'equipped_title': lambda: None, 'current_choice_prompt': lambda: None,
-        'pending_tutorial_popup': lambda: None,
-        'world_state_version': lambda: "1.0", 'last_festival_check': lambda: "",
-        'guild_id': lambda: None, 'guild_role': lambda: None, 'guild_rank': lambda: "none",
-        'job': lambda: "novice", 'save_version': lambda: "2.0.0",
-        # 辞書型
-        'kill_counts': dict, 'craft_counts': dict, 'achievement_progress': dict,
-        'achievement_timers': dict, 'monster_killed_types': dict, 'permanent_bonuses': dict,
-        'meta_progression': dict, 'favor': dict, 'inheritance_selection': dict,
-        'challenge_progress': dict, 'skill_fusion_materials': dict, 'skill_evolution': dict,
-        'skill_traits': dict, 'skill_specialization': dict, 'fusion_chain_progress': dict,
-        'skill_archive_progress': dict, 'story_flags': dict, 'story_variables': dict,
-        'player_legacy': dict, 'character_relationships': dict, 'ending_progress': dict,
-        'skill_tree_progress': dict, 'faction_reputation': dict, 'guild_quest_progress': dict,
-        'excavated_sites': list, 'collected_fragments': list, 'decoded_fragments': list,
-        'owned_keys': list, 'reached_truths': list, 'leaned_endings': dict, 'interpretation_notes': dict,
-        'decoder_hints_seen': list,
-        # 数値型
-        'karma_law_chaos': int, 'karma_good_evil': int, 'reincarnation_count': int,
-        'max_dungeon_depth': int, 'near_death_count': int, 'total_turns': int, 'gold': int,
-        'social_points': int, 'weekly_play_time': int, 'total_level_earned': int,
-        'play_time_seconds': int, 'friend_helps': int, 'skill_points': int,
-        'total_skill_points_earned': int, 'job_level': lambda: 1, 'job_exp': int,
-        'guild_contribution': int
-    }
+    # 後方互換性用フィールド定義（migration_pipeline へ移譲）
+    DEFAULT_FIELD_FACTORIES = DEFAULT_FIELD_FACTORIES
 
     @classmethod
     def _create_backup(cls) -> None:
@@ -111,24 +67,7 @@ class SaveSystem:
     @classmethod
     def _ensure_compatibility(cls, player: Any) -> None:
         """プレイヤーオブジェクトの全サブシステムフィールドおよびコンポーネント整合性を確保 (Step 4.3)"""
-        if not player:
-            return
-
-        # ECSコンポーネントコンテナの存在を確認
-        if not hasattr(player, 'components') or not isinstance(player.components, dict):
-            player.components = {}
-
-        # 各コンポーネントの初期化/補完
-        for comp_cls in [TitleComponent, GuildFactionComponent, AchievementComponent,
-                         ReincarnationComponent, SkillTreeJobComponent, SkillFusionComponent,
-                         StorytellerComponent, ProceduralQuestComponent]:
-            if comp_cls not in player.components:
-                player.components[comp_cls] = comp_cls()
-
-        # 旧属性へのフォールバック担保
-        for field_name, factory in cls.DEFAULT_FIELD_FACTORIES.items():
-            if not hasattr(player, field_name):
-                setattr(player, field_name, factory())
+        MigrationPipeline.ensure_entity_compatibility(player)
 
     @classmethod
     def save(cls, engine: Any) -> str:
@@ -263,7 +202,7 @@ class SaveSystem:
         from entity import Entity
 
         # マイグレーション適用 (Step 31)
-        migrated_data = MigrationManager.migrate(data)
+        migrated_data = MigrationPipeline.migrate(data)
 
         engine = target_engine or Engine()
         engine.dungeon_level = migrated_data.get("dungeon_level", 1)
@@ -352,22 +291,6 @@ class SaveSystem:
         return cls.save_json(loaded)
 
 
-class MigrationManager:
-    """セーブデータバージョン移行マネージャー (Step 29, 30, 31)"""
-    @classmethod
-    def migrate(cls, data: Dict[str, Any]) -> Dict[str, Any]:
-        version = data.get("save_version", "1.0.0")
-        if version == "1.0.0":
-            data = cls.migrate_v1_to_v2(data)
-        return data
-
-    @classmethod
-    def migrate_v1_to_v2(cls, data: Dict[str, Any]) -> Dict[str, Any]:
-        """v1.0.0 -> v2.0.0 スキーマ移行 (Step 30)"""
-        data["save_version"] = "2.0.0"
-        if "player" in data and data["player"]:
-            p = data["player"]
-            if "components" not in p:
-                p["components"] = {}
-        return data
+# Backwards compatibility alias
+MigrationManager = MigrationPipeline
 

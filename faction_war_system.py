@@ -13,11 +13,16 @@ from pathlib import Path
 if TYPE_CHECKING:
     pass
 
+from protocols import MemoryRegistryProtocol
+
 # Phase 2 連携：遅延インポート
 try:
     from npc_memory_system import GLOBAL_MEMORY_REGISTRY, MemoryType, MemoryImportance
     _HAS_NPC_MEMORY = True
 except ImportError:
+    GLOBAL_MEMORY_REGISTRY = None
+    MemoryType = None
+    MemoryImportance = None
     _HAS_NPC_MEMORY = False
 
 
@@ -89,8 +94,9 @@ REGISTRY = FactionWarRegistry()
 class FactionWarManager:
     """派閥抗争管理マネージャー (Steps 56-58)"""
 
-    def __init__(self, registry: Optional[FactionWarRegistry] = None):
+    def __init__(self, registry: Optional[FactionWarRegistry] = None, memory_registry: Optional[MemoryRegistryProtocol] = None):
         self.registry = registry or REGISTRY
+        self.memory_registry = memory_registry or (GLOBAL_MEMORY_REGISTRY if _HAS_NPC_MEMORY else None)
 
     def calculate_influence_change(self, faction_id: str, game_state: Any = None) -> int:
         """影響力の自然変動量を計算 (Step 57)"""
@@ -126,16 +132,17 @@ class FactionWarManager:
         faction.influence = max(0, min(100, faction.influence + change))
 
         # Phase 2 連携：派閥影響力変動を NPC 記憶に記録
-        if _HAS_NPC_MEMORY and change != 0:
-            for npc_id, mgr in GLOBAL_MEMORY_REGISTRY.all_managers().items():
+        if self.memory_registry and change != 0:
+            for npc_id, mgr in self.memory_registry.all_managers().items():
                 # 同派閥 NPC に記録
                 if getattr(mgr.npc, 'faction_id', None) == faction_id:
+                    importance = MemoryImportance.SIGNIFICANT if (MemoryImportance and abs(change) > 5) else (MemoryImportance.NOTABLE if MemoryImportance else None)
                     mgr.record_reputation_event(
                         subject_id=faction_id,
                         event_type="faction_influence_change",
                         delta=change,
                         source="faction_system",
-                        importance=MemoryImportance.SIGNIFICANT if abs(change) > 5 else MemoryImportance.NOTABLE,
+                        importance=importance,
                     )
 
     # Phase 2 連携メソッド

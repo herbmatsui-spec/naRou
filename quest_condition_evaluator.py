@@ -55,9 +55,15 @@ class EvaluationContext:
     _variable_values: Dict[str, Any] = field(default_factory=dict)
     _skill_levels: Dict[str, int] = field(default_factory=dict)
     _pet_data: Dict[str, Any] = field(default_factory=dict)
+    _property_cache: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
+        self._property_cache = {}
         self._load_from_player()
+
+    def clear_cache(self) -> None:
+        """キャッシュをクリアする"""
+        self._property_cache.clear()
 
     def _load_from_player(self):
         if not self.player:
@@ -99,23 +105,29 @@ class EvaluationContext:
 
     def resolve(self, key: str) -> Any:
         """
-        ドット区切りパスを解決する
+        ドット区切りパスを解決する（キャッシュ対応）
         例: "player.level", "player.kill_counts.goblin", "world_state.variables.gold"
         """
+        if key in self._property_cache:
+            return self._property_cache[key]
+
         # 特殊プレフィックスを処理
         if key.startswith("player."):
-            return self._resolve_player_key(key[7:])  # Remove "player."
+            val = self._resolve_player_key(key[7:])  # Remove "player."
         elif key.startswith("world_state."):
-            return self._resolve_world_state_key(key[12:])  # Remove "world_state."
+            val = self._resolve_world_state_key(key[12:])  # Remove "world_state."
         elif key.startswith("extra."):
-            return self._resolve_extra_key(key[6:])  # Remove "extra."
+            val = self._resolve_extra_key(key[6:])  # Remove "extra."
         elif key.startswith("flags."):
             # フラグはストーリー変数の中で管理される
             flag_key = key[6:]  # Remove "flags."
-            return self._resolve_player_key(f"story_variables.{flag_key}")
+            val = self._resolve_player_key(f"story_variables.{flag_key}")
         else:
             # デフォルトはプレイヤーキーとして扱う
-            return self._resolve_player_key(key)
+            val = self._resolve_player_key(key)
+
+        self._property_cache[key] = val
+        return val
 
     def _resolve_player_key(self, key: str) -> Any:
         """プレイヤー関連のキーを解決"""

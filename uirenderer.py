@@ -91,19 +91,18 @@ class UIRenderer:
         else:
             console.print(x=2, y=ui_y+3, string="🎮 [矢印]:移動 [Space]:便利行動 [l]:調査 [i]:荷物 [c]:能力 [Shift+T]:称号 [?]:ヘルプ", fg=(140, 180, 220))
 
-        # 称号・実績獲得通知UI (Steps 70, 71)
-        # TODO: Achievement notification
-        # achievements
-        if hasattr(context.player, 'achievement_notifications') and context.player.achievement_notifications:
-            for i, notif in enumerate(context.player.achievement_notifications[:3]):
-                console.print(x=2, y=ui_y+5+i, string=f"{notif}", fg=(255, 220, 100))
+        # 称号・実績獲得通知UI
+        achieve_notifs = getattr(context.player, 'achievement_notifications', []) or []
+        for i, notif in enumerate(achieve_notifs[:3]):
+            console.print(x=2, y=ui_y+5+i, string=f"{notif}", fg=(255, 220, 100))
 
         # フローティング重要通知表示 (Step 2.2)
-        latest_notif = context.notification_manager.get_latest()
-        if latest_notif:
-            notif_box_w = min(70, len(latest_notif.message) + len(latest_notif.title) + 6)
-            nbx = max(2, (SCREEN_WIDTH - notif_box_w) // 2)
-            nby = 2
-            console.draw_rect(x=nbx, y=nby, width=notif_box_w, height=3, ch=0, bg=(20, 25, 40))
-            console.draw_frame(x=nbx, y=nby, width=notif_box_w, height=3, title=f" {latest_notif.title} ", fg=latest_notif.color)
-            console.print(x=nbx+2, y=nby+1, string=latest_notif.message[:notif_box_w-4], fg=(255, 255, 255))
+        if hasattr(context, "notification_manager") and context.notification_manager:
+            latest_notif = context.notification_manager.get_latest()
+            if latest_notif:
+                notif_box_w = min(70, len(latest_notif.message) + len(latest_notif.title) + 6)
+                nbx = max(2, (SCREEN_WIDTH - notif_box_w) // 2)
+                nby = 2
+                console.draw_rect(x=nbx, y=nby, width=notif_box_w, height=3, ch=0, bg=(20, 25, 40))
+                console.draw_frame(x=nbx, y=nby, width=notif_box_w, height=3, title=f" {latest_notif.title} ", fg=latest_notif.color)
+                console.print(x=nbx+2, y=nby+1, string=latest_notif.message[:notif_box_w-4], fg=(255, 255, 255))

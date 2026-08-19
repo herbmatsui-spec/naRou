@@ -8,6 +8,7 @@ meta:
   fallback: false
 
 ui:
+  hello: "こんにちは"
   menu:
     new_game: "新規ゲーム"
     continue: "続ける"

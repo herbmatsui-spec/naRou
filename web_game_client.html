@@ -14,10 +14,58 @@
   <script type="module" src="demos/lib/ParticleSystem.js"></script>
   <script type="module" src="demos/lib/PostProcessManager.js"></script>
   <script type="module" src="demos/lib/ScreenShake.js"></script>
+  <script type="module" src="demos/lib/EnvironmentShader.js"></script>
+  <script type="module" src="demos/lib/FluidRenderer.js"></script>
+  <script type="module" src="demos/lib/DecalSystem.js"></script>
+  <script type="module" src="demos/lib/BoidSystem.js"></script>
   <style>
     /* Brand UI variables and theme variants are provided by web/theme.css
        (auto-generated from design_tokens.json). Theme switching sets
        document.documentElement.dataset.theme. */
+
+    /* Step 65 & 66: バネ物理（Spring physics）UIアニメーション */
+    .spring-anim {
+      animation: springBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes springBounce {
+      0% { transform: scale(0.92) translateY(8px); opacity: 0; }
+      70% { transform: scale(1.03) translateY(-2px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    /* Step 68: ボタン波紋（Ripple）とホバーグロー */
+    .hotbar-btn, .tab-btn, .dpad-btn, .audio-btn {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .hotbar-btn:active, .dpad-btn:active {
+      transform: scale(0.92);
+      filter: brightness(1.2);
+    }
+    .ripple-effect {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      transform: scale(0);
+      animation: ripple 0.5s ease-out;
+      pointer-events: none;
+    }
+    @keyframes ripple {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    /* Step 71: Typewriter + Bounce 通知アニメーション */
+    .notif-bounce {
+      animation: notifAppear 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes notifAppear {
+      from { transform: translateY(-16px) scale(0.8); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
 
     * {
       box-sizing: border-box;
@@ -675,7 +723,9 @@
       const check = () => {
         attempts++;
         if (window.LightingSystem && window.ParticleSystem && 
-            window.PostProcessManager && window.ScreenShake && window.TextureAtlas) {
+            window.PostProcessManager && window.ScreenShake && window.TextureAtlas &&
+            window.InteractionManager && window.FoliageFilter && window.FluidRenderer &&
+            window.DecalSystem && window.BoidSystem) {
           callback();
         } else if (attempts < maxAttempts) {
           setTimeout(check, 100);
@@ -703,6 +753,22 @@
     const tileLayer = new PIXI.Container();
     const entityLayer = new PIXI.Container();
     const effectLayer = new PIXI.Container();
+
+    // Step 49 & 50: 永続的デカールシステム (DecalSystem) の初期化
+    const decalSystem = new DecalSystem(pixiApp, canvas.width, canvas.height);
+    backgroundLayer.addChild(decalSystem.sprite);
+
+    // Step 18: 環境干渉 & Foliage フィルターの初期化
+    const interactionManager = new InteractionManager();
+    const foliageFilter = new FoliageFilter();
+    tileLayer.filters = [foliageFilter];
+
+    // Step 35: 流体シミュレーション (FluidRenderer) の初期化
+    const fluidRenderer = new FluidRenderer(pixiApp, canvas.width, canvas.height);
+    effectLayer.addChild(fluidRenderer.fluidSprite);
+
+    // Step 57: 自律飛行群れパーティクル (BoidSystem) の初期化
+    const boidSystem = new BoidSystem(pixiApp, effectLayer, canvas.width, canvas.height, 40);
 
     // 背景グラフィックを作成（濃紫で塗りつぶし）
     const backgroundGraphics = new PIXI.Graphics();
@@ -771,6 +837,17 @@
                 atlasImage.onerror = reject;
             });
             
+            // Step 10: ノーマルマップ画像をロード
+            const normalAtlasImage = new Image();
+            normalAtlasImage.src = 'demos/assets/normal_atlas.png';
+            await new Promise((resolve) => {
+                normalAtlasImage.onload = resolve;
+                normalAtlasImage.onerror = () => {
+                    console.warn('Normal atlas not found, skipping');
+                    resolve();
+                };
+            });
+
             // アトラスメタデータをロード
             const metadataResponse = await fetch('demos/assets/font_atlas.json');
             const metadata = await metadataResponse.json();
@@ -779,6 +856,15 @@
             const baseTexture = new PIXI.BaseTexture(atlasImage);
             textureAtlas = new TextureAtlas(baseTexture, metadata);
             
+            if (normalAtlasImage.complete && normalAtlasImage.naturalWidth > 0) {
+                const normalBaseTexture = new PIXI.BaseTexture(normalAtlasImage);
+                textureAtlas.loadNormalMap(normalBaseTexture);
+                if (lightingSystem && lightingSystem.normalMapFilter) {
+                    lightingSystem.normalMapFilter.uniforms.uNormalSampler = normalBaseTexture;
+                    tileLayer.filters = [lightingSystem.normalMapFilter];
+                }
+            }
+
             // タイル文字と色のマッピング（テクスチャアトラスを使用）
             tileTextures = {
                 '#': textureAtlas.getTexture('#'),
@@ -788,7 +874,7 @@
                 '⛩️': textureAtlas.getTexture('⛩️')
             };
             
-            console.log('Texture atlas loaded successfully');
+            console.log('Texture atlas and normal maps loaded successfully');
         } catch (error) {
             console.error('Failed to load texture atlas:', error);
             // フォールバック: プレースホルダーテクスチャを使用
@@ -868,11 +954,49 @@
         const offsetX = Math.max(0, (canvas.width - viewW * TILE_SIZE) / 2);
         const offsetY = Math.max(0, (canvas.height - viewH * TILE_SIZE) / 2);
 
-        // ライティングシステムを更新（乗算ブレンド＋松明フリッカー＋敵視界コーン）
+        // Step 5 & 8: 霧密度 (Fog Density) の同期
+        window.fogDensity = gameState.fog_density !== undefined ? gameState.fog_density : 0.35;
+
+        // ライティングシステムを更新（乗算ブレンド＋松明フリッカー＋敵視界コーン＋GI/フォグ）
         lightingSystem.updateLightMap(lightMap, lightColor);
         lightingSystem.setLightSources(lightSources, animTime);
         lightingSystem.setEnemyCones(enemyCones, animTime);
+        if (lightingSystem.updateSDF && gameState.raw_tiles) {
+            const blockedGrid = gameState.raw_tiles.map(row => row.map(t => (t === '#' ? 1 : 0)));
+            lightingSystem.updateSDF(blockedGrid);
+        }
+        if (lightingSystem.renderGI) {
+            lightingSystem.renderGI(animTime);
+        }
+        if (lightingSystem.updateNormalLighting && gameState.player) {
+            const playerPx = offsetX + (gameState.player.x + 0.5) * TILE_SIZE;
+            const playerPy = offsetY + (gameState.player.y + 0.5) * TILE_SIZE;
+            lightingSystem.updateNormalLighting(playerPx, playerPy);
+        }
         lightingSystem.applyLighting(pixiApp.stage);
+
+        // Step 19 & 21: 環境干渉 (Foliage Bending) の Interactor 更新
+        if (interactionManager && foliageFilter) {
+            const interactors = [];
+            if (gameState.player) {
+                interactors.push({
+                    x: offsetX + (gameState.player.x + 0.5) * TILE_SIZE,
+                    y: offsetY + (gameState.player.y + 0.5) * TILE_SIZE,
+                    radius: 28.0
+                });
+            }
+            if (Array.isArray(gameState.entities)) {
+                for (const ent of gameState.entities.slice(0, 7)) {
+                    interactors.push({
+                        x: offsetX + (ent.x + 0.5) * TILE_SIZE,
+                        y: offsetY + (ent.y + 0.5) * TILE_SIZE,
+                        radius: 22.0
+                    });
+                }
+            }
+            interactionManager.updateInteractors(interactors);
+            foliageFilter.update(interactionManager, 0.016);
+        }
 
         // 深度別カラーグレーディング（ポストプロセス）
         if (postProcessManager && postProcessManager.setColorGrade) {
@@ -944,7 +1068,7 @@
         const entities = gameState.entities || [];
         const player = gameState.player;
         
-        // プレイヤーの移動パーティクル
+        // プレイヤーの移動パーティクル & 足跡デカール
         if (player && prevPlayerPos) {
           const dx = player.x - prevPlayerPos.x;
           const dy = player.y - prevPlayerPos.y;
@@ -955,6 +1079,14 @@
               offsetY + player.y * TILE_SIZE, 
               3
             );
+            // Step 54: 足跡スタンプを地面に焼き付け
+            if (decalSystem) {
+              decalSystem.stampFootprint(
+                offsetX + (player.x + 0.5) * TILE_SIZE,
+                offsetY + (player.y + 0.5) * TILE_SIZE,
+                dx, dy
+              );
+            }
           }
         }
         
@@ -969,6 +1101,24 @@
             );
             // スクリーンシェイク
             screenShake.shake('medium');
+
+            // Step 38: 血痕流体パーティクルを散布
+            if (fluidRenderer) {
+                fluidRenderer.spawnSpatter(
+                    offsetX + (player.x + 0.5) * TILE_SIZE,
+                    offsetY + (player.y + 0.5) * TILE_SIZE,
+                    'blood', 8, 70.0
+                );
+            }
+            // Step 27 & 46: 衝撃波とダメージ色収差
+            if (postProcessManager) {
+                postProcessManager.triggerDamageDistortion(1.0);
+                postProcessManager.addShockwave(
+                    offsetX + (player.x + 0.5) * TILE_SIZE,
+                    offsetY + (player.y + 0.5) * TILE_SIZE,
+                    140, 0.45
+                );
+            }
           } else if (player.hp > prevPlayerHp) {
             // 回復した
             particleSystem.emitEffect('heal',
@@ -1138,8 +1288,42 @@
     }
 
     // PixiJSのtickerでレンダリングループを開始
-    pixiApp.ticker.add(() => {
+    pixiApp.ticker.add((delta) => {
+      const dt = delta / 60.0;
+      if (fluidRenderer) {
+          fluidRenderer.update(dt);
+          fluidRenderer.render();
+      }
+      if (postProcessManager) {
+          postProcessManager.update(dt);
+      }
+      if (boidSystem) {
+          const playerPos = gameState && gameState.player ? {
+              x: (gameState.player.x + 0.5) * TILE_SIZE,
+              y: (gameState.player.y + 0.5) * TILE_SIZE
+          } : null;
+          boidSystem.update(dt, playerPos, gameState ? gameState.light_sources : []);
+      }
       render();
+    });
+
+    // Step 68: UIボタンの波紋クリック（Ripple）エフェクト初期化
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.hotbar-btn, .tab-btn, .dpad-btn, .audio-btn');
+      if (btn) {
+        const circle = document.createElement('span');
+        const diameter = Math.max(btn.clientWidth, btn.clientHeight);
+        const radius = diameter / 2;
+        const rect = btn.getBoundingClientRect();
+        circle.style.width = circle.style.height = `${diameter}px`;
+        circle.style.left = `${e.clientX - rect.left - radius}px`;
+        circle.style.top = `${e.clientY - rect.top - radius}px`;
+        circle.classList.add('ripple-effect');
+        const oldRipple = btn.getElementsByClassName('ripple-effect')[0];
+        if (oldRipple) oldRipple.remove();
+        btn.appendChild(circle);
+        setTimeout(() => circle.remove(), 500);
+      }
     });
 
     // ==================== STATE SYNC & API ====================
@@ -1264,10 +1448,19 @@
     }
 
     function switchTab(tabId) {
-      document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
+      document.querySelectorAll(".tab-content").forEach(el => {
+        el.style.display = "none";
+        el.classList.remove("spring-anim");
+      });
       document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
-      document.getElementById(tabId).style.display = "block";
-      event.target.classList.add("active");
+      const targetEl = document.getElementById(tabId);
+      if (targetEl) {
+        targetEl.style.display = "block";
+        targetEl.classList.add("spring-anim");
+      }
+      if (window.event && window.event.target) {
+        window.event.target.classList.add("active");
+      }
     }
 
     // ==================== KEYBOARD CONTROLS ====================
