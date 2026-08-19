@@ -1,0 +1,38 @@
+pet_legacy:
+  legacy_transfer:
+    - type: "bloodline_bonus"
+      condition: "max_bond_1000"
+      effect:
+        type: "start_with_bloodline_purity"
+        value: 0.3
+      cost: 10
+    - type: "evolved_form"
+      condition: "has_evolved_pet"
+      effect:
+        type: "start_with_evolved_form"
+        value: "last_evolution"
+      cost: 15
+    - type: "legacy_skill"
+      condition: "mastered_pet_skill"
+      effect:
+        type: "start_with_skill"
+        value: "last_mastered_skill"
+      cost: 8
+    - type: "appearance_trait"
+      condition: "rare_mutation"
+      effect:
+        type: "start_with_trait"
+        value: "last_mutation"
+      cost: 12
+    - type: "bond_headstart"
+      condition: "avg_bond_above_500"
+      effect:
+        type: "start_with_bond"
+        value: 200
+      cost: 6
+  legacy_points:
+    base: 20
+    per_10_levels: 3
+    per_max_bond_1000: 5
+    per_evolved_pet: 8
+    per_legendary_pet: 15

@@ -24,6 +24,10 @@ across the demo HTML files, the web game client, and the terminal tcod renderer.
 | `core/palette.py` | Exposes `PALETTE_16` alongside `COLORS` |
 | `tools/test_palette_parity.py` | Verifies token ↔ CSS ↔ palette consistency |
 | `design_tokens.protan.json` / `.deutan.json` / `.tritan.json` | Color-blind variants |
+| `design_audit.md` | Step 1 style audit of demo classes |
+| `class_mapping.json` | Step 5 Tailwind → token alias mapping |
+| `tools/replace_classes.py` | Step 5 applies the class mapping to demos |
+| `assets/css/demo.css` | Token-based utilities + custom demo classes (no Tailwind) |
 
 ## Completion Checklist
 - [x] `design_tokens.json` is the single source for all colors / fonts / spacing
@@ -32,6 +36,8 @@ across the demo HTML files, the web game client, and the terminal tcod renderer.
 - [x] Terminal `palette.py` is synced with the web palette
 - [x] Color-blind palette variants generated
 - [x] Responsive breakpoints, dark/light/high-contrast, reduced-motion supported
+- [x] Style audit completed (`design_audit.md`)
+- [x] Tailwind utility classes replaced with token aliases (`class_mapping.json`, `tools/replace_classes.py`, `assets/css/demo.css`)
 - [x] Palette parity test passes
 
 ## How to Regenerate

@@ -1,0 +1,30 @@
+pet_guilds:
+  default_guild:
+    name: "冒険者ペットギルド"
+    icon: "🐾🏰"
+    description: "冒険者とそのペットたちの集う場所"
+    max_members: 10
+    facilities:
+      - "pet_hotel"
+      - "training_area"
+      - "social_park"
+    guild_level_requirements:
+      1: 0
+      2: 500
+      3: 1500
+      4: 3000
+    guild_buffers:
+      - threshold: 2
+        effects:
+          - type: "bond_gain_bonus"
+            value: 0.1
+      - threshold: 3
+        effects:
+          - type: "exp_bonus"
+            value: 0.05
+          - type: "heal_rate_bonus"
+            value: 0.1
+      - threshold: 4
+        effects:
+          - type: "rare_fusion_access"
+            value: true

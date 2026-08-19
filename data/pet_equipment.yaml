@@ -1,0 +1,72 @@
+pet_equipment:
+  collars:
+    - id: "basic_collar"
+      name: "基本の首輪"
+      icon: "🔗"
+      required_bond: 0
+      required_level: 1
+      effects:
+        - type: "stat_bonus"
+          value:
+            hp: 5
+    - id: "magic_collar"
+      name: "魔法の首輪"
+      icon: "🔷"
+      required_bond: 200
+      required_level: 10
+      effects:
+        - type: "stat_bonus"
+          value:
+            mp: 15
+            intelligence: 3
+        - type: "skill_unlock"
+          skill_id: "magic_affinity"
+  armor:
+    - id: "leather_barding"
+      name: "革の馬鎧"
+      icon: "🛡️"
+      required_bond: 150
+      required_level: 12
+      effects:
+        - type: "stat_bonus"
+          value:
+            defense: 8
+            agility: -2
+        - type: "skill_unlock"
+          skill_id: "defensive_posture"
+    - id: "dragon_scale_barding"
+      name: "龍の鱗鎧"
+      icon: "🐉🛡️"
+      required_bond: 500
+      required_level: 25
+      effects:
+        - type: "stat_bonus"
+          value:
+            defense: 25
+            fire_resistance: 30
+        - type: "skill_unlock"
+          skill_id: "scale_shield"
+  weapons:
+    - id: "pet_claws"
+      name: "ペットの爪"
+      icon: "⚔️"
+      required_bond: 0
+      required_level: 1
+      effects:
+        - type: "stat_bonus"
+          value:
+            attack: 3
+        - type: "skill_unlock"
+          skill_id: "scratch"
+    - id: "enchanted_fang"
+      name: "魔法の牙"
+      icon: "🦷✨"
+      required_bond: 300
+      required_level: 18
+      effects:
+        - type: "stat_bonus"
+          value:
+            attack: 12
+            intelligence: 5
+        - type: "skill_unlock"
+          skill_id: "magic_bite"

@@ -1,0 +1,53 @@
+passive_skills:
+  iron_body:
+    name: "鉄の肉体"
+    tree: "constitution"
+    tier: 2
+    cost: 20
+    prerequisites: ["basic_constitution"]
+    effects:
+      - type: "max_hp_bonus"
+        value: 50
+      - type: "physical_resistance"
+        value: 10
+      - type: "knockback_resistance"
+        value: 0.5
+
+  mana_efficiency:
+    name: "魔力効率化"
+    tree: "magic"
+    tier: 2
+    cost: 20
+    prerequisites: ["magic_basic"]
+    effects:
+      - type: "mp_cost_reduction"
+        value: 0.2
+      - type: "mp_regen_bonus"
+        value: 2
+
+  lucky_find:
+    name: "幸運な発見"
+    tree: "luck"
+    tier: 3
+    cost: 50
+    prerequisites: ["fortune_favor"]
+    effects:
+      - type: "item_find_rate"
+        value: 0.3
+      - type: "rare_drop_rate"
+        value: 0.15
+      - type: "trap_detection"
+        value: 5
+
+  death_defiance:
+    name: "死者の抗い"
+    tree: "survival"
+    tier: 3
+    cost: 100
+    prerequisites: ["survivor_instinct"]
+    effects:
+      - type: "auto_revive"
+        chance: 0.05
+        hp_percent: 0.3
+      - type: "death_exp_bonus"
+        value: 2.0

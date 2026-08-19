@@ -124,6 +124,8 @@ class SkillTreeJobComponent:
     mastered_jobs: List[str] = field(default_factory=list)
     mastered_exclusive_skills: List[str] = field(default_factory=list)
     inherited_skills: List[str] = field(default_factory=list)
+    learned_passive_skills: List[str] = field(default_factory=list)
+    inherited_stat_bonus: int = 0
 
 
 @dataclass

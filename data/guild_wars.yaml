@@ -1,0 +1,14 @@
+guild_war_conditions:
+  victory_conditions:
+    - type: "member_eliminations"
+      target: 50
+    - type: "territory_control"
+      target: ["derphy"]
+    - type: "quest_completion"
+      target:
+        guild_quest: "defend_stronghold"
+        count: 10
+  alliance_benefits:
+    - type: "shared_vault_access"
+    - type: "joint_quest_availability"
+    - type: "mutual_defense_pact"

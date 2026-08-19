@@ -2,15 +2,15 @@
 {% block title %}Elona WebGL Scene Demo - Template{% endblock %}
 {% block content %}
 <div class="stage-box">
-        <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+        <div class="flex justify-between items-center border-b border-dark pb-3">
             <div class="flex items-center gap-3">
                 <span class="text-3xl" id="scene-icon">🏡</span>
                 <div>
-                    <h1 class="text-xl font-bold text-sky-400" id="scene-title">Scene Title</h1>
-                    <p class="text-xs text-slate-400" id="scene-desc">Scene description</p>
+                    <h1 class="text-xl font-bold text-accent" id="scene-title">Scene Title</h1>
+                    <p class="text-xs text-muted" id="scene-desc">Scene description</p>
                 </div>
             </div>
-            <span class="bg-sky-500/20 text-sky-300 px-3 py-1 rounded-full text-xs font-semibold">WebGL2 Demo</span>
+            <span class="bg-accent-soft text-accent-soft px-3 py-1 rounded-full text-xs font-semibold">WebGL2 Demo</span>
         </div>
 
         <canvas id="webgl-canvas"></canvas>
@@ -26,9 +26,9 @@
             <div class="stat-row"><span>GPU Memory:</span><span id="gpuMemory">--</span></div>
         </div>
 
-        <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 text-sm flex items-center justify-between">
-            <span class="text-yellow-300 font-medium" id="scene-log">📜 Scene log</span>
-            <span class="text-xs text-slate-500">Elona WebGL Renderer</span>
+        <div class="bg-dark border border-darker rounded-lg p-3 text-sm flex items-center justify-between">
+            <span class="text-gold font-medium" id="scene-log">📜 Scene log</span>
+            <span class="text-xs text-muted">Elona WebGL Renderer</span>
         </div>
     </div>
 

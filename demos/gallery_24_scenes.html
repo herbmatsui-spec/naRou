@@ -3,18 +3,18 @@
 {% block content %}
 <div class="gallery-container">
         <!-- Header -->
-        <div class="flex justify-between items-center border-b border-slate-700/80 pb-4">
+        <div class="flex justify-between items-center border-b border-dark-soft pb-4">
             <div class="flex items-center gap-3">
                 <span class="text-3xl">👑</span>
                 <div>
-                    <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-amber-300">
+                    <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-accent to-gold">
                         naRou: Masterpiece Edition — 全24シーン・グランドギャラリー
                     </h1>
-                    <p class="text-xs text-slate-400">24種類の個別HTMLシーンを切り替えて鑑賞できるデモ展示（実装済みシステム紹介）</p>
+                    <p class="text-xs text-muted">24種類の個別HTMLシーンを切り替えて鑑賞できるデモ展示（実装済みシステム紹介）</p>
                 </div>
             </div>
             <div class="flex gap-2">
-                <button id="btnAutoPlay" class="bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs shadow-lg hover:brightness-110 transition">
+                <button id="btnAutoPlay" class="bg-gradient-to-r from-warning to-warning text-strong font-bold px-4 py-2 rounded-xl text-xs shadow-lg hover:brightness-110 transition">
                     ▶️ オートツアー開始 (Auto Play)
                 </button>
             </div>
@@ -25,11 +25,11 @@
             <div class="absolute top-4 left-6 flex items-center gap-3">
                 <span class="text-2xl" id="curIcon">🏡</span>
                 <div>
-                    <h2 class="text-lg font-bold text-sky-300" id="curTitle"></h2>
-                    <p class="text-xs text-slate-400" id="curDesc"></p>
+                    <h2 class="text-lg font-bold text-accent-soft" id="curTitle"></h2>
+                    <p class="text-xs text-muted" id="curDesc"></p>
                 </div>
             </div>
-            <span class="absolute top-4 right-6 bg-sky-500/20 text-sky-300 text-xs px-3 py-1 rounded-full font-bold" id="curBadge">
+            <span class="absolute top-4 right-6 bg-accent-soft text-accent-soft text-xs px-3 py-1 rounded-full font-bold" id="curBadge">
                 Scene 1 / 24
             </span>
 
@@ -37,15 +37,15 @@
                 <!-- Javascript fills matrix -->
             </div>
 
-            <div class="absolute bottom-4 left-6 right-6 bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-2 flex justify-between items-center text-sm">
-                <span class="text-yellow-300 font-medium" id="curLog"></span>
-                <span class="text-xs text-slate-500 font-mono">naRou 24-Scene Engine</span>
+            <div class="absolute bottom-4 left-6 right-6 bg-slate-900/90 border border-darker rounded-xl px-4 py-2 flex justify-between items-center text-sm">
+                <span class="text-gold font-medium" id="curLog"></span>
+                <span class="text-xs text-muted font-mono">naRou 24-Scene Engine</span>
             </div>
         </div>
 
         <!-- 24 Scene Selection Grid -->
         <div>
-            <div class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">シーン一覧 (全24シーンを選択して切り替え)</div>
+            <div class="text-xs text-muted font-bold uppercase tracking-wider mb-2">シーン一覧 (全24シーンを選択して切り替え)</div>
             <div class="grid grid-cols-6 gap-2" id="sceneList">
                 <!-- Javascript generates 24 scene buttons -->
             </div>
