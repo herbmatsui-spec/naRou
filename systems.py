@@ -100,6 +100,30 @@ class CombatSystem:
         return [(cx + dx, cy + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1) if (dx, dy) != (0, 0)]
 
     @staticmethod
+    def publish_damage_event(event_bus, damage: int, x: int, y: int, is_crit: bool = False, is_kill: bool = False) -> None:
+        """ダメージイベントを発行 (FXManagerが購読してエフェクトを生成)"""
+        if event_bus:
+            event_bus.publish("damage_dealt", {
+                "damage": damage,
+                "x": x,
+                "y": y,
+                "is_crit": is_crit,
+                "is_kill": is_kill,
+            })
+
+    @staticmethod
+    def publish_kill_event(event_bus, x: int, y: int) -> None:
+        """敵撃破イベントを発行"""
+        if event_bus:
+            event_bus.publish("entity_killed", {"x": x, "y": y})
+
+    @staticmethod
+    def publish_trap_event(event_bus, damage: int, x: int, y: int) -> None:
+        """トラップ発動イベントを発行"""
+        if event_bus:
+            event_bus.publish("trap_triggered", {"damage": damage, "x": x, "y": y})
+
+    @staticmethod
     def calc_element_damage(base_dmg: int, element: Element, resistance: int) -> int:
         """属性耐性を考慮したダメージ計算 (ステップ38)"""
         # resistance: 100=無効, 0=通常, -50=弱点(1.5倍)

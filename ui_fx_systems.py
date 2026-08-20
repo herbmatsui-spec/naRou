@@ -50,6 +50,8 @@ class Particle:
     vy: float = 0.0
     # 衝撃波などのための拡張属性
     is_shockwave: bool = False
+    # Tiny Rogue tile-based rendering
+    tile_id: Optional[str] = None
 
     def update(self) -> bool:
         self.x += self.vx

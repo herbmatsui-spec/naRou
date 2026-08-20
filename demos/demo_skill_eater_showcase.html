@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A-World: Skill Eater Web Showcase</title>
+    <style>
+        :root {
+            --bg-color: #0d0f17;
+            --panel-bg: rgba(20, 24, 38, 0.85);
+            --accent-cyan: #00f2fe;
+            --accent-purple: #9b51e0;
+            --accent-red: #ff3366;
+            --accent-gold: #ffd200;
+            --border-glow: 0 0 15px rgba(0, 242, 254, 0.2);
+            --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: #e0e6ed;
+            font-family: var(--font-family);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        #container {
+            width: 1000px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), var(--border-glow);
+            display: grid;
+            grid-template-rows: 60px 1fr 180px;
+            overflow: hidden;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            background: linear-gradient(90deg, #151928, #1a2238);
+            border-bottom: 1px solid rgba(0, 242, 254, 0.2);
+        }
+        header h1 {
+            font-size: 1.2rem;
+            color: var(--accent-cyan);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .badge {
+            background: rgba(155, 81, 224, 0.2);
+            color: #d1a8ff;
+            border: 1px solid var(--accent-purple);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            height: 400px;
+            border-bottom: 1px solid rgba(0, 242, 254, 0.2);
+        }
+        .sidebar {
+            background: rgba(15, 18, 28, 0.9);
+            padding: 16px;
+            border-right: 1px solid rgba(0, 242, 254, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .stat-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: #8da2b5;
+            display: flex;
+            justify-content: space-between;
+        }
+        .progress-bar {
+            height: 10px;
+            background: #1e2438;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .hp-fill { background: linear-gradient(90deg, #ff3366, #ff6b8b); width: 100%; }
+        .mp-fill { background: linear-gradient(90deg, #00f2fe, #4facfe); width: 80%; }
+        .mem-fill { background: linear-gradient(90deg, #ffd200, #ff9900); width: 65%; }
+        .sanity-fill { background: linear-gradient(90deg, #9b51e0, #e056fd); width: 25%; }
+
+        .log-section {
+            background: #080a10;
+            padding: 14px 20px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.82rem;
+            line-height: 1.4;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .log-entry {
+            display: flex;
+            gap: 8px;
+        }
+        .log-time { color: #526173; }
+        .log-combat { color: #ff6b8b; }
+        .log-devour { color: #d1a8ff; }
+        .log-system { color: #00f2fe; }
+
+        .btn {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        .btn-primary { background: #1f293d; color: #fff; border-color: #3b82f6; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-cyan { background: #064e3b; color: #6ee7b7; border-color: #10b981; }
+        .btn-cyan:hover { background: #059669; color: #fff; }
+        .btn-purple { background: #4c1d95; color: #d8b4fe; border-color: #8b5cf6; }
+        .btn-purple:hover { background: #7c3aed; color: #fff; }
+        .btn-gold { background: #78350f; color: #fde68a; border-color: #f59e0b; }
+        .btn-gold:hover { background: #d97706; color: #fff; }
+        .btn-red { background: #7f1d1d; color: #fca5a5; border-color: #ef4444; }
+        .btn-red:hover { background: #dc2626; color: #fff; }
+    </style>
+
+</head>
+<body>
+    <div id="container">
+        <header>
+            <h1>Skill Eater System &bull; Live Showcase</h1>
+            <span class="badge">A-World Presentation Engine</span>
+        </header>
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="stat-group">
+                    <div class="stat-label"><span>HEALTH</span><span id="hp-val">100 / 100</span></div>
+                    <div class="progress-bar"><div id="hp-bar" class="progress-fill hp-fill"></div></div>
+                </div>
+                <div class="stat-group">
+                    <div class="stat-label"><span>MANA</span><span id="mp-val">40 / 50</span></div>
+                    <div class="progress-bar"><div id="mp-bar" class="progress-fill mp-fill"></div></div>
+                </div>
+                <div class="stat-group">
+                    <div class="stat-label"><span>MEMORY CAPACITY</span><span id="mem-val">65%</span></div>
+                    <div class="progress-bar"><div id="mem-bar" class="progress-fill mem-fill"></div></div>
+                </div>
+                <div class="stat-group">
+                    <div class="stat-label"><span>SANITY EROSION</span><span id="sanity-val">25%</span></div>
+                    <div class="progress-bar"><div id="sanity-bar" class="progress-fill sanity-fill"></div></div>
+                </div>
+                
+                <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px;">
+                    <button class="btn btn-primary" id="btn-attack">⚔ ATTACK</button>
+                    <button class="btn btn-cyan" id="btn-scan">🔍 SCAN CORE</button>
+                    <button class="btn btn-purple" id="btn-devour">🔮 DEVOUR SKILL</button>
+                    <button class="btn btn-gold" id="btn-synth">🧪 SYNTHESIS</button>
+                    <button class="btn btn-red" id="btn-hack">💻 ROOT HACK</button>
+                </div>
+            </div>
+
+            <div id="stage-wrapper" style="position: relative; display:flex; justify-content:center; align-items:center; background:#0b0e14;">
+                <canvas id="gameCanvas" width="640" height="360" style="border: 1px solid rgba(0, 242, 254, 0.2); box-shadow: 0 4px 20px rgba(0,0,0,0.8); border-radius: 4px;"></canvas>
+            </div>
+
+        </div>
+        <div id="log-console" class="log-section">
+            <div class="log-entry"><span class="log-time">[SYSTEM]</span><span class="log-system">Presentation Engine initialized. Ready for battle commands.</span></div>
+        </div>
+    </div>
+
+    <script>
+        class GameState {
+            constructor() {
+                this.hp = 100;
+                this.maxHp = 100;
+                this.mp = 40;
+                this.maxMp = 50;
+                this.sanity = 25;
+                this.memory = 65;
+                
+                this.enemyHp = 120;
+                this.enemyMaxHp = 120;
+                this.enemyName = "Abyssal Drake";
+                this.enemyStatus = "normal"; // normal, scanned, devoured, husk
+                
+                this.activeEffects = [];
+                this.floatingTexts = [];
+                this.shake = 0;
+            }
+            
+            addLog(type, text) {
+                const consoleEl = document.getElementById("log-console");
+                const entry = document.createElement("div");
+                entry.className = "log-entry";
+                entry.style.opacity = "0";
+                entry.style.transform = "translateX(-8px)";
+                entry.style.transition = "all 0.25s ease";
+                const timeStr = new Date().toLocaleTimeString();
+                entry.innerHTML = `<span class="log-time">[${timeStr}]</span><span class="log-${type}">${text}</span>`;
+                consoleEl.appendChild(entry);
+                setTimeout(() => {
+                    entry.style.opacity = "1";
+                    entry.style.transform = "translateX(0)";
+                }, 10);
+                consoleEl.scrollTop = consoleEl.scrollHeight;
+            }
+
+        }
+        
+        const state = new GameState();
+
+        class AssetLoader {
+            constructor() {
+                this.images = {};
+                this.loaded = false;
+            }
+
+            async loadAll() {
+                const assets = {
+                    atlas: "../assets/tiles/tiny_rogue_atlas_16x16.png",
+                    emote_heart: "../emote/PNG/Vector/Style 1/emote_heart.png",
+                    emote_star: "../emote/PNG/Vector/Style 1/emote_star.png",
+                    emote_stars: "../emote/PNG/Vector/Style 1/emote_stars.png",
+                    emote_alert: "../emote/PNG/Vector/Style 1/emote_alert.png",
+                    emote_anger: "../emote/PNG/Vector/Style 1/emote_anger.png",
+                    emote_dots3: "../emote/PNG/Vector/Style 1/emote_dots3.png"
+                };
+
+                const promises = Object.entries(assets).map(([key, src]) => {
+                    return new Promise((resolve) => {
+                        const img = new Image();
+                        img.src = src;
+                        img.onload = () => {
+                            this.images[key] = img;
+                            resolve();
+                        };
+                        img.onerror = () => {
+                            console.warn("Failed to load:", src);
+                            resolve();
+                        };
+                    });
+                });
+
+                await Promise.all(promises);
+                this.loaded = true;
+                state.addLog("system", "Visual & Emote assets loaded successfully.");
+            }
+        }
+
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playHit() {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = "sawtooth";
+                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+            }
+
+            playDevour() {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.4);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.4);
+            }
+
+            playScan() {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = "triangle";
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                osc.frequency.setValueAtTime(800, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.2);
+            }
+        }
+
+        const sound = new SoundFX();
+
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        function drawGame() {
+            ctx.fillStyle = "#0c1017";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 背景グリッドダンジョン
+            ctx.strokeStyle = "rgba(0, 242, 254, 0.05)";
+            ctx.lineWidth = 1;
+            for (let x = 0; x < canvas.width; x += 32) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += 32) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+
+            // 画面シェイク適用
+            ctx.save();
+            if (state.shake > 0) {
+                const ox = (Math.random() - 0.5) * state.shake;
+                const oy = (Math.random() - 0.5) * state.shake;
+                ctx.translate(ox, oy);
+                state.shake *= 0.9;
+                if (state.shake < 0.2) state.shake = 0;
+            }
+
+            // 主人公
+            const hx = 160, hy = 200;
+            ctx.fillStyle = "#3b82f6";
+            ctx.fillRect(hx - 24, hy - 32, 48, 64);
+            ctx.fillStyle = "#fff";
+            ctx.font = "12px monospace";
+            ctx.fillText("HERO", hx - 14, hy + 48);
+
+            // 敵
+            const ex = 480, ey = 200;
+            if (state.enemyStatus === "husk") {
+                ctx.fillStyle = "#4b5563";
+            } else if (state.enemyStatus === "devoured") {
+                ctx.fillStyle = "#1e293b";
+            } else {
+                ctx.fillStyle = "#ef4444";
+            }
+            ctx.fillRect(ex - 32, ey - 32, 64, 64);
+            ctx.fillStyle = "#fff";
+            ctx.fillText(state.enemyName, ex - 40, ey - 44);
+
+            // 敵HPバー
+            const barW = 80;
+            ctx.fillStyle = "#1e2438";
+            ctx.fillRect(ex - barW/2, ey - 40, barW, 6);
+            ctx.fillStyle = "#ef4444";
+            const enemyRatio = Math.max(0, state.enemyHp / state.enemyMaxHp);
+            ctx.fillRect(ex - barW/2, ey - 40, barW * enemyRatio, 6);
+
+            // アクティブエフェクト更新＆描画
+            for (let i = state.activeEffects.length - 1; i >= 0; i--) {
+                const fx = state.activeEffects[i];
+                fx.update();
+                fx.draw(ctx);
+                if (fx.isDead()) state.activeEffects.splice(i, 1);
+            }
+
+            // フローティングテキスト更新＆描画
+            for (let i = state.floatingTexts.length - 1; i >= 0; i--) {
+                const ft = state.floatingTexts[i];
+                ft.update();
+                ft.draw(ctx);
+                if (ft.isDead()) state.floatingTexts.splice(i, 1);
+            }
+
+            ctx.restore();
+            requestAnimationFrame(drawGame);
+        }
+
+        class FloatingText {
+            constructor(text, x, y, color = "#ff4444") {
+                this.text = text;
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.life = 1.0;
+            }
+            update() {
+                this.y -= 1.2;
+                this.life -= 0.02;
+            }
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.life);
+                ctx.fillStyle = this.color;
+                ctx.font = "bold 16px sans-serif";
+                ctx.fillText(this.text, this.x, this.y);
+                ctx.restore();
+            }
+            isDead() { return this.life <= 0; }
+        }
+
+        // 通常攻撃イベント
+        document.getElementById("btn-attack").addEventListener("click", () => {
+            if (state.enemyHp <= 0) return;
+            sound.playHit();
+            const dmg = Math.floor(Math.random() * 20) + 15;
+            state.enemyHp = Math.max(0, state.enemyHp - dmg);
+            state.shake = 8;
+            state.floatingTexts.push(new FloatingText(`-${dmg}`, 480 + (Math.random()-0.5)*20, 160));
+            state.addLog("combat", `Hero attacked ${state.enemyName} for ${dmg} damage!`);
+        });
+
+        // 解析イベント
+        document.getElementById("btn-scan").addEventListener("click", () => {
+            sound.playScan();
+            state.enemyStatus = "scanned";
+            state.floatingTexts.push(new FloatingText("ANALYZING...", 480, 140, "#00f2fe"));
+            state.addLog("system", `[SCAN COMPLETE] ${state.enemyName}: Fire Elemental / Absorptive Core Lv.3 identified!`);
+        });
+
+        // 捕食イベント
+        document.getElementById("btn-devour").addEventListener("click", () => {
+            sound.playDevour();
+            state.enemyStatus = "devoured";
+            state.enemyHp = 0;
+            state.floatingTexts.push(new FloatingText("DEVOUR COMPLETE!", 160, 140, "#9b51e0"));
+            state.addLog("devour", `[DEVOUR SUCCESS] Acquired skill [Inferno Breath Lv.1] from ${state.enemyName}! Stats permanently increased.`);
+        });
+
+        // キメラ合成イベント
+        document.getElementById("btn-synth").addEventListener("click", () => {
+            sound.playDevour();
+            state.shake = 12;
+            state.floatingTexts.push(new FloatingText("CHIMERA FUSION!", 320, 140, "#ffd200"));
+            state.addLog("system", `[SYNTHESIS SUCCESS] Fused [Flame Strike] + [Gale Slash] -> [Inferno Storm Slash]!`);
+        });
+
+        // ROOTハックイベント
+        document.getElementById("btn-hack").addEventListener("click", () => {
+            sound.playHit();
+            state.shake = 20;
+            state.sanity = Math.min(100, state.sanity + 20);
+            document.getElementById("sanity-bar").style.width = `${state.sanity}%`;
+            document.getElementById("sanity-val").innerText = `${state.sanity}%`;
+            state.floatingTexts.push(new FloatingText("ROOT OVERRIDE: 2.0x DMG!", 320, 140, "#ff3366"));
+            state.addLog("system", `[ROOT LAW OVERRIDE] World Rule Modified: Global Damage Multiplier set to 2.0x (Sanity Erosion: +20%)`);
+        });
+
+
+
+
+
+
+
+        requestAnimationFrame(drawGame);
+    </script>
+
+
+
+
+</body>
+</html>
+

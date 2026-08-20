@@ -92,6 +92,8 @@ class GameplayLoop:
                 self.engine.log("【悪行】グウェンを攻撃した！ (Karma -15)", (255, 80, 80))
             weapon = self.engine.inventory.equipment.get("main_hand")
             dmg, is_crit, msg = CombatSystem.calculate_melee_attack(self.engine.player, target, weapon)
+            target.hp -= dmg
+            CombatSystem.publish_damage_event(self.engine.event_bus, dmg, target.x, target.y, is_crit, target.hp <= 0)
             self.engine.log(msg, (255, 130, 130) if is_crit else (240, 240, 240))
             SoundManager.play_se("hit")
 
@@ -102,8 +104,8 @@ class GameplayLoop:
 
             for l in self.engine.player.gain_skill_exp("long_sword", 18):
                 self.engine.log(l, (150, 255, 150))
-            target.hp -= dmg
             if target.hp <= 0:
+                CombatSystem.publish_kill_event(self.engine.event_bus, target.x, target.y)
                 self.engine._on_kill(target)
             self.engine.player.energy -= ENERGY_THRESHOLD
             return True
@@ -116,6 +118,7 @@ class GameplayLoop:
             tile = self.engine.game_map.tiles[tx][ty]
             if tile == TILE_TRAP:
                 self.engine.player.hp -= 6
+                CombatSystem.publish_trap_event(self.engine.event_bus, 6, self.engine.player.x, self.engine.player.y)
                 if hasattr(self.engine, "screen_shake"):
                     self.engine.screen_shake.trigger(intensity=1.0, duration=3)
                 self.engine.floating_texts.append(FloatingText("-6", self.engine.player.x, self.engine.player.y - 0.2, (255, 80, 80)))
