@@ -3,6 +3,13 @@ Test suite for Elona Masterpiece Edition (v2.0)
 Validates DataManager, AdvancedAISystem, and Canvas Web API data serialization.
 """
 
+import os
+import sys
+
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+
 from game import Engine
 from data_manager import DataManager
 from ai_system import AdvancedAISystem, TACTIC_AGGRESSIVE

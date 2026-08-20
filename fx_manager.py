@@ -54,18 +54,55 @@ class FXManager:
             self.trigger_shake(intensity=1.5, duration=4, direction=direction)
             self.trigger_hit_stop(duration=6)
             self.spawn_shockwave(x, y, color=(255, 255, 200))
+            # Screen flash on crit
+            self.trigger_flash(x, y, color=(255, 255, 150), duration=3)
 
     def _on_entity_killed(self, data: Any) -> None:
         if not isinstance(data, dict):
             return
         x = data.get("x", 0)
         y = data.get("y", 0)
+        monster_type = data.get("monster_type", "unknown")
         self.trigger_shake(intensity=1.2, duration=3)
         self.spawn_explosion(x, y, count=3)
         
         # Spawn blood pool on kill
         if is_enabled("ENABLE_TINY_ROGUE_GFX"):
             self.spawn_blood_pool(x, y)
+            # Play death animation - spawn death frame then fade
+            self.spawn_death_animation(x, y, monster_type)
+
+    def spawn_death_animation(self, x: float, y: float, monster_type: str = "generic") -> None:
+        """Spawn death animation using TR_MONSTER_* death frame then fade."""
+        if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            return
+        
+        # Map monster type to death effect
+        death_effect_map = {
+            "slime": "smoke",
+            "goblin": "blood",
+            "orc": "blood",
+            "skeleton": "smoke",
+            "ghost": "smoke",
+            "dragon": "fire",
+        }
+        effect_type = death_effect_map.get(monster_type, "smoke")
+        
+        # Spawn death frame (monster collapsing)
+        self.spawn_tile_effect(x, y, effect_type, count=1, life=20, vx=0, vy=0)
+        
+        # Fade out particles
+        for i in range(3):
+            self.spawn_tile_effect(
+                x + random.uniform(-0.5, 0.5),
+                y + random.uniform(-0.5, 0.5),
+                "smoke",
+                count=1,
+                life=15 - i * 3,
+                vx=random.uniform(-0.2, 0.2),
+                vy=random.uniform(-0.2, 0.2),
+                color=(100, 100, 100)
+            )
 
     def _on_trap_triggered(self, data: Any) -> None:
         if not isinstance(data, dict):
@@ -134,6 +171,20 @@ class FXManager:
     def trigger_hit_stop(self, duration: int = 4) -> None:
         """攻撃命中時の瞬間停止をトリガー"""
         self.hit_stop_frames = duration
+
+    def trigger_flash(self, x: float, y: float, color: Tuple[int, int, int] = (255, 255, 150), duration: int = 3) -> None:
+        """画面フラッシュエフェクト (Tiny Rogue TR_EFFECT_09 sparkle + TR_EFFECT_01 magic_cast)"""
+        if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            return
+        
+        # Spawn sparkle particles at the impact point
+        self.spawn_sparkle_effect(x, y, count=8)
+        
+        # Spawn a brief magic cast flash
+        self.spawn_magic_cast(x, y, color=color, count=4)
+        
+        # Trigger a brief screen shake for impact feel
+        self.trigger_shake(intensity=0.5, duration=2)
 
     def spawn_shockwave(self, x: float, y: float, color: Tuple[int, int, int] = (255, 255, 255)) -> None:
         """同心円状の衝撃波パーティクルを展開"""
@@ -266,6 +317,36 @@ class FXManager:
         """Spawn heal effect using TR_EFFECT_06 (heal)."""
         self.spawn_tile_effect(x, y, "heal", count, color=(100, 255, 150), life=8, vx=random.uniform(-0.1, 0.1), vy=random.uniform(-0.4, -0.1))
 
+    def spawn_loot_sparkle(self, x: float, y: float, rarity: str = "common") -> None:
+        """Spawn loot sparkle on item drop using TR_EFFECT_09 (sparkle)."""
+        if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            return
+        
+        rarity_colors = {
+            "common": (200, 200, 200),
+            "uncommon": (100, 255, 100),
+            "rare": (100, 150, 255),
+            "epic": (200, 100, 255),
+            "legendary": (255, 215, 0),
+        }
+        color = rarity_colors.get(rarity, (200, 200, 200))
+        
+        # Main sparkle
+        self.spawn_sparkle_effect(x, y, count=6)
+        
+        # Rising particles
+        for i in range(4):
+            self.spawn_tile_effect(
+                x + random.uniform(-0.3, 0.3),
+                y - i * 0.3,
+                "sparkle",
+                count=1,
+                color=color,
+                life=8,
+                vx=random.uniform(-0.1, 0.1),
+                vy=random.uniform(-0.3, -0.1)
+            )
+
     def spawn_teleport_effect(self, x: float, y: float, count: int = 10) -> None:
         """Spawn teleport effect using TR_EFFECT_07 (teleport)."""
         self.spawn_tile_effect(x, y, "teleport", count, color=(200, 100, 255), life=6, vx=random.uniform(-0.4, 0.4), vy=random.uniform(-0.4, 0.4))
@@ -298,6 +379,24 @@ class FXManager:
     def spawn_shockwave_effect(self, x: float, y: float, count: int = 16) -> None:
         """Spawn shockwave effect using TR_EFFECT_12 (shockwave) in a circle."""
         self.spawn_tile_effect(x, y, "shockwave", count, color=(255, 255, 200), life=6, vx=0, vy=0)
+
+    def spawn_footstep_particles(self, x: float, y: float, floor_type: str = "default", direction: Tuple[float, float] = (0, 0)) -> None:
+        """Spawn footstep particles matching floor tile type."""
+        if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            return
+        
+        # Different particle styles for different floor types
+        if floor_type == "stone":
+            self.spawn_material_particles(x, y, "stone", count=2)
+        elif floor_type == "water":
+            self.spawn_tile_effect(x, y, "fire", count=1, color=(100, 150, 255), life=3, vx=-direction[0]*0.2, vy=-direction[1]*0.2)
+        elif floor_type == "grass":
+            self.spawn_material_particles(x, y, "default", count=1)
+        elif floor_type == "dirt":
+            self.spawn_material_particles(x, y, "stone", count=1)
+        else:
+            # Default small puff
+            self.spawn_tile_effect(x, y, "smoke", count=1, color=(150, 150, 150), life=3, vx=-direction[0]*0.1, vy=-direction[1]*0.1)
 
     def trigger_glitch(self, duration: int = 5) -> None:
         """Proposal 7: 精神世界・次元干渉グリッチをトリガー"""

@@ -7,10 +7,13 @@ Status Screen, Tabbed Inventory, Colored Logs, Faction/Aggro
 from __future__ import annotations
 
 import sys
-# 本物のPydantic/Pillow等のsite-packagesを最優先に設定
-for _sp in [r'C:\Users\keide\AppData\Roaming\Python\Python314\site-packages', r'C:\Python314\Lib\site-packages']:
-    if _sp not in sys.path:
-        sys.path.insert(0, _sp)
+from pathlib import Path
+try:
+    import pydantic
+except ImportError:
+    _stubs = Path(__file__).resolve().parent / "stubs"
+    if str(_stubs) not in sys.path:
+        sys.path.insert(0, str(_stubs))
 
 import random
 from typing import List, Optional, Tuple, Dict, Any, Set
@@ -20,7 +23,7 @@ import tcod
 import tcod.event
 
 from constants import (
-    SCREEN_WIDTH, SCREEN_HEIGHT, MAP_WIDTH, MAP_HEIGHT, ENERGY_THRESHOLD, TILE_WALL, TILE_FLOOR, TILE_STAIRS_DOWN, TILE_TRAP,
+    SCREEN_WIDTH, SCREEN_HEIGHT, MAP_WIDTH, MAP_HEIGHT, VIEW_WIDTH, VIEW_HEIGHT, ENERGY_THRESHOLD, TILE_WALL, TILE_FLOOR, TILE_STAIRS_DOWN, TILE_TRAP,
     COLOR_GOLD_YELLOW, COLOR_PET_PINK, Element, GameState,
     SPAWN_SNAIL_CHANCE, SPAWN_MONSTER_CHANCE, SPAWN_ITEM_CHANCE, SPAWN_RESOURCE_NODE_CHANCE,
     SNAIL_SPEED, SNAIL_COLOR,
@@ -120,49 +123,14 @@ class Engine:
         self.systems_coordinator = SystemCoordinator(self)
         self.setup_systems()
 
-# --- ゲーム状態データの初期化 ---
-        self.game_state_data = GameStateData(
-            player=Entity(
-                x=player_cfg.get("start_x", 20),
-                y=player_cfg.get("start_y", 20),
-                char=player_cfg.get("char", "@"),
-                color=tuple(player_cfg.get("color", [255, 255, 255])),
-                name=player_cfg.get("name", "名無しの冒険者"),
-                is_player=True,
-                speed=player_cfg.get("speed", 85),
-                attributes=player_cfg.get("attributes", {}),
-            ),
-            pet=Entity(
-                x=pet_cfg.get("start_x", 21),
-                y=pet_cfg.get("start_y", 20),
-                char=pet_cfg.get("char", "p"),
-                color=tuple(pet_cfg.get("color", [255, 180, 210])),
-                name=pet_cfg.get("name", "妹分『シエル』"),
-                is_pet=True,
-                speed=pet_cfg.get("speed", 90),
-                attributes=pet_cfg.get("attributes", {}),
-            ),
-            inventory=Inventory(max_items=26, max_weight=60.0),
-            pet_inventory=Inventory(max_items=12, max_weight=30.0),
-            survival=SurvivalSystem(),
-        )
+        # --- GameStateInitializer によるゲーム状態データの初期化 (Phase 4) ---
+        from core.world_state_manager import GameStateInitializer
+        self.game_state_initializer = GameStateInitializer(self)
+        self.game_state_data = self.game_state_initializer.initialize_world_state()
 
-        # --- エンティティマネージャーは Kernel から取得 ---
-        # 初期エンティティを追加
+        # --- エンティティマネージャーに初期エンティティを追加 ---
         self.entity_manager.add_entity(self.game_state_data.player)
         self.entity_manager.add_entity(self.game_state_data.pet)
-        # アイテムとリソースノードのリストは空で初期化（EntityManager内で管理）
-
-        # --- マップ ---
-        self.game_state_data.dungeon_level = 1
-        self.game_state_data.game_map = GameMap(MAP_WIDTH, MAP_HEIGHT, floor_level=self.game_state_data.dungeon_level)
-        self.game_state_data.game_map.generate_dungeon()
-        self.game_state_data.player.x, self.game_state_data.player.y = self.game_state_data.game_map.start_pos
-        self.game_state_data.pet.x = self.game_state_data.player.x + 1
-        self.game_state_data.pet.y = self.game_state_data.player.y
-
-        rx, ry = self.game_state_data.game_map.rooms[0].center
-        self.game_state_data.altar_pos = (rx + 2, ry)
 
         # プレイヤーとペットの初期化 (CharacterPackage 経由)
         self.player_pet_initializer(self.kernel, self)
@@ -170,39 +138,18 @@ class Engine:
         # --- インベントリアイテムの設定 ---
         self._setup_initial_inventory()
 
-        # エンティティマネージャーに初期エンティティを設定（すでに追加済み）
-        # アイテムとリソースノードのリストは空で初期化済み
+        # ダンジョンスポーン
         self._spawn_dungeon()
 
-        # --- クエスト・状態 ---
-        self.game_state_data.quests = [
-            Quest(title="ぷち掃討の栄誉", target_monster="ぷち",  target_count=3, reward_gold=350,  reward_platinum=2),
-            Quest(title="オーク討伐令",   target_monster="オーク", target_count=2, reward_gold=750, reward_platinum=3),
-        ]
-        self.game_state_data.current_state = GameState.EXPLORING  # Step 6.1, 6.2
-        self.game_state_data.game_state = "play"  # 旧互換用: "play","inventory","status","debug","wish","look","context","help","skill_tree"
-        self.game_state_data.help_tab = 0         # 0..3 ヘルプ画面タブ
-        self.game_state_data.inventory_target = "player"
-        self.game_state_data.inventory_cursor = 0
-        self.game_state_data.inventory_tab = 0   # 0=全 1=武器 2=防具 3=消費 4=その他
-        self.game_state_data.active_dialogue: Optional[Tuple[str, str]] = None
-        self.game_state_data.wish_input = ""
-        self.game_state_data.debug_input = ""
-        self.game_state_data.turns = 0
-        # 考古学 解釈プロンプト状態 (改善②)
-        self.game_state_data.arch_interpret_active = False
-        self.game_state_data.arch_interpret_groups_cache: List[Dict[str, Any]] = []
-        self.game_state_data.arch_interpret_truth_idx = 0
-        self.game_state_data.arch_interpret_ending_idx = 0
-
-# --- Visual FX & UI システム (Phase 1-9, FXManager委譲) ---
-        self.look_cursor = LookCursor(self.game_state_data.player.x, self.game_state_data.player.y)
-        self.context_menu = ContextMenu()
-        self.tutorial_manager = TutorialManager()
-        self.notification_manager = NotificationManager()
-        self.web_server = start_web_server(self, port=8080)
-        print("DEBUG: Web server started")
-        print("DEBUG: Web server started")
+        # --- Visual FX & UI システム & Web サービス初期化 (Phase 5) ---
+        from core.system_initializer import SystemInitializer
+        (
+            self.look_cursor,
+            self.context_menu,
+            self.tutorial_manager,
+            self.notification_manager,
+            self.web_server
+        ) = SystemInitializer.initialize_ui_and_services(self)
 
     def _initialize_player_and_pet(self) -> None:
         """プレイヤーとペットの初期化処理"""
@@ -1932,6 +1879,13 @@ def main() -> None:
                             continue
                         elif event.sym == tcod.event.KeySym.J:
                             engine.game_state = "job"
+                            continue
+                        elif event.sym == tcod.event.KeySym.G:
+                            # Toggle Tiny Rogue graphics
+                            from feature_flags import is_enabled, set_flag
+                            new_state = not is_enabled("ENABLE_TINY_ROGUE_GFX")
+                            set_flag("ENABLE_TINY_ROGUE_GFX", new_state)
+                            engine.log(f"Tiny Rogue graphics: {'ON' if new_state else 'OFF'}", (100, 255, 100) if new_state else (255, 100, 100))
                             continue
                         elif event.sym == tcod.event.KeySym.ESCAPE:
                             if engine.game_state in ("skill_tree", "job"):

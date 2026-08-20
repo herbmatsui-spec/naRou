@@ -5,6 +5,7 @@ Applies various optimization techniques to reduce file sizes and improve perform
 """
 
 import os
+import sys
 import json
 import argparse
 from pathlib import Path

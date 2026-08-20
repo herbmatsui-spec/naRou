@@ -2,10 +2,11 @@
 UI Renderer Module - Handles inline UI drawing: popup text, look cursor, map legend, bottom UI
 """
 from __future__ import annotations
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import tcod
 
 from constants import (
+    SCREEN_WIDTH, SCREEN_HEIGHT,
     VIEW_WIDTH, VIEW_HEIGHT,
     COLOR_WALL_DARK, COLOR_WALL_LIT, COLOR_FLOOR_DARK, COLOR_FLOOR_LIT, COLOR_ALTAR,
     COLOR_HP_GREEN, COLOR_MP_BLUE, COLOR_GOLD_YELLOW, COLOR_PET_PINK,
@@ -17,6 +18,9 @@ from systems import STATUS_BLEEDING
 from render_context import RenderContext
 from crafting_system import ResourceNode
 from map_engine import TILE_REGISTRY
+from core.tiny_rogue_tiles import get_ui_tile_id
+from feature_flags import is_enabled
+from ui_fx_systems import GaugeBar
 
 
 class UIRenderer:
@@ -65,10 +69,18 @@ class UIRenderer:
         # 行1: プレイヤー情報 & HP/MPバー
         hp_bar = GaugeBar.render(p.hp, p.max_hp, length=8)
         mp_bar = GaugeBar.render(p.mp, p.max_mp, length=6)
-        console.print(x=2,  y=ui_y+1, string=f"{p.name} [{hunger_str}{bleed_tag}]", fg=(255,255,160))
-        console.print(x=22, y=ui_y+1, string=f"HP:[{hp_bar}] {p.hp}/{p.max_hp}", fg=COLOR_HP_GREEN)
-        console.print(x=46, y=ui_y+1, string=f"MP:[{mp_bar}] {p.mp}/{p.max_mp}", fg=COLOR_MP_BLUE)
-        console.print(x=66, y=ui_y+1, string=f"Lv.{p.level} {s.gold}G", fg=COLOR_GOLD_YELLOW)
+        x = 2
+        x += cls._draw_ui_icon(console, x, ui_y+1, "heart", COLOR_HP_GREEN)
+        console.print(x=x,  y=ui_y+1, string=f"{p.name} [{hunger_str}{bleed_tag}]", fg=(255,255,160))
+        x = 22
+        x += cls._draw_ui_icon(console, x, ui_y+1, "heart", COLOR_HP_GREEN)
+        console.print(x=x, y=ui_y+1, string=f"HP:[{hp_bar}] {p.hp}/{p.max_hp}", fg=COLOR_HP_GREEN)
+        x = 46
+        x += cls._draw_ui_icon(console, x, ui_y+1, "mana", COLOR_MP_BLUE)
+        console.print(x=x, y=ui_y+1, string=f"MP:[{mp_bar}] {p.mp}/{p.max_mp}", fg=COLOR_MP_BLUE)
+        x = 66
+        x += cls._draw_ui_icon(console, x, ui_y+1, "coin", COLOR_GOLD_YELLOW)
+        console.print(x=x, y=ui_y+1, string=f"Lv.{p.level} {s.gold}G", fg=COLOR_GOLD_YELLOW)
 
         # 行2: ペット情報 & 環境情報
         pet_hp_bar = GaugeBar.render(context.pet.hp, context.pet.max_hp, length=6) if context.pet.hp > 0 else " DEAD "
@@ -106,3 +118,37 @@ class UIRenderer:
                 console.draw_rect(x=nbx, y=nby, width=notif_box_w, height=3, ch=0, bg=(20, 25, 40))
                 console.draw_frame(x=nbx, y=nby, width=notif_box_w, height=3, title=f" {latest_notif.title} ", fg=latest_notif.color)
                 console.print(x=nbx+2, y=nby+1, string=latest_notif.message[:notif_box_w-4], fg=(255, 255, 255))
+
+    @staticmethod
+    def _draw_ui_icon(console: tcod.console.Console, x: int, y: int, ui_type: str, color: Tuple[int, int, int] = None) -> int:
+        """Draw a UI icon using Tiny Rogue tile if enabled, else return 0."""
+        if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            return 0
+        tile_id = get_ui_tile_id(ui_type)
+        if not tile_id:
+            return 0
+        try:
+            uv = TILE_REGISTRY.get_uv(tile_id, scale="tiny_rogue_16")
+            icon_char = ""
+            if ui_type == "heart":
+                icon_char = "♥"
+            elif ui_type == "mana":
+                icon_char = "♢"
+            elif ui_type == "coin":
+                icon_char = "★"
+            elif ui_type == "key":
+                icon_char = "⚿"
+            elif ui_type == "sword_icon":
+                icon_char = "⚔"
+            elif ui_type == "shield_icon":
+                icon_char = "🛡"
+            elif ui_type == "potion_icon":
+                icon_char = "🧪"
+            elif ui_type == "level":
+                icon_char = "⬆"
+            if icon_char:
+                console.print(x=x, y=y, string=icon_char, fg=color or (255, 255, 255))
+            return 2  # width of icon
+        except Exception:
+            return 0
+        return 0

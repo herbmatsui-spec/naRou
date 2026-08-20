@@ -100,7 +100,6 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"error": "Rate limit exceeded"}).encode('utf-8'))
             return
 
-        global _ENGINE_INSTANCE
         if self.path == "/api/state":
             if _ENGINE_INSTANCE is None:
                 self._set_headers()
@@ -170,7 +169,6 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def do_POST(self):
-        global _ENGINE_INSTANCE
         if self.path == "/api/action":
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length).decode('utf-8')

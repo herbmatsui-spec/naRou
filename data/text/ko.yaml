@@ -8,6 +8,7 @@ meta:
   fallback: false
 
 ui:
+  hello: "안녕하세요"
   menu:
     new_game: "새 게임"
     continue: "이어하기"

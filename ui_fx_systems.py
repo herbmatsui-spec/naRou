@@ -21,6 +21,8 @@ from constants import (
     COLOR_PET_PINK
 )
 from skill_tree_system import SkillTreeRegistry
+from feature_flags import is_enabled
+from job_system import JobRegistry
 
 @dataclass
 class FloatingText:
@@ -224,10 +226,98 @@ class DynamicLighting:
         return (lit_r, lit_g, lit_b), min(1.0, total_intensity)
 
     @classmethod
-    def get_light_sources_for_engine(cls, context: RenderContext) -> List[LightSource]:
+    def get_tile_lighting_properties(cls, tile_id: str) -> Dict[str, Any]:
+        """
+        Get tile-specific lighting properties for advanced rendering.
+        
+        Returns dict with keys:
+        - 'emissive': bool - whether tile emits light
+        - 'emissive_color': Tuple[int, int, int] - color of emitted light
+        - 'emissive_radius': float - radius of emitted light
+        - 'reflective': bool - whether tile reflects light strongly
+        - 'translucent': bool - whether tile lets light through
+        - 'material': str - material type for material-based lighting
+        """
+        props = {
+            'emissive': False,
+            'emissive_color': (255, 255, 255),
+            'emissive_radius': 0.0,
+            'reflective': False,
+            'translucent': False,
+            'material': 'default',
+        }
+        
+        # Tiny Rogue tile properties
+        if tile_id.startswith("TR_"):
+            # Light sources
+            if tile_id in ("TR_DECOR_01",):  # Torch
+                props.update({
+                    'emissive': True,
+                    'emissive_color': (255, 180, 50),
+                    'emissive_radius': 5.0,
+                    'material': 'fire',
+                })
+            elif tile_id in ("TR_DECOR_03",):  # Altar
+                props.update({
+                    'emissive': True,
+                    'emissive_color': (255, 225, 100),
+                    'emissive_radius': 4.0,
+                    'material': 'holy',
+                })
+            elif tile_id in ("TR_DECOR_04",):  # Fountain
+                props.update({
+                    'emissive': True,
+                    'emissive_color': (100, 200, 255),
+                    'emissive_radius': 3.0,
+                    'material': 'water',
+                })
+            # Reflective surfaces
+            elif tile_id.startswith("TR_ITEM_04") or tile_id.startswith("TR_ITEM_05"):  # Weapons
+                props.update({
+                    'reflective': True,
+                    'material': 'metal',
+                })
+            elif tile_id.startswith("TR_ITEM_07") or tile_id.startswith("TR_ITEM_08"):  # Armor
+                props.update({
+                    'reflective': True,
+                    'material': 'metal',
+                })
+            elif tile_id.startswith("TR_UI_07"):  # Coin
+                props.update({
+                    'reflective': True,
+                    'material': 'gold',
+                })
+            # Translucent
+            elif tile_id.startswith("TR_EFFECT_03"):  # Ice
+                props.update({
+                    'translucent': True,
+                    'material': 'ice',
+                })
+            elif tile_id.startswith("TR_EFFECT_06"):  # Heal
+                props.update({
+                    'translucent': True,
+                    'material': 'holy',
+                })
+            elif tile_id.startswith("TR_DECOR_04"):  # Fountain/water
+                props.update({
+                    'translucent': True,
+                    'material': 'water',
+                })
+            # Material types for floor/wall
+            elif tile_id.startswith("TR_FLOOR"):
+                props.update({'material': 'stone'})
+            elif tile_id.startswith("TR_WALL"):
+                props.update({'material': 'stone'})
+            elif tile_id.startswith("TR_MONSTER") or tile_id.startswith("TR_PLAYER"):
+                props.update({'material': 'flesh'})
+        
+        return props
+
+    @classmethod
+    def get_light_sources_for_engine(cls, context) -> List[LightSource]:
         """現在のゲーム状態から動的光源リストを抽出"""
         sources: List[LightSource] = []
-        if not hasattr(engine, "player") or not context.player:
+        if not getattr(context, "player", None):
             return sources
 
         # 1. プレイヤーの松明 / 光 (手持ち光源)
@@ -235,27 +325,27 @@ class DynamicLighting:
         sources.append(LightSource(x=p.x, y=p.y, radius=8.0, color=(255, 235, 190), intensity=1.0, source_type="player"))
 
         # 2. ペットの淡い守護光
-        if hasattr(engine, "pet") and context.pet and context.pet.hp > 0:
+        if getattr(context, "pet", None) and context.pet.hp > 0:
             sources.append(LightSource(x=context.pet.x, y=context.pet.y, radius=4.5, color=(255, 200, 230), intensity=0.75, source_type="pet"))
 
         # 3. 祭壇の神聖な黄金光
-        if hasattr(engine, "altar_pos") and context.altar_pos:
+        if getattr(context, "altar_pos", None):
             ax, ay = context.altar_pos
             sources.append(LightSource(x=ax, y=ay, radius=6.0, color=(255, 225, 100), intensity=1.2, source_type="altar"))
 
         # 4. 下り階段 / ポータルの神秘的な青光
-        if hasattr(engine, "game_map") and context.game_map and context.game_map.stairs_down_pos:
+        if getattr(context, "game_map", None) and getattr(context.game_map, "stairs_down_pos", None):
             sx, sy = context.game_map.stairs_down_pos
             sources.append(LightSource(x=sx, y=sy, radius=5.0, color=(120, 220, 255), intensity=0.9, source_type="portal"))
 
         # 5. 鉱石脈・採取ノードの微光
-        if hasattr(engine, "resource_nodes"):
+        if getattr(context, "resource_nodes", None):
             for node in context.resource_nodes:
                 if not getattr(node, "depleted", False):
                     sources.append(LightSource(x=node.x, y=node.y, radius=3.0, color=(100, 255, 180), intensity=0.6, source_type="resource"))
 
         # 6. 光る魔法パーティクル
-        if hasattr(engine, "particles"):
+        if getattr(context, "particles", None):
             for pt in context.particles[:5]:
                 sources.append(LightSource(x=int(pt.x), y=int(pt.y), radius=2.5, color=pt.color, intensity=0.8, source_type="magic"))
 
@@ -584,6 +674,70 @@ class WeatherAtmosphereLayer:
                     # 揺れる陽炎
                     cur_fg = console.fg[vx, vy]
                     console.fg[vx, vy] = (min(255, cur_fg[0] + 30), cur_fg[1], max(0, cur_fg[2] - 20))
+                elif weather == "rain":
+                    # 雨粒子 (TR_EFFECT_02 fire tile repurposed as rain drops)
+                    rain_intensity = (math.sin(vx * 0.3 + tick * 0.8) + 1) * 0.5
+                    if rain_intensity > 0.7:
+                        console.print(vx, vy, "│", fg=(100, 150, 255))
+                elif weather == "snow":
+                    # 雪粒子 (TR_EFFECT_03 ice tile)
+                    snow_intensity = (math.sin(vx * 0.2 + tick * 0.3) + 1) * 0.5
+                    if snow_intensity > 0.75:
+                        console.print(vx, vy, "❆", fg=(200, 230, 255))
+
+    @staticmethod
+    def spawn_weather_particles(
+        fx_manager: Any,
+        weather: str,
+        cam_x: int,
+        cam_y: int,
+        view_w: int,
+        view_h: int,
+        tick: int
+    ) -> None:
+        """Spawn weather particles using Tiny Rogue TR_EFFECT_* tiles."""
+        if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            return
+        
+        if weather == "rain":
+            # Spawn rain drops using TR_EFFECT_02 (fire) as rain
+            for _ in range(3):
+                fx_manager.spawn_tile_effect(
+                    cam_x + random.randint(0, view_w),
+                    cam_y + random.randint(0, view_h),
+                    "fire",  # repurposed as rain
+                    count=1,
+                    vx=random.uniform(-0.1, 0.1),
+                    vy=random.uniform(0.5, 1.0),
+                    life=random.randint(5, 10),
+                    color=(100, 150, 255)
+                )
+        elif weather == "snow":
+            # Spawn snow using TR_EFFECT_03 (ice)
+            for _ in range(2):
+                fx_manager.spawn_tile_effect(
+                    cam_x + random.randint(0, view_w),
+                    cam_y + random.randint(0, view_h),
+                    "ice",
+                    count=1,
+                    vx=random.uniform(-0.2, 0.2),
+                    vy=random.uniform(0.1, 0.3),
+                    life=random.randint(10, 20),
+                    color=(200, 230, 255)
+                )
+        elif weather == "ash":
+            # Volcanic ash using TR_EFFECT_10 (smoke)
+            for _ in range(2):
+                fx_manager.spawn_tile_effect(
+                    cam_x + random.randint(0, view_w),
+                    cam_y + random.randint(0, view_h),
+                    "smoke",
+                    count=1,
+                    vx=random.uniform(-0.3, 0.3),
+                    vy=random.uniform(0.0, 0.2),
+                    life=random.randint(15, 30),
+                    color=(100, 100, 100)
+                )
 
 
 class ScreenFilterManager:

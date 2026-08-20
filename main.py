@@ -2,10 +2,13 @@ import subprocess
 import sys
 import os
 
-# 本物のPydantic/Pillow等のsite-packagesを最優先に設定
-for _sp in [r'C:\Users\keide\AppData\Roaming\Python\Python314\site-packages', r'C:\Python314\Lib\site-packages']:
-    if _sp not in sys.path:
-        sys.path.insert(0, _sp)
+from pathlib import Path
+try:
+    import pydantic
+except ImportError:
+    _stubs = Path(__file__).resolve().parent / "stubs"
+    if str(_stubs) not in sys.path:
+        sys.path.insert(0, str(_stubs))
 
 
 def run_script(script_name):

@@ -8,10 +8,17 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# site-packages (本物の Pydantic, Pillow 等) をローカルスタブより優先
-for sp in [r'C:\Users\keide\AppData\Roaming\Python\Python314\site-packages', r'C:\Python314\Lib\site-packages']:
-    if sp not in sys.path:
-        sys.path.insert(0, sp)
+_root_dir = Path(__file__).resolve().parent
+if str(_root_dir) not in sys.path:
+    sys.path.insert(0, str(_root_dir))
+
+# Pydantic等の外部ライブラリが見つからない場合のスタブフォールバック
+try:
+    import pydantic
+except ImportError:
+    stubs_dir = _root_dir / "stubs"
+    if str(stubs_dir) not in sys.path:
+        sys.path.insert(0, str(stubs_dir))
 
 import random
 from typing import TYPE_CHECKING, Any
@@ -269,7 +276,7 @@ class DataManager(BaseSystem):
     def _color_tuple(self, color) -> tuple:
         if not color:
             return (255, 255, 255)
-        return tuple(int(c.root) for c in color)
+        return tuple(int(getattr(c, "root", c)) for c in color)
 
     # ==================== ITEM GENERATION ====================
 
@@ -419,7 +426,7 @@ class DataManager(BaseSystem):
         mob.hp = base_hp
         mob.faction = faction
         mob.ai_type = data.ai_type if data.ai_type else "aggressive"
-        mob.skills = [s.root for s in (data.skills or [])]
+        mob.skills = [getattr(s, "root", s) for s in (data.skills or [])]
         mob.status_effects = []
         return mob
 

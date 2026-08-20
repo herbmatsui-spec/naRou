@@ -158,9 +158,12 @@ class PaletteUnifier:
         
         try:
             with open(output_path, 'w') as f:
-            f.write("# Placeholder for palette-unified asset\n")
-        logger.info(f"Created placeholder: {output_path}")
-        return True
+                f.write("# Placeholder for palette-unified asset\n")
+            logger.info(f"Created placeholder: {output_path}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to unify palette: {e}")
+            return False
 
 def main():
     parser = argparse.ArgumentParser(description='Unify asset palettes to master palette')

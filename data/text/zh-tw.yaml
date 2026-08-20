@@ -8,6 +8,7 @@ meta:
   fallback: false
 
 ui:
+  hello: "你好"
   menu:
     new_game: "新遊戲"
     continue: "繼續"

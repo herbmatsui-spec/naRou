@@ -5,6 +5,7 @@ Supports restoring from full backups, incremental backups, and specific points i
 """
 
 import os
+import sys
 import json
 import argparse
 import shutil
