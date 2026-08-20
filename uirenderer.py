@@ -2,18 +2,22 @@
 UI Renderer Module - Handles inline UI drawing: popup text, look cursor, map legend, bottom UI
 """
 from __future__ import annotations
-from typing import Tuple
+from typing import List, Optional, Tuple
 import tcod
 
 from constants import (
     SCREEN_WIDTH, SCREEN_HEIGHT,
     VIEW_WIDTH, VIEW_HEIGHT,
+    COLOR_WALL_DARK, COLOR_WALL_LIT, COLOR_FLOOR_DARK, COLOR_FLOOR_LIT, COLOR_ALTAR,
     COLOR_HP_GREEN, COLOR_MP_BLUE, COLOR_GOLD_YELLOW, COLOR_PET_PINK,
     TILE_STAIRS_DOWN,
 )
 from entity import GodInfo
+from item_system import Item
 from systems import STATUS_BLEEDING
 from render_context import RenderContext
+from crafting_system import ResourceNode
+from map_engine import TILE_REGISTRY
 from core.tiny_rogue_tiles import get_ui_tile_id
 from feature_flags import is_enabled
 from ui_fx_systems import GaugeBar
@@ -124,6 +128,7 @@ class UIRenderer:
         if not tile_id:
             return 0
         try:
+            uv = TILE_REGISTRY.get_uv(tile_id, scale="tiny_rogue_16")
             icon_char = ""
             if ui_type == "heart":
                 icon_char = "♥"

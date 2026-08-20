@@ -2,7 +2,7 @@ from feature_flags import set_flag
 set_flag('ENABLE_TINY_ROGUE_GFX', True)
 
 from core.tiny_rogue_tiles import (
-    get_dungeon_tile_id, 
+    get_tiny_rogue_tile_id, get_dungeon_tile_id, 
     get_item_tile_id, get_decoration_tile_id,
     get_effect_tile_id, get_ui_tile_id, get_terrain_config
 )

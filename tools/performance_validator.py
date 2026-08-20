@@ -8,7 +8,7 @@ import os
 import time
 import statistics
 from datetime import datetime
-from typing import Dict, Any, Callable
+from typing import Dict, Any, List, Optional, Callable
 from performance_monitor import PerformanceMonitor
 from performance_optimizer import PerformanceOptimizer
 
@@ -449,7 +449,7 @@ def main():
     
     # レポート生成
     print("\nGenerating report...")
-    validator.generate_report()
+    report = validator.generate_report()
     print("Report generated successfully")
     
     # アーティファクト化

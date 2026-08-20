@@ -5,9 +5,7 @@ Shared between TCODRenderer and game logic.
 
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import List, Tuple, Optional, Dict, Any, TYPE_CHECKING
-if TYPE_CHECKING:
-    import numpy as np
+from typing import List, Tuple, Optional, Dict, Any
 from collections import defaultdict
 from random import random, choice
 from pathlib import Path
@@ -672,6 +670,7 @@ def compute_ssao_from_tiles(console, cam_x: int, cam_y: int, view_w: int, view_h
 
 
 # --- Visual Obsessive Lighting Extensions (Step 23) ---
+from core.gbuffer import GBuffer
 
 
 @dataclass

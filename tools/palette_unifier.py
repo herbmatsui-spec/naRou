@@ -11,7 +11,7 @@ from typing import List, Tuple, Optional
 import logging
 
 try:
-    import PIL  # noqa: F401
+    import PIL
     PIL_AVAILABLE = True
 except ImportError:
     PIL_AVAILABLE = False

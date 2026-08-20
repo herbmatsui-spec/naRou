@@ -3,8 +3,8 @@
 Produces structured progress info and an ASCII visualization of a player's
 skill tree, mirroring the spec's UI layout.
 """
-from dataclasses import dataclass
-from typing import List, Dict
+from dataclasses import dataclass, field
+from typing import List, Dict, Optional, Any
 
 
 @dataclass

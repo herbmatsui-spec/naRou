@@ -4,6 +4,7 @@ import os
 import sys
 import subprocess
 import argparse
+import json
 
 def run_command(cmd, cwd=None):
     """Run a command and return success status."""

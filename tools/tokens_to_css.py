@@ -1,4 +1,4 @@
-import json
+import json, sys
 
 def tokens_to_css(tokens, prefix="--"):
     lines = [":root {"]

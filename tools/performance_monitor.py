@@ -279,7 +279,7 @@ class PerformanceMonitor:
             If single arg / test expects float: duration in seconds
         """
         start = time.perf_counter()
-        func(*args, **kwargs)
+        result = func(*args, **kwargs)
         duration = time.perf_counter() - start
         return duration
 

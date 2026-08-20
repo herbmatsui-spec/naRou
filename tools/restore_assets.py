@@ -9,7 +9,8 @@ import sys
 import json
 import argparse
 import shutil
-from typing import Dict, List
+from pathlib import Path
+from typing import Dict, List, Optional
 import time
 
 
@@ -261,6 +262,7 @@ def main():
             backup_dir = args.backup_source
         else:
             # Assume it's a backup name within the configured backup directory
+            backup_config = config.get('backup', {})
             backup_dir = os.path.join(config['directories'].get('cache', 'assets/cache'), 
                                     'backups', args.backup_source)
             if not os.path.exists(backup_dir):
