@@ -106,15 +106,17 @@ class SkillFusionRepository(CachedRepository[SkillFusion, str]):
     def _build_indexes(self):
         for fusion in self._data.values():
             for result in fusion.result_skills:
-                self._by_result.setdefault(result.root, []).append(fusion)
+                key = result.root if hasattr(result, "root") else str(result)
+                self._by_result.setdefault(key, []).append(fusion)
 
     def get_fusions_for_result(self, result_skill_id: str) -> list[SkillFusion]:
         return [f for f in self._by_result.get(result_skill_id, [])
-                if any(r.root == result_skill_id for r in f.result_skills)]
+                if any((getattr(r, "root", r) == result_skill_id) for r in f.result_skills)]
 
     def get_fusions_using_skill(self, skill_id: str) -> list[SkillFusion]:
         return [f for f in self._data.values()
-                if any(s.root == skill_id for s in f.required_skills)]
+                if any((getattr(s, "root", s) == skill_id) for s in f.required_skills)]
+
 
     def invalidate_cache(self):
         super().invalidate_cache()

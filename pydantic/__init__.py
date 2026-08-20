@@ -24,6 +24,13 @@ class BaseModel:
             setattr(self, k, v)
 
     @classmethod
+    def model_construct(cls, _fields_set=None, **values):
+        instance = cls.__new__(cls)
+        for k, v in values.items():
+            setattr(instance, k, v)
+        return instance
+
+    @classmethod
     def model_validate(cls, obj, *args, **kwargs):
         if isinstance(obj, cls):
             return obj
@@ -34,8 +41,13 @@ class BaseModel:
         return cls(obj)
 
     @classmethod
+    def construct(cls, _fields_set=None, **values):
+        return cls.model_construct(_fields_set=_fields_set, **values)
+
+    @classmethod
     def parse_obj(cls, obj):
         return cls.model_validate(obj)
+
 
     def model_dump(self, *args, **kwargs):
         return self.__dict__

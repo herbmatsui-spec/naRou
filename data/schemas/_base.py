@@ -3,11 +3,19 @@ Core type definitions and base classes for data-driven schema pipeline.
 Provides shared enums, base models, and utilities for all generated data classes.
 """
 from __future__ import annotations
+
+import sys
+# 本物のPydantic等のsite-packagesを最優先に設定
+for _sp in [r'C:\Users\keide\AppData\Roaming\Python\Python314\site-packages', r'C:\Python314\Lib\site-packages']:
+    if _sp not in sys.path:
+        sys.path.insert(0, _sp)
+
 from typing import Any, Dict, List, Optional, Literal, Union, ClassVar
 from dataclasses import dataclass, field
 from enum import Enum
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from pydantic.alias_generators import to_camel
+
 
 
 class ItemCategory(str, Enum):

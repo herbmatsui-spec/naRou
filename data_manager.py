@@ -27,21 +27,23 @@ from constants import (
     QUALITY_NORMAL,
 )
 from core_framework import BaseSystem
-from data.generated.character.gods import GodsDefinition
-from data.generated.character.jobs import JobsDefinition
+from data.generated.character.gods import GodsDefinition, God
+from data.generated.character.jobs import JobsDefinition, Job
 from data.generated.dungeon.dungeon import DungeonThemeDefinition
-from data.generated.faction.factions import FactionsDefinition
+from data.generated.faction.factions import FactionsDefinition, Faction
 
 # 生成されたPydanticモデル（スキーマバリデーション用）
 from data.generated.item.item import ItemDefinition
-from data.generated.meta.achievements import AchievementsDefinition
-from data.generated.meta.titles import TitlesDefinition
+from data.generated.meta.achievements import AchievementsDefinition, Achievement
+from data.generated.meta.titles import TitlesDefinition, Title
 from data.generated.monster.monster import MonsterDefinition
 from data.generated.quest.quest import QuestDefinition
-from data.generated.skill.skill_fusion import SkillFusionDefinition
-from data.generated.skill.skill_trees import SkillTreesDefinition
-from data.generated.skill.spells import SpellsDefinition
-from data.generated.social.guilds import GuildsDefinition
+from data.generated.skill.skill_fusion import SkillFusionDefinition, SkillFusion
+from data.generated.skill.skill_trees import SkillTreesDefinition, SkillTree
+from data.generated.skill.spells import SpellsDefinition, Spell
+from data.generated.social.guilds import GuildsDefinition, Guild
+
+
 
 # リポジトリ層
 from data.repositories import (
@@ -129,18 +131,23 @@ class DataManager(BaseSystem):
 
         # スキルツリー (ラッパー key: skill_trees)
         skill_trees_raw = self._load_yaml("skill_trees.yaml") or {}
-        skill_trees_def = SkillTreesDefinition.model_validate(skill_trees_raw)
-        self.skill_trees = SkillTreeRepository(dict(skill_trees_def.skill_trees))
+        st_data = skill_trees_raw.get("skill_trees", {}) if isinstance(skill_trees_raw, dict) else {}
+        self.skill_trees = SkillTreeRepository(
+            {k: (SkillTree.model_validate(v) if not isinstance(v, SkillTree) else v) for k, v in st_data.items()}
+        )
 
         # 呪文 (フラット辞書, RootModel)
         spells_raw = self._load_yaml("spells.yaml") or {}
-        spells_def = SpellsDefinition.model_validate(spells_raw)
-        self.spells = SpellRepository(dict(spells_def.root))
+        self.spells = SpellRepository(
+            {k: (Spell.model_validate(v) if not isinstance(v, Spell) else v) for k, v in spells_raw.items()}
+        )
 
         # スキル融合 (ラッパー key: fusions)
         fusion_raw = self._load_yaml("skill_fusion.yaml") or {}
-        fusion_def = SkillFusionDefinition.model_validate(fusion_raw)
-        self.skill_fusions = SkillFusionRepository(dict(fusion_def.fusions))
+        fu_data = fusion_raw.get("fusions", {}) if isinstance(fusion_raw, dict) else {}
+        self.skill_fusions = SkillFusionRepository(
+            {k: (SkillFusion.model_validate(v) if not isinstance(v, SkillFusion) else v) for k, v in fu_data.items()}
+        )
 
         # クエスト (ラッパー key: main_quests, リスト形式)
         # main_quests.yaml はスキーマと構造が異なるため tolerant ロード
@@ -148,28 +155,37 @@ class DataManager(BaseSystem):
 
         # 派閥 (ラッパー key: factions)
         factions_raw = self._load_yaml("factions.yaml") or {}
-        factions_def = FactionsDefinition.model_validate(factions_raw)
-        self.factions = FactionRepository(dict(factions_def.factions))
+        fac_data = factions_raw.get("factions", {}) if isinstance(factions_raw, dict) else {}
+        self.factions = FactionRepository(
+            {k: (Faction.model_validate(v) if not isinstance(v, Faction) else v) for k, v in fac_data.items()}
+        )
 
         # 実績 (ラッパー key: achievements)
         ach_raw = self._load_yaml("achievements.yaml") or {}
-        ach_def = AchievementsDefinition.model_validate(ach_raw)
-        self.achievements = AchievementRepository(dict(ach_def.achievements))
+        ach_data = ach_raw.get("achievements", {}) if isinstance(ach_raw, dict) else {}
+        self.achievements = AchievementRepository(
+            {k: (Achievement.model_validate(v) if not isinstance(v, Achievement) else v) for k, v in ach_data.items()}
+        )
 
         # 称号 (ラッパー key: titles)
         titles_raw = self._load_yaml("titles.yaml") or {}
-        titles_def = TitlesDefinition.model_validate(titles_raw)
-        self.titles = TitleRepository(dict(titles_def.titles))
+        ti_data = titles_raw.get("titles", {}) if isinstance(titles_raw, dict) else {}
+        self.titles = TitleRepository(
+            {k: (Title.model_validate(v) if not isinstance(v, Title) else v) for k, v in ti_data.items()}
+        )
 
         # 職業 (ラッパー key: jobs)
         jobs_raw = self._load_yaml("jobs.yaml") or {}
-        jobs_def = JobsDefinition.model_validate(jobs_raw)
-        self.jobs = JobRepository(dict(jobs_def.jobs))
+        job_data = jobs_raw.get("jobs", {}) if isinstance(jobs_raw, dict) else {}
+        self.jobs = JobRepository(
+            {k: (Job.model_validate(v) if not isinstance(v, Job) else v) for k, v in job_data.items()}
+        )
 
         # 神 (フラット辞書, RootModel)
         gods_raw = self._load_yaml("gods.yaml") or {}
-        gods_def = GodsDefinition.model_validate(gods_raw)
-        self.gods = GodRepository(dict(gods_def.root))
+        self.gods = GodRepository(
+            {k: (God.model_validate(v) if not isinstance(v, God) else v) for k, v in gods_raw.items()}
+        )
 
         # ダンジョンテーマ (ラッパー key: dungeon_themes)
         # dungeon_themes.yaml はスキーマと構造が異なるため tolerant ロード
@@ -177,8 +193,11 @@ class DataManager(BaseSystem):
 
         # ギルド (ラッパー key: guilds)
         guilds_raw = self._load_yaml("guilds.yaml") or {}
-        guilds_def = GuildsDefinition.model_validate(guilds_raw)
-        self.guilds = GuildRepository(dict(guilds_def.guilds))
+        gui_data = guilds_raw.get("guilds", {}) if isinstance(guilds_raw, dict) else {}
+        self.guilds = GuildRepository(
+            {k: (Guild.model_validate(v) if not isinstance(v, Guild) else v) for k, v in gui_data.items()}
+        )
+
 
         # ローカライゼーション読み込み
         self._load_localization()
