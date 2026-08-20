@@ -5,23 +5,24 @@ test_skill_eater_audio_integration.py
 
 import unittest
 from pathlib import Path
-from skill_eater_system import (
-    SkillEaterRegistry,
-    SkillDef,
-    SkillTier,
-    SkillType,
-    CharacterState
-)
-from skill_eater_audio_system import SkillEaterAudioSystem, AUDIO_DIR
+
+from skill_eater_audio_system import AUDIO_DIR, SkillEaterAudioSystem
 from skill_eater_combat_system import SkillEaterCombatSystem
-from skill_eater_synthesis_system import SkillEaterSynthesisSystem
-from skill_eater_servant_system import SkillEaterServantSystem
 from skill_eater_economy_system import SkillEaterEconomySystem
 from skill_eater_exploration_system import SkillEaterExplorationSystem
 from skill_eater_meta_quest_system import (
     GlobalRuleEngine,
     SkillEaterQuestSystem,
-    SkillEaterReincarnationSystem
+    SkillEaterReincarnationSystem,
+)
+from skill_eater_servant_system import SkillEaterServantSystem
+from skill_eater_synthesis_system import SkillEaterSynthesisSystem
+from skill_eater_system import (
+    CharacterState,
+    SkillDef,
+    SkillEaterRegistry,
+    SkillTier,
+    SkillType,
 )
 
 
@@ -29,7 +30,7 @@ class TestSkillEaterAudioIntegration(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.registry = SkillEaterRegistry.get_instance()
-        yaml_path = Path("e:/narou2/data/worlds/skill_eater/skills.yaml")
+        yaml_path = Path(__file__).parents[1] / "data/worlds/skill_eater/skills.yaml"
         cls.registry.load_from_yaml(yaml_path)
 
     def setUp(self):
@@ -58,8 +59,30 @@ class TestSkillEaterAudioIntegration(unittest.TestCase):
 
     # ⚔️ 提案2: 基本戦闘SEテスト (Steps 9〜16)
     def test_combat_basic_attack_sounds(self):
-        p1 = CharacterState(id="p1", name="主人公", hp=100, max_hp=100, mp=50, max_mp=50, atk=20, defense=10, intelligence=10, speed=10)
-        e1 = CharacterState(id="e1", name="スライム", hp=15, max_hp=15, mp=0, max_mp=0, atk=5, defense=5, intelligence=5, speed=5)
+        p1 = CharacterState(
+            id="p1",
+            name="主人公",
+            hp=100,
+            max_hp=100,
+            mp=50,
+            max_mp=50,
+            atk=20,
+            defense=10,
+            intelligence=10,
+            speed=10,
+        )
+        e1 = CharacterState(
+            id="e1",
+            name="スライム",
+            hp=15,
+            max_hp=15,
+            mp=0,
+            max_mp=0,
+            atk=5,
+            defense=5,
+            intelligence=5,
+            speed=5,
+        )
 
         res = self.combat.execute_basic_attack(p1, e1)
         self.assertTrue(res.success)
@@ -67,33 +90,88 @@ class TestSkillEaterAudioIntegration(unittest.TestCase):
 
     # 🧬 提案3: 《喰らい》＆シナジーSEテスト (Steps 17〜24)
     def test_devour_and_synergy_sounds(self):
-        predator = CharacterState(id="p1", name="主人公", hp=100, max_hp=100, mp=50, max_mp=50, atk=10, defense=10, intelligence=10, speed=10, analysis_level=8)
-        
+        predator = CharacterState(
+            id="p1",
+            name="主人公",
+            hp=100,
+            max_hp=100,
+            mp=50,
+            max_mp=50,
+            atk=10,
+            defense=10,
+            intelligence=10,
+            speed=10,
+            analysis_level=8,
+        )
+
         # 1. 深度解析 (Step 22, 23: metalClick, metalLatch)
-        prey = CharacterState(id="e1", name="炎術士", hp=10, max_hp=50, mp=0, max_mp=0, atk=5, defense=5, intelligence=5, speed=5)
+        prey = CharacterState(
+            id="e1",
+            name="炎術士",
+            hp=10,
+            max_hp=50,
+            mp=0,
+            max_mp=0,
+            atk=5,
+            defense=5,
+            intelligence=5,
+            speed=5,
+        )
         prey.add_skill("com_magic_001")  # Fire
         scan_res = self.combat.analyze_target(predator, prey)
         self.assertIn("metalClick.ogg", scan_res.played_sounds)
         self.assertIn("metalLatch.ogg", scan_res.played_sounds)
 
         # 2. 喰らい発動＆成功 (Step 17, 18: clothBelt, handleSmallLeather2)
-        dev_res = self.combat.execute_devour(predator, prey, "com_magic_001", force_success=True)
+        dev_res = self.combat.execute_devour(
+            predator, prey, "com_magic_001", force_success=True
+        )
         self.assertTrue(dev_res.success)
         self.assertIn("clothBelt.ogg", dev_res.played_sounds)
         self.assertIn("handleSmallLeather2.ogg", dev_res.played_sounds)
 
         # 3. 2連喰らいで爆発シナジー (Step 20: metalPot1)
-        prey_wind = CharacterState(id="w1", name="風術士", hp=10, max_hp=50, mp=0, max_mp=0, atk=5, defense=5, intelligence=5, speed=5)
-        wind_skill = SkillDef(id="wind_01", name="突風", tier=SkillTier.COMMON, type=SkillType.ACTIVE, tags=["Wind"])
+        prey_wind = CharacterState(
+            id="w1",
+            name="風術士",
+            hp=10,
+            max_hp=50,
+            mp=0,
+            max_mp=0,
+            atk=5,
+            defense=5,
+            intelligence=5,
+            speed=5,
+        )
+        wind_skill = SkillDef(
+            id="wind_01",
+            name="突風",
+            tier=SkillTier.COMMON,
+            type=SkillType.ACTIVE,
+            tags=["Wind"],
+        )
         self.registry._skills["wind_01"] = wind_skill
         prey_wind.add_skill("wind_01")
 
-        dev_res2 = self.combat.execute_devour(predator, prey_wind, "wind_01", force_success=True)
+        dev_res2 = self.combat.execute_devour(
+            predator, prey_wind, "wind_01", force_success=True
+        )
         self.assertIn("metalPot1.ogg", dev_res2.played_sounds)
 
     # 🧪 提案4: 合成錬金SEテスト (Steps 25〜32)
     def test_synthesis_audio(self):
-        player = CharacterState(id="p1", name="主人公", hp=100, max_hp=100, mp=50, max_mp=50, atk=10, defense=10, intelligence=10, speed=10)
+        player = CharacterState(
+            id="p1",
+            name="主人公",
+            hp=100,
+            max_hp=100,
+            mp=50,
+            max_mp=50,
+            atk=10,
+            defense=10,
+            intelligence=10,
+            speed=10,
+        )
         player.add_skill("com_magic_001")
         player.add_skill("com_labor_002")
 
@@ -106,8 +184,26 @@ class TestSkillEaterAudioIntegration(unittest.TestCase):
 
     # 💰 提案5: 経済・闇市場SEテスト (Steps 33〜40)
     def test_economy_audio(self):
-        player = CharacterState(id="p1", name="主人公", hp=100, max_hp=100, mp=50, max_mp=50, atk=10, defense=10, intelligence=10, speed=10)
-        illegal_skill = SkillDef(id="ill_01", name="違法キメラ", tier=SkillTier.RARE, type=SkillType.ACTIVE, market_value=5000, is_illegal=True)
+        player = CharacterState(
+            id="p1",
+            name="主人公",
+            hp=100,
+            max_hp=100,
+            mp=50,
+            max_mp=50,
+            atk=10,
+            defense=10,
+            intelligence=10,
+            speed=10,
+        )
+        illegal_skill = SkillDef(
+            id="ill_01",
+            name="違法キメラ",
+            tier=SkillTier.RARE,
+            type=SkillType.ACTIVE,
+            market_value=5000,
+            is_illegal=True,
+        )
         self.registry._skills["ill_01"] = illegal_skill
         player.add_skill("ill_01")
 
@@ -125,10 +221,33 @@ class TestSkillEaterAudioIntegration(unittest.TestCase):
 
     # 🧳 提案6: 従属者移植＆自壊SEテスト (Steps 41〜48)
     def test_servant_audio(self):
-        player = CharacterState(id="p1", name="主人公", hp=100, max_hp=100, mp=50, max_mp=50, atk=10, defense=10, intelligence=10, speed=10)
+        player = CharacterState(
+            id="p1",
+            name="主人公",
+            hp=100,
+            max_hp=100,
+            mp=50,
+            max_mp=50,
+            atk=10,
+            defense=10,
+            intelligence=10,
+            speed=10,
+        )
         player.add_skill("com_combat_001")
 
-        husk = CharacterState(id="h1", name="空体", hp=10, max_hp=10, mp=0, max_mp=0, atk=5, defense=5, intelligence=5, speed=5, is_husk=True)
+        husk = CharacterState(
+            id="h1",
+            name="空体",
+            hp=10,
+            max_hp=10,
+            mp=0,
+            max_mp=0,
+            atk=5,
+            defense=5,
+            intelligence=5,
+            speed=5,
+            is_husk=True,
+        )
         servant = self.servant.capture_husk(husk)
 
         # 移植音 (beltHandle1)
@@ -138,7 +257,18 @@ class TestSkillEaterAudioIntegration(unittest.TestCase):
 
         # 寿命自壊 (cloth3, creak3)
         servant.duration_turns = 1
-        dummy_enemy = CharacterState(id="e1", name="敵", hp=100, max_hp=100, mp=0, max_mp=0, atk=5, defense=5, intelligence=5, speed=5)
+        dummy_enemy = CharacterState(
+            id="e1",
+            name="敵",
+            hp=100,
+            max_hp=100,
+            mp=0,
+            max_mp=0,
+            atk=5,
+            defense=5,
+            intelligence=5,
+            speed=5,
+        )
         res = self.servant.execute_servant_turn(servant, [dummy_enemy], [player])
         self.assertTrue(res.is_crumbled)
         self.assertIn("cloth3.ogg", res.played_sounds)
@@ -161,22 +291,46 @@ class TestSkillEaterAudioIntegration(unittest.TestCase):
     # 💻 提案8: メタ書き換え＆輪廻転生SEテスト (Steps 57〜64)
     def test_meta_override_and_reincarnation_audio(self):
         # 1. ハッキング (metalClick, metalLatch, bookOpen)
-        hacker = CharacterState(id="p1", name="主人公", hp=100, max_hp=100, mp=50, max_mp=50, atk=10, defense=10, intelligence=100, speed=10)
-        target = CharacterState(id="boss", name="ボス", hp=100, max_hp=100, mp=50, max_mp=50, atk=10, defense=10, intelligence=10, speed=10)
-        
+        hacker = CharacterState(
+            id="p1",
+            name="主人公",
+            hp=100,
+            max_hp=100,
+            mp=50,
+            max_mp=50,
+            atk=10,
+            defense=10,
+            intelligence=100,
+            speed=10,
+        )
+        target = CharacterState(
+            id="boss",
+            name="ボス",
+            hp=100,
+            max_hp=100,
+            mp=50,
+            max_mp=50,
+            atk=10,
+            defense=10,
+            intelligence=10,
+            speed=10,
+        )
+
         hack_res = self.combat.execute_hack(hacker, target)
         self.assertIn("metalClick.ogg", hack_res.played_sounds)
         self.assertIn("metalLatch.ogg", hack_res.played_sounds)
 
         # 2. 法則書き換え (bookFlip3, metalPot3, doorClose_4)
         self.rules.root_access_granted = True
-        self.rules.override_rule("damage_multiplier", 2.0, cost_type="MAX_HP", player=hacker)
+        self.rules.override_rule(
+            "damage_multiplier", 2.0, cost_type="MAX_HP", player=hacker
+        )
         sounds = self.audio.get_and_clear_played_sounds()
         self.assertIn("bookFlip3.ogg", sounds)
         self.assertIn("doorClose_4.ogg", sounds)
 
         # 3. 輪廻転生 (doorClose_3, bookClose, doorOpen_2, footstep00)
-        new_player, _ = self.reincarnation.process_reincarnation(hacker, [])
+        _new_player, _ = self.reincarnation.process_reincarnation(hacker, [])
         sounds_reinc = self.audio.get_and_clear_played_sounds()
         self.assertIn("doorClose_3.ogg", sounds_reinc)
         self.assertIn("bookClose.ogg", sounds_reinc)

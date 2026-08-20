@@ -3,43 +3,44 @@ skill_eater_presentation_system.py
 Aの世界（スキル喰い） 演出管理エンジン (Presentation System)
 提案1: Emote（画像）＋ Audio（効果音）の連動管理基盤 (Steps 1〜8)
 """
+from __future__ import annotations
 
-import os
+from dataclasses import dataclass
 from pathlib import Path
-from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
-from skill_eater_audio_system import SkillEaterAudioSystem, AUDIO_DIR
+
+from skill_eater_audio_system import SkillEaterAudioSystem
 
 # Step 2: 物理パス定数の定義
-EMOTE_DIR = Path("E:/narou2/emote/PNG/Vector/Style 1")
+EMOTE_DIR = Path(__file__).parents[0] / "assets/emote/pixel/style1"
 
 
 @dataclass
 class PresentationEvent:
     """Step 3: 演出イベント定義（画像、音声、メッセージ）"""
-    emote_file: Optional[str] = None
-    audio_file: Optional[str] = None
+
+    emote_file: str | None = None
+    audio_file: str | None = None
     message: str = ""
     duration_ms: int = 1000
 
 
 class SkillEaterPresentationSystem:
-    _instance: Optional["SkillEaterPresentationSystem"] = None
+    _instance: SkillEaterPresentationSystem | None = None
 
     def __init__(
         self,
-        emote_dir: Optional[Path] = None,
-        audio_system: Optional[SkillEaterAudioSystem] = None,
-        is_mock_only: bool = False
+        emote_dir: Path | None = None,
+        audio_system: SkillEaterAudioSystem | None = None,
+        is_mock_only: bool = False,
     ):
         self.emote_dir = emote_dir or EMOTE_DIR
         self.audio_system = audio_system or SkillEaterAudioSystem.get_instance()
-        self.event_queue: List[PresentationEvent] = []
+        self.event_queue: list[PresentationEvent] = []
         self.is_mock_only = is_mock_only
         self.is_enabled = True
 
     @classmethod
-    def get_instance(cls) -> "SkillEaterPresentationSystem":
+    def get_instance(cls) -> SkillEaterPresentationSystem:
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
@@ -58,10 +59,10 @@ class SkillEaterPresentationSystem:
 
     def add_event(
         self,
-        emote_file: Optional[str] = None,
-        audio_file: Optional[str] = None,
+        emote_file: str | None = None,
+        audio_file: str | None = None,
         message: str = "",
-        duration_ms: int = 1000
+        duration_ms: int = 1000,
     ) -> PresentationEvent:
         """
         Step 5 & Step 7: 演出イベントの発行
@@ -72,7 +73,7 @@ class SkillEaterPresentationSystem:
             emote_file=emote_file,
             audio_file=audio_file,
             message=message,
-            duration_ms=duration_ms
+            duration_ms=duration_ms,
         )
 
         if self.is_enabled:
@@ -82,7 +83,7 @@ class SkillEaterPresentationSystem:
 
         return evt
 
-    def get_and_clear_events(self) -> List[PresentationEvent]:
+    def get_and_clear_events(self) -> list[PresentationEvent]:
         """Step 6: イベントキューの取得とクリア"""
         events = list(self.event_queue)
         self.event_queue.clear()

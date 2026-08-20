@@ -3,37 +3,38 @@ skill_eater_audio_system.py
 Aの世界（スキル喰い） 音響エンジン・SE管理システム
 Phase 1: オーディオ基盤 (Kenney Foley / Sound Effect System)
 """
+from __future__ import annotations
 
-import os
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import Any
 
 # Step 2: 物理パス定数の定義
-AUDIO_DIR = Path("E:/narou2/audio/Audio")
+AUDIO_DIR = Path(__file__).parents[0] / "assets/audio"
 
 
 class SkillEaterAudioSystem:
-    _instance: Optional["SkillEaterAudioSystem"] = None
+    _instance: SkillEaterAudioSystem | None = None
 
-    def __init__(self, audio_dir: Optional[Path] = None, enable_real_audio: bool = True):
+    def __init__(self, audio_dir: Path | None = None, enable_real_audio: bool = True):
         self.audio_dir = audio_dir or AUDIO_DIR
-        self.played_sounds: List[str] = []
+        self.played_sounds: list[str] = []
         self.volume: float = 1.0
         self.is_muted: bool = False
         self.has_pygame: bool = False
-        self._sound_cache: Dict[str, Any] = {}
+        self._sound_cache: dict[str, Any] = {}
 
         # Step 5: pygame.mixerの安全な初期化試行
         if enable_real_audio:
             try:
                 import pygame
+
                 pygame.mixer.init()
                 self.has_pygame = True
             except Exception:
                 self.has_pygame = False
 
     @classmethod
-    def get_instance(cls) -> "SkillEaterAudioSystem":
+    def get_instance(cls) -> SkillEaterAudioSystem:
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
@@ -72,6 +73,7 @@ class SkillEaterAudioSystem:
 
         try:
             import pygame
+
             if sound_name not in self._sound_cache:
                 self._sound_cache[sound_name] = pygame.mixer.Sound(str(sound_path))
             snd = self._sound_cache[sound_name]
@@ -81,7 +83,7 @@ class SkillEaterAudioSystem:
         except Exception:
             return False
 
-    def get_and_clear_played_sounds(self) -> List[str]:
+    def get_and_clear_played_sounds(self) -> list[str]:
         """Step 8: 再生ログの取得とクリア（テスト・Result連携用）"""
         sounds = list(self.played_sounds)
         self.played_sounds.clear()
