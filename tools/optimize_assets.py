@@ -5,12 +5,11 @@ Applies various optimization techniques to reduce file sizes and improve perform
 """
 
 import os
+import sys
 import json
 import argparse
-from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, List
 import shutil
-import subprocess
 import time
 
 
@@ -346,7 +345,7 @@ def save_optimization_results(results: Dict, output_path: str) -> bool:
         return False
 
 
-def print_optimization_summary(results: Dict):
+def print_optimization_summary(results: Dict, verbose: bool = False):
     """Print a formatted summary of the optimization results."""
     print(f"\n{'='*70}")
     print(f"ASSET OPTIMIZATION RESULTS")
@@ -370,7 +369,7 @@ def print_optimization_summary(results: Dict):
         print(f"    Space Saved: {result.get('space_saved_bytes', 0)} bytes ({result.get('space_saved_bytes', 0) / (1024*1024):.2f} MB)")
         print(f"    Errors: {len(result.get('errors', []))}")
         
-        if result.get('errors') and args.verbose:
+        if result.get('errors') and verbose:
             print(f"    Error Details:")
             for error in result['errors'][:3]:
                 print(f"      - {error}")
@@ -442,7 +441,7 @@ def main():
         print(json.dumps(results, indent=2))
     else:
         # Print formatted summary
-        print_optimization_summary(results)
+        print_optimization_summary(results, verbose=args.verbose)
     
     sys.exit(0)
 

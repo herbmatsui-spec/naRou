@@ -84,3 +84,7 @@ class TurnQueue:
             self.time_system.pass_ticks(10)
 
         return None, ticks_elapsed
+
+    def process(self, engine: Any, delta_time: float = 1.0) -> None:
+        """Process turn queue update in continuous game loop."""
+        pass

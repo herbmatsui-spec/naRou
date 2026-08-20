@@ -52,10 +52,13 @@ class RenderSystem:
 
     @classmethod
     def render_all(cls, console: tcod.console.Console, context: RenderContext) -> None:
-        """ゲーム画面全体の描画"""
         # Compute camera offset and lighting once for all rendering passes
-        cam_x = max(0, min(MAP_WIDTH - VIEW_WIDTH, context.player.x - VIEW_WIDTH // 2))
-        cam_y = max(0, min(MAP_HEIGHT - VIEW_HEIGHT, context.player.y - VIEW_HEIGHT // 2))
+        p = context.player
+        s = context.survival
+        ui_y = VIEW_HEIGHT
+        is_starving = s.hunger <= 2000
+        cam_x = max(0, min(MAP_WIDTH - VIEW_WIDTH, p.x - VIEW_WIDTH // 2))
+        cam_y = max(0, min(MAP_HEIGHT - VIEW_HEIGHT, p.y - VIEW_HEIGHT // 2))
         light_sources = DynamicLighting.get_light_sources_for_engine(context)
         
         # Delegate map rendering to MapRenderer

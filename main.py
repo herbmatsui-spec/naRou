@@ -2,6 +2,15 @@ import subprocess
 import sys
 import os
 
+from pathlib import Path
+try:
+    import pydantic
+except ImportError:
+    _stubs = Path(__file__).resolve().parent / "stubs"
+    if str(_stubs) not in sys.path:
+        sys.path.insert(0, str(_stubs))
+
+
 def run_script(script_name):
     if os.path.exists(script_name):
         print(f"\n--- {script_name} を実行しています ---")

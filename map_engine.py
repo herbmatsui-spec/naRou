@@ -14,6 +14,7 @@ from pathlib import Path
 from constants import (
     TILE_STAIRS_DOWN, TILE_STAIRS_UP
 )
+from feature_flags import is_enabled
 
 # ワールドレイヤーシステムのインポート（オプション）
 try:
@@ -225,6 +226,9 @@ class GameMap:
         # タイルバリアント（オートタイル用）の追跡
         self.tile_variants: Dict[Tuple[int, int], int] = {}
 
+        # Room decorations (TR_DECOR variants)
+        self.decorations: Dict[Tuple[int, int], str] = {}
+
         # 松明（光源）位置 — ダイナミックライティング用 (Phase 2-A)
         self.torch_positions: List[Tuple[int, int]] = []
 
@@ -259,20 +263,40 @@ class GameMap:
         return self.tiles[x][y] != "TILE_WALL"
 
     def create_room(self, room: RectRoom) -> None:
-        """部屋の内部を床にする"""
+        """部屋の内部を床にする (Tiny Rogue variants randomization)"""
         for x in range(room.x1 + 1, room.x2):
             for y in range(room.y1 + 1, room.y2):
                 self.tiles[x][y] = "TILE_FLOOR"
+                # Random floor variant for visual variety (Tiny Rogue has 12 variants)
+                if is_enabled("ENABLE_TINY_ROGUE_GFX"):
+                    variant = random.randint(0, 11)
+                    self.tile_variants[(x, y)] = variant
+                else:
+                    self.tile_variants[(x, y)] = 0
+
+        # Place random decorations in room (10% chance per room)
+        if is_enabled("ENABLE_TINY_ROGUE_GFX") and random.random() < 0.1:
+            decor_x = random.randint(room.x1 + 1, room.x2 - 1)
+            decor_y = random.randint(room.y1 + 1, room.y2 - 1)
+            if self.tiles[decor_x][decor_y] == "TILE_FLOOR":
+                # Pick a random decor variant from the 12 available
+                decor_variant = random.randint(1, 12)
+                self.decorations = getattr(self, 'decorations', {})
+                self.decorations[(decor_x, decor_y)] = f"TR_DECOR_{decor_variant:02d}"
 
     def create_h_tunnel(self, x1: int, x2: int, y: int) -> None:
         """水平方向の通路を作る (ステップ22)"""
         for x in range(min(x1, x2), max(x1, x2) + 1):
             self.tiles[x][y] = "TILE_FLOOR"
+            if is_enabled("ENABLE_TINY_ROGUE_GFX"):
+                self.tile_variants[(x, y)] = random.randint(0, 11)
 
     def create_v_tunnel(self, y1: int, y2: int, x: int) -> None:
         """垂直方向の通路を作る (ステップ22)"""
         for y in range(min(y1, y2), max(y1, y2) + 1):
             self.tiles[x][y] = "TILE_FLOOR"
+            if is_enabled("ENABLE_TINY_ROGUE_GFX"):
+                self.tile_variants[(x, y)] = random.randint(0, 11)
 
     def generate_dungeon(
         self,

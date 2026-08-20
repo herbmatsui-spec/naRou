@@ -4,7 +4,6 @@ Performance Monitor for naRou
 Handles CPU, memory, disk I/O, network, and response time monitoring.
 """
 
-import os
 import time
 import psutil
 import threading

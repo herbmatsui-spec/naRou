@@ -4,8 +4,6 @@ Generate TileDef entries for tiny_rogue tiles and merge into tileset_def.json.
 Reads the actual atlas metadata to know which tile IDs exist.
 """
 import json
-import csv
-import re
 from pathlib import Path
 
 DEF_PATH = Path("assets/tiles/tileset_def.json")

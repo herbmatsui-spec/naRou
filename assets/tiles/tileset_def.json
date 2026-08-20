@@ -1663,6 +1663,492 @@
       "states": [
         "idle"
       ]
+    },
+    "TR_MONSTER_04": {
+      "file": "TR_MONSTER_04",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_05": {
+      "file": "TR_MONSTER_05",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_06": {
+      "file": "TR_MONSTER_06",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_07": {
+      "file": "TR_MONSTER_07",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_08": {
+      "file": "TR_MONSTER_08",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_09": {
+      "file": "TR_MONSTER_09",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_10": {
+      "file": "TR_MONSTER_10",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_11": {
+      "file": "TR_MONSTER_11",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_12": {
+      "file": "TR_MONSTER_12",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_VAR_04": {
+      "file": "TR_MONSTER_VAR_04",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_VAR_05": {
+      "file": "TR_MONSTER_VAR_05",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_VAR_06": {
+      "file": "TR_MONSTER_VAR_06",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_VAR_07": {
+      "file": "TR_MONSTER_VAR_07",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_VAR_08": {
+      "file": "TR_MONSTER_VAR_08",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_VAR_09": {
+      "file": "TR_MONSTER_VAR_09",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_VAR_10": {
+      "file": "TR_MONSTER_VAR_10",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_VAR_11": {
+      "file": "TR_MONSTER_VAR_11",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_VAR_12": {
+      "file": "TR_MONSTER_VAR_12",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_PLAYER_04": {
+      "file": "TR_PLAYER_04",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_PLAYER_05": {
+      "file": "TR_PLAYER_05",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_PLAYER_06": {
+      "file": "TR_PLAYER_06",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_PLAYER_07": {
+      "file": "TR_PLAYER_07",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_PLAYER_08": {
+      "file": "TR_PLAYER_08",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_PLAYER_09": {
+      "file": "TR_PLAYER_09",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_PLAYER_10": {
+      "file": "TR_PLAYER_10",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_PLAYER_11": {
+      "file": "TR_PLAYER_11",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_PLAYER_12": {
+      "file": "TR_PLAYER_12",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
     }
   }
 }

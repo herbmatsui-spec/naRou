@@ -2,8 +2,9 @@
 Map Renderer Module - Handles map tile rendering with pixel art and fallback
 """
 from __future__ import annotations
-from typing import Optional
+from typing import Optional, List
 import tcod
+import math
 
 from constants import (
     SCREEN_WIDTH, SCREEN_HEIGHT, MAP_WIDTH, MAP_HEIGHT, VIEW_WIDTH, VIEW_HEIGHT,
@@ -18,6 +19,83 @@ from ui_fx_systems import (
 from render_context import RenderContext
 from crafting_system import ResourceNode
 from map_engine import TILE_REGISTRY
+from feature_flags import is_enabled
+
+
+class ParallaxBackground:
+    """パララックス背景レイヤー (Tiny Rogue tilemap_packed.png使用)"""
+    
+    _layer_images: List[tcod.image.Image] = []
+    _layer_speeds: List[float] = [0.05, 0.1, 0.2, 0.3]  # 背景ほど遅く動く
+    _layer_offsets: List[float] = [0.0, 0.0, 0.0, 0.0]
+    _initialized: bool = False
+    
+    @classmethod
+    def initialize(cls) -> None:
+        if cls._initialized:
+            return
+        try:
+            # Load tilemap_packed.png as parallax layers
+            # The tilemap is 192x176, we can slice it into horizontal bands
+            tilemap = tcod.image.Image.load("assets/tiles/tiny_rogue/tilemap_packed.png")
+            tw, th = tilemap.width, tilemap.height
+            
+            # Create 4 layers by slicing the tilemap vertically
+            band_height = th // 4
+            for i in range(4):
+                layer_img = tcod.image.Image(tw, band_height)
+                # Blit portion of tilemap
+                tilemap.blit(
+                    layer_img,
+                    0, 0,
+                    0, i * band_height,
+                    tw, band_height
+                )
+                cls._layer_images.append(layer_img)
+            
+            cls._initialized = True
+        except Exception:
+            # Fallback: create simple gradient layers
+            cls._layer_images = []
+            for i in range(4):
+                img = tcod.image.Image(VIEW_WIDTH, VIEW_HEIGHT // 4)
+                for y in range(VIEW_HEIGHT // 4):
+                    intensity = 30 + i * 20 + y * 2
+                    for x in range(VIEW_WIDTH):
+                        img.put_pixel(x, y, (intensity, intensity + 10, intensity + 20))
+                cls._layer_images.append(img)
+            cls._initialized = True
+    
+    @classmethod
+    def update(cls, cam_x: float, cam_y: float, dt: float = 1.0/60) -> None:
+        if not cls._initialized:
+            cls.initialize()
+        for i in range(len(cls._layer_images)):
+            cls._layer_offsets[i] += cls._layer_speeds[i] * cam_x * dt
+    
+    @classmethod
+    def render(cls, console: tcod.console.Console, cam_x: float, cam_y: float) -> None:
+        if not cls._initialized:
+            cls.initialize()
+        
+        if not cls._layer_images:
+            return
+        
+        for i, layer_img in enumerate(cls._layer_images):
+            # Calculate scroll offset
+            offset_x = int(cls._layer_offsets[i]) % layer_img.width
+            offset_y = (i * VIEW_HEIGHT // 4)
+            
+            # Render layer with wrapping
+            tile_w = layer_img.width
+            for tx in range(-1, VIEW_WIDTH // tile_w + 2):
+                draw_x = tx * tile_w - offset_x
+                if -tile_w <= draw_x < SCREEN_WIDTH:
+                    layer_img.blit(
+                        console,
+                        draw_x, offset_y,
+                        0, 0, tile_w, layer_img.height
+                    )
 
 
 class MapRenderer:
@@ -64,6 +142,10 @@ class MapRenderer:
         # 動的ライティング用光源取得 - 呼び出し側から提供されない場合は内部で計算
         if light_sources is None:
             light_sources = DynamicLighting.get_light_sources_for_engine(context)
+
+        # Render parallax background (if enabled)
+        if use_pixel_art and is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            ParallaxBackground.render(console, cam_x, cam_y)
 
         for vx in range(VIEW_WIDTH):
             for vy in range(VIEW_HEIGHT):
@@ -112,9 +194,28 @@ class MapRenderer:
                             # Apply lighting as a simple brightness adjustment
                             # Calculate average brightness of light color
                             brightness = (lit_col[0] + lit_col[1] + lit_col[2]) / (3 * 255.0)
+                            
+                            # Ambient occlusion for walls: darken corners/edges
+                            if tile_id in ("TILE_WALL", "TR_WALL_01", "TR_WALL_02", "TR_WALL_03", "TR_WALL_04", 
+                                          "TR_WALL_05", "TR_WALL_06", "TR_WALL_07", "TR_WALL_08", "TR_WALL_09",
+                                          "TR_WALL_10", "TR_WALL_11", "TR_WALL_12"):
+                                # Check 4 neighbors for AO
+                                ao_factor = 1.0
+                                wall_neighbors = 0
+                                for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
+                                    nx, ny = map_x + dx, map_y + dy
+                                    if 0 <= nx < MAP_WIDTH and 0 <= ny < MAP_HEIGHT:
+                                        nt = context.game_map.tiles[nx][ny]
+                                        if nt in ("TILE_WALL", "TR_WALL_01", "TR_WALL_02", "TR_WALL_03", "TR_WALL_04", 
+                                                  "TR_WALL_05", "TR_WALL_06", "TR_WALL_07", "TR_WALL_08", "TR_WALL_09",
+                                                  "TR_WALL_10", "TR_WALL_11", "TR_WALL_12"):
+                                            wall_neighbors += 1
+                                # Darken based on how many wall neighbors (more neighbors = darker corner)
+                                ao_factor = max(0.6, 1.0 - wall_neighbors * 0.1)
+                                brightness *= ao_factor
+                            
+                            # Apply lighting as a simple brightness adjustment
                             # Apply as a multiply blend (darken if dark, brighten if bright)
-                            # For simplicity, we'll just draw a tinted rectangle with adjusted alpha
-                            # This gives a basic lighting effect
                             if brightness > 0.5:  # Bright light - additively blend
                                 blend_factor = min(1.0, brightness * 0.5)
                                 r = min(255, int(255 * blend_factor + lit_col[0] * (1 - blend_factor)))

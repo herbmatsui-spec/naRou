@@ -10,6 +10,13 @@ from pathlib import Path
 from typing import Dict, Tuple, Optional, List, Any
 import json
 
+# Import animated tile registration
+try:
+    from core.animated_tile import register_animated_tiles
+except ImportError:
+    def register_animated_tiles(tile_atlas):
+        pass
+
 
 @dataclass
 class TileUV:
@@ -134,6 +141,9 @@ class TileAtlas:
             if meta_path.exists():
                 with open(meta_path) as f:
                     self.atlas_meta[scale] = json.load(f)
+
+        # 3. Register animated tiles (water, lava, etc.)
+        register_animated_tiles(self)
 
     def get_uv(
         self,

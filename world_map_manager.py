@@ -10,6 +10,7 @@ from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
 
 from world_layer import WorldLayer
+from map_engine import GameMap
 
 
 @dataclass

@@ -16,21 +16,27 @@ class AchievementRepository(CachedRepository[Achievement, str]):
     
     def _build_indexes(self):
         for ach in self._data.values():
-            if ach.condition and ach.condition.type:
-                self._by_type.setdefault(ach.condition.type, []).append(ach)
+            cond = ach.condition
+            if cond:
+                c_type = getattr(cond, "type", None)
+                if c_type is None and isinstance(cond, dict):
+                    c_type = cond.get("type")
+                if c_type:
+                    c_val = getattr(c_type, "value", str(c_type))
+                    self._by_type.setdefault(c_val, []).append(ach)
             if ach.hidden:
                 self._hidden.append(ach)
     
-    def get_by_condition_type(self, cond_type: str) -> list[AchievementDefinition]:
+    def get_by_condition_type(self, cond_type: str) -> list[Achievement]:
         return self._by_type.get(cond_type, [])
     
-    def get_visible(self) -> list[AchievementDefinition]:
+    def get_visible(self) -> list[Achievement]:
         return [a for a in self._data.values() if not a.hidden]
     
-    def get_hidden(self) -> list[AchievementDefinition]:
+    def get_hidden(self) -> list[Achievement]:
         return self._hidden[:]
     
-    def get_by_reward_type(self, reward_type: str) -> list[AchievementDefinition]:
+    def get_by_reward_type(self, reward_type: str) -> list[Achievement]:
         result = []
         for ach in self._data.values():
             if reward_type == "title" and ach.reward_title or reward_type == "gold" and ach.reward_gold or reward_type == "item" and ach.reward_item or reward_type == "skill_point" and ach.reward_skill_points:
@@ -47,17 +53,20 @@ class AchievementRepository(CachedRepository[Achievement, str]):
 class TitleRepository(CachedRepository[Title, str]):
     """称号・リポジトリ"""
     
-    def __init__(self, titles: dict[str, TitleDefinition]):
+    def __init__(self, titles: dict[str, Title]):
         super().__init__(titles)
-        self._by_category: dict[str, list[TitleDefinition]] = {}
-        self._hidden: list[TitleDefinition] = []
+        self._by_category: dict[str, list[Title]] = {}
+        self._hidden: list[Title] = []
         self._build_indexes()
     
     def _build_indexes(self):
         for title in self._data.values():
-            self._by_category.setdefault(title.category, []).append(title)
+            cat = getattr(title.category, "value", str(title.category)) if title.category else ""
+            if cat:
+                self._by_category.setdefault(cat, []).append(title)
             if title.is_hidden:
                 self._hidden.append(title)
+
     
     def get_by_category(self, category: str) -> list[TitleDefinition]:
         return self._by_category.get(category, [])

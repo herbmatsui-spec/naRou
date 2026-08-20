@@ -4,15 +4,14 @@ Palette Unifier for naRou
 Unifies asset palettes to match the game's master palette from design_tokens.json.
 """
 
-import os
 import json
 import argparse
 from pathlib import Path
-from typing import List, Tuple, Dict, Optional
+from typing import List, Tuple, Optional
 import logging
 
 try:
-    from PIL import Image
+    import PIL
     PIL_AVAILABLE = True
 except ImportError:
     PIL_AVAILABLE = False
@@ -158,9 +157,12 @@ class PaletteUnifier:
         
         try:
             with open(output_path, 'w') as f:
-            f.write("# Placeholder for palette-unified asset\n")
-        logger.info(f"Created placeholder: {output_path}")
-        return True
+                f.write("# Placeholder for palette-unified asset\n")
+            logger.info(f"Created placeholder: {output_path}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to unify palette: {e}")
+            return False
 
 def main():
     parser = argparse.ArgumentParser(description='Unify asset palettes to master palette')

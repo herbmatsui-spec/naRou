@@ -11,6 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Callable
 from dataclasses import dataclass, asdict
+from tools.performance_monitor import PerformanceMonitor
 
 @dataclass
 class OptimizationResult:

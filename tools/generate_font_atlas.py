@@ -8,7 +8,7 @@ import os
 import json
 import argparse
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict
 from PIL import Image, ImageDraw, ImageFont
 
 
