@@ -5,6 +5,8 @@ Step 6: Event-driven relationship updates
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import time
 from collections import defaultdict
 from collections.abc import Callable
@@ -203,6 +205,7 @@ class RelationshipEventHandler:
                     handler(event_data)
                 except Exception as e:
                     print(f"Error in custom event handler for {event_type}: {e}")
+                    logger.exception("Unhandled exception")
             # カスタムハンドラーが処理した場合は標準処理をスキップ
             if self._custom_event_handlers[event_type]:
                 return
@@ -259,6 +262,7 @@ class RelationshipEventHandler:
                 )
 
         except Exception as e:
+            logger.exception("Unhandled exception")
             print(f"Error processing relationship event {event_type}: {e}")
 
     def _enrich_context(

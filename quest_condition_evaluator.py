@@ -5,6 +5,8 @@ AST評価エンジン：プレイヤー/ワールド状態 → bool
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
@@ -382,6 +384,7 @@ if __name__ == "__main__":
                 else:
                     print(f"✗ {condition_str:<35} => {result} (expected {expected})")
             except Exception as e:
+                logger.exception("Unhandled exception")
                 print(f"✗ {condition_str:<35} => ERROR: {e}")
 
     print(f"\n結果: {passed}/{total} 成功")

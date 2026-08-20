@@ -11,6 +11,8 @@ Elona Roguelike - UI & Visual FX Systems (Phases 2 - 8)
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import math
 import random
 from dataclasses import dataclass
@@ -524,6 +526,7 @@ class TutorialManager:
                     action_required=gdata.get("action_required", ""),
                 )
         except Exception as e:
+            logger.exception("Unhandled exception")
             print(f"[TutorialManager] Failed to load {self.file_path}: {e}")
 
     def check_triggers(

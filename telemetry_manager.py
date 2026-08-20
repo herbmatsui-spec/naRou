@@ -18,6 +18,8 @@ Key capabilities:
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import json
 import os
 import platform
@@ -105,6 +107,7 @@ class TelemetryManager:
             except Exception:
         # TODO: handle exception properly
                 self._queue = []
+                logger.exception("Unhandled exception")
 
     # ----- step 50: performance -----
     def track_performance(self, metrics: dict[str, Any]) -> None:
@@ -127,6 +130,7 @@ class TelemetryManager:
             return True
         except Exception:
         # TODO: handle exception properly
+            logger.exception("Unhandled exception")
             return False
 
     # ----- step 48 / 49: exception handling + crash send -----
@@ -196,6 +200,7 @@ def get_telemetry_manager() -> TelemetryManager:
 
         enabled = get_config_manager().get_telemetry_enabled()
     except Exception:
+        logger.exception("Unhandled exception")
         # TODO: handle exception properly
         enabled = False
     mgr = TelemetryManager()

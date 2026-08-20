@@ -3,6 +3,8 @@
 """
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import os
 from dataclasses import dataclass
 from typing import Any
@@ -46,6 +48,7 @@ class InheritanceRegistry:
                     always_keep = inh.get("always_keep", [])
                     selective_rules = inh.get("selective_keep", {})
             except Exception:
+                logger.exception("Unhandled exception")
                 # TODO: handle exception properly
                 pass
 

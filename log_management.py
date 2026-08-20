@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import argparse
 import gzip
 import json
@@ -191,6 +193,7 @@ class LogManager:
                                     }
                                 )
                 except Exception as e:
+                    logger.exception("Unhandled exception")
                     print(f"Error reading {log_file}: {e}")
 
         return matches

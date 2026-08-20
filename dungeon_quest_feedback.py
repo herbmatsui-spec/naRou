@@ -5,6 +5,8 @@ Dungeon Quest Feedback Module (偏執的クエストシステム / 設計書 Pha
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
@@ -298,6 +300,7 @@ class DungeonQuestPipeline:
 
                     return build_dungeon_spec_from_yaml(spec_data)
         except Exception:
+            logger.exception("Unhandled exception")
             # TODO: handle exception properly
             pass
         return None

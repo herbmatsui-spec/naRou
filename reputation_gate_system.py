@@ -5,6 +5,8 @@ Reputation Gate System Module (偏執的クエストシステム / 設計書 Pha
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum, auto
@@ -229,6 +231,7 @@ class ReputationGate:
             elif action == GateAction.CUSTOM:
                 return self._custom_action(target, player, params)
         except Exception:
+            logger.exception("Unhandled exception")
             # Log failure and return False
             return False
 

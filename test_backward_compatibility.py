@@ -5,6 +5,8 @@
 """
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 from map_engine import GameMap
 from world_layer import WorldLayer
 
@@ -53,6 +55,7 @@ def test_backward_compatibility():
         print("   ✓ 後方互換性メカニズムが動作中")
     except Exception as e:
         print(f"   エラー: {e}")
+        logger.exception("Unhandled exception")
     print()
 
     print("3. 基本マップ機能テスト")
@@ -80,6 +83,7 @@ def test_backward_compatibility():
         )
         print("   ✓ 基本マップ機能が動作中")
     except Exception as e:
+        logger.exception("Unhandled exception")
         print(f"   エラー in 基本マップ機能: {e}")
     print()
 

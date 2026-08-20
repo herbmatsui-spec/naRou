@@ -6,6 +6,8 @@ memory_fragments.yaml と story_endings.yaml を truth_codex 経由で連携し�
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import os
 import random
 from typing import Any
@@ -22,6 +24,7 @@ except Exception:
         # 循環防止（通常は存在）
     ReincarnationComponent = None
 
+    logger.exception("Unhandled exception")
 DATA_DIR = "data"
 
 
@@ -80,6 +83,7 @@ class ArchaeologyRegistry:
             print(f"[ArchaeologyRegistry] Failed to load {filename}: {e}")
             return None
 
+            logger.exception("Unhandled exception")
     # ---------- 取得 ----------
     def get_fragment(self, fid: str) -> dict[str, Any] | None:
         return self._fragments.get(fid)
@@ -207,6 +211,7 @@ class ArchaeologyManager(BaseSystem):
             except Exception:
                 # TODO: handle exception properly
                 pass
+                logger.exception("Unhandled exception")
         if engine and hasattr(engine, "log"):
             engine.log(
                 f"⛏【発掘】記憶の欠片『{frag.get('name', fragment_id) if frag else fragment_id}』を出土した！",
@@ -254,6 +259,7 @@ class ArchaeologyManager(BaseSystem):
             SoundManager.play_se(name)
         except Exception:
             # TODO: handle exception properly
+            logger.exception("Unhandled exception")
             pass
 
     # ---------- Step 19: 解読 ----------
@@ -356,6 +362,7 @@ class ArchaeologyManager(BaseSystem):
                 int(player.ending_progress.get(ending_id, 0)), 1
             )
         except Exception:
+            logger.exception("Unhandled exception")
             # TODO: handle exception properly
             pass
         if engine and hasattr(engine, "log"):

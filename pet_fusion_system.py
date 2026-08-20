@@ -6,6 +6,8 @@ Steps 59-64
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import random
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -87,6 +89,7 @@ class PetFusionRegistry:
                 self._recipes[fid] = recipe
             self._loaded = True
         except Exception:
+            logger.exception("Unhandled exception")
             # TODO: handle exception properly
             self._loaded = True
 

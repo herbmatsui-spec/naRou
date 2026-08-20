@@ -6,6 +6,8 @@ story_choices.yaml / story_endings.yaml 連携（Step 16）。
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import os
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
@@ -548,6 +550,7 @@ class NarrativeExecutor:
             self._active_states[player_id] = state
             return True
         except Exception:
+            logger.exception("Unhandled exception")
             # If deserialization fails, indicate failure
             return False
 

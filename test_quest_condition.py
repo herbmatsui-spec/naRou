@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 """Simple test for the quest condition system"""
 
 import os
@@ -125,6 +127,7 @@ def test_condition_system():
             else:
                 print(f"✗ {condition_str:<55} => {result} (expected {expected})")
         except Exception as e:
+            logger.exception("Unhandled exception")
             import traceback
 
             print(f"✗ {condition_str:<55} => ERROR: {e}")

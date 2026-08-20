@@ -5,6 +5,8 @@ Steps 37-45: 属性耐性, 詠唱失敗率, AoEパターン, Faction/Aggro, 出�
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import random
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -346,6 +348,7 @@ class CombatSystem:
             return skill_id in data.get("exclusive_skills", {})
         except Exception:
             # TODO: handle exception properly
+            logger.exception("Unhandled exception")
             return False
 
     @staticmethod
@@ -363,6 +366,7 @@ class CombatSystem:
                 data = yaml.safe_load(f) or {}
             return data.get("exclusive_skills", {}).get(skill_id)
         except Exception:
+            logger.exception("Unhandled exception")
             # TODO: handle exception properly
             return None
 

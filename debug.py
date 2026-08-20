@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import argparse
 import os
 import subprocess
@@ -32,16 +34,19 @@ def debug_imports():
     except Exception as e:
         print(f"entity: FAILED - {e}")
         traceback.print_exc()
+        logger.exception("Unhandled exception")
 
     try:
         print("systems: OK")
     except Exception as e:
         print(f"systems: FAILED - {e}")
+        logger.exception("Unhandled exception")
         traceback.print_exc()
 
     try:
         print("game: OK")
     except Exception as e:
+        logger.exception("Unhandled exception")
         print(f"game: FAILED - {e}")
         traceback.print_exc()
 

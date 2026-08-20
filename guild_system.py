@@ -6,6 +6,8 @@ Steps 15-23, 46-48
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -70,6 +72,7 @@ class GuildRegistry:
                     self._guilds[gid] = guild
             except Exception:
                 # TODO: handle exception properly
+                logger.exception("Unhandled exception")
                 pass
 
         p_rewards = Path(rewards_path)
@@ -79,6 +82,7 @@ class GuildRegistry:
                     data = yaml.safe_load(f) or {}
                 self._rewards = data.get("guild_rewards", {})
             except Exception:
+                logger.exception("Unhandled exception")
                 # TODO: handle exception properly
                 pass
 

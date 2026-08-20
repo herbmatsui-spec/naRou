@@ -5,6 +5,8 @@ World Event Hooks Module (偏執的クエストシステム / 設計書 Phase 9 
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 from collections.abc import Callable
 
 from world_event_system import WorldEvent, WorldEventSystem, WorldEventType
@@ -62,6 +64,7 @@ class EventMonitor:
             try:
                 handler(event)
             except Exception as e:
+                logger.exception("Unhandled exception")
                 # エラーはログに記録するが、監視を停止しない
                 print(f"[EventMonitor Error] Handler for {event_type} failed: {e}")
 

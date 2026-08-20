@@ -867,3 +867,27 @@ def set_selected_renderer(renderer: str) -> None:
 def get_capabilities() -> dict:
     """Step 66: 検出結果と選択レンダラを返す。"""
     return {"detected": _DETECTED_GRAPHICS, "selected": _SELECTED_RENDERER}
+
+
+if __name__ == "__main__":
+    # テスト用: モックエンジンでサーバー起動
+    class MockEngine:
+        player = None
+        pet = None
+        entities = []
+        items_on_ground = []
+        floating_texts = []
+        particles = []
+        game_map = None
+        message_log = type('MockLog', (), {'history': []})()
+        turns = 0
+        dungeon_level = 1
+
+    server = start_web_server(MockEngine(), port=8080)
+    if server:
+        print("Web server started on port 8080")
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            print("\nShutting down...")
+            server.shutdown()

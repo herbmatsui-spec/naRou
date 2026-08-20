@@ -3,6 +3,8 @@
 """
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import os
 from dataclasses import dataclass
 from typing import Any
@@ -58,6 +60,7 @@ class KarmaRegistry:
                     if "actions" in k:
                         actions.update(k["actions"])
             except Exception:
+                logger.exception("Unhandled exception")
                 # TODO: handle exception properly
                 pass
 

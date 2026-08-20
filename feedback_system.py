@@ -5,6 +5,8 @@ Handles collecting and storing feedback after world events.
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import json
 import os
 from datetime import datetime
@@ -40,6 +42,7 @@ class FeedbackSystem:
             return True
         except Exception as e:
             print(f"Failed to submit feedback: {e}")
+            logger.exception("Unhandled exception")
             return False
 
     def get_feedback_for_event(self, event_id: str) -> list:
@@ -60,6 +63,7 @@ class FeedbackSystem:
                         data = json.load(f)
                         feedbacks.append(data)
                 except Exception as e:
+                    logger.exception("Unhandled exception")
                     print(f"Failed to read feedback file {filename}: {e}")
         return feedbacks
 

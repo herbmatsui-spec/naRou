@@ -5,6 +5,8 @@ Step 11: Betrayal and conflict mechanics
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import random
 import time
 from collections import defaultdict
@@ -570,6 +572,7 @@ class BetrayalConflictSystem:
             try:
                 handler(event_type, data)
             except Exception as e:
+                logger.exception("Unhandled exception")
                 print(f"Error in betrayal event handler: {e}")
 
     def get_betrayal_statistics(self) -> dict[str, Any]:

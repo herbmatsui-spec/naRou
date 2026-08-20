@@ -5,6 +5,8 @@ Handles the rendering and interaction of the Adventurer's Journal.
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 from typing import Any
 
 import tcod
@@ -234,6 +236,7 @@ class JournalUI:
                     )
                     current_y += 1
             except Exception:
+                logger.exception("Unhandled exception")
                 # TODO: handle exception properly
                 pass
 

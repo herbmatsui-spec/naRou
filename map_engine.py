@@ -6,6 +6,8 @@ Vertical World Extension: Steps 13-18
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import json
 import math
 import random
@@ -593,6 +595,7 @@ class GameMap:
                 b = int(base_color[2] * 0.8 + fc[2] * 0.2)
                 return (min(255, r), min(255, g), min(255, b))
         except Exception:
+            logger.exception("Unhandled exception")
             # If faction lookup fails, just return the base color
             pass
         return base_color

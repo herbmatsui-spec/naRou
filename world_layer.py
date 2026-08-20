@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import os
 from dataclasses import dataclass, field
 from typing import Any
@@ -70,6 +72,7 @@ class WorldLayer:
             else:
                 self.theme_data = self._get_default_theme()
         except Exception as e:
+            logger.exception("Unhandled exception")
             print(
                 f"テーマロードエラー ({self.zone}:{self.biome}:{self.depth}:{self.dimension}): {e}"
             )

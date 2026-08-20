@@ -5,6 +5,8 @@ Step 17: Integration with world state system
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
@@ -196,6 +198,7 @@ class WorldStateRelationshipIntegration:
                 )
             except Exception:
                 # TODO: handle exception properly
+                logger.exception("Unhandled exception")
                 pass
 
         return results
@@ -445,6 +448,7 @@ class WorldStateRelationshipIntegration:
                 try:
                     self.world_state_manager.set_variable(None, key, severity)
                 except Exception:
+                    logger.exception("Unhandled exception")
                     # TODO: handle exception properly
                     pass
 

@@ -5,6 +5,8 @@ Steps 2, 4, 7, 9, 20, 21, 24, 25 (Bresenham & A* Pathfinding)
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import heapq
 import math
 from collections.abc import Callable
@@ -146,6 +148,7 @@ class EventBus:
                 try:
                     cb(data)
                 except Exception as e:
+                    logger.exception("Unhandled exception")
                     import logging
 
                     logging.getLogger("EventBus").error(

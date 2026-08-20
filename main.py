@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import importlib.util
 import os
 import subprocess
@@ -28,6 +30,7 @@ def prompt_accessibility():
     except Exception:
         # TODO: handle exception properly
 
+        logger.exception("Unhandled exception")
         return
 
     print("\n--- アクセシビリティ設定（Enter で現在値を維持）---")
@@ -61,6 +64,7 @@ def start_web_backend(open_browser: bool = False, port: int = 8080):
         return srv
     except Exception as exc:  # noqa: BLE001 - バックエンド起動失敗は致命的ではない
         print(f"Web バックエンド起動に失敗しました: {exc}")
+        logger.exception("Unhandled exception")
         return None
 
 
@@ -134,6 +138,7 @@ def main():
             except ImportError:
                 print("エラー: game.py が見つからないか、エラーがあります。")
             except Exception as e:  # noqa: BLE001
+                logger.exception("Unhandled exception")
                 from exceptions import ElonaError
 
                 print(f"\n【重大なエラーが発生しました】: {e}")

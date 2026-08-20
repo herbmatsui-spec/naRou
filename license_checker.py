@@ -7,6 +7,8 @@ Designed for offline-first: caches last successful check for 7 days.
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import base64
 import hashlib
 import hmac
@@ -69,6 +71,7 @@ class LicenseChecker:
         except Exception:
             # TODO: handle exception properly
             return False
+            logger.exception("Unhandled exception")
 
     def _load_cache(self) -> dict | None:
         if CACHE_FILE.exists():
@@ -77,6 +80,7 @@ class LicenseChecker:
                     return json.load(f)
             except Exception:
                 # TODO: handle exception properly
+                logger.exception("Unhandled exception")
                 pass
         return None
 
@@ -85,6 +89,7 @@ class LicenseChecker:
             with open(CACHE_FILE, "w") as f:
                 json.dump(data, f)
         except Exception:
+            logger.exception("Unhandled exception")
             # TODO: handle exception properly
             pass
 

@@ -5,6 +5,8 @@ Step 5: Dynamic relationship change system
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import time
 from collections import defaultdict, deque
 from collections.abc import Callable
@@ -301,6 +303,7 @@ class DynamicRelationshipSystem:
                 context_multiplier = context_func(context)
                 modifier *= context_multiplier
             except Exception:
+                logger.exception("Unhandled exception")
         # TODO: handle exception properly
         # 修正子が失敗しても継続
                 continue

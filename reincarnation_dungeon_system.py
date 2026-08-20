@@ -3,6 +3,8 @@
 """
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import os
 from dataclasses import dataclass
 from typing import Any
@@ -91,6 +93,7 @@ class ReincarnationDungeonRegistry:
                 self._data["first_life_trial"] = default_data
 
         except Exception as e:
+            logger.exception("Unhandled exception")
             print(f"Error loading reincarnation dungeon data: {e}")
             # エラー時のデフォルトデータ
             default_data = ReincarnationDungeonData(
