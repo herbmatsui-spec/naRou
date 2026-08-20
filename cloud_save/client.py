@@ -9,11 +9,11 @@ Usage:
     client = CloudSaveClient(base_url="https://api.example.com")
     await client.push("player1", b"<encrypted-bytes>")
 """
+
 from __future__ import annotations
 
 import abc
 import os
-from typing import Optional
 
 
 class CloudSaveClient(abc.ABC):
@@ -28,7 +28,7 @@ class CloudSaveClient(abc.ABC):
         """Upload encrypted save payload for *user_id*."""
 
     @abc.abstractmethod
-    def pull(self, user_id: str) -> Optional[bytes]:
+    def pull(self, user_id: str) -> bytes | None:
         """Download encrypted save payload for *user_id* or None."""
 
     @abc.abstractmethod
@@ -50,7 +50,7 @@ class LocalCloudSaveClient(CloudSaveClient):
             fh.write(payload)
         return True
 
-    def pull(self, user_id: str) -> Optional[bytes]:
+    def pull(self, user_id: str) -> bytes | None:
         path = os.path.join(self.root, f"{user_id}.save")
         if not os.path.exists(path):
             return None

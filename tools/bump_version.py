@@ -9,6 +9,7 @@ Usage:
     python tools/bump_version.py minor
     python tools/bump_version.py major
 """
+
 from __future__ import annotations
 
 import argparse
@@ -34,7 +35,7 @@ def write_version(nums: list[int]) -> str:
     VERSION_FILE.write_text(text + "\n")
     if PYPROJECT.exists():
         content = PYPROJECT.read_text()
-        content = re.sub(r'(version\s*=\s*")[^"]+(")', rf'\g<1>{text}\g<2>', content)
+        content = re.sub(r'(version\s*=\s*")[^"]+(")', rf"\g<1>{text}\g<2>", content)
         PYPROJECT.write_text(content)
     return text
 
@@ -54,7 +55,9 @@ def bump(part: str) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Bump naRou version")
-    parser.add_argument("part", choices=["major", "minor", "patch"], help="Version part")
+    parser.add_argument(
+        "part", choices=["major", "minor", "patch"], help="Version part"
+    )
     args = parser.parse_args()
     new_v = bump(args.part)
     print(f"version -> {new_v}")

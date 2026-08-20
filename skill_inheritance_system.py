@@ -3,10 +3,12 @@ Skill Inheritance System Module (Steps 65-69)
 """
 
 from __future__ import annotations
+
 import os
-import yaml
-from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
+
+import yaml
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -16,20 +18,22 @@ if TYPE_CHECKING:
 @dataclass
 class SkillInheritanceData:
     """スキル継承データ (Step 66)"""
+
     id: str
     name: str = ""
     description: str = ""
     inheritance_type: str = ""
-    eligible_skills: List[str] = field(default_factory=list)
+    eligible_skills: list[str] = field(default_factory=list)
     inheritance_rate: float = 0.50
     level_bonus: int = 5
-    requirements: Dict[str, Any] = field(default_factory=dict)
+    requirements: dict[str, Any] = field(default_factory=dict)
 
 
 # Step 67, 68: SkillInheritanceRegistry
 class SkillInheritanceRegistry:
     """スキル継承レジストリ (Step 67, 68)"""
-    _instance: Optional[SkillInheritanceRegistry] = None
+
+    _instance: SkillInheritanceRegistry | None = None
 
     def __new__(cls) -> SkillInheritanceRegistry:
         if cls._instance is None:
@@ -42,11 +46,13 @@ class SkillInheritanceRegistry:
         self._rules = {}
         if not os.path.exists(file_path):
             self._rules["bloodline_skills"] = SkillInheritanceData(
-                id="bloodline_skills", name="血統スキル継承", eligible_skills=["martial_arts", "swordsmanship"]
+                id="bloodline_skills",
+                name="血統スキル継承",
+                eligible_skills=["martial_arts", "swordsmanship"],
             )
             return
 
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             raw = yaml.safe_load(f) or {}
 
         r_dict = raw.get("inheritance_rules", {})
@@ -59,13 +65,13 @@ class SkillInheritanceRegistry:
                 eligible_skills=rdata.get("eligible_skills", []),
                 inheritance_rate=float(rdata.get("inheritance_rate", 0.50)),
                 level_bonus=int(rdata.get("level_bonus", 5)),
-                requirements=rdata.get("requirements", {})
+                requirements=rdata.get("requirements", {}),
             )
 
-    def get(self, rule_id: str) -> Optional[SkillInheritanceData]:
+    def get(self, rule_id: str) -> SkillInheritanceData | None:
         return self._rules.get(rule_id)
 
-    def all(self) -> Dict[str, SkillInheritanceData]:
+    def all(self) -> dict[str, SkillInheritanceData]:
         return dict(self._rules)
 
 
@@ -75,10 +81,13 @@ REGISTRY = SkillInheritanceRegistry()
 # Step 69: SkillInheritanceManager
 class SkillInheritanceManager:
     """スキル継承管理 (Step 69)"""
-    def __init__(self, registry: Optional[SkillInheritanceRegistry] = None):
+
+    def __init__(self, registry: SkillInheritanceRegistry | None = None):
         self.registry = registry or REGISTRY
 
-    def get_inheritable_skills(self, player: "Entity", rule_id: str = "bloodline_skills") -> List[str]:
+    def get_inheritable_skills(
+        self, player: Entity, rule_id: str = "bloodline_skills"
+    ) -> list[str]:
         """継承可能なスキル一覧を取得 (Step 69)"""
         rule = self.registry.get(rule_id)
         if not rule or not player:
@@ -86,7 +95,9 @@ class SkillInheritanceManager:
 
         return [sk for sk in rule.eligible_skills if sk in player.skills]
 
-    def inherit_skill(self, player: "Entity", skill_name: str, rule_id: str = "bloodline_skills") -> bool:
+    def inherit_skill(
+        self, player: Entity, skill_name: str, rule_id: str = "bloodline_skills"
+    ) -> bool:
         """スキル継承を実行 (Step 69)"""
         rule = self.registry.get(rule_id)
         if not rule or skill_name not in rule.eligible_skills:

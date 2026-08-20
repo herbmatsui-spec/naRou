@@ -1,16 +1,21 @@
-import yaml
 import logging
+
+import yaml
 from pydantic import BaseModel, ValidationError
+
 from dotenv import load_dotenv
+
 load_dotenv()
 import os
-from typing import Any, Dict, Optional
+from typing import Any
+
 from cryptography.fernet import Fernet
 
 
 class DataCache:
     """YAMLおよび設定データのメモリキャッシュ機構 (Step 9.1)"""
-    _cache: Dict[str, Any] = {}
+
+    _cache: dict[str, Any] = {}
 
     @classmethod
     def get_data(cls, file_path: str) -> Any:
@@ -19,7 +24,7 @@ class DataCache:
         if not os.path.exists(file_path):
             return None
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 data = yaml.safe_load(f)
                 cls._cache[file_path] = data
                 return data
@@ -33,7 +38,8 @@ class DataCache:
 
 class ConfigManager:
     """ConfigManager with optional encryption for sensitive settings (Step 66)."""
-    _fernet: Optional[Fernet] = None
+
+    _fernet: Fernet | None = None
 
     def __init__(self, config_path: str = "config.yaml"):
         self.config_path = config_path
@@ -83,7 +89,7 @@ class ConfigManager:
                 return default
         return default
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         cached = DataCache.get_data(self.config_path)
         if cached is not None:
             return cached
@@ -92,15 +98,15 @@ class ConfigManager:
     def get(self, key: str, default: Any = None) -> Any:
         return self.config.get("settings", {}).get(key, default)
 
-    def get_player_config(self) -> Dict[str, Any]:
+    def get_player_config(self) -> dict[str, Any]:
         """プレイヤー初期設定を取得"""
         return self.config.get("player", {})
 
-    def get_pet_config(self) -> Dict[str, Any]:
+    def get_pet_config(self) -> dict[str, Any]:
         """ペット初期設定を取得"""
         return self.config.get("pet", {})
 
-    def get_settings(self) -> Dict[str, Any]:
+    def get_settings(self) -> dict[str, Any]:
         """全設定を取得"""
         return self.config.get("settings", {})
 
@@ -111,7 +117,10 @@ class ConfigManager:
     def set_telemetry_enabled(self, value: bool) -> None:
         """Update telemetry opt-in state and persist to settings."""
         self.telemetry_enabled = bool(value)
-        self.config.setdefault("settings", {})["telemetry_enabled"] = self.telemetry_enabled
+        self.config.setdefault("settings", {})["telemetry_enabled"] = (
+            self.telemetry_enabled
+        )
+
 
 # Pydantic validation model
 class ConfigModel(BaseModel):
@@ -130,7 +139,7 @@ class ConfigModel(BaseModel):
 
 
 # グローバルインスタンス
-_config_manager: Optional[ConfigManager] = None
+_config_manager: ConfigManager | None = None
 
 
 def get_config_manager() -> ConfigManager:

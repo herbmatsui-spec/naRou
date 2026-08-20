@@ -22,7 +22,7 @@ class Version:
     patch: int = 0
 
     @classmethod
-    def parse(cls, s: str) -> "Version":
+    def parse(cls, s: str) -> Version:
         parts = (s.strip().lstrip("v").split(".") + ["0", "0", "0"])[:3]
         return cls(*(int(p) for p in parts))
 

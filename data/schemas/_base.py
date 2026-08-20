@@ -2,10 +2,12 @@
 Core type definitions and base classes for data-driven schema pipeline.
 Provides shared enums, base models, and utilities for all generated data classes.
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 try:
     import pydantic
 except ImportError:
@@ -13,12 +15,12 @@ except ImportError:
     if str(_stubs) not in sys.path:
         sys.path.insert(0, str(_stubs))
 
-from typing import Any, Dict, List, Optional, Literal, Union, ClassVar
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from pydantic import BaseModel, Field, ConfigDict, field_validator
-from pydantic.alias_generators import to_camel
+from typing import Any
 
+from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 
 
 class ItemCategory(str, Enum):
@@ -116,6 +118,7 @@ class AIType(str, Enum):
 
 class DataModel(BaseModel):
     """Base Pydantic model with common configuration"""
+
     model_config = ConfigDict(
         frozen=True,
         extra="forbid",
@@ -126,50 +129,56 @@ class DataModel(BaseModel):
     )
 
     @classmethod
-    def from_yaml(cls, path: str) -> "DataModel":
+    def from_yaml(cls, path: str) -> DataModel:
         import yaml
+
         with open(path, encoding="utf-8") as f:
             return cls.model_validate(yaml.safe_load(f))
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "DataModel":
+    def from_dict(cls, data: dict[str, Any]) -> DataModel:
         return cls.model_validate(data)
 
 
 @dataclass(frozen=True, slots=True)
 class DataClassBase:
     """Base for generated frozen dataclasses (slots=True for performance)"""
+
     pass
 
 
 @dataclass(frozen=True, slots=True)
 class EffectData(DataClassBase):
     """Common effect structure used across skills, items, etc."""
+
     type: EffectType
     value: float
     target: EffectTarget
-    condition: Optional[str] = None
+    condition: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class PrerequisiteData(DataClassBase):
     """Common prerequisite structure"""
+
     type: PrerequisiteType
     value: str
-    min_value: Optional[int] = None
+    min_value: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class RewardData(DataClassBase):
     """Common reward structure"""
+
     type: RewardType
-    value: Union[str, int]
+    value: str | int
     count: int = 1
 
 
 @dataclass(frozen=True, slots=True)
 class ObjectiveData(DataClassBase):
     """Common quest objective structure"""
+
     type: ObjectiveType
     target: str
     count: int
@@ -178,6 +187,7 @@ class ObjectiveData(DataClassBase):
 @dataclass(frozen=True, slots=True)
 class DropEntryData(DataClassBase):
     """Monster drop table entry"""
+
     item_id: str
     chance: float
     min_count: int = 1
@@ -187,6 +197,7 @@ class DropEntryData(DataClassBase):
 @dataclass(frozen=True, slots=True)
 class MonsterTableEntryData(DataClassBase):
     """Dungeon monster spawn table entry"""
+
     monster_id: str
     weight: float
     min_level: int
@@ -196,6 +207,7 @@ class MonsterTableEntryData(DataClassBase):
 @dataclass(frozen=True, slots=True)
 class ItemTableEntryData(DataClassBase):
     """Dungeon item spawn table entry"""
+
     item_id: str
     weight: float
     min_level: int = 1
@@ -205,6 +217,7 @@ class ItemTableEntryData(DataClassBase):
 def validate_id_format(value: str, prefix: str) -> str:
     """Validate ID follows the required prefix pattern"""
     import re
+
     pattern = f"^{re.escape(prefix)}[a-z_][a-z0-9_]*$"
     if not re.match(pattern, value):
         raise ValueError(f"ID '{value}' must match pattern '{pattern}'")
@@ -212,9 +225,24 @@ def validate_id_format(value: str, prefix: str) -> str:
 
 
 __all__ = [
-    "ItemCategory", "Quality", "SkillCategory", "EffectType", "EffectTarget",
-    "QuestType", "ObjectiveType", "RewardType", "PrerequisiteType", "AIType",
-    "DataModel", "DataClassBase", "EffectData", "PrerequisiteData",
-    "RewardData", "ObjectiveData", "DropEntryData",
-    "MonsterTableEntryData", "ItemTableEntryData", "validate_id_format",
+    "ItemCategory",
+    "Quality",
+    "SkillCategory",
+    "EffectType",
+    "EffectTarget",
+    "QuestType",
+    "ObjectiveType",
+    "RewardType",
+    "PrerequisiteType",
+    "AIType",
+    "DataModel",
+    "DataClassBase",
+    "EffectData",
+    "PrerequisiteData",
+    "RewardData",
+    "ObjectiveData",
+    "DropEntryData",
+    "MonsterTableEntryData",
+    "ItemTableEntryData",
+    "validate_id_format",
 ]

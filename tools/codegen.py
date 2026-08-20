@@ -9,18 +9,19 @@ Usage:
 """
 
 from __future__ import annotations
+
 import argparse
 import json
-import os
 import sys
-import subprocess
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 try:
     from datamodel_code_generator import DataModelType, generate
 except ImportError:
-    print("[codegen] Warning: datamodel-code-generator not installed. Run: pip install datamodel-code-generator")
+    print(
+        "[codegen] Warning: datamodel-code-generator not installed. Run: pip install datamodel-code-generator"
+    )
     generate = None
 
 try:
@@ -98,7 +99,9 @@ class CodeGenerator:
                 jsonschema.Draft7Validator.check_schema(schema)
                 print(f"[validate] OK: {schema_file.relative_to(self.schemas_dir)}")
             except Exception as e:
-                print(f"[validate] ERROR: {schema_file.relative_to(self.schemas_dir)} - {e}")
+                print(
+                    f"[validate] ERROR: {schema_file.relative_to(self.schemas_dir)} - {e}"
+                )
                 errors += 1
         return errors
 
@@ -124,7 +127,7 @@ class CodeGenerator:
                             schema_file = sf
                             break
                         # 単数形も試す (items.yaml -> item/item.json)
-                        singular = schema_name.rstrip('s')
+                        singular = schema_name.rstrip("s")
                         sf = subdir / f"{singular}.json"
                         if sf.exists():
                             schema_file = sf
@@ -151,14 +154,16 @@ class CodeGenerator:
                         if required and all(r in data for r in required):
                             # 必須プロパティが全て存在する -> ドキュメントスキーマ
                             is_doc_schema = True
-                    
+
                     if not is_doc_schema and isinstance(data, dict):
                         # コレクションスキーマ: 各エントリを検証
                         for key, value in data.items():
                             try:
                                 jsonschema.validate(value, schema)
                             except jsonschema.ValidationError as e2:
-                                print(f"[validate] ERROR: {data_file.name}[{key}] - {e2.message}")
+                                print(
+                                    f"[validate] ERROR: {data_file.name}[{key}] - {e2.message}"
+                                )
                                 errors += 1
                     else:
                         # ドキュメントスキーマ: エラーを出力
@@ -177,7 +182,6 @@ class CodeGenerator:
             print("[codegen] No Pydantic models found. Run generation first.")
             return
 
-        import ast
         import importlib.util
 
         # 生成されたモジュールをインポート
@@ -194,9 +198,15 @@ class CodeGenerator:
                 spec.loader.exec_module(module)
 
                 for name, obj in module.__dict__.items():
-                    if isinstance(obj, type) and issubclass(obj, module.DataModel) and obj is not module.DataModel:
+                    if (
+                        isinstance(obj, type)
+                        and issubclass(obj, module.DataModel)
+                        and obj is not module.DataModel
+                    ):
                         dc_code = self._generate_dataclass_code(name, obj)
-                        out_file = self.dataclasses_dir / py_file.relative_to(self.output_dir).with_suffix(".py")
+                        out_file = self.dataclasses_dir / py_file.relative_to(
+                            self.output_dir
+                        ).with_suffix(".py")
                         out_file.parent.mkdir(parents=True, exist_ok=True)
 
                         if dry_run:
@@ -226,11 +236,13 @@ class CodeGenerator:
         lines.append("from typing import Optional, List, Dict, Any, Union, Literal")
         for imp in sorted(imports):
             lines.append(imp)
-        lines.append("from data.schemas._base import DataClassBase, EffectData, PrerequisiteData, RewardData, ObjectiveData, DropEntryData")
+        lines.append(
+            "from data.schemas._base import DataClassBase, EffectData, PrerequisiteData, RewardData, ObjectiveData, DropEntryData"
+        )
         lines.append("")
 
         # dataclass 定義
-        lines.append(f"@dataclass(frozen=True, slots=True)")
+        lines.append("@dataclass(frozen=True, slots=True)")
         lines.append(f"class {model_name}(DataClassBase):")
 
         for field_name, field_info in fields.items():
@@ -258,7 +270,12 @@ class CodeGenerator:
     def _type_to_import(self, ann: Any) -> str:
         """型アノテーションから必要なインポートを推測"""
         ann_str = str(ann)
-        if "Optional" in ann_str or "Union" in ann_str or "List" in ann_str or "Dict" in ann_str:
+        if (
+            "Optional" in ann_str
+            or "Union" in ann_str
+            or "List" in ann_str
+            or "Dict" in ann_str
+        ):
             return "from typing import Optional, Union, List, Dict"
         if "Literal" in ann_str:
             return "from typing import Literal"
@@ -284,6 +301,7 @@ class CodeGenerator:
         if class_name and f"class {class_name}" in existing:
             # 既存クラスを置換
             import re
+
             pattern = rf"@dataclass\(frozen=True, slots=True\)\nclass {class_name}\(.*?\):\n(?:    .*\n)*"
             existing = re.sub(pattern, dc_code + "\n", existing, flags=re.DOTALL)
         else:
@@ -294,14 +312,36 @@ class CodeGenerator:
 
 def main():
     parser = argparse.ArgumentParser(description="naRou Data Schema Code Generator")
-    parser.add_argument("--schemas-dir", default="data/schemas", help="JSON Schema directory")
-    parser.add_argument("--output-dir", default="data/generated", help="Pydantic output directory")
-    parser.add_argument("--dataclasses-dir", default="data/generated_dc", help="dataclass output directory")
-    parser.add_argument("--dry-run", action="store_true", help="Show what would be done without writing")
-    parser.add_argument("--validate-only", action="store_true", help="Only validate schemas")
-    parser.add_argument("--validate-data", action="store_true", help="Validate data files against schemas")
-    parser.add_argument("--generate-dataclasses", action="store_true", help="Generate frozen dataclasses from Pydantic models")
-    parser.add_argument("--data-dir", default="data", help="Data directory for validation")
+    parser.add_argument(
+        "--schemas-dir", default="data/schemas", help="JSON Schema directory"
+    )
+    parser.add_argument(
+        "--output-dir", default="data/generated", help="Pydantic output directory"
+    )
+    parser.add_argument(
+        "--dataclasses-dir",
+        default="data/generated_dc",
+        help="dataclass output directory",
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Show what would be done without writing"
+    )
+    parser.add_argument(
+        "--validate-only", action="store_true", help="Only validate schemas"
+    )
+    parser.add_argument(
+        "--validate-data",
+        action="store_true",
+        help="Validate data files against schemas",
+    )
+    parser.add_argument(
+        "--generate-dataclasses",
+        action="store_true",
+        help="Generate frozen dataclasses from Pydantic models",
+    )
+    parser.add_argument(
+        "--data-dir", default="data", help="Data directory for validation"
+    )
 
     args = parser.parse_args()
 

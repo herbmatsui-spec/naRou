@@ -117,24 +117,24 @@ dungeon_themes:
 ```python
 class WorldLayer:
     """単一のワールド層を表すクラス"""
-    
+
     def __init__(self, zone: str, biome: str, depth: int, dimension: str):
-        self.zone = zone          # surface, underground, otherworld, heaven
-        self.biome = biome        # plains, forest, mountains, etc.
-        self.depth = depth        # 0-200 (actual depth level)
-        self.dimension = dimension # material, ethereal, void
+        self.zone = zone  # surface, underground, otherworld, heaven
+        self.biome = biome  # plains, forest, mountains, etc.
+        self.depth = depth  # 0-200 (actual depth level)
+        self.dimension = dimension  # material, ethereal, void
         self.game_map: Optional[GameMap] = None
         self.theme_data: Dict[str, Any] = {}
-        
+
     def load_theme(self) -> None:
         """dungeon_themes.yaml からテーマデータをロード"""
-        
+
     def generate_map(self, width: int, height: int) -> GameMap:
         """テーマに基づいてマップを生成"""
-        
+
     def get_monster_pool(self) -> Dict[str, List[str]]:
         """現在の層に基づくモンスタープールを取得"""
-        
+
     def get_resources(self) -> Dict[str, Any]:
         """資源・アイテムテーブルを取得"""
 ```
@@ -144,22 +144,26 @@ class WorldLayer:
 ```python
 class WorldMapManager:
     """マルチレイヤーワールドを管理するクラス"""
-    
+
     def __init__(self):
         self.layers: Dict[Tuple[str, str, int, str], WorldLayer] = {}
         self.active_layers: Set[Tuple[str, str, int, str]] = set()
         self.player_position: Dict[str, Any] = {}  # 現在のプレイヤー位置（層別）
-        
-    def get_or_create_layer(self, zone: str, biome: str, depth: int, dimension: str) -> WorldLayer:
+
+    def get_or_create_layer(
+        self, zone: str, biome: str, depth: int, dimension: str
+    ) -> WorldLayer:
         """指定された層を取得または作成"""
-        
+
     def load_layer(self, zone: str, biome: str, depth: int, dimension: str) -> GameMap:
         """層をロードしてGameMapを返す"""
-        
+
     def unload_layer(self, zone: str, biome: str, depth: int, dimension: str) -> None:
         """使用していない層をアンロード（メモリ節約）"""
-        
-    def get_adjacent_layers(self, zone: str, biome: str, depth: int, dimension: str) -> List[WorldLayer]:
+
+    def get_adjacent_layers(
+        self, zone: str, biome: str, depth: int, dimension: str
+    ) -> List[WorldLayer]:
         """移動可能な隣接層を取得"""
 ```
 
@@ -167,17 +171,26 @@ class WorldMapManager:
 `map_engine.py` の `GameMap` クラスに追加:
 ```python
 # GameMapクラスに追加
-def __init__(self, width: int, height: int, map_type: str = "dungeon", 
-             floor_level: int = 1, world_layer: Optional[WorldLayer] = None):
+def __init__(
+    self,
+    width: int,
+    height: int,
+    map_type: str = "dungeon",
+    floor_level: int = 1,
+    world_layer: Optional[WorldLayer] = None,
+):
     # ... existing code ...
     self.world_layer = world_layer  # 新規追加
-    
+
+
 def is_stairs_down_available(self) -> bool:
     """下り階段が次の層へ続くかチェック"""
-    
+
+
 def is_stairs_up_available(self) -> bool:
     """上り階段が前の層へ続くかチェック"""
-    
+
+
 def get_layer_transition_info(self) -> Dict[str, Any]:
     """階層間移動に必要な情報を取得"""
 ```
@@ -185,8 +198,9 @@ def get_layer_transition_info(self) -> Dict[str, Any]:
 ### ステップ16: 階層間移動ロジック実装
 `map_engine.py` に移動処理を追加:
 ```python
-def handle_stairs_interaction(self, player_x: int, player_y: int, 
-                             world_manager: WorldMapManager) -> Optional[Tuple[int, int, str]]:
+def handle_stairs_interaction(
+    self, player_x: int, player_y: int, world_manager: WorldMapManager
+) -> Optional[Tuple[int, int, str]]:
     """
     階段との相互作用を処理し、必要なら層移動を返す
     返り値: (new_x, new_y, target_layer_key) または None（移動なし）
@@ -195,17 +209,24 @@ def handle_stairs_interaction(self, player_x: int, player_y: int,
     if self.tiles[player_x][player_y] == TILE_STAIRS_DOWN:
         # 現在の層情報を取得
         if self.world_layer:
-            current_key = (self.world_layer.zone, self.world_layer.biome, 
-                          self.world_layer.depth, self.world_layer.dimension)
-            
+            current_key = (
+                self.world_layer.zone,
+                self.world_layer.biome,
+                self.world_layer.depth,
+                self.world_layer.dimension,
+            )
+
             # 次の層を決定（ゾーン境界も考慮）
             target_layer = self._calculate_target_layer_down(world_manager)
             if target_layer:
                 # 次の層の入口座標を計算（通常は上り階段の位置）
                 entrance_pos = target_layer.get_entrance_position()
-                return (entrance_pos[0], entrance_pos[1], 
-                       f"{target_layer.zone}:{target_layer.biome}:{target_layer.depth}:{target_layer.dimension}")
-    
+                return (
+                    entrance_pos[0],
+                    entrance_pos[1],
+                    f"{target_layer.zone}:{target_layer.biome}:{target_layer.depth}:{target_layer.dimension}",
+                )
+
     # 上り階段の同様の処理
     # ...
     return None
@@ -224,18 +245,19 @@ def handle_stairs_interaction(self, player_x: int, player_y: int,
 ### ステップ18: モンスタースポーンシステム連携
 `world_layer.py` にモンスターゲネレーションロジックを実装:
 ```python
-def spawn_monsters_for_area(self, game_map: GameMap, 
-                           area_rect: Tuple[int, int, int, int]) -> List[Entity]:
+def spawn_monsters_for_area(
+    self, game_map: GameMap, area_rect: Tuple[int, int, int, int]
+) -> List[Entity]:
     """
     指定領域にテーマに基づくモンスターをスポーン
     """
     monster_pool = self.get_monster_pool()
     spawned = []
-    
+
     # エリアサイズに基づくスポーン数計算
     area_size = (area_rect[2] - area_rect[0]) * (area_rect[3] - area_rect[1])
     spawn_count = int(area_size * self.get_spawn_density())
-    
+
     for _ in range(spawn_count):
         # モンスタープールから重み付きランダム選択
         monster_type = self._select_monster_by_rarity(monster_pool)
@@ -244,7 +266,7 @@ def spawn_monsters_for_area(self, game_map: GameMap,
         if pos:
             entity = self._create_monster_entity(monster_type, pos)
             spawned.append(entity)
-            
+
     return spawned
 ```
 
@@ -297,22 +319,20 @@ def get_difficulty_multiplier(self) -> float:
     # ゾーンベースの難易度
     zone_multipliers = {
         "surface": 0.5,
-        "underground": 1.0, 
+        "underground": 1.0,
         "otherworld": 2.0,
-        "heaven": 3.0
+        "heaven": 3.0,
     }
     # 深度による補正
     depth_factor = 1.0 + (self.depth * 0.01)  # 1階層ごとに1%増加
     # 次元による補正
-    dimension_multipliers = {
-        "material": 1.0,
-        "ethereal": 1.5,
-        "void": 2.0
-    }
-    
-    return (zone_multipliers.get(self.zone, 1.0) * 
-            depth_factor * 
-            dimension_multipliers.get(self.dimension, 1.0))
+    dimension_multipliers = {"material": 1.0, "ethereal": 1.5, "void": 2.0}
+
+    return (
+        zone_multipliers.get(self.zone, 1.0)
+        * depth_factor
+        * dimension_multipliers.get(self.dimension, 1.0)
+    )
 ```
 
 ### ステップ24: パフォーマンス最適化

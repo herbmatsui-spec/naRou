@@ -16,15 +16,19 @@ integer tile coordinates.
 from __future__ import annotations
 
 import math
-from typing import Callable, Dict, List, Optional, Sequence, Tuple
+from collections.abc import Callable, Sequence
 
 # Octant transforms for recursive shadowcasting. Each tuple is (xx, xy, yx, yy)
 # mapping the algorithm's local (dx, dy) onto world coordinates.
 _OCTANTS = (
-    (1, 0, 0, 1), (0, 1, 1, 0),
-    (0, -1, 1, 0), (-1, 0, 0, 1),
-    (-1, 0, 0, -1), (0, -1, -1, 0),
-    (0, 1, -1, 0), (1, 0, 0, -1),
+    (1, 0, 0, 1),
+    (0, 1, 1, 0),
+    (0, -1, 1, 0),
+    (-1, 0, 0, 1),
+    (-1, 0, 0, -1),
+    (0, -1, -1, 0),
+    (0, 1, -1, 0),
+    (1, 0, 0, -1),
 )
 
 
@@ -66,8 +70,9 @@ def recursive_shadowcast(
     return visible
 
 
-def _cast_light(visible, is_blocked, ox, oy, radius, row, start_slope, end_slope,
-                xx, xy, yx, yy):
+def _cast_light(
+    visible, is_blocked, ox, oy, radius, row, start_slope, end_slope, xx, xy, yx, yy
+):
     if start_slope < end_slope:
         return
 
@@ -91,8 +96,20 @@ def _cast_light(visible, is_blocked, ox, oy, radius, row, start_slope, end_slope
                 if not blocked_prev:
                     nx = ox + (dx - 1) * xx + dy * xy
                     ny = oy + (dx - 1) * yx + dy * yy
-                    _cast_light(visible, is_blocked, ox, oy, radius, i + 1,
-                                next_start_slope, l_slope, xx, xy, yx, yy)
+                    _cast_light(
+                        visible,
+                        is_blocked,
+                        ox,
+                        oy,
+                        radius,
+                        i + 1,
+                        next_start_slope,
+                        l_slope,
+                        xx,
+                        xy,
+                        yx,
+                        yy,
+                    )
                 blocked_prev = True
             else:
                 blocked_prev = False
@@ -130,7 +147,7 @@ def line_of_sight(blocked, x0: int, y0: int, x1: int, y1: int) -> bool:
 #   radius        light reach in tiles
 #   intensity     peak brightness 0..1
 #   color         optional (r, g, b) 0..255 tint; default neutral white
-LightSource = Dict[str, object]
+LightSource = dict[str, object]
 
 
 def compute_light_map(
@@ -139,7 +156,7 @@ def compute_light_map(
     width: int,
     height: int,
     ambient: float = 0.06,
-) -> Tuple[List[List[float]], List[List[Tuple[int, int, int]]]]:
+) -> tuple[list[list[float]], list[list[tuple[int, int, int]]]]:
     """Compute a (intensity, color) light map.
 
     Returns two height x width grids:
@@ -150,10 +167,10 @@ def compute_light_map(
     linear falloff: factor = intensity * (1 - dist / radius).
     """
     is_blocked = _as_blocked(blocked)
-    intensity: List[List[float]] = [[ambient] * width for _ in range(height)]
-    cr: List[List[float]] = [[0.0] * width for _ in range(height)]
-    cg: List[List[float]] = [[0.0] * width for _ in range(height)]
-    cb: List[List[float]] = [[0.0] * width for _ in range(height)]
+    intensity: list[list[float]] = [[ambient] * width for _ in range(height)]
+    cr: list[list[float]] = [[0.0] * width for _ in range(height)]
+    cg: list[list[float]] = [[0.0] * width for _ in range(height)]
+    cb: list[list[float]] = [[0.0] * width for _ in range(height)]
 
     for src in sources:
         sx = int(src["x"])
@@ -189,15 +206,19 @@ def compute_light_map(
                 cg[y][x] += f * g0
                 cb[y][x] += f * b0
 
-    color: List[List[Tuple[int, int, int]]] = []
+    color: list[list[tuple[int, int, int]]] = []
     for y in range(height):
         row_cols = []
         for x in range(width):
             w = intensity[y][x]
             if w > ambient:
-                row_cols.append((min(255, int(cr[y][x] / w)),
-                                 min(255, int(cg[y][x] / w)),
-                                 min(255, int(cb[y][x] / w))))
+                row_cols.append(
+                    (
+                        min(255, int(cr[y][x] / w)),
+                        min(255, int(cg[y][x] / w)),
+                        min(255, int(cb[y][x] / w)),
+                    )
+                )
             else:
                 row_cols.append((255, 255, 255))
         color.append(row_cols)

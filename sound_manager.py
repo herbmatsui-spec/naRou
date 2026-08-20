@@ -1,10 +1,12 @@
-import threading
 import os
+import threading
+from typing import Any
+
 import yaml
-from typing import Optional, Dict, Any
 
 try:
     import winsound
+
     HAS_WINSOUND = True
 except ImportError:
     HAS_WINSOUND = False
@@ -12,6 +14,7 @@ except ImportError:
 # Import audio backend for OGG playback
 try:
     from audio.backend import get_audio_backend, load_audio_manifest, preload_all_audio
+
     HAS_AUDIO_BACKEND = True
 except ImportError:
     HAS_AUDIO_BACKEND = False
@@ -21,18 +24,19 @@ from feature_flags import is_enabled
 
 class BGMManager:
     """BGM管理システム（クロスフェード・テーマ切り替え） (Step 7.1, 7.3)"""
+
     def __init__(self, config_path: str = "data/audio_config.yaml"):
         self.config_path = config_path
-        self.current_track: Optional[str] = None
-        self.current_theme: Optional[str] = None
+        self.current_track: str | None = None
+        self.current_theme: str | None = None
         self.volume: float = 0.8
         self.is_crisis: bool = False
         self.config = self._load_config()
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         if os.path.exists(self.config_path):
             try:
-                with open(self.config_path, "r", encoding="utf-8") as f:
+                with open(self.config_path, encoding="utf-8") as f:
                     return yaml.safe_load(f) or {}
             except Exception:
                 pass
@@ -47,7 +51,7 @@ class BGMManager:
         self.volume = bgm_conf.get("volume", 0.8)
         return f"Playing BGM [{track_id}] (Theme: {theme}, Volume: {self.volume})"
 
-    def check_crisis_trigger(self, hp: int, max_hp: int) -> Optional[str]:
+    def check_crisis_trigger(self, hp: int, max_hp: int) -> str | None:
         """HP低下時の緊張BGMトリガー (Step 7.3)"""
         if max_hp > 0 and (hp / max_hp) <= 0.3:
             if not self.is_crisis:
@@ -62,16 +66,17 @@ class BGMManager:
 
 class AmbientLayer:
     """環境音（アンビエント）レイヤー管理 (Step 7.2)"""
+
     def __init__(self, config_path: str = "data/audio_config.yaml"):
         self.config_path = config_path
-        self.current_ambient: Optional[str] = None
+        self.current_ambient: str | None = None
         self.volume: float = 0.5
         self.config = self._load_config()
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         if os.path.exists(self.config_path):
             try:
-                with open(self.config_path, "r", encoding="utf-8") as f:
+                with open(self.config_path, encoding="utf-8") as f:
                     return yaml.safe_load(f) or {}
             except Exception:
                 pass
@@ -88,6 +93,7 @@ class AmbientLayer:
 
 class SoundManager:
     """効果音・BGM・環境音総合管理クラス (非同期スレッド再生)"""
+
     _enabled = True
     bgm_manager = BGMManager()
     ambient_layer = AmbientLayer()
@@ -155,10 +161,10 @@ class SoundManager:
         return cls.ambient_layer.update_ambient(location_type)
 
     # ===== NEW: OGG Audio Pack Integration =====
-    
+
     _audio_initialized = False
-    _se_cache: Dict[str, str] = {}  # se_type -> suggested_id mapping
-    _terrain_footstep_map: Dict[str, str] = {}
+    _se_cache: dict[str, str] = {}  # se_type -> suggested_id mapping
+    _terrain_footstep_map: dict[str, str] = {}
 
     @classmethod
     def _init_audio_pack(cls):
@@ -167,33 +173,37 @@ class SoundManager:
             return
         if not is_enabled("ENABLE_AUDIO_PACK"):
             return
-        
+
         backend = get_audio_backend()
         if not backend.is_available:
             return
-        
+
         # Load SE mappings from config
         cls._load_se_mappings()
-        
+
         # Preload all audio
         loaded = preload_all_audio("assets/audio/manifest.csv")
         if loaded > 0:
             cls._audio_initialized = True
-            print(f"Audio pack initialized: {loaded} sounds loaded (backend: {backend.backend})")
+            print(
+                f"Audio pack initialized: {loaded} sounds loaded (backend: {backend.backend})"
+            )
 
     @classmethod
     def _load_se_mappings(cls):
         """Load SE type -> suggested_id mappings from audio config."""
         try:
             if os.path.exists("data/audio_config.yaml"):
-                with open("data/audio_config.yaml", "r", encoding="utf-8") as f:
+                with open("data/audio_config.yaml", encoding="utf-8") as f:
                     config = yaml.safe_load(f) or {}
                 se_map = config.get("se", {})
                 for se_type, filename in se_map.items():
                     # Convert filename to suggested_id (e.g., metalClick.ogg -> se_metal_click)
-                    suggested_id = "se_" + filename.replace(".ogg", "").replace(".", "_").lower()
+                    suggested_id = (
+                        "se_" + filename.replace(".ogg", "").replace(".", "_").lower()
+                    )
                     cls._se_cache[se_type] = suggested_id
-                
+
                 # Load terrain footstep mapping
                 footstep_keys = [k for k in se_map.keys() if k.startswith("footstep_")]
                 for key in footstep_keys:
@@ -211,18 +221,18 @@ class SoundManager:
             # Fall back to tone-based SE
             cls.play_se(se_type)
             return
-        
+
         cls._init_audio_pack()
-        
+
         if not HAS_AUDIO_BACKEND:
             cls.play_se(se_type)
             return
-        
+
         backend = get_audio_backend()
         if not backend.is_available:
             cls.play_se(se_type)
             return
-        
+
         suggested_id = cls._se_cache.get(se_type)
         if not suggested_id:
             # Try direct mapping
@@ -230,10 +240,10 @@ class SoundManager:
         if not suggested_id:
             cls.play_se(se_type)  # Fallback
             return
-        
+
         def _worker():
             backend.play_sound(suggested_id, volume=volume)
-        
+
         threading.Thread(target=_worker, daemon=True).start()
 
     @classmethod
@@ -244,23 +254,25 @@ class SoundManager:
         if not is_enabled("ENABLE_AUDIO_PACK"):
             cls.play_se("step")
             return
-        
+
         cls._init_audio_pack()
-        
+
         if not HAS_AUDIO_BACKEND:
             cls.play_se("step")
             return
-        
+
         backend = get_audio_backend()
         if not backend.is_available:
             cls.play_se("step")
             return
-        
+
         se_type = cls._terrain_footstep_map.get(terrain, "footstep_stone")
         suggested_id = cls._se_cache.get(se_type)
         if suggested_id:
+
             def _worker():
                 backend.play_sound(suggested_id, volume=volume)
+
             threading.Thread(target=_worker, daemon=True).start()
         else:
             cls.play_se("step")
@@ -279,37 +291,39 @@ class SoundManager:
         cls.play_se_ogg(se_type, volume)
 
     @classmethod
-    def play_bgm_ogg(cls, theme: str = "dungeon", fade_in: float = 1.0, loop: bool = True):
+    def play_bgm_ogg(
+        cls, theme: str = "dungeon", fade_in: float = 1.0, loop: bool = True
+    ):
         """Play BGM using OGG file with crossfade."""
         if not cls._enabled:
             return
         if not is_enabled("ENABLE_AUDIO_PACK"):
             cls.bgm_manager.play_bgm(theme, fade_in=fade_in)
             return
-        
+
         cls._init_audio_pack()
-        
+
         if not HAS_AUDIO_BACKEND:
             cls.bgm_manager.play_bgm(theme, fade_in=fade_in)
             return
-        
+
         backend = get_audio_backend()
         if not backend.is_available:
             cls.bgm_manager.play_bgm(theme, fade_in=fade_in)
             return
-        
+
         config = cls.bgm_manager.config
         bgm_conf = config.get("bgm", {}).get(theme, {})
         track_filename = bgm_conf.get("track", f"bgm_{theme}.ogg")
         volume = bgm_conf.get("volume", 0.7)
-        
+
         # Try to find the OGG file
         bgm_path = f"assets/audio/{track_filename}"
         if not os.path.exists(bgm_path):
             # Try with .ogg extension
             if not track_filename.endswith(".ogg"):
                 bgm_path = f"assets/audio/{track_filename}.ogg"
-        
+
         if os.path.exists(bgm_path):
             backend.play_bgm(bgm_path, volume=volume, loop=loop, fade_in=fade_in)
         else:
@@ -323,18 +337,18 @@ class SoundManager:
         if not is_enabled("ENABLE_AUDIO_PACK"):
             cls.ambient_layer.update_ambient(location_type)
             return
-        
+
         cls._init_audio_pack()
-        
+
         if not HAS_AUDIO_BACKEND:
             cls.ambient_layer.update_ambient(location_type)
             return
-        
+
         backend = get_audio_backend()
         if not backend.is_available:
             cls.ambient_layer.update_ambient(location_type)
             return
-        
+
         # Determine ambient variant based on location and depth
         if location_type == "dungeon":
             if depth >= 10:
@@ -351,15 +365,15 @@ class SoundManager:
             ambient_key = "cave"
         else:
             ambient_key = "dungeon_shallow"
-        
+
         config = cls.ambient_layer.config
         ambient_loops = config.get("ambient_loops", {})
         sound_filename = ambient_loops.get(ambient_key, "amb_water_drop")
-        
+
         ambient_path = f"assets/audio/{sound_filename}"
         if not ambient_path.endswith(".ogg"):
             ambient_path += ".ogg"
-        
+
         if os.path.exists(ambient_path):
             # For ambient, we play as a looping BGM at lower volume
             volume = 0.3

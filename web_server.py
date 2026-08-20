@@ -4,28 +4,34 @@ Provides HTTP server and REST/JSON API for HTML5 Canvas interactive rendering & 
 """
 
 from __future__ import annotations
+
 import json
 import math
-import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from typing import Optional, Dict, Any, TYPE_CHECKING
 import os
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from typing import TYPE_CHECKING, Any
 
-from ui_event_panel import get_current_event_info, get_event_ranking, get_player_event_score
+from ui_event_panel import (
+    get_current_event_info,
+    get_event_ranking,
+    get_player_event_score,
+)
 from ui_ranking_panel import get_all_event_rankings
 
 # Dynamic-lighting foundation (Phase 2-A). Import is optional so the server still
 # runs if fov.py is unavailable.
 try:
     from fov import compute_light_map as _compute_light_map
+
     _FOV_AVAILABLE = True
-except Exception:  # pragma: no cover
+except Exception:  # noqa: BLE001 - fov モジュールが利用できない場合は False
     _FOV_AVAILABLE = False
 
 if TYPE_CHECKING:
     from game import Engine
 
-_ENGINE_INSTANCE: Optional["Engine"] = None
+_ENGINE_INSTANCE: Engine | None = None
 
 # 開発環境ではlocalhostを許可、本番環境では適切なドメインに制限する
 ALLOWED_ORIGINS = [
@@ -34,13 +40,14 @@ ALLOWED_ORIGINS = [
     # 本番環境ではここに実際のドメインを追加
 ]
 
+
 def _is_origin_allowed(origin: str) -> bool:
     """オリジンが許可リストに含まれているかチェック"""
     return origin in ALLOWED_ORIGINS
 
 
 # レート制限のスケルトン実装（本番では適切なストレージに置き換える）
-_REQUEST_HISTORY: Dict[str, list] = {}
+_REQUEST_HISTORY: dict[str, list] = {}
 _RATE_LIMIT_WINDOW = 60  # 1分間隔
 _RATE_LIMIT_MAX_REQUESTS = 100  # 窓内最大リクエスト数
 
@@ -48,21 +55,23 @@ _RATE_LIMIT_MAX_REQUESTS = 100  # 窓内最大リクエスト数
 def _is_rate_allowed(client_ip: str) -> bool:
     """レート制限チェックのスケルトン実装"""
     import time
+
     now = time.time()
-    
+
     if client_ip not in _REQUEST_HISTORY:
         _REQUEST_HISTORY[client_ip] = []
-    
+
     # 古いリクエストを削除
     _REQUEST_HISTORY[client_ip] = [
-        req_time for req_time in _REQUEST_HISTORY[client_ip]
+        req_time
+        for req_time in _REQUEST_HISTORY[client_ip]
         if now - req_time < _RATE_LIMIT_WINDOW
     ]
-    
+
     # リクエスト数をチェック
     if len(_REQUEST_HISTORY[client_ip]) >= _RATE_LIMIT_MAX_REQUESTS:
         return False
-    
+
     # 現在のリクエストを記録
     _REQUEST_HISTORY[client_ip].append(now)
     return True
@@ -72,7 +81,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
     def _set_headers(self, content_type="application/json"):
         self.send_response(200)
         # セキュリティ強化: オリジンチェックを実装
-        origin = self.headers.get('Origin')
+        origin = self.headers.get("Origin")
         if origin and _is_origin_allowed(origin):
             self.send_header("Access-Control-Allow-Origin", origin)
         else:
@@ -85,11 +94,12 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
 
     def do_OPTIONS(self):
         self._set_headers()
+
     def do_GET(self):
         # Health check endpoint
         if self.path == "/health":
             self._set_headers("application/json")
-            self.wfile.write(json.dumps({"status": "ok"}).encode('utf-8'))
+            self.wfile.write(json.dumps({"status": "ok"}).encode("utf-8"))
             return
         # レート制限チェック
         client_ip = self.client_address[0]
@@ -97,64 +107,130 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             self.send_response(429)  # Too Many Requests
             self.send_header("Content-Type", "application/json")
             self.end_headers()
-            self.wfile.write(json.dumps({"error": "Rate limit exceeded"}).encode('utf-8'))
+            self.wfile.write(
+                json.dumps({"error": "Rate limit exceeded"}).encode("utf-8")
+            )
+            return
+
+        # Step 52: User-Agent からグラフィックス能力を推定して記録
+        global _DETECTED_GRAPHICS
+        _DETECTED_GRAPHICS = detect_graphics(self.headers.get("User-Agent"))
+
+        if self.path.split("?", 1)[0] == "/api/capabilities":
+            # Step 66: 検出結果と選択レンダラを返す
+            self._set_headers("application/json; charset=utf-8")
+            self.wfile.write(json.dumps(get_capabilities(), ensure_ascii=False).encode("utf-8"))
             return
 
         if self.path == "/api/state":
             if _ENGINE_INSTANCE is None:
                 self._set_headers()
-                self.wfile.write(json.dumps({"error": "Engine not initialized"}).encode('utf-8'))
+                self.wfile.write(
+                    json.dumps({"error": "Engine not initialized"}).encode("utf-8")
+                )
                 return
 
             state = self._serialize_engine_state(_ENGINE_INSTANCE)
             self._set_headers("application/json; charset=utf-8")
-            self.wfile.write(json.dumps(state, ensure_ascii=False).encode('utf-8'))
+            self.wfile.write(json.dumps(state, ensure_ascii=False).encode("utf-8"))
         elif self.path == "/api/event/info":
             # イベント情報を取得
-            query = self.path.split('?', 1)[1] if '?' in self.path else ''
-            params = dict(qc.split('=') for qc in query.split('&') if qc)
-            turn = int(params.get('turn', 0))
+            query = self.path.split("?", 1)[1] if "?" in self.path else ""
+            params = dict(qc.split("=") for qc in query.split("&") if qc)
+            turn = int(params.get("turn", 0))
             info = get_current_event_info(turn)
             self._set_headers("application/json; charset=utf-8")
-            self.wfile.write(json.dumps(info, ensure_ascii=False).encode('utf-8'))
+            self.wfile.write(json.dumps(info, ensure_ascii=False).encode("utf-8"))
         elif self.path == "/api/event/ranking":
-            query = self.path.split('?', 1)[1] if '?' in self.path else ''
-            params = dict(qc.split('=') for qc in query.split('&') if qc)
-            event_id = params.get('event_id', '')
-            top_n = int(params.get('top_n', 10))
+            query = self.path.split("?", 1)[1] if "?" in self.path else ""
+            params = dict(qc.split("=") for qc in query.split("&") if qc)
+            event_id = params.get("event_id", "")
+            top_n = int(params.get("top_n", 10))
             ranking = get_event_ranking(event_id, top_n)
             self._set_headers("application/json; charset=utf-8")
-            self.wfile.write(json.dumps(ranking, ensure_ascii=False).encode('utf-8'))
+            self.wfile.write(json.dumps(ranking, ensure_ascii=False).encode("utf-8"))
         elif self.path == "/api/event/score":
-            query = self.path.split('?', 1)[1] if '?' in self.path else ''
-            params = dict(qc.split('=') for qc in query.split('&') if qc)
-            event_id = params.get('event_id', '')
-            player_id = params.get('player_id', '')
+            query = self.path.split("?", 1)[1] if "?" in self.path else ""
+            params = dict(qc.split("=") for qc in query.split("&") if qc)
+            event_id = params.get("event_id", "")
+            player_id = params.get("player_id", "")
             score = get_player_event_score(event_id, player_id)
             self._set_headers("application/json; charset=utf-8")
-            self.wfile.write(json.dumps({"score": score}, ensure_ascii=False).encode('utf-8'))
+            self.wfile.write(
+                json.dumps({"score": score}, ensure_ascii=False).encode("utf-8")
+            )
         elif self.path == "/api/event/titles":
-            query = self.path.split('?', 1)[1] if '?' in self.path else ''
-            params = dict(qc.split('=') for qc in query.split('&') if qc)
-            event_id = params.get('event_id', '')
-            player_id = params.get('player_id', '')
+            query = self.path.split("?", 1)[1] if "?" in self.path else ""
+            params = dict(qc.split("=") for qc in query.split("&") if qc)
+            event_id = params.get("event_id", "")
+            player_id = params.get("player_id", "")
             # プレイヤーオブジェクトを取得する必要があるが、ここでは簡易的に空リストを返す
             # 実際には、エンジンからプレイヤーオブジェクトを取得する
             titles = []  # プレースホルダー
             self._set_headers("application/json; charset=utf-8")
-            self.wfile.write(json.dumps(titles, ensure_ascii=False).encode('utf-8'))
+            self.wfile.write(json.dumps(titles, ensure_ascii=False).encode("utf-8"))
         elif self.path == "/api/event/all_rankings":
             all_rankings = get_all_event_rankings()
             self._set_headers("application/json; charset=utf-8")
-            self.wfile.write(json.dumps(all_rankings, ensure_ascii=False).encode('utf-8'))
+            self.wfile.write(
+                json.dumps(all_rankings, ensure_ascii=False).encode("utf-8")
+            )
             return
         elif self.path == "/api/webgl/info":
             self._set_headers("application/json; charset=utf-8")
             from webgl_manager import WebGLManager
+
             ctx = WebGLManager.instance().get_context()
-            self.wfile.write(json.dumps({"webgl_context": str(ctx)}).encode('utf-8'))
+            self.wfile.write(json.dumps({"webgl_context": str(ctx)}).encode("utf-8"))
             return
-        elif self.path == "/" or self.path.endswith(".html") or self.path == "/index.html":
+        elif self.path.split('?', 1)[0] == "/api/tokens":
+            # Step 30 / Step 42 / Step 43: デザイントークンとフォント倍率を返す
+            # ?a11y=deutan のように強制上書きを許可 (Step 43)
+            query = self.path.split("?", 1)[1] if "?" in self.path else ""
+            params = dict(qc.split("=") for qc in query.split("&") if "=" in qc)
+            force_variant = params.get("a11y")
+            self._set_headers("application/json; charset=utf-8")
+            try:
+                from core.accessibility import get_active_tokens, load_design_tokens
+
+                tokens = (
+                    get_active_tokens()
+                    if not force_variant
+                    else load_design_tokens(force_variant)
+                )
+            except Exception:  # noqa: BLE001 - トークン取得失敗は空 dict
+                tokens = {}
+            try:
+                from config import get_config
+
+                font_scale = get_config("accessibility.font_scale") or 1.0
+            except Exception:  # noqa: BLE001 - フォントスケール取得失敗はデフォルト
+                font_scale = 1.0
+            self.wfile.write(
+                json.dumps(
+                    {"tokens": tokens, "font_scale": font_scale},
+                    ensure_ascii=False,
+                ).encode("utf-8")
+            )
+            return
+        elif self.path.split('?', 1)[0] == "/api/tutorial":
+            # Step 39: チュートリアル手順を返す
+            self._set_headers("application/json; charset=utf-8")
+            try:
+                from core.tutorial_controller import TutorialController
+
+                steps = TutorialController().steps
+            except Exception:  # noqa: BLE001 - チュートリアル読み込み失敗は空リスト
+                steps = []
+            self.wfile.write(
+                json.dumps({"steps": steps}, ensure_ascii=False).encode("utf-8")
+            )
+            return
+        elif (
+            self.path == "/"
+            or self.path.endswith(".html")
+            or self.path == "/index.html"
+        ):
             html_path = os.path.join(os.path.dirname(__file__), "web_game_client.html")
             if os.path.exists(html_path):
                 with open(html_path, "rb") as f:
@@ -169,9 +245,21 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def do_POST(self):
+        if self.path.split("?", 1)[0] == "/api/capabilities":
+            # Step 56: クライアントが選択したレンダラ名を記録
+            content_length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(content_length).decode("utf-8") if content_length else ""
+            try:
+                data = json.loads(body) if body else {}
+                set_selected_renderer(str(data.get("selected", "unknown")))
+            except Exception:  # noqa: BLE001, S110 - レンダラ記録失敗は無視
+                pass
+            self._set_headers("application/json; charset=utf-8")
+            self.wfile.write(json.dumps(get_capabilities(), ensure_ascii=False).encode("utf-8"))
+            return
         if self.path == "/api/action":
-            content_length = int(self.headers.get('Content-Length', 0))
-            body = self.rfile.read(content_length).decode('utf-8')
+            content_length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(content_length).decode("utf-8")
             data = json.loads(body) if body else {}
 
             action = data.get("action")
@@ -180,16 +268,20 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             if _ENGINE_INSTANCE and action:
                 result_msg = self._handle_web_action(_ENGINE_INSTANCE, action, data)
 
-            state = self._serialize_engine_state(_ENGINE_INSTANCE) if _ENGINE_INSTANCE else {}
+            state = (
+                self._serialize_engine_state(_ENGINE_INSTANCE)
+                if _ENGINE_INSTANCE
+                else {}
+            )
             state["action_result"] = result_msg
 
             self._set_headers("application/json; charset=utf-8")
-            self.wfile.write(json.dumps(state, ensure_ascii=False).encode('utf-8'))
+            self.wfile.write(json.dumps(state, ensure_ascii=False).encode("utf-8"))
         else:
             self.send_response(404)
             self.end_headers()
 
-    def _serialize_engine_state(self, engine: "Engine") -> Dict[str, Any]:
+    def _serialize_engine_state(self, engine: Engine) -> dict[str, Any]:
         """Canvas 2DおよびWebAudio向けに完全なゲーム状態をJSONシリアライズ"""
         p = engine.player
         pet = engine.pet
@@ -215,35 +307,56 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
         if _FOV_AVAILABLE:
             try:
                 blocked = [
-                    [not engine.game_map.is_transparent(cam_x + vx, cam_y + vy)
-                     if (0 <= cam_x + vx < engine.game_map.width
-                         and 0 <= cam_y + vy < engine.game_map.height)
-                     else True
-                     for vx in range(view_w)]
+                    [
+                        not engine.game_map.is_transparent(cam_x + vx, cam_y + vy)
+                        if (
+                            0 <= cam_x + vx < engine.game_map.width
+                            and 0 <= cam_y + vy < engine.game_map.height
+                        )
+                        else True
+                        for vx in range(view_w)
+                    ]
                     for vy in range(view_h)
                 ]
-                sources = [{
-                    "x": p.x - cam_x, "y": p.y - cam_y,
-                    "radius": 8.0, "intensity": 1.0,
-                    "color": (255, 240, 210),
-                }]
-                for (tx, ty) in getattr(engine.game_map, "torch_positions", []):
+                sources = [
+                    {
+                        "x": p.x - cam_x,
+                        "y": p.y - cam_y,
+                        "radius": 8.0,
+                        "intensity": 1.0,
+                        "color": (255, 240, 210),
+                    }
+                ]
+                for tx, ty in getattr(engine.game_map, "torch_positions", []):
                     lx, ly = tx - cam_x, ty - cam_y
                     if 0 <= lx < view_w and 0 <= ly < view_h:
-                        sources.append({
-                            "x": lx, "y": ly,
-                            "radius": 5.0, "intensity": 0.9,
-                            "color": (255, 170, 80),
-                        })
+                        sources.append(
+                            {
+                                "x": lx,
+                                "y": ly,
+                                "radius": 5.0,
+                                "intensity": 0.9,
+                                "color": (255, 170, 80),
+                            }
+                        )
                 client_light_sources = [
-                    {"x": s["x"], "y": s["y"],
-                     "radius": s["radius"], "intensity": s["intensity"],
-                     "color": [int(s["color"][0]), int(s["color"][1]), int(s["color"][2])]}
+                    {
+                        "x": s["x"],
+                        "y": s["y"],
+                        "radius": s["radius"],
+                        "intensity": s["intensity"],
+                        "color": [
+                            int(s["color"][0]),
+                            int(s["color"][1]),
+                            int(s["color"][2]),
+                        ],
+                    }
                     for s in sources
                 ]
                 light_intensity, light_rgb = _compute_light_map(
-                    blocked, sources, view_w, view_h, ambient=0.06)
-            except Exception:
+                    blocked, sources, view_w, view_h, ambient=0.06
+                )
+            except Exception:  # noqa: BLE001 - 読み込み失敗時はデフォルト値へ
                 light_intensity = None
 
         for vy in range(view_h):
@@ -266,7 +379,9 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                         else:
                             row.append(raw_tile)
                         if light_intensity is not None:
-                            intensity = max(0.12, round(float(light_intensity[vy][vx]), 2))
+                            intensity = max(
+                                0.12, round(float(light_intensity[vy][vx]), 2)
+                            )
                             r, g, b = light_rgb[vy][vx]
                             color_row.append(f"{r},{g},{b}")
                         else:
@@ -307,10 +422,10 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                         tile_id = "PET"
                     else:
                         tile_id = "ENEMY_GOBLIN"
-                    
+
                     # 向き計算 (移動ベクトルから推定)
                     facing = getattr(e, "facing", 0)
-                    if facing == 0 and (hasattr(e, 'prev_x') and hasattr(e, 'prev_y')):
+                    if facing == 0 and (hasattr(e, "prev_x") and hasattr(e, "prev_y")):
                         dx = e.x - e.prev_x
                         dy = e.y - e.prev_y
                         if dx != 0 or dy != 0:
@@ -318,47 +433,61 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                                 facing = 2 if dx > 0 else 1
                             else:
                                 facing = 0 if dy > 0 else 3
-                    
+
                     # 状態判定
                     state = "idle"
-                    if getattr(e, "attacking", False):
-                        state = "attack"
-                    elif getattr(e, "attack_timer", 0) > 0:
+                    if (
+                        getattr(e, "attacking", False)
+                        or getattr(e, "attack_timer", 0) > 0
+                    ):
                         state = "attack"
                     elif e.hp <= 0:
                         state = "dead"
-                    elif getattr(e, "moving", False) or getattr(e, "vx", 0) != 0 or getattr(e, "vy", 0) != 0:
+                    elif (
+                        getattr(e, "moving", False)
+                        or getattr(e, "vx", 0) != 0
+                        or getattr(e, "vy", 0) != 0
+                    ):
                         state = "walk"
                     else:
                         state = "idle"
-                    
-                    entities_data.append({
-                        "name": e.name,
-                        "char": e.char,
-                        "tile_id": tile_id,
-                        "x": vx,
-                        "y": vy,
-                        "world_x": e.x,
-                        "world_y": e.y,
-                        "hp": e.hp,
-                        "max_hp": e.max_hp,
-                        "is_player": e.is_player,
-                        "is_pet": getattr(e, "is_pet", False),
-                        "facing": facing,
-                        "state": state,
-                        "attack_timer": getattr(e, "attack_timer", 0),
-                        "moving": getattr(e, "moving", False),
-                        "faction": getattr(e, "faction", "neutral"),
-                        "status_effects": [st.name for st in getattr(e, "status_effects", [])]
-                    })
+
+                    entities_data.append(
+                        {
+                            "name": e.name,
+                            "char": e.char,
+                            "tile_id": tile_id,
+                            "x": vx,
+                            "y": vy,
+                            "world_x": e.x,
+                            "world_y": e.y,
+                            "hp": e.hp,
+                            "max_hp": e.max_hp,
+                            "is_player": e.is_player,
+                            "is_pet": getattr(e, "is_pet", False),
+                            "facing": facing,
+                            "state": state,
+                            "attack_timer": getattr(e, "attack_timer", 0),
+                            "moving": getattr(e, "moving", False),
+                            "faction": getattr(e, "faction", "neutral"),
+                            "status_effects": [
+                                st.name for st in getattr(e, "status_effects", [])
+                            ],
+                        }
+                    )
                     # Phase 2-A: 敵の視界コーン（プレイヤー方向を向く）
                     if not getattr(e, "is_player", False):
                         ang = math.atan2(p.y - e.y, p.x - e.x)
-                        enemy_cones.append({
-                            "x": vx, "y": vy,
-                            "angle": ang, "half_angle": 0.6,
-                            "range": 6, "color": "255,60,60",
-                        })
+                        enemy_cones.append(
+                            {
+                                "x": vx,
+                                "y": vy,
+                                "angle": ang,
+                                "half_angle": 0.6,
+                                "range": 6,
+                                "color": "255,60,60",
+                            }
+                        )
 
         items_data = []
         for itm in engine.items_on_ground:
@@ -366,15 +495,17 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 vx = itm.x - cam_x
                 vy = itm.y - cam_y
                 if 0 <= vx < view_w and 0 <= vy < view_h:
-                    items_data.append({
-                        "name": itm.display_name,
-                        "raw_name": itm.name,
-                        "char": itm.char,
-                        "category": itm.category,
-                        "quality": itm.quality,
-                        "x": vx,
-                        "y": vy
-                    })
+                    items_data.append(
+                        {
+                            "name": itm.display_name,
+                            "raw_name": itm.name,
+                            "char": itm.char,
+                            "category": itm.category,
+                            "quality": itm.quality,
+                            "x": vx,
+                            "y": vy,
+                        }
+                    )
 
         # 浮遊テキスト
         floating_data = []
@@ -383,13 +514,15 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 vx = ft.x - cam_x
                 vy = ft.y - cam_y
                 if 0 <= vx < view_w and 0 <= vy < view_h:
-                    floating_data.append({
-                        "text": ft.text,
-                        "x": vx,
-                        "y": vy,
-                        "color": list(ft.color),
-                        "life": getattr(ft, "life", 10)
-                    })
+                    floating_data.append(
+                        {
+                            "text": ft.text,
+                            "x": vx,
+                            "y": vy,
+                            "color": list(ft.color),
+                            "life": getattr(ft, "life", 10),
+                        }
+                    )
 
         # パーティクル
         particle_data = []
@@ -398,13 +531,15 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 vx = pt.x - cam_x
                 vy = pt.y - cam_y
                 if 0 <= vx < view_w and 0 <= vy < view_h:
-                    particle_data.append({
-                        "char": pt.char,
-                        "x": vx,
-                        "y": vy,
-                        "color": list(pt.color),
-                        "life": getattr(pt, "life", 5)
-                    })
+                    particle_data.append(
+                        {
+                            "char": pt.char,
+                            "x": vx,
+                            "y": vy,
+                            "color": list(pt.color),
+                            "life": getattr(pt, "life", 5),
+                        }
+                    )
 
         inv_items = [
             {
@@ -418,29 +553,35 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 "value": itm.value,
                 "count": itm.count,
                 "cursed": itm.cursed,
-                "equipped": any(slot.item is itm for slot in engine.inventory.slots)
+                "equipped": any(slot.item is itm for slot in engine.inventory.slots),
             }
             for itm in engine.inventory.items
         ]
 
-        pet_inv_items = [
-            {
-                "id": itm.item_id,
-                "name": itm.display_name,
-                "category": itm.category,
-                "char": itm.char,
-                "weight": itm.weight,
-                "count": itm.count,
-                "equipped": any(slot.item is itm for slot in engine.pet_inventory.slots)
-            }
-            for itm in engine.pet_inventory.items
-        ] if hasattr(engine, "pet_inventory") else []
+        pet_inv_items = (
+            [
+                {
+                    "id": itm.item_id,
+                    "name": itm.display_name,
+                    "category": itm.category,
+                    "char": itm.char,
+                    "weight": itm.weight,
+                    "count": itm.count,
+                    "equipped": any(
+                        slot.item is itm for slot in engine.pet_inventory.slots
+                    ),
+                }
+                for itm in engine.pet_inventory.items
+            ]
+            if hasattr(engine, "pet_inventory")
+            else []
+        )
 
         logs = [
             {
-                "text": entry.text if hasattr(entry, 'text') else str(entry),
-                "level": getattr(entry, 'level', 'INFO'),
-                "color": getattr(entry, 'color', (230, 230, 230))
+                "text": entry.text if hasattr(entry, "text") else str(entry),
+                "level": getattr(entry, "level", "INFO"),
+                "color": getattr(entry, "color", (230, 230, 230)),
             }
             for entry in engine.msg_log.history[-12:]
         ]
@@ -452,7 +593,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 "current": q.current_count,
                 "needed": q.target_count,
                 "reward_gold": q.reward_gold,
-                "completed": q.completed
+                "completed": q.completed,
             }
             for q in getattr(engine, "quests", [])
         ]
@@ -461,7 +602,9 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
         if popup_tutorial:
             p.pending_tutorial_popup = None
 
-        screen_shake = engine.screen_shake.is_active if hasattr(engine, "screen_shake") else False
+        screen_shake = (
+            engine.screen_shake.is_active if hasattr(engine, "screen_shake") else False
+        )
 
         # プレイヤー属性
         attrs = {
@@ -481,10 +624,15 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
         if hasattr(engine, "altar_pos"):
             ax, ay = engine.altar_pos
             if engine.game_map.visible[ax][ay]:
-                light_sources.append({
-                    "x": ax - cam_x, "y": ay - cam_y, "radius": 4.0,
-                    "color": [100, 200, 255], "intensity": 0.8
-                })
+                light_sources.append(
+                    {
+                        "x": ax - cam_x,
+                        "y": ay - cam_y,
+                        "radius": 4.0,
+                        "color": [100, 200, 255],
+                        "intensity": 0.8,
+                    }
+                )
 
         return {
             "player": {
@@ -505,13 +653,13 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 "god": getattr(p, "god_id", "jure"),
                 "piety": getattr(p, "piety", 0),
                 "attributes": attrs,
-                "skill_points": getattr(p, "skill_points", 0)
+                "skill_points": getattr(p, "skill_points", 0),
             },
             "pet": {
                 "name": pet.name if pet else "",
                 "hp": pet.hp if pet else 0,
                 "max_hp": pet.max_hp if pet else 0,
-                "tactic": getattr(pet, "tactic", "balanced") if pet else "balanced"
+                "tactic": getattr(pet, "tactic", "balanced") if pet else "balanced",
             },
             "map": visible_tiles,
             "raw_tiles": raw_tiles,
@@ -519,8 +667,16 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             "light_color": light_color,
             "light_sources": light_sources,
             "enemy_cones": enemy_cones,
-            "camera": {"cam_x": cam_x, "cam_y": cam_y, "view_w": view_w, "view_h": view_h},
-            "map_size": {"width": engine.game_map.width, "height": engine.game_map.height},
+            "camera": {
+                "cam_x": cam_x,
+                "cam_y": cam_y,
+                "view_w": view_w,
+                "view_h": view_h,
+            },
+            "map_size": {
+                "width": engine.game_map.width,
+                "height": engine.game_map.height,
+            },
             "entities": entities_data,
             "items": items_data,
             "floating_texts": floating_data,
@@ -536,29 +692,46 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 "title": latest_notif.title,
                 "message": latest_notif.message,
                 "category": latest_notif.category,
-                "color": list(latest_notif.color)
-            } if (latest_notif := getattr(engine, "notification_manager", None) and engine.notification_manager.get_latest()) else None,
-            "screen_shake": screen_shake
+                "color": list(latest_notif.color),
+            }
+            if (
+                latest_notif := getattr(engine, "notification_manager", None)
+                and engine.notification_manager.get_latest()
+            )
+            else None,
+            "screen_shake": screen_shake,
         }
 
-    def _handle_web_action(self, engine: "Engine", action: str, data: Dict[str, Any]) -> str:
+    def _handle_web_action(
+        self, engine: Engine, action: str, data: dict[str, Any]
+    ) -> str:
         """Webからのキー入力・アクションディスパッチ"""
         dx, dy = 0, 0
-        if action == "up": dy = -1
-        elif action == "down": dy = 1
-        elif action == "left": dx = -1
-        elif action == "right": dx = 1
-        elif action == "up_left": dx, dy = -1, -1
-        elif action == "up_right": dx, dy = 1, -1
-        elif action == "down_left": dx, dy = -1, 1
-        elif action == "down_right": dx, dy = 1, 1
+        if action == "up":
+            dy = -1
+        elif action == "down":
+            dy = 1
+        elif action == "left":
+            dx = -1
+        elif action == "right":
+            dx = 1
+        elif action == "up_left":
+            dx, dy = -1, -1
+        elif action == "up_right":
+            dx, dy = 1, -1
+        elif action == "down_left":
+            dx, dy = -1, 1
+        elif action == "down_right":
+            dx, dy = 1, 1
         elif action == "wait":
             engine.player.energy -= 100
             engine.advance_world()
             return "1ターン待機しました"
         elif action == "pickup":
             px, py = engine.player.x, engine.player.y
-            items = [itm for itm in engine.items_on_ground if itm.x == px and itm.y == py]
+            items = [
+                itm for itm in engine.items_on_ground if itm.x == px and itm.y == py
+            ]
             if items:
                 itm = items[0]
                 ok, msg = engine.inventory.add_item(itm)
@@ -569,7 +742,11 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                     return msg
             return "足元にアイテムはありません"
         elif action == "pray":
-            engine.log(f"神【{getattr(engine.player, 'god_id', '神')}】に祈りを捧げた…… 神の恩寵が全身を満たす！", (255, 215, 0), level="SUCCESS")
+            engine.log(
+                f"神【{getattr(engine.player, 'god_id', '神')}】に祈りを捧げた…… 神の恩寵が全身を満たす！",
+                (255, 215, 0),
+                level="SUCCESS",
+            )
             engine.player.hp = engine.player.max_hp
             engine.player.mp = engine.player.max_mp
             engine.advance_world()
@@ -577,14 +754,21 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
         elif action == "cast_fireball":
             if engine.player.mp >= 12:
                 engine.player.mp -= 12
-                engine.log("💥 火炎球（ファイアボール）の呪文を放った！", (255, 120, 50), level="SUCCESS")
+                engine.log(
+                    "💥 火炎球（ファイアボール）の呪文を放った！",
+                    (255, 120, 50),
+                    level="SUCCESS",
+                )
                 from ui_fx_systems import Particle
+
                 for e in list(engine.entities):
                     if e.faction == "monster" and e.hp > 0:
                         dist = abs(e.x - engine.player.x) + abs(e.y - engine.player.y)
                         if dist <= 5:
                             e.hp -= 25
-                            engine.particles.append(Particle("💥", e.x, e.y, (255, 100, 50), life=4))
+                            engine.particles.append(
+                                Particle("💥", e.x, e.y, (255, 100, 50), life=4)
+                            )
                             if e.hp <= 0:
                                 engine._on_kill(e)
                 engine.advance_world()
@@ -597,15 +781,20 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 heal = getattr(pot, "heal_amount", 40)
                 engine.player.hp = min(engine.player.max_hp, engine.player.hp + heal)
                 engine.inventory.remove_item(pot, 1)
-                engine.log(f"🧪 {pot.display_name} を飲み、体力が回復した！ (+{heal} HP)", (100, 255, 150))
+                engine.log(
+                    f"🧪 {pot.display_name} を飲み、体力が回復した！ (+{heal} HP)",
+                    (100, 255, 150),
+                )
                 engine.advance_world()
                 return f"{pot.display_name} を使用しました"
             return "ポーションを持っていません"
         elif action == "set_pet_tactic":
             tactic = data.get("tactic", "balanced")
             if engine.pet:
-                setattr(engine.pet, "tactic", tactic)
-                engine.log(f"シエルへの戦術指示を【{tactic}】に変更しました。", (255, 180, 220))
+                engine.pet.tactic = tactic
+                engine.log(
+                    f"シエルへの戦術指示を【{tactic}】に変更しました。", (255, 180, 220)
+                )
                 return f"戦術指示: {tactic}"
 
         if dx != 0 or dy != 0:
@@ -619,7 +808,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
         return
 
 
-def start_web_server(engine: "Engine", port: int = 8080) -> Optional[HTTPServer]:
+def start_web_server(engine: Engine, port: int = 8080) -> HTTPServer | None:
     global _ENGINE_INSTANCE
     _ENGINE_INSTANCE = engine
 
@@ -628,6 +817,43 @@ def start_web_server(engine: "Engine", port: int = 8080) -> Optional[HTTPServer]
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         return server
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - バインド失敗時はメッセージのみ表示
         print(f"Web server failed to bind on port {port}: {e}")
         return None
+
+
+def launch_browser(url: str = "http://localhost:8080") -> bool:
+    """Step 49: 既定のブラウザでゲーム URL を開く。失敗時は False を返す。"""
+    try:
+        import webbrowser
+
+        return webbrowser.open(url)
+    except Exception:  # noqa: BLE001 - ブラウザ起動不可環境では単に失敗扱い
+        return False
+
+
+# Step 52 / Step 66: クライアントのグラフィックス能力を推定・記録する
+_DETECTED_GRAPHICS = "unknown"
+_SELECTED_RENDERER = "unknown"
+
+
+def detect_graphics(user_agent: str = "") -> str:
+    """User-Agent などから 'webgpu' | 'webgl2' | 'canvas2d' | 'none' を推定。"""
+    ua = (user_agent or "").lower()
+    if "edg" in ua or "chrome" in ua or "firefox" in ua or "safari" in ua:
+        # モダンブラウザは概ね WebGL2 をサポート
+        return "webgl2"
+    if not ua:
+        return "webgl2"  # 既定の楽観的推定
+    return "canvas2d"
+
+
+def set_selected_renderer(renderer: str) -> None:
+    """Step 56: クライアントが選択したレンダラ名を記録。"""
+    global _SELECTED_RENDERER
+    _SELECTED_RENDERER = renderer
+
+
+def get_capabilities() -> dict:
+    """Step 66: 検出結果と選択レンダラを返す。"""
+    return {"detected": _DETECTED_GRAPHICS, "selected": _SELECTED_RENDERER}

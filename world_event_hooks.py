@@ -5,27 +5,33 @@ World Event Hooks Module (偏執的クエストシステム / 設計書 Phase 9 
 
 from __future__ import annotations
 
-from typing import Optional, Callable, Dict, List
-from world_event_system import WorldEventSystem, WorldEventType, WorldEvent
+from collections.abc import Callable
+
+from world_event_system import WorldEvent, WorldEventSystem, WorldEventType
 
 
 class EventMonitor:
     """ワールドイベントを監視し、イベント発生・終了時にハンドラーを呼び出す"""
 
-    def __init__(self, event_system: Optional[WorldEventSystem] = None):
+    def __init__(self, event_system: WorldEventSystem | None = None):
         from world_event_system import WORLD_EVENT_SYSTEM
+
         self.event_system = event_system or WORLD_EVENT_SYSTEM
-        self._handlers: Dict[WorldEventType, List[Callable[[WorldEvent], None]]] = {
+        self._handlers: dict[WorldEventType, list[Callable[[WorldEvent], None]]] = {
             event_type: [] for event_type in WorldEventType
         }
-        self._active_events: Dict[WorldEventType, WorldEvent] = {}
+        self._active_events: dict[WorldEventType, WorldEvent] = {}
 
-    def register_handler(self, event_type: WorldEventType, handler: Callable[[WorldEvent], None]) -> None:
+    def register_handler(
+        self, event_type: WorldEventType, handler: Callable[[WorldEvent], None]
+    ) -> None:
         """特定のイベントタイプにハンドラーを登録"""
         if event_type in self._handlers:
             self._handlers[event_type].append(handler)
 
-    def unregister_handler(self, event_type: WorldEventType, handler: Callable[[WorldEvent], None]) -> None:
+    def unregister_handler(
+        self, event_type: WorldEventType, handler: Callable[[WorldEvent], None]
+    ) -> None:
         """ハンドラーの登録を解除"""
         if event_type in self._handlers and handler in self._handlers[event_type]:
             self._handlers[event_type].remove(handler)
@@ -65,7 +71,9 @@ class EventMonitor:
 EVENT_MONITOR = EventMonitor()
 
 
-def monitor_world_event(event_type: WorldEventType, handler: Callable[[WorldEvent], None]) -> None:
+def monitor_world_event(
+    event_type: WorldEventType, handler: Callable[[WorldEvent], None]
+) -> None:
     """ワールドイベントのハンドラーを登録するヘルパー関数"""
     EVENT_MONITOR.register_handler(event_type, handler)
 

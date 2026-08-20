@@ -1,11 +1,13 @@
 from __future__ import annotations
-from packages.core.kernel.package import IPackage, PackageMetadata
+
 from packages.core.kernel.kernel import Kernel
+from packages.core.kernel.package import IPackage, PackageMetadata
 
 
 # Module-level function for pickling support
 def _create_web_server(engine, port=8080):
     from web_server import start_web_server
+
     return start_web_server(engine, port=port)
 
 
@@ -25,7 +27,6 @@ class PlatformPackage(IPackage):
 
     def setup(self, kernel: Kernel) -> None:
         from input_handler import InputHandler
-        from renderer import Renderer, get_renderer
 
         kernel.register_system("web_server_factory", _create_web_server)
         kernel.register_system("input_handler", InputHandler())

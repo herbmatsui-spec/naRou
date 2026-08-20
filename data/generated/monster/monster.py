@@ -5,8 +5,9 @@ from __future__ import annotations
 
 from enum import Enum
 
-from data.schemas._base import DataModel
 from pydantic import ConfigDict, Field, RootModel
+
+from data.schemas._base import DataModel
 
 
 class ColorItem(RootModel[int]):
@@ -14,18 +15,18 @@ class ColorItem(RootModel[int]):
 
 
 class Skill(RootModel[str]):
-    root: str = Field(..., pattern='^(sk_)?[a-z_][a-z0-9_]*$')
+    root: str = Field(..., pattern="^(sk_)?[a-z_][a-z0-9_]*$")
 
 
 class Spell(RootModel[str]):
-    root: str = Field(..., pattern='^(sp_)?[a-z_][a-z0-9_]*$')
+    root: str = Field(..., pattern="^(sp_)?[a-z_][a-z0-9_]*$")
 
 
 class DropEntry(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
-    item_id: str = Field(..., pattern='^it_[a-z_][a-z0-9_]*$')
+    item_id: str = Field(..., pattern="^it_[a-z_][a-z0-9_]*$")
     """
     Item ID to drop
     """
@@ -42,23 +43,23 @@ class AiType(Enum):
     AI behavior type
     """
 
-    melee = 'melee'
-    ranged = 'ranged'
-    caster = 'caster'
-    flee = 'flee'
-    guard = 'guard'
-    aggressive = 'aggressive'
-    coward = 'coward'
-    tactical = 'tactical'
-    boss = 'boss'
-    support = 'support'
+    melee = "melee"
+    ranged = "ranged"
+    caster = "caster"
+    flee = "flee"
+    guard = "guard"
+    aggressive = "aggressive"
+    coward = "coward"
+    tactical = "tactical"
+    boss = "boss"
+    support = "support"
 
 
 class MonsterDefinition(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
-    id: str | None = Field(None, pattern='^mn_[a-z_][a-z0-9_]*$')
+    id: str | None = Field(None, pattern="^mn_[a-z_][a-z0-9_]*$")
     """
     Unique monster ID with 'mn_' prefix (optional, can be inferred from key)
     """
@@ -106,7 +107,7 @@ class MonsterDefinition(DataModel):
     """
     Maximum floor level where this monster spawns
     """
-    melee_damage: str | None = Field(None, pattern='^\\d+d\\d+(\\+\\d+)?$')
+    melee_damage: str | None = Field(None, pattern="^\\d+d\\d+(\\+\\d+)?$")
     """
     Melee damage dice notation (e.g., '2d6+3')
     """
@@ -134,7 +135,7 @@ class MonsterDefinition(DataModel):
     """
     Drop table entries
     """
-    faction: str | None = 'monster'
+    faction: str | None = "monster"
     """
     Faction ID for reputation/aggro
     """

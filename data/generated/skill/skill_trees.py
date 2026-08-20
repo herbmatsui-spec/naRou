@@ -5,54 +5,55 @@ from __future__ import annotations
 
 from enum import Enum
 
-from data.schemas._base import DataModel
 from pydantic import ConfigDict, Field, RootModel
+
+from data.schemas._base import DataModel
 
 
 class Prerequisite(RootModel[str]):
-    root: str = Field(..., pattern='^[a-z_][a-z0-9_]*$')
+    root: str = Field(..., pattern="^[a-z_][a-z0-9_]*$")
 
 
 class Type(Enum):
-    damage_bonus = 'damage_bonus'
-    crit_chance = 'crit_chance'
-    mp_cost_reduction = 'mp_cost_reduction'
-    unlock_skill = 'unlock_skill'
-    heal_amount = 'heal_amount'
-    stat_bonus = 'stat_bonus'
-    resistance = 'resistance'
-    unlock_recipe = 'unlock_recipe'
-    speed_bonus = 'speed_bonus'
-    evasion_bonus = 'evasion_bonus'
-    accuracy_bonus = 'accuracy_bonus'
-    lifesteal = 'lifesteal'
-    mana_shield = 'mana_shield'
-    reflect_damage = 'reflect_damage'
-    poison_immunity = 'poison_immunity'
-    stun_chance = 'stun_chance'
-    dodge_chance = 'dodge_chance'
-    counter_chance = 'counter_chance'
-    elemental_damage = 'elemental_damage'
-    mp_on_hit = 'mp_on_hit'
-    undead_damage_bonus = 'undead_damage_bonus'
-    heal_on_kill = 'heal_on_kill'
+    damage_bonus = "damage_bonus"
+    crit_chance = "crit_chance"
+    mp_cost_reduction = "mp_cost_reduction"
+    unlock_skill = "unlock_skill"
+    heal_amount = "heal_amount"
+    stat_bonus = "stat_bonus"
+    resistance = "resistance"
+    unlock_recipe = "unlock_recipe"
+    speed_bonus = "speed_bonus"
+    evasion_bonus = "evasion_bonus"
+    accuracy_bonus = "accuracy_bonus"
+    lifesteal = "lifesteal"
+    mana_shield = "mana_shield"
+    reflect_damage = "reflect_damage"
+    poison_immunity = "poison_immunity"
+    stun_chance = "stun_chance"
+    dodge_chance = "dodge_chance"
+    counter_chance = "counter_chance"
+    elemental_damage = "elemental_damage"
+    mp_on_hit = "mp_on_hit"
+    undead_damage_bonus = "undead_damage_bonus"
+    heal_on_kill = "heal_on_kill"
 
 
 class Target(Enum):
-    melee = 'melee'
-    spell = 'spell'
-    self = 'self'
-    ranged = 'ranged'
-    pet = 'pet'
-    all = 'all'
-    enemy = 'enemy'
-    ally = 'ally'
-    unarmed = 'unarmed'
+    melee = "melee"
+    spell = "spell"
+    self = "self"
+    ranged = "ranged"
+    pet = "pet"
+    all = "all"
+    enemy = "enemy"
+    ally = "ally"
+    unarmed = "unarmed"
 
 
 class Effect(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     type: Type
     value: float | str
@@ -63,7 +64,7 @@ class Effect(DataModel):
 
 class Meta(DataModel):
     model_config = ConfigDict(
-        extra='allow',
+        extra="allow",
     )
     version: str | None = None
     last_updated: str | None = None
@@ -71,9 +72,9 @@ class Meta(DataModel):
 
 class SkillTier(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
-    id: str = Field(..., pattern='^[a-z_][a-z0-9_]*$')
+    id: str = Field(..., pattern="^[a-z_][a-z0-9_]*$")
     name: str = Field(..., min_length=1)
     description: str
     cost: int = Field(..., ge=1)
@@ -83,7 +84,7 @@ class SkillTier(DataModel):
 
 class SkillTree(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     name: str = Field(..., min_length=1)
     icon: str = Field(..., max_length=2, min_length=1)
@@ -92,7 +93,7 @@ class SkillTree(DataModel):
 
 class SkillTreesDefinition(DataModel):
     model_config = ConfigDict(
-        extra='allow',
+        extra="allow",
     )
     skill_trees: dict[str, SkillTree]
     meta: Meta | None = None

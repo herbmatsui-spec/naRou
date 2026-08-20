@@ -7,21 +7,28 @@ Provides:
   * Critical value anomaly detection (Step 69)
   * Violation logging & reporting (Step 70)
 """
+
 from __future__ import annotations
 
-import os
+import logging
 import sys
 import time
-import hashlib
-import logging
-from typing import Any, Dict, Optional
 from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 # Critical game state keys that should be monitored for tampering
 CRITICAL_KEYS = {
-    "player": ["gold", "level", "exp", "karma_law_chaos", "karma_good_evil", "hp", "mp"],
+    "player": [
+        "gold",
+        "level",
+        "exp",
+        "karma_law_chaos",
+        "karma_good_evil",
+        "hp",
+        "mp",
+    ],
     "survival": ["hunger", "thirst", "sleepiness"],
 }
 
@@ -29,9 +36,9 @@ CRITICAL_KEYS = {
 class IntegrityChecker:
     """Runtime integrity & anti-tamper monitor."""
 
-    def __init__(self, engine: Optional[Any] = None):
+    def __init__(self, engine: Any | None = None):
         self.engine = engine
-        self._baselines: Dict[str, Any] = {}
+        self._baselines: dict[str, Any] = {}
         self._violation_count = 0
         self._last_check = 0.0
         self._check_interval = 30.0  # seconds
@@ -43,13 +50,14 @@ class IntegrityChecker:
         if sys.platform == "win32":
             try:
                 import ctypes
+
                 return bool(ctypes.windll.kernel32.IsDebuggerPresent())
             except Exception:
                 pass
         # Linux: /proc/self/status TracerPid
         if sys.platform == "linux":
             try:
-                with open("/proc/self/status", "r") as f:
+                with open("/proc/self/status") as f:
                     for line in f:
                         if line.startswith("TracerPid:"):
                             return int(line.split(":")[1].strip()) != 0
@@ -59,6 +67,7 @@ class IntegrityChecker:
         if sys.platform == "darwin":
             try:
                 import ctypes
+
                 libc = ctypes.CDLL("libc.dylib")
                 if libc.ptrace(31, 0, 0, 0) == -1:  # PT_DENY_ATTACH
                     return True
@@ -68,7 +77,7 @@ class IntegrityChecker:
         return sys.gettrace() is not None
 
     # ---- Step 65: Memory integrity check ----
-    def snapshot_critical_values(self, engine: Any) -> Dict[str, Any]:
+    def snapshot_critical_values(self, engine: Any) -> dict[str, Any]:
         """Record baseline values for critical game state."""
         snap = {}
         if not engine:
@@ -99,29 +108,35 @@ class IntegrityChecker:
             if current_val is not None and current_val != baseline:
                 # Allow small deltas for stats that change naturally (hp, mp, hunger)
                 if key.endswith((".hp", ".mp", ".hunger", ".thirst", ".sleepiness")):
-                    if isinstance(current_val, (int, float)) and isinstance(baseline, (int, float)):
+                    if isinstance(current_val, (int, float)) and isinstance(
+                        baseline, (int, float)
+                    ):
                         if abs(current_val - baseline) <= max(5, baseline * 0.1):
                             continue
                 self._log_violation(
                     "memory_tamper",
-                    f"Critical value changed: {key} baseline={baseline} current={current_val}"
+                    f"Critical value changed: {key} baseline={baseline} current={current_val}",
                 )
                 return False
         return True
 
     # ---- Step 69: Anomaly detection (balance anomalies) ----
-    def detect_anomaly(self, result: Dict[str, Any]) -> bool:
+    def detect_anomaly(self, result: dict[str, Any]) -> bool:
         """Detect statistical anomalies in combat results (one-shot kills, etc.)."""
         # Example: damage > 3x max expected, or 100% crit rate over 50 attacks
         damage = result.get("damage", 0)
         max_expected = result.get("max_expected_damage", 0)
         if max_expected and damage > max_expected * 3:
-            self._log_violation("damage_anomaly", f"Damage {damage} exceeds 3x expected {max_expected}")
+            self._log_violation(
+                "damage_anomaly", f"Damage {damage} exceeds 3x expected {max_expected}"
+            )
             return True
         crit_rate = result.get("crit_rate", 0)
         attacks = result.get("attacks", 0)
         if attacks > 50 and crit_rate == 1.0:
-            self._log_violation("crit_anomaly", f"100% crit rate over {attacks} attacks")
+            self._log_violation(
+                "crit_anomaly", f"100% crit rate over {attacks} attacks"
+            )
             return True
         return False
 
@@ -161,7 +176,7 @@ class IntegrityChecker:
         return ok
 
 
-def get_integrity_checker(engine: Optional[Any] = None) -> IntegrityChecker:
+def get_integrity_checker(engine: Any | None = None) -> IntegrityChecker:
     """Factory returning an IntegrityChecker bound to engine."""
     return IntegrityChecker(engine)
 

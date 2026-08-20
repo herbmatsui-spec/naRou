@@ -2,6 +2,7 @@
 """
 Generate tiny_rogue_manifest.csv from the tile PNGs.
 """
+
 import csv
 from pathlib import Path
 
@@ -28,37 +29,37 @@ for i in range(132):
     col = i % 12
     if row == 0:
         cat = "floor"
-        suggested = f"TR_FLOOR_{col+1:02d}"
+        suggested = f"TR_FLOOR_{col + 1:02d}"
     elif row == 1:
         cat = "wall"
-        suggested = f"TR_WALL_{col+1:02d}"
+        suggested = f"TR_WALL_{col + 1:02d}"
     elif row == 2:
         cat = "wall_variant"
-        suggested = f"TR_WALL_VAR_{col+1:02d}"
+        suggested = f"TR_WALL_VAR_{col + 1:02d}"
     elif row == 3:
         cat = "decoration"
-        suggested = f"TR_DECOR_{col+1:02d}"
+        suggested = f"TR_DECOR_{col + 1:02d}"
     elif row == 4:
         cat = "item"
-        suggested = f"TR_ITEM_{col+1:02d}"
+        suggested = f"TR_ITEM_{col + 1:02d}"
     elif row == 5:
         cat = "monster"
-        suggested = f"TR_MONSTER_{col+1:02d}"
+        suggested = f"TR_MONSTER_{col + 1:02d}"
     elif row == 6:
         cat = "monster_variant"
-        suggested = f"TR_MONSTER_VAR_{col+1:02d}"
+        suggested = f"TR_MONSTER_VAR_{col + 1:02d}"
     elif row == 7:
         cat = "effect"
-        suggested = f"TR_EFFECT_{col+1:02d}"
+        suggested = f"TR_EFFECT_{col + 1:02d}"
     elif row == 8:
         cat = "ui"
-        suggested = f"TR_UI_{col+1:02d}"
+        suggested = f"TR_UI_{col + 1:02d}"
     elif row == 9:
         cat = "player_npc"
-        suggested = f"TR_PLAYER_{col+1:02d}"
+        suggested = f"TR_PLAYER_{col + 1:02d}"
     else:
         cat = "misc"
-        suggested = f"TR_MISC_{col+1:02d}"
+        suggested = f"TR_MISC_{col + 1:02d}"
     category_map[i] = (cat, suggested)
 
 rows = []

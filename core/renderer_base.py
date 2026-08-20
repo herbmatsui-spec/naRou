@@ -1,8 +1,9 @@
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Optional, Tuple, List, Dict, Any
 from pathlib import Path
+from typing import Any
 
 
 @dataclass
@@ -16,7 +17,7 @@ class TileDrawCall:
     v0: float
     u1: float
     v1: float
-    color: Tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0)
+    color: tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0)
     rotation: float = 0.0
     scale: float = 1.0
 
@@ -27,31 +28,33 @@ class TextDrawCall:
     x: int
     y: int
     font_size: int
-    color: Tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0)
+    color: tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0)
     alignment: str = "left"
-    max_width: Optional[int] = None
+    max_width: int | None = None
 
 
 @dataclass
 class EntityDrawCall:
     """エンティティ描画コール（方向別・状態別アニメーション対応）"""
-    tile_id: str              # "PLAYER", "PET", "ENEMY_GOBLIN" 等
-    x: int                    # タイル座標X
-    y: int                    # タイル座標Y
-    direction: int = 0        # 0:下, 1:左, 2:右, 3:上
-    state: str = "idle"       # "idle", "walk", "attack", "dead"
-    frame: int = 0            # 現在フレーム（内部管理用）
-    variant: int = 0          # バリアント（通常0）
-    tint: Tuple[int, int, int] = (255, 255, 255)  # 色調補正
-    bounce: float = 0.0       # 呼吸アニメ用Yオフセット
+
+    tile_id: str  # "PLAYER", "PET", "ENEMY_GOBLIN" 等
+    x: int  # タイル座標X
+    y: int  # タイル座標Y
+    direction: int = 0  # 0:下, 1:左, 2:右, 3:上
+    state: str = "idle"  # "idle", "walk", "attack", "dead"
+    frame: int = 0  # 現在フレーム（内部管理用）
+    variant: int = 0  # バリアント（通常0）
+    tint: tuple[int, int, int] = (255, 255, 255)  # 色調補正
+    bounce: float = 0.0  # 呼吸アニメ用Yオフセット
 
 
 @dataclass
 class LightingDrawCall:
     """ライティング描画コール"""
-    light_map: Optional[Any] = None
-    light_sources: List[Any] = field(default_factory=list)
-    enemy_cones: List[Any] = field(default_factory=list)
+
+    light_map: Any | None = None
+    light_sources: list[Any] = field(default_factory=list)
+    enemy_cones: list[Any] = field(default_factory=list)
     ambient_light: float = 0.08
     time: float = 0.0
 
@@ -59,7 +62,8 @@ class LightingDrawCall:
 @dataclass
 class ParticleDrawCall:
     """パーティクル描画コール"""
-    particles: List[Any] = field(default_factory=list)
+
+    particles: list[Any] = field(default_factory=list)
 
 
 @dataclass
@@ -116,11 +120,13 @@ class RendererBase(ABC):
         pass
 
     @abstractmethod
-    def get_texture_size(self, texture_id: int) -> Tuple[int, int]:
+    def get_texture_size(self, texture_id: int) -> tuple[int, int]:
         pass
 
     @abstractmethod
-    def clear(self, color: Tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)) -> None:
+    def clear(
+        self, color: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)
+    ) -> None:
         pass
 
     @abstractmethod
@@ -132,5 +138,5 @@ class RendererBase(ABC):
         pass
 
     @abstractmethod
-    def get_framebuffer_size(self) -> Tuple[int, int]:
+    def get_framebuffer_size(self) -> tuple[int, int]:
         pass

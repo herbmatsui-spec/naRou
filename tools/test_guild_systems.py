@@ -1,13 +1,16 @@
 """Tests for Guild/Faction Proposals 6-9."""
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from guild_systems import (
-    GuildRoleManager, GuildWarManager, GuildWarState,
-    RankingTitleManager, FactionEventManager,
+    FactionEventManager,
+    GuildRoleManager,
+    GuildWarManager,
+    GuildWarState,
+    RankingTitleManager,
 )
 
 
@@ -32,8 +35,13 @@ def test_role_permissions():
 # 提案7: wars
 def test_war_victory():
     mgr = GuildWarManager()
-    st = GuildWarState(attacker="A", defender="B", eliminations=50,
-                       territory=["derphy"], quest_progress=10)
+    st = GuildWarState(
+        attacker="A",
+        defender="B",
+        eliminations=50,
+        territory=["derphy"],
+        quest_progress=10,
+    )
     assert mgr.is_victory(st)
     st.quest_progress = 0
     assert not mgr.is_victory(st)

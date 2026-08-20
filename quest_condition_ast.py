@@ -11,12 +11,21 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, List, Union
+from typing import Any
 
 # 比較演算子・述語演算子の許可リスト
 LEAF_OPERATORS = (
-    "==", "!=", ">=", "<=", ">", "<",
-    "has", "in", "contains", "exists", "truthy",
+    "==",
+    "!=",
+    ">=",
+    "<=",
+    ">",
+    "<",
+    "has",
+    "in",
+    "contains",
+    "exists",
+    "truthy",
 )
 # 組み合わせ演算子（論理結合子）
 COMBINATOR_OPERATORS = ("and", "or", "xor", "not")
@@ -97,7 +106,7 @@ class NotCondition(ConditionNode):
 class AndCondition(ConditionNode):
     """論理積ノード。全ての子が真なら真。"""
 
-    children: List[ConditionNode]
+    children: list[ConditionNode]
 
     def evaluate(self, context: Any) -> bool:
         return all(child.evaluate(context) for child in self.children)
@@ -107,7 +116,7 @@ class AndCondition(ConditionNode):
 class OrCondition(ConditionNode):
     """論理和ノード。いずれかの子が真なら真。"""
 
-    children: List[ConditionNode]
+    children: list[ConditionNode]
 
     def evaluate(self, context: Any) -> bool:
         return any(child.evaluate(context) for child in self.children)
@@ -117,7 +126,7 @@ class OrCondition(ConditionNode):
 class XorCondition(ConditionNode):
     """排他的論理和ノード。ちょうど1つの子が真なら真。"""
 
-    children: List[ConditionNode]
+    children: list[ConditionNode]
 
     def evaluate(self, context: Any) -> bool:
         return sum(1 for child in self.children if child.evaluate(context)) == 1

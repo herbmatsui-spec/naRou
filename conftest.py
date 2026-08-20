@@ -1,4 +1,5 @@
 """Pytest configuration: ensure project root is importable for test suites."""
+
 import os
 import sys
 

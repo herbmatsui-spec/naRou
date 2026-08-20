@@ -8,8 +8,6 @@ light sources for the player lantern + torches.
 import os
 import sys
 
-import pytest
-
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
@@ -19,10 +17,12 @@ from map_engine import GameMap  # noqa: E402
 
 def _build_viewport(game_map, cam_x, cam_y, view_w, view_h, sources):
     blocked = [
-        [not game_map.is_transparent(cam_x + vx, cam_y + vy)
-         if (0 <= cam_x + vx < game_map.width and 0 <= cam_y + vy < game_map.height)
-         else True
-         for vx in range(view_w)]
+        [
+            not game_map.is_transparent(cam_x + vx, cam_y + vy)
+            if (0 <= cam_x + vx < game_map.width and 0 <= cam_y + vy < game_map.height)
+            else True
+            for vx in range(view_w)
+        ]
         for vy in range(view_h)
     ]
     intensity, _ = compute_light_map(blocked, sources, view_w, view_h, ambient=0.06)
@@ -40,9 +40,15 @@ def test_torches_light_floor_around_them():
     cam_y = max(0, ty - view_h // 2)
     lx, ly = tx - cam_x, ty - cam_y
 
-    sources = [{
-        "x": lx, "y": ly, "radius": 5.0, "intensity": 0.9, "color": (255, 170, 80),
-    }]
+    sources = [
+        {
+            "x": lx,
+            "y": ly,
+            "radius": 5.0,
+            "intensity": 0.9,
+            "color": (255, 170, 80),
+        }
+    ]
     intensity = _build_viewport(m, cam_x, cam_y, view_w, view_h, sources)
 
     # Torch sits on a wall (correctly unlit), but an adjacent floor cell glows.
@@ -63,8 +69,14 @@ def test_player_lantern_lights_own_tile():
     cam_x = max(0, min(m.width - view_w, px - view_w // 2))
     cam_y = max(0, min(m.height - view_h, py - view_h // 2))
     lx, ly = px - cam_x, py - cam_y
-    sources = [{
-        "x": lx, "y": ly, "radius": 8.0, "intensity": 1.0, "color": (255, 240, 210),
-    }]
+    sources = [
+        {
+            "x": lx,
+            "y": ly,
+            "radius": 8.0,
+            "intensity": 1.0,
+            "color": (255, 240, 210),
+        }
+    ]
     intensity = _build_viewport(m, cam_x, cam_y, view_w, view_h, sources)
     assert intensity[ly][lx] > 0.9  # player tile is fully lit

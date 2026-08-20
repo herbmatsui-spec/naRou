@@ -1,12 +1,15 @@
 """Tests for Seasonal Proposals 6-9."""
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from seasonal_systems import (
-    EventAnnouncer, EventFeedbackManager, EventAnalyticsManager, EventAction,
+    EventAction,
+    EventAnalyticsManager,
+    EventAnnouncer,
+    EventFeedbackManager,
     EventResourceManager,
 )
 

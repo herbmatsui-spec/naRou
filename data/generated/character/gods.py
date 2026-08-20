@@ -3,13 +3,14 @@
 
 from __future__ import annotations
 
-from data.schemas._base import DataModel
 from pydantic import ConfigDict, Field, RootModel
+
+from data.schemas._base import DataModel
 
 
 class God(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     name: str = Field(..., min_length=1)
     domain: str

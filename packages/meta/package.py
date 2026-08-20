@@ -1,6 +1,7 @@
 from __future__ import annotations
-from packages.core.kernel.package import IPackage, PackageMetadata
+
 from packages.core.kernel.kernel import Kernel
+from packages.core.kernel.package import IPackage, PackageMetadata
 
 
 class MetaPackage(IPackage):
@@ -24,14 +25,23 @@ class MetaPackage(IPackage):
         )
 
     def setup(self, kernel: Kernel) -> None:
-        from achievement_system import AchievementRegistry, AchievementManager
-        from reincarnation_system import ReincarnationRegistry, ReincarnationManager
-        from inheritance_system import InheritanceRegistry, InheritanceManager
-        from karma_system import KarmaRegistry, KarmaManager
-        from reincarnation_dungeon_system import ReincarnationDungeonRegistry, ReincarnationDungeonManager
-        from legacy_skill_system import LegacySkillRegistry, LegacySkillManager
-        from reincarnation_challenge_system import ReincarnationChallengeRegistry, ReincarnationChallengeManager
-        from meta_progression_system import MetaProgressionRegistry, MetaProgressionManager
+        from achievement_system import AchievementManager, AchievementRegistry
+        from inheritance_system import InheritanceManager, InheritanceRegistry
+        from karma_system import KarmaManager, KarmaRegistry
+        from legacy_skill_system import LegacySkillManager, LegacySkillRegistry
+        from meta_progression_system import (
+            MetaProgressionManager,
+            MetaProgressionRegistry,
+        )
+        from reincarnation_challenge_system import (
+            ReincarnationChallengeManager,
+            ReincarnationChallengeRegistry,
+        )
+        from reincarnation_dungeon_system import (
+            ReincarnationDungeonManager,
+            ReincarnationDungeonRegistry,
+        )
+        from reincarnation_system import ReincarnationManager, ReincarnationRegistry
         from title_system import MANAGER as TitleManager
 
         ach_reg = AchievementRegistry()
@@ -52,7 +62,10 @@ class MetaPackage(IPackage):
 
         reinc_dungeon_reg = ReincarnationDungeonRegistry()
         reinc_dungeon_reg.load()
-        kernel.register_system("reincarnation_dungeon_manager", ReincarnationDungeonManager(reinc_dungeon_reg))
+        kernel.register_system(
+            "reincarnation_dungeon_manager",
+            ReincarnationDungeonManager(reinc_dungeon_reg),
+        )
 
         legacy_reg = LegacySkillRegistry()
         legacy_reg.load()
@@ -60,11 +73,15 @@ class MetaPackage(IPackage):
 
         challenge_reg = ReincarnationChallengeRegistry()
         challenge_reg.load()
-        kernel.register_system("challenge_manager", ReincarnationChallengeManager(challenge_reg))
+        kernel.register_system(
+            "challenge_manager", ReincarnationChallengeManager(challenge_reg)
+        )
 
         meta_reg = MetaProgressionRegistry()
         meta_reg.load()
-        kernel.register_system("meta_progression_manager", MetaProgressionManager(meta_reg))
+        kernel.register_system(
+            "meta_progression_manager", MetaProgressionManager(meta_reg)
+        )
 
         kernel.register_system("title_manager", TitleManager)
 

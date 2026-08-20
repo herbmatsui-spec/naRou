@@ -5,8 +5,8 @@ Provides localized log message formatting on top of the standard logger.
 """
 
 from __future__ import annotations
+
 import logging
-from typing import Optional
 
 from localization_manager import LocalizationManager
 

@@ -15,11 +15,13 @@
 ### 実装例
 ```python
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 def load_yaml_safe(filepath: str, default=None):
     try:
-        with open(filepath, encoding='utf-8') as f:
+        with open(filepath, encoding="utf-8") as f:
             return yaml.safe_load(f)
     except FileNotFoundError:
         logger.warning(f"YAML file not found: {filepath}. Using default.")
@@ -51,11 +53,13 @@ import pytest
 from title_system import TitleRegistry, TitleManager
 from entity import Entity
 
+
 def test_title_loading():
     registry = TitleRegistry()
     registry.load("data/titles.yaml")
     assert len(registry.all()) > 0
     assert "goblin_slayer" in registry.all()
+
 
 def test_title_condition_check():
     player = Entity()
@@ -164,10 +168,11 @@ def check_all_titles(self, player: 'Entity') -> List[str]:
 import importlib
 import os
 
+
 class PluginManager:
     def __init__(self):
         self.plugins = []
-    
+
     def load_plugins_from_directory(self, directory: str):
         for filename in os.listdir(directory):
             if filename.endswith(".py") and not filename.startswith("_"):
@@ -197,11 +202,13 @@ class PluginManager:
 ```python
 from pathlib import Path
 
+
 def get_data_file_path(filename: str) -> Path:
     return Path("data") / filename
 
+
 def load_yaml_universal(filepath: Path):
-    with filepath.open(encoding='utf-8') as f:
+    with filepath.open(encoding="utf-8") as f:
         return yaml.safe_load(f)
 ```
 
@@ -299,26 +306,27 @@ def migrate_titles_v1_to_v2(data: dict) -> dict:
     """v1 スキマのタイトルデータを v2 に移行"""
     if data.get("schema_version", 1) >= 2:
         return data  # すでにv2以上
-    
+
     migrated = data.copy()
     migrated["schema_version"] = 2
-    
+
     for title_data in migrated.get("titles", {}).values():
         # v1には hidden_until がなかったのでデフォルト値を設定
         if "hidden_until" not in title_data:
             title_data["hidden_until"] = None
-            
+
     return migrated
+
 
 # ローダーでの使用例
 def load_with_migration(filepath: str, migration_funcs: List[Callable]) -> dict:
     raw_data = load_yaml_safe(filepath)
     current_version = raw_data.get("schema_version", 1)
-    
+
     for version, func in enumerate(migration_funcs, start=2):
         if current_version < version:
             raw_data = func(raw_data)
-            
+
     return raw_data
 ```
 

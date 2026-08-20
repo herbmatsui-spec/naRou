@@ -5,10 +5,12 @@ Steps 52-58
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, TYPE_CHECKING
-import yaml
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+import yaml
 
 if TYPE_CHECKING:
     pass
@@ -17,7 +19,8 @@ from protocols import MemoryRegistryProtocol
 
 # Phase 2 連携：遅延インポート
 try:
-    from npc_memory_system import GLOBAL_MEMORY_REGISTRY, MemoryType, MemoryImportance
+    from npc_memory_system import GLOBAL_MEMORY_REGISTRY, MemoryImportance, MemoryType
+
     _HAS_NPC_MEMORY = True
 except ImportError:
     GLOBAL_MEMORY_REGISTRY = None
@@ -29,19 +32,21 @@ except ImportError:
 @dataclass
 class FactionWarData:
     """派閥抗争マスターデータ (Step 53)"""
+
     id: str
     name: str
-    color: List[int] = field(default_factory=lambda: [255, 255, 255])
-    territories: List[str] = field(default_factory=list)
-    allied_factions: List[str] = field(default_factory=list)
-    rival_factions: List[str] = field(default_factory=list)
+    color: list[int] = field(default_factory=lambda: [255, 255, 255])
+    territories: list[str] = field(default_factory=list)
+    allied_factions: list[str] = field(default_factory=list)
+    rival_factions: list[str] = field(default_factory=list)
     influence: int = 50
 
 
 class FactionWarRegistry:
     """派閥抗争レジストリ (シングルトン) (Steps 54, 55)"""
-    _instance: Optional['FactionWarRegistry'] = None
-    _factions: Dict[str, FactionWarData] = {}
+
+    _instance: FactionWarRegistry | None = None
+    _factions: dict[str, FactionWarData] = {}
     _loaded: bool = False
 
     def __new__(cls):
@@ -61,29 +66,29 @@ class FactionWarRegistry:
             return
 
         try:
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, encoding="utf-8") as f:
                 data = yaml.safe_load(f) or {}
-            fw_data = data.get('faction_war_conditions', {})
+            fw_data = data.get("faction_war_conditions", {})
             for fid, f_dict in fw_data.items():
                 faction = FactionWarData(
                     id=fid,
-                    name=f_dict.get('name', fid),
-                    color=f_dict.get('color') or [255, 255, 255],
-                    territories=f_dict.get('territories') or [],
-                    allied_factions=f_dict.get('allied_factions') or [],
-                    rival_factions=f_dict.get('rival_factions') or [],
-                    influence=f_dict.get('influence', 50)
+                    name=f_dict.get("name", fid),
+                    color=f_dict.get("color") or [255, 255, 255],
+                    territories=f_dict.get("territories") or [],
+                    allied_factions=f_dict.get("allied_factions") or [],
+                    rival_factions=f_dict.get("rival_factions") or [],
+                    influence=f_dict.get("influence", 50),
                 )
                 self._factions[fid] = faction
             self._loaded = True
         except Exception:
             self._loaded = True
 
-    def get(self, faction_id: str) -> Optional[FactionWarData]:
+    def get(self, faction_id: str) -> FactionWarData | None:
         """特定派閥抗争データを取得 (Step 54)"""
         return self._factions.get(faction_id)
 
-    def all(self) -> Dict[str, FactionWarData]:
+    def all(self) -> dict[str, FactionWarData]:
         """すべての派閥抗争データ辞書を返す (Step 54)"""
         return self._factions
 
@@ -94,11 +99,19 @@ REGISTRY = FactionWarRegistry()
 class FactionWarManager:
     """派閥抗争管理マネージャー (Steps 56-58)"""
 
-    def __init__(self, registry: Optional[FactionWarRegistry] = None, memory_registry: Optional[MemoryRegistryProtocol] = None):
+    def __init__(
+        self,
+        registry: FactionWarRegistry | None = None,
+        memory_registry: MemoryRegistryProtocol | None = None,
+    ):
         self.registry = registry or REGISTRY
-        self.memory_registry = memory_registry or (GLOBAL_MEMORY_REGISTRY if _HAS_NPC_MEMORY else None)
+        self.memory_registry = memory_registry or (
+            GLOBAL_MEMORY_REGISTRY if _HAS_NPC_MEMORY else None
+        )
 
-    def calculate_influence_change(self, faction_id: str, game_state: Any = None) -> int:
+    def calculate_influence_change(
+        self, faction_id: str, game_state: Any = None
+    ) -> int:
         """影響力の自然変動量を計算 (Step 57)"""
         faction = self.registry.get(faction_id)
         if not faction:
@@ -135,8 +148,12 @@ class FactionWarManager:
         if self.memory_registry and change != 0:
             for npc_id, mgr in self.memory_registry.all_managers().items():
                 # 同派閥 NPC に記録
-                if getattr(mgr.npc, 'faction_id', None) == faction_id:
-                    importance = MemoryImportance.SIGNIFICANT if (MemoryImportance and abs(change) > 5) else (MemoryImportance.NOTABLE if MemoryImportance else None)
+                if getattr(mgr.npc, "faction_id", None) == faction_id:
+                    importance = (
+                        MemoryImportance.SIGNIFICANT
+                        if (MemoryImportance and abs(change) > 5)
+                        else (MemoryImportance.NOTABLE if MemoryImportance else None)
+                    )
                     mgr.record_reputation_event(
                         subject_id=faction_id,
                         event_type="faction_influence_change",
@@ -146,7 +163,7 @@ class FactionWarManager:
                     )
 
     # Phase 2 連携メソッド
-    def get_faction_reputation_for_gate(self, player: "Entity", faction_id: str) -> int:
+    def get_faction_reputation_for_gate(self, player: Entity, faction_id: str) -> int:
         """ReputationGate 用派閥評判値取得（0-100 -> -100 to 100）"""
         faction = self.registry.get(faction_id)
         if not faction:
@@ -156,7 +173,7 @@ class FactionWarManager:
         player_rep = player.faction_reputation.get(faction_id, 0)
         return (faction.influence - 50) + player_rep
 
-    def get_all_faction_reputations(self, player: "Entity") -> Dict[str, int]:
+    def get_all_faction_reputations(self, player: Entity) -> dict[str, int]:
         """全派閥評判取得（噂伝播・評判ゲート用）"""
         result = {}
         for fid, faction in self.registry.all().items():

@@ -1,13 +1,15 @@
-import pytest
 from collision_system import SpatialHashCollision
+
 
 class DummyEntity:
     def __init__(self, x: int, y: int, hp: int = 1):
         self.x = x
         self.y = y
         self.hp = hp
+
     def __repr__(self):
         return f"DummyEntity({self.x},{self.y},hp={self.hp})"
+
 
 def test_add_and_query_entities():
     coll = SpatialHashCollision(cell_size=5)
@@ -19,6 +21,7 @@ def test_add_and_query_entities():
     pot = coll.get_potential_colliders(1, 1)
     assert e1 in pot
     assert e2 not in pot
+
 
 def test_move_entity_updates_hash():
     coll = SpatialHashCollision(cell_size=5)
@@ -32,6 +35,7 @@ def test_move_entity_updates_hash():
     # New cell should contain e
     new_cell = coll.get_potential_colliders(7, 9)
     assert e in new_cell
+
 
 def test_check_collision_excludes_self_and_dead_entities():
     coll = SpatialHashCollision(cell_size=5)

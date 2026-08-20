@@ -282,6 +282,8 @@ class MSDFAtlas {
 
 export class WebGLRenderer {
     private gl: WebGL2RenderingContext;
+    // Step 53: WebGL2 が使えない場合のフォールバック検知フラグ
+    webgl2_supported: boolean = true;
     private width: number;
     private height: number;
     private texture_cache: Map<number, WebGLTexture> = new Map();
@@ -363,9 +365,14 @@ export class WebGLRenderer {
         });
         
         if (!gl) {
-            throw new Error('WebGL2 not supported');
+            // Step 53: 例外を投げず、Canvas2D レンダラへのフォールバックを通知
+            console.warn('WebGL2 not supported; falling back to Canvas2D renderer.');
+            this.webgl2_supported = false;
+            this.gl = null as unknown as WebGL2RenderingContext;
+            this.viewport = { x: 0, y: 0, width: this.width, height: this.height };
+            return;
         }
-        
+
         this.gl = gl;
         this.viewport = { x: 0, y: 0, width: this.width, height: this.height };
         

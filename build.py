@@ -12,10 +12,10 @@ Usage:
     python build.py --platform linux
     python build.py --platform all
 """
+
 from __future__ import annotations
 
 import argparse
-import os
 import shutil
 import subprocess
 import sys
@@ -53,8 +53,11 @@ def ensure_pyinstaller() -> bool:
 
 def _common_args(onefile: bool = True) -> list[str]:
     args = [
-        sys.executable, "-m", "PyInstaller",
-        "--name", APP_NAME,
+        sys.executable,
+        "-m",
+        "PyInstaller",
+        "--name",
+        APP_NAME,
         "--noconfirm",
         "--clean",
     ]
@@ -115,7 +118,8 @@ def build_all() -> bool:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build naRou")
     parser.add_argument(
-        "--platform", default="auto",
+        "--platform",
+        default="auto",
         choices=["auto", "windows", "macos", "linux", "all"],
         help="Target platform",
     )

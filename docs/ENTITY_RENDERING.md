@@ -149,9 +149,21 @@ elif self.attack_timer > 0:
 
 ```python
 AUTOTILE_MAP = {
-    0b0000: 0,  0b0001: 1,  0b0010: 2,  0b0100: 4,  0b1000: 8,
-    0b0011: 3,  0b0110: 6,  0b1100: 12, 0b1001: 9,  0b0101: 5,
-    0b1010: 10, 0b0111: 7,  0b1110: 14, 0b1101: 13, 0b1011: 11,
+    0b0000: 0,
+    0b0001: 1,
+    0b0010: 2,
+    0b0100: 4,
+    0b1000: 8,
+    0b0011: 3,
+    0b0110: 6,
+    0b1100: 12,
+    0b1001: 9,
+    0b0101: 5,
+    0b1010: 10,
+    0b0111: 7,
+    0b1110: 14,
+    0b1101: 13,
+    0b1011: 11,
     0b1111: 15,
 }
 ```
@@ -205,7 +217,7 @@ renderer = EntityRenderer(tile_atlas)
 eid = renderer.register_entity("PLAYER", x=10, y=10, direction=0, state="idle")
 
 # Update per frame
-renderer.update_entity(eid, x=10, y=10, direction=2, state="walk", dt=1/60)
+renderer.update_entity(eid, x=10, y=10, direction=2, state="walk", dt=1 / 60)
 
 # Get subimage for rendering
 sub_image = renderer.get_subimage(eid)

@@ -3,26 +3,32 @@
 実際のゲームイベント（撃破/採取/探索）から生成クエストが進捗・達成されることを検証。
 """
 
-import sys
 import os
-from typing import Dict
+import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from procedural_quest_generator import (
-    ProceduralQuestGenerator, ProceduralQuestManager, REGISTRY,
-    GeneratedQuest, QuestObjectiveSpec,
-)
 from entity import Entity
 from game import Engine
+from procedural_quest_generator import (
+    REGISTRY,
+    GeneratedQuest,
+    ProceduralQuestGenerator,
+    ProceduralQuestManager,
+    QuestObjectiveSpec,
+)
 
 
-def _make_kill_quest(quest_id: str, target: str = "goblin", count: int = 3) -> Dict:
+def _make_kill_quest(quest_id: str, target: str = "goblin", count: int = 3) -> dict:
     q = GeneratedQuest(
-        quest_id=quest_id, title="t", source_type="board",
-        archetype_id="slay", difficulty_id="tutorial", reward_id="copper",
+        quest_id=quest_id,
+        title="t",
+        source_type="board",
+        archetype_id="slay",
+        difficulty_id="tutorial",
+        reward_id="copper",
         setting_id="forest",
         objectives=[QuestObjectiveSpec("slay_obj", "討伐", "kill", target, count)],
         reward={"gold": 100, "exp": 10, "items": [], "bonus": {"fame": 1}},
@@ -43,7 +49,9 @@ def test_procedural_quest_gameplay_hooks():
     mgr.update_progress(p, "kill", "ゴブリン", 1)
     mgr.update_progress(p, "kill", "ゴブリン", 1)
     mgr.update_progress(p, "kill", "ゴブリン", 1)  # 3回で自動達成
-    assert p.gold > gold_before and p.procedural_quest.completed_count >= 1, "Fuzzy kill matching failed"
+    assert p.gold > gold_before and p.procedural_quest.completed_count >= 1, (
+        "Fuzzy kill matching failed"
+    )
     print("[OK] 曖昧照合: target='goblin' に 実体名='ゴブリン' の撃破で進捗・達成")
 
     # 2) Engine フック: _progress_generated_quests 経由で報酬が付与される
@@ -59,8 +67,12 @@ def test_procedural_quest_gameplay_hooks():
     # 3) 採取イベント: collect で進捗（アイテム名で照合）
     p2 = Entity()
     cq = GeneratedQuest(
-        quest_id="gen_collect", title="c", source_type="board",
-        archetype_id="gather", difficulty_id="tutorial", reward_id="copper",
+        quest_id="gen_collect",
+        title="c",
+        source_type="board",
+        archetype_id="gather",
+        difficulty_id="tutorial",
+        reward_id="copper",
         setting_id="forest",
         objectives=[QuestObjectiveSpec("gather_obj", "採取", "collect", "herb", 2)],
         reward={"gold": 50, "exp": 5, "items": [], "bonus": {}},
@@ -75,8 +87,12 @@ def test_procedural_quest_gameplay_hooks():
     # 4) 探索イベント: explore(depth) で進捗
     p3 = Entity()
     eq = GeneratedQuest(
-        quest_id="gen_explore", title="e", source_type="dungeon",
-        archetype_id="explore", difficulty_id="normal", reward_id="gold",
+        quest_id="gen_explore",
+        title="e",
+        source_type="dungeon",
+        archetype_id="explore",
+        difficulty_id="normal",
+        reward_id="gold",
         setting_id="cave",
         objectives=[QuestObjectiveSpec("explore_obj", "探索", "explore", "depth", 3)],
         reward={"gold": 200, "exp": 50, "items": [], "bonus": {}},

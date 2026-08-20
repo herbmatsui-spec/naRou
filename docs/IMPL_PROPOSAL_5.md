@@ -55,8 +55,10 @@ grep -r "class=\"" demos/*.html | sed 's/.*class="\([^"]*\)".*/\1/' | tr ' ' '\n
 # tools/tokens_to_css.py
 import json
 
+
 def tokens_to_css(tokens, prefix="--"):
     css = [":root {"]
+
     def flatten(d, path=""):
         for k, v in d.items():
             new_path = f"{path}{k}"
@@ -64,9 +66,11 @@ def tokens_to_css(tokens, prefix="--"):
                 flatten(v, f"{new_path}-")
             else:
                 css.append(f"  {prefix}{new_path}: {v};")
+
     flatten(tokens)
     css.append("}")
     return "\n".join(css)
+
 
 with open("design_tokens.json") as f:
     tokens = json.load(f)
@@ -205,25 +209,28 @@ with open("design_tokens.json") as f:
 
 # tcod用 16色パレット生成（16bit JRPG準拠）
 palette = [
-    tokens["colors"]["semantic"]["bg"],           # 0: 背景
-    tokens["colors"]["semantic"]["text"],         # 1: 前景
-    tokens["colors"]["tiles"]["wall"],            # 2: 壁
-    tokens["colors"]["tiles"]["floor"],           # 3: 床
-    tokens["colors"]["tiles"]["water"],           # 4: 水
-    tokens["colors"]["tiles"]["player"],          # 5: プレイヤー
-    tokens["colors"]["tiles"]["enemy"],           # 6: 敵
-    tokens["colors"]["tiles"]["pet"],             # 7: ペット
-    tokens["colors"]["semantic"]["accent"],       # 8: アクセント
-    tokens["colors"]["semantic"]["danger"],       # 9: 危険/ダメージ
-    tokens["colors"]["semantic"]["success"],      # 10: 成功/回復
-    tokens["colors"]["semantic"]["warning"],      # 11: 警告
-    "#8b9bb4", "#6b7b94", "#4b5b74", "#2c3e50",  # 12-15: グレースケール
+    tokens["colors"]["semantic"]["bg"],  # 0: 背景
+    tokens["colors"]["semantic"]["text"],  # 1: 前景
+    tokens["colors"]["tiles"]["wall"],  # 2: 壁
+    tokens["colors"]["tiles"]["floor"],  # 3: 床
+    tokens["colors"]["tiles"]["water"],  # 4: 水
+    tokens["colors"]["tiles"]["player"],  # 5: プレイヤー
+    tokens["colors"]["tiles"]["enemy"],  # 6: 敵
+    tokens["colors"]["tiles"]["pet"],  # 7: ペット
+    tokens["colors"]["semantic"]["accent"],  # 8: アクセント
+    tokens["colors"]["semantic"]["danger"],  # 9: 危険/ダメージ
+    tokens["colors"]["semantic"]["success"],  # 10: 成功/回復
+    tokens["colors"]["semantic"]["warning"],  # 11: 警告
+    "#8b9bb4",
+    "#6b7b94",
+    "#4b5b74",
+    "#2c3e50",  # 12-15: グレースケール
 ]
 
 # Pythonリスト形式で出力
 print("PALETTE_16 = [")
 for i, c in enumerate(palette):
-    r, g, b = int(c[1:3],16), int(c[3:5],16), int(c[5:7],16)
+    r, g, b = int(c[1:3], 16), int(c[3:5], 16), int(c[5:7], 16)
     print(f"    ({r}, {g}, {b}),  # {i}")
 print("]")
 ```
@@ -251,6 +258,7 @@ def test_palette_parity():
 def simulate_protanopia(rgb): ...
 def simulate_deuteranopia(rgb): ...
 def simulate_tritanopia(rgb): ...
+
 
 # 各色覚タイプ用に design_tokens.json を変換し
 # design_tokens.protanopia.json 等を生成

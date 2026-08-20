@@ -1,12 +1,15 @@
 """Tests for Pet Proposals 6-9."""
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pet_systems import (
-    PetEquipmentManager, PetTrainingManager, PetGuildManager, PetLegacyManager,
+    PetEquipmentManager,
+    PetGuildManager,
+    PetLegacyManager,
+    PetTrainingManager,
 )
 
 
@@ -39,7 +42,9 @@ def test_training():
     mgr = PetTrainingManager()
     pet = FakePet(bond=300, level=15)
     assert mgr.can_enroll(pet, "magic_training", ["magic_tower", "library"])
-    assert not mgr.can_enroll(pet, "magic_training", ["magic_tower"])  # missing facility
+    assert not mgr.can_enroll(
+        pet, "magic_training", ["magic_tower"]
+    )  # missing facility
     assert mgr.complete(pet, "magic_training")
     assert "magic_training" in pet.completed_pet_training
     print("PASS: pet training enroll + complete")
@@ -59,8 +64,9 @@ def test_guild():
 # 提案9: legacy
 def test_legacy():
     mgr = PetLegacyManager()
-    pts = mgr.compute_legacy_points(level=100, max_bond=1200,
-                                    evolved_pets=1, legendary_pets=0)
+    pts = mgr.compute_legacy_points(
+        level=100, max_bond=1200, evolved_pets=1, legendary_pets=0
+    )
     # base20 + (100//10)*3=30 + max_bond>=1000 ->5 + evolved1*8=8 = 63
     assert pts == 63
     pet = FakePet()

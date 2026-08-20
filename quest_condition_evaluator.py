@@ -4,24 +4,25 @@ AST評価エンジン：プレイヤー/ワールド状態 → bool
 """
 
 from __future__ import annotations
-from typing import Any, Dict, List, Optional, Set, Union, TYPE_CHECKING
+
 from dataclasses import dataclass, field
-from enum import Enum
-import time
+from typing import TYPE_CHECKING, Any
 
 from quest_condition_ast import (
-    ConditionNode, LeafCondition, NotCondition, AndCondition, OrCondition, XorCondition
+    ConditionNode,
 )
 
 if TYPE_CHECKING:
     from entity import Entity
     from game import Engine
-    from world_state_system import WorldStateManager, WorldPhase
+    from world_state_system import WorldStateManager
+
+
 @dataclass
 class DictContext:
     """入れ子辞書で状態を保持する標準コンテキスト実装 (後方互換性)。"""
 
-    _state: Dict[str, Any]
+    _state: dict[str, Any]
 
     def __post_init__(self):
         if not isinstance(self._state, dict):
@@ -38,24 +39,23 @@ class DictContext:
         return node
 
 
-
 @dataclass
 class EvaluationContext:
     """条件評価のためのコンテキスト（プレイヤー/ワールド状態へのアクセス）"""
 
-    player: Optional["Entity"] = None
-    engine: Optional["Engine"] = None
-    world_state: Optional["WorldStateManager"] = None
-    extra_vars: Dict[str, Any] = field(default_factory=dict)
+    player: Entity | None = None
+    engine: Engine | None = None
+    world_state: WorldStateManager | None = None
+    extra_vars: dict[str, Any] = field(default_factory=dict)
 
     # キャッシュ
-    _kill_counts: Dict[str, int] = field(default_factory=dict)
-    _collect_counts: Dict[str, int] = field(default_factory=dict)
-    _visit_flags: Set[str] = field(default_factory=set)
-    _variable_values: Dict[str, Any] = field(default_factory=dict)
-    _skill_levels: Dict[str, int] = field(default_factory=dict)
-    _pet_data: Dict[str, Any] = field(default_factory=dict)
-    _property_cache: Dict[str, Any] = field(default_factory=dict)
+    _kill_counts: dict[str, int] = field(default_factory=dict)
+    _collect_counts: dict[str, int] = field(default_factory=dict)
+    _visit_flags: set[str] = field(default_factory=set)
+    _variable_values: dict[str, Any] = field(default_factory=dict)
+    _skill_levels: dict[str, int] = field(default_factory=dict)
+    _pet_data: dict[str, Any] = field(default_factory=dict)
+    _property_cache: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         self._property_cache = {}
@@ -184,7 +184,7 @@ class EvaluationContext:
         """ワールドステート関連のキーを解決"""
         if not self.world_state:
             return None
-            
+
         if key == "phase":
             return self.world_state.get_phase().name
         elif key.startswith("variables."):
@@ -208,7 +208,7 @@ class EvaluationContext:
             for pet in getattr(self.player, "pets", [])
         )
 
-    def _get_pet_data(self, species: str) -> Optional[Dict[str, Any]]:
+    def _get_pet_data(self, species: str) -> dict[str, Any] | None:
         """指定種族のペットデータを取得（最初に見つかったもの）"""
         for pet in getattr(self.player, "pets", []):
             if hasattr(pet, "species") and getattr(pet, "species", None) == species:
@@ -255,6 +255,7 @@ def _apply_operator(op: str, left: Any, right: Any) -> bool:
         return bool(left)
     raise ValueError(f"未対応の演算子: {op!r}")
 
+
 def evaluate(node: ConditionNode, context: Any) -> bool:
     """
     後方互換性のための評価関数。
@@ -265,14 +266,14 @@ def evaluate(node: ConditionNode, context: Any) -> bool:
 
 def evaluate_condition(
     node: ConditionNode,
-    player: Optional["Entity"] = None,
-    engine: Optional["Engine"] = None,
-    world_state: Optional["WorldStateManager"] = None,
-    extra_vars: Optional[Dict[str, Any]] = None
+    player: Entity | None = None,
+    engine: Engine | None = None,
+    world_state: WorldStateManager | None = None,
+    extra_vars: dict[str, Any] | None = None,
 ) -> bool:
     """
     条件ノードを評価するエントリーポイント
-    
+
     Usage:
         result = evaluate_condition(ast, player=player, engine=engine)
     """
@@ -307,21 +308,34 @@ if __name__ == "__main__":
     class MockEngine:
         class TimeSystem:
             def get_current_time(self):
-                class T: hour = 10; minute = 30
+                class T:
+                    hour = 10
+                    minute = 30
+
                 return T()
+
         class WeatherSystem:
-            def get_current_weather(self): return "clear"
+            def get_current_weather(self):
+                return "clear"
+
         class CalendarSystem:
-            def get_current_season(self): return "spring"
-            def get_moon_phase(self): return 3
+            def get_current_season(self):
+                return "spring"
+
+            def get_moon_phase(self):
+                return 3
+
         time_system = TimeSystem()
         weather_system = WeatherSystem()
         calendar_system = CalendarSystem()
 
     class MockWorldState:
         def get_phase(self):
-            class Phase: name = "EXPLORATION"
+            class Phase:
+                name = "EXPLORATION"
+
             return Phase()
+
         def get_variable(self, player, var_name, default=None):
             return player.story_variables.get(var_name, default)
 
@@ -334,27 +348,28 @@ if __name__ == "__main__":
     test_cases = [
         ("player.kill_counts.goblin>=", 5, True),
         ("player.kill_counts.goblin>=", 10, False),
-        ("player.kill_counts.goblin>=", 5, True) and ("player.collect_counts.herb>=", 3, True),  # AND
+        ("player.kill_counts.goblin>=", 5, True)
+        and ("player.collect_counts.herb>=", 3, True),  # AND
         ("player.level>=", 10, True) and ("player.job", "==", "mage", True),  # AND
         ("player.story_variables.boss_defeated", "==", False, True),  # False
     ]
 
     print("=== Testing Quest Condition System ===\n")
-    
+
     passed = 0
     total = 0
-    
+
     for i in range(0, len(test_cases), 3):
         if i + 2 < len(test_cases):
             key = test_cases[i]
-            op = test_cases[i+1]
-            value = test_cases[i+2]
-            expected = test_cases[i+3] if i+3 < len(test_cases) else False
-            
+            op = test_cases[i + 1]
+            value = test_cases[i + 2]
+            expected = test_cases[i + 3] if i + 3 < len(test_cases) else False
+
             # キーと演算子と値を組み合わせて条件文字列を作る
             condition_str = f"{key}{op}{value}"
             total += 1
-            
+
             try:
                 # パース
                 ast = parse_condition(condition_str)
@@ -368,5 +383,5 @@ if __name__ == "__main__":
                     print(f"✗ {condition_str:<35} => {result} (expected {expected})")
             except Exception as e:
                 print(f"✗ {condition_str:<35} => ERROR: {e}")
-    
+
     print(f"\n結果: {passed}/{total} 成功")

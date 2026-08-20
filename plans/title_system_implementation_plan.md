@@ -231,40 +231,44 @@ from pathlib import Path
 @dataclass
 class TitleEffect:
     """称号によるステータス効果"""
-    attr: str          # 対象属性名 (strength, damage_vs_goblin 等)
-    value: float       # 加算値 or 乗算値
+
+    attr: str  # 対象属性名 (strength, damage_vs_goblin 等)
+    value: float  # 加算値 or 乗算値
     is_multiplier: bool = False  # Trueなら乗算、Falseなら加算
 
 
 @dataclass
 class TitleCondition:
     """称号獲得条件"""
-    type: str          # kill_count, skill_level, dungeon_depth 等
-    target: str = ""   # 対象 (モンスターID, スキル名 等)
-    count: int = 0     # 必要数
-    value: int = 0     # 閾値
-    level: int = 0     # スキルレベル等
-    category: str = "" # クラフトカテゴリ等
-    min_depth: int = 0 # ダンジョン深度
-    max_turns: int = 0 # ターン数制限
+
+    type: str  # kill_count, skill_level, dungeon_depth 等
+    target: str = ""  # 対象 (モンスターID, スキル名 等)
+    count: int = 0  # 必要数
+    value: int = 0  # 閾値
+    level: int = 0  # スキルレベル等
+    category: str = ""  # クラフトカテゴリ等
+    min_depth: int = 0  # ダンジョン深度
+    max_turns: int = 0  # ターン数制限
 
 
 @dataclass
 class TitleData:
     """称号マスターデータ"""
+
     id: str
-    name: str          # 表示名「ゴブリンスレイヤー」
-    epithet: str       # 二つ名「緑皮の悪夢」
-    category: str      # kill, explore, skill, survival, faith, wealth, pet, craft, special, milestone
+    name: str  # 表示名「ゴブリンスレイヤー」
+    epithet: str  # 二つ名「緑皮の悪夢」
+    category: str  # kill, explore, skill, survival, faith, wealth, pet, craft, special, milestone
     condition: TitleCondition
     effects: List[TitleEffect]
-    message: str       # 獲得時メッセージ
+    message: str  # 獲得時メッセージ
     is_hidden: bool = False  # 獲得前は隠すか
 
 
 class TitleRegistry:
     """称号レジストリ（シングルトン的）"""
-    _instance: Optional['TitleRegistry'] = None
+
+    _instance: Optional["TitleRegistry"] = None
     _titles: Dict[str, TitleData] = {}
     _loaded: bool = False
 
@@ -277,33 +281,37 @@ class TitleRegistry:
         """YAMLから称号定義を読み込み"""
         if self._loaded:
             return
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
-        for t in data.get('titles', {}).values():
-            cond = t['condition']
+        for t in data.get("titles", {}).values():
+            cond = t["condition"]
             condition = TitleCondition(
-                type=cond['type'],
-                target=cond.get('target', ''),
-                count=cond.get('count', 0),
-                value=cond.get('value', 0),
-                level=cond.get('level', 0),
-                category=cond.get('category', ''),
-                min_depth=cond.get('min_depth', 0),
-                max_turns=cond.get('max_turns', 0),
+                type=cond["type"],
+                target=cond.get("target", ""),
+                count=cond.get("count", 0),
+                value=cond.get("value", 0),
+                level=cond.get("level", 0),
+                category=cond.get("category", ""),
+                min_depth=cond.get("min_depth", 0),
+                max_turns=cond.get("max_turns", 0),
             )
             effects = [
-                TitleEffect(attr=e['attr'], value=e['value'], is_multiplier=e.get('is_multiplier', False))
-                for e in t.get('effects', [])
+                TitleEffect(
+                    attr=e["attr"],
+                    value=e["value"],
+                    is_multiplier=e.get("is_multiplier", False),
+                )
+                for e in t.get("effects", [])
             ]
             title = TitleData(
-                id=t['id'],
-                name=t['name'],
-                epithet=t['epithet'],
-                category=t['category'],
+                id=t["id"],
+                name=t["name"],
+                epithet=t["epithet"],
+                category=t["category"],
                 condition=condition,
                 effects=effects,
-                message=t['message'],
-                is_hidden=t.get('is_hidden', False),
+                message=t["message"],
+                is_hidden=t.get("is_hidden", False),
             )
             self._titles[title.id] = title
         self._loaded = True
@@ -358,7 +366,9 @@ REGISTRY = TitleRegistry()
 ```python
 # title_system.py 続き
 
-from entity import Entity  # 循環import回避のため TYPE_CHECKING または遅延import推奨だが、ここでは直接import
+from entity import (
+    Entity,
+)  # 循環import回避のため TYPE_CHECKING または遅延import推奨だが、ここでは直接import
 
 
 class TitleManager:
@@ -371,50 +381,54 @@ class TitleManager:
     def check_kill_count(self, player: Entity, target: str, required: int) -> bool:
         # 実装簡易化: Entity に kill_counts: Dict[str, int] を後で追加予定
         # ここでは仮実装（後でステップ7で実装）
-        return getattr(player, 'kill_counts', {}).get(target, 0) >= required
+        return getattr(player, "kill_counts", {}).get(target, 0) >= required
 
     def check_skill_level(self, player: Entity, skill: str, level: int) -> bool:
         return player.skills.get(skill, Skill("")).level >= level
 
     def check_dungeon_depth(self, player: Entity, min_depth: int) -> bool:
-        return getattr(player, 'max_dungeon_depth', 0) >= min_depth
+        return getattr(player, "max_dungeon_depth", 0) >= min_depth
 
     def check_near_death(self, player: Entity, count: int) -> bool:
-        return getattr(player, 'near_death_count', 0) >= count
+        return getattr(player, "near_death_count", 0) >= count
 
     def check_piety(self, player: Entity, value: int) -> bool:
         return player.piety >= value
 
     def check_gold(self, player: Entity, value: int) -> bool:
         # 所持金チェック（インベントリまたはプレイヤー直接保持）
-        return getattr(player, 'gold', 0) >= value
+        return getattr(player, "gold", 0) >= value
 
     def check_pet_count(self, player: Entity, count: int) -> bool:
         # ペット数は Engine 側で管理想定、ここでは player.pets 参照
-        return len(getattr(player, 'pets', [])) >= count
+        return len(getattr(player, "pets", [])) >= count
 
     def check_craft_count(self, player: Entity, category: str, count: int) -> bool:
-        return getattr(player, 'craft_counts', {}).get(category, 0) >= count
+        return getattr(player, "craft_counts", {}).get(category, 0) >= count
 
     def check_level(self, player: Entity, level: int) -> bool:
         return player.level >= level
 
     def check_game_clear_time(self, player: Entity, max_turns: int) -> bool:
-        return getattr(player, 'total_turns', 0) <= max_turns
+        return getattr(player, "total_turns", 0) <= max_turns
 
     # === 汎用判定ディスパッチャ ===
     def check_condition(self, player: Entity, condition: TitleCondition) -> bool:
         check_map = {
-            'kill_count': lambda c: self.check_kill_count(player, c.target, c.count),
-            'skill_level': lambda c: self.check_skill_level(player, c.target, c.level),
-            'dungeon_depth': lambda c: self.check_dungeon_depth(player, c.min_depth),
-            'near_death_count': lambda c: self.check_near_death(player, c.count),
-            'piety': lambda c: self.check_piety(player, c.value),
-            'gold_owned': lambda c: self.check_gold(player, c.value),
-            'pet_count': lambda c: self.check_pet_count(player, c.count),
-            'craft_count': lambda c: self.check_craft_count(player, c.category, c.count),
-            'level': lambda c: self.check_level(player, c.value),
-            'game_clear_time': lambda c: self.check_game_clear_time(player, c.max_turns),
+            "kill_count": lambda c: self.check_kill_count(player, c.target, c.count),
+            "skill_level": lambda c: self.check_skill_level(player, c.target, c.level),
+            "dungeon_depth": lambda c: self.check_dungeon_depth(player, c.min_depth),
+            "near_death_count": lambda c: self.check_near_death(player, c.count),
+            "piety": lambda c: self.check_piety(player, c.value),
+            "gold_owned": lambda c: self.check_gold(player, c.value),
+            "pet_count": lambda c: self.check_pet_count(player, c.count),
+            "craft_count": lambda c: self.check_craft_count(
+                player, c.category, c.count
+            ),
+            "level": lambda c: self.check_level(player, c.value),
+            "game_clear_time": lambda c: self.check_game_clear_time(
+                player, c.max_turns
+            ),
         }
         checker = check_map.get(condition.type)
         if checker:
@@ -440,8 +454,16 @@ class TitleManager:
         """称号効果をステータスに適用"""
         for eff in title.effects:
             if eff.attr == "all_attributes":
-                for attr in ['strength', 'endurance', 'dexterity', 'perception',
-                             'learning', 'will', 'magic', 'charisma']:
+                for attr in [
+                    "strength",
+                    "endurance",
+                    "dexterity",
+                    "perception",
+                    "learning",
+                    "will",
+                    "magic",
+                    "charisma",
+                ]:
                     current = getattr(player.attributes, attr)
                     setattr(player.attributes, attr, current + int(eff.value))
             elif hasattr(player.attributes, eff.attr):
@@ -460,8 +482,16 @@ class TitleManager:
         """称号効果を除去（装備解除時）"""
         for eff in title.effects:
             if eff.attr == "all_attributes":
-                for attr in ['strength', 'endurance', 'dexterity', 'perception',
-                             'learning', 'will', 'magic', 'charisma']:
+                for attr in [
+                    "strength",
+                    "endurance",
+                    "dexterity",
+                    "perception",
+                    "learning",
+                    "will",
+                    "magic",
+                    "charisma",
+                ]:
                     current = getattr(player.attributes, attr)
                     setattr(player.attributes, attr, current - int(eff.value))
             elif hasattr(player.attributes, eff.attr):
@@ -647,41 +677,43 @@ MANAGER = TitleManager()
 ```python
 # game.py render_all 関数内、適切な位置（インベントリ画面等の近く）に追加
 
+
 def render_title_screen(console: tcod.console.Console, engine: Engine) -> None:
     """称号画面描画（Tキーで開く想定）"""
     from title_system import MANAGER
+
     if not engine.player:
         return
-    
+
     titles = MANAGER.get_title_list_for_ui(engine.player)
     w, h = 70, 40
     x = (console.width - w) // 2
     y = (console.height - h) // 2
-    
+
     # 背景
     console.draw_frame(x, y, w, h, title=" 称号・二つ名 ", clear=True)
-    
+
     # 現在の二つ名表示
     display_name = MANAGER.get_display_name(engine.player)
     console.print(x + 2, y + 1, f"現在: {display_name}", fg=(255, 255, 100))
-    
+
     # リスト
     row = 3
     for t in titles:
-        if t['hidden']:
+        if t["hidden"]:
             line = "  ??? (未発見)"
             color = (100, 100, 100)
         else:
-            mark = "★" if t['equipped'] else ("●" if t['owned'] else "○")
+            mark = "★" if t["equipped"] else ("●" if t["owned"] else "○")
             line = f"  {mark} {t['name']} 《{t['epithet']}》 [{t['category']}]"
-            color = (100, 255, 100) if t['owned'] else (200, 200, 200)
-            if t['equipped']:
+            color = (100, 255, 100) if t["owned"] else (200, 200, 200)
+            if t["equipped"]:
                 color = (255, 255, 0)
         console.print(x + 2, y + row, line, fg=color)
         row += 1
         if row > h - 3:
             break
-    
+
     console.print(x + 2, y + h - 2, "Enter: 装備/解除  Esc: 閉じる", fg=(150, 150, 150))
 
 
@@ -709,11 +741,11 @@ if engine.player and engine.player.title_notifications:
     for i, msg in enumerate(engine.player.title_notifications):
         # 簡易ポップアップ（3秒表示等のタイマー実装推奨）
         console.print(
-            console.width // 2 - len(msg) // 2, 
-            3 + i, 
-            f"★ {msg} ★", 
+            console.width // 2 - len(msg) // 2,
+            3 + i,
+            f"★ {msg} ★",
             fg=(255, 215, 0),  # 金色
-            bg=(0, 0, 0)
+            bg=(0, 0, 0),
         )
     # 表示後クリア（またはタイマーで）
     # engine.player.title_notifications.clear()  # 即時クリア or 残す

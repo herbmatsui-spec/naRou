@@ -5,37 +5,38 @@ from __future__ import annotations
 
 from enum import Enum
 
-from data.schemas._base import DataModel
 from pydantic import ConfigDict, Field, RootModel
+
+from data.schemas._base import DataModel
 
 
 class Element(Enum):
-    fire = 'fire'
-    cold = 'cold'
-    lightning = 'lightning'
-    magic = 'magic'
-    acid = 'acid'
-    poison = 'poison'
-    dark = 'dark'
-    holy = 'holy'
-    physical = 'physical'
-    heal = 'heal'
-    utility = 'utility'
-    buff = 'buff'
+    fire = "fire"
+    cold = "cold"
+    lightning = "lightning"
+    magic = "magic"
+    acid = "acid"
+    poison = "poison"
+    dark = "dark"
+    holy = "holy"
+    physical = "physical"
+    heal = "heal"
+    utility = "utility"
+    buff = "buff"
 
 
 class TargetType(Enum):
-    single = 'single'
-    area = 'area'
-    beam = 'beam'
-    cone = 'cone'
-    self = 'self'
-    touch = 'touch'
+    single = "single"
+    area = "area"
+    beam = "beam"
+    cone = "cone"
+    self = "self"
+    touch = "touch"
 
 
 class Spell(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     name: str = Field(..., min_length=1)
     mp_cost: int = Field(..., ge=0)

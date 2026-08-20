@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
 """Configuration script for naRou project."""
-import os
-import sys
-import yaml
+
 import argparse
+import os
+
+import yaml
+
 
 def load_config(config_path="config.yaml"):
     """Load configuration from YAML file."""
     if os.path.exists(config_path):
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             return yaml.safe_load(f) or {}
     return {}
+
 
 def save_config(config, config_path="config.yaml"):
     """Save configuration to YAML file."""
     with open(config_path, "w") as f:
         yaml.dump(config, f, default_flow_style=False)
+
 
 def configure(key, value, config_path="config.yaml"):
     """Set a configuration value."""
@@ -30,6 +34,7 @@ def configure(key, value, config_path="config.yaml"):
     save_config(config, config_path)
     print(f"Set {key} = {value}")
 
+
 def get_config(key, config_path="config.yaml"):
     """Get a configuration value."""
     config = load_config(config_path)
@@ -42,19 +47,25 @@ def get_config(key, config_path="config.yaml"):
             return None
     return current
 
+
 def list_config(config_path="config.yaml"):
     """List all configuration values."""
     config = load_config(config_path)
     print(yaml.dump(config, default_flow_style=False))
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Configure naRou")
-    parser.add_argument("--set", nargs=2, metavar=("KEY", "VALUE"), help="Set configuration value")
+    parser.add_argument(
+        "--set", nargs=2, metavar=("KEY", "VALUE"), help="Set configuration value"
+    )
     parser.add_argument("--get", metavar="KEY", help="Get configuration value")
     parser.add_argument("--list", action="store_true", help="List all configuration")
-    parser.add_argument("--config", default="config.yaml", help="Configuration file path")
+    parser.add_argument(
+        "--config", default="config.yaml", help="Configuration file path"
+    )
     args = parser.parse_args()
-    
+
     if args.set:
         configure(args.set[0], args.set[1], args.config)
     elif args.get:
@@ -74,5 +85,6 @@ def localize(key: str, language: str = None, manager=None) -> str:
     strings without importing the manager directly.
     """
     from localization_manager import LocalizationManager
+
     mgr = manager or LocalizationManager()
     return mgr.get_text(key, language)

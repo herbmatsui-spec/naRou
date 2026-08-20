@@ -41,14 +41,14 @@ from core.gi import create_ddgi_probes, create_lpv
 probes = create_ddgi_probes(32, 32, 32)  # 32^3 probes
 start = time.time()
 for _ in range(10):
-    probes.update(np.random.rand(32,32,32,3))
-print(f"DDGI update: {(time.time()-start)/10*1000:.1f}ms")
+    probes.update(np.random.rand(32, 32, 32, 3))
+print(f"DDGI update: {(time.time() - start) / 10 * 1000:.1f}ms")
 
 lpv = create_lpv(64, 64, 64)
 start = time.time()
 for _ in range(10):
-    lpv.propagate(np.random.rand(64,64,64,3))
-print(f"LPV propagate: {(time.time()-start)/10*1000:.1f}ms")
+    lpv.propagate(np.random.rand(64, 64, 64, 3))
+print(f"LPV propagate: {(time.time() - start) / 10 * 1000:.1f}ms")
 ```
 - 期待: 数百ms〜秒オーダー（実用不可）
 
@@ -73,27 +73,33 @@ grep -rl "from core.gi import\|import.*gi" --include="*.py" | xargs -I{} sed -i 
 # core/lighting.py に追加
 class SimpleSSAO:
     """法線ベース擬似 SSAO（深度バッファ不要）"""
+
     def __init__(self, width: int, height: int, radius: int = 2):
         self.width = width
         self.height = height
         self.radius = radius
         self.kernel = self._generate_kernel(16)
         self.noise = self._generate_noise(4, 4)
-    
-    def _generate_kernel(self, n: int) -> List[Tuple[float,float,float]]:
+
+    def _generate_kernel(self, n: int) -> List[Tuple[float, float, float]]:
         import random, math
+
         kernel = []
         for i in range(n):
-            vec = (random.uniform(-1,1), random.uniform(-1,1), random.uniform(0,1))
+            vec = (random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(0, 1))
             # ヘミサンプリング
-            length = math.sqrt(sum(v*v for v in vec))
-            kernel.append((vec[0]/length, vec[1]/length, vec[2]/length))
+            length = math.sqrt(sum(v * v for v in vec))
+            kernel.append((vec[0] / length, vec[1] / length, vec[2] / length))
         return kernel
-    
-    def _generate_noise(self, w: int, h: int) -> List[List[Tuple[float,float]]]:
+
+    def _generate_noise(self, w: int, h: int) -> List[List[Tuple[float, float]]]:
         import random
-        return [[(random.uniform(-1,1), random.uniform(-1,1)) for _ in range(w)] for _ in range(h)]
-    
+
+        return [
+            [(random.uniform(-1, 1), random.uniform(-1, 1)) for _ in range(w)]
+            for _ in range(h)
+        ]
+
     def compute(self, normal_buffer: np.ndarray) -> np.ndarray:
         """法線バッファから AO 値計算（簡易版）"""
         # 実装は簡易化: 法線のばらつきから擬似的に AO 推定
@@ -101,7 +107,10 @@ class SimpleSSAO:
         ao = np.ones((self.height, self.width), dtype=np.float32)
         # 簡易実装: エッジ検出で暗くする程度
         from scipy import ndimage
-        edges = ndimage.sobel(normal_buffer[...,0]) + ndimage.sobel(normal_buffer[...,1])
+
+        edges = ndimage.sobel(normal_buffer[..., 0]) + ndimage.sobel(
+            normal_buffer[..., 1]
+        )
         ao = np.clip(1.0 - edges * 0.5, 0.3, 1.0)
         return ao
 ```
@@ -112,7 +121,7 @@ class SimpleSSAO:
 def render_pass(self, console, cam_x, cam_y, view_w, view_h, visible, explored, time):
     # 既存の apply_lighting_to_tiles...
     # 追加: SSAO 適用
-    if hasattr(self, 'ssao') and self.ssao:
+    if hasattr(self, "ssao") and self.ssao:
         # 法線バッファがあれば適用
         pass  # 将来拡張用
 ```

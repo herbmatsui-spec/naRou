@@ -32,22 +32,39 @@
 # 判定指標（全て数値化・閾値化）
 filters = {
     # 基本チェック（既存）
-    "resolution": {"16x16": (16,16), "32x32": (32,32), "64x64": (64,64)},
+    "resolution": {"16x16": (16, 16), "32x32": (32, 32), "64x64": (64, 64)},
     "transparency_ratio": {"terrain": (0.0, 0.05), "entity": (0.1, 0.9)},
     "color_count": {"16color": 16, "32color": 32, "64color": 64},
     "seamless_tiling": {"method": "edge_correlation", "threshold": 0.95},
-    
     # NEW: 構造・意味的チェック
     "silhouette_clarity": {"method": "edge_density", "min": 0.3},  # キャラ輪郭の明確さ
-    "palette_adherence": {"method": "nearest_palette_distance", "max_avg_dist": 8},  # 指定パレットへの忠実度
-    "style_consistency": {"method": "clip_score", "reference": "assets/style_guide/reference/", "min": 0.82},  # CLIPでスタイル一致度
-    "anatomy_check": {"method": "keypoint_detection", "parts": ["head", "torso", "limbs"]},  # MediaPipe等で人体構造検証
-    "animation_coherence": {"method": "optical_flow_consistency", "max_frame_jump": 2.0},  # フレーム間の動き連続性
+    "palette_adherence": {
+        "method": "nearest_palette_distance",
+        "max_avg_dist": 8,
+    },  # 指定パレットへの忠実度
+    "style_consistency": {
+        "method": "clip_score",
+        "reference": "assets/style_guide/reference/",
+        "min": 0.82,
+    },  # CLIPでスタイル一致度
+    "anatomy_check": {
+        "method": "keypoint_detection",
+        "parts": ["head", "torso", "limbs"],
+    },  # MediaPipe等で人体構造検証
+    "animation_coherence": {
+        "method": "optical_flow_consistency",
+        "max_frame_jump": 2.0,
+    },  # フレーム間の動き連続性
     "ui_9slice_valid": {"method": "border_uniformity_check"},  # 9-slice用ボーダー均一性
-    
     # NEW: 相対評価・ランキング
-    "batch_percentile": {"metric": "composite_score", "keep_top_pct": 30},  # 同一バッチ内上位30%のみ通過
-    "diversity_filter": {"method": "feature_clustering", "max_similar": 0.9},  # 類似しすぎるバリアント除外
+    "batch_percentile": {
+        "metric": "composite_score",
+        "keep_top_pct": 30,
+    },  # 同一バッチ内上位30%のみ通過
+    "diversity_filter": {
+        "method": "feature_clustering",
+        "max_similar": 0.9,
+    },  # 類似しすぎるバリアント除外
 }
 ```
 
@@ -71,15 +88,43 @@ filters = {
 ```python
 refinement_strategies = [
     # ルールベース自動修正（高速・確実）
-    {"name": "palette_quantize", "trigger": "color_count_exceed", "action": "nearest_palette_quantize"},
-    {"name": "outline_boost", "trigger": "low_edge_density", "action": "morphological_dilate_outline"},
-    {"name": "shadow_deepen", "trigger": "low_contrast", "action": "multiply_shadow_layer_1.3x"},
-    {"name": "noise_removal", "trigger": "high_freq_noise", "action": "median_filter_3x3"},
-    {"name": "seamless_fix", "trigger": "seamless_fail", "action": "tile_blend_edges_4px"},
-    
+    {
+        "name": "palette_quantize",
+        "trigger": "color_count_exceed",
+        "action": "nearest_palette_quantize",
+    },
+    {
+        "name": "outline_boost",
+        "trigger": "low_edge_density",
+        "action": "morphological_dilate_outline",
+    },
+    {
+        "name": "shadow_deepen",
+        "trigger": "low_contrast",
+        "action": "multiply_shadow_layer_1.3x",
+    },
+    {
+        "name": "noise_removal",
+        "trigger": "high_freq_noise",
+        "action": "median_filter_3x3",
+    },
+    {
+        "name": "seamless_fix",
+        "trigger": "seamless_fail",
+        "action": "tile_blend_edges_4px",
+    },
     # Gemini img2img 再生成（高コスト・最終手段）
-    {"name": "gemini_inpaint", "trigger": "structure_defect", "prompt_suffix": "fix anatomy, correct proportions, clean pixel art"},
-    {"name": "gemini_img2img", "trigger": "style_drift", "strength": 0.3, "prompt_suffix": "strict 16-bit pixel art style, reference attached"},
+    {
+        "name": "gemini_inpaint",
+        "trigger": "structure_defect",
+        "prompt_suffix": "fix anatomy, correct proportions, clean pixel art",
+    },
+    {
+        "name": "gemini_img2img",
+        "trigger": "style_drift",
+        "strength": 0.3,
+        "prompt_suffix": "strict 16-bit pixel art style, reference attached",
+    },
 ]
 
 # ループ制御

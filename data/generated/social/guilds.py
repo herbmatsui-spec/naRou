@@ -3,8 +3,9 @@
 
 from __future__ import annotations
 
-from data.schemas._base import DataModel
 from pydantic import ConfigDict, Field, RootModel
+
+from data.schemas._base import DataModel
 
 
 class MembershipBenefit(DataModel):
@@ -18,7 +19,7 @@ class RankRequirements(RootModel[int]):
 
 class Guild(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     name: str = Field(..., min_length=1)
     icon: str = Field(..., max_length=2, min_length=1)
@@ -32,7 +33,7 @@ class Guild(DataModel):
 
 class Meta(DataModel):
     model_config = ConfigDict(
-        extra='allow',
+        extra="allow",
     )
     version: str | None = None
     last_updated: str | None = None
@@ -40,7 +41,7 @@ class Meta(DataModel):
 
 class GuildsDefinition(DataModel):
     model_config = ConfigDict(
-        extra='allow',
+        extra="allow",
     )
     guilds: dict[str, Guild]
     meta: Meta | None = None

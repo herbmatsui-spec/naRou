@@ -1,14 +1,16 @@
 from __future__ import annotations
-from typing import Dict, List, Any, Optional, Set
+
 from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
 class Kernel:
     """薄いカーネル：システム登録・依存解決・イベント配送のみ"""
-    _systems: Dict[str, Any] = field(default_factory=dict)
-    _packages: Dict[str, "IPackage"] = field(default_factory=dict)
-    _load_order: List[str] = field(default_factory=list)
+
+    _systems: dict[str, Any] = field(default_factory=dict)
+    _packages: dict[str, IPackage] = field(default_factory=dict)
+    _load_order: list[str] = field(default_factory=list)
     _event_bus: Any = None
 
     def register_system(self, name: str, system: Any) -> Any:
@@ -32,8 +34,7 @@ class Kernel:
         return self._event_bus
 
     # --- パッケージ管理 ---
-    def load_package(self, package: "IPackage") -> None:
-        from packages.core.kernel.package import PackageMetadata
+    def load_package(self, package: IPackage) -> None:
         meta = package.metadata
         if meta.name in self._packages:
             raise ValueError(f"Package already loaded: {meta.name}")
@@ -41,12 +42,16 @@ class Kernel:
         # 依存チェック
         for dep in meta.dependencies or []:
             if dep not in self._packages:
-                raise RuntimeError(f"Missing dependency: {dep} (required by {meta.name})")
+                raise RuntimeError(
+                    f"Missing dependency: {dep} (required by {meta.name})"
+                )
 
         # 必須システムチェック
         for req in meta.requires or []:
             if not self.has_system(req):
-                raise RuntimeError(f"Required system not available: {req} (for {meta.name})")
+                raise RuntimeError(
+                    f"Required system not available: {req} (for {meta.name})"
+                )
 
         package.on_load(self)
         package.setup(self)
@@ -61,9 +66,9 @@ class Kernel:
         del self._packages[name]
         self._load_order.remove(name)
 
-    def get_package(self, name: str) -> Optional["IPackage"]:
+    def get_package(self, name: str) -> IPackage | None:
         return self._packages.get(name)
 
     # --- 依存性解決（トポロジカルソート） ---
-    def resolve_load_order(self, package_names: List[str]) -> List[str]:
+    def resolve_load_order(self, package_names: list[str]) -> list[str]:
         return [n for n in self._load_order if n in package_names]

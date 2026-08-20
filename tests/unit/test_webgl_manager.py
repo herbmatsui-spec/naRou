@@ -1,15 +1,17 @@
-import pytest
 from webgl_manager import WebGLManager
+
 
 class DummyCanvas:
     def getContext(self, name: str):
         # Return a simple mock object identifying the context type
         return f"<MockWebGL2Context:{name}>"
 
+
 def test_singleton_behavior():
     a = WebGLManager()
     b = WebGLManager()
     assert a is b, "WebGLManager should be a singleton"
+
 
 def test_context_acquisition_and_caching():
     mgr = WebGLManager.instance()
@@ -19,6 +21,7 @@ def test_context_acquisition_and_caching():
     ctx2 = mgr.get_context()
     assert ctx1 == "<MockWebGL2Context:webgl2>"
     assert ctx1 is ctx2, "Subsequent get_context calls must return the same object"
+
 
 def test_lazy_acquisition_when_canvas_set_later():
     mgr = WebGLManager.instance()

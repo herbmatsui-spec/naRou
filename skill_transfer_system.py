@@ -3,10 +3,12 @@ Skill Trait Transfer System Module (Steps 50-56)
 """
 
 from __future__ import annotations
+
 import os
-import yaml
-from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
+
+import yaml
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -16,20 +18,22 @@ if TYPE_CHECKING:
 @dataclass
 class SkillTransferData:
     """スキル特性転移データ (Step 51)"""
+
     id: str
     name: str = ""
     description: str = ""
-    source_traits: List[str] = field(default_factory=list)
-    target_skills: List[str] = field(default_factory=list)
+    source_traits: list[str] = field(default_factory=list)
+    target_skills: list[str] = field(default_factory=list)
     transfer_ratio: float = 0.80
-    cost: Dict[str, int] = field(default_factory=dict)
+    cost: dict[str, int] = field(default_factory=dict)
     irreversible: bool = True
 
 
 # Step 52, 53: SkillTransferRegistry
 class SkillTransferRegistry:
     """スキル特性転移レジストリ (Step 52, 53)"""
-    _instance: Optional[SkillTransferRegistry] = None
+
+    _instance: SkillTransferRegistry | None = None
 
     def __new__(cls) -> SkillTransferRegistry:
         if cls._instance is None:
@@ -42,11 +46,13 @@ class SkillTransferRegistry:
         self._traits = {}
         if not os.path.exists(file_path):
             self._traits["critical_boost"] = SkillTransferData(
-                id="critical_boost", name="急所看破の転移", target_skills=["martial_arts", "swordsmanship"]
+                id="critical_boost",
+                name="急所看破の転移",
+                target_skills=["martial_arts", "swordsmanship"],
             )
             return
 
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             raw = yaml.safe_load(f) or {}
 
         t_dict = raw.get("transfer_traits", {})
@@ -59,13 +65,13 @@ class SkillTransferRegistry:
                 target_skills=tdata.get("target_skills", []),
                 transfer_ratio=float(tdata.get("transfer_ratio", 0.80)),
                 cost=tdata.get("cost", {}),
-                irreversible=bool(tdata.get("irreversible", True))
+                irreversible=bool(tdata.get("irreversible", True)),
             )
 
-    def get(self, trait_id: str) -> Optional[SkillTransferData]:
+    def get(self, trait_id: str) -> SkillTransferData | None:
         return self._traits.get(trait_id)
 
-    def all(self) -> Dict[str, SkillTransferData]:
+    def all(self) -> dict[str, SkillTransferData]:
         return dict(self._traits)
 
 
@@ -75,10 +81,17 @@ REGISTRY = SkillTransferRegistry()
 # Step 54-56: SkillTransferManager
 class SkillTransferManager:
     """スキル特性転移管理 (Steps 54-56)"""
-    def __init__(self, registry: Optional[SkillTransferRegistry] = None):
+
+    def __init__(self, registry: SkillTransferRegistry | None = None):
         self.registry = registry or REGISTRY
 
-    def can_transfer(self, player: "Entity", trait_id: str, target_skill: str, engine: Optional[Any] = None) -> bool:
+    def can_transfer(
+        self,
+        player: Entity,
+        trait_id: str,
+        target_skill: str,
+        engine: Any | None = None,
+    ) -> bool:
         """特性転移が可能かを判定 (Step 55)"""
         data = self.registry.get(trait_id)
         if not data or not player:
@@ -105,7 +118,13 @@ class SkillTransferManager:
 
         return True
 
-    def transfer_trait(self, player: "Entity", trait_id: str, target_skill: str, engine: Optional[Any] = None) -> bool:
+    def transfer_trait(
+        self,
+        player: Entity,
+        trait_id: str,
+        target_skill: str,
+        engine: Any | None = None,
+    ) -> bool:
         """特性転移を実行 (Step 56)"""
         if not self.can_transfer(player, trait_id, target_skill, engine):
             return False
@@ -129,7 +148,11 @@ class SkillTransferManager:
 
         if engine:
             from sound_manager import SoundManager
+
             SoundManager.play_se("level_up")
-            engine.log(f"★特性転移完了！ 【{target_skill}】に【{data.name}】が宿った！", (255, 215, 0))
+            engine.log(
+                f"★特性転移完了！ 【{target_skill}】に【{data.name}】が宿った！",
+                (255, 215, 0),
+            )
 
         return True

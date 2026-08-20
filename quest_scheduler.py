@@ -6,27 +6,27 @@ Quest Scheduler Module (偏執的クエストシステム / 設計書 Phase 3 St
 from __future__ import annotations
 
 import os
-import yaml
-import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set, TYPE_CHECKING
 from enum import Enum, auto
+from typing import TYPE_CHECKING, Any
+
+import yaml
 
 if TYPE_CHECKING:
     from entity import Entity
     from game import Engine
-    from world_state_system import WorldStateManager
 
 
 class ScheduleAxis(Enum):
     """スケジュール判定軸"""
-    TIME_OF_DAY = auto()      # 時間帯 (HH:MM)
-    DAY_OF_WEEK = auto()      # 曜日 (0-6)
-    MOON_PHASE = auto()       # 月齢
-    SEASON = auto()           # 季節
-    WEATHER = auto()          # 天候
-    WORLD_PHASE = auto()      # ワールドフェーズ
+
+    TIME_OF_DAY = auto()  # 時間帯 (HH:MM)
+    DAY_OF_WEEK = auto()  # 曜日 (0-6)
+    MOON_PHASE = auto()  # 月齢
+    SEASON = auto()  # 季節
+    WEATHER = auto()  # 天候
+    WORLD_PHASE = auto()  # ワールドフェーズ
 
 
 class LogicOperator(Enum):
@@ -37,8 +37,9 @@ class LogicOperator(Enum):
 @dataclass
 class TimeWindow:
     """時間窓 (HH:MM 形式)"""
-    start: str      # "05:00"
-    end: str        # "19:00"
+
+    start: str  # "05:00"
+    end: str  # "19:00"
 
     def contains(self, current_time: datetime) -> bool:
         """現在時刻が窓内か判定（日付跨ぎ対応）"""
@@ -59,18 +60,19 @@ class TimeWindow:
 @dataclass
 class ScheduleCondition:
     """単一スケジュール条件"""
+
     # テンプレート参照
-    template: Optional[str] = None
+    template: str | None = None
     # 直接指定
-    time_windows: List[TimeWindow] = field(default_factory=list)
-    day_of_week: Optional[int] = None          # 0-6
-    moon_phase: Optional[str] = None           # new|waxing|full|waning
-    season: Optional[str] = None               # spring|summer|autumn|winter
-    weather: Optional[str] = None              # clear|rain|storm|snow|fog
-    world_phase: Optional[str] = None          # ワールドフェーズ名
-    location: Optional[str] = None             # 場所制限
-    npcs: List[str] = field(default_factory=list)  # 特定NPCでのみ利用可
-    duration_days: int = 0                     # 期間延長（月齢用等）
+    time_windows: list[TimeWindow] = field(default_factory=list)
+    day_of_week: int | None = None  # 0-6
+    moon_phase: str | None = None  # new|waxing|full|waning
+    season: str | None = None  # spring|summer|autumn|winter
+    weather: str | None = None  # clear|rain|storm|snow|fog
+    world_phase: str | None = None  # ワールドフェーズ名
+    location: str | None = None  # 場所制限
+    npcs: list[str] = field(default_factory=list)  # 特定NPCでのみ利用可
+    duration_days: int = 0  # 期間延長（月齢用等）
 
     def __post_init__(self):
         # テンプレートから展開は外部で行う
@@ -108,16 +110,17 @@ class ScheduleCondition:
 @dataclass
 class QuestSchedule:
     """クエストスケジュール定義"""
+
     quest_id: str
     title: str = ""
     description: str = ""
-    conditions: List[ScheduleCondition] = field(default_factory=list)
+    conditions: list[ScheduleCondition] = field(default_factory=list)
     logic: LogicOperator = LogicOperator.AND
-    requirements: Dict[str, Any] = field(default_factory=dict)
-    rewards: Dict[str, Any] = field(default_factory=dict)
+    requirements: dict[str, Any] = field(default_factory=dict)
+    rewards: dict[str, Any] = field(default_factory=dict)
     enabled: bool = True
 
-    def is_available(self, context: "ScheduleContext") -> bool:
+    def is_available(self, context: ScheduleContext) -> bool:
         """利用可能か判定"""
         if not self.enabled:
             return False
@@ -135,18 +138,20 @@ class ScheduleContext:
 
     def __init__(
         self,
-        current_time: Optional[datetime] = None,
-        day_of_week: Optional[int] = None,
-        moon_phase: Optional[str] = None,
-        season: Optional[str] = None,
-        weather: Optional[str] = None,
-        world_phase: Optional[str] = None,
-        location: Optional[str] = None,
-        npc_id: Optional[str] = None,
+        current_time: datetime | None = None,
+        day_of_week: int | None = None,
+        moon_phase: str | None = None,
+        season: str | None = None,
+        weather: str | None = None,
+        world_phase: str | None = None,
+        location: str | None = None,
+        npc_id: str | None = None,
     ):
         self.current_time = current_time or datetime.now()
         # day_of_week 未指定時は current_time から計算 (0=月曜 ... 6=日曜)
-        self.day_of_week = day_of_week if day_of_week is not None else self.current_time.weekday()
+        self.day_of_week = (
+            day_of_week if day_of_week is not None else self.current_time.weekday()
+        )
         self.moon_phase = moon_phase
         self.season = season
         self.weather = weather
@@ -155,19 +160,27 @@ class ScheduleContext:
         self.npc_id = npc_id
 
     @classmethod
-    def from_engine(cls, engine: "Engine") -> "ScheduleContext":
+    def from_engine(cls, engine: Engine) -> ScheduleContext:
         """エンジンからコンテキスト生成"""
-        ws_mgr = getattr(engine, 'world_state_manager', None)
+        ws_mgr = getattr(engine, "world_state_manager", None)
         if ws_mgr:
             phase = ws_mgr.get_phase()
             world_phase = phase.name if phase else None
             # 時刻・季節・天候・月齢は WorldStateManager から取得想定
             return cls(
-                current_time=ws_mgr.get_current_datetime() if hasattr(ws_mgr, 'get_current_datetime') else None,
-                day_of_week=ws_mgr.get_day_of_week() if hasattr(ws_mgr, 'get_day_of_week') else None,
-                moon_phase=ws_mgr.get_moon_phase() if hasattr(ws_mgr, 'get_moon_phase') else None,
-                season=ws_mgr.get_season() if hasattr(ws_mgr, 'get_season') else None,
-                weather=ws_mgr.get_weather() if hasattr(ws_mgr, 'get_weather') else None,
+                current_time=ws_mgr.get_current_datetime()
+                if hasattr(ws_mgr, "get_current_datetime")
+                else None,
+                day_of_week=ws_mgr.get_day_of_week()
+                if hasattr(ws_mgr, "get_day_of_week")
+                else None,
+                moon_phase=ws_mgr.get_moon_phase()
+                if hasattr(ws_mgr, "get_moon_phase")
+                else None,
+                season=ws_mgr.get_season() if hasattr(ws_mgr, "get_season") else None,
+                weather=ws_mgr.get_weather()
+                if hasattr(ws_mgr, "get_weather")
+                else None,
                 world_phase=world_phase,
             )
         return cls()
@@ -178,9 +191,9 @@ class QuestScheduler:
 
     def __init__(self, data_path: str = "data/quest_schedules.yaml"):
         self.data_path = data_path
-        self._templates: Dict[str, Dict[str, Any]] = {}
-        self._schedules: Dict[str, QuestSchedule] = {}
-        self._overrides: Dict[str, Dict[str, Any]] = {}
+        self._templates: dict[str, dict[str, Any]] = {}
+        self._schedules: dict[str, QuestSchedule] = {}
+        self._overrides: dict[str, dict[str, Any]] = {}
         self.load_schedules()
 
     def load_schedules(self) -> None:
@@ -192,7 +205,7 @@ class QuestScheduler:
         if not os.path.exists(self.data_path):
             return
 
-        with open(self.data_path, "r", encoding="utf-8") as f:
+        with open(self.data_path, encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
 
         # テンプレート読み込み
@@ -206,20 +219,24 @@ class QuestScheduler:
         # 上書き読み込み
         self._overrides = {o["quest_id"]: o for o in data.get("schedule_overrides", [])}
 
-    def _parse_schedule(self, s_data: Dict[str, Any]) -> QuestSchedule:
+    def _parse_schedule(self, s_data: dict[str, Any]) -> QuestSchedule:
         """スケジュールデータから QuestSchedule 構築"""
         conditions = []
         schedule_data = s_data.get("schedule", {})
 
         # テンプレート単体
         if "template" in schedule_data:
-            conditions.append(self._expand_template(schedule_data["template"], schedule_data))
+            conditions.append(
+                self._expand_template(schedule_data["template"], schedule_data)
+            )
         # 複数条件
         elif "conditions" in schedule_data:
             logic = LogicOperator[schedule_data.get("logic", "AND")]
             for cond_data in schedule_data["conditions"]:
                 if "template" in cond_data:
-                    conditions.append(self._expand_template(cond_data["template"], cond_data))
+                    conditions.append(
+                        self._expand_template(cond_data["template"], cond_data)
+                    )
                 else:
                     conditions.append(self._parse_condition(cond_data))
             return QuestSchedule(
@@ -244,13 +261,15 @@ class QuestScheduler:
             enabled=s_data.get("enabled", True),
         )
 
-    def _expand_template(self, template_name: str, override: Dict[str, Any]) -> ScheduleCondition:
+    def _expand_template(
+        self, template_name: str, override: dict[str, Any]
+    ) -> ScheduleCondition:
         """テンプレート展開 + 上書きマージ"""
         tmpl = self._templates.get(template_name, {})
         merged = {**tmpl, **override}
         return self._parse_condition(merged)
 
-    def _parse_condition(self, data: Dict[str, Any]) -> ScheduleCondition:
+    def _parse_condition(self, data: dict[str, Any]) -> ScheduleCondition:
         """条件データから ScheduleCondition 構築"""
         time_windows = []
         for tw in data.get("time_windows", []):
@@ -268,15 +287,15 @@ class QuestScheduler:
             duration_days=data.get("duration_days", 0),
         )
 
-    def get_schedule(self, quest_id: str) -> Optional[QuestSchedule]:
+    def get_schedule(self, quest_id: str) -> QuestSchedule | None:
         """スケジュール取得"""
         return self._schedules.get(quest_id)
 
     def get_available_quests(
         self,
         context: ScheduleContext,
-        player: Optional["Entity"] = None,
-    ) -> List[QuestSchedule]:
+        player: Entity | None = None,
+    ) -> list[QuestSchedule]:
         """現在利用可能なクエスト一覧取得"""
         available = []
         for schedule in self._schedules.values():
@@ -295,7 +314,7 @@ class QuestScheduler:
                 available.append(schedule)
         return available
 
-    def _check_requirements(self, schedule: QuestSchedule, player: "Entity") -> bool:
+    def _check_requirements(self, schedule: QuestSchedule, player: Entity) -> bool:
         """要件チェック"""
         req = schedule.requirements
         if not req:
@@ -305,6 +324,7 @@ class QuestScheduler:
         if "min_favorability" in req:
             # 関係システム連携
             from relationship_system import REGISTRY as REL_REG
+
             rel_mgr = REL_REG
             # ここでは簡易チェック（実装時に詳細化）
             pass
@@ -318,7 +338,7 @@ class QuestScheduler:
         for skill_key in ["skill_performance", "skill_herbalism"]:
             if skill_key in req:
                 skill_name = skill_key.replace("skill_", "")
-                if hasattr(player, 'skills'):
+                if hasattr(player, "skills"):
                     skill = player.skills.get(skill_name)
                     if not skill or skill.level < req[skill_key]:
                         return False
@@ -326,6 +346,7 @@ class QuestScheduler:
         # メインクエスト完了チェック
         if "main_quest" in req:
             from main_quest_system import MainQuestSystem
+
             mqs = MainQuestSystem()
             quest = mqs.quests.get(req["main_quest"])
             if not quest or quest.status != quest.status.__class__.COMPLETED:
@@ -333,7 +354,9 @@ class QuestScheduler:
 
         return True
 
-    def _check_override(self, override: Dict[str, Any], context: ScheduleContext) -> bool:
+    def _check_override(
+        self, override: dict[str, Any], context: ScheduleContext
+    ) -> bool:
         """上書きが現在のコンテキストに適用されるか判定"""
         # 日付指定がある場合
         if "date" in override:
@@ -355,9 +378,15 @@ class QuestScheduler:
                 end_str = dr["end"]
                 start_parts = start_str.split("_")
                 end_parts = end_str.split("_")
-                start_date = datetime(int(start_parts[1]), int(start_parts[3]), int(start_parts[5]))
-                end_date = datetime(int(end_parts[1]), int(end_parts[3]), int(end_parts[5]))
-                return start_date.date() <= context.current_time.date() <= end_date.date()
+                start_date = datetime(
+                    int(start_parts[1]), int(start_parts[3]), int(start_parts[5])
+                )
+                end_date = datetime(
+                    int(end_parts[1]), int(end_parts[3]), int(end_parts[5])
+                )
+                return (
+                    start_date.date() <= context.current_time.date() <= end_date.date()
+                )
             except (ValueError, IndexError, KeyError):
                 return False
         return True
@@ -366,7 +395,7 @@ class QuestScheduler:
         self,
         quest_id: str,
         context: ScheduleContext,
-        player: Optional["Entity"] = None,
+        player: Entity | None = None,
     ) -> bool:
         """特定クエストの利用可否判定"""
         schedule = self._schedules.get(quest_id)
@@ -392,9 +421,9 @@ class QuestScheduler:
     def get_next_available_time(
         self,
         quest_id: str,
-        from_time: Optional[datetime] = None,
+        from_time: datetime | None = None,
         max_days: int = 30,
-    ) -> Optional[datetime]:
+    ) -> datetime | None:
         """次回利用可能時刻を予測（簡易版：日単位で探索、時間窓も考慮）"""
         from_time = from_time or datetime.now()
         schedule = self._schedules.get(quest_id)
@@ -421,7 +450,9 @@ class QuestScheduler:
             for tw in time_windows:
                 # 時間窓の開始時刻をその日の日付で作成
                 start_h, start_m = map(int, tw.start.split(":"))
-                candidate = datetime.combine(base_date, datetime.min.time().replace(hour=start_h, minute=start_m))
+                candidate = datetime.combine(
+                    base_date, datetime.min.time().replace(hour=start_h, minute=start_m)
+                )
                 if candidate < from_time:
                     continue
                 context = ScheduleContext(current_time=candidate)

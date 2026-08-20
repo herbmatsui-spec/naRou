@@ -3,19 +3,20 @@
 Consolidated managers for the seasonal content pipeline proposal. These are
 tooling/process systems that operate on world-event data.
 """
-from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
-import yaml
+
 import logging
 import time
+from dataclasses import dataclass
+from typing import Any
 
+import yaml
 
 logger = logging.getLogger(__name__)
 
 
 def _load_yaml(path: str) -> dict:
     try:
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, encoding="utf-8") as f:
             return yaml.safe_load(f) or {}
     except FileNotFoundError:
         logger.warning(f"File not found: {path}")
@@ -29,12 +30,14 @@ def _load_yaml(path: str) -> dict:
 # 提案6: Event announcement / countdown
 # ============================================================
 
+
 class EventAnnouncer:
     def __init__(self, announcement_period: int = 7 * 86400):
         self.announcement_period = announcement_period  # seconds before start
 
-    def build_announcement(self, event: dict, start_time: float,
-                          now: Optional[float] = None) -> dict:
+    def build_announcement(
+        self, event: dict, start_time: float, now: float | None = None
+    ) -> dict:
         now = now if now is not None else time.time()
         countdown = max(0, int(start_time - now))
         announced = (start_time - now) <= self.announcement_period
@@ -47,8 +50,12 @@ class EventAnnouncer:
             "theme": event.get("theme", event.get("name")),
         }
 
-    def active_countdowns(self, events: Dict[str, dict], starts: Dict[str, float],
-                          now: Optional[float] = None) -> List[dict]:
+    def active_countdowns(
+        self,
+        events: dict[str, dict],
+        starts: dict[str, float],
+        now: float | None = None,
+    ) -> list[dict]:
         out = []
         for eid, ev in events.items():
             if eid in starts:
@@ -60,18 +67,23 @@ class EventAnnouncer:
 # 提案7: Post-event feedback & carry-over
 # ============================================================
 
+
 class EventFeedbackManager:
     def __init__(self):
-        self._feedback: List[dict] = []
-        self._legends: List[dict] = []
+        self._feedback: list[dict] = []
+        self._legends: list[dict] = []
 
-    def submit_survey(self, event_id: str, satisfaction: int, improvements: List[str]) -> None:
-        self._feedback.append({
-            "event_id": event_id,
-            "satisfaction": satisfaction,
-            "improvements": improvements,
-            "ts": time.time(),
-        })
+    def submit_survey(
+        self, event_id: str, satisfaction: int, improvements: list[str]
+    ) -> None:
+        self._feedback.append(
+            {
+                "event_id": event_id,
+                "satisfaction": satisfaction,
+                "improvements": improvements,
+                "ts": time.time(),
+            }
+        )
 
     def average_satisfaction(self, event_id: str) -> float:
         vals = [f["satisfaction"] for f in self._feedback if f["event_id"] == event_id]
@@ -85,6 +97,7 @@ class EventFeedbackManager:
 # 提案8: Balance data collection & analysis
 # ============================================================
 
+
 @dataclass
 class EventAction:
     event_id: str
@@ -95,7 +108,7 @@ class EventAction:
 
 class EventAnalyticsManager:
     def __init__(self):
-        self._actions: List[EventAction] = []
+        self._actions: list[EventAction] = []
 
     def record(self, action: EventAction) -> None:
         self._actions.append(action)
@@ -104,9 +117,12 @@ class EventAnalyticsManager:
         participants = {a.player_id for a in self._actions if a.event_id == event_id}
         return len(participants) / total_players if total_players else 0.0
 
-    def reward_balance(self, event_id: str) -> Dict[str, float]:
-        rewards = [a.value for a in self._actions
-                   if a.event_id == event_id and a.action_type == "reward"]
+    def reward_balance(self, event_id: str) -> dict[str, float]:
+        rewards = [
+            a.value
+            for a in self._actions
+            if a.event_id == event_id and a.action_type == "reward"
+        ]
         if not rewards:
             return {"avg": 0.0, "count": 0.0, "max": 0.0}
         return {
@@ -120,20 +136,21 @@ class EventAnalyticsManager:
 # 提案9: Event resource reuse & extensibility
 # ============================================================
 
+
 class EventResourceManager:
     """Validates world-event assets for modular reuse and schema compatibility."""
 
     CURRENT_SCHEMA = 1
 
     def __init__(self, path: str = "data/world_events.yaml"):
-        self._data: Dict[str, Any] = {}
+        self._data: dict[str, Any] = {}
         self.load(path)
 
     def load(self, path: str = "data/world_events.yaml") -> None:
         self._data = _load_yaml(path)
-        logger.info(f"Loaded world events resource bundle")
+        logger.info("Loaded world events resource bundle")
 
-    def get_events(self) -> Dict[str, dict]:
+    def get_events(self) -> dict[str, dict]:
         return self._data.get("world_events", {})
 
     def schema_compatible(self, event: dict) -> bool:
@@ -144,7 +161,7 @@ class EventResourceManager:
         """
         return bool(event.get("id")) and bool(event.get("name"))
 
-    def reusable_assets(self, event_id: str) -> Dict[str, Any]:
+    def reusable_assets(self, event_id: str) -> dict[str, Any]:
         """Return modular asset references for an event (images/sound/story)."""
         ev = self.get_events().get(event_id, {})
         return {
@@ -154,7 +171,7 @@ class EventResourceManager:
             "modules": ["story", "effects", "rewards"],
         }
 
-    def validate_all(self) -> List[str]:
+    def validate_all(self) -> list[str]:
         errors = []
         for eid, ev in self.get_events().items():
             if not self.schema_compatible(ev):

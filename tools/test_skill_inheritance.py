@@ -1,7 +1,7 @@
 """Tests for Proposal 7: Skill Inheritance / Reincarnation Bonuses."""
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -17,6 +17,7 @@ class FakeComp:
 class FakePlayer:
     def __init__(self):
         self._comp = FakeComp()
+
     def get_component(self, _):
         return self._comp
 

@@ -458,14 +458,28 @@ story_variables: Dict[str, Any] = field(default_factory=dict)  # ストーリー
 story_choices_made: List[str] = field(default_factory=list)  # 行った選択の履歴
 world_state_version: str = "1.0"  # ワールド状態のバージョン
 player_legacy: Dict[str, Any] = field(default_factory=dict)  # プレイヤーレガシー
-character_relationships: Dict[str, Dict[str, int]] = field(default_factory=dict)  # NPC関係値
+character_relationships: Dict[str, Dict[str, int]] = field(
+    default_factory=dict
+)  # NPC関係値
 memory_fragments: List[str] = field(default_factory=list)  # 解放された記憶フラグメント
-active_world_events: List[str] = field(default_factory=list)  # 現在アクティブなワールドイベント
-completed_storylines: List[str] = field(default_factory=list)  # 完了したストーリーライン
-available_storylines: List[str] = field(default_factory=list)  # 利用可能なストーリーライン
-story_notifications: List[Dict[str, Any]] = field(default_factory=list)  # 表示中のストーリー通知
-current_choice_prompt: Optional[Dict[str, Any]] = field(default=None)  # 現在表示中の選択肢
-ending_progress: Dict[str, int] = field(default_factory=dict)  # 各エンディングへの進行度
+active_world_events: List[str] = field(
+    default_factory=list
+)  # 現在アクティブなワールドイベント
+completed_storylines: List[str] = field(
+    default_factory=list
+)  # 完了したストーリーライン
+available_storylines: List[str] = field(
+    default_factory=list
+)  # 利用可能なストーリーライン
+story_notifications: List[Dict[str, Any]] = field(
+    default_factory=list
+)  # 表示中のストーリー通知
+current_choice_prompt: Optional[Dict[str, Any]] = field(
+    default=None
+)  # 現在表示中の選択肢
+ending_progress: Dict[str, int] = field(
+    default_factory=dict
+)  # 各エンディングへの進行度
 ```
 
 ## 統合フロー

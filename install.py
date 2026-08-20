@@ -1,20 +1,25 @@
 #!/usr/bin/env python3
 """Install script for naRou project."""
-import os
-import sys
-import subprocess
+
 import argparse
+import subprocess
+import sys
+import shlex
+
 
 def run_command(cmd, cwd=None):
     """Run a command and return success status."""
-    print(f"Running: {cmd}")
-    result = subprocess.run(cmd, shell=True, cwd=cwd)
+    if isinstance(cmd, str):
+        cmd = shlex.split(cmd)
+    print(f"Running: {' '.join(cmd)}")
+    result = subprocess.run(cmd, cwd=cwd)
     return result.returncode == 0
+
 
 def install(package_path=None, dev=False):
     """Install the project."""
     print("Installing naRou...")
-    
+
     if package_path:
         # Install from package
         if not run_command(f"pip install {package_path}"):
@@ -27,15 +32,18 @@ def install(package_path=None, dev=False):
         else:
             if not run_command("pip install -e ."):
                 return False
-    
+
     print("Installation completed successfully!")
     return True
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Install naRou")
     parser.add_argument("--package", help="Path to package file")
-    parser.add_argument("--dev", action="store_true", help="Install in development mode")
+    parser.add_argument(
+        "--dev", action="store_true", help="Install in development mode"
+    )
     args = parser.parse_args()
-    
+
     success = install(args.package, args.dev)
     sys.exit(0 if success else 1)

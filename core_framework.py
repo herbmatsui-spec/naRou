@@ -4,15 +4,18 @@ Steps 2, 4, 7, 9, 20, 21, 24, 25 (Bresenham & A* Pathfinding)
 """
 
 from __future__ import annotations
-import math
+
 import heapq
-from typing import List, Tuple, Callable, Dict, Any
+import math
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass(frozen=True, order=True)
 class Point:
     """不変な2次元座標クラス (ステップ2)"""
+
     x: int
     y: int
 
@@ -31,11 +34,11 @@ class Point:
         return max(abs(self.x - other.x), abs(self.y - other.y))
 
 
-def bresenham_line(start: Point, end: Point) -> List[Point]:
+def bresenham_line(start: Point, end: Point) -> list[Point]:
     """Bresenhamアルゴリズムによる2点間の直線上グリッド座標の算出 (ステップ20)"""
     x1, y1 = start.x, start.y
     x2, y2 = end.x, end.y
-    points: List[Point] = []
+    points: list[Point] = []
     dx = abs(x2 - x1)
     dy = abs(y2 - y1)
     sx = 1 if x1 < x2 else -1
@@ -58,20 +61,21 @@ def bresenham_line(start: Point, end: Point) -> List[Point]:
 
 class AStar:
     """A*による最短経路探索 (ステップ24, 25) - 賢いNPC追跡"""
+
     @staticmethod
     def get_path(
         start: Point,
         goal: Point,
         is_walkable_fn: Callable[[int, int], bool],
-        max_depth: int = 40
-    ) -> List[Point]:
+        max_depth: int = 40,
+    ) -> list[Point]:
         if start == goal:
             return []
 
-        open_set: List[Tuple[float, int, Point]] = []
+        open_set: list[tuple[float, int, Point]] = []
         heapq.heappush(open_set, (0.0, 0, start))
-        came_from: Dict[Point, Point] = {}
-        g_score: Dict[Point, float] = {start: 0.0}
+        came_from: dict[Point, Point] = {}
+        g_score: dict[Point, float] = {start: 0.0}
 
         count = 0
         while open_set and count < max_depth * 10:
@@ -79,7 +83,7 @@ class AStar:
             _, _, current = heapq.heappop(open_set)
 
             if current == goal:
-                path: List[Point] = []
+                path: list[Point] = []
                 curr = goal
                 while curr in came_from:
                     path.append(curr)
@@ -88,7 +92,16 @@ class AStar:
                 return path
 
             # 8方向への展開
-            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (1, 1), (-1, 1), (1, -1)]:
+            for dx, dy in [
+                (-1, 0),
+                (1, 0),
+                (0, -1),
+                (0, 1),
+                (-1, -1),
+                (1, 1),
+                (-1, 1),
+                (1, -1),
+            ]:
                 neighbor = Point(current.x + dx, current.y + dy)
                 # ゴール位置そのものは通過可能として扱う
                 if neighbor != goal and not is_walkable_fn(neighbor.x, neighbor.y):
@@ -97,7 +110,7 @@ class AStar:
                 step_cost = 1.414 if dx != 0 and dy != 0 else 1.0
                 tentative_g = g_score[current] + step_cost
 
-                if tentative_g < g_score.get(neighbor, float('inf')):
+                if tentative_g < g_score.get(neighbor, float("inf")):
                     came_from[neighbor] = current
                     g_score[neighbor] = tentative_g
                     f_score = tentative_g + neighbor.chebyshev_distance(goal)
@@ -108,8 +121,9 @@ class AStar:
 
 class EventBus:
     """モジュール間の疎結合イベント通知バス (ステップ7, 商用高信頼性対応)"""
+
     def __init__(self):
-        self._subscribers: Dict[str, List[Callable[[Any], None]]] = {}
+        self._subscribers: dict[str, list[Callable[[Any], None]]] = {}
 
     def subscribe(self, event_type: str, callback: Callable[[Any], None]) -> None:
         if event_type not in self._subscribers:
@@ -118,7 +132,10 @@ class EventBus:
             self._subscribers[event_type].append(callback)
 
     def unsubscribe(self, event_type: str, callback: Callable[[Any], None]) -> bool:
-        if event_type in self._subscribers and callback in self._subscribers[event_type]:
+        if (
+            event_type in self._subscribers
+            and callback in self._subscribers[event_type]
+        ):
             self._subscribers[event_type].remove(callback)
             return True
         return False
@@ -130,45 +147,51 @@ class EventBus:
                     cb(data)
                 except Exception as e:
                     import logging
-                    logging.getLogger("EventBus").error(f"Error handling event {event_type} in {cb}: {e}", exc_info=True)
+
+                    logging.getLogger("EventBus").error(
+                        f"Error handling event {event_type} in {cb}: {e}", exc_info=True
+                    )
 
     def clear(self) -> None:
         self._subscribers.clear()
 
 
-
 @dataclass
 class LogMessage:
     """色付きメッセージログ (ステップ8)"""
+
     text: str
-    color: Tuple[int, int, int] = (230, 230, 230)
+    color: tuple[int, int, int] = (230, 230, 230)
     level: str = "INFO"  # INFO, SUCCESS, WARNING, CRITICAL
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "text": self.text,
-            "color": list(self.color),
-            "level": self.level
-        }
+    def to_dict(self) -> dict[str, Any]:
+        return {"text": self.text, "color": list(self.color), "level": self.level}
 
 
 class MessageLog:
     """高度なメッセージ履歴管理 (ステップ8, 66, UX強化)"""
+
     def __init__(self, max_history: int = 150):
-        self.history: List[LogMessage] = []
+        self.history: list[LogMessage] = []
         self.max_history = max_history
 
-    def add(self, text: str, color: Tuple[int, int, int] = (230, 230, 230), level: str = "INFO") -> None:
+    def add(
+        self,
+        text: str,
+        color: tuple[int, int, int] = (230, 230, 230),
+        level: str = "INFO",
+    ) -> None:
         self.history.append(LogMessage(text=text, color=color, level=level))
         if len(self.history) > self.max_history:
             self.history.pop(0)
 
-    def get_recent(self, count: int = 5) -> List[LogMessage]:
+    def get_recent(self, count: int = 5) -> list[LogMessage]:
         return self.history[-count:]
 
 
 class BaseSystem:
     """商用アーキテクチャ用サブシステム基底クラス (Step 12, 13)"""
+
     def __init__(self, name: str = ""):
         self.name = name or self.__class__.__name__
 
@@ -181,8 +204,6 @@ class BaseSystem:
         pass
 
 
-
-
 # --- LocalizationManager integration (i18n, Step 3.x) ---
 def localize(key: str, language: str = None, manager=None) -> str:
     """Return localized text for *key* using LocalizationManager.
@@ -191,5 +212,6 @@ def localize(key: str, language: str = None, manager=None) -> str:
     strings without importing the manager directly.
     """
     from localization_manager import LocalizationManager
+
     mgr = manager or LocalizationManager()
     return mgr.get_text(key, language)

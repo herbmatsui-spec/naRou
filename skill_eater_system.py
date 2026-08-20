@@ -5,8 +5,9 @@ Aの世界（スキル喰い）コアデータ構造および管理システム
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Any
 from pathlib import Path
+from typing import Any, Optional
+
 import yaml
 
 
@@ -29,10 +30,10 @@ class SkillType(str, Enum):
 class SkillEffect:
     effect_type: str
     target: str
-    params: Dict[str, Any] = field(default_factory=dict)
+    params: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "SkillEffect":
+    def from_dict(cls, data: dict[str, Any]) -> "SkillEffect":
         data_copy = dict(data)
         effect_type = data_copy.pop("type", "Unknown")
         target = data_copy.pop("target", "Self")
@@ -48,20 +49,20 @@ class SkillDef:
     mp_cost: int = 0
     cooldown: int = 0
     market_value: int = 0
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     flavor_text: str = ""
-    effects: List[SkillEffect] = field(default_factory=list)
+    effects: list[SkillEffect] = field(default_factory=list)
     is_illegal: bool = False
     memory_usage: int = 1
     is_encrypted: bool = False
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "SkillDef":
+    def from_dict(cls, data: dict[str, Any]) -> "SkillDef":
         tier_val = SkillTier(data.get("tier", "Common"))
         type_val = SkillType(data.get("type", "Passive"))
         effects_data = data.get("effects", [])
         effects = [SkillEffect.from_dict(e) for e in effects_data]
-        
+
         return cls(
             id=data["id"],
             name=data["name"],
@@ -74,8 +75,21 @@ class SkillDef:
             flavor_text=data.get("flavor_text", ""),
             effects=effects,
             is_illegal=data.get("is_illegal", False),
-            memory_usage=data.get("memory_usage", (1 if tier_val == SkillTier.COMMON else (2 if tier_val == SkillTier.RARE else (4 if tier_val == SkillTier.UNIQUE else 5)))),
-            is_encrypted=data.get("is_encrypted", tier_val in [SkillTier.UNIQUE, SkillTier.CONCEPT])
+            memory_usage=data.get(
+                "memory_usage",
+                (
+                    1
+                    if tier_val == SkillTier.COMMON
+                    else (
+                        2
+                        if tier_val == SkillTier.RARE
+                        else (4 if tier_val == SkillTier.UNIQUE else 5)
+                    )
+                ),
+            ),
+            is_encrypted=data.get(
+                "is_encrypted", tier_val in [SkillTier.UNIQUE, SkillTier.CONCEPT]
+            ),
         )
 
 
@@ -83,7 +97,7 @@ class SkillEaterRegistry:
     _instance: Optional["SkillEaterRegistry"] = None
 
     def __init__(self):
-        self._skills: Dict[str, SkillDef] = {}
+        self._skills: dict[str, SkillDef] = {}
 
     @classmethod
     def get_instance(cls) -> "SkillEaterRegistry":
@@ -96,7 +110,7 @@ class SkillEaterRegistry:
         if not path.exists():
             raise FileNotFoundError(f"Skill definition file not found: {path}")
 
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         if not data or "skills" not in data:
@@ -106,16 +120,16 @@ class SkillEaterRegistry:
             skill = SkillDef.from_dict(skill_data)
             self._skills[skill.id] = skill
 
-    def get_skill(self, skill_id: str) -> Optional[SkillDef]:
+    def get_skill(self, skill_id: str) -> SkillDef | None:
         return self._skills.get(skill_id)
 
-    def get_all_skills(self) -> List[SkillDef]:
+    def get_all_skills(self) -> list[SkillDef]:
         return list(self._skills.values())
 
-    def get_skills_by_tier(self, tier: SkillTier) -> List[SkillDef]:
+    def get_skills_by_tier(self, tier: SkillTier) -> list[SkillDef]:
         return [s for s in self._skills.values() if s.tier == tier]
 
-    def get_skills_by_tag(self, tag: str) -> List[SkillDef]:
+    def get_skills_by_tag(self, tag: str) -> list[SkillDef]:
         return [s for s in self._skills.values() if tag in s.tags]
 
 
@@ -139,10 +153,10 @@ class CharacterState:
     intelligence: int
     speed: int
     analysis_level: int = 1
-    skills: Dict[str, CharacterSkillSlot] = field(default_factory=dict)
-    status_effects: List[str] = field(default_factory=list)
+    skills: dict[str, CharacterSkillSlot] = field(default_factory=dict)
+    status_effects: list[str] = field(default_factory=list)
     is_husk: bool = False  # スキルを全て失って空っぽになった状態
-    last_devoured_element: Optional[str] = None  # 前回喰らったスキルの代表属性
+    last_devoured_element: str | None = None  # 前回喰らったスキルの代表属性
     max_memory_capacity: int = 10  # 記憶容量（メモリ）上限
     addiction_buildup: int = 0  # スキル精神侵食度 (0 - 100)
     encryption_broken: bool = False  # ハッキングによる偽装解除フラグ
@@ -170,7 +184,7 @@ class CharacterState:
         self.skills[skill_id] = CharacterSkillSlot(skill_id=skill_id, level=level)
         return True
 
-    def remove_skill(self, skill_id: str) -> Optional[CharacterSkillSlot]:
+    def remove_skill(self, skill_id: str) -> CharacterSkillSlot | None:
         slot = self.skills.pop(skill_id, None)
         if len(self.skills) == 0:
             self.is_husk = True
@@ -179,5 +193,5 @@ class CharacterState:
     def has_skill(self, skill_id: str) -> bool:
         return skill_id in self.skills
 
-    def get_skill_ids(self) -> List[str]:
+    def get_skill_ids(self) -> list[str]:
         return list(self.skills.keys())

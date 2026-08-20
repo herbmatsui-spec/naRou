@@ -3,17 +3,18 @@
 
 from __future__ import annotations
 
-from data.schemas._base import DataModel
 from pydantic import ConfigDict, Field, RootModel
+
+from data.schemas._base import DataModel
 
 
 class ExclusiveSkill(RootModel[str]):
-    root: str = Field(..., pattern='^[a-z_][a-z0-9_]*$')
+    root: str = Field(..., pattern="^[a-z_][a-z0-9_]*$")
 
 
 class UnlockConditions(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     level: int | None = Field(None, ge=1)
     job: str | None = None
@@ -23,7 +24,7 @@ class UnlockConditions(DataModel):
 
 class Job(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     name: str = Field(..., min_length=1)
     description: str
@@ -37,7 +38,7 @@ class Job(DataModel):
 
 class Meta(DataModel):
     model_config = ConfigDict(
-        extra='allow',
+        extra="allow",
     )
     version: str | None = None
     last_updated: str | None = None
@@ -45,7 +46,7 @@ class Meta(DataModel):
 
 class JobsDefinition(DataModel):
     model_config = ConfigDict(
-        extra='allow',
+        extra="allow",
     )
     jobs: dict[str, Job]
     meta: Meta | None = None

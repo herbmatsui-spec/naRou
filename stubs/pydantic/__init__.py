@@ -3,20 +3,26 @@ Provides BaseModel that accepts any fields and does nothing.
 ValidationError is just an Exception subclass.
 """
 
+
 class ValidationError(Exception):
     pass
+
 
 # Minimal stand‑ins for pydantic's Field, ConfigDict and field_validator
 def Field(default=None, **kwargs):
     return default
 
+
 class ConfigDict(dict):
     pass
+
 
 def field_validator(*args, **kwargs):
     def decorator(func):
         return func
+
     return decorator
+
 
 class BaseModel:
     def __init__(self, **data):
@@ -48,7 +54,6 @@ class BaseModel:
     def parse_obj(cls, obj):
         return cls.model_validate(obj)
 
-
     def model_dump(self, *args, **kwargs):
         return self.__dict__
 
@@ -58,10 +63,12 @@ class BaseModel:
     def __repr__(self):
         return f"<{self.__class__.__name__} {self.__dict__}>"
 
+
 class RootModel(BaseModel):
     """Simple stub for pydantic.RootModel used in generated code.
     Supports subscript syntax like ``RootModel[MyModel]``.
     """
+
     def __init__(self, root=None, **data):
         if root is not None:
             self.root = root
@@ -80,4 +87,3 @@ class RootModel(BaseModel):
             return obj
         instance = cls(root=obj)
         return instance
-

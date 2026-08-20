@@ -332,15 +332,27 @@ archive_categories:
 class Entity:
     # ... existing fields ...
     # スキル合成・進化システム
-    skill_fusion_materials: Dict[str, int] = field(default_factory=dict)  # 融合素材一時保存
-    skill_evolution: Dict[str, str] = field(default_factory=dict)  # スキルID: 現在の進化段階
+    skill_fusion_materials: Dict[str, int] = field(
+        default_factory=dict
+    )  # 融合素材一時保存
+    skill_evolution: Dict[str, str] = field(
+        default_factory=dict
+    )  # スキルID: 現在の進化段階
     awakened_skills: List[str] = field(default_factory=list)  # 覚醒済みスキルリスト
-    skill_traits: Dict[str, Dict[str, float]] = field(default_factory=dict)  # スキルID: {特性名: 値}
+    skill_traits: Dict[str, Dict[str, float]] = field(
+        default_factory=dict
+    )  # スキルID: {特性名: 値}
     equipped_skills: List[str] = field(default_factory=list)  # 現在装備中のスキル
     inheritable_skills: List[str] = field(default_factory=list)  # 継承可能スキルリスト
-    skill_specialization: Dict[str, str] = field(default_factory=dict)  # スキルID: 専門化パス
-    fusion_chain_progress: Dict[str, int] = field(default_factory=dict)  # 融合連鎖ID: 現在ステージ
-    skill_archive_progress: Dict[str, bool] = field(default_factory=dict)  # アーカイブエントリーID: 解放済みか
+    skill_specialization: Dict[str, str] = field(
+        default_factory=dict
+    )  # スキルID: 専門化パス
+    fusion_chain_progress: Dict[str, int] = field(
+        default_factory=dict
+    )  # 融合連鎖ID: 現在ステージ
+    skill_archive_progress: Dict[str, bool] = field(
+        default_factory=dict
+    )  # アーカイブエントリーID: 解放済みか
 ```
 
 ## 統合フロー

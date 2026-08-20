@@ -109,4 +109,8 @@ Each step will include a simple verification method:
 - Manual checklist items for subjective qualities
 
 ## Next Steps
+<<<<<<< ours
 Upon approval of this meta-plan, proceed to create the detailed 1-72 step implementation plan document.
+=======
+Upon approval of this meta-plan, proceed to create the detailed 1-72 step implementation plan document.
+>>>>>>> theirs

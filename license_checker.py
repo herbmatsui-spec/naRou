@@ -4,16 +4,16 @@
 Validates Steam DRM ownership or custom license token.
 Designed for offline-first: caches last successful check for 7 days.
 """
+
 from __future__ import annotations
 
-import os
-import json
-import time
-import hmac
-import hashlib
 import base64
+import hashlib
+import hmac
+import json
+import os
+import time
 from pathlib import Path
-from typing import Optional
 
 CACHE_FILE = Path("license_cache.json")
 CACHE_TTL = 7 * 24 * 3600  # 7 days
@@ -25,7 +25,7 @@ class LicenseChecker:
     def __init__(self, app_id: str = "", secret: str = ""):
         self.app_id = app_id or os.environ.get("STEAM_APP_ID", "")
         self.secret = secret or os.environ.get("LICENSE_SECRET", "")
-        self._cached: Optional[dict] = None
+        self._cached: dict | None = None
 
     def validate(self) -> bool:
         """Return True if license is valid (uses cache if recent)."""
@@ -69,10 +69,10 @@ class LicenseChecker:
         except Exception:
             return False
 
-    def _load_cache(self) -> Optional[dict]:
+    def _load_cache(self) -> dict | None:
         if CACHE_FILE.exists():
             try:
-                with open(CACHE_FILE, "r") as f:
+                with open(CACHE_FILE) as f:
                     return json.load(f)
             except Exception:
                 pass

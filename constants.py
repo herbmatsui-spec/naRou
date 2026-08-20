@@ -29,6 +29,7 @@ TILE_STAIRS_UP = "<"
 TILE_WATER = "~"
 TILE_TRAP = "^"
 
+
 # 属性Enum
 class Element(Enum):
     PHYSICAL = auto()
@@ -38,6 +39,7 @@ class Element(Enum):
     DARKNESS = auto()
     CHAOS = auto()
     MAGIC = auto()
+
 
 # アイテムカテゴリ
 class ItemCategory(Enum):
@@ -54,6 +56,7 @@ class ItemCategory(Enum):
     ROD = "rod"
     ORE = "ore"
     GOLD = "gold"
+
 
 # アイテムカテゴリ定数（後方互換用）
 CAT_WEAPON = "weapon"
@@ -91,14 +94,15 @@ QUALITY_GOOD = "良質"
 QUALITY_MIRACLE = "奇跡"
 QUALITY_GOD = "神器"
 
+
 # ゲーム状態Enum (Step 6.1)
 class GameState(Enum):
     EXPLORING = "exploring"  # 通常の探索・移動状態
-    COMBAT    = "combat"     # 戦闘演出中（ターン処理待ち）
-    DIALOGUE  = "dialogue"   # NPCとの会話中
-    MENU      = "menu"       # インベントリやスキルツリーなどのメニュー展開中
-    EVENT     = "event"      # 世界イベント・ストーリー選択のカットシーン中
-    PAUSED    = "paused"     # 一時停止状態
+    COMBAT = "combat"  # 戦闘演出中（ターン処理待ち）
+    DIALOGUE = "dialogue"  # NPCとの会話中
+    MENU = "menu"  # インベントリやスキルツリーなどのメニュー展開中
+    EVENT = "event"  # 世界イベント・ストーリー選択のカットシーン中
+    PAUSED = "paused"  # 一時停止状態
 
 
 # ゲームバランス定数

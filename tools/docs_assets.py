@@ -4,57 +4,52 @@ Documentation generator script for creating documentation about assets.
 Generates API references, usage guides, and asset catalogs.
 """
 
+import argparse
+import json
 import os
 import sys
-import json
-import argparse
-from pathlib import Path
-from typing import Dict, List, Optional
 import time
+from pathlib import Path
 
 
-def load_config(config_path: str = "tools/asset_pipeline_config.json") -> Dict:
+def load_config(config_path: str = "tools/asset_pipeline_config.json") -> dict:
     """Load pipeline configuration."""
-    with open(config_path, 'r') as f:
+    with open(config_path) as f:
         return json.load(f)
 
 
-def generate_tileset_docs(tileset_dir: str, output_dir: str, config: Dict) -> Dict:
+def generate_tileset_docs(tileset_dir: str, output_dir: str, config: dict) -> dict:
     """Generate documentation for tileset assets."""
-    stats = {
-        'assets_documented': 0,
-        'files_generated': 0,
-        'errors': []
-    }
-    
+    stats = {"assets_documented": 0, "files_generated": 0, "errors": []}
+
     if not os.path.exists(tileset_dir):
-        stats['errors'].append(f"Tileset directory does not exist: {tileset_dir}")
+        stats["errors"].append(f"Tileset directory does not exist: {tileset_dir}")
         return stats
-    
+
     # Create output directory
     os.makedirs(output_dir, exist_ok=True)
-    
+
     # Generate individual tileset documentation
     for root, dirs, files in os.walk(tileset_dir):
         for file in files:
-            if file.endswith('.json') and not file.endswith('_manifest.json'):
-                stats['assets_documented'] += 1
+            if file.endswith(".json") and not file.endswith("_manifest.json"):
+                stats["assets_documented"] += 1
                 json_path = os.path.join(root, file)
-                png_path = json_path.replace('.json', '.png')
-                
+                png_path = json_path.replace(".json", ".png")
+
                 if os.path.exists(png_path):
                     try:
-                        with open(json_path, 'r') as f:
+                        with open(json_path) as f:
                             metadata = json.load(f)
-                        
+
                         # Generate markdown documentation for this tileset
                         tileset_name = os.path.splitext(file)[0]
                         doc_content = f"""# Tileset: {tileset_name}
 
 ## Overview
-- **Tile Size**: {metadata.get('tile_size', 0)}px
-- **Atlas Dimensions**: {metadata.get('atlas_width', 0)}x{metadata.get('atlas_height', 0)}px
-- **Total Tiles**: {metadata.get('tile_count', 0)}
+- **Tile Size**: {metadata.get("tile_size", 0)}px
+- **Atlas Dimensions**: {metadata.get("atlas_width", 0)}x{metadata.get("atlas_height", 0)}px
+- **Total Tiles**: {metadata.get("tile_count", 0)}
 - **Atlas File**: `{os.path.basename(png_path)}`
 - **Metadata File**: `{os.path.basename(json_path)}`
 
@@ -87,56 +82,62 @@ function getTileByPosition(row, col, tilesetData) {{
 
 ## Tile Information
 """
-                        
+
                         # Add tile details if available
-                        if 'tiles' in metadata and metadata['tiles']:
+                        if "tiles" in metadata and metadata["tiles"]:
                             doc_content += "\n| Index | Name | X | Y | Width | Height | U | V | U Width | V Height |\n"
                             doc_content += "|-------|------|---|---|-------|--------|---|---|---------|----------|\n"
-                            for tile in metadata['tiles'][:20]:  # Limit to first 20 tiles
+                            for tile in metadata["tiles"][
+                                :20
+                            ]:  # Limit to first 20 tiles
                                 doc_content += f"| {tile.get('index', 'N/A')} | {tile.get('name', 'unnamed')} | {tile.get('x', 0)} | {tile.get('y', 0)} | {tile.get('width', 0)} | {tile.get('height', 0)} | {tile.get('u', 0):.4f} | {tile.get('v', 0):.4f} | {tile.get('uw', 0):.4f} | {tile.get('vh', 0):.4f} |\n"
-                            
-                            if len(metadata['tiles']) > 20:
+
+                            if len(metadata["tiles"]) > 20:
                                 doc_content += f"\n*Showing first 20 tiles. Total tiles: {len(metadata['tiles'])}*\n"
                         else:
-                            doc_content += "\n*No detailed tile information available*\n"
-                        
+                            doc_content += (
+                                "\n*No detailed tile information available*\n"
+                            )
+
                         # Add technical details
                         doc_content += f"""
 ## Technical Details
 - **File Size**: {os.path.getsize(png_path)} bytes (PNG) + {os.path.getsize(json_path)} bytes (JSON)
 - **Format**: PNG image with JSON metadata
-- **Generated**: {time.strftime('%Y-%m-%d %H:%M:%S')}
-- **Pipeline Version**: {config.get('version', '1.0.0')}
+- **Generated**: {time.strftime("%Y-%m-%d %H:%M:%S")}
+- **Pipeline Version**: {config.get("version", "1.0.0")}
 """
-                        
+
                         # Write documentation file
                         doc_file = os.path.join(output_dir, f"{tileset_name}_docs.md")
-                        with open(doc_file, 'w') as f:
+                        with open(doc_file, "w") as f:
                             f.write(doc_content)
-                        
-                        stats['files_generated'] += 1
-                        
+
+                        stats["files_generated"] += 1
+
                     except Exception as e:
-                        stats['errors'].append(f"Error generating docs for {json_path}: {e}")
-    
+                        stats["errors"].append(
+                            f"Error generating docs for {json_path}: {e}"
+                        )
+
     # Generate index documentation
     try:
         index_content = f"""# Tileset Documentation Index
 
-Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}
-Pipeline Version: {config.get('version', '1.0.0')}
+Generated: {time.strftime("%Y-%m-%d %H:%M:%S")}
+Pipeline Version: {config.get("version", "1.0.0")}
 
 ## Available Tilesets
 
 """
-        
+
         # List all tilesets
         tileset_files = []
         for root, dirs, files in os.walk(tileset_dir):
             for file in files:
-                if file.endswith('.png'):
+                if file.endswith(".png"):
                     tileset_files.append(os.path.splitext(file)[0])
-        
+
         if tileset_files:
             index_content += "| Tileset Name | Documentation |\n"
             index_content += "|--------------|---------------|\n"
@@ -144,7 +145,7 @@ Pipeline Version: {config.get('version', '1.0.0')}
                 index_content += f"| {tileset_name} | [{tileset_name}_docs.md]({tileset_name}_docs.md) |\n"
         else:
             index_content += "*No tilesets found*\n"
-        
+
         index_content += """
 ## Usage Guidelines
 
@@ -170,54 +171,50 @@ To render a specific tile from a tileset:
 - [Sound Documentation](../sounds/)
 - [Model Documentation](../models/)
 """
-        
+
         index_file = os.path.join(output_dir, "index.md")
-        with open(index_file, 'w') as f:
+        with open(index_file, "w") as f:
             f.write(index_content)
-        
-        stats['files_generated'] += 1
-        
+
+        stats["files_generated"] += 1
+
     except Exception as e:
-        stats['errors'].append(f"Error generating tileset index: {e}")
-    
+        stats["errors"].append(f"Error generating tileset index: {e}")
+
     return stats
 
 
-def generate_font_docs(font_dir: str, output_dir: str, config: Dict) -> Dict:
+def generate_font_docs(font_dir: str, output_dir: str, config: dict) -> dict:
     """Generate documentation for font assets."""
-    stats = {
-        'assets_documented': 0,
-        'files_generated': 0,
-        'errors': []
-    }
-    
+    stats = {"assets_documented": 0, "files_generated": 0, "errors": []}
+
     if not os.path.exists(font_dir):
-        stats['errors'].append(f"Font directory does not exist: {font_dir}")
+        stats["errors"].append(f"Font directory does not exist: {font_dir}")
         return stats
-    
+
     # Create output directory
     os.makedirs(output_dir, exist_ok=True)
-    
+
     # Generate individual font documentation
     for root, dirs, files in os.walk(font_dir):
         for file in files:
-            if file.endswith('.json') and not file.endswith('_manifest.json'):
-                stats['assets_documented'] += 1
+            if file.endswith(".json") and not file.endswith("_manifest.json"):
+                stats["assets_documented"] += 1
                 json_path = os.path.join(root, file)
-                png_path = json_path.replace('.json', '.png')
-                
+                png_path = json_path.replace(".json", ".png")
+
                 if os.path.exists(png_path):
                     try:
-                        with open(json_path, 'r') as f:
+                        with open(json_path) as f:
                             metadata = json.load(f)
-                        
+
                         font_name = os.path.splitext(file)[0]
                         doc_content = f"""# Font: {font_name}
 
 ## Overview
-- **Font Size**: {metadata.get('font_size', 0)}pt
-- **Atlas Dimensions**: {metadata.get('atlas_width', 0)}x{metadata.get('atlas_height', 0)}px
-- **Characters Mapped**: {len(metadata.get('metrics', {}))}
+- **Font Size**: {metadata.get("font_size", 0)}pt
+- **Atlas Dimensions**: {metadata.get("atlas_width", 0)}x{metadata.get("atlas_height", 0)}px
+- **Characters Mapped**: {len(metadata.get("metrics", {}))}
 - **Atlas File**: `{os.path.basename(png_path)}`
 - **Metadata File**: `{os.path.basename(json_path)}`
 
@@ -280,28 +277,32 @@ function getKerning(fontData, char1, char2) {{
 
 ## Character Support
 """
-                        
+
                         # Add character coverage information
-                        metrics = metadata.get('metrics', {})
+                        metrics = metadata.get("metrics", {})
                         if metrics:
                             # Group characters by type
                             ascii_chars = [c for c in metrics.keys() if ord(c) < 128]
-                            extended_chars = [c for c in metrics.keys() if ord(c) >= 128]
-                            
+                            extended_chars = [
+                                c for c in metrics.keys() if ord(c) >= 128
+                            ]
+
                             doc_content += f"""- **Total Characters**: {len(metrics)}
 - **ASCII Characters** (0-127): {len(ascii_chars)}
 - **Extended Characters** (≥128): {len(extended_chars)}
 
 ### ASCII Character Coverage
 """
-                            
+
                             # Show ASCII characters in a grid
                             doc_content += "```\n"
                             for row in range(16):
                                 line = ""
                                 for col in range(16):
                                     char_code = row * 16 + col
-                                    if char_code < 32 or char_code > 126:  # Non-printable ASCII
+                                    if (
+                                        char_code < 32 or char_code > 126
+                                    ):  # Non-printable ASCII
                                         line += " . "
                                     else:
                                         char = chr(char_code)
@@ -311,60 +312,66 @@ function getKerning(fontData, char1, char2) {{
                                             line += "   "
                                 doc_content += line + "\n"
                             doc_content += "```\n"
-                            
+
                             # List extended characters if any
                             if extended_chars:
                                 doc_content += f"\n**Extended Characters**: {''.join(sorted(extended_chars[:50]))}"
                                 if len(extended_chars) > 50:
-                                    doc_content += f"... and {len(extended_chars) - 50} more"
+                                    doc_content += (
+                                        f"... and {len(extended_chars) - 50} more"
+                                    )
                         else:
                             doc_content += "\n*No character metrics available*\n"
-                        
+
                         # Add technical details
                         doc_content += f"""
 ## Technical Details
 - **File Size**: {os.path.getsize(png_path)} bytes (PNG) + {os.path.getsize(json_path)} bytes (JSON)
 - **Format**: PNG image with JSON metadata
-- **Generated**: {time.strftime('%Y-%m-%d %H:%M:%S')}
-- **Pipeline Version**: {config.get('version', '1.0.0')}
+- **Generated**: {time.strftime("%Y-%m-%d %H:%M:%S")}
+- **Pipeline Version**: {config.get("version", "1.0.0")}
 """
-                        
+
                         # Write documentation file
                         doc_file = os.path.join(output_dir, f"{font_name}_docs.md")
-                        with open(doc_file, 'w') as f:
+                        with open(doc_file, "w") as f:
                             f.write(doc_content)
-                        
-                        stats['files_generated'] += 1
-                        
+
+                        stats["files_generated"] += 1
+
                     except Exception as e:
-                        stats['errors'].append(f"Error generating docs for {json_path}: {e}")
-    
+                        stats["errors"].append(
+                            f"Error generating docs for {json_path}: {e}"
+                        )
+
     # Generate index documentation
     try:
         index_content = f"""# Font Documentation Index
 
-Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}
-Pipeline Version: {config.get('version', '1.0.0')}
+Generated: {time.strftime("%Y-%m-%d %H:%M:%S")}
+Pipeline Version: {config.get("version", "1.0.0")}
 
 ## Available Fonts
 
 """
-        
+
         # List all fonts
         font_files = []
         for root, dirs, files in os.walk(font_dir):
             for file in files:
-                if file.endswith('.png'):
+                if file.endswith(".png"):
                     font_files.append(os.path.splitext(file)[0])
-        
+
         if font_files:
             index_content += "| Font Name | Documentation |\n"
             index_content += "|-----------|---------------|\n"
             for font_name in sorted(font_files):
-                index_content += f"| {font_name} | [{font_name}_docs.md]({font_name}_docs.md) |\n"
+                index_content += (
+                    f"| {font_name} | [{font_name}_docs.md]({font_name}_docs.md) |\n"
+                )
         else:
             index_content += "*No fonts found*\n"
-        
+
         index_content += """
 ## Usage Guidelines
 
@@ -394,50 +401,46 @@ To render text using a font atlas:
 - [Sound Documentation](../sounds/)
 - [Model Documentation](../models/)
 """
-        
+
         index_file = os.path.join(output_dir, "index.md")
-        with open(index_file, 'w') as f:
+        with open(index_file, "w") as f:
             f.write(index_content)
-        
-        stats['files_generated'] += 1
-        
+
+        stats["files_generated"] += 1
+
     except Exception as e:
-        stats['errors'].append(f"Error generating font index: {e}")
-    
+        stats["errors"].append(f"Error generating font index: {e}")
+
     return stats
 
 
-def generate_sound_docs(sound_dir: str, output_dir: str, config: Dict) -> Dict:
+def generate_sound_docs(sound_dir: str, output_dir: str, config: dict) -> dict:
     """Generate documentation for sound assets."""
-    stats = {
-        'assets_documented': 0,
-        'files_generated': 0,
-        'errors': []
-    }
-    
+    stats = {"assets_documented": 0, "files_generated": 0, "errors": []}
+
     if not os.path.exists(sound_dir):
-        stats['errors'].append(f"Sound directory does not exist: {sound_dir}")
+        stats["errors"].append(f"Sound directory does not exist: {sound_dir}")
         return stats
-    
+
     # Create output directory
     os.makedirs(output_dir, exist_ok=True)
-    
+
     # Generate individual sound documentation
-    extensions = ['.ogg', '.mp3', '.wav', '.flac']
+    extensions = [".ogg", ".mp3", ".wav", ".flac"]
     for root, dirs, files in os.walk(sound_dir):
         for file in files:
             if any(file.lower().endswith(ext) for ext in extensions):
-                stats['assets_documented'] += 1
+                stats["assets_documented"] += 1
                 sound_path = os.path.join(root, file)
-                
+
                 try:
                     sound_name = os.path.splitext(file)[0]
                     file_size = os.path.getsize(sound_path)
-                    
+
                     # Try to get metadata (would use audio library in real implementation)
                     duration = 0.0  # Placeholder
-                    bitrate = 0     # Placeholder
-                    
+                    bitrate = 0  # Placeholder
+
                     doc_content = f"""# Sound: {sound_name}
 
 ## Overview
@@ -511,74 +514,79 @@ function playSoundWithAudioElement(src, volume = 1.0, loop = false) {{
 ## Technical Details
 - **File Size**: {file_size} bytes
 - **Format**: {Path(file).suffix.upper()[1:]}
-- **Generated**: {time.strftime('%Y-%m-%d %H:%M:%S')}
-- **Pipeline Version**: {config.get('version', '1.0.0')}
+- **Generated**: {time.strftime("%Y-%m-%d %H:%M:%S")}
+- **Pipeline Version**: {config.get("version", "1.0.0")}
 
 ## Format-Specific Notes
 """
-                    
+
                     # Add format-specific information
                     ext = Path(file).suffix.lower()
-                    if ext == '.ogg':
+                    if ext == ".ogg":
                         doc_content += """- **OGG Vorbis**: Open-source, lossy compression format. Good balance of quality and file size. Widely supported.
 - **Looping**: Supports seamless looping
 - **Metadata**: Supports tags (title, artist, album, etc.)"""
-                    elif ext == '.mp3':
+                    elif ext == ".mp3":
                         doc_content += """- **MP3**: Widely compatible, lossy compression format. May have licensing considerations.
 - **Looping**: May have gaps at loop boundaries due to encoder delay/padding
 - **Metadata**: Extensive ID3 tag support"""
-                    elif ext == '.wav':
+                    elif ext == ".wav":
                         doc_content += """- **WAV**: Uncompressed, lossless format. Highest quality but largest file size.
 - **Looping**: Supports seamless looping
 - **Metadata**: Limited compared to other formats"""
-                    elif ext == '.flac':
+                    elif ext == ".flac":
                         doc_content += """- **FLAC**: Free lossless audio codec. Compression without quality loss.
 - **Looping**: Supports seamless looping
 - **Metadata**: Extensive tag support like Vorbis comments"""
-                    
-                    doc_content += f"""
+
+                    doc_content += """
 ## Related Documentation
 - [Asset Pipeline Overview](../pipeline_docs.md)
 - [Tileset Documentation](../tilesets/)
 - [Font Documentation](../fonts/)
 - [Model Documentation](../models/)
 """
-                    
+
                     # Write documentation file
                     doc_file = os.path.join(output_dir, f"{sound_name}_docs.md")
-                    with open(doc_file, 'w') as f:
+                    with open(doc_file, "w") as f:
                         f.write(doc_content)
-                    
-                    stats['files_generated'] += 1
-                    
+
+                    stats["files_generated"] += 1
+
                 except Exception as e:
-                    stats['errors'].append(f"Error generating docs for {sound_path}: {e}")
-    
+                    stats["errors"].append(
+                        f"Error generating docs for {sound_path}: {e}"
+                    )
+
     # Generate index documentation
     try:
         index_content = f"""# Sound Documentation Index
 
-Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}
-Pipeline Version: {config.get('version', '1.0.0')}
+Generated: {time.strftime("%Y-%m-%d %H:%M:%S")}
+Pipeline Version: {config.get("version", "1.0.0")}
 
 ## Available Sounds
 
 """
-        
+
         # List all sounds
         sound_files = []
         for root, dirs, files in os.walk(sound_dir):
             for file in files:
-                if any(file.lower().endswith(ext) for ext in ['.ogg', '.mp3', '.wav', '.flac']):
+                if any(
+                    file.lower().endswith(ext)
+                    for ext in [".ogg", ".mp3", ".wav", ".flac"]
+                ):
                     sound_files.append(os.path.splitext(file)[0])
-        
+
         if sound_files:
             index_content += "| Sound Name | Format | Documentation |\n"
             index_content += "|------------|--------|---------------|\n"
             for sound_name in sorted(sound_files):
                 # Find the actual file to get extension
                 found = False
-                for ext in ['.ogg', '.mp3', '.wav', '.flac']:
+                for ext in [".ogg", ".mp3", ".wav", ".flac"]:
                     test_path = os.path.join(sound_dir, sound_name + ext)
                     if os.path.exists(test_path):
                         index_content += f"| {sound_name} | {ext.upper()[1:]} | [{sound_name}_docs.md]({sound_name}_docs.md) |\n"
@@ -588,7 +596,7 @@ Pipeline Version: {config.get('version', '1.0.0')}
                     index_content += f"| {sound_name} | unknown | [{sound_name}_docs.md]({sound_name}_docs.md) |\n"
         else:
             index_content += "*No sounds found*\n"
-        
+
         index_content += """
 ## Usage Guidelines
 
@@ -616,62 +624,68 @@ Sound assets can be loaded using:
 - [Font Documentation](../fonts/)
 - [Model Documentation](../models/)
 """
-        
+
         index_file = os.path.join(output_dir, "index.md")
-        with open(index_file, 'w') as f:
+        with open(index_file, "w") as f:
             f.write(index_content)
-        
-        stats['files_generated'] += 1
-        
+
+        stats["files_generated"] += 1
+
     except Exception as e:
-        stats['errors'].append(f"Error generating sound index: {e}")
-    
+        stats["errors"].append(f"Error generating sound index: {e}")
+
     return stats
 
 
-def generate_model_docs(model_dir: str, output_dir: str, config: Dict) -> Dict:
+def generate_model_docs(model_dir: str, output_dir: str, config: dict) -> dict:
     """Generate documentation for model assets."""
-    stats = {
-        'assets_documented': 0,
-        'files_generated': 0,
-        'errors': []
-    }
-    
+    stats = {"assets_documented": 0, "files_generated": 0, "errors": []}
+
     if not os.path.exists(model_dir):
-        stats['errors'].append(f"Model directory does not exist: {model_dir}")
+        stats["errors"].append(f"Model directory does not exist: {model_dir}")
         return stats
-    
+
     # Create output directory
     os.makedirs(output_dir, exist_ok=True)
-    
+
     # Generate individual model documentation
-    extensions = ['.obj', '.fbx', '.gltf', '.glb', '.dae', '.3ds', '.blend', '.ply', '.stl']
+    extensions = [
+        ".obj",
+        ".fbx",
+        ".gltf",
+        ".glb",
+        ".dae",
+        ".3ds",
+        ".blend",
+        ".ply",
+        ".stl",
+    ]
     for root, dirs, files in os.walk(model_dir):
         for file in files:
             if any(file.lower().endswith(ext) for ext in extensions):
-                stats['assets_documented'] += 1
+                stats["assets_documented"] += 1
                 model_path = os.path.join(root, file)
-                
+
                 try:
                     model_name = os.path.splitext(file)[0]
                     file_size = os.path.getsize(model_path)
-                    
+
                     # Try to get metadata (would use assimp or similar in real implementation)
                     vertex_count = 0
                     face_count = 0
-                    
-                    if file.endswith('.obj'):
+
+                    if file.endswith(".obj"):
                         # Simple OBJ parsing
                         try:
-                            with open(model_path, 'r') as f:
+                            with open(model_path) as f:
                                 for line in f:
-                                    if line.startswith('v '):
+                                    if line.startswith("v "):
                                         vertex_count += 1
-                                    elif line.startswith('f '):
+                                    elif line.startswith("f "):
                                         face_count += 1
                         except Exception:
                             pass
-                    
+
                     doc_content = f"""# Model: {model_name}
 
 ## Overview
@@ -752,105 +766,130 @@ class ModelLoader {{
 ## Technical Details
 - **File Size**: {file_size} bytes
 - **Format**: {Path(file).suffix.upper()[1:]}
-- **Generated**: {time.strftime('%Y-%m-%d %H:%M:%S')}
-- **Pipeline Version**: {config.get('version', '1.0.0')}
+- **Generated**: {time.strftime("%Y-%m-%d %H:%M:%S")}
+- **Pipeline Version**: {config.get("version", "1.0.0")}
 
 ## Format-Specific Information
 """
-                    
+
                     # Add format-specific details
                     ext = Path(file).suffix.lower()
                     format_info = {
-                        '.obj': '''**OBJ (Wavefront)**:
+                        ".obj": """**OBJ (Wavefront)**:
 - Simple, widely-supported format
 - Stores vertices, texture coordinates, normals, and faces
 - Does not support animation natively
-- Text-based format (human-readable but larger file size)''',
-                        '.fbx': '''**FBX (Filmbox)**:
+- Text-based format (human-readable but larger file size)""",
+                        ".fbx": """**FBX (Filmbox)**:
 - Autodesk format with broad industry support
 - Supports meshes, materials, animations, skeletons
 - Binary and ASCII versions available
-- Proprietary but well-documented''',
-                        '.gltf': '''**glTF (GL Transmission Format)**:
+- Proprietary but well-documented""",
+                        ".gltf": """**glTF (GL Transmission Format)**:
 - Open standard by Khronos Group
 - Efficient, interoperable format for 3D scenes
 - Supports PBR materials, animations, skeletons
 - Binary (.glb) and JSON-based (.gltf) versions
-- Designed for web and real-time applications''',
-                        '.glb': '''**glb (Binary glTF)**:
+- Designed for web and real-time applications""",
+                        ".glb": """**glb (Binary glTF)**:
 - Binary version of glTF format
 - More compact than JSON-based glTF
-- Preferred for distribution due to smaller size''',
-                        '.dae': '''**DAE (COLLADA)**:
+- Preferred for distribution due to smaller size""",
+                        ".dae": """**DAE (COLLADA)**:
 - XML-based format for 3D asset exchange
 - Supports geometries, materials, animations, physics
-- Open standard but less commonly used now than glTF''',
-                        '.3ds': '''**3DS (3D Studio)**:
+- Open standard but less commonly used now than glTF""",
+                        ".3ds": """**3DS (3D Studio)**:
 - Legacy Autodesk format
 - Limited to 65535 vertices per mesh
-- Largely superseded by FBX and glTF''',
-                        '.blend': '''**BLEND (Blender)**:
+- Largely superseded by FBX and glTF""",
+                        ".blend": """**BLEND (Blender)**:
 - Native format for Blender software
 - Contains complete scene data
-- Not ideal for distribution; export to glTF/OBJ instead''',
-                        '.ply': '''**PLY (Polygon File Format)**:
+- Not ideal for distribution; export to glTF/OBJ instead""",
+                        ".ply": """**PLY (Polygon File Format)**:
 - Originally for 3D scanners
 - Supports vertices, faces, color, normals
-- Both ASCII and binary versions''',
-                        '.stl': '''**STL (Stereolithography)**:
+- Both ASCII and binary versions""",
+                        ".stl": """**STL (Stereolithography)**:
 - Primarily for 3D printing
 - Stores only vertex coordinates and facet normals
-- No texture or material support'''
+- No texture or material support""",
                     }
-                    
+
                     if ext in format_info:
                         doc_content += format_info[ext]
                     else:
                         doc_content += f"- **{ext.upper()[1:]}**: Format-specific details not available"
-                    
-                    doc_content += f"""
+
+                    doc_content += """
 ## Related Documentation
 - [Asset Pipeline Overview](../pipeline_docs.md)
 - [Tileset Documentation](../tilesets/)
 - [Font Documentation](../fonts/)
 - [Sound Documentation](../sounds/)
 """
-                    
+
                     # Write documentation file
                     doc_file = os.path.join(output_dir, f"{model_name}_docs.md")
-                    with open(doc_file, 'w') as f:
+                    with open(doc_file, "w") as f:
                         f.write(doc_content)
-                    
-                    stats['files_generated'] += 1
-                    
+
+                    stats["files_generated"] += 1
+
                 except Exception as e:
-                    stats['errors'].append(f"Error generating docs for {model_path}: {e}")
-    
+                    stats["errors"].append(
+                        f"Error generating docs for {model_path}: {e}"
+                    )
+
     # Generate index documentation
     try:
         index_content = f"""# Model Documentation Index
 
-Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}
-Pipeline Version: {config.get('version', '1.0.0')}
+Generated: {time.strftime("%Y-%m-%d %H:%M:%S")}
+Pipeline Version: {config.get("version", "1.0.0")}
 
 ## Available Models
 
 """
-        
+
         # List all models
         model_files = []
         for root, dirs, files in os.walk(model_dir):
             for file in files:
-                if any(file.lower().endswith(ext) for ext in ['.obj', '.fbx', '.gltf', '.glb', '.dae', '.3ds', '.blend', '.ply', '.stl']):
+                if any(
+                    file.lower().endswith(ext)
+                    for ext in [
+                        ".obj",
+                        ".fbx",
+                        ".gltf",
+                        ".glb",
+                        ".dae",
+                        ".3ds",
+                        ".blend",
+                        ".ply",
+                        ".stl",
+                    ]
+                ):
                     model_files.append(os.path.splitext(file)[0])
-        
+
         if model_files:
             index_content += "| Model Name | Format | Documentation |\n"
             index_content += "|------------|--------|---------------|\n"
             for model_name in sorted(model_files):
                 # Find the actual file to get extension
                 found = False
-                for ext in ['.obj', '.fbx', '.gltf', '.glb', '.dae', '.3ds', '.blend', '.ply', '.stl']:
+                for ext in [
+                    ".obj",
+                    ".fbx",
+                    ".gltf",
+                    ".glb",
+                    ".dae",
+                    ".3ds",
+                    ".blend",
+                    ".ply",
+                    ".stl",
+                ]:
                     test_path = os.path.join(model_dir, model_name + ext)
                     if os.path.exists(test_path):
                         index_content += f"| {model_name} | {ext.upper()[1:]} | [{model_name}_docs.md]({model_name}_docs.md) |\n"
@@ -860,7 +899,7 @@ Pipeline Version: {config.get('version', '1.0.0')}
                     index_content += f"| {model_name} | unknown | [{model_name}_docs.md]({model_name}_docs.md) |\n"
         else:
             index_content += "*No models found*\n"
-        
+
         index_content += """
 ## Usage Guidelines
 
@@ -890,35 +929,32 @@ For better performance in games:
 - [Font Documentation](../fonts/)
 - [Sound Documentation](../sounds/)
 """
-        
+
         index_file = os.path.join(output_dir, "index.md")
-        with open(index_file, 'w') as f:
+        with open(index_file, "w") as f:
             f.write(index_content)
-        
-        stats['files_generated'] += 1
-        
+
+        stats["files_generated"] += 1
+
     except Exception as e:
-        stats['errors'].append(f"Error generating model index: {e}")
-    
+        stats["errors"].append(f"Error generating model index: {e}")
+
     return stats
 
 
-def generate_overall_docs(config: Dict) -> Dict:
+def generate_overall_docs(config: dict) -> dict:
     """Generate overall asset pipeline documentation."""
-    stats = {
-        'files_generated': 0,
-        'errors': []
-    }
-    
+    stats = {"files_generated": 0, "errors": []}
+
     try:
         # Generate main documentation index
-        docs_dir = os.path.join(config['directories']['output'], 'docs')
+        docs_dir = os.path.join(config["directories"]["output"], "docs")
         os.makedirs(docs_dir, exist_ok=True)
-        
+
         main_content = f"""# naRou Asset Pipeline Documentation
 
-Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}
-Pipeline Version: {config.get('version', '1.0.0')}
+Generated: {time.strftime("%Y-%m-%d %H:%M:%S")}
+Pipeline Version: {config.get("version", "1.0.0")}
 
 ## Overview
 This documentation provides comprehensive information about all assets processed by the naRou asset pipeline.
@@ -971,16 +1007,18 @@ For issues with assets, please check:
 ---
 *This documentation was automatically generated by the naRou asset pipeline.*
 """
-        
+
         main_file = os.path.join(docs_dir, "index.md")
-        with open(main_file, 'w') as f:
+        with open(main_file, "w") as f:
             f.write(main_content)
-        
-        stats['files_generated'] += 1
-        
+
+        stats["files_generated"] += 1
+
         # Generate additional documentation files
         additional_docs = [
-            ("build_process.md", """# Asset Pipeline Build Process
+            (
+                "build_process.md",
+                """# Asset Pipeline Build Process
 
 ## Overview
 The naRou asset pipeline processes assets through several stages to convert source assets into optimized game-ready formats.
@@ -1006,8 +1044,11 @@ The build process is controlled by `asset_pipeline_config.json` which specifies:
 To customize the pipeline:
 1. Modify the configuration file
 2. Create custom processing scripts in the `tools/` directory
-3. Extend the build script (`build_assets.py`) for new asset types"""),
-            ("validation.md", """# Asset Validation Procedures
+3. Extend the build script (`build_assets.py`) for new asset types""",
+            ),
+            (
+                "validation.md",
+                """# Asset Validation Procedures
 
 ## Overview
 Asset validation ensures that all processed assets meet quality standards and are ready for use in games.
@@ -1029,8 +1070,11 @@ Asset validation ensures that all processed assets meet quality standards and ar
 - Incorrect metadata formatting
 - Assets exceeding size limits
 - Incompatible file formats
-- Texture atlases with poor packing efficiency"""),
-            ("deployment.md", """# Asset Deployment Guide
+- Texture atlases with poor packing efficiency""",
+            ),
+            (
+                "deployment.md",
+                """# Asset Deployment Guide
 
 ## Overview
 This guide covers deploying processed assets to various target environments.
@@ -1059,8 +1103,11 @@ This guide covers deploying processed assets to various target environments.
 1. [ ] Verify all files were transferred correctly
 2. [ ] Check that deployed assets match source in content (accounting for optimization)
 3. [ ] Test loading and rendering of key assets
-4. [ ] Monitor for any errors in initial usage"""),
-            ("configuration.md", """# Asset Pipeline Configuration Reference
+4. [ ] Monitor for any errors in initial usage""",
+            ),
+            (
+                "configuration.md",
+                """# Asset Pipeline Configuration Reference
 
 ## Configuration File
 The asset pipeline uses `asset_pipeline_config.json` for all configuration settings.
@@ -1182,8 +1229,11 @@ Controls overall pipeline behavior:
 The following environment variables can override configuration settings:
 - `ASSET_PIPELINE_CONFIG`: Path to configuration file
 - `ASSET_SOURCE_DIR`: Override source directory
-- `ASSET_OUTPUT_DIR`: Override output directory"""),
-            ("api_reference.md", """# Asset Pipeline API Reference
+- `ASSET_OUTPUT_DIR`: Override output directory""",
+            ),
+            (
+                "api_reference.md",
+                """# Asset Pipeline API Reference
 
 ## Overview
 This document describes the programmatic interfaces available for working with the naRou asset pipeline.
@@ -1280,76 +1330,74 @@ const maxAtlasSize = pipeline.config.tileset.max_atlas_size;
 const workerCount = pipeline.config.pipeline.max_workers;
 ```
 
-        ]"""),
+        ]""",
+            ),
         ]
 
-        
         for filename, content in additional_docs:
             file_path = os.path.join(docs_dir, filename)
             try:
-                with open(file_path, 'w') as f:
+                with open(file_path, "w") as f:
                     f.write(content)
-                stats['files_generated'] += 1
+                stats["files_generated"] += 1
             except Exception as e:
-                stats['errors'].append(f"Error generating {filename}: {e}")
-        
+                stats["errors"].append(f"Error generating {filename}: {e}")
+
     except Exception as e:
-        stats['errors'].append(f"Error generating overall documentation: {e}")
-    
+        stats["errors"].append(f"Error generating overall documentation: {e}")
+
     return stats
 
 
-def generate_documentation(config: Dict) -> Dict:
+def generate_documentation(config: dict) -> dict:
     """Generate documentation for all asset types."""
     docs = {
-        'timestamp': time.time(),
-        'datetime': time.strftime('%Y-%m-%d %H:%M:%S'),
-        'results': {}
+        "timestamp": time.time(),
+        "datetime": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "results": {},
     }
-    
+
     # Generate documentation for each asset type
     doc_generators = [
-        ('tilesets', 'tilesets', generate_tileset_docs),
-        ('fonts', 'fonts', generate_font_docs),
-        ('sounds', 'sounds', generate_sound_docs),
-        ('models', 'models', generate_model_docs)
+        ("tilesets", "tilesets", generate_tileset_docs),
+        ("fonts", "fonts", generate_font_docs),
+        ("sounds", "sounds", generate_sound_docs),
+        ("models", "models", generate_model_docs),
     ]
-    
+
     for doc_name, dir_key, generator_func in doc_generators:
-        dir_path = os.path.join(config['directories']['output'], dir_key)
-        docs_dir = os.path.join(config['directories']['output'], 'docs', doc_name)
+        dir_path = os.path.join(config["directories"]["output"], dir_key)
+        docs_dir = os.path.join(config["directories"]["output"], "docs", doc_name)
         print(f"Generating {doc_name} documentation in: {docs_dir}")
-        docs['results'][doc_name] = generator_func(dir_path, docs_dir, config)
-    
+        docs["results"][doc_name] = generator_func(dir_path, docs_dir, config)
+
     # Generate overall documentation
     print("Generating overall pipeline documentation...")
-    docs['results']['overall'] = generate_overall_docs(config)
-    
+    docs["results"]["overall"] = generate_overall_docs(config)
+
     # Generate summary
-    docs['summary'] = {
-        'total_docs_generated': sum(
-            result.get('files_generated', 0) 
-            for result in docs['results'].values()
+    docs["summary"] = {
+        "total_docs_generated": sum(
+            result.get("files_generated", 0) for result in docs["results"].values()
         ),
-        'total_errors': sum(
-            len(result.get('errors', [])) 
-            for result in docs['results'].values()
+        "total_errors": sum(
+            len(result.get("errors", [])) for result in docs["results"].values()
         ),
-        'assets_documented': sum(
-            result.get('assets_documented', 0) 
-            for result in docs['results'].values() 
-            if isinstance(result, dict) and 'assets_documented' in result
-        )
+        "assets_documented": sum(
+            result.get("assets_documented", 0)
+            for result in docs["results"].values()
+            if isinstance(result, dict) and "assets_documented" in result
+        ),
     }
-    
+
     return docs
 
 
-def save_documentation(docs: Dict, output_path: str) -> bool:
+def save_documentation(docs: dict, output_path: str) -> bool:
     """Save documentation to a JSON file."""
     try:
         os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             json.dump(docs, f, indent=2)
         print(f"Documentation saved to: {output_path}")
         return True
@@ -1358,113 +1406,122 @@ def save_documentation(docs: Dict, output_path: str) -> bool:
         return False
 
 
-def print_documentation_summary(docs: Dict, verbose: bool = False):
+def print_documentation_summary(docs: dict, verbose: bool = False):
     """Print a formatted summary of the documentation generation."""
-    print(f"\n{'='*70}")
-    print(f"ASSET DOCUMENTATION GENERATION SUMMARY")
-    print(f"{'='*70}")
+    print(f"\n{'=' * 70}")
+    print("ASSET DOCUMENTATION GENERATION SUMMARY")
+    print(f"{'=' * 70}")
     print(f"Timestamp: {docs['datetime']}")
-    
-    print(f"\nSUMMARY:")
-    summary = docs.get('summary', {})
-    print(f"  Total Documentation Files Generated: {summary.get('total_docs_generated', 0)}")
+
+    print("\nSUMMARY:")
+    summary = docs.get("summary", {})
+    print(
+        f"  Total Documentation Files Generated: {summary.get('total_docs_generated', 0)}"
+    )
     print(f"  Total Errors Encountered: {summary.get('total_errors', 0)}")
     print(f"  Total Assets Documented: {summary.get('assets_documented', 0)}")
-    
-    print(f"\nDETAILED RESULTS BY ASSET TYPE:")
-    for asset_type, result in docs.get('results', {}).items():
+
+    print("\nDETAILED RESULTS BY ASSET TYPE:")
+    for asset_type, result in docs.get("results", {}).items():
         if isinstance(result, dict):
             print(f"\n  {asset_type.upper()}:")
-            if 'assets_documented' in result:
+            if "assets_documented" in result:
                 print(f"    Assets Documented: {result.get('assets_documented', 0)}")
             print(f"    Files Generated: {result.get('files_generated', 0)}")
             print(f"    Errors: {len(result.get('errors', []))}")
-            
-            if result.get('errors') and verbose:
-                print(f"    Error Details:")
-                for error in result['errors'][:3]:
+
+            if result.get("errors") and verbose:
+                print("    Error Details:")
+                for error in result["errors"][:3]:
                     print(f"      - {error}")
-                if len(result['errors']) > 3:
+                if len(result["errors"]) > 3:
                     print(f"      ... and {len(result['errors']) - 3} more errors")
         else:
             print(f"\n  {asset_type.upper()}: {result}")
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Generate documentation for assets')
-    parser.add_argument('--config', default='tools/asset_pipeline_config.json',
-                       help='Path to configuration file')
-    parser.add_argument('--output', default=None,
-                       help='Output file for documentation (JSON)')
-    parser.add_argument('--assets', nargs='+',
-                       choices=['tilesets', 'fonts', 'sounds', 'models', 'all'],
-                       default=['all'], help='Asset types to document')
-    parser.add_argument('--summary-only', action='store_true',
-                       help='Print only summary, not full JSON output')
-    parser.add_argument('--verbose', '-v', action='store_true',
-                       help='Verbose output')
-    
+    parser = argparse.ArgumentParser(description="Generate documentation for assets")
+    parser.add_argument(
+        "--config",
+        default="tools/asset_pipeline_config.json",
+        help="Path to configuration file",
+    )
+    parser.add_argument(
+        "--output", default=None, help="Output file for documentation (JSON)"
+    )
+    parser.add_argument(
+        "--assets",
+        nargs="+",
+        choices=["tilesets", "fonts", "sounds", "models", "all"],
+        default=["all"],
+        help="Asset types to document",
+    )
+    parser.add_argument(
+        "--summary-only",
+        action="store_true",
+        help="Print only summary, not full JSON output",
+    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
+
     args = parser.parse_args()
-    
+
     # Load configuration
     try:
         config = load_config(args.config)
     except Exception as e:
         print(f"Error loading configuration: {e}")
         sys.exit(1)
-    
+
     # Determine which assets to document
-    if args.assets == ['all']:
-        assets_to_document = ['tilesets', 'fonts', 'sounds', 'models']
+    if args.assets == ["all"]:
+        assets_to_document = ["tilesets", "fonts", "sounds", "models"]
     else:
         assets_to_document = args.assets
-    
+
     # Generate documentation
     docs = generate_documentation(config)
-    
+
     # Filter results if needed
-    if args.assets != ['all']:
+    if args.assets != ["all"]:
         filtered_results = {
-            k: v for k, v in docs['results'].items() 
-            if k in assets_to_document
+            k: v for k, v in docs["results"].items() if k in assets_to_document
         }
-        docs['results'] = filtered_results
-        
+        docs["results"] = filtered_results
+
         # Recalculate summary
         total_files_generated = sum(
-            result.get('files_generated', 0) 
-            for result in docs['results'].values()
+            result.get("files_generated", 0) for result in docs["results"].values()
         )
         total_errors = sum(
-            len(result.get('errors', [])) 
-            for result in docs['results'].values()
+            len(result.get("errors", [])) for result in docs["results"].values()
         )
         total_assets_documented = sum(
-            result.get('assets_documented', 0) 
-            for result in docs['results'].values() 
-            if isinstance(result, dict) and 'assets_documented' in result
+            result.get("assets_documented", 0)
+            for result in docs["results"].values()
+            if isinstance(result, dict) and "assets_documented" in result
         )
-        
-        docs['summary'] = {
-            'total_docs_generated': total_files_generated,
-            'total_errors': total_errors,
-            'total_assets_documented': total_assets_documented
+
+        docs["summary"] = {
+            "total_docs_generated": total_files_generated,
+            "total_errors": total_errors,
+            "total_assets_documented": total_assets_documented,
         }
-    
+
     # Save or output results
     if args.output:
         if not save_documentation(docs, args.output):
             sys.exit(1)
-    
+
     if not args.summary_only:
         # Print full JSON
         print(json.dumps(docs, indent=2))
     else:
         # Print formatted summary
         print_documentation_summary(docs, verbose=args.verbose)
-    
+
     sys.exit(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

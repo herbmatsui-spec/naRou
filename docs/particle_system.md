@@ -59,23 +59,23 @@ GPU-friendly Structured-Array-of-Arrays (SoA) layout for 1M+ particles:
 ```python
 class ParticleBuffer:
     max_particles = 1_048_576  # 2^20
-    
+
     # SoA arrays (cache-friendly)
     position: float32[max, 3]
     velocity: float32[max, 3]
-    life: float32[max, 4]      # x=current, y=max, z,w=padding
-    color: float32[max, 4]     # RGBA
-    size: float32[max, 4]      # x=start, y=end, z=current, w=pad
+    life: float32[max, 4]  # x=current, y=max, z,w=padding
+    color: float32[max, 4]  # RGBA
+    size: float32[max, 4]  # x=start, y=end, z=current, w=pad
     rotation: float32[max, 4]  # x=start, y=speed, z=current
-    flags: uint32[max]         # ALIVE, RIBBON, TRAIL, MESH, COLLIDE, EMIT_LIGHT
+    flags: uint32[max]  # ALIVE, RIBBON, TRAIL, MESH, COLLIDE, EMIT_LIGHT
     material_id: uint32[max]
     emitter_id: uint32[max]
     prev_position: float32[max, 3]  # For ribbons/trails
     ribbon_length: float32[max]
-    
+
     # Double-ended queue management
-    free_list: list[int]       # Dead particle indices
-    alive_indices: list[int]   # Alive particle indices
+    free_list: list[int]  # Dead particle indices
+    alive_indices: list[int]  # Alive particle indices
 ```
 
 **Allocation Strategy:**
@@ -91,6 +91,7 @@ Divergence-free 3D velocity field using Perlin noise curl:
 # Curl = ∇ × N
 # N(p) = 3D Perlin noise
 # v = (∂Nz/∂y - ∂Ny/∂z, ∂Nx/∂z - ∂Nz/∂x, ∂Ny/∂x - ∂Nx/∂y)
+
 
 class CurlNoise:
     def curl_noise_3d(self, x, y, z, eps=0.01) -> vec3:
@@ -179,7 +180,7 @@ def simulate_particles_cpu(buffer, dt, curl_noise, sdf_collision,
 ```python
 flags |= ParticleFlags.RIBBON
 prev_position: vec3  # Previous frame position
-ribbon_length: float # Accumulated length
+ribbon_length: float  # Accumulated length
 ```
 
 **Usage:** Magic trails, weapon swings, projectile paths
@@ -190,17 +191,18 @@ ribbon_length: float # Accumulated length
 # In render_system.py
 particle_manager = ParticleManager(max_particles=1_048_576)
 
+
 def render_frame():
     # 1. Update emitters
     for emitter in active_emitters:
         emitter.update(dt, particle_buffer, ...)
-    
+
     # 2. Simulate
     particle_manager.simulate(dt, curl_noise, sdf_collision)
-    
+
     # 3. Render (instanced)
     ParticleRenderer.render(particle_buffer, camera, material_system)
-    
+
     # 4. HDR pipeline
     compositor.render_particles(particle_buffer)
 ```

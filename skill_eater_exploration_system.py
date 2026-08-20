@@ -6,10 +6,13 @@ Aの世界（スキル喰い） 探索・移動・環境音システム
 
 import random
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple, Dict
-from skill_eater_system import CharacterState
+
 from skill_eater_audio_system import SkillEaterAudioSystem
-from skill_eater_presentation_system import SkillEaterPresentationSystem, PresentationEvent
+from skill_eater_presentation_system import (
+    PresentationEvent,
+    SkillEaterPresentationSystem,
+)
+from skill_eater_system import CharacterState
 
 
 @dataclass
@@ -19,7 +22,7 @@ class DungeonRoom:
     description: str
     has_treasure: bool = False
     has_trap: bool = False
-    enemies: List[CharacterState] = field(default_factory=list)
+    enemies: list[CharacterState] = field(default_factory=list)
 
 
 @dataclass
@@ -27,23 +30,42 @@ class ExplorationResult:
     action_type: str  # 'STEP', 'MOVE_ROOM', 'OPEN_DOOR', 'LOOT_CHEST', 'ESCAPE', 'TRAP'
     message: str
     current_room_id: str
-    played_sounds: List[str] = field(default_factory=list)
-    presentation_events: List[PresentationEvent] = field(default_factory=list)  # Step 49: 演出リスト
+    played_sounds: list[str] = field(default_factory=list)
+    presentation_events: list[PresentationEvent] = field(
+        default_factory=list
+    )  # Step 49: 演出リスト
 
 
 class SkillEaterExplorationSystem:
     def __init__(
         self,
-        audio: Optional[SkillEaterAudioSystem] = None,
-        presentation: Optional[SkillEaterPresentationSystem] = None
+        audio: SkillEaterAudioSystem | None = None,
+        presentation: SkillEaterPresentationSystem | None = None,
     ):
         self.audio = audio or SkillEaterAudioSystem.get_instance()
         self.presentation = presentation or SkillEaterPresentationSystem.get_instance()
-        self.dungeon_rooms: Dict[str, DungeonRoom] = {
-            "slum_alley": DungeonRoom("slum_alley", "スラムの裏路地", "薄暗く湿った路地。遠くでサイレンが鳴り響く。"),
-            "underground_market": DungeonRoom("underground_market", "地下闇市場通り", "違法スキルの密売人たちが行き交う。"),
-            "midas_tower_entrance": DungeonRoom("midas_tower_entrance", "ミダスタワー正面玄関", "巨大な黄金の扉がそびえ立つ。"),
-            "vault_chamber": DungeonRoom("vault_chamber", "バベルの金庫室", "秘匿された至高のスキルが眠る金庫。", has_treasure=True)
+        self.dungeon_rooms: dict[str, DungeonRoom] = {
+            "slum_alley": DungeonRoom(
+                "slum_alley",
+                "スラムの裏路地",
+                "薄暗く湿った路地。遠くでサイレンが鳴り響く。",
+            ),
+            "underground_market": DungeonRoom(
+                "underground_market",
+                "地下闇市場通り",
+                "違法スキルの密売人たちが行き交う。",
+            ),
+            "midas_tower_entrance": DungeonRoom(
+                "midas_tower_entrance",
+                "ミダスタワー正面玄関",
+                "巨大な黄金の扉がそびえ立つ。",
+            ),
+            "vault_chamber": DungeonRoom(
+                "vault_chamber",
+                "バベルの金庫室",
+                "秘匿された至高のスキルが眠る金庫。",
+                has_treasure=True,
+            ),
         }
         self.current_room_id: str = "slum_alley"
 
@@ -52,9 +74,7 @@ class SkillEaterExplorationSystem:
         idx = random.randint(0, 9)
         sound_name = f"footstep0{idx}.ogg"
         evt = self.presentation.add_event(
-            emote_file=None,
-            audio_file=sound_name,
-            message="一歩前進"
+            emote_file=None, audio_file=sound_name, message="一歩前進"
         )
 
         return ExplorationResult(
@@ -62,7 +82,7 @@ class SkillEaterExplorationSystem:
             message="一歩、足を踏み出した。",
             current_room_id=self.current_room_id,
             played_sounds=[sound_name],
-            presentation_events=[evt]
+            presentation_events=[evt],
         )
 
     def move_to_room(self, target_room_id: str) -> ExplorationResult:
@@ -73,7 +93,7 @@ class SkillEaterExplorationSystem:
                 message="行き先が存在しません。",
                 current_room_id=self.current_room_id,
                 played_sounds=[],
-                presentation_events=[]
+                presentation_events=[],
             )
 
         sounds = []
@@ -85,11 +105,15 @@ class SkillEaterExplorationSystem:
             self.audio.play_sound(s)
             sounds.append(s)
 
-        emote = "emote_exclamation.png" if target_room_id == "vault_chamber" else "emote_dots2.png"
+        emote = (
+            "emote_exclamation.png"
+            if target_room_id == "vault_chamber"
+            else "emote_dots2.png"
+        )
         evt_enter = self.presentation.add_event(
             emote_file=emote,
             audio_file="doorOpen_1.ogg",
-            message=f"{target_room_id} へ移動"
+            message=f"{target_room_id} へ移動",
         )
         sounds.append("doorOpen_1.ogg")
         events.append(evt_enter)
@@ -102,7 +126,7 @@ class SkillEaterExplorationSystem:
             message=f"【エリア進入】{room.name} に到達した。（{room.description}）",
             current_room_id=self.current_room_id,
             played_sounds=sounds,
-            presentation_events=events
+            presentation_events=events,
         )
 
     def open_treasure_chest(self) -> ExplorationResult:
@@ -111,7 +135,7 @@ class SkillEaterExplorationSystem:
         evt = self.presentation.add_event(
             emote_file="emote_star.png",
             audio_file="metalLatch.ogg",
-            message="宝箱の鍵を解錠！"
+            message="宝箱の鍵を解錠！",
         )
         self.audio.play_sound("doorOpen_1.ogg")
 
@@ -120,7 +144,7 @@ class SkillEaterExplorationSystem:
             message="【宝箱開封】錠前を外し、コンテナを開けた！",
             current_room_id=self.current_room_id,
             played_sounds=sounds,
-            presentation_events=[evt]
+            presentation_events=[evt],
         )
 
     def escape_combat(self) -> ExplorationResult:
@@ -129,7 +153,7 @@ class SkillEaterExplorationSystem:
         evt = self.presentation.add_event(
             emote_file="emote_drops.png",
             audio_file="cloth1.ogg",
-            message="冷や汗を流しながら逃走！"
+            message="冷や汗を流しながら逃走！",
         )
         self.audio.play_sound("footstep01.ogg")
         self.audio.play_sound("footstep02.ogg")
@@ -139,7 +163,7 @@ class SkillEaterExplorationSystem:
             message="背を向け、一目散に路地裏へ逃亡した！",
             current_room_id=self.current_room_id,
             played_sounds=sounds,
-            presentation_events=[evt]
+            presentation_events=[evt],
         )
 
     def trigger_trap_door(self) -> ExplorationResult:
@@ -147,12 +171,12 @@ class SkillEaterExplorationSystem:
         evt = self.presentation.add_event(
             emote_file="emote_alert.png",
             audio_file="doorClose_2.ogg",
-            message="退路遮断トラップ作動！"
+            message="退路遮断トラップ作動！",
         )
         return ExplorationResult(
             action_type="TRAP",
             message="【トラップ発動！】背後の鉄扉が激しい音を立てて閉まり、退路が遮断された！",
             current_room_id=self.current_room_id,
             played_sounds=["doorClose_2.ogg"],
-            presentation_events=[evt]
+            presentation_events=[evt],
         )

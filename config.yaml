@@ -1,38 +1,71 @@
-settings:
-  log_level: "INFO"
-  default_output_dir: "output"
-  version: "1.0.0"
-
-player:
-  name: "名無しの冒険者"
-  start_x: 20
-  start_y: 20
-  char: "@"
-  color: [255, 255, 255]
-  speed: 85
-  attributes:
-    strength: 14
-    endurance: 13
-    dexterity: 14
-    perception: 12
-    learning: 11
-    will: 13
-    magic: 12
-    charisma: 15
-
+accessibility:
+  color_vision: deutan
+  font_scale: 1.0
+  text_mode: false
+game:
+  difficulty: easy
+  difficulty_presets:
+    easy:
+      enemy_hp: 0.8
+      player_damage_taken: 0.5
+      player_regen: 1.5
+    hard:
+      enemy_hp: 1.2
+      player_damage_taken: 1.5
+      player_regen: 0.8
+    normal:
+      enemy_hp: 1.0
+      player_damage_taken: 1.0
+      player_regen: 1.0
 pet:
-  name: "妹分『シエル』"
+  attributes:
+    charisma: 18
+    dexterity: 15
+    endurance: 11
+    learning: 9
+    magic: 7
+    perception: 12
+    strength: 11
+    will: 11
+  char: p
+  color:
+  - 255
+  - 180
+  - 210
+  name: "\u59B9\u5206\u300E\u30B7\u30A8\u30EB\u300F"
+  speed: 90
   start_x: 21
   start_y: 20
-  char: "p"
-  color: [255, 180, 210]
-  speed: 90
+player:
   attributes:
-    strength: 11
-    endurance: 11
-    dexterity: 15
+    charisma: 15
+    dexterity: 14
+    endurance: 13
+    learning: 11
+    magic: 12
     perception: 12
-    learning: 9
-    will: 11
-    magic: 7
-    charisma: 18
+    strength: 14
+    will: 13
+  char: '@'
+  color:
+  - 255
+  - 255
+  - 255
+  name: "\u540D\u7121\u3057\u306E\u5192\u967A\u8005"
+  speed: 85
+  start_x: 20
+  start_y: 20
+settings:
+  default_output_dir: output
+  log_level: INFO
+  version: 1.0.0
+
+assets:
+  tiny_rogue_tiles: "assets/tiles/tiny_rogue/tiles"
+  tiny_rogue_atlas: "assets/tiles/tiny_rogue_atlas_16x16.png"
+  tiny_rogue_atlas_meta: "assets/tiles/tiny_rogue_atlas_16x16.json"
+  audio_sfx: "assets/audio"
+  audio_manifest: "assets/audio/manifest.csv"
+  emote_pixel: "assets/emote/pixel"
+  emote_tilesheets: "assets/emote/tilesheets"
+  emote_spritesheets: "assets/emote/spritesheets"

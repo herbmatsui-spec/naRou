@@ -79,14 +79,14 @@ class Particle:
     vy: float = 0.0
     life: float = 0.0
     max_life: float = 0.0
-    char: str = '·'
+    char: str = "·"
     color: Tuple[int, int, int] = (255, 255, 255)
     alpha: float = 1.0
     gravity: float = 0.1
     rotation: float = 0.0
     rotation_speed: float = 0.0
     active: bool = False
-    type: str = 'dust'
+    type: str = "dust"
 ```
 
 ## Particle Types
@@ -132,7 +132,7 @@ class Particle:
 # For each visible tile:
 if intensity <= 0.001:
     # Explored but not visible: Fog of War
-    r, g, b = base_color * ambient_light (0.08)
+    r, g, b = base_color * ambient_light(0.08)
 elif intensity > 0:
     # Visible: Multiplicative
     r, g, b = base_color * intensity
@@ -177,45 +177,50 @@ console.tiles_rgb["ch"][tx, ty] = ord(particle.char)
 ```python
 def render(self, console):
     # ... state checks ...
-    
+
     # Use new TCODRenderer
     from core.tcod_renderer import TCODRenderer
-    
-    if not hasattr(self, '_tcod_renderer'):
+
+    if not hasattr(self, "_tcod_renderer"):
         self._tcod_renderer = TCODRenderer(console.width, console.height)
         self._tcod_renderer.initialize_context(sdl_window=False)
         self._tcod_renderer.console = console
-    
+
     renderer = self._tcod_renderer
-    frame_time = 1/60
-    
+    frame_time = 1 / 60
+
     renderer.begin_frame()  # Updates particles
-    
+
     # Camera
-    cam_x = max(0, min(MAP_WIDTH - VIEW_WIDTH, player.x - VIEW_WIDTH//2))
-    cam_y = max(0, min(MAP_HEIGHT - VIEW_HEIGHT, player.y - VIEW_HEIGHT//2))
-    
+    cam_x = max(0, min(MAP_WIDTH - VIEW_WIDTH, player.x - VIEW_WIDTH // 2))
+    cam_y = max(0, min(MAP_HEIGHT - VIEW_HEIGHT, player.y - VIEW_HEIGHT // 2))
+
     # Build lighting data
     # ... create LightMap, LightSource[], EnemyCone[] ...
-    
+
     # Send to renderer
     renderer.draw_lighting(LightingDrawCall(...))
     renderer.draw_particles(ParticleDrawCall(...))
-    
+
     # RENDER PASSES IN ORDER:
     # 1. Lighting (base + additive)
-    renderer.render_lighting_pass(cam_x, cam_y, VIEW_WIDTH, VIEW_HEIGHT,
-                                  visible=game_map.visible,
-                                  explored=game_map.explored,
-                                  time=render_time)
-    
+    renderer.render_lighting_pass(
+        cam_x,
+        cam_y,
+        VIEW_WIDTH,
+        VIEW_HEIGHT,
+        visible=game_map.visible,
+        explored=game_map.explored,
+        time=render_time,
+    )
+
     # 2. Standard rendering (map, items, entities)
     RenderSystem.render_all(console, render_context)
-    
+
     # 3. Particles (topmost)
     renderer.render_particles_pass(cam_x, cam_y)
-    
-    renderer.end_frame(1/60)
+
+    renderer.end_frame(1 / 60)
 ```
 
 ### Web Server Data Transmission (web_server.py)
@@ -246,6 +251,7 @@ elif fps > 40 and quality_reduced:
 def _return_to_pool(self, particle):
     particle.reset()
     self.pools[particle.type].append(particle)
+
 
 def _get_from_pool(self, ptype):
     pool = self.pools[ptype]

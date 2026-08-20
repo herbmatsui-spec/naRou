@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tile mapping utilities for dungeon generation, items, decorations, effects, UI
 - Comprehensive integration test suite
 - Demo script `demo_tiny_rogue_graphics.py` showcasing all features
+- テキスト(ASCII)モード（GPU不要）: `core/text_renderer.py`, `main_text.py`, メニュー選択肢追加
+- アクセシビリティ対応: 色覚多様性 (`design_tokens.*`, `core/accessibility.py`), 難易度プリセット (`core/difficulty.py`, `config.yaml`), チュートリアル (`data/tutorial_steps.json`, `core/tutorial_controller.py`), 操作ガイドトグル, フォントスケール (`web_server.py`)
+- ワンタッチ Web 起動＋モバイル対応: `web_server.py` の `launch_browser`, `--open` フラグ, バックグラウンド起動, レンダラ選択フォールバック (WebGL2→Canvas2D), タッチ/スワイプ/D-pad, レスポンシブ対応, 自動再接続, FPS ベース品質低下, ライトモードトグル
 
 ### Changed
 - `TileAtlas._load()` now loads `tiny_rogue_16` metadata
@@ -43,6 +46,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - UI icons rendered via Tiny Rogue tiles when feature flag enabled
 - Screen flash on critical hits
 - Ambient occlusion for wall tiles
+- ゲーム本編の SDL 失敗フォールバック: テキストモード有効時はテキストモードへ自動切替
+- web_server.py: /api/tokens エンドポイントに ?a11y= クエリ対応, /api/capabilities エンドポイント追加
+- main.py: メニューにテキストモード起動オプション追加, アクセシビリティ選択画面追加, NAROU_FORCE_TEXT 環境変数対応
 
 ### Fixed
 - Validation warnings for variant/frame counts are expected (atlas packing uses single-tile entries with animation handled via UV offsets)

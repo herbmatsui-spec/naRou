@@ -6,7 +6,9 @@ Kernel の薄い互換ラッパーとして機能
 """
 
 from __future__ import annotations
-from typing import Any, Optional, List
+
+from typing import Any
+
 from packages.core.kernel.kernel import Kernel
 
 
@@ -23,10 +25,11 @@ class SystemCoordinator:
         """
         self.engine = engine
         self._kernel: Kernel = engine.kernel
-        self._registration_order: List[str] = []
+        self._registration_order: list[str] = []
 
-    def register_system(self, name: str, system: Any,
-                       dependencies: Optional[List[str]] = None) -> Any:
+    def register_system(
+        self, name: str, system: Any, dependencies: list[str] | None = None
+    ) -> Any:
         """
         システムを Kernel に登録する。
         dependencies は互換性のために受け取るが、Kernel 側ではパッケージ単位で管理されるためここでは無視。

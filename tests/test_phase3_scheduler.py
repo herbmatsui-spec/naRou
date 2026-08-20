@@ -4,26 +4,24 @@ Phase 3 テスト: 5軸スケジューラ (時間・天候・季節・月齢・�
 
 from __future__ import annotations
 
-import time
-from datetime import datetime, timedelta
-from unittest.mock import Mock, MagicMock
+from datetime import datetime
+from unittest.mock import Mock
 
 import pytest
 
 from quest_scheduler import (
-    QuestScheduler,
+    LogicOperator,
     QuestSchedule,
+    QuestScheduler,
     ScheduleCondition,
     ScheduleContext,
     TimeWindow,
-    LogicOperator,
-    QUEST_SCHEDULER,
 )
-
 
 # ---------------------------------------------------------------------------
 # Step 9/10: スケジューラ基本機能
 # ---------------------------------------------------------------------------
+
 
 def test_time_window():
     """TimeWindow 基本判定"""
@@ -207,13 +205,14 @@ def test_next_available_time():
 # Step 11: 待機/睡眠フック統合
 # ---------------------------------------------------------------------------
 
+
 def test_advance_world_scheduler_hook():
     """advance_world でスケジューラ再評価が走る"""
     from game import Engine
 
     engine = Engine()
     # スケジューラが初期化されているか
-    assert hasattr(engine, 'quest_scheduler')
+    assert hasattr(engine, "quest_scheduler")
     assert engine.quest_scheduler is not None
 
 
@@ -221,10 +220,12 @@ def test_advance_world_scheduler_hook():
 # Step 12: ワールドイベント連携
 # ---------------------------------------------------------------------------
 
+
 def test_world_event_schedule_injection():
     """ワールドイベント発生時のスケジュール注入"""
-    from world_event_system import WorldEventManager, REGISTRY as WE_REG, WorldEventData
     from quest_scheduler import QuestScheduler
+    from world_event_system import REGISTRY as WE_REG
+    from world_event_system import WorldEventData, WorldEventManager
 
     # レジストリクリア
     WE_REG._events.clear()
@@ -261,8 +262,9 @@ def test_world_event_schedule_injection():
 
 def test_world_event_moon_eclipse():
     """月食イベントのスケジュール注入"""
-    from world_event_system import WorldEventManager, REGISTRY as WE_REG, WorldEventData
     from quest_scheduler import QuestScheduler
+    from world_event_system import REGISTRY as WE_REG
+    from world_event_system import WorldEventData, WorldEventManager
 
     WE_REG._events.clear()
     WE_REG._loaded = False
@@ -294,8 +296,9 @@ def test_world_event_moon_eclipse():
 
 def test_world_event_meteor():
     """流星群イベントのスケジュール注入"""
-    from world_event_system import WorldEventManager, REGISTRY as WE_REG, WorldEventData
     from quest_scheduler import QuestScheduler
+    from world_event_system import REGISTRY as WE_REG
+    from world_event_system import WorldEventData, WorldEventManager
 
     WE_REG._events.clear()
     WE_REG._loaded = False
@@ -327,8 +330,8 @@ def test_world_event_meteor():
 
 def test_schedule_context_from_engine():
     """ScheduleContext.from_engine でエンジンからコンテキスト生成"""
-    from quest_scheduler import ScheduleContext
     from game import Engine
+    from quest_scheduler import ScheduleContext
 
     engine = Engine()
     ctx = ScheduleContext.from_engine(engine)

@@ -25,7 +25,6 @@ from typing import TYPE_CHECKING, Any
 
 import yaml
 
-
 from constants import (
     QUALITY_BAD,
     QUALITY_GOD,
@@ -34,23 +33,21 @@ from constants import (
     QUALITY_NORMAL,
 )
 from core_framework import BaseSystem
-from data.generated.character.gods import GodsDefinition, God
-from data.generated.character.jobs import JobsDefinition, Job
+from data.generated.character.gods import God
+from data.generated.character.jobs import Job
 from data.generated.dungeon.dungeon import DungeonThemeDefinition
-from data.generated.faction.factions import FactionsDefinition, Faction
+from data.generated.faction.factions import Faction
 
 # 生成されたPydanticモデル（スキーマバリデーション用）
 from data.generated.item.item import ItemDefinition
-from data.generated.meta.achievements import AchievementsDefinition, Achievement
-from data.generated.meta.titles import TitlesDefinition, Title
+from data.generated.meta.achievements import Achievement
+from data.generated.meta.titles import Title
 from data.generated.monster.monster import MonsterDefinition
 from data.generated.quest.quest import QuestDefinition
-from data.generated.skill.skill_fusion import SkillFusionDefinition, SkillFusion
-from data.generated.skill.skill_trees import SkillTreesDefinition, SkillTree
-from data.generated.skill.spells import SpellsDefinition, Spell
-from data.generated.social.guilds import GuildsDefinition, Guild
-
-
+from data.generated.skill.skill_fusion import SkillFusion
+from data.generated.skill.skill_trees import SkillTree
+from data.generated.skill.spells import Spell
+from data.generated.social.guilds import Guild
 
 # リポジトリ層
 from data.repositories import (
@@ -138,22 +135,39 @@ class DataManager(BaseSystem):
 
         # スキルツリー (ラッパー key: skill_trees)
         skill_trees_raw = self._load_yaml("skill_trees.yaml") or {}
-        st_data = skill_trees_raw.get("skill_trees", {}) if isinstance(skill_trees_raw, dict) else {}
+        st_data = (
+            skill_trees_raw.get("skill_trees", {})
+            if isinstance(skill_trees_raw, dict)
+            else {}
+        )
         self.skill_trees = SkillTreeRepository(
-            {k: (SkillTree.model_validate(v) if not isinstance(v, SkillTree) else v) for k, v in st_data.items()}
+            {
+                k: (SkillTree.model_validate(v) if not isinstance(v, SkillTree) else v)
+                for k, v in st_data.items()
+            }
         )
 
         # 呪文 (フラット辞書, RootModel)
         spells_raw = self._load_yaml("spells.yaml") or {}
         self.spells = SpellRepository(
-            {k: (Spell.model_validate(v) if not isinstance(v, Spell) else v) for k, v in spells_raw.items()}
+            {
+                k: (Spell.model_validate(v) if not isinstance(v, Spell) else v)
+                for k, v in spells_raw.items()
+            }
         )
 
         # スキル融合 (ラッパー key: fusions)
         fusion_raw = self._load_yaml("skill_fusion.yaml") or {}
         fu_data = fusion_raw.get("fusions", {}) if isinstance(fusion_raw, dict) else {}
         self.skill_fusions = SkillFusionRepository(
-            {k: (SkillFusion.model_validate(v) if not isinstance(v, SkillFusion) else v) for k, v in fu_data.items()}
+            {
+                k: (
+                    SkillFusion.model_validate(v)
+                    if not isinstance(v, SkillFusion)
+                    else v
+                )
+                for k, v in fu_data.items()
+            }
         )
 
         # クエスト (ラッパー key: main_quests, リスト形式)
@@ -162,49 +176,74 @@ class DataManager(BaseSystem):
 
         # 派閥 (ラッパー key: factions)
         factions_raw = self._load_yaml("factions.yaml") or {}
-        fac_data = factions_raw.get("factions", {}) if isinstance(factions_raw, dict) else {}
+        fac_data = (
+            factions_raw.get("factions", {}) if isinstance(factions_raw, dict) else {}
+        )
         self.factions = FactionRepository(
-            {k: (Faction.model_validate(v) if not isinstance(v, Faction) else v) for k, v in fac_data.items()}
+            {
+                k: (Faction.model_validate(v) if not isinstance(v, Faction) else v)
+                for k, v in fac_data.items()
+            }
         )
 
         # 実績 (ラッパー key: achievements)
         ach_raw = self._load_yaml("achievements.yaml") or {}
         ach_data = ach_raw.get("achievements", {}) if isinstance(ach_raw, dict) else {}
         self.achievements = AchievementRepository(
-            {k: (Achievement.model_validate(v) if not isinstance(v, Achievement) else v) for k, v in ach_data.items()}
+            {
+                k: (
+                    Achievement.model_validate(v)
+                    if not isinstance(v, Achievement)
+                    else v
+                )
+                for k, v in ach_data.items()
+            }
         )
 
         # 称号 (ラッパー key: titles)
         titles_raw = self._load_yaml("titles.yaml") or {}
         ti_data = titles_raw.get("titles", {}) if isinstance(titles_raw, dict) else {}
         self.titles = TitleRepository(
-            {k: (Title.model_validate(v) if not isinstance(v, Title) else v) for k, v in ti_data.items()}
+            {
+                k: (Title.model_validate(v) if not isinstance(v, Title) else v)
+                for k, v in ti_data.items()
+            }
         )
 
         # 職業 (ラッパー key: jobs)
         jobs_raw = self._load_yaml("jobs.yaml") or {}
         job_data = jobs_raw.get("jobs", {}) if isinstance(jobs_raw, dict) else {}
         self.jobs = JobRepository(
-            {k: (Job.model_validate(v) if not isinstance(v, Job) else v) for k, v in job_data.items()}
+            {
+                k: (Job.model_validate(v) if not isinstance(v, Job) else v)
+                for k, v in job_data.items()
+            }
         )
 
         # 神 (フラット辞書, RootModel)
         gods_raw = self._load_yaml("gods.yaml") or {}
         self.gods = GodRepository(
-            {k: (God.model_validate(v) if not isinstance(v, God) else v) for k, v in gods_raw.items()}
+            {
+                k: (God.model_validate(v) if not isinstance(v, God) else v)
+                for k, v in gods_raw.items()
+            }
         )
 
         # ダンジョンテーマ (ラッパー key: dungeon_themes)
         # dungeon_themes.yaml はスキーマと構造が異なるため tolerant ロード
-        self.dungeon_themes = DungeonThemeRepository(self._build_dungeon_themes_tolerant())
+        self.dungeon_themes = DungeonThemeRepository(
+            self._build_dungeon_themes_tolerant()
+        )
 
         # ギルド (ラッパー key: guilds)
         guilds_raw = self._load_yaml("guilds.yaml") or {}
         gui_data = guilds_raw.get("guilds", {}) if isinstance(guilds_raw, dict) else {}
         self.guilds = GuildRepository(
-            {k: (Guild.model_validate(v) if not isinstance(v, Guild) else v) for k, v in gui_data.items()}
+            {
+                k: (Guild.model_validate(v) if not isinstance(v, Guild) else v)
+                for k, v in gui_data.items()
+            }
         )
-
 
         # ローカライゼーション読み込み
         self._load_localization()
@@ -289,7 +328,7 @@ class DataManager(BaseSystem):
         quality: str = QUALITY_NORMAL,
         cursed: bool = False,
         count: int = 1,
-        identified: bool = True
+        identified: bool = True,
     ) -> Item:
         """YAMLデータ定義からItemインスタンスを生成"""
         data = self.items.get(item_id)
@@ -349,7 +388,9 @@ class DataManager(BaseSystem):
         )
         return item
 
-    def get_random_item_for_floor(self, floor_level: int, x: int = 0, y: int = 0) -> Item:
+    def get_random_item_for_floor(
+        self, floor_level: int, x: int = 0, y: int = 0
+    ) -> Item:
         """フロア深度に応じたアイテムの動的ランダム生成"""
         if not self.items._data:
             return create_sample_item("potion_heal", x, y)
@@ -375,9 +416,15 @@ class DataManager(BaseSystem):
             quality = QUALITY_NORMAL
 
         materials = list(MATERIALS.keys())
-        mat = random.choice(materials) if quality in (QUALITY_GOOD, QUALITY_MIRACLE, QUALITY_GOD) else None
+        mat = (
+            random.choice(materials)
+            if quality in (QUALITY_GOOD, QUALITY_MIRACLE, QUALITY_GOD)
+            else None
+        )
         cursed = (quality == QUALITY_BAD) or (random.random() < 0.05)
-        return self.create_item(item_id, x, y, material=mat, quality=quality, cursed=cursed)
+        return self.create_item(
+            item_id, x, y, material=mat, quality=quality, cursed=cursed
+        )
 
     # ==================== MONSTER GENERATION ====================
 
@@ -387,7 +434,7 @@ class DataManager(BaseSystem):
         x: int = 0,
         y: int = 0,
         level_scale: int = 1,
-        faction: str = "monster"
+        faction: str = "monster",
     ) -> Entity:
         """YAMLデータ定義からMonster Entityインスタンスを生成"""
         data = self.monsters.get(monster_id)
@@ -420,7 +467,7 @@ class DataManager(BaseSystem):
             speed=base_speed,
             attributes=scaled_attrs,
             is_player=False,
-            is_pet=False
+            is_pet=False,
         )
         mob.max_hp = base_hp
         mob.hp = base_hp
@@ -430,7 +477,9 @@ class DataManager(BaseSystem):
         mob.status_effects = []
         return mob
 
-    def get_random_monster_for_floor(self, floor_level: int, x: int = 0, y: int = 0) -> Entity:
+    def get_random_monster_for_floor(
+        self, floor_level: int, x: int = 0, y: int = 0
+    ) -> Entity:
         """フロア深度に応じたモンスターの動的ランダム生成"""
         if not self.monsters._data:
             return MonsterPreset.create("slime", x, y)
@@ -476,5 +525,6 @@ class DataManager(BaseSystem):
 def localize(key: str, language: str = None, manager=None) -> str:
     """Return localized text for *key* using LocalizationManager."""
     from localization_manager import LocalizationManager
+
     mgr = manager or LocalizationManager()
     return mgr.get_text(key, language)

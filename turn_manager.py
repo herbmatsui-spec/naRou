@@ -4,13 +4,16 @@ Steps 10 to 18 (Resolving speed & action timing contradictions)
 """
 
 from __future__ import annotations
-from typing import List, Optional, Tuple, Any
+
+from typing import Any
+
 from constants import ENERGY_THRESHOLD
 from core_framework import EventBus
 
 
 class TimeSystem:
     """Tickベースの絶対時間とElona風エネルギーチャージシステム (ステップ9, 10, 11, 12, 17)"""
+
     def __init__(
         self,
         year: int = 517,
@@ -18,7 +21,7 @@ class TimeSystem:
         day: int = 15,
         hour: int = 8,
         minute: int = 0,
-        event_bus: Optional[EventBus] = None
+        event_bus: EventBus | None = None,
     ):
         self.year = year
         self.month = month
@@ -42,7 +45,9 @@ class TimeSystem:
                     self.hour -= 24
                     self.day += 1
                     if self.event_bus:
-                        self.event_bus.publish("NEW_DAY", {"day": self.day, "month": self.month})
+                        self.event_bus.publish(
+                            "NEW_DAY", {"day": self.day, "month": self.month}
+                        )
                     if self.day > 30:
                         self.day = 1
                         self.month += 1
@@ -58,10 +63,11 @@ class TimeSystem:
 
 class TurnQueue:
     """速度(Speed)に基づく厳密な行動順管理 (ステップ12, 13, 14, 15)"""
+
     def __init__(self, time_system: TimeSystem):
         self.time_system = time_system
 
-    def step_next_actor(self, entities: List[Any]) -> Tuple[Optional[Any], int]:
+    def step_next_actor(self, entities: list[Any]) -> tuple[Any | None, int]:
         """
         全キャラクターのenergyにspeedを加算し、最初に1000を超えたEntityを返す。
         戻り値: (行動可能になったEntity, 経過したTick数)
@@ -69,7 +75,9 @@ class TurnQueue:
         ticks_elapsed = 0
         while ticks_elapsed < 500:  # 無限ループ防止ガード
             # 閾値に達しているEntityがいるか探す
-            ready_entities = [e for e in entities if e.energy >= ENERGY_THRESHOLD and e.hp > 0]
+            ready_entities = [
+                e for e in entities if e.energy >= ENERGY_THRESHOLD and e.hp > 0
+            ]
             if ready_entities:
                 # 速度が最も速い、または余剰エネルギーが多い順
                 ready_entities.sort(key=lambda e: (e.energy, e.speed), reverse=True)

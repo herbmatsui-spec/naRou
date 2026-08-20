@@ -1,19 +1,20 @@
 """Tests for Proposal 6: Passive Skills System."""
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from skill_tree_system import (
-    get_passive_skill_registry,
-    get_passive_skill_manager,
     PassiveSkill,
+    get_passive_skill_manager,
+    get_passive_skill_registry,
 )
 
 
 class FakePlayer:
     """Minimal stand-in exposing the attributes PassiveSkillManager needs."""
+
     def __init__(self):
         self.learned_passive_skills = []
         self.skill_points = 1000
@@ -53,9 +54,9 @@ def test_learn_and_aggregate():
 def test_multiple_skills_sum():
     mgr = get_passive_skill_manager()
     p = FakePlayer()
-    p.learned_passive_skills.extend([
-        "basic_constitution", "magic_basic", "fortune_favor", "survivor_instinct"
-    ])
+    p.learned_passive_skills.extend(
+        ["basic_constitution", "magic_basic", "fortune_favor", "survivor_instinct"]
+    )
     assert mgr.learn(p, "mana_efficiency")
     assert mgr.learn(p, "lucky_find")
     bonuses = mgr.aggregate_bonuses(p)

@@ -3,20 +3,30 @@ Provides a lightweight wrapper around `heapq` allowing jobs (callables) to be
 scheduled with an integer priority (lower number = higher priority)."""
 
 from __future__ import annotations
+
 import heapq
 import itertools
-from typing import Callable, Any, List, Tuple
+from collections.abc import Callable
+from typing import Any
 
 
 class JobQueue:
     """Priority queue for background jobs.
     Each job is a callable with optional args/kwargs stored internally.
     """
+
     def __init__(self):
-        self._heap: List[Tuple[int, int, Callable, tuple, dict]] = []
+        self._heap: list[tuple[int, int, Callable, tuple, dict]] = []
         self._counter = itertools.count()  # tie‑breaker for same priority
 
-    def add_job(self, func: Callable, *, priority: int = 10, args: tuple = (), kwargs: dict = None) -> None:
+    def add_job(
+        self,
+        func: Callable,
+        *,
+        priority: int = 10,
+        args: tuple = (),
+        kwargs: dict = None,
+    ) -> None:
         """Add a job to the queue.
         Args:
             func: Callable to execute.
@@ -40,6 +50,7 @@ class JobQueue:
 
     def __len__(self) -> int:
         return len(self._heap)
+
 
 # Example usage (not executed in production):
 # def hello(name):

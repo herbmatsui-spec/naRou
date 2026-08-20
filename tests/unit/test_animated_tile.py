@@ -1,15 +1,16 @@
 """Unit tests for animated tile system."""
-import sys
-sys.path.insert(0, '.')
 
-from core.animated_tile import AnimatedTile, ANIMATED_TILES, get_animated_tile
+import sys
+
+sys.path.insert(0, ".")
+
+from core.animated_tile import AnimatedTile, get_animated_tile
 
 
 def test_animated_tile_creation():
     """Test AnimatedTile creation and basic properties."""
     tile = AnimatedTile(
-        tile_ids=["TR_EFFECT_01", "TR_EFFECT_02", "TR_EFFECT_03"],
-        fps=10
+        tile_ids=["TR_EFFECT_01", "TR_EFFECT_02", "TR_EFFECT_03"], fps=10
     )
     assert tile.tile_ids == ["TR_EFFECT_01", "TR_EFFECT_02", "TR_EFFECT_03"]
     assert tile.fps == 10
@@ -20,10 +21,7 @@ def test_animated_tile_creation():
 
 def test_animated_tile_get_frame():
     """Test frame retrieval by index."""
-    tile = AnimatedTile(
-        tile_ids=["A", "B", "C"],
-        fps=5
-    )
+    tile = AnimatedTile(tile_ids=["A", "B", "C"], fps=5)
     assert tile.get_frame(0) == "A"
     assert tile.get_frame(1) == "B"
     assert tile.get_frame(2) == "C"
@@ -34,7 +32,7 @@ def test_animated_tile_get_frame_at_time():
     """Test frame retrieval at specific time."""
     tile = AnimatedTile(
         tile_ids=["FRAME1", "FRAME2"],
-        fps=10  # 0.1s per frame
+        fps=10,  # 0.1s per frame
     )
     # At t=0, should be frame 0
     assert tile.get_frame_at_time(0.0) == "FRAME1"
@@ -54,7 +52,7 @@ def test_animated_tile_validation():
         assert False, "Should have raised ValueError"
     except ValueError:
         pass
-    
+
     # Negative fps should raise
     try:
         AnimatedTile(tile_ids=["A"], fps=-1)

@@ -5,10 +5,12 @@ memory_fragments.yaml と story_endings.yaml を truth_codex 経由で連携し�
 """
 
 from __future__ import annotations
+
 import os
-import yaml
 import random
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Any
+
+import yaml
 
 from core_framework import BaseSystem
 
@@ -22,26 +24,39 @@ DATA_DIR = "data"
 
 class ArchaeologyRegistry:
     """考古学データの一元ロード・キャッシュ (Step 15)"""
-    _instance: Optional["ArchaeologyRegistry"] = None
 
-    def __new__(cls) -> "ArchaeologyRegistry":
+    _instance: ArchaeologyRegistry | None = None
+
+    def __new__(cls) -> ArchaeologyRegistry:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._fragments: Dict[str, Any] = {}
-            cls._endings: Dict[str, Any] = {}
-            cls._sites: Dict[str, Any] = {}
-            cls._keys: Dict[str, Any] = {}
-            cls._truths: Dict[str, Any] = {}
-            cls._cipher_to_key: Dict[str, str] = {}
+            cls._fragments: dict[str, Any] = {}
+            cls._endings: dict[str, Any] = {}
+            cls._sites: dict[str, Any] = {}
+            cls._keys: dict[str, Any] = {}
+            cls._truths: dict[str, Any] = {}
+            cls._cipher_to_key: dict[str, str] = {}
         return cls._instance
 
     # ---------- ロード ----------
     def load(self, data_dir: str = DATA_DIR) -> None:
-        self._fragments = self._load_section(data_dir, "memory_fragments.yaml", "memory_fragments") or {}
-        self._endings = self._load_section(data_dir, "story_endings.yaml", "story_endings") or {}
-        self._sites = self._load_section(data_dir, "archaeology_sites.yaml", "archaeology_sites") or {}
-        self._keys = self._load_section(data_dir, "decoder_keys.yaml", "decoder_keys") or {}
-        self._truths = self._load_section(data_dir, "truth_codex.yaml", "truth_codex") or {}
+        self._fragments = (
+            self._load_section(data_dir, "memory_fragments.yaml", "memory_fragments")
+            or {}
+        )
+        self._endings = (
+            self._load_section(data_dir, "story_endings.yaml", "story_endings") or {}
+        )
+        self._sites = (
+            self._load_section(data_dir, "archaeology_sites.yaml", "archaeology_sites")
+            or {}
+        )
+        self._keys = (
+            self._load_section(data_dir, "decoder_keys.yaml", "decoder_keys") or {}
+        )
+        self._truths = (
+            self._load_section(data_dir, "truth_codex.yaml", "truth_codex") or {}
+        )
         # cipher_type -> key_id マップ構築
         self._cipher_to_key = {}
         for kid, kval in self._keys.items():
@@ -49,56 +64,64 @@ class ArchaeologyRegistry:
             if ct:
                 self._cipher_to_key[ct] = kid
 
-    def _load_section(self, data_dir: str, filename: str, section: str) -> Optional[Dict[str, Any]]:
+    def _load_section(
+        self, data_dir: str, filename: str, section: str
+    ) -> dict[str, Any] | None:
         path = os.path.join(data_dir, filename)
         if not os.path.exists(path):
             return None
         try:
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 return yaml.safe_load(f).get(section, {}) or {}
         except Exception as e:
             print(f"[ArchaeologyRegistry] Failed to load {filename}: {e}")
             return None
 
     # ---------- 取得 ----------
-    def get_fragment(self, fid: str) -> Optional[Dict[str, Any]]:
+    def get_fragment(self, fid: str) -> dict[str, Any] | None:
         return self._fragments.get(fid)
 
-    def get_site(self, sid: str) -> Optional[Dict[str, Any]]:
+    def get_site(self, sid: str) -> dict[str, Any] | None:
         return self._sites.get(sid)
 
-    def get_key(self, kid: str) -> Optional[Dict[str, Any]]:
+    def get_key(self, kid: str) -> dict[str, Any] | None:
         return self._keys.get(kid)
 
-    def get_truth(self, tid: str) -> Optional[Dict[str, Any]]:
+    def get_truth(self, tid: str) -> dict[str, Any] | None:
         return self._truths.get(tid)
 
-    def get_ending(self, eid: str) -> Optional[Dict[str, Any]]:
+    def get_ending(self, eid: str) -> dict[str, Any] | None:
         return self._endings.get(eid)
 
-    def all_truths(self) -> Dict[str, Any]:
+    def all_truths(self) -> dict[str, Any]:
         return dict(self._truths)
 
-    def key_for_cipher(self, cipher_type: str) -> Optional[str]:
+    def key_for_cipher(self, cipher_type: str) -> str | None:
         return self._cipher_to_key.get(cipher_type)
 
-    def find_site_for_depth(self, depth: int) -> Optional[str]:
+    def find_site_for_depth(self, depth: int) -> str | None:
         """指定深度で発掘可能な遺跡サイト id を1件返す (Step 26 入力フック用)
         深度範囲が重なる場合は、min_depth が最も深い（最も特化した）サイトを優先する。"""
         candidates = [
-            sid for sid, s in self._sites.items()
+            sid
+            for sid, s in self._sites.items()
             if int(s.get("min_depth", 1)) <= depth <= int(s.get("max_depth", 999))
         ]
         if not candidates:
             return None
-        return max(candidates, key=lambda sid: int(self._sites[sid].get("min_depth", 1)))
+        return max(
+            candidates, key=lambda sid: int(self._sites[sid].get("min_depth", 1))
+        )
 
-    def pick_site_for_excavation(self, depth: int, rng: Optional[Any] = None) -> Optional[str]:
+    def pick_site_for_excavation(
+        self, depth: int, rng: Any | None = None
+    ) -> str | None:
         """発掘用サイト選出（改善③: バリエーション）。
         深度で一致する複数サイトからランダムに1件選ぶ。該当なしは None。"""
         rng = rng or random
         candidates = [
-            sid for sid, s in self._sites.items()
+            sid
+            for sid, s in self._sites.items()
             if int(s.get("min_depth", 1)) <= depth <= int(s.get("max_depth", 999))
         ]
         if not candidates:
@@ -112,14 +135,16 @@ REGISTRY = ArchaeologyRegistry()
 class ArchaeologyManager(BaseSystem):
     """考古学ループの進行・判定管理 (Steps 16-23)"""
 
-    def __init__(self, registry: Optional[ArchaeologyRegistry] = None):
+    def __init__(self, registry: ArchaeologyRegistry | None = None):
         super().__init__("archaeology_manager")
         self.registry = registry or REGISTRY
         if not self.registry._fragments:
             self.registry.load()
 
     # ---------- Step 16: 発掘ドロップ解決 ----------
-    def resolve_excavation(self, site_id: str, rng: Optional[Any] = None) -> Tuple[Optional[str], Optional[str]]:
+    def resolve_excavation(
+        self, site_id: str, rng: Any | None = None
+    ) -> tuple[str | None, str | None]:
         """遺跡サイトから断片と鍵を重み付き抽選 (fragment_id, key_id)"""
         site = self.registry.get_site(site_id)
         if not site:
@@ -131,7 +156,7 @@ class ArchaeologyManager(BaseSystem):
         key_id = self._weighted_choice(key_pool, rng)
         return frag_id, key_id
 
-    def _weighted_choice(self, pool: Dict[str, int], rng: Any) -> Optional[str]:
+    def _weighted_choice(self, pool: dict[str, int], rng: Any) -> str | None:
         if not pool:
             return None
         total = sum(pool.values())
@@ -146,7 +171,9 @@ class ArchaeologyManager(BaseSystem):
         return list(pool.keys())[-1]
 
     # ---------- Step 17: 収集 ----------
-    def collect_fragment(self, player: Any, fragment_id: str, engine: Optional[Any] = None) -> bool:
+    def collect_fragment(
+        self, player: Any, fragment_id: str, engine: Any | None = None
+    ) -> bool:
         """生断片を収集（重複排除）し、StorytellerComponent の memory_fragments とも連携"""
         comp = player.archaeology
         if fragment_id in comp.collected_fragments:
@@ -162,32 +189,44 @@ class ArchaeologyManager(BaseSystem):
             # メタ進行・実績 (Step 30): ReincarnationComponent の collected_fragments へも dict で同期
             try:
                 reinc_comp = player.get_component(ReincarnationComponent)
-                if not any(f.get("fragment_id") == fragment_id for f in reinc_comp.collected_fragments if isinstance(f, dict)):
-                    reinc_comp.collected_fragments.append({
-                        "fragment_id": fragment_id,
-                        "name": name,
-                        "category": frag.get("cipher_type", ""),
-                    })
+                if not any(
+                    f.get("fragment_id") == fragment_id
+                    for f in reinc_comp.collected_fragments
+                    if isinstance(f, dict)
+                ):
+                    reinc_comp.collected_fragments.append(
+                        {
+                            "fragment_id": fragment_id,
+                            "name": name,
+                            "category": frag.get("cipher_type", ""),
+                        }
+                    )
             except Exception:
                 pass
         if engine and hasattr(engine, "log"):
-            engine.log(f"⛏【発掘】記憶の欠片『{frag.get('name', fragment_id) if frag else fragment_id}』を出土した！", (255, 215, 0))
+            engine.log(
+                f"⛏【発掘】記憶の欠片『{frag.get('name', fragment_id) if frag else fragment_id}』を出土した！",
+                (255, 215, 0),
+            )
         return True
 
     # ---------- Step 18: デコーダー鍵 ----------
-    def acquire_key(self, player: Any, key_id: str, engine: Optional[Any] = None) -> bool:
+    def acquire_key(self, player: Any, key_id: str, engine: Any | None = None) -> bool:
         comp = player.archaeology
         if key_id in comp.owned_keys:
             return False
         comp.owned_keys.append(key_id)
         key = self.registry.get_key(key_id)
         if engine and hasattr(engine, "log"):
-            engine.log(f"🗝【鍵】『{key.get('name', key_id) if key else key_id}』を手に入れた。", (180, 220, 255))
+            engine.log(
+                f"🗝【鍵】『{key.get('name', key_id) if key else key_id}』を手に入れた。",
+                (180, 220, 255),
+            )
         # 改善③: 後から鍵を得たとき、既収集の未解読断片を自動解読し直す
         self.recheck_decoding(player, engine)
         return True
 
-    def recheck_decoding(self, player: Any, engine: Optional[Any] = None) -> List[str]:
+    def recheck_decoding(self, player: Any, engine: Any | None = None) -> list[str]:
         """所有鍵で解読可能になった未解読断片を一括解読（改善③: 遅延解読）"""
         newly = []
         for fid in list(player.archaeology.collected_fragments):
@@ -204,15 +243,18 @@ class ArchaeologyManager(BaseSystem):
 
     # ---------- Step 29: 効果音ヘルパ ----------
     @staticmethod
-    def _play_se(engine: Optional[Any], name: str) -> None:
+    def _play_se(engine: Any | None, name: str) -> None:
         try:
             from sound_manager import SoundManager
+
             SoundManager.play_se(name)
         except Exception:
             pass
 
     # ---------- Step 19: 解読 ----------
-    def decode_fragment(self, player: Any, fragment_id: str, engine: Optional[Any] = None) -> bool:
+    def decode_fragment(
+        self, player: Any, fragment_id: str, engine: Any | None = None
+    ) -> bool:
         """対応する言語族の鍵を所有していれば解読。未所持ならヒントのみ提示。"""
         comp = player.archaeology
         if fragment_id in comp.decoded_fragments:
@@ -227,18 +269,24 @@ class ArchaeologyManager(BaseSystem):
             if hint and hint not in player.archaeology.decoder_hints_seen:
                 player.archaeology.decoder_hints_seen.append(hint)
             if engine and hasattr(engine, "log"):
-                engine.log(f"❓【未解読】『{frag.get('name', fragment_id)}』の文字は読めない…（{hint}）", (200, 200, 160))
+                engine.log(
+                    f"❓【未解読】『{frag.get('name', fragment_id)}』の文字は読めない…（{hint}）",
+                    (200, 200, 160),
+                )
             return False
         comp.decoded_fragments.append(fragment_id)
         if engine and hasattr(engine, "log"):
-            engine.log(f"📜【解読】『{frag.get('name', fragment_id)}』の暗号が解かれた！", (150, 255, 180))
+            engine.log(
+                f"📜【解読】『{frag.get('name', fragment_id)}』の暗号が解かれた！",
+                (150, 255, 180),
+            )
         self._play_se(engine, "level_up")
         # 解読が進めば真理到達を評価
         self.check_truth_progress(player, engine)
         return True
 
     # ---------- Step 20/21: 真理到達 ----------
-    def check_truth_progress(self, player: Any, engine: Optional[Any] = None) -> List[str]:
+    def check_truth_progress(self, player: Any, engine: Any | None = None) -> list[str]:
         """解読済み断片から到達可能な真理ノードを評価し、新規到達を記録"""
         comp = player.archaeology
         decoded = set(comp.decoded_fragments)
@@ -251,15 +299,18 @@ class ArchaeologyManager(BaseSystem):
                 comp.reached_truths.append(tid)
                 newly.append(tid)
                 if engine and hasattr(engine, "log"):
-                    engine.log(f"🌟【真理到達】『{t.get('name', tid)}』の全貌が見えた！", (255, 240, 120))
+                    engine.log(
+                        f"🌟【真理到達】『{t.get('name', tid)}』の全貌が見えた！",
+                        (255, 240, 120),
+                    )
                 self._play_se(engine, "victory")
         return newly
 
     # ---------- Step 22: エンディング候補提示 ----------
-    def suggest_endings(self, player: Any) -> List[Tuple[str, str]]:
+    def suggest_endings(self, player: Any) -> list[tuple[str, str]]:
         """到達済み真理ノードから候補エンディング (truth_id, ending_id) を収集"""
         comp = player.archaeology
-        out: List[Tuple[str, str]] = []
+        out: list[tuple[str, str]] = []
         for tid in comp.reached_truths:
             t = self.registry.get_truth(tid)
             if not t:
@@ -268,7 +319,7 @@ class ArchaeologyManager(BaseSystem):
                 out.append((tid, eid))
         return out
 
-    def get_available_endings(self, player: Any) -> List[str]:
+    def get_available_endings(self, player: Any) -> list[str]:
         """解釈が記録され、考古学経由で到達可能なエンディング id 一覧"""
         comp = player.archaeology
         return list(comp.leaned_endings.values())
@@ -278,29 +329,41 @@ class ArchaeologyManager(BaseSystem):
         """到達済み真理に対して、そのエンディングへ寄った解釈が記録されているか"""
         return ending_id in self.get_available_endings(player)
 
-    def trigger_ending(self, player: Any, ending_id: str, engine: Optional[Any] = None) -> bool:
+    def trigger_ending(
+        self, player: Any, ending_id: str, engine: Any | None = None
+    ) -> bool:
         """story_endings.yaml の unlock_conditions を実際に満たし、エンディング到達を発生させる（改善①）"""
         if not self.is_ending_reachable(player, ending_id):
             if engine and hasattr(engine, "log"):
-                engine.log("そのエンディングはまだ考古学の解釈から到達していない。", (200, 120, 120))
+                engine.log(
+                    "そのエンディングはまだ考古学の解釈から到達していない。",
+                    (200, 120, 120),
+                )
             return False
         ending = self.registry.get_ending(ending_id)
         # データ駆動で unlock_conditions の各トークンを story_flags に True で書き込み（本当に満たす）
-        for cond in (ending.get("unlock_conditions", []) if ending else []):
+        for cond in ending.get("unlock_conditions", []) if ending else []:
             player.story_flags[cond] = True
         player.story_flags[f"ending_{ending_id}_unlocked_by_archaeology"] = True
         # エンディング進行度を記録（StorytellerComponent.ending_progress）
         try:
-            player.ending_progress[ending_id] = max(int(player.ending_progress.get(ending_id, 0)), 1)
+            player.ending_progress[ending_id] = max(
+                int(player.ending_progress.get(ending_id, 0)), 1
+            )
         except Exception:
             pass
         if engine and hasattr(engine, "log"):
             scene = ending.get("ending_scene", "") if ending else ""
-            engine.log(f"🏁【エンディング到達】『{ending.get('name', ending_id) if ending else ending_id}』（幕: {scene}）に辿り着いた！", (255, 230, 120))
+            engine.log(
+                f"🏁【エンディング到達】『{ending.get('name', ending_id) if ending else ending_id}』（幕: {scene}）に辿り着いた！",
+                (255, 230, 120),
+            )
         self._play_se(engine, "victory")
         return True
 
-    def trigger_available_endings(self, player: Any, engine: Optional[Any] = None) -> List[str]:
+    def trigger_available_endings(
+        self, player: Any, engine: Any | None = None
+    ) -> list[str]:
         """解釈済みエンディングを全て発生させる"""
         triggered = []
         for eid in self.get_available_endings(player):
@@ -309,7 +372,14 @@ class ArchaeologyManager(BaseSystem):
         return triggered
 
     # ---------- Step 23: 解釈による分岐記録 ----------
-    def interpret_truth(self, player: Any, truth_id: str, ending_id: str, note: str = "", engine: Optional[Any] = None) -> bool:
+    def interpret_truth(
+        self,
+        player: Any,
+        truth_id: str,
+        ending_id: str,
+        note: str = "",
+        engine: Any | None = None,
+    ) -> bool:
         """プレイヤーの解釈（寄り先エンディング）を記録し、story_endings への接続フラグをセット"""
         comp = player.archaeology
         if truth_id not in comp.reached_truths:
@@ -320,7 +390,9 @@ class ArchaeologyManager(BaseSystem):
         candidates = t.get("candidate_endings", []) if t else []
         if ending_id not in candidates:
             if engine and hasattr(engine, "log"):
-                engine.log("そのエンディングはこの真理の候補ではない。", (200, 120, 120))
+                engine.log(
+                    "そのエンディングはこの真理の候補ではない。", (200, 120, 120)
+                )
             return False
         comp.leaned_endings[truth_id] = ending_id
         if note:
@@ -329,14 +401,17 @@ class ArchaeologyManager(BaseSystem):
         player.story_flags[f"ending_{ending_id}_unlocked_by_archaeology"] = True
         if engine and hasattr(engine, "log"):
             ending = self.registry.get_ending(ending_id)
-            engine.log(f"💭【解釈】『{t.get('name', truth_id) if t else truth_id}』を『{ending.get('name', ending_id) if ending else ending_id}』の視点で読んだ。", (220, 200, 255))
+            engine.log(
+                f"💭【解釈】『{t.get('name', truth_id) if t else truth_id}』を『{ending.get('name', ending_id) if ending else ending_id}』の視点で読んだ。",
+                (220, 200, 255),
+            )
         self._play_se(engine, "level_up")
         # 改善①: 解釈＝即エンディング到達（story_endings の unlock_conditions を実際に満たす）
         self.trigger_ending(player, ending_id, engine)
         return True
 
     # ---------- Step 32/33: 出力 ----------
-    def export_ledger(self, player: Any) -> Dict[str, Any]:
+    def export_ledger(self, player: Any) -> dict[str, Any]:
         """解釈台帳（interpretation ledger）を辞書で出力"""
         comp = player.archaeology
         return {

@@ -7,6 +7,7 @@ optimally Steam Deck compatible. Requires ``appimagetool`` on PATH.
 Usage:
     python tools/build_appimage.py --appdir dist/naRou
 """
+
 from __future__ import annotations
 
 import argparse
@@ -26,12 +27,14 @@ def run(cmd: list[str]) -> bool:
 
 def build_appimage(appdir: Path) -> bool:
     if not shutil.which("appimagetool"):
-        print("[appimage] appimagetool not found; skipping (install linuxdeploy/appimagetool)")
+        print(
+            "[appimage] appimagetool not found; skipping (install linuxdeploy/appimagetool)"
+        )
         return False
     # Ensure AppRun + .desktop + icon exist (minimal placeholders).
     apprun = appdir / "AppRun"
     if not apprun.exists():
-        apprun.write_text("#!/bin/sh\nexec \"$(dirname \"$0\")/naRou\" \"$@\"\n")
+        apprun.write_text('#!/bin/sh\nexec "$(dirname "$0")/naRou" "$@"\n')
         apprun.chmod(0o755)
     desktop = appdir / f"{APP_NAME}.desktop"
     if not desktop.exists():

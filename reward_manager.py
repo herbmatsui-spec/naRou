@@ -2,10 +2,14 @@
 Reward Manager Module
 Handles granting of rewards for world events.
 """
+
 from __future__ import annotations
+
 import random
 from typing import Any
+
 from entity import Entity  # Assuming Entity is defined elsewhere
+
 
 class RewardManager:
     def __init__(self):
@@ -38,5 +42,6 @@ class RewardManager:
         """プレイヤーにアイテムを付与する（実装は省略）"""
         # TODO: 実際のアイテムシステムと連携
         pass
+
 
 REWARD_MANAGER = RewardManager()

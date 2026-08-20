@@ -52,13 +52,15 @@ flowchart TD
 ```python
 @dataclass
 class MemoryFragment:
-    fragment_id: str             # 一意なID (例: "frag_dragon_slayer_gen1_a8f9")
-    name: str                    # 表示名 (例: "古の竜を穿ちし記憶")
-    description: str             # 動的フレーバーテキスト
-    generation: int              # 獲得した世代 (周回数)
-    category: str                # "combat", "magic", "survival", "exploration", "social"
-    buff_traits: Dict[str, float]# パッシブ補正 (例: {"fire_resist": 15.0, "str": 3.0})
-    lore_snippet: str            # ストーリー/世界観の断片テキスト
+    fragment_id: str  # 一意なID (例: "frag_dragon_slayer_gen1_a8f9")
+    name: str  # 表示名 (例: "古の竜を穿ちし記憶")
+    description: str  # 動的フレーバーテキスト
+    generation: int  # 獲得した世代 (周回数)
+    category: str  # "combat", "magic", "survival", "exploration", "social"
+    buff_traits: Dict[
+        str, float
+    ]  # パッシブ補正 (例: {"fire_resist": 15.0, "str": 3.0})
+    lore_snippet: str  # ストーリー/世界観の断片テキスト
     unlocked_secrets: List[str]  # 解放される隠し要素/ダンジョンID/レシピ等
 ```
 
@@ -66,11 +68,11 @@ class MemoryFragment:
 ```python
 @dataclass
 class CycleModifier:
-    modifier_id: str             # "mod_mana_surge", "mod_lone_wolf", etc.
-    name: str                    # 表示名 (例: "魔力奔流の兆し")
-    description: str             # 説明
-    target_goal: str             # 達成条件キー (例: "reach_depth_50_with_magic")
-    reward_meta_points: int      # クリア時のメタポイント/解放要素
+    modifier_id: str  # "mod_mana_surge", "mod_lone_wolf", etc.
+    name: str  # 表示名 (例: "魔力奔流の兆し")
+    description: str  # 説明
+    target_goal: str  # 達成条件キー (例: "reach_depth_50_with_magic")
+    reward_meta_points: int  # クリア時のメタポイント/解放要素
     positive_effects: Dict[str, float]
     negative_effects: Dict[str, float]
 ```

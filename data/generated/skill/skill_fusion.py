@@ -5,56 +5,57 @@ from __future__ import annotations
 
 from enum import Enum
 
-from data.schemas._base import DataModel
 from pydantic import ConfigDict, Field, RootModel
+
+from data.schemas._base import DataModel
 
 
 class Meta(DataModel):
     model_config = ConfigDict(
-        extra='allow',
+        extra="allow",
     )
     version: str | None = None
     last_updated: str | None = None
 
 
 class RequiredSkill(RootModel[str]):
-    root: str = Field(..., pattern='^[a-z_][a-z0-9_]*$')
+    root: str = Field(..., pattern="^[a-z_][a-z0-9_]*$")
 
 
 class ResultSkill(RootModel[str]):
-    root: str = Field(..., pattern='^[a-z_][a-z0-9_]*$')
+    root: str = Field(..., pattern="^[a-z_][a-z0-9_]*$")
 
 
 class Type(Enum):
-    elemental_damage = 'elemental_damage'
-    mp_on_hit = 'mp_on_hit'
-    undead_damage_bonus = 'undead_damage_bonus'
-    heal_on_kill = 'heal_on_kill'
-    crit_chance = 'crit_chance'
-    damage_bonus = 'damage_bonus'
-    lifesteal = 'lifesteal'
-    speed_bonus = 'speed_bonus'
-    spell_power_on_melee = 'spell_power_on_melee'
-    auto_reflect = 'auto_reflect'
-    heal_on_hit = 'heal_on_hit'
-    undead_bane = 'undead_bane'
-    backstab_multiplier = 'backstab_multiplier'
+    elemental_damage = "elemental_damage"
+    mp_on_hit = "mp_on_hit"
+    undead_damage_bonus = "undead_damage_bonus"
+    heal_on_kill = "heal_on_kill"
+    crit_chance = "crit_chance"
+    damage_bonus = "damage_bonus"
+    lifesteal = "lifesteal"
+    speed_bonus = "speed_bonus"
+    spell_power_on_melee = "spell_power_on_melee"
+    auto_reflect = "auto_reflect"
+    heal_on_hit = "heal_on_hit"
+    undead_bane = "undead_bane"
+    backstab_multiplier = "backstab_multiplier"
 
 
 class Target(Enum):
-    melee = 'melee'
-    spell = 'spell'
-    self = 'self'
-    ranged = 'ranged'
-    pet = 'pet'
-    all = 'all'
-    enemy = 'enemy'
-    ally = 'ally'
+    melee = "melee"
+    spell = "spell"
+    self = "self"
+    ranged = "ranged"
+    pet = "pet"
+    all = "all"
+    enemy = "enemy"
+    ally = "ally"
 
 
 class Effect(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     type: Type
     value: float | str | None = None
@@ -64,7 +65,7 @@ class Effect(DataModel):
 
 class SkillFusion(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     name: str = Field(..., min_length=1)
     description: str
@@ -77,7 +78,7 @@ class SkillFusion(DataModel):
 
 class SkillFusionDefinition(DataModel):
     model_config = ConfigDict(
-        extra='allow',
+        extra="allow",
     )
     fusions: dict[str, SkillFusion]
     meta: Meta | None = None

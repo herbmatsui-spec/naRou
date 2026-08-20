@@ -1,4 +1,5 @@
 """Final i18n validation suite"""
+
 import unittest
 
 from localization_manager import LocalizationManager
@@ -15,5 +16,5 @@ class TestFinalValidation(unittest.TestCase):
             self.assertTrue(lm.get_language_data(lang).get("hello"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

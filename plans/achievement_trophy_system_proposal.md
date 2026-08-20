@@ -279,22 +279,26 @@ class Entity:
     # ... existing fields ...
     # 実績システム
     achievements: List[str] = field(default_factory=list)
-    achievement_progress: Dict[str, int] = field(default_factory=list)  # 進行中の実績進捗
-    achievement_timers: Dict[str, int] = field(default_factory=list)  # 時間制限実績用タイマー
-    
+    achievement_progress: Dict[str, int] = field(
+        default_factory=list
+    )  # 進行中の実績進捗
+    achievement_timers: Dict[str, int] = field(
+        default_factory=list
+    )  # 時間制限実績用タイマー
+
     # コレクション実績用
     monster_killed_types: Dict[str, int] = field(default_factory=list)
     unique_items_obtained: List[str] = field(default_factory=list)
-    
+
     # ソーシャル実績用（オンライン機能がある場合）
     social_points: int = 0
     weekly_play_time: int = 0
-    
+
     # 転生・メタ実績用
     reincarnation_count: int = 0
     total_level_earned: int = 0
     permanent_bonuses: Dict[str, int] = field(default_factory=list)
-    
+
     # メタ進行要素用
     meta_progression: Dict[str, int] = field(default_factory=list)
 ```

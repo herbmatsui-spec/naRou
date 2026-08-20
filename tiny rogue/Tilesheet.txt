@@ -1,3 +1,4 @@
+<<<<<<< ours
 Tilesheet information:
 
 Tile size                 •  16px × 16px
@@ -6,4 +7,14 @@ Space between tiles       •  1px × 1px
 Total tiles (horizontal)  •  12 tiles
 Total tiles (vertical)    •  11 tiles
 ---
+=======
+Tilesheet information:
+
+Tile size                 •  16px × 16px
+Space between tiles       •  1px × 1px
+---
+Total tiles (horizontal)  •  12 tiles
+Total tiles (vertical)    •  11 tiles
+---
+>>>>>>> theirs
 Total tiles in sheet      •  132 tiles

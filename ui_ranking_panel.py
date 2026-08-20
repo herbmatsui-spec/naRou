@@ -2,12 +2,16 @@
 UI Ranking Panel Module
 Provides data for displaying ranking information in the UI.
 """
+
 from __future__ import annotations
-from typing import Dict, Any, List
+
+from typing import Any
+
 from ranking_manager import RANKING_MANAGER
 from world_event_system import REGISTRY
 
-def get_all_event_rankings() -> Dict[str, List[tuple]]:
+
+def get_all_event_rankings() -> dict[str, list[tuple]]:
     """
     すべてのイベントのランキングを取得する。
     :return: {event_id: [(player_id, score), ...]}
@@ -17,7 +21,8 @@ def get_all_event_rankings() -> Dict[str, List[tuple]]:
         rankings[event_id] = RANKING_MANAGER.get_ranking(event_id)
     return rankings
 
-def get_event_ranking(event_id: str, top_n: int = 10) -> List[tuple]:
+
+def get_event_ranking(event_id: str, top_n: int = 10) -> list[tuple]:
     """
     指定されたイベントのランキングを取得する。
     :param event_id: イベントID
@@ -26,7 +31,8 @@ def get_event_ranking(event_id: str, top_n: int = 10) -> List[tuple]:
     """
     return RANKING_MANAGER.get_ranking(event_id)[:top_n]
 
-def get_ranking_as_dict(event_id: str, top_n: int = 10) -> List[Dict[str, Any]]:
+
+def get_ranking_as_dict(event_id: str, top_n: int = 10) -> list[dict[str, Any]]:
     """
     ランキングを辞書のリストで取得する（UI向け）。
     :param event_id: イベントID

@@ -10,10 +10,13 @@ This script:
 
 Run manually: `python tools/convert_demos_to_template.py`
 """
-import os, re
+
+import os
+import re
+
 
 def convert_file(path):
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         html = f.read()
     # Extract title
     title_match = re.search(r"<title>(.*?)</title>", html, re.IGNORECASE)
@@ -28,15 +31,15 @@ def convert_file(path):
     # Build new template content
     # Build new template content using explicit string concatenation to avoid f-string brace issues
     new_html = (
-        "{% extends \"templates/base.html\" %}\n"
+        '{% extends "templates/base.html" %}\n'
         "{% block title %}" + title + "{% endblock %}\n"
-        "{% block content %}\n"
-        + body_content + "\n"
+        "{% block content %}\n" + body_content + "\n"
         "{% endblock %}\n"
     )
     with open(path, "w", encoding="utf-8") as f:
         f.write(new_html)
     print(f"Converted {os.path.basename(path)}")
+
 
 if __name__ == "__main__":
     demo_dir = os.path.join(os.path.dirname(__file__), "..", "demos")

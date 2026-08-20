@@ -1,18 +1,21 @@
 from __future__ import annotations
-import os
-import shutil
+
+import base64
 import gzip
-import pickle
 import hashlib
 import hmac
-import base64
-from typing import Any, Tuple, Optional, Dict
+import os
+import pickle
+import shutil
+from typing import Any
+
 from exceptions import SaveDataCorruptedError
-from migration_pipeline import MigrationPipeline, DEFAULT_FIELD_FACTORIES
+from migration_pipeline import DEFAULT_FIELD_FACTORIES, MigrationPipeline
 
 
 class SaveSystem:
     """gzip+pickleによる完全なセーブシステム（ECSコンポーネント完全対応・SHA256チェックサム・自動バックアップ・世代管理）"""
+
     SAVE_PATH = "savegame.bin"
     CURRENT_VERSION = "2.0.0"
     SUPPORTED_VERSIONS = {"1.0.0", "1.1.0", "1.2.0", "2.0.0"}
@@ -56,7 +59,7 @@ class SaveSystem:
             # bak2 -> bak3, bak1 -> bak2
             for i in range(cls.MAX_BACKUPS - 1, 0, -1):
                 src = f"{cls.SAVE_PATH}.bak{i}"
-                dst = f"{cls.SAVE_PATH}.bak{i+1}"
+                dst = f"{cls.SAVE_PATH}.bak{i + 1}"
                 if os.path.exists(src):
                     shutil.copy2(src, dst)
             # savegame.bin -> savegame.bin.bak1
@@ -73,7 +76,7 @@ class SaveSystem:
     def save(cls, engine: Any) -> str:
         """チェックサム付加 + バックアップローテーション + gzip+pickle (Step 4.1, 4.2, 4.3)"""
         try:
-            if hasattr(engine, 'player') and engine.player:
+            if hasattr(engine, "player") and engine.player:
                 engine.player.save_version = cls.CURRENT_VERSION
                 cls._ensure_compatibility(engine.player)
 
@@ -100,16 +103,16 @@ class SaveSystem:
             with open(cls.SAVE_PATH, "wb") as f:
                 f.write(checksum + save_hmac + compressed)
 
-            return f"セーブ完了！ ({len(compressed)} bytes, チェックサム検証済, 圧縮率{100 - int(len(compressed)/len(pickled)*100)}%)"
+            return f"セーブ完了！ ({len(compressed)} bytes, チェックサム検証済, 圧縮率{100 - int(len(compressed) / len(pickled) * 100)}%)"
         except Exception as e:
             return f"セーブ失敗: {e}"
 
     @classmethod
-    def load(cls, allow_backup_recovery: bool = True) -> Tuple[Optional[Any], str]:
+    def load(cls, allow_backup_recovery: bool = True) -> tuple[Any | None, str]:
         """HMAC署名検証 + チェックサム検証 + バージョン互換性検証 + バックアップ自動リカバリ (Step 61, 62)"""
         if not os.path.exists(cls.SAVE_PATH):
             return None, "セーブデータが見つかりません。"
-        
+
         try:
             with open(cls.SAVE_PATH, "rb") as f:
                 data = f.read()
@@ -117,7 +120,9 @@ class SaveSystem:
             # New format: 32 bytes SHA256 + 32 bytes HMAC + payload
             # Legacy format: 32 bytes SHA256 + payload (no HMAC)
             if len(data) < 64:
-                raise SaveDataCorruptedError("セーブデータが破損しています（サイズ不正）。")
+                raise SaveDataCorruptedError(
+                    "セーブデータが破損しています（サイズ不正）。"
+                )
 
             checksum = data[:32]
             save_hmac = data[32:64]
@@ -125,30 +130,41 @@ class SaveSystem:
 
             # HMAC検証 (Step 61) - まずHMACを検証
             if not cls._verify_hmac(payload, save_hmac):
-                raise SaveDataCorruptedError("セーブデータのHMAC署名が一致しません（改ざんの可能性）。")
+                raise SaveDataCorruptedError(
+                    "セーブデータのHMAC署名が一致しません（改ざんの可能性）。"
+                )
 
             # チェックサム検証
             expected_checksum = hashlib.sha256(payload).digest()
             if checksum != expected_checksum:
-                raise SaveDataCorruptedError("セーブデータのチェックサムが一致しません（データ改ざんまたは破損）。")
+                raise SaveDataCorruptedError(
+                    "セーブデータのチェックサムが一致しません（データ改ざんまたは破損）。"
+                )
 
             loaded_engine = pickle.loads(gzip.decompress(payload))
 
             # プレイヤーデータの互換性確保
-            if hasattr(loaded_engine, 'player') and loaded_engine.player:
+            if hasattr(loaded_engine, "player") and loaded_engine.player:
                 p_version = getattr(loaded_engine.player, "save_version", "1.0.0")
                 if p_version not in cls.SUPPORTED_VERSIONS:
-                    raise SaveDataCorruptedError(f"未対応のセーブバージョンです: {p_version}")
+                    raise SaveDataCorruptedError(
+                        f"未対応のセーブバージョンです: {p_version}"
+                    )
                 cls._ensure_compatibility(loaded_engine.player)
 
             # ペット自体のフィールド互換性確保
-            pet = getattr(loaded_engine, 'pet', None)
-            if pet and hasattr(pet, 'pet_ai') and pet.pet_ai:
-                if not hasattr(pet.pet_ai, 'bond'): pet.pet_ai.bond = 0
-                if not hasattr(pet.pet_ai, 'contract_id'): pet.pet_ai.contract_id = "default"
-                if not hasattr(pet.pet_ai, 'evolution_path'): pet.pet_ai.evolution_path = []
-                if not hasattr(pet.pet_ai, 'evolution_stage'): pet.pet_ai.evolution_stage = 0
-                if not hasattr(pet.pet_ai, 'equipment'): pet.pet_ai.equipment = {}
+            pet = getattr(loaded_engine, "pet", None)
+            if pet and hasattr(pet, "pet_ai") and pet.pet_ai:
+                if not hasattr(pet.pet_ai, "bond"):
+                    pet.pet_ai.bond = 0
+                if not hasattr(pet.pet_ai, "contract_id"):
+                    pet.pet_ai.contract_id = "default"
+                if not hasattr(pet.pet_ai, "evolution_path"):
+                    pet.pet_ai.evolution_path = []
+                if not hasattr(pet.pet_ai, "evolution_stage"):
+                    pet.pet_ai.evolution_stage = 0
+                if not hasattr(pet.pet_ai, "equipment"):
+                    pet.pet_ai.equipment = {}
 
             return loaded_engine, "ロード完了！ ゲームが完全に復元されました。"
         except Exception as e:
@@ -161,7 +177,10 @@ class SaveSystem:
                             shutil.copy2(bak_file, cls.SAVE_PATH)
                             res, msg = cls.load(allow_backup_recovery=False)
                             if res is not None:
-                                return res, f"【警告】セーブデータ破損のため、バックアップ(世代{i})から復旧しました。"
+                                return (
+                                    res,
+                                    f"【警告】セーブデータ破損のため、バックアップ(世代{i})から復旧しました。",
+                                )
                         except Exception:
                             continue
             return None, f"ロード失敗: {e}"
@@ -172,34 +191,48 @@ class SaveSystem:
     JSON_SAVE_PATH = "savegame.json"
 
     @classmethod
-    def serialize_engine_to_dict(cls, engine: Any) -> Dict[str, Any]:
+    def serialize_engine_to_dict(cls, engine: Any) -> dict[str, Any]:
         """Engine全体を辞書形式にシリアライズ (Step 24)"""
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "save_version": cls.CURRENT_VERSION,
             "dungeon_level": getattr(engine, "dungeon_level", 1),
             "turns": getattr(engine, "turns", 0),
             "game_state": getattr(engine, "game_state", "play"),
-            "player": engine.player.to_dict() if hasattr(engine, "player") and engine.player else None,
-            "pet": engine.pet.to_dict() if hasattr(engine, "pet") and engine.pet else None,
+            "player": engine.player.to_dict()
+            if hasattr(engine, "player") and engine.player
+            else None,
+            "pet": engine.pet.to_dict()
+            if hasattr(engine, "pet") and engine.pet
+            else None,
             "survival": {
                 "gold": getattr(engine.survival, "gold", 0),
                 "platinum": getattr(engine.survival, "platinum", 0),
                 "hunger": getattr(engine.survival, "hunger", 8000),
                 "sleepiness": getattr(engine.survival, "sleepiness", 0),
                 "karma": getattr(engine.survival, "karma", 20),
-            } if hasattr(engine, "survival") and engine.survival else {},
-            "inventory": [itm.to_dict() for itm in engine.inventory.items] if hasattr(engine, "inventory") and engine.inventory else [],
-            "pet_inventory": [itm.to_dict() for itm in engine.pet_inventory.items] if hasattr(engine, "pet_inventory") and engine.pet_inventory else [],
-            "items_on_ground": [itm.to_dict() for itm in getattr(engine, "items_on_ground", [])],
+            }
+            if hasattr(engine, "survival") and engine.survival
+            else {},
+            "inventory": [itm.to_dict() for itm in engine.inventory.items]
+            if hasattr(engine, "inventory") and engine.inventory
+            else [],
+            "pet_inventory": [itm.to_dict() for itm in engine.pet_inventory.items]
+            if hasattr(engine, "pet_inventory") and engine.pet_inventory
+            else [],
+            "items_on_ground": [
+                itm.to_dict() for itm in getattr(engine, "items_on_ground", [])
+            ],
         }
         return data
 
     @classmethod
-    def deserialize_dict_to_engine(cls, data: Dict[str, Any], target_engine: Optional[Any] = None) -> Any:
+    def deserialize_dict_to_engine(
+        cls, data: dict[str, Any], target_engine: Any | None = None
+    ) -> Any:
         """辞書から Engine の状態を復元 (Step 25)"""
+        from entity import Entity
         from game import Engine
         from item_system import Item
-        from entity import Entity
 
         # マイグレーション適用 (Step 31)
         migrated_data = MigrationPipeline.migrate(data)
@@ -226,30 +259,42 @@ class SaveSystem:
             engine.survival.sleep = surv_data.get("sleep", 100)
 
         # Inventories
-        if hasattr(engine, "inventory") and engine.inventory and "inventory" in migrated_data:
-            engine.inventory.items = [Item.from_dict(it) for it in migrated_data["inventory"]]
+        if (
+            hasattr(engine, "inventory")
+            and engine.inventory
+            and "inventory" in migrated_data
+        ):
+            engine.inventory.items = [
+                Item.from_dict(it) for it in migrated_data["inventory"]
+            ]
 
-        if hasattr(engine, "pet_inventory") and engine.pet_inventory and "pet_inventory" in migrated_data:
-            engine.pet_inventory.items = [Item.from_dict(it) for it in migrated_data["pet_inventory"]]
+        if (
+            hasattr(engine, "pet_inventory")
+            and engine.pet_inventory
+            and "pet_inventory" in migrated_data
+        ):
+            engine.pet_inventory.items = [
+                Item.from_dict(it) for it in migrated_data["pet_inventory"]
+            ]
 
         if "items_on_ground" in migrated_data:
-            engine.items_on_ground = [Item.from_dict(it) for it in migrated_data["items_on_ground"]]
+            engine.items_on_ground = [
+                Item.from_dict(it) for it in migrated_data["items_on_ground"]
+            ]
 
         return engine
 
     @classmethod
-    def save_json(cls, engine: Any, file_path: Optional[str] = None) -> str:
+    def save_json(cls, engine: Any, file_path: str | None = None) -> str:
         """JSON形式でファイル保存 (SHA256チェックサム付加) (Step 26, 33)"""
         import json
+
         target_path = file_path or cls.JSON_SAVE_PATH
         try:
             dict_data = cls.serialize_engine_to_dict(engine)
             json_str = json.dumps(dict_data, ensure_ascii=False, indent=2)
             checksum = hashlib.sha256(json_str.encode("utf-8")).hexdigest()
-            payload = {
-                "checksum": checksum,
-                "data": dict_data
-            }
+            payload = {"checksum": checksum, "data": dict_data}
             with open(target_path, "w", encoding="utf-8") as f:
                 json.dump(payload, f, ensure_ascii=False, indent=2)
             return f"JSONセーブ完了！ ({target_path}, SHA256: {checksum[:8]}...)"
@@ -257,23 +302,28 @@ class SaveSystem:
             return f"JSONセーブ失敗: {e}"
 
     @classmethod
-    def load_json(cls, file_path: Optional[str] = None) -> Tuple[Optional[Any], str]:
+    def load_json(cls, file_path: str | None = None) -> tuple[Any | None, str]:
         """JSONファイルから読み込み (チェックサム検証 & 自動復元) (Step 27, 33, 35)"""
         import json
+
         target_path = file_path or cls.JSON_SAVE_PATH
         if not os.path.exists(target_path):
             return None, "JSONセーブデータが見つかりません。"
         try:
-            with open(target_path, "r", encoding="utf-8") as f:
+            with open(target_path, encoding="utf-8") as f:
                 payload = json.load(f)
 
             # チェックサム検証
             if "checksum" in payload and "data" in payload:
                 dict_data = payload["data"]
                 expected_str = json.dumps(dict_data, ensure_ascii=False, indent=2)
-                expected_checksum = hashlib.sha256(expected_str.encode("utf-8")).hexdigest()
+                expected_checksum = hashlib.sha256(
+                    expected_str.encode("utf-8")
+                ).hexdigest()
                 if payload["checksum"] != expected_checksum:
-                    raise SaveDataCorruptedError("JSONセーブデータのチェックサムが一致しません。")
+                    raise SaveDataCorruptedError(
+                        "JSONセーブデータのチェックサムが一致しません。"
+                    )
             else:
                 dict_data = payload
 
@@ -293,4 +343,3 @@ class SaveSystem:
 
 # Backwards compatibility alias
 MigrationManager = MigrationPipeline
-

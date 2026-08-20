@@ -2,18 +2,18 @@
 
 Consolidated managers for the pet contract/evolution/fusion proposal.
 """
-from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
-import yaml
-import logging
 
+import logging
+from typing import Any
+
+import yaml
 
 logger = logging.getLogger(__name__)
 
 
 def _load_yaml(path: str) -> dict:
     try:
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, encoding="utf-8") as f:
             return yaml.safe_load(f) or {}
     except FileNotFoundError:
         logger.warning(f"File not found: {path}")
@@ -27,9 +27,10 @@ def _load_yaml(path: str) -> dict:
 # 提案6: Pet equipment / gear
 # ============================================================
 
+
 class PetEquipmentManager:
     def __init__(self, path: str = "data/pet_equipment.yaml"):
-        self._items: Dict[str, dict] = {}
+        self._items: dict[str, dict] = {}
         self.load(path)
 
     def load(self, path: str = "data/pet_equipment.yaml") -> None:
@@ -40,15 +41,16 @@ class PetEquipmentManager:
                 self._items[it["id"]] = {**it, "slot": slot}
         logger.info(f"Loaded {len(self._items)} pet equipment items")
 
-    def get(self, item_id: str) -> Optional[dict]:
+    def get(self, item_id: str) -> dict | None:
         return self._items.get(item_id)
 
     def can_equip(self, pet, item_id: str) -> bool:
         it = self._items.get(item_id)
         if it is None:
             return False
-        return (getattr(pet, "bond", 0) >= it.get("required_bond", 0)
-                and getattr(pet, "level", 1) >= it.get("required_level", 1))
+        return getattr(pet, "bond", 0) >= it.get("required_bond", 0) and getattr(
+            pet, "level", 1
+        ) >= it.get("required_level", 1)
 
     def equip(self, pet, slot: str, item_id: str) -> bool:
         if not self.can_equip(pet, item_id):
@@ -58,8 +60,8 @@ class PetEquipmentManager:
         pet.equipment[slot] = item_id
         return True
 
-    def aggregate_bonuses(self, pet) -> Dict[str, int]:
-        out: Dict[str, int] = {}
+    def aggregate_bonuses(self, pet) -> dict[str, int]:
+        out: dict[str, int] = {}
         for item_id in getattr(pet, "equipment", {}).values():
             it = self._items.get(item_id)
             if it is None:
@@ -75,9 +77,10 @@ class PetEquipmentManager:
 # 提案7: Pet training & loyalty
 # ============================================================
 
+
 class PetTrainingManager:
     def __init__(self, path: str = "data/pet_training.yaml"):
-        self._courses: Dict[str, dict] = {}
+        self._courses: dict[str, dict] = {}
         self.load(path)
 
     def load(self, path: str = "data/pet_training.yaml") -> None:
@@ -87,7 +90,7 @@ class PetTrainingManager:
             self._courses[c["id"]] = c
         logger.info(f"Loaded {len(self._courses)} pet training courses")
 
-    def can_enroll(self, pet, course_id: str, facilities: List[str]) -> bool:
+    def can_enroll(self, pet, course_id: str, facilities: list[str]) -> bool:
         c = self._courses.get(course_id)
         if c is None:
             return False
@@ -112,9 +115,10 @@ class PetTrainingManager:
 # 提案8: Pet guild / fellowship
 # ============================================================
 
+
 class PetGuildManager:
     def __init__(self, path: str = "data/pet_guilds.yaml"):
-        self._guilds: Dict[str, dict] = {}
+        self._guilds: dict[str, dict] = {}
         self.load(path)
 
     def load(self, path: str = "data/pet_guilds.yaml") -> None:
@@ -133,7 +137,7 @@ class PetGuildManager:
                 lvl = max(lvl, int(l))
         return lvl
 
-    def active_buffs(self, guild_id: str, total_bond: int) -> List[dict]:
+    def active_buffs(self, guild_id: str, total_bond: int) -> list[dict]:
         g = self._guilds.get(guild_id)
         if not g:
             return []
@@ -149,10 +153,11 @@ class PetGuildManager:
 # 提案9: Pet legacy / reincarnation
 # ============================================================
 
+
 class PetLegacyManager:
     def __init__(self, path: str = "data/pet_legacy.yaml"):
-        self._transfers: List[dict] = []
-        self._points_cfg: Dict[str, Any] = {}
+        self._transfers: list[dict] = []
+        self._points_cfg: dict[str, Any] = {}
         self.load(path)
 
     def load(self, path: str = "data/pet_legacy.yaml") -> None:
@@ -161,8 +166,9 @@ class PetLegacyManager:
         self._points_cfg = data.get("pet_legacy", {}).get("legacy_points", {})
         logger.info(f"Loaded {len(self._transfers)} pet legacy transfers")
 
-    def compute_legacy_points(self, level: int, max_bond: int,
-                              evolved_pets: int, legendary_pets: int) -> int:
+    def compute_legacy_points(
+        self, level: int, max_bond: int, evolved_pets: int, legendary_pets: int
+    ) -> int:
         cfg = self._points_cfg
         pts = int(cfg.get("base", 0))
         pts += (level // 10) * int(cfg.get("per_10_levels", 0))
@@ -172,7 +178,7 @@ class PetLegacyManager:
         pts += legendary_pets * int(cfg.get("per_legendary_pet", 0))
         return pts
 
-    def available_transfers(self, flags: Dict[str, bool]) -> List[dict]:
+    def available_transfers(self, flags: dict[str, bool]) -> list[dict]:
         out = []
         for t in self._transfers:
             if flags.get(t.get("condition"), False):

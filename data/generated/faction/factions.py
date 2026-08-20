@@ -3,8 +3,9 @@
 
 from __future__ import annotations
 
-from data.schemas._base import DataModel
 from pydantic import ConfigDict, Field, RootModel
+
+from data.schemas._base import DataModel
 
 
 class ColorItem(RootModel[int]):
@@ -13,7 +14,7 @@ class ColorItem(RootModel[int]):
 
 class Faction(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     name: str = Field(..., min_length=1)
     color: list[ColorItem] = Field(..., max_length=3, min_length=3)
@@ -25,7 +26,7 @@ class Faction(DataModel):
 
 class Meta(DataModel):
     model_config = ConfigDict(
-        extra='allow',
+        extra="allow",
     )
     version: str | None = None
     last_updated: str | None = None
@@ -33,7 +34,7 @@ class Meta(DataModel):
 
 class FactionsDefinition(DataModel):
     model_config = ConfigDict(
-        extra='allow',
+        extra="allow",
     )
     factions: dict[str, Faction]
     meta: Meta | None = None

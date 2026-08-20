@@ -6,8 +6,8 @@ Quest Narrative DAG Module (偏執的クエストシステム / 設計書 Phase 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set, TYPE_CHECKING
 from enum import Enum, auto
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -15,25 +15,28 @@ if TYPE_CHECKING:
 
 class NarrativeNodeType(Enum):
     """ナラティブノードの種類"""
-    START = auto()          # 開始ノード
-    CHOICE = auto()         # 選択肢ノード
-    EVENT = auto()          # イベントノード（自動進行）
-    CONDITION = auto()      # 条件分岐ノード
-    END = auto()            # 終了ノード（エンディング）
-    MERGE = auto()          # 分岐合流ノード
+
+    START = auto()  # 開始ノード
+    CHOICE = auto()  # 選択肢ノード
+    EVENT = auto()  # イベントノード（自動進行）
+    CONDITION = auto()  # 条件分岐ノード
+    END = auto()  # 終了ノード（エンディング）
+    MERGE = auto()  # 分岐合流ノード
 
 
 class NarrativeEdgeType(Enum):
     """エッジの種類"""
-    CHOICE = auto()         # プレイヤー選択による遷移
-    AUTO = auto()           # 自動遷移（条件満たし等）
-    CONDITION_TRUE = auto() # 条件真
-    CONDITION_FALSE = auto()# 条件偽
+
+    CHOICE = auto()  # プレイヤー選択による遷移
+    AUTO = auto()  # 自動遷移（条件満たし等）
+    CONDITION_TRUE = auto()  # 条件真
+    CONDITION_FALSE = auto()  # 条件偽
 
 
 @dataclass
 class NarrativeEdge:
     """ナラティブエッジ（分岐）"""
+
     edge_id: str
     source_node_id: str
     target_node_id: str
@@ -43,17 +46,17 @@ class NarrativeEdge:
     # 条件遷移用（CQCT 連携）
     condition_dsl: str = ""
     # 遷移時の副作用
-    effects: Dict[str, Any] = field(default_factory=dict)
+    effects: dict[str, Any] = field(default_factory=dict)
     # 必要フラグ（設定されていれば自動遷移）
-    required_flags: List[str] = field(default_factory=list)
+    required_flags: list[str] = field(default_factory=list)
     # 禁止フラグ（設定されていれば遷移不可）
-    forbidden_flags: List[str] = field(default_factory=list)
+    forbidden_flags: list[str] = field(default_factory=list)
     # 重み（ランダム選択用）
     weight: float = 1.0
     # 隠し選択肢フラグ
     hidden: bool = False
 
-    def is_available(self, context: "NarrativeContext") -> bool:
+    def is_available(self, context: NarrativeContext) -> bool:
         """遷移可能か判定"""
         # 必要フラグチェック
         for flag in self.required_flags:
@@ -67,6 +70,7 @@ class NarrativeEdge:
         if self.condition_dsl:
             from quest_condition_evaluator import evaluate
             from quest_condition_parser import parse_condition
+
             try:
                 node = parse_condition(self.condition_dsl)
                 return evaluate(node, context)
@@ -78,30 +82,31 @@ class NarrativeEdge:
 @dataclass
 class NarrativeNode:
     """ナラティブノード"""
+
     node_id: str
     node_type: NarrativeNodeType = NarrativeNodeType.EVENT
     # 表示テキスト
     title: str = ""
     description: str = ""
     # このノードで実行されるアクション
-    actions: List[Dict[str, Any]] = field(default_factory=list)
+    actions: list[dict[str, Any]] = field(default_factory=list)
     # 報酬
-    rewards: Dict[str, Any] = field(default_factory=dict)
+    rewards: dict[str, Any] = field(default_factory=dict)
     # 出力エッジ
-    outgoing_edges: List[NarrativeEdge] = field(default_factory=list)
+    outgoing_edges: list[NarrativeEdge] = field(default_factory=list)
     # 入力エッジ（逆参照用）
-    incoming_edges: List[str] = field(default_factory=list)
+    incoming_edges: list[str] = field(default_factory=list)
     # フラグ操作
-    set_flags: List[str] = field(default_factory=list)
-    clear_flags: List[str] = field(default_factory=list)
+    set_flags: list[str] = field(default_factory=list)
+    clear_flags: list[str] = field(default_factory=list)
     # メタデータ
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def add_edge(self, edge: NarrativeEdge) -> None:
         """エッジ追加（双方向リンク）"""
         self.outgoing_edges.append(edge)
 
-    def get_available_edges(self, context: "NarrativeContext") -> List[NarrativeEdge]:
+    def get_available_edges(self, context: NarrativeContext) -> list[NarrativeEdge]:
         """現在のコンテキストで利用可能なエッジを取得"""
         return [e for e in self.outgoing_edges if e.is_available(context)]
 
@@ -111,9 +116,9 @@ class NarrativeContext:
 
     def __init__(
         self,
-        player: Optional["Entity"] = None,
-        flags: Optional[Set[str]] = None,
-        variables: Optional[Dict[str, Any]] = None,
+        player: Entity | None = None,
+        flags: set[str] | None = None,
+        variables: dict[str, Any] | None = None,
     ):
         self.player = player
         self.flags = flags or set()
@@ -140,9 +145,9 @@ class NarrativeDAG:
 
     def __init__(self, dag_id: str):
         self.dag_id = dag_id
-        self._nodes: Dict[str, NarrativeNode] = {}
-        self._start_node_id: Optional[str] = None
-        self._end_node_ids: Set[str] = set()
+        self._nodes: dict[str, NarrativeNode] = {}
+        self._start_node_id: str | None = None
+        self._end_node_ids: set[str] = set()
 
     def add_node(self, node: NarrativeNode) -> None:
         """ノード追加"""
@@ -152,18 +157,18 @@ class NarrativeDAG:
         if node.node_type == NarrativeNodeType.END:
             self._end_node_ids.add(node.node_id)
 
-    def get_node(self, node_id: str) -> Optional[NarrativeNode]:
+    def get_node(self, node_id: str) -> NarrativeNode | None:
         return self._nodes.get(node_id)
 
-    def get_start_node(self) -> Optional[NarrativeNode]:
+    def get_start_node(self) -> NarrativeNode | None:
         if self._start_node_id:
             return self._nodes.get(self._start_node_id)
         return None
 
-    def get_end_nodes(self) -> List[NarrativeNode]:
+    def get_end_nodes(self) -> list[NarrativeNode]:
         return [self._nodes[nid] for nid in self._end_node_ids if nid in self._nodes]
 
-    def validate(self) -> List[str]:
+    def validate(self) -> list[str]:
         """DAG 検証（サイクル検出、到達不能ノード検出等）"""
         errors = []
 
@@ -171,7 +176,9 @@ class NarrativeDAG:
         if not self._start_node_id:
             errors.append(f"DAG {self.dag_id}: 開始ノードが定義されていません")
         elif self._start_node_id not in self._nodes:
-            errors.append(f"DAG {self.dag_id}: 開始ノード {self._start_node_id} が存在しません")
+            errors.append(
+                f"DAG {self.dag_id}: 開始ノード {self._start_node_id} が存在しません"
+            )
 
         # 終了ノード存在チェック
         if not self._end_node_ids:
@@ -181,7 +188,9 @@ class NarrativeDAG:
         for node in self._nodes.values():
             for edge in node.outgoing_edges:
                 if edge.target_node_id not in self._nodes:
-                    errors.append(f"DAG {self.dag_id}: エッジ {edge.edge_id} のターゲット {edge.target_node_id} が存在しません")
+                    errors.append(
+                        f"DAG {self.dag_id}: エッジ {edge.edge_id} のターゲット {edge.target_node_id} が存在しません"
+                    )
 
         # サイクル検出（DFS）
         visited = set()
@@ -222,16 +231,18 @@ class NarrativeDAG:
 
         for nid in self._nodes:
             if nid not in reachable:
-                errors.append(f"DAG {self.dag_id}: ノード {nid} が開始ノードから到達不能です")
+                errors.append(
+                    f"DAG {self.dag_id}: ノード {nid} が開始ノードから到達不能です"
+                )
 
         return errors
 
-    def all_nodes(self) -> Dict[str, NarrativeNode]:
+    def all_nodes(self) -> dict[str, NarrativeNode]:
         return dict(self._nodes)
 
 
 # YAML からの構築ヘルパー
-def build_dag_from_yaml(dag_id: str, data: Dict[str, Any]) -> NarrativeDAG:
+def build_dag_from_yaml(dag_id: str, data: dict[str, Any]) -> NarrativeDAG:
     """YAML データから NarrativeDAG を構築"""
     dag = NarrativeDAG(dag_id)
 

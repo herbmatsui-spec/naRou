@@ -5,21 +5,22 @@ Checks for missing tiles, mismatched definitions, and autotile readiness.
 """
 
 from __future__ import annotations
+
 import json
-from pathlib import Path
-from typing import Dict, List, Tuple, Any
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
 
 @dataclass
 class ValidationResult:
     ok: bool
-    errors: List[str]
-    warnings: List[str]
-    info: List[str]
+    errors: list[str]
+    warnings: list[str]
+    info: list[str]
 
 
-def load_json(path: Path) -> Dict[str, Any]:
+def load_json(path: Path) -> dict[str, Any]:
     with open(path) as f:
         return json.load(f)
 
@@ -81,11 +82,15 @@ def validate_tileset_def() -> ValidationResult:
 
         meta = atlas_meta[atlas_scale]
         if "tiles" not in meta:
-            errors.append(f"{tile_id}: metadata for scale {atlas_scale} has no 'tiles' key")
+            errors.append(
+                f"{tile_id}: metadata for scale {atlas_scale} has no 'tiles' key"
+            )
             continue
 
         if file_key not in meta["tiles"]:
-            errors.append(f"{tile_id}: file '{file_key}' not found in {atlas_scale} atlas metadata")
+            errors.append(
+                f"{tile_id}: file '{file_key}' not found in {atlas_scale} atlas metadata"
+            )
             continue
 
         meta_tile = meta["tiles"][file_key]
@@ -121,7 +126,9 @@ def validate_tileset_def() -> ValidationResult:
         # Autotile check
         if tile_def.get("autotile", False):
             if variants != 16:
-                warnings.append(f"{tile_id}: autotile=true but variants={variants} (expected 16 for 4-bit mask)")
+                warnings.append(
+                    f"{tile_id}: autotile=true but variants={variants} (expected 16 for 4-bit mask)"
+                )
             info.append(f"{tile_id}: autotile enabled, will use 4-bit neighbor mask")
 
         info.append(
@@ -137,7 +144,9 @@ def validate_tileset_def() -> ValidationResult:
             def_files = set(t.get("file") for t in tiles.values())
             orphaned = meta_tiles - def_files
             if orphaned:
-                warnings.append(f"Scale {scale}: orphaned in metadata (not in defs): {orphaned}")
+                warnings.append(
+                    f"Scale {scale}: orphaned in metadata (not in defs): {orphaned}"
+                )
 
     ok = len(errors) == 0
     return ValidationResult(ok, errors, warnings, info)

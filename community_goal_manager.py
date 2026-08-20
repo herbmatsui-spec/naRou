@@ -2,16 +2,18 @@
 Community Goal Manager Module
 Handles community goals and rewards for world events.
 """
+
 from __future__ import annotations
-from typing import Dict, Any, Optional
-from entity import Entity  # For type hinting
+
+from typing import Any
+
 
 class CommunityGoalManager:
     def __init__(self):
         # コミュニティゴールの状態: {event_id: {goal_type: current_value}}
-        self.community_progress: Dict[str, Dict[str, int]] = {}
+        self.community_progress: dict[str, dict[str, int]] = {}
         # ゴールが達成されたかどうかのフラグ: {event_id: bool}
-        self.goal_achieved: Dict[str, bool] = {}
+        self.goal_achieved: dict[str, bool] = {}
 
     def add_progress(self, event_id: str, goal_type: str, amount: int = 1) -> bool:
         """
@@ -29,8 +31,9 @@ class CommunityGoalManager:
 
         # ゴール目標を取得
         from world_event_system import REGISTRY
+
         event_data = REGISTRY.get(event_id)
-        if not event_data or not hasattr(event_data, 'community_goal'):
+        if not event_data or not hasattr(event_data, "community_goal"):
             return False
         goal_info = event_data.community_goal
         if goal_info.get("type") != goal_type:
@@ -52,8 +55,9 @@ class CommunityGoalManager:
     def get_goal_reward(self, event_id: str) -> Any:
         """達成時の報酬を取得する"""
         from world_event_system import REGISTRY
+
         event_data = REGISTRY.get(event_id)
-        if event_data and hasattr(event_data, 'community_goal'):
+        if event_data and hasattr(event_data, "community_goal"):
             return event_data.community_goal.get("reward")
         return None
 

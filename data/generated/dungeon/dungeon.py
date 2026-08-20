@@ -3,15 +3,16 @@
 
 from __future__ import annotations
 
-from data.schemas._base import DataModel
 from pydantic import ConfigDict, Field
+
+from data.schemas._base import DataModel
 
 
 class MonsterTable(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
-    monster_id: str = Field(..., pattern='^mn_[a-z_][a-z0-9_]*$')
+    monster_id: str = Field(..., pattern="^mn_[a-z_][a-z0-9_]*$")
     """
     Monster ID
     """
@@ -35,9 +36,9 @@ class MonsterTable(DataModel):
 
 class ItemTable(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
-    item_id: str = Field(..., pattern='^it_[a-z_][a-z0-9_]*$')
+    item_id: str = Field(..., pattern="^it_[a-z_][a-z0-9_]*$")
     """
     Item ID
     """
@@ -51,9 +52,9 @@ class ItemTable(DataModel):
 
 class DungeonThemeDefinition(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
-    id: str = Field(..., pattern='^dg_[a-z_][a-z0-9_]*$')
+    id: str = Field(..., pattern="^dg_[a-z_][a-z0-9_]*$")
     """
     Unique dungeon theme ID with 'dg_' prefix
     """

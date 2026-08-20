@@ -3,24 +3,33 @@ World Event System Module (Steps 67-71)
 """
 
 from __future__ import annotations
+
 import os
-import yaml
 import random
-from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
+
+import yaml
 
 if TYPE_CHECKING:
     from entity import Entity
 
-from reward_manager import RewardManager
-from ranking_manager import RankingManager
-from title_manager import TitleManager
-from event_scheduler import EventScheduler
 from community_goal_manager import COMMUNITY_GOAL_MANAGER
+from event_scheduler import EventScheduler
+from ranking_manager import RankingManager
+from reward_manager import RewardManager
+from title_manager import TitleManager
 
 # Phase 3 Step 12: QuestScheduler 連携
 try:
-    from quest_scheduler import QuestScheduler, QuestSchedule, ScheduleCondition, TimeWindow, LogicOperator
+    from quest_scheduler import (
+        LogicOperator,
+        QuestSchedule,
+        QuestScheduler,
+        ScheduleCondition,
+        TimeWindow,
+    )
+
     _HAS_QUEST_SCHEDULER = True
 except ImportError:
     _HAS_QUEST_SCHEDULER = False
@@ -30,28 +39,32 @@ except ImportError:
 @dataclass
 class WorldEventData:
     """ワールドイベントデータ (Step 68)"""
+
     id: str
     name: str = ""
     description: str = ""
-    trigger_conditions: Dict[str, Any] = field(default_factory=dict)
+    trigger_conditions: dict[str, Any] = field(default_factory=dict)
     duration: int = 100
-    effects: Dict[str, Any] = field(default_factory=dict)
-    story_triggers: List[str] = field(default_factory=list)
+    effects: dict[str, Any] = field(default_factory=dict)
+    story_triggers: list[str] = field(default_factory=list)
     # シーズンイベント用追加フィールド
-    quarter: Optional[int] = None  # 1:春, 2:夏, 3:秋, 4:冬
-    rewards: Dict[str, Any] = field(default_factory=dict)
-    rankings: Dict[str, Any] = field(default_factory=dict)
-    titles: List[Dict[str, Any]] = field(default_factory=list)
-    community_goal: Dict[str, Any] = field(default_factory=dict)
+    quarter: int | None = None  # 1:春, 2:夏, 3:秋, 4:冬
+    rewards: dict[str, Any] = field(default_factory=dict)
+    rankings: dict[str, Any] = field(default_factory=dict)
+    titles: list[dict[str, Any]] = field(default_factory=list)
+    community_goal: dict[str, Any] = field(default_factory=dict)
     announcement_period: int = 0  # イベント開始前何ターンから予告するか
-    start_turn: Optional[int] = None  # イベント開始ターン（Noneの場合はスケジュールしない）
-    end_turn: Optional[int] = None    # イベント終了ターン
+    start_turn: int | None = (
+        None  # イベント開始ターン（Noneの場合はスケジュールしない）
+    )
+    end_turn: int | None = None  # イベント終了ターン
 
 
 # Step 69, 70: WorldEventRegistry
 class WorldEventRegistry:
     """ワールドイベントレジストリ (Step 69, 70)"""
-    _instance: Optional[WorldEventRegistry] = None
+
+    _instance: WorldEventRegistry | None = None
 
     def __new__(cls) -> WorldEventRegistry:
         if cls._instance is None:
@@ -64,13 +77,21 @@ class WorldEventRegistry:
         self._events = {}
         if not os.path.exists(file_path):
             self._events["blood_moon"] = WorldEventData(
-                id="blood_moon", name="血の月", duration=100,
-                quarter=None, rewards={}, rankings={}, titles=[], community_goal={},
-                announcement_period=0, start_turn=None, end_turn=None
+                id="blood_moon",
+                name="血の月",
+                duration=100,
+                quarter=None,
+                rewards={},
+                rankings={},
+                titles=[],
+                community_goal={},
+                announcement_period=0,
+                start_turn=None,
+                end_turn=None,
             )
             return
 
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             raw = yaml.safe_load(f) or {}
 
         e_dict = raw.get("world_events", {})
@@ -90,14 +111,15 @@ class WorldEventRegistry:
                 community_goal=edata.get("community_goal", {}),
                 announcement_period=int(edata.get("announcement_period", 0)),
                 start_turn=edata.get("start_turn"),
-                end_turn=edata.get("end_turn")
+                end_turn=edata.get("end_turn"),
             )
 
-    def get(self, event_id: str) -> Optional[WorldEventData]:
+    def get(self, event_id: str) -> WorldEventData | None:
         return self._events.get(event_id)
 
-    def all_events(self) -> Dict[str, WorldEventData]:
+    def all_events(self) -> dict[str, WorldEventData]:
         return dict(self._events)
+
 
 REGISTRY = WorldEventRegistry()
 
@@ -111,10 +133,13 @@ EVENT_SCHEDULER = EventScheduler(REGISTRY)
 # Step 71: WorldEventManager
 class WorldEventManager:
     """ワールドイベント発生・進行管理 (Step 71)"""
-    def __init__(self, registry: Optional[WorldEventRegistry] = None):
+
+    def __init__(self, registry: WorldEventRegistry | None = None):
         self.registry = registry or REGISTRY
 
-    def check_event_triggers(self, player: "Entity", engine: Optional[Any] = None, current_turn: Optional[int] = None) -> Optional[WorldEventData]:
+    def check_event_triggers(
+        self, player: Entity, engine: Any | None = None, current_turn: int | None = None
+    ) -> WorldEventData | None:
         """イベント発生判定 (Step 71)"""
         # スケジュールされたシーズンイベントをチェック
         if current_turn is not None:
@@ -130,7 +155,9 @@ class WorldEventManager:
                     return edata
         return None
 
-    def trigger_event(self, player: "Entity", event_id: str, engine: Optional[Any] = None) -> bool:
+    def trigger_event(
+        self, player: Entity, event_id: str, engine: Any | None = None
+    ) -> bool:
         """イベントを発生 (Step 71)"""
         edata = self.registry.get(event_id)
         if not edata or not player:
@@ -141,31 +168,43 @@ class WorldEventManager:
 
         if engine:
             from sound_manager import SoundManager
+
             SoundManager.play_se("level_up")
-            engine.log(f"🌌【世界変動】『{edata.name}』が発生した！ {edata.description}", (255, 100, 100))
+            engine.log(
+                f"🌌【世界変動】『{edata.name}』が発生した！ {edata.description}",
+                (255, 100, 100),
+            )
             # イベント発生時に報酬を付与（基本実装）
             REWARD_MANAGER.grant_event_rewards(player, edata)
 
             # Phase 3 Step 12: 動的スケジュール注入
-            if hasattr(engine, 'quest_scheduler'):
-                self.inject_event_schedule(event_id, engine.quest_scheduler, duration_turns=edata.duration)
+            if hasattr(engine, "quest_scheduler"):
+                self.inject_event_schedule(
+                    event_id, engine.quest_scheduler, duration_turns=edata.duration
+                )
 
         return True
 
-    def add_event_points(self, player: "Entity", event_id: str, action_type: str, amount: int = 1) -> None:
+    def add_event_points(
+        self, player: Entity, event_id: str, action_type: str, amount: int = 1
+    ) -> None:
         """指定されたイベントにプレイヤーのアクションからポイントを加算する"""
         event_data = self.registry.get(event_id)
         if event_data:
             points = RANKING_MANAGER.calculate_points(event_data, action_type, amount)
             if points > 0:
-                RANKING_MANAGER.add_points(event_id, getattr(player, 'id', str(id(player))), points)
+                RANKING_MANAGER.add_points(
+                    event_id, getattr(player, "id", str(id(player))), points
+                )
                 COMMUNITY_GOAL_MANAGER.add_progress(event_id, "total_points", points)
 
-    def check_and_grant_event_titles(self, player: "Entity", event_data: Any, stats: Dict[str, Any]) -> List[str]:
+    def check_and_grant_event_titles(
+        self, player: Entity, event_data: Any, stats: dict[str, Any]
+    ) -> list[str]:
         """イベントデータとプレイヤーの統計に基づいて称号を付与し、新規獲得した称号を返す"""
         return TITLE_MANAGER.check_and_grant_titles(player, event_data, stats)
 
-    def update_active_events(self, player: "Entity", engine: Optional[Any] = None) -> None:
+    def update_active_events(self, player: Entity, engine: Any | None = None) -> None:
         """アクティブイベントの進行 (Step 71)"""
         pass
 
@@ -173,7 +212,7 @@ class WorldEventManager:
     def inject_event_schedule(
         self,
         event_id: str,
-        scheduler: "QuestScheduler",
+        scheduler: QuestScheduler,
         duration_turns: int = 100,
     ) -> bool:
         """ワールドイベント発生時に対応するクエストスケジュールを動的注入"""
@@ -193,9 +232,9 @@ class WorldEventManager:
 
     def _create_event_schedule(
         self,
-        event_data: "WorldEventData",
+        event_data: WorldEventData,
         duration_turns: int,
-    ) -> Optional["QuestSchedule"]:
+    ) -> QuestSchedule | None:
         """イベントデータからスケジュール生成"""
         if not _HAS_QUEST_SCHEDULER:
             return None
@@ -218,14 +257,19 @@ class WorldEventManager:
                 title=f"{event_data.name} 限定クエスト",
                 description=f"{event_data.name} 開催期間中の特別依頼",
                 conditions=[
-                    ScheduleCondition(season=season, duration_days=duration_turns // 24),
+                    ScheduleCondition(
+                        season=season, duration_days=duration_turns // 24
+                    ),
                 ],
                 logic=LogicOperator.AND,
                 rewards=event_data.rewards or {"gold": 1000, "fame": 50},
             )
 
         # 月齢系 (蝕・満月等)
-        if any(kw in name_lower for kw in ["蝕", "eclipse", "月食", "日食", "満月", "full_moon"]):
+        if any(
+            kw in name_lower
+            for kw in ["蝕", "eclipse", "月食", "日食", "満月", "full_moon"]
+        ):
             moon_phase = "full"
             if "新月" in event_data.name or "new_moon" in name_lower:
                 moon_phase = "new"
@@ -242,7 +286,8 @@ class WorldEventManager:
                     ScheduleCondition(moon_phase=moon_phase, duration_days=3),
                 ],
                 logic=LogicOperator.AND,
-                rewards=event_data.rewards or {"artifact": "moon_fragment", "piety": 30},
+                rewards=event_data.rewards
+                or {"artifact": "moon_fragment", "piety": 30},
             )
 
         # 流星群・天体系
@@ -252,7 +297,9 @@ class WorldEventManager:
                 title=f"{event_data.name} 採集",
                 description=f"{event_data.name} の夜に落ちる星屑を拾う",
                 conditions=[
-                    ScheduleCondition(time_windows=[TimeWindow("20:00", "04:00")], duration_days=2),
+                    ScheduleCondition(
+                        time_windows=[TimeWindow("20:00", "04:00")], duration_days=2
+                    ),
                 ],
                 logic=LogicOperator.AND,
                 rewards=event_data.rewards or {"items": {"star_dust": 5}, "exp": 500},
@@ -264,7 +311,10 @@ class WorldEventManager:
             title=f"{event_data.name} 関連依頼",
             description=event_data.description or f"{event_data.name} に関連する依頼",
             conditions=[
-                ScheduleCondition(time_windows=[TimeWindow("06:00", "22:00")], duration_days=duration_turns // 24),
+                ScheduleCondition(
+                    time_windows=[TimeWindow("06:00", "22:00")],
+                    duration_days=duration_turns // 24,
+                ),
             ],
             logic=LogicOperator.AND,
             rewards=event_data.rewards or {"gold": 500},

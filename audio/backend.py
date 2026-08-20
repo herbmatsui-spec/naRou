@@ -1,14 +1,14 @@
 """Audio backend wrapper for OGG/WAV playback using simpleaudio."""
+
 from __future__ import annotations
-import os
+
 import threading
 from pathlib import Path
-from typing import Dict, Optional
-import weakref
 
 # Try to import simpleaudio
 try:
     import simpleaudio as sa
+
     HAS_SIMPLEAUDIO = True
 except ImportError:
     HAS_SIMPLEAUDIO = False
@@ -17,6 +17,7 @@ except ImportError:
 # Try to import pygame as fallback
 try:
     import pygame
+
     HAS_PYGAME = True
 except ImportError:
     HAS_PYGAME = False
@@ -27,17 +28,17 @@ from feature_flags import is_enabled
 
 class AudioBackend:
     """Unified audio backend supporting simpleaudio and pygame."""
-    
+
     def __init__(self):
-        self._sounds: Dict[str, any] = {}
+        self._sounds: dict[str, any] = {}
         self._play_objects: list = []
         self._lock = threading.Lock()
         self._volume = 1.0
-        self._bgm_player: Optional[any] = None
+        self._bgm_player: any | None = None
         self._bgm_volume = 0.7
-        self._current_bgm_path: Optional[str] = None
+        self._current_bgm_path: str | None = None
         self._init_backend()
-    
+
     def _init_backend(self):
         """Initialize the best available audio backend."""
         if HAS_PYGAME:
@@ -51,24 +52,24 @@ class AudioBackend:
             self._backend = "simpleaudio"
             return
         self._backend = "none"
-    
+
     @property
     def backend(self) -> str:
         return self._backend
-    
+
     @property
     def is_available(self) -> bool:
         return self._backend != "none"
-    
+
     def load_sound(self, sound_id: str, filepath: str) -> bool:
         """Load a sound file into memory."""
         if not self.is_available:
             return False
-        
+
         path = Path(filepath)
         if not path.exists():
             return False
-        
+
         try:
             with self._lock:
                 if self._backend == "pygame":
@@ -81,16 +82,18 @@ class AudioBackend:
         except Exception as e:
             print(f"Failed to load sound {sound_id}: {e}")
             return False
-    
-    def play_sound(self, sound_id: str, volume: float = 1.0, blocking: bool = False) -> bool:
+
+    def play_sound(
+        self, sound_id: str, volume: float = 1.0, blocking: bool = False
+    ) -> bool:
         """Play a loaded sound."""
         if not self.is_available or not is_enabled("ENABLE_AUDIO_PACK"):
             return False
-        
+
         sound = self._sounds.get(sound_id)
         if not sound:
             return False
-        
+
         try:
             with self._lock:
                 if self._backend == "pygame":
@@ -100,31 +103,41 @@ class AudioBackend:
                     play_obj = sound.play()
                     self._play_objects.append(play_obj)
                     # Clean up finished play objects
-                    self._play_objects = [p for p in self._play_objects if p.is_playing()]
+                    self._play_objects = [
+                        p for p in self._play_objects if p.is_playing()
+                    ]
             return True
         except Exception as e:
             print(f"Failed to play sound {sound_id}: {e}")
             return False
-    
-    def play_bgm(self, filepath: str, volume: float = 0.7, loop: bool = True, fade_in: float = 1.0) -> bool:
+
+    def play_bgm(
+        self,
+        filepath: str,
+        volume: float = 0.7,
+        loop: bool = True,
+        fade_in: float = 1.0,
+    ) -> bool:
         """Play background music with crossfade support."""
         if not self.is_available or not is_enabled("ENABLE_AUDIO_PACK"):
             return False
-        
+
         path = Path(filepath)
         if not path.exists():
             return False
-        
+
         try:
             with self._lock:
                 # Stop current BGM with fade out
                 if self._backend == "pygame" and pygame.mixer.music.get_busy():
                     pygame.mixer.music.fadeout(int(fade_in * 1000))
-                
+
                 if self._backend == "pygame":
                     pygame.mixer.music.load(str(path))
                     pygame.mixer.music.set_volume(volume * self._volume)
-                    pygame.mixer.music.play(-1 if loop else 0, fade_ms=int(fade_in * 1000))
+                    pygame.mixer.music.play(
+                        -1 if loop else 0, fade_ms=int(fade_in * 1000)
+                    )
                     self._current_bgm_path = str(path)
                     self._bgm_volume = volume
                 elif self._backend == "simpleaudio":
@@ -139,12 +152,12 @@ class AudioBackend:
         except Exception as e:
             print(f"Failed to play BGM {filepath}: {e}")
             return False
-    
+
     def stop_bgm(self, fade_out: float = 1.0) -> bool:
         """Stop background music with fade out."""
         if not self.is_available:
             return False
-        
+
         try:
             with self._lock:
                 if self._backend == "pygame":
@@ -158,19 +171,19 @@ class AudioBackend:
             return True
         except Exception:
             return False
-    
+
     def set_master_volume(self, volume: float):
         """Set master volume (0.0 - 1.0)."""
         self._volume = max(0.0, min(1.0, volume))
         if self._backend == "pygame" and self._current_bgm_path:
             pygame.mixer.music.set_volume(self._bgm_volume * self._volume)
-    
+
     def set_bgm_volume(self, volume: float):
         """Set BGM volume (0.0 - 1.0)."""
         self._bgm_volume = max(0.0, min(1.0, volume))
         if self._backend == "pygame":
             pygame.mixer.music.set_volume(self._bgm_volume * self._volume)
-    
+
     def cleanup(self):
         """Stop all sounds and cleanup."""
         with self._lock:
@@ -189,6 +202,7 @@ class AudioBackend:
 # Global instance
 _AUDIO_BACKEND = None
 
+
 def get_audio_backend() -> AudioBackend:
     """Get global audio backend instance."""
     global _AUDIO_BACKEND
@@ -197,21 +211,24 @@ def get_audio_backend() -> AudioBackend:
     return _AUDIO_BACKEND
 
 
-def load_audio_manifest(manifest_path: str = "assets/audio/manifest.csv") -> Dict[str, Dict]:
+def load_audio_manifest(
+    manifest_path: str = "assets/audio/manifest.csv",
+) -> dict[str, dict]:
     """Load audio manifest CSV and return dict of sound info."""
     import csv
+
     sounds = {}
     path = Path(manifest_path)
     if not path.exists():
         return sounds
-    
-    with open(path, 'r', encoding='utf-8') as f:
+
+    with open(path, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            sounds[row['suggested_id']] = {
-                'filename': row['filename'],
-                'category': row['category'],
-                'path': f"assets/audio/{row['filename']}"
+            sounds[row["suggested_id"]] = {
+                "filename": row["filename"],
+                "category": row["category"],
+                "path": f"assets/audio/{row['filename']}",
             }
     return sounds
 
@@ -221,10 +238,10 @@ def preload_all_audio(manifest_path: str = "assets/audio/manifest.csv") -> int:
     backend = get_audio_backend()
     if not backend.is_available:
         return 0
-    
+
     sounds = load_audio_manifest(manifest_path)
     loaded = 0
     for sound_id, info in sounds.items():
-        if backend.load_sound(sound_id, info['path']):
+        if backend.load_sound(sound_id, info["path"]):
             loaded += 1
     return loaded

@@ -3,10 +3,12 @@ Skill Evolution System Module (Steps 36-42)
 """
 
 from __future__ import annotations
+
 import os
-import yaml
-from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
+
+import yaml
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -16,16 +18,18 @@ if TYPE_CHECKING:
 @dataclass
 class SkillEvolutionData:
     """スキル進化チェーンデータ (Step 37)"""
+
     id: str
     name: str = ""
     description: str = ""
-    stages: List[Dict[str, Any]] = field(default_factory=list)
+    stages: list[dict[str, Any]] = field(default_factory=list)
 
 
 # Step 38, 39: SkillEvolutionRegistry
 class SkillEvolutionRegistry:
     """スキル進化レジストリ (Step 38, 39)"""
-    _instance: Optional[SkillEvolutionRegistry] = None
+
+    _instance: SkillEvolutionRegistry | None = None
 
     def __new__(cls) -> SkillEvolutionRegistry:
         if cls._instance is None:
@@ -38,11 +42,13 @@ class SkillEvolutionRegistry:
         self._chains = {}
         if not os.path.exists(file_path):
             self._chains["sword_mastery"] = SkillEvolutionData(
-                id="sword_mastery", name="剣術の進化の道", stages=[{"id": "sword_stage_1", "name": "剣術の心得"}]
+                id="sword_mastery",
+                name="剣術の進化の道",
+                stages=[{"id": "sword_stage_1", "name": "剣術の心得"}],
             )
             return
 
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             raw = yaml.safe_load(f) or {}
 
         c_dict = raw.get("evolution_chains", {})
@@ -51,13 +57,13 @@ class SkillEvolutionRegistry:
                 id=cid,
                 name=cdata.get("name", cid),
                 description=cdata.get("description", ""),
-                stages=cdata.get("stages", [])
+                stages=cdata.get("stages", []),
             )
 
-    def get(self, chain_id: str) -> Optional[SkillEvolutionData]:
+    def get(self, chain_id: str) -> SkillEvolutionData | None:
         return self._chains.get(chain_id)
 
-    def all(self) -> Dict[str, SkillEvolutionData]:
+    def all(self) -> dict[str, SkillEvolutionData]:
         return dict(self._chains)
 
 
@@ -67,10 +73,11 @@ REGISTRY = SkillEvolutionRegistry()
 # Step 40-42: SkillEvolutionManager
 class SkillEvolutionManager:
     """スキル進化管理 (Steps 40-42)"""
-    def __init__(self, registry: Optional[SkillEvolutionRegistry] = None):
+
+    def __init__(self, registry: SkillEvolutionRegistry | None = None):
         self.registry = registry or REGISTRY
 
-    def check_evolution(self, player: "Entity", chain_id: str) -> Optional[Dict[str, Any]]:
+    def check_evolution(self, player: Entity, chain_id: str) -> dict[str, Any] | None:
         """進化可能な次のステージを取得 (Step 41)"""
         chain = self.registry.get(chain_id)
         if not chain or not player:
@@ -104,7 +111,9 @@ class SkillEvolutionManager:
 
         return next_stage
 
-    def evolve_skill(self, player: "Entity", chain_id: str, engine: Optional[Any] = None) -> bool:
+    def evolve_skill(
+        self, player: Entity, chain_id: str, engine: Any | None = None
+    ) -> bool:
         """スキルを進化させる (Step 42)"""
         next_stage = self.check_evolution(player, chain_id)
         if not next_stage:
@@ -117,11 +126,19 @@ class SkillEvolutionManager:
         bonuses = next_stage.get("bonuses", {})
         for b_name, b_val in bonuses.items():
             if hasattr(player.attributes, b_name):
-                setattr(player.attributes, b_name, getattr(player.attributes, b_name) + int(b_val))
+                setattr(
+                    player.attributes,
+                    b_name,
+                    getattr(player.attributes, b_name) + int(b_val),
+                )
 
         if engine:
             from sound_manager import SoundManager
+
             SoundManager.play_se("level_up")
-            engine.log(f"★スキルが進化！ 【{next_stage.get('name', stage_id)}】に覚醒・深化！", (255, 215, 0))
+            engine.log(
+                f"★スキルが進化！ 【{next_stage.get('name', stage_id)}】に覚醒・深化！",
+                (255, 215, 0),
+            )
 
         return True

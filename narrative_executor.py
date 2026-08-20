@@ -7,23 +7,21 @@ story_choices.yaml / story_endings.yaml 連携（Step 16）。
 from __future__ import annotations
 
 import os
-import yaml
-import random
-from typing import Any, Dict, List, Optional, Set, TYPE_CHECKING
 from dataclasses import dataclass, field
-from copy import deepcopy
+from typing import TYPE_CHECKING, Any
+
+import yaml
 
 if TYPE_CHECKING:
     from entity import Entity
-    from game import Engine
 
 from quest_narrative_dag import (
-    NarrativeDAG,
-    NarrativeNode,
-    NarrativeEdge,
     NarrativeContext,
-    NarrativeNodeType,
+    NarrativeDAG,
+    NarrativeEdge,
     NarrativeEdgeType,
+    NarrativeNode,
+    NarrativeNodeType,
     build_dag_from_yaml,
 )
 
@@ -31,15 +29,16 @@ from quest_narrative_dag import (
 @dataclass
 class NarrativeState:
     """ナラティブ実行状態（セーブデータ用）"""
+
     dag_id: str
     current_node_id: str
-    flags: Set[str] = field(default_factory=set)
-    variables: Dict[str, Any] = field(default_factory=dict)
-    history: List[str] = field(default_factory=list)  # 通過したノードID履歴
+    flags: set[str] = field(default_factory=set)
+    variables: dict[str, Any] = field(default_factory=dict)
+    history: list[str] = field(default_factory=list)  # 通過したノードID履歴
     completed: bool = False
-    ending_id: Optional[str] = None
+    ending_id: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "dag_id": self.dag_id,
             "current_node_id": self.current_node_id,
@@ -51,7 +50,7 @@ class NarrativeState:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "NarrativeState":
+    def from_dict(cls, data: dict[str, Any]) -> NarrativeState:
         return cls(
             dag_id=data["dag_id"],
             current_node_id=data["current_node_id"],
@@ -66,22 +65,24 @@ class NarrativeState:
 @dataclass
 class StoryChoiceConsequence:
     """選択肢の結果（story_choices.yaml）"""
+
     id: str
     description: str = ""
-    immediate_effects: List[Dict[str, Any]] = field(default_factory=list)
-    long_term_effects: List[Dict[str, Any]] = field(default_factory=list)
-    world_state_changes: Dict[str, Any] = field(default_factory=dict)
+    immediate_effects: list[dict[str, Any]] = field(default_factory=list)
+    long_term_effects: list[dict[str, Any]] = field(default_factory=list)
+    world_state_changes: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class StoryEnding:
     """ストーリー エンディング（story_endings.yaml）"""
+
     id: str
     name: str = ""
     description: str = ""
-    unlock_conditions: List[str] = field(default_factory=list)
+    unlock_conditions: list[str] = field(default_factory=list)
     ending_scene: str = ""
-    rewards: Dict[str, Any] = field(default_factory=dict)
+    rewards: dict[str, Any] = field(default_factory=dict)
 
 
 class NarrativeExecutor:
@@ -96,10 +97,10 @@ class NarrativeExecutor:
         self.data_path = data_path
         self.choices_path = choices_path
         self.endings_path = endings_path
-        self._dags: Dict[str, NarrativeDAG] = {}
-        self._choices: Dict[str, StoryChoiceConsequence] = {}
-        self._endings: Dict[str, StoryEnding] = {}
-        self._active_states: Dict[str, NarrativeState] = {}  # player_id -> state
+        self._dags: dict[str, NarrativeDAG] = {}
+        self._choices: dict[str, StoryChoiceConsequence] = {}
+        self._endings: dict[str, StoryEnding] = {}
+        self._active_states: dict[str, NarrativeState] = {}  # player_id -> state
         self.load_all()
 
     def load_all(self) -> None:
@@ -114,7 +115,7 @@ class NarrativeExecutor:
         if not os.path.exists(self.data_path):
             return
 
-        with open(self.data_path, "r", encoding="utf-8") as f:
+        with open(self.data_path, encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
 
         for dag_id, dag_data in data.get("narrative_dags", {}).items():
@@ -131,7 +132,7 @@ class NarrativeExecutor:
         if not os.path.exists(self.choices_path):
             return
 
-        with open(self.choices_path, "r", encoding="utf-8") as f:
+        with open(self.choices_path, encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
 
         for choice_id, choice_data in data.get("choice_consequences", {}).items():
@@ -149,7 +150,7 @@ class NarrativeExecutor:
         if not os.path.exists(self.endings_path):
             return
 
-        with open(self.endings_path, "r", encoding="utf-8") as f:
+        with open(self.endings_path, encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
 
         for ending_id, ending_data in data.get("story_endings", {}).items():
@@ -162,17 +163,17 @@ class NarrativeExecutor:
                 rewards=ending_data.get("rewards", {}),
             )
 
-    def get_choice(self, choice_id: str) -> Optional[StoryChoiceConsequence]:
+    def get_choice(self, choice_id: str) -> StoryChoiceConsequence | None:
         return self._choices.get(choice_id)
 
-    def get_ending(self, ending_id: str) -> Optional[StoryEnding]:
+    def get_ending(self, ending_id: str) -> StoryEnding | None:
         return self._endings.get(ending_id)
 
     def apply_choice_consequence(
         self,
         choice_id: str,
         context: NarrativeContext,
-    ) -> List[str]:
+    ) -> list[str]:
         """選択肢の結果を適用（即時効果・長期効果・世界状態変更）"""
         choice = self._choices.get(choice_id)
         if not choice:
@@ -250,7 +251,9 @@ class NarrativeExecutor:
         # フラグ直接指定
         return condition in context.flags
 
-    def grant_ending_rewards(self, ending_id: str, context: NarrativeContext) -> List[str]:
+    def grant_ending_rewards(
+        self, ending_id: str, context: NarrativeContext
+    ) -> list[str]:
         """エンディング報酬付与"""
         ending = self._endings.get(ending_id)
         if not ending:
@@ -272,20 +275,22 @@ class NarrativeExecutor:
                 logs.append(f"エンディングシーン: {value}")
         return logs
 
-    def get_available_endings(self, context: NarrativeContext) -> List[StoryEnding]:
+    def get_available_endings(self, context: NarrativeContext) -> list[StoryEnding]:
         """現在解放可能なエンディング一覧"""
-        return [e for e in self._endings.values() if self.check_ending_unlock(e.id, context)]
+        return [
+            e for e in self._endings.values() if self.check_ending_unlock(e.id, context)
+        ]
 
-    def get_dag(self, dag_id: str) -> Optional[NarrativeDAG]:
+    def get_dag(self, dag_id: str) -> NarrativeDAG | None:
         return self._dags.get(dag_id)
 
     def start_narrative(
         self,
         dag_id: str,
-        player: "Entity",
-        initial_flags: Optional[Set[str]] = None,
-        initial_variables: Optional[Dict[str, Any]] = None,
-    ) -> Optional[NarrativeState]:
+        player: Entity,
+        initial_flags: set[str] | None = None,
+        initial_variables: dict[str, Any] | None = None,
+    ) -> NarrativeState | None:
         """ナラティブ開始"""
         dag = self._dags.get(dag_id)
         if not dag:
@@ -310,11 +315,13 @@ class NarrativeExecutor:
             current_node_id=current_node_id,
             flags=context.flags,
             variables=context.variables,
-            history=[start_node.node_id, current_node_id] if current_node_id != start_node.node_id else [start_node.node_id],
+            history=[start_node.node_id, current_node_id]
+            if current_node_id != start_node.node_id
+            else [start_node.node_id],
         )
 
         # プレイヤーIDで管理（簡易版：名前使用）
-        player_id = getattr(player, 'name', 'player')
+        player_id = getattr(player, "name", "player")
         self._active_states[player_id] = state
 
         # フラグ・変数適用
@@ -322,11 +329,11 @@ class NarrativeExecutor:
 
         return state
 
-    def get_active_state(self, player: "Entity") -> Optional[NarrativeState]:
-        player_id = getattr(player, 'name', 'player')
+    def get_active_state(self, player: Entity) -> NarrativeState | None:
+        player_id = getattr(player, "name", "player")
         return self._active_states.get(player_id)
 
-    def get_current_node(self, player: "Entity") -> Optional[NarrativeNode]:
+    def get_current_node(self, player: Entity) -> NarrativeNode | None:
         state = self.get_active_state(player)
         if not state:
             return None
@@ -335,7 +342,7 @@ class NarrativeExecutor:
             return None
         return dag.get_node(state.current_node_id)
 
-    def get_available_choices(self, player: "Entity") -> List[NarrativeEdge]:
+    def get_available_choices(self, player: Entity) -> list[NarrativeEdge]:
         """現在のノードで選択可能なエッジ一覧取得"""
         state = self.get_active_state(player)
         if not state or state.completed:
@@ -364,7 +371,7 @@ class NarrativeExecutor:
         available.sort(key=lambda e: (-e.weight, e.edge_id))
         return available
 
-    def make_choice(self, player: "Entity", edge_id: str) -> List[str]:
+    def make_choice(self, player: Entity, edge_id: str) -> list[str]:
         """選択肢を選択して遷移実行。ログメッセージリストを返す。"""
         state = self.get_active_state(player)
         if not state or state.completed:
@@ -415,7 +422,7 @@ class NarrativeExecutor:
         edge: NarrativeEdge,
         context: NarrativeContext,
         state: NarrativeState,
-    ) -> List[str]:
+    ) -> list[str]:
         """エッジ遷移実行"""
         logs = []
 
@@ -447,7 +454,9 @@ class NarrativeExecutor:
         if final_node.node_type == NarrativeNodeType.END:
             state.completed = True
             state.ending_id = final_node.node_id
-            logs.append(f"★ ナラティブ「{dag.dag_id}」が完了しました: {final_node.title}")
+            logs.append(
+                f"★ ナラティブ「{dag.dag_id}」が完了しました: {final_node.title}"
+            )
 
             # エンディング解放チェック・報酬付与
             if self.check_ending_unlock(final_node.node_id, context):
@@ -481,7 +490,10 @@ class NarrativeExecutor:
             # 自動遷移可能なエッジを探す
             auto_edge = None
             for edge in node.outgoing_edges:
-                if edge.edge_type in (NarrativeEdgeType.AUTO, NarrativeEdgeType.CONDITION_TRUE):
+                if edge.edge_type in (
+                    NarrativeEdgeType.AUTO,
+                    NarrativeEdgeType.CONDITION_TRUE,
+                ):
                     if edge.is_available(context):
                         auto_edge = edge
                         break
@@ -502,7 +514,9 @@ class NarrativeExecutor:
 
         return current_id
 
-    def _apply_node_effects(self, node: Optional[NarrativeNode], context: NarrativeContext) -> None:
+    def _apply_node_effects(
+        self, node: NarrativeNode | None, context: NarrativeContext
+    ) -> None:
         """ノードのフラグ・変数・報酬効果を適用"""
         if not node:
             return
@@ -516,14 +530,14 @@ class NarrativeExecutor:
         for key, value in node.rewards.items():
             context.variables[key] = value
 
-    def save_state(self, player: "Entity") -> Optional[Dict[str, Any]]:
+    def save_state(self, player: Entity) -> dict[str, Any] | None:
         """状態をシリアライズ"""
         state = self.get_active_state(player)
         if not state:
             return None
         return state.to_dict()
 
-    def load_state(self, player: "Entity", data: Dict[str, Any]) -> bool:
+    def load_state(self, player: Entity, data: dict[str, Any]) -> bool:
         """状態をデシリアライズ"""
         try:
             state = NarrativeState.from_dict(data)
@@ -531,13 +545,13 @@ class NarrativeExecutor:
             if not dag:
                 return False
 
-            player_id = getattr(player, 'name', 'player')
+            player_id = getattr(player, "name", "player")
             self._active_states[player_id] = state
             return True
         except Exception:
             return False
 
-    def force_transition(self, player: "Entity", target_node_id: str) -> List[str]:
+    def force_transition(self, player: Entity, target_node_id: str) -> list[str]:
         """強制遷移（デバッグ・イベント連携用）"""
         state = self.get_active_state(player)
         if not state:

@@ -1,6 +1,7 @@
 from __future__ import annotations
-from packages.core.kernel.package import IPackage, PackageMetadata
+
 from packages.core.kernel.kernel import Kernel
+from packages.core.kernel.package import IPackage, PackageMetadata
 
 
 class NarrativePackage(IPackage):
@@ -20,11 +21,11 @@ class NarrativePackage(IPackage):
         )
 
     def setup(self, kernel: Kernel) -> None:
-        from storyteller_system import StorytellerRegistry, StorytellerManager
-        from choice_system import ChoiceRegistry, ChoiceManager
+        from choice_system import ChoiceManager, ChoiceRegistry
         from dialogue_system import DialogueManager
-        from main_quest_system import MainQuestSystem
         from journal_ui import JournalUI
+        from main_quest_system import MainQuestSystem
+        from storyteller_system import StorytellerManager, StorytellerRegistry
 
         story_reg = StorytellerRegistry()
         story_reg.load()

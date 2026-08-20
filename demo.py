@@ -5,7 +5,6 @@ Localized demo strings used by interactive showcases and tutorials.
 """
 
 from __future__ import annotations
-from typing import Dict, List
 
 from localization_manager import LocalizationManager
 
@@ -16,7 +15,7 @@ def demo_greeting(language: str = "en") -> str:
     return mgr.get_text("welcome", language)
 
 
-def demo_strings(language: str = "en") -> Dict[str, str]:
+def demo_strings(language: str = "en") -> dict[str, str]:
     """Return a bundle of localized strings used by the demo."""
     mgr = LocalizationManager()
     keys = ["hello", "welcome", "play", "options", "quit", "credits"]

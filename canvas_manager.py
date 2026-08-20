@@ -5,8 +5,9 @@ Used by any part of the engine that needs direct draw calls.
 
 from __future__ import annotations
 
+
 class CanvasManager:
-    _instance: "CanvasManager" = None
+    _instance: CanvasManager = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -17,7 +18,9 @@ class CanvasManager:
     def __init__(self):
         if getattr(self, "_initialized", False):
             return
-        self.canvas = None  # Placeholder for actual canvas object (e.g., via web integration)
+        self.canvas = (
+            None  # Placeholder for actual canvas object (e.g., via web integration)
+        )
         self.ctx = None
         self._initialized = True
 

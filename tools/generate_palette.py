@@ -7,6 +7,7 @@ Python list of RGB tuples suitable for tcod rendering. Run:
 
     python tools/generate_palette.py > core/palette_generated.py
 """
+
 import json
 import os
 
@@ -49,22 +50,22 @@ def build_palette(tokens: dict) -> list[tuple[int, int, int]]:
     accent = tiles.get("accent", "#d4af37")
 
     palette = [
-        hex_to_rgb(bg),        # 0: background
-        hex_to_rgb(text),      # 1: foreground/text
-        hex_to_rgb(wall),      # 2: wall
-        hex_to_rgb(floor),     # 3: floor
-        hex_to_rgb(water),     # 4: water
-        hex_to_rgb(player),    # 5: player
-        hex_to_rgb(enemy),     # 6: enemy
-        hex_to_rgb(pet),       # 7: pet
-        hex_to_rgb(accent),    # 8: accent
-        hex_to_rgb(danger),    # 9: danger/damage
-        hex_to_rgb(success),   # 10: success/heal
-        hex_to_rgb(warning),   # 11: warning
-        (139, 155, 180),       # 12: gray scale
-        (107, 123, 148),       # 13
-        (75, 91, 116),         # 14
-        (44, 62, 80),          # 15
+        hex_to_rgb(bg),  # 0: background
+        hex_to_rgb(text),  # 1: foreground/text
+        hex_to_rgb(wall),  # 2: wall
+        hex_to_rgb(floor),  # 3: floor
+        hex_to_rgb(water),  # 4: water
+        hex_to_rgb(player),  # 5: player
+        hex_to_rgb(enemy),  # 6: enemy
+        hex_to_rgb(pet),  # 7: pet
+        hex_to_rgb(accent),  # 8: accent
+        hex_to_rgb(danger),  # 9: danger/damage
+        hex_to_rgb(success),  # 10: success/heal
+        hex_to_rgb(warning),  # 11: warning
+        (139, 155, 180),  # 12: gray scale
+        (107, 123, 148),  # 13
+        (75, 91, 116),  # 14
+        (44, 62, 80),  # 15
     ]
     return palette
 

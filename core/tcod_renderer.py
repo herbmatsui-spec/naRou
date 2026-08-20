@@ -1,29 +1,38 @@
 from __future__ import annotations
+
 from pathlib import Path
-from typing import Optional, Tuple, Dict, Any
+from typing import Any, List
+
 import numpy as np
 import tcod
-import tcod.tileset
 import tcod.console
+import tcod.tileset
 
-from core.renderer_base import (
-    RendererBase, TileDrawCall, TextDrawCall, Viewport, EntityDrawCall,
-    LightingDrawCall, ParticleDrawCall
+from core.entity_renderer import (
+    EntityRenderer,
 )
-from core.msdf_atlas import MSDFAtlas, GlyphMetrics
-from core.tile_atlas import TileAtlas, AnimState, TileUV
-from core.entity_renderer import EntityRenderer, calculate_facing, calculate_facing_to_target
 from core.lighting import TerminalLightingSystem, TerminalParticleSystem
+from core.msdf_atlas import MSDFAtlas
+from core.renderer_base import (
+    EntityDrawCall,
+    LightingDrawCall,
+    ParticleDrawCall,
+    RendererBase,
+    TextDrawCall,
+    TileDrawCall,
+    Viewport,
+)
+from core.tile_atlas import AnimState, TileAtlas
 
 
 class TCODRenderer(RendererBase):
-    def __init__(self, width: int, height: int, tileset_path: Optional[str] = None):
+    def __init__(self, width: int, height: int, tileset_path: str | None = None):
         self.width = width
         self.height = height
-        
+
         # Initialize TileAtlas for unified tile management
         self.tile_atlas = TileAtlas(default_scale="32")
-        
+
         # Load master tileset for tcod (32x32)
         if tileset_path and Path(tileset_path).exists():
             self.tileset = tcod.tileset.load_tilesheet(
@@ -37,19 +46,21 @@ class TCODRenderer(RendererBase):
                 )
             else:
                 self.tileset = tcod.tileset.procedural_block_elements()
-        
+
         self.console = tcod.console.Console(width, height, order="F")
-        self.context: Optional[tcod.context.Context] = None
-        
+        self.context: tcod.context.Context | None = None
+
         # Sub-image cache: (tile_id, variant, frame, direction, state) -> tcod.image.Image
-        self._subimage_cache: Dict[Tuple[str, int, int, int, str], tcod.image.Image] = {}
-        
+        self._subimage_cache: dict[
+            tuple[str, int, int, int, str], tcod.image.Image
+        ] = {}
+
         # Animation tracking: (x, y) -> AnimState
-        self._tile_animations: Dict[Tuple[int, int], AnimState] = {}
-        
-        self._msdf_atlas: Optional[MSDFAtlas] = None
-        self._msdf_texture_id: Optional[int] = None
-        
+        self._tile_animations: dict[tuple[int, int], AnimState] = {}
+
+        self._msdf_atlas: MSDFAtlas | None = None
+        self._msdf_texture_id: int | None = None
+
         self._viewport = Viewport(0, 0, width, height)
 
         # EntityRenderer for entity animations
@@ -74,10 +85,12 @@ class TCODRenderer(RendererBase):
             self._fps = self._frame_count / self._last_frame_time
             self._frame_count = 0
             self._last_frame_time = 0.0
-            
+
             if self._frame_count % 60 == 0:
-                print(f"[TCOD] FPS: {self._fps:.1f}, Draw calls: {self._draw_calls}, Animations: {len(self._tile_animations)}")
-            
+                print(
+                    f"[TCOD] FPS: {self._fps:.1f}, Draw calls: {self._draw_calls}, Animations: {len(self._tile_animations)}"
+                )
+
             # Auto quality adjustment
             if self._fps < 20 and not self._quality_reduced:
                 self._quality_reduced = True
@@ -88,7 +101,7 @@ class TCODRenderer(RendererBase):
                 self._quality_reduced = False
                 print("[TCOD] Performance recovered, restoring quality")
 
-    def get_performance_stats(self) -> Dict[str, Any]:
+    def get_performance_stats(self) -> dict[str, Any]:
         """Get current performance statistics."""
         return {
             "fps": self._fps,
@@ -96,7 +109,7 @@ class TCODRenderer(RendererBase):
             "tile_animations": len(self._tile_animations),
             "entity_animations": len(self.entity_renderer.entity_anims),
             "cached_subimages": len(self._subimage_cache),
-            "quality_reduced": self._quality_reduced
+            "quality_reduced": self._quality_reduced,
         }
 
     def initialize_context(self, sdl_window: bool = True) -> None:
@@ -112,11 +125,11 @@ class TCODRenderer(RendererBase):
         self.console.clear()
         self._draw_calls = 0
         # Update particle physics
-        self.particles.update(1/60)
+        self.particles.update(1 / 60)
 
     def end_frame(self, dt: float = 0.016) -> None:
         # Sync quality settings
-        if hasattr(self.particles, 'set_quality'):
+        if hasattr(self.particles, "set_quality"):
             self.particles.set_quality(self._quality_reduced)
         self._monitor_performance(dt)
         if self.context:
@@ -154,13 +167,8 @@ class TCODRenderer(RendererBase):
             self._draw_fallback_tile(call.x, call.y)
 
     def _get_cached_subimage(
-        self, 
-        tile_id: str, 
-        variant: int, 
-        frame: int, 
-        direction: int, 
-        state: str
-    ) -> Optional[tcod.image.Image]:
+        self, tile_id: str, variant: int, frame: int, direction: int, state: str
+    ) -> tcod.image.Image | None:
         """Get or create cached sub-image for a tile configuration."""
         key = (tile_id, variant, frame, direction, state)
         if key in self._subimage_cache:
@@ -168,7 +176,9 @@ class TCODRenderer(RendererBase):
 
         # Get UV from TileAtlas
         try:
-            uv = self.tile_atlas.get_uv(tile_id, variant, frame, direction, state, scale="32")
+            uv = self.tile_atlas.get_uv(
+                tile_id, variant, frame, direction, state, scale="32"
+            )
         except KeyError:
             return None
 
@@ -179,7 +189,7 @@ class TCODRenderer(RendererBase):
 
         # Load master image if not cached
         master_key = f"master_{master_path}"
-        if not hasattr(self, '_master_images'):
+        if not hasattr(self, "_master_images"):
             self._master_images = {}
         if master_key not in self._master_images:
             self._master_images[master_key] = tcod.image.Image(master_path.as_posix())
@@ -190,7 +200,7 @@ class TCODRenderer(RendererBase):
         # Use numpy for fast pixel copy
         try:
             master_arr = np.array(master)  # (H, W, 4) or (H, W, 3)
-            sub_arr = master_arr[uv.y:uv.y+uv.h, uv.x:uv.x+uv.w]
+            sub_arr = master_arr[uv.y : uv.y + uv.h, uv.x : uv.x + uv.w]
             # Create new image from array
             sub = tcod.image.Image(sub_arr.shape[1], sub_arr.shape[0])
             # tcod.image.Image doesn't have direct array setter, use put_pixel
@@ -249,23 +259,21 @@ class TCODRenderer(RendererBase):
     def draw_particles(self, call: ParticleDrawCall) -> None:
         """Receive particle data for this frame."""
         for p in call.particles:
-            self.particles.emit({
-                'type': p.type,
-                'x': p.x,
-                'y': p.y,
-                'count': 1,
-                'lifetime': p.life,
-                'colors': [p.color],
-                'chars': [p.char]
-            })
+            self.particles.emit(
+                {
+                    "type": p.type,
+                    "x": p.x,
+                    "y": p.y,
+                    "count": 1,
+                    "lifetime": p.life,
+                    "colors": [p.color],
+                    "chars": [p.char],
+                }
+            )
 
     def _get_entity_subimage(
-        self, 
-        tile_id: str, 
-        direction: int, 
-        state: str, 
-        frame: int
-    ) -> Optional[tcod.image.Image]:
+        self, tile_id: str, direction: int, state: str, frame: int
+    ) -> tcod.image.Image | None:
         """Get or create cached sub-image for an entity configuration."""
         key = (tile_id, frame, direction, state)
         if key in self._subimage_cache:
@@ -273,8 +281,14 @@ class TCODRenderer(RendererBase):
 
         # Get UV from TileAtlas
         try:
-            uv = self.tile_atlas.get_uv(tile_id, variant=0, frame=frame, 
-                                       direction=direction, state=state, scale="32")
+            uv = self.tile_atlas.get_uv(
+                tile_id,
+                variant=0,
+                frame=frame,
+                direction=direction,
+                state=state,
+                scale="32",
+            )
         except KeyError:
             return None
 
@@ -285,7 +299,7 @@ class TCODRenderer(RendererBase):
 
         # Load master image if not cached
         master_key = f"master_{master_path}"
-        if not hasattr(self, '_master_images'):
+        if not hasattr(self, "_master_images"):
             self._master_images = {}
         if master_key not in self._master_images:
             self._master_images[master_key] = tcod.image.Image(master_path.as_posix())
@@ -295,7 +309,7 @@ class TCODRenderer(RendererBase):
         sub = tcod.image.Image(uv.w, uv.h)
         try:
             master_arr = np.array(master)
-            sub_arr = master_arr[uv.y:uv.y+uv.h, uv.x:uv.x+uv.w]
+            sub_arr = master_arr[uv.y : uv.y + uv.h, uv.x : uv.x + uv.w]
             sub = tcod.image.Image(sub_arr.shape[1], sub_arr.shape[0])
             for py in range(uv.h):
                 for px in range(uv.w):
@@ -311,24 +325,30 @@ class TCODRenderer(RendererBase):
         return sub
 
     def start_tile_animation(
-        self, 
-        x: int, 
-        y: int, 
-        tile_id: str, 
+        self,
+        x: int,
+        y: int,
+        tile_id: str,
         variant: int = 0,
         direction: int = 0,
         state: str = "idle",
         fps: int = None,
-        loop: bool = True
+        loop: bool = True,
     ) -> None:
         """Start an animation at a tile position."""
         anim = self.tile_atlas.create_anim_state(
-            tile_id, variant=variant, direction=direction, 
-            state=state, fps=fps, loop=loop
+            tile_id,
+            variant=variant,
+            direction=direction,
+            state=state,
+            fps=fps,
+            loop=loop,
         )
         self._tile_animations[(x, y)] = anim
 
-    def get_tile_animation_frame(self, x: int, y: int) -> Optional[Tuple[int, int, int, int]]:
+    def get_tile_animation_frame(
+        self, x: int, y: int
+    ) -> tuple[int, int, int, int] | None:
         """Get current animation frame UV for a position."""
         anim = self._tile_animations.get((x, y))
         if not anim:
@@ -342,14 +362,13 @@ class TCODRenderer(RendererBase):
         cam_y: int,
         view_w: int,
         view_h: int,
-        visible: Optional[List[List[bool]]] = None,
-        explored: Optional[List[List[bool]]] = None,
-        time: float = 0.0
+        visible: List[List[bool]] | None = None,
+        explored: List[List[bool]] | None = None,
+        time: float = 0.0,
     ) -> None:
         """ライティング完全パス実行 (タイル描画前に呼び出し)"""
         self.lighting.render_pass(
-            self.console, cam_x, cam_y, view_w, view_h,
-            visible, explored, time
+            self.console, cam_x, cam_y, view_w, view_h, visible, explored, time
         )
 
     def render_particles_pass(self, cam_x: int, cam_y: int) -> None:
@@ -365,11 +384,11 @@ class TCODRenderer(RendererBase):
                 fg=self._color_to_tuple(call.color),
             )
             return
-        
+
         x = call.x
         y = call.y
         scale = call.font_size / self._msdf_atlas.font_size
-        
+
         for ch in call.text:
             glyph = self._msdf_atlas.get_glyph(ch)
             if glyph and glyph.width > 0:
@@ -392,7 +411,7 @@ class TCODRenderer(RendererBase):
     def create_texture(self, path: Path) -> int:
         if not path.exists():
             raise FileNotFoundError(f"Texture not found: {path}")
-        
+
         image = tcod.image.Image(path.as_posix())
         texture_id = len(self._subimage_cache) + 1
         self._subimage_cache[texture_id] = image  # Reuse cache dict
@@ -402,13 +421,15 @@ class TCODRenderer(RendererBase):
         if texture_id in self._subimage_cache:
             del self._subimage_cache[texture_id]
 
-    def get_texture_size(self, texture_id: int) -> Tuple[int, int]:
+    def get_texture_size(self, texture_id: int) -> tuple[int, int]:
         if texture_id in self._subimage_cache:
             img = self._subimage_cache[texture_id]
             return (img.width, img.height)
         return (0, 0)
 
-    def clear(self, color: Tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)) -> None:
+    def clear(
+        self, color: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)
+    ) -> None:
         r, g, b, a = [int(c * 255) for c in color]
         self.console.clear(fg=(r, g, b), bg=(0, 0, 0))
 
@@ -428,11 +449,13 @@ class TCODRenderer(RendererBase):
                 title="naRou",
             )
 
-    def get_framebuffer_size(self) -> Tuple[int, int]:
+    def get_framebuffer_size(self) -> tuple[int, int]:
         return (self.width, self.height)
 
     def set_msdf_atlas(self, atlas: MSDFAtlas) -> None:
         self._msdf_atlas = atlas
 
-    def _color_to_tuple(self, color: Tuple[float, float, float, float]) -> Tuple[int, int, int]:
+    def _color_to_tuple(
+        self, color: tuple[float, float, float, float]
+    ) -> tuple[int, int, int]:
         return tuple(int(c * 255) for c in color[:3])

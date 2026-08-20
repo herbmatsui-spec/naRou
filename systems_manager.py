@@ -4,11 +4,14 @@ Step 1, 2: システムの動的登録・取得・ライフサイクル管理
 """
 
 from __future__ import annotations
-from typing import Dict, Any, Optional, Iterator, TypeVar, Protocol, overload
+
+from collections.abc import Iterator
+from typing import Any, Protocol, TypeVar, overload
 
 
 class SystemProtocol(Protocol):
     """システムの最小プロトコル。initialize/update を持つ任意のオブジェクトを許容する。"""
+
     def initialize(self, engine: Any) -> None: ...
     def update(self, engine: Any, delta_time: float) -> None: ...
 
@@ -20,15 +23,16 @@ class SystemManager:
     """システムマネージャー (Step 1-7, 14, 15)
     エンジン内の各マネージャー（スキル、ジョブ、ギルド、派閥等）を一元管理し、疎結合化を実現する。
     """
+
     def __init__(self):
-        self.systems: Dict[str, Any] = {}
+        self.systems: dict[str, Any] = {}
 
     def register(self, name: str, system: SystemT) -> SystemT:
         """システムを登録する"""
         self.systems[name] = system
         return system
 
-    def unregister(self, name: str) -> Optional[Any]:
+    def unregister(self, name: str) -> Any | None:
         """システムを登録解除する"""
         return self.systems.pop(name, None)
 
@@ -37,7 +41,9 @@ class SystemManager:
     @overload
     def get(self, name: str, system_type: None = None, default: Any = None) -> Any: ...
 
-    def get(self, name: str, system_type: type[SystemT] | None = None, default: Any = None) -> Any:
+    def get(
+        self, name: str, system_type: type[SystemT] | None = None, default: Any = None
+    ) -> Any:
         """登録されたシステムを取得する。
 
         Args:

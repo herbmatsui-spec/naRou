@@ -3,10 +3,12 @@ Reincarnation Challenge System Module (Steps 66-71)
 """
 
 from __future__ import annotations
+
 import os
-import yaml
-from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
+
+import yaml
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -16,17 +18,19 @@ if TYPE_CHECKING:
 @dataclass
 class ReincarnationChallengeData:
     """転生チャレンジデータ (Step 67)"""
+
     id: str
     name: str = ""
     description: str = ""
-    requirements: Dict[str, Any] = field(default_factory=dict)
-    rewards: Dict[str, Any] = field(default_factory=dict)
+    requirements: dict[str, Any] = field(default_factory=dict)
+    rewards: dict[str, Any] = field(default_factory=dict)
 
 
 # Step 68, 69: ReincarnationChallengeRegistry
 class ReincarnationChallengeRegistry:
     """転生チャレンジレジストリ (Step 68, 69)"""
-    _instance: Optional[ReincarnationChallengeRegistry] = None
+
+    _instance: ReincarnationChallengeRegistry | None = None
 
     def __new__(cls) -> ReincarnationChallengeRegistry:
         if cls._instance is None:
@@ -39,11 +43,13 @@ class ReincarnationChallengeRegistry:
         self._challenges = {}
         if not os.path.exists(file_path):
             self._challenges["speed_ascension"] = ReincarnationChallengeData(
-                id="speed_ascension", name="迅雷の転生", requirements={"turns_limit": 3000, "level_target": 50}
+                id="speed_ascension",
+                name="迅雷の転生",
+                requirements={"turns_limit": 3000, "level_target": 50},
             )
             return
 
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             raw = yaml.safe_load(f) or {}
 
         c_dict = raw.get("reincarnation_challenges", {})
@@ -53,13 +59,13 @@ class ReincarnationChallengeRegistry:
                 name=data.get("name", cid),
                 description=data.get("description", ""),
                 requirements=data.get("requirements", {}),
-                rewards=data.get("rewards", {})
+                rewards=data.get("rewards", {}),
             )
 
-    def get(self, c_id: str) -> Optional[ReincarnationChallengeData]:
+    def get(self, c_id: str) -> ReincarnationChallengeData | None:
         return self._challenges.get(c_id)
 
-    def all(self) -> Dict[str, ReincarnationChallengeData]:
+    def all(self) -> dict[str, ReincarnationChallengeData]:
         return dict(self._challenges)
 
 
@@ -69,16 +75,23 @@ REGISTRY = ReincarnationChallengeRegistry()
 # Step 70: ReincarnationChallengeManager
 class ReincarnationChallengeManager:
     """チャレンジ進捗・達成管理 (Steps 70, 71)"""
-    def __init__(self, registry: Optional[ReincarnationChallengeRegistry] = None):
+
+    def __init__(self, registry: ReincarnationChallengeRegistry | None = None):
         self.registry = registry or REGISTRY
 
-    def update_challenge_progress(self, player: "Entity", challenge_key: str, amount: int = 1, engine: Optional[Any] = None) -> List[str]:
+    def update_challenge_progress(
+        self,
+        player: Entity,
+        challenge_key: str,
+        amount: int = 1,
+        engine: Any | None = None,
+    ) -> list[str]:
         """チャレンジ進捗を更新 (Step 70)"""
         cur = player.challenge_progress.get(challenge_key, 0)
         player.challenge_progress[challenge_key] = cur + amount
         return self.check_completions(player, engine)
 
-    def check_completions(self, player: "Entity", engine: Optional[Any] = None) -> List[str]:
+    def check_completions(self, player: Entity, engine: Any | None = None) -> list[str]:
         """チャレンジ達成判定 (Step 70)"""
         completed = []
         for cid, cdata in self.registry.all().items():
@@ -95,7 +108,10 @@ class ReincarnationChallengeManager:
                 is_ok = False
             if player.level < req_lvl and req_lvl > 0:
                 is_ok = False
-            if req_kill_max is not None and sum(player.kill_counts.values()) > req_kill_max:
+            if (
+                req_kill_max is not None
+                and sum(player.kill_counts.values()) > req_kill_max
+            ):
                 is_ok = False
 
             if is_ok:
@@ -105,7 +121,12 @@ class ReincarnationChallengeManager:
 
         return completed
 
-    def grant_rewards(self, player: "Entity", cdata: ReincarnationChallengeData, engine: Optional[Any] = None) -> None:
+    def grant_rewards(
+        self,
+        player: Entity,
+        cdata: ReincarnationChallengeData,
+        engine: Any | None = None,
+    ) -> None:
         """チャレンジ報酬付与 (Step 70)"""
         rew = cdata.rewards
         if rew.get("gold", 0) > 0:
@@ -124,5 +145,8 @@ class ReincarnationChallengeManager:
 
         if engine:
             from sound_manager import SoundManager
+
             SoundManager.play_se("level_up")
-            engine.log(f"★チャレンジ達成！ 【{cdata.name}】の報酬を獲得！", (255, 215, 0))
+            engine.log(
+                f"★チャレンジ達成！ 【{cdata.name}】の報酬を獲得！", (255, 215, 0)
+            )

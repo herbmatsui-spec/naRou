@@ -6,48 +6,49 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
-from data.schemas._base import DataModel
 from pydantic import ConfigDict, Field
+
+from data.schemas._base import DataModel
 
 
 class Type(Enum):
-    kill_count = 'kill_count'
-    monster_type_kill = 'monster_type_kill'
-    dungeon_floors = 'dungeon_floors'
-    item_collect = 'item_collect'
-    gold_earned = 'gold_earned'
-    level_reached = 'level_reached'
-    skill_learned = 'skill_learned'
-    quest_completed = 'quest_completed'
-    pet_evolved = 'pet_evolved'
-    reincarnation_count = 'reincarnation_count'
-    god_piety = 'god_piety'
-    guild_rank = 'guild_rank'
-    weekly_time = 'weekly_time'
-    friend_helps = 'friend_helps'
-    special_combo = 'special_combo'
-    speedrun = 'speedrun'
-    reincarnation = 'reincarnation'
-    unique_monsters_killed = 'unique_monsters_killed'
-    meta_progression_all = 'meta_progression_all'
-    unique_items_obtained = 'unique_items_obtained'
-    festival_date = 'festival_date'
+    kill_count = "kill_count"
+    monster_type_kill = "monster_type_kill"
+    dungeon_floors = "dungeon_floors"
+    item_collect = "item_collect"
+    gold_earned = "gold_earned"
+    level_reached = "level_reached"
+    skill_learned = "skill_learned"
+    quest_completed = "quest_completed"
+    pet_evolved = "pet_evolved"
+    reincarnation_count = "reincarnation_count"
+    god_piety = "god_piety"
+    guild_rank = "guild_rank"
+    weekly_time = "weekly_time"
+    friend_helps = "friend_helps"
+    special_combo = "special_combo"
+    speedrun = "speedrun"
+    reincarnation = "reincarnation"
+    unique_monsters_killed = "unique_monsters_killed"
+    meta_progression_all = "meta_progression_all"
+    unique_items_obtained = "unique_items_obtained"
+    festival_date = "festival_date"
 
 
 class Condition(DataModel):
     model_config = ConfigDict(
-        extra='allow',
+        extra="allow",
     )
     type: Type
     target: int | None = Field(None, ge=1)
     monster_key: str | None = None
-    item_id: str | None = Field(None, pattern='^it_[a-z_][a-z0-9_]*$')
+    item_id: str | None = Field(None, pattern="^it_[a-z_][a-z0-9_]*$")
     required_items: list[str] | None = None
 
 
 class Achievement(DataModel):
     model_config = ConfigDict(
-        extra='allow',
+        extra="allow",
     )
     name: str = Field(..., min_length=1)
     description: str
@@ -66,7 +67,7 @@ class Achievement(DataModel):
 
 class Meta(DataModel):
     model_config = ConfigDict(
-        extra='allow',
+        extra="allow",
     )
     version: str | None = None
     last_updated: str | None = None
@@ -74,7 +75,7 @@ class Meta(DataModel):
 
 class AchievementsDefinition(DataModel):
     model_config = ConfigDict(
-        extra='allow',
+        extra="allow",
     )
     achievements: dict[str, Achievement]
     meta: Meta | None = None

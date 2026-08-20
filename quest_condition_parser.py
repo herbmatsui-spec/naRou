@@ -13,17 +13,17 @@ DSL は S 式形式を採用する（括弧で明示的な構造が堅牢）。
 
 from __future__ import annotations
 
-from typing import Any, List, Tuple
+from typing import Any
 
 from quest_condition_ast import (
+    COMBINATOR_OPERATORS,
+    LEAF_OPERATORS,
     AndCondition,
     ConditionNodeBase,
     LeafCondition,
     NotCondition,
     OrCondition,
     XorCondition,
-    COMBINATOR_OPERATORS,
-    LEAF_OPERATORS,
 )
 
 
@@ -31,11 +31,11 @@ class ConditionParseError(ValueError):
     """DSL 文字列が不正な場合に送出される。"""
 
 
-_Token = Tuple[str, str]  # (kind, text)  kind: lparen|rparen|atom|str
+_Token = tuple[str, str]  # (kind, text)  kind: lparen|rparen|atom|str
 
 
-def _tokenize(dsl: str) -> List[_Token]:
-    tokens: List[_Token] = []
+def _tokenize(dsl: str) -> list[_Token]:
+    tokens: list[_Token] = []
     i = 0
     n = len(dsl)
     while i < n:
@@ -48,10 +48,10 @@ def _tokenize(dsl: str) -> List[_Token]:
             i += 1
         elif c.isspace():
             i += 1
-        elif c in ("\"", "'"):
+        elif c in ('"', "'"):
             quote = c
             i += 1
-            buf: List[str] = []
+            buf: list[str] = []
             while i < n and dsl[i] != quote:
                 if dsl[i] == "\\" and i + 1 < n:
                     buf.append(dsl[i + 1])
@@ -96,7 +96,7 @@ class ConditionParser:
     """DSL 文字列を条件 AST へ変換するパーサー。"""
 
     def __init__(self) -> None:
-        self._tokens: List[_Token] = []
+        self._tokens: list[_Token] = []
         self._pos = 0
 
     def parse(self, dsl: str) -> ConditionNodeBase:
@@ -139,7 +139,7 @@ class ConditionParser:
         raise ConditionParseError(f"未知の演算子: {op!r}")
 
     def _parse_combinator(self, op: str) -> ConditionNodeBase:
-        children: List[ConditionNodeBase] = []
+        children: list[ConditionNodeBase] = []
         while True:
             kind, _ = self._peek()
             if kind == "rparen":
@@ -202,7 +202,13 @@ def parse_condition(dsl: str) -> ConditionNodeBase:
     return node
 
 
-__all__ = ["ConditionParser", "parse_condition", "parse_condition_from_yaml", "ConditionParseError", "PARSED_AST_CACHE"]
+__all__ = [
+    "ConditionParser",
+    "parse_condition",
+    "parse_condition_from_yaml",
+    "ConditionParseError",
+    "PARSED_AST_CACHE",
+]
 
 
 def parse_condition_from_yaml(dsl: str):

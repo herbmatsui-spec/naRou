@@ -4,11 +4,13 @@ Handles the progression of the primary story line, quest tracking, and reward di
 """
 
 from __future__ import annotations
-import yaml
+
 import os
-from typing import List, Optional, Dict, Any, TYPE_CHECKING, Union
 from dataclasses import dataclass, field
 from enum import Enum, auto
+from typing import TYPE_CHECKING, Any
+
+import yaml
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -16,39 +18,46 @@ if TYPE_CHECKING:
     from quest_condition_ast import ConditionNode
     from quest_condition_evaluator import EvaluationContext
 
+
 # 遅延インポートで循環参照回避
 def _get_condition_parser():
     from quest_condition_parser import parse_condition_from_yaml
+
     return parse_condition_from_yaml
 
+
 def _get_evaluator():
-    from quest_condition_evaluator import evaluate_condition, EvaluationContext
+    from quest_condition_evaluator import EvaluationContext, evaluate_condition
+
     return evaluate_condition, EvaluationContext
 
+
 class QuestStatus(Enum):
-    LOCKED = auto()      # 解放前
-    AVAILABLE = auto()   # 受注可能
-    ACTIVE = auto()      # 進行中
-    COMPLETED = auto()   # 完了
-    FAILED = auto()      # 失敗
+    LOCKED = auto()  # 解放前
+    AVAILABLE = auto()  # 受注可能
+    ACTIVE = auto()  # 進行中
+    COMPLETED = auto()  # 完了
+    FAILED = auto()  # 失敗
+
 
 @dataclass
 class QuestObjective:
     """クエストの達成条件 (設計書 2.2 + CQCT拡張 + ナラティブDAG拡張)"""
+
     objective_id: str
     description: str
-    target_type: str = ""           # 従来互換: "kill", "visit", "collect", "variable"
-    target_id: str = ""             # 従来互換: モンスター名, 場所名, アイテムID, 変数名
+    target_type: str = ""  # 従来互換: "kill", "visit", "collect", "variable"
+    target_id: str = ""  # 従来互換: モンスター名, 場所名, アイテムID, 変数名
     required_count: int = 1
     current_count: int = 0
     is_completed: bool = False
     # CQCT拡張フィールド
-    condition_tree: Optional["ConditionNode"] = None  # 複合条件AST
-    condition_dsl: str = ""         # DSL文字列（YAML保存用）
-    auto_evaluate: bool = True      # イベント駆動で自動評価するか
+    condition_tree: ConditionNode | None = None  # 複合条件AST
+    condition_dsl: str = ""  # DSL文字列（YAML保存用）
+    auto_evaluate: bool = True  # イベント駆動で自動評価するか
     # ナラティブDAG拡張 (Phase 4 Step 17)
-    narrative_dag_id: str = ""      # 関連ナラティブDAG ID
-    narrative_started: bool = False # ナラティブ開始済みフラグ
+    narrative_dag_id: str = ""  # 関連ナラティブDAG ID
+    narrative_started: bool = False  # ナラティブ開始済みフラグ
 
     def update(self, target: str, amount: int = 1) -> bool:
         """従来互換：単純カウント更新"""
@@ -59,7 +68,7 @@ class QuestObjective:
             return True
         return False
 
-    def evaluate(self, context: "EvaluationContext") -> bool:
+    def evaluate(self, context: EvaluationContext) -> bool:
         """CQCT評価：条件ツリーがある場合はそれを優先"""
         if self.condition_tree:
             self.is_completed = self.condition_tree.evaluate(context)
@@ -67,7 +76,7 @@ class QuestObjective:
         # フォールバック：従来のカウントベース
         return self.is_completed
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """シリアライズ"""
         return {
             "objective_id": self.objective_id,
@@ -82,7 +91,7 @@ class QuestObjective:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "QuestObjective":
+    def from_dict(cls, data: dict[str, Any]) -> QuestObjective:
         """デシリアライズ（condition_treeは別途構築）"""
         obj = cls(
             objective_id=data.get("objective_id", ""),
@@ -107,26 +116,28 @@ class QuestObjective:
 @dataclass
 class MainQuest:
     """メインクエスト定義 (設計書 2.2 + CQCT拡張 + ナラティブDAG拡張)"""
+
     quest_id: str
     title: str
     description: str
     required_phase: str  # WorldPhaseの文字列
-    objectives: List[QuestObjective]
-    rewards: Dict[str, Any] = field(default_factory=dict)
-    next_quest_id: Optional[str] = None
+    objectives: list[QuestObjective]
+    rewards: dict[str, Any] = field(default_factory=dict)
+    next_quest_id: str | None = None
     status: QuestStatus = QuestStatus.LOCKED
     # CQCT拡張: クエスト全体の解放条件
-    unlock_condition: Optional["ConditionNode"] = None
+    unlock_condition: ConditionNode | None = None
     unlock_dsl: str = ""
     # ナラティブDAG拡張 (Phase 4 Step 17)
-    narrative_dag_id: str = ""      # クエスト全体のナラティブDAG
+    narrative_dag_id: str = ""  # クエスト全体のナラティブDAG
 
-    def check_unlock(self, context: "EvaluationContext") -> bool:
+    def check_unlock(self, context: EvaluationContext) -> bool:
         """解放条件チェック"""
         if self.unlock_condition:
             return self.unlock_condition.evaluate(context)
         # フォールバック: required_phaseのみ
-        from world_state_system import WorldStateManager, REGISTRY
+        from world_state_system import REGISTRY, WorldStateManager
+
         ws_manager = WorldStateManager(REGISTRY)
         return ws_manager.get_phase().name == self.required_phase
 
@@ -144,10 +155,11 @@ class MainQuest:
 
 class MainQuestSystem:
     """メインクエスト管理エンジン"""
+
     def __init__(self, data_path: str = "data/main_quests.yaml"):
         self.data_path = data_path
-        self.quests: Dict[str, MainQuest] = {}
-        self.active_quest_id: Optional[str] = None
+        self.quests: dict[str, MainQuest] = {}
+        self.active_quest_id: str | None = None
         self.load_quests()
 
     def load_quests(self) -> None:
@@ -157,7 +169,7 @@ class MainQuestSystem:
             self._create_default_quests()
             return
 
-        with open(self.data_path, "r", encoding="utf-8") as f:
+        with open(self.data_path, encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
             q_list = data.get("main_quests", [])
             for q_data in q_list:
@@ -176,7 +188,7 @@ class MainQuestSystem:
                     narrative_dag_id=q_data.get("narrative_dag_id", ""),
                 )
                 self.quests[quest.quest_id] = quest
-        
+
         # 条件ツリーの遅延構築
         for quest in self.quests.values():
             quest.build_condition_trees()
@@ -188,14 +200,29 @@ class MainQuestSystem:
             title="運命の始まり",
             description="村の長から古文書を受け取り、世界の異変について知る。",
             required_phase="BEGINNING",
-            objectives=[QuestObjective("talk_elder", "村の長に話しかける", "visit", "village_elder", narrative_dag_id="prologue_branching")],
+            objectives=[
+                QuestObjective(
+                    "talk_elder",
+                    "村の長に話しかける",
+                    "visit",
+                    "village_elder",
+                    narrative_dag_id="prologue_branching",
+                )
+            ],
             rewards={"gold": 100, "world_phase": "AWAKENING"},
             next_quest_id="awakening_01",
-            narrative_dag_id="prologue_branching"
+            narrative_dag_id="prologue_branching",
         )
         self.quests[q1.quest_id] = q1
 
-    def update_progress(self, player: "Entity", event_type: str, target_id: str, amount: int = 1, engine: Optional["Engine"] = None) -> List[str]:
+    def update_progress(
+        self,
+        player: Entity,
+        event_type: str,
+        target_id: str,
+        amount: int = 1,
+        engine: Engine | None = None,
+    ) -> list[str]:
         """
         イベントに基づいてクエスト進行を更新する。
         event_type: "kill", "visit", "collect", "variable"
@@ -223,23 +250,28 @@ class MainQuestSystem:
                 # イベントタイプが条件に関連しているかチェック（簡易版）
                 if obj.evaluate(context):
                     changed = True
-                    logs.append(f"【クエスト進行】{quest.title}: {obj.description} (達成！)")
+                    logs.append(
+                        f"【クエスト進行】{quest.title}: {obj.description} (達成！)"
+                    )
             # 従来の更新ロジック（後方互換性）
             elif obj.target_type == event_type:
                 if obj.update(target_id, amount):
                     changed = True
-                    logs.append(f"【クエスト進行】{quest.title}: {obj.description} ({obj.current_count}/{obj.required_count})")
+                    logs.append(
+                        f"【クエスト進行】{quest.title}: {obj.description} ({obj.current_count}/{obj.required_count})"
+                    )
 
         # クエスト完了判定
         if all(obj.is_completed for obj in quest.objectives):
             logs.append(f"★メインクエスト【{quest.title}】を完了した！")
             self._complete_quest(player, quest, engine)
-             
+
         return logs
 
-    def _try_activate_next_quest(self, player: "Entity", engine: Optional["Engine"]) -> None:
+    def _try_activate_next_quest(self, player: Entity, engine: Engine | None) -> None:
         """条件を満たすクエストをアクティブにする"""
-        from world_state_system import WorldStateManager, REGISTRY
+        from world_state_system import REGISTRY, WorldStateManager
+
         ws_manager = WorldStateManager(REGISTRY)
         current_phase = ws_manager.get_phase().name
 
@@ -254,30 +286,36 @@ class MainQuestSystem:
                 # プレイヤーに通知するためのログはupdate_progress側で処理されるか、EventBusで飛ばす
                 break
 
-    def _complete_quest(self, player: "Entity", quest: MainQuest, engine: Optional["Engine"]) -> None:
+    def _complete_quest(
+        self, player: Entity, quest: MainQuest, engine: Engine | None
+    ) -> None:
         """クエスト完了処理と報酬付与"""
         quest.status = QuestStatus.COMPLETED
-         
+
         # 報酬付与
         rewards = quest.rewards
         if "gold" in rewards:
             # SurvivalSystem経由でゴールド追加（実際の実装に合わせて調整）
             if hasattr(engine, "survival_system"):
                 engine.survival_system.gold += rewards["gold"]
-         
+
         if "world_phase" in rewards:
             # ワールドフェーズの更新
             if engine:
-                from world_state_system import WorldStateManager, REGISTRY
+                from world_state_system import REGISTRY, WorldStateManager
+
                 ws_manager = WorldStateManager(REGISTRY)
                 try:
                     from world_state_system import WorldPhase
+
                     ws_manager.set_phase(WorldPhase[rewards["world_phase"]], engine)
                 except KeyError:
                     pass
 
         # 次のクエストを準備
-        self.active_quest_id = None # 次の更新タイミングで _try_activate_next_quest が呼ばれる
+        self.active_quest_id = (
+            None  # 次の更新タイミングで _try_activate_next_quest が呼ばれる
+        )
         if quest.next_quest_id and quest.next_quest_id in self.quests:
             self.quests[quest.next_quest_id].status = QuestStatus.AVAILABLE
 
@@ -285,10 +323,13 @@ class MainQuestSystem:
         if quest.narrative_dag_id and engine:
             self._start_quest_narrative(quest.narrative_dag_id, player, engine)
 
-    def _start_quest_narrative(self, dag_id: str, player: "Entity", engine: "Engine") -> List[str]:
+    def _start_quest_narrative(
+        self, dag_id: str, player: Entity, engine: Engine
+    ) -> list[str]:
         """クエスト関連ナラティブを開始"""
         try:
             from narrative_executor import NARRATIVE_EXECUTOR
+
             state = NARRATIVE_EXECUTOR.start_narrative(dag_id, player)
             if state:
                 return [f"【ナラティブ開始】{dag_id}"]
@@ -296,26 +337,29 @@ class MainQuestSystem:
             return [f"ナラティブ開始エラー: {e}"]
         return []
 
-    def make_narrative_choice(self, player: "Entity", edge_id: str) -> List[str]:
+    def make_narrative_choice(self, player: Entity, edge_id: str) -> list[str]:
         """ナラティブ選択肢を実行"""
         try:
             from narrative_executor import NARRATIVE_EXECUTOR
+
             return NARRATIVE_EXECUTOR.make_choice(player, edge_id)
         except Exception as e:
             return [f"ナラティブ選択エラー: {e}"]
 
-    def get_active_narrative_node(self, player: "Entity"):
+    def get_active_narrative_node(self, player: Entity):
         """現在のアクティブなナラティブノードを取得"""
         try:
             from narrative_executor import NARRATIVE_EXECUTOR
+
             return NARRATIVE_EXECUTOR.get_current_node(player)
         except Exception:
             return None
 
-    def get_narrative_choices(self, player: "Entity") -> List[Dict[str, Any]]:
+    def get_narrative_choices(self, player: Entity) -> list[dict[str, Any]]:
         """現在のナラティブで選択可能な選択肢一覧を取得"""
         try:
             from narrative_executor import NARRATIVE_EXECUTOR
+
             edges = NARRATIVE_EXECUTOR.get_available_choices(player)
             return [
                 {
@@ -328,10 +372,11 @@ class MainQuestSystem:
         except Exception:
             return []
 
-    def get_available_endings(self, player: "Entity") -> List[Dict[str, Any]]:
+    def get_available_endings(self, player: Entity) -> list[dict[str, Any]]:
         """解放可能なエンディング一覧を取得"""
         try:
             from narrative_executor import NARRATIVE_EXECUTOR
+
             state = NARRATIVE_EXECUTOR.get_active_state(player)
             if not state:
                 return []
@@ -355,10 +400,11 @@ class MainQuestSystem:
         except Exception:
             return []
 
-    def get_narrative_state(self, player: "Entity") -> Optional[Dict[str, Any]]:
+    def get_narrative_state(self, player: Entity) -> dict[str, Any] | None:
         """ナラティブ状態をシリアライズして取得"""
         try:
             from narrative_executor import NARRATIVE_EXECUTOR
+
             state = NARRATIVE_EXECUTOR.get_active_state(player)
             if state:
                 return state.to_dict()
@@ -366,10 +412,11 @@ class MainQuestSystem:
             pass
         return None
 
-    def load_narrative_state(self, player: "Entity", data: Dict[str, Any]) -> bool:
+    def load_narrative_state(self, player: Entity, data: dict[str, Any]) -> bool:
         """ナラティブ状態を復元"""
         try:
             from narrative_executor import NARRATIVE_EXECUTOR
+
             return NARRATIVE_EXECUTOR.load_state(player, data)
         except Exception:
             return False

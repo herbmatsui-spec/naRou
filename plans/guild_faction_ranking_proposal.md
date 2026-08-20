@@ -447,20 +447,22 @@ faction_events:
 @dataclass
 class Entity:
     # ... 既存フィールド ...
-    
+
     # ギルド関連
     guild_id: Optional[str] = None
     guild_rank: str = "none"
     guild_contribution: int = 0
     guild_role: Optional[str] = None
-    
+
     # ファクション関連
     faction_reputation: Dict[str, int] = field(default_factory=dict)
     completed_faction_events: List[str] = field(default_factory=list)
     ranking_titles: List[str] = field(default_factory=list)
-    
+
     # クエスト・進行関連
-    guild_quest_progress: Dict[str, int] = field(default_factory=dict)  # quest_id -> progress
+    guild_quest_progress: Dict[str, int] = field(
+        default_factory=dict
+    )  # quest_id -> progress
 ```
 
 ### 統合フロー

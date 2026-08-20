@@ -1,13 +1,13 @@
 """Tests for Proposal 8 (Synergy) and Proposal 9 (Skill Tree UI)."""
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from skill_synergy_system import SkillSynergyManager
+from skill_tree_system import get_skill_tree_manager, get_skill_tree_registry
 from ui_skill_tree import SkillTreeRenderer
-from skill_tree_system import get_skill_tree_registry, get_skill_tree_manager
 
 
 class FakePlayer:

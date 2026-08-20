@@ -3,8 +3,8 @@
 Produces structured progress info and an ASCII visualization of a player's
 skill tree, mirroring the spec's UI layout.
 """
-from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Any
+
+from dataclasses import dataclass
 
 
 @dataclass
@@ -13,7 +13,7 @@ class SkillNodeView:
     name: str
     learned: bool
     available: bool
-    prerequisites: List[str]
+    prerequisites: list[str]
     progress_pct: int  # 0-100, based on cost vs earned points (for display)
 
 
@@ -24,23 +24,31 @@ class SkillTreeRenderer:
         self.registry = registry
         self.manager = manager
 
-    def build_nodes(self, player) -> Dict[str, List[SkillNodeView]]:
-        result: Dict[str, List[SkillNodeView]] = {}
+    def build_nodes(self, player) -> dict[str, list[SkillNodeView]]:
+        result: dict[str, list[SkillNodeView]] = {}
         for tree_id, tree in self.registry.all().items():
             earned = player.total_skill_points_earned
             nodes = []
             for tier in tree.tiers:
                 learned = tier.id in player.skill_tree_progress.get(tree_id, [])
-                available = (not learned) and self.manager.check_prerequisites(player, tier)
-                pct = 100 if learned else (int(min(100, earned / tier.cost * 100)) if tier.cost else 0)
-                nodes.append(SkillNodeView(
-                    tier_id=tier.id,
-                    name=tier.name,
-                    learned=learned,
-                    available=available,
-                    prerequisites=list(tier.prerequisites),
-                    progress_pct=pct,
-                ))
+                available = (not learned) and self.manager.check_prerequisites(
+                    player, tier
+                )
+                pct = (
+                    100
+                    if learned
+                    else (int(min(100, earned / tier.cost * 100)) if tier.cost else 0)
+                )
+                nodes.append(
+                    SkillNodeView(
+                        tier_id=tier.id,
+                        name=tier.name,
+                        learned=learned,
+                        available=available,
+                        prerequisites=list(tier.prerequisites),
+                        progress_pct=pct,
+                    )
+                )
             result[tree_id] = nodes
         return result
 

@@ -300,6 +300,7 @@ function getEntityTileId(ent) {
 # tools/generate_font_atlas.py:132-145
 if args.msdf:
     from core.msdf_atlas import MSDFAtlas  # このインポートが失敗する可能性大
+
     atlas = MSDFAtlas(padding=args.padding)
     atlas.generate_atlas(args.font, chars, args.size, padding=args.padding)
     atlas.save_atlas(png_path, json_path)  # このメソッド存在確認必要

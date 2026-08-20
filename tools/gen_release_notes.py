@@ -7,6 +7,7 @@ Conventional Commits conventions. Requires ``git``.
 Usage:
     python tools/gen_release_notes.py
 """
+
 from __future__ import annotations
 
 import argparse
@@ -20,8 +21,10 @@ CHANGELOG = PROJECT_ROOT / "CHANGELOG.md"
 
 def git(*args: str) -> str:
     return subprocess.run(
-        ["git", *args], cwd=str(PROJECT_ROOT),
-        capture_output=True, text=True,
+        ["git", *args],
+        cwd=str(PROJECT_ROOT),
+        capture_output=True,
+        text=True,
     ).stdout.strip()
 
 
@@ -37,7 +40,10 @@ def recent_commits(since_tag: str) -> list[str]:
 
 def categorise(commits: list[str]) -> dict[str, list[str]]:
     cats = {
-        "Added": [], "Changed": [], "Fixed": [], "Other": [],
+        "Added": [],
+        "Changed": [],
+        "Fixed": [],
+        "Other": [],
     }
     for c in commits:
         low = c.lower()

@@ -19,7 +19,7 @@ from pathlib import Path
 
 
 def load_design_tokens(filepath: str = "design_tokens.json") -> dict:
-    with open(filepath, "r") as f:
+    with open(filepath) as f:
         return json.load(f)
 
 
@@ -118,9 +118,9 @@ BRAND_COLORBLIND = {
     "--panel-border": "rgba(120, 170, 255, 0.4)",
     "--panel-border-glow": "rgba(120, 170, 255, 0.8)",
     "--primary-accent": "#ffb000",
-    "--hp-color": "#0072ff",   # blue instead of green/red
-    "--mp-color": "#ff8c00",   # orange
-    "--sp-color": "#e0e0e0",   # white/grey
+    "--hp-color": "#0072ff",  # blue instead of green/red
+    "--mp-color": "#ff8c00",  # orange
+    "--sp-color": "#e0e0e0",  # white/grey
     "--text-main": "#f2f6ff",
     "--text-muted": "#9fb4d6",
 }
@@ -181,8 +181,10 @@ def main():
         Path("web").mkdir(exist_ok=True)
         with open("web/theme.css", "w") as f:
             f.write(css + "\n")
-        print(f"Generated web/theme.css from design_tokens.json "
-              f"({len(THEME_VARIANTS) + 1} theme variants)")
+        print(
+            f"Generated web/theme.css from design_tokens.json "
+            f"({len(THEME_VARIANTS) + 1} theme variants)"
+        )
         return True
     except Exception as e:
         print(f"Error generating theme.css: {e}")

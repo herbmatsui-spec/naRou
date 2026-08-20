@@ -3,18 +3,19 @@
 Consolidated managers for the guild/faction ranking proposal. Each manager
 loads its YAML data and exposes the core logic described in the proposal.
 """
-from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
-import yaml
-import logging
 
+import logging
+from dataclasses import dataclass, field
+from typing import Any
+
+import yaml
 
 logger = logging.getLogger(__name__)
 
 
 def _load_yaml(path: str) -> dict:
     try:
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, encoding="utf-8") as f:
             return yaml.safe_load(f) or {}
     except FileNotFoundError:
         logger.warning(f"File not found: {path}")
@@ -28,9 +29,10 @@ def _load_yaml(path: str) -> dict:
 # 提案6: Guild hierarchy & permissions
 # ============================================================
 
+
 class GuildRoleManager:
     def __init__(self, path: str = "data/guild_roles.yaml"):
-        self._roles: Dict[str, dict] = {}
+        self._roles: dict[str, dict] = {}
         self.load(path)
 
     def load(self, path: str = "data/guild_roles.yaml") -> None:
@@ -42,7 +44,7 @@ class GuildRoleManager:
                 self._roles[rid] = rdata
         logger.info(f"Loaded {len(self._roles)} guild roles")
 
-    def has_permission(self, role: Optional[str], permission: str) -> bool:
+    def has_permission(self, role: str | None, permission: str) -> bool:
         if role is None:
             return False
         rdata = self._roles.get(role)
@@ -68,26 +70,31 @@ class GuildRoleManager:
 # 提案7: Guild wars & alliances
 # ============================================================
 
+
 @dataclass
 class GuildWarState:
     attacker: str
     defender: str
     eliminations: int = 0
-    territory: List[str] = field(default_factory=list)
+    territory: list[str] = field(default_factory=list)
     quest_progress: int = 0
-    allied_with: List[str] = field(default_factory=list)
+    allied_with: list[str] = field(default_factory=list)
 
 
 class GuildWarManager:
     def __init__(self, path: str = "data/guild_wars.yaml"):
-        self._conditions: List[dict] = []
-        self._alliance_benefits: List[str] = []
+        self._conditions: list[dict] = []
+        self._alliance_benefits: list[str] = []
         self.load(path)
 
     def load(self, path: str = "data/guild_wars.yaml") -> None:
         data = _load_yaml(path)
-        self._conditions = data.get("guild_war_conditions", {}).get("victory_conditions", [])
-        self._alliance_benefits = data.get("guild_war_conditions", {}).get("alliance_benefits", [])
+        self._conditions = data.get("guild_war_conditions", {}).get(
+            "victory_conditions", []
+        )
+        self._alliance_benefits = data.get("guild_war_conditions", {}).get(
+            "alliance_benefits", []
+        )
         logger.info(f"Loaded {len(self._conditions)} war victory conditions")
 
     def is_victory(self, state: GuildWarState) -> bool:
@@ -117,23 +124,24 @@ class GuildWarManager:
 # 提案8: Ranking titles
 # ============================================================
 
+
 class RankingTitleManager:
     def __init__(self, path: str = "data/ranking_titles.yaml"):
-        self._data: Dict[str, List[dict]] = {}
+        self._data: dict[str, list[dict]] = {}
         self.load(path)
 
     def load(self, path: str = "data/ranking_titles.yaml") -> None:
         self._data = _load_yaml(path).get("ranking_titles", {})
         logger.info(f"Loaded ranking titles for: {list(self._data.keys())}")
 
-    def title_for_rank(self, category: str, rank: int) -> Optional[dict]:
+    def title_for_rank(self, category: str, rank: int) -> dict | None:
         for entry in self._data.get(category, []):
             lo, hi = entry.get("rank_range", [0, 0])
             if lo <= rank <= hi:
                 return entry
         return None
 
-    def grant_title(self, player, category: str, rank: int) -> Optional[str]:
+    def grant_title(self, player, category: str, rank: int) -> str | None:
         entry = self.title_for_rank(category, rank)
         if entry is None:
             return None
@@ -142,9 +150,9 @@ class RankingTitleManager:
             player.ranking_titles.append(title)
         return title
 
-    def aggregate_effects(self, player) -> Dict[str, Any]:
+    def aggregate_effects(self, player) -> dict[str, Any]:
         """Sum stat/bonus effects from all held ranking titles."""
-        out: Dict[str, Any] = {"stat_bonus": {}, "bonuses": {}}
+        out: dict[str, Any] = {"stat_bonus": {}, "bonuses": {}}
         for title in player.ranking_titles:
             # find entry by title across categories
             for entries in self._data.values():
@@ -153,10 +161,14 @@ class RankingTitleManager:
                         for eff in e.get("effects", []):
                             if eff.get("type") == "stat_bonus":
                                 for k, v in (eff.get("value") or {}).items():
-                                    out["stat_bonus"][k] = out["stat_bonus"].get(k, 0) + int(v)
+                                    out["stat_bonus"][k] = out["stat_bonus"].get(
+                                        k, 0
+                                    ) + int(v)
                             else:
                                 key = eff.get("type")
-                                out["bonuses"][key] = out["bonuses"].get(key, 0) + float(eff.get("value", 0))
+                                out["bonuses"][key] = out["bonuses"].get(
+                                    key, 0
+                                ) + float(eff.get("value", 0))
         return out
 
 
@@ -164,16 +176,17 @@ class RankingTitleManager:
 # 提案9: Faction storylines & events
 # ============================================================
 
+
 class FactionEventManager:
     def __init__(self, path: str = "data/faction_events.yaml"):
-        self._events: Dict[str, List[dict]] = {}
+        self._events: dict[str, list[dict]] = {}
         self.load(path)
 
     def load(self, path: str = "data/faction_events.yaml") -> None:
         self._events = _load_yaml(path).get("faction_events", {})
         logger.info(f"Loaded faction events for: {list(self._events.keys())}")
 
-    def available_events(self, faction: str, reputation: Dict[str, int]) -> List[dict]:
+    def available_events(self, faction: str, reputation: dict[str, int]) -> list[dict]:
         out = []
         for ev in self._events.get(faction, []):
             reqs = ev.get("requirements", {})
@@ -183,11 +196,15 @@ class FactionEventManager:
                 out.append(ev)
         return out
 
-    def complete_event(self, player, faction: str, event_id: str, choice_id: str) -> dict:
+    def complete_event(
+        self, player, faction: str, event_id: str, choice_id: str
+    ) -> dict:
         for ev in self._events.get(faction, []):
             if ev.get("id") != event_id:
                 continue
-            choice = next((c for c in ev.get("choices", []) if c.get("id") == choice_id), None)
+            choice = next(
+                (c for c in ev.get("choices", []) if c.get("id") == choice_id), None
+            )
             if choice is None:
                 return {}
             # record completion
@@ -196,7 +213,9 @@ class FactionEventManager:
             # apply reputation consequences
             cons = choice.get("consequences", {})
             for f, delta in cons.get("faction_reputation", {}).items():
-                player.faction_reputation[f] = player.faction_reputation.get(f, 0) + int(delta)
+                player.faction_reputation[f] = player.faction_reputation.get(
+                    f, 0
+                ) + int(delta)
             rewards = cons.get("rewards", [])
             return {"rewards": rewards, "consequences": cons}
         return {}

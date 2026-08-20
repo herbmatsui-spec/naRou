@@ -7,6 +7,7 @@ anti-cheat integrity checks (proposal #1-C). Output: ``build_manifest.json``.
 Usage:
     python tools/gen_manifest.py --dir dist
 """
+
 from __future__ import annotations
 
 import argparse

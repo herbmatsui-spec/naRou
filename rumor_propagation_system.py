@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set, TYPE_CHECKING
 from enum import Enum, auto
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -18,41 +18,47 @@ if TYPE_CHECKING:
 
 class RumorType(Enum):
     """噂の種類"""
-    QUEST_SUCCESS = auto()      # クエスト成功
-    QUEST_FAILURE = auto()      # クエスト失敗
-    PLAYER_ACTION = auto()      # プレイヤーの特定行動（殺人・窃盗・英雄的行為等）
-    FACTION_MOVE = auto()       # 派閥の動き（領土拡大・同盟・抗争）
-    WORLD_EVENT = auto()        # ワールドイベント（祭り・蝕・流星群）
-    NPC_SECRET = auto()         # NPCの秘密・弱点
+
+    QUEST_SUCCESS = auto()  # クエスト成功
+    QUEST_FAILURE = auto()  # クエスト失敗
+    PLAYER_ACTION = auto()  # プレイヤーの特定行動（殺人・窃盗・英雄的行為等）
+    FACTION_MOVE = auto()  # 派閥の動き（領土拡大・同盟・抗争）
+    WORLD_EVENT = auto()  # ワールドイベント（祭り・蝕・流星群）
+    NPC_SECRET = auto()  # NPCの秘密・弱点
     TREASURE_LOCATION = auto()  # 財宝・ダンジョン情報
-    MARKET_PRICE = auto()       # 物価変動情報
+    MARKET_PRICE = auto()  # 物価変動情報
 
 
 @dataclass
 class Rumor:
     """噂エントリ"""
+
     rumor_id: str
     rumor_type: RumorType
-    content: Dict[str, Any]           # 噂の具体的内容
-    origin_npc_id: str                # 発信元 NPC
+    content: dict[str, Any]  # 噂の具体的内容
+    origin_npc_id: str  # 発信元 NPC
     origin_location: tuple[int, int]  # 発生座標
     timestamp: float
-    base_credibility: float = 1.0     # 基本信憑性（0-1）
-    tags: Set[str] = field(default_factory=set)
+    base_credibility: float = 1.0  # 基本信憑性（0-1）
+    tags: set[str] = field(default_factory=set)
     # 伝播状態
-    known_by: Set[str] = field(default_factory=set)  # 知っている NPC ID 集合
-    propagation_count: int = 0        # 伝播回数
+    known_by: set[str] = field(default_factory=set)  # 知っている NPC ID 集合
+    propagation_count: int = 0  # 伝播回数
 
-    def credibility_for(self, listener: "Entity", engine: "Engine") -> float:
+    def credibility_for(self, listener: Entity, engine: Engine) -> float:
         """特定リスナーに対する実効信憑性を計算"""
         # 基本信憑性
         cred = self.base_credibility
         # 発信元との関係性で補正
-        rel_mgr = engine.relationship_manager if hasattr(engine, 'relationship_manager') else None
+        rel_mgr = (
+            engine.relationship_manager
+            if hasattr(engine, "relationship_manager")
+            else None
+        )
         if rel_mgr:
             rel_level = rel_mgr.get_relationship_level(listener, self.origin_npc_id)
             # 関係レベル: 0=他人, 1=知り合い, 2=友人, 3=親友
-            cred *= (0.5 + rel_level * 0.15)  # 0.5-0.95
+            cred *= 0.5 + rel_level * 0.15  # 0.5-0.95
         # 同派閥なら信憑性アップ
         # 派閥システムとの連携は実装時に
         return min(1.0, max(0.0, cred))
@@ -61,14 +67,15 @@ class Rumor:
 @dataclass
 class RumorPropagationConfig:
     """伝播設定"""
-    max_distance: float = 50.0           # 最大伝播距離（タイル）
-    base_decay_per_tile: float = 0.02    # タイルごとの減衰
-    intimacy_bonus: float = 0.1          # 親密度ボーナス（関係レベル×）
-    faction_same_bonus: float = 0.2      # 同派閥ボーナス
-    faction_rival_penalty: float = 0.3   # 敵対派閥ペナルティ
-    max_propagation_hops: int = 5        # 最大伝播ホップ数
+
+    max_distance: float = 50.0  # 最大伝播距離（タイル）
+    base_decay_per_tile: float = 0.02  # タイルごとの減衰
+    intimacy_bonus: float = 0.1  # 親密度ボーナス（関係レベル×）
+    faction_same_bonus: float = 0.2  # 同派閥ボーナス
+    faction_rival_penalty: float = 0.3  # 敵対派閥ペナルティ
+    max_propagation_hops: int = 5  # 最大伝播ホップ数
     min_credibility_to_spread: float = 0.2  # これ未満なら伝播しない
-    rumor_lifetime: float = 86400.0      # 噂の寿命（秒、24時間）
+    rumor_lifetime: float = 86400.0  # 噂の寿命（秒、24時間）
 
 
 class RumorEngine:
@@ -76,18 +83,20 @@ class RumorEngine:
 
     def __init__(
         self,
-        engine: "Engine",
-        config: Optional[RumorPropagationConfig] = None,
-        world_map: Optional["WorldMapManager"] = None,
+        engine: Engine,
+        config: RumorPropagationConfig | None = None,
+        world_map: WorldMapManager | None = None,
     ):
         self.engine = engine
         self.config = config or RumorPropagationConfig()
         self.world_map = world_map
-        self._rumors: Dict[str, Rumor] = {}
-        self._npc_locations: Dict[str, tuple[int, int]] = {}  # NPC ID -> (x, y)
-        self._npc_factions: Dict[str, str] = {}               # NPC ID -> faction_id
+        self._rumors: dict[str, Rumor] = {}
+        self._npc_locations: dict[str, tuple[int, int]] = {}  # NPC ID -> (x, y)
+        self._npc_factions: dict[str, str] = {}  # NPC ID -> faction_id
 
-    def register_npc(self, npc: "Entity", location: tuple[int, int], faction_id: Optional[str] = None) -> None:
+    def register_npc(
+        self, npc: Entity, location: tuple[int, int], faction_id: str | None = None
+    ) -> None:
         """NPC を伝播ネットワークに登録"""
         self._npc_locations[npc.name] = location
         if faction_id:
@@ -100,14 +109,14 @@ class RumorEngine:
     def create_rumor(
         self,
         rumor_type: RumorType,
-        content: Dict[str, Any],
-        origin_npc: "Entity",
+        content: dict[str, Any],
+        origin_npc: Entity,
         origin_location: tuple[int, int],
         base_credibility: float = 1.0,
-        tags: Optional[Set[str]] = None,
+        tags: set[str] | None = None,
     ) -> Rumor:
         """新しい噂を生成・登録"""
-        rumor_id = f"{rumor_type.name.lower()}_{origin_npc.name}_{int(time.time()*1000)%1000000}"
+        rumor_id = f"{rumor_type.name.lower()}_{origin_npc.name}_{int(time.time() * 1000) % 1000000}"
         rumor = Rumor(
             rumor_id=rumor_id,
             rumor_type=rumor_type,
@@ -121,7 +130,11 @@ class RumorEngine:
         rumor.known_by.add(origin_npc.name)
         self._rumors[rumor_id] = rumor
         # 発信元の記憶にも記録
-        from npc_memory_system import GLOBAL_MEMORY_REGISTRY, MemoryType, MemoryImportance
+        from npc_memory_system import (
+            GLOBAL_MEMORY_REGISTRY,
+            MemoryImportance,
+        )
+
         mgr = GLOBAL_MEMORY_REGISTRY.get(origin_npc)
         mgr.record_reputation_event(
             subject_id=origin_npc.name,
@@ -141,7 +154,7 @@ class RumorEngine:
 
     def _relationship_level(self, npc1_id: str, npc2_id: str) -> int:
         """2 NPC 間の関係レベル取得（0-3）"""
-        rel_mgr = getattr(self.engine, 'relationship_manager', None)
+        rel_mgr = getattr(self.engine, "relationship_manager", None)
         if rel_mgr:
             # npc1 が npc2 をどう見ているか
             npc1 = self._find_entity(npc1_id)
@@ -157,32 +170,34 @@ class RumorEngine:
             return 0.0
         if f1 == f2:
             return 1.0
-        fw_mgr = getattr(self.engine, 'faction_war_manager', None)
+        fw_mgr = getattr(self.engine, "faction_war_manager", None)
         if fw_mgr and fw_mgr.check_war_conditions(f1, f2):
             return -1.0
         # 同盟チェック
         from faction_war_system import REGISTRY as FW_REG
+
         fw_data1 = FW_REG.get(f1)
         if fw_data1 and f2 in fw_data1.allied_factions:
             return 1.0
         return 0.0
 
-    def _find_entity(self, npc_id: str) -> Optional["Entity"]:
+    def _find_entity(self, npc_id: str) -> Entity | None:
         """エンジンから NPC を検索"""
-        if hasattr(self.engine, 'entity_manager'):
+        if hasattr(self.engine, "entity_manager"):
             for e in self.engine.entity_manager.get_all_entities():
                 if e.name == npc_id:
                     return e
         return None
 
-    def propagate_step(self, current_time: Optional[float] = None) -> int:
+    def propagate_step(self, current_time: float | None = None) -> int:
         """伝播ステップ実行（1ターン/1フレームごとに呼ぶ）。新規伝播数を返す。"""
         current_time = current_time or time.time()
         new_spreads = 0
 
         # 期限切れ噂を削除
         expired = [
-            rid for rid, r in self._rumors.items()
+            rid
+            for rid, r in self._rumors.items()
             if current_time - r.timestamp > self.config.rumor_lifetime
         ]
         for rid in expired:
@@ -214,7 +229,9 @@ class RumorEngine:
                         continue
 
                     # 伝播確率計算
-                    prob = self._calculate_spread_probability(rumor, knower_id, listener_id, dist)
+                    prob = self._calculate_spread_probability(
+                        rumor, knower_id, listener_id, dist
+                    )
                     if prob <= self.config.min_credibility_to_spread:
                         continue
 
@@ -226,7 +243,11 @@ class RumorEngine:
                         # 受信者の記憶に記録
                         listener = self._find_entity(listener_id)
                         if listener:
-                            from npc_memory_system import GLOBAL_MEMORY_REGISTRY, MemoryType, MemoryImportance
+                            from npc_memory_system import (
+                                GLOBAL_MEMORY_REGISTRY,
+                                MemoryImportance,
+                            )
+
                             mgr = GLOBAL_MEMORY_REGISTRY.get(listener)
                             mgr.record_reputation_event(
                                 subject_id=rumor.origin_npc_id,
@@ -266,11 +287,11 @@ class RumorEngine:
 
         return min(1.0, max(0.0, prob))
 
-    def get_rumors_known_by(self, npc_id: str) -> List[Rumor]:
+    def get_rumors_known_by(self, npc_id: str) -> list[Rumor]:
         """特定 NPC が知っている噂一覧"""
         return [r for r in self._rumors.values() if npc_id in r.known_by]
 
-    def get_rumors_about(self, subject_id: str) -> List[Rumor]:
+    def get_rumors_about(self, subject_id: str) -> list[Rumor]:
         """特定対象に関する噂一覧"""
         results = []
         for r in self._rumors.values():
@@ -282,23 +303,27 @@ class RumorEngine:
     def query_rumors(
         self,
         npc_id: str,
-        rumor_type: Optional[RumorType] = None,
+        rumor_type: RumorType | None = None,
         min_credibility: float = 0.0,
-    ) -> List[Rumor]:
+    ) -> list[Rumor]:
         """NPC が知る噂をフィルタ"""
         results = self.get_rumors_known_by(npc_id)
         if rumor_type:
             results = [r for r in results if r.rumor_type == rumor_type]
         if min_credibility > 0:
             npc = self._find_entity(npc_id)
-            results = [r for r in results if r.credibility_for(npc, self.engine) >= min_credibility]
+            results = [
+                r
+                for r in results
+                if r.credibility_for(npc, self.engine) >= min_credibility
+            ]
         return results
 
     def inject_rumor_for_quest(
         self,
         quest_id: str,
         success: bool,
-        origin_npc: "Entity",
+        origin_npc: Entity,
         location: tuple[int, int],
     ) -> Rumor:
         """クエスト結果から噂を自動生成（Phase 3 連携用）"""

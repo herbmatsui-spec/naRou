@@ -5,15 +5,17 @@ Provides UV lookup for tile_id + variant + frame + direction + state.
 """
 
 from __future__ import annotations
+
+import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Tuple, Optional, List, Any
-import json
+from typing import Any
 
 # Import animated tile registration
 try:
     from core.animated_tile import register_animated_tiles
 except ImportError:
+
     def register_animated_tiles(tile_atlas):
         pass
 
@@ -21,6 +23,7 @@ except ImportError:
 @dataclass
 class TileUV:
     """UV coordinates in atlas texture (pixels)."""
+
     x: int
     y: int
     w: int
@@ -31,16 +34,17 @@ class TileUV:
 @dataclass
 class TileDef:
     """Tile definition from tileset_def.json."""
+
     tile_id: str
-    file: str                 # Key in atlas metadata (e.g., "WALL_DUNGEON")
+    file: str  # Key in atlas metadata (e.g., "WALL_DUNGEON")
     variants: int = 1
     animated: bool = False
     frames: int = 1
     fps: int = 10
     variant_width: int = 16
-    frame_width: int = 0      # 0 = use variant_width or base width
+    frame_width: int = 0  # 0 = use variant_width or base width
     directions: int = 1
-    states: List[str] = None
+    states: list[str] = None
     autotile: bool = False
     atlas_scale: str = "16"
     anchor_x: float = 0.5
@@ -56,8 +60,9 @@ class TileDef:
 @dataclass
 class AnimState:
     """Runtime animation state for a tile/entity."""
+
     tile_id: str
-    atlas: 'TileAtlas'
+    atlas: TileAtlas
     frame: int = 0
     timer: float = 0.0
     fps: int = 10
@@ -88,7 +93,7 @@ class AnimState:
             frame=self.frame,
             direction=self.direction,
             state=self.state,
-            scale=s
+            scale=s,
         )
 
 
@@ -101,26 +106,28 @@ AUTOTILE_MAP = {
     0b1000: 8,  # left
     0b0011: 3,  # up+right
     0b0110: 6,  # right+down
-    0b1100: 12, # down+left
+    0b1100: 12,  # down+left
     0b1001: 9,  # left+up
     0b0101: 5,  # up+down
-    0b1010: 10, # left+right
+    0b1010: 10,  # left+right
     0b0111: 7,  # up+right+down
-    0b1110: 14, # right+down+left
-    0b1101: 13, # down+left+up
-    0b1011: 11, # left+up+right
-    0b1111: 15, # all four
+    0b1110: 14,  # right+down+left
+    0b1101: 13,  # down+left+up
+    0b1011: 11,  # left+up+right
+    0b1111: 15,  # all four
 }
 
 
 class TileAtlas:
     """Unified tile atlas loader and UV provider."""
 
-    def __init__(self, def_path: str = "assets/tiles/tileset_def.json", default_scale: str = "16"):
+    def __init__(
+        self, def_path: str = "assets/tiles/tileset_def.json", default_scale: str = "16"
+    ):
         self.def_path = Path(def_path)
         self.default_scale = default_scale
-        self.defs: Dict[str, TileDef] = {}
-        self.atlas_meta: Dict[str, Dict[str, Any]] = {}  # scale -> metadata
+        self.defs: dict[str, TileDef] = {}
+        self.atlas_meta: dict[str, dict[str, Any]] = {}  # scale -> metadata
         self._load()
 
     def _load(self) -> None:
@@ -135,7 +142,7 @@ class TileAtlas:
         # 2. Load atlas metadata for each scale
         for scale in ("16", "32", "64", "tiny_rogue_16"):
             if scale == "tiny_rogue_16":
-                meta_path = self.def_path.parent / "tileset_tiny_rogue_16x16.json"
+                meta_path = self.def_path.parent / "tiny_rogue_atlas_16x16.json"
             else:
                 meta_path = self.def_path.parent / f"tileset_{scale}x{scale}.json"
             if meta_path.exists():
@@ -152,7 +159,7 @@ class TileAtlas:
         frame: int = 0,
         direction: int = 0,
         state: str = "idle",
-        scale: str = None
+        scale: str = None,
     ) -> TileUV:
         """Get UV coordinates for a specific tile configuration."""
         s = scale or self.default_scale
@@ -190,11 +197,7 @@ class TileAtlas:
         return AUTOTILE_MAP.get(neighbor_mask & 0xF, 0)
 
     def calculate_neighbor_mask(
-        self,
-        tile_map: List[List[str]],
-        x: int,
-        y: int,
-        target_tile: str
+        self, tile_map: list[list[str]], x: int, y: int, target_tile: str
     ) -> int:
         """Calculate 4-bit neighbor mask for autotiling.
         bit0=up, bit1=right, bit2=down, bit3=left
@@ -202,14 +205,14 @@ class TileAtlas:
         h = len(tile_map)
         w = len(tile_map[0]) if h > 0 else 0
         mask = 0
-        if y > 0 and tile_map[y-1][x] == target_tile:
-            mask |= 1      # up
-        if x < w - 1 and tile_map[y][x+1] == target_tile:
-            mask |= 2      # right
-        if y < h - 1 and tile_map[y+1][x] == target_tile:
-            mask |= 4      # down
-        if x > 0 and tile_map[y][x-1] == target_tile:
-            mask |= 8      # left
+        if y > 0 and tile_map[y - 1][x] == target_tile:
+            mask |= 1  # up
+        if x < w - 1 and tile_map[y][x + 1] == target_tile:
+            mask |= 2  # right
+        if y < h - 1 and tile_map[y + 1][x] == target_tile:
+            mask |= 4  # down
+        if x > 0 and tile_map[y][x - 1] == target_tile:
+            mask |= 8  # left
         return mask
 
     def create_anim_state(
@@ -219,7 +222,7 @@ class TileAtlas:
         direction: int = 0,
         state: str = "idle",
         fps: int = None,
-        loop: bool = True
+        loop: bool = True,
     ) -> AnimState:
         """Create an AnimState for runtime animation."""
         td = self.defs.get(tile_id)
@@ -232,7 +235,7 @@ class TileAtlas:
             direction=direction,
             state=state,
             fps=fps or td.fps,
-            loop=loop
+            loop=loop,
         )
 
     def get_tcod_tile_rect(
@@ -242,13 +245,13 @@ class TileAtlas:
         frame: int = 0,
         direction: int = 0,
         state: str = "idle",
-        scale: str = "32"
-    ) -> Tuple[int, int, int, int]:
+        scale: str = "32",
+    ) -> tuple[int, int, int, int]:
         """Get (x, y, w, h) in pixels for tcod tileset loading."""
         uv = self.get_uv(tile_id, variant, frame, direction, state, scale)
         return (uv.x, uv.y, uv.w, uv.h)
 
-    def get_master_image_path(self, tile_id: str, scale: str = None) -> Optional[Path]:
+    def get_master_image_path(self, tile_id: str, scale: str = None) -> Path | None:
         """Get path to master atlas image for a tile."""
         s = scale or self.default_scale
         td = self.defs.get(tile_id)
@@ -258,7 +261,7 @@ class TileAtlas:
         img_scale = s
         return self.def_path.parent / f"tileset_{img_scale}x{img_scale}.png"
 
-    def get_all_tile_ids(self) -> List[str]:
+    def get_all_tile_ids(self) -> list[str]:
         """Get list of all defined tile IDs."""
         return list(self.defs.keys())
 
@@ -299,6 +302,8 @@ if __name__ == "__main__":
         ["TILE_WALL", "TILE_WALL", "TILE_WALL"],
     ]
     mask = atlas.calculate_neighbor_mask(test_map, 1, 1, "TILE_WALL")
-    print(f"Center wall neighbor mask: {bin(mask)} -> variant {atlas.get_autotile_variant('TILE_WALL', mask)}")
+    print(
+        f"Center wall neighbor mask: {bin(mask)} -> variant {atlas.get_autotile_variant('TILE_WALL', mask)}"
+    )
 
     print("All tests passed!")

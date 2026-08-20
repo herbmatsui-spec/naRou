@@ -4,6 +4,7 @@ Repository-layer test suite for Elona Masterpiece Edition (v2.0).
 Validates that every generated repository correctly indexes and queries the
 schema-validated game data exposed through DataManager.
 """
+
 import os
 import sys
 
@@ -14,12 +15,6 @@ if _ROOT not in sys.path:
 import pytest
 
 from data_manager import DataManager
-from data.repositories import (
-    ItemRepository, MonsterRepository, SkillTreeRepository, SpellRepository,
-    SkillFusionRepository, QuestRepository, FactionRepository,
-    AchievementRepository, TitleRepository, JobRepository, GodRepository,
-    DungeonThemeRepository, GuildRepository,
-)
 
 
 @pytest.fixture(scope="module")
@@ -28,6 +23,7 @@ def dm() -> DataManager:
 
 
 # ----------------------------- ItemRepository -----------------------------
+
 
 def test_item_count(dm):
     assert len(dm.items.get_all()) > 0
@@ -59,6 +55,7 @@ def test_item_get_by_material(dm):
 
 # --------------------------- MonsterRepository ---------------------------
 
+
 def test_monster_count(dm):
     assert len(dm.monsters.get_all()) > 0
 
@@ -81,6 +78,7 @@ def test_monster_bosses(dm):
 
 # ------------------------- SkillTreeRepository --------------------------
 
+
 def test_skill_tree_count(dm):
     assert len(dm.skill_trees.get_all()) > 0
 
@@ -92,6 +90,7 @@ def test_skill_tree_skills(dm):
 
 
 # ---------------------------- SpellRepository ---------------------------
+
 
 def test_spell_count(dm):
     assert len(dm.spells.get_all()) > 0
@@ -106,6 +105,7 @@ def test_spell_get_by_element(dm):
 
 
 # ------------------------- SkillFusionRepository ------------------------
+
 
 def test_skill_fusion_count(dm):
     assert len(dm.skill_fusions.get_all()) > 0
@@ -125,6 +125,7 @@ def test_skill_fusion_lookup(dm):
 
 # --------------------------- QuestRepository ----------------------------
 
+
 def test_quest_count(dm):
     assert len(dm.quests.get_all()) > 0
 
@@ -140,6 +141,7 @@ def test_quest_repeatable(dm):
 
 
 # -------------------------- FactionRepository ---------------------------
+
 
 def test_faction_count(dm):
     assert len(dm.factions.get_all()) > 0
@@ -161,6 +163,7 @@ def test_faction_allies_rivals(dm):
 
 # ------------------------ AchievementRepository -------------------------
 
+
 def test_achievement_count(dm):
     assert len(dm.achievements.get_all()) > 0
 
@@ -173,6 +176,7 @@ def test_achievement_visible_hidden(dm):
 
 
 # --------------------------- TitleRepository ----------------------------
+
 
 def test_title_count(dm):
     assert len(dm.titles.get_all()) > 0
@@ -191,6 +195,7 @@ def test_title_visible_hidden(dm):
 
 
 # ----------------------------- JobRepository ----------------------------
+
 
 def test_job_count(dm):
     assert len(dm.jobs.get_all()) > 0
@@ -215,6 +220,7 @@ def test_job_unlock_conditions(dm):
 
 # ----------------------------- GodRepository ----------------------------
 
+
 def test_god_count(dm):
     assert len(dm.gods.get_all()) > 0
 
@@ -226,6 +232,7 @@ def test_god_domains(dm):
 
 
 # ------------------------ DungeonThemeRepository ------------------------
+
 
 def test_dungeon_theme_count(dm):
     assert len(dm.dungeon_themes.get_all()) > 0
@@ -240,6 +247,7 @@ def test_dungeon_theme_for_level(dm):
 
 # --------------------------- GuildRepository ----------------------------
 
+
 def test_guild_count(dm):
     assert len(dm.guilds.get_all()) > 0
 
@@ -250,6 +258,7 @@ def test_guild_by_location(dm):
 
 
 # --------------------------- DataManager --------------------------------
+
 
 def test_data_manager_create_item(dm):
     item = dm.create_item("longsword", quality="god", material="rubynus")

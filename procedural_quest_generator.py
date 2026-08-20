@@ -7,11 +7,12 @@
 """
 
 from __future__ import annotations
+
+import hashlib
 import os
 import random
-import hashlib
-from typing import Dict, List, Optional, Any, Tuple, TYPE_CHECKING
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -22,13 +23,15 @@ if TYPE_CHECKING:
 # フェーズB: データクラス (Steps 9-14)
 # ============================================================
 
+
 # Step 9: QuestArchetype
 @dataclass
 class QuestArchetype:
     """クエストアーキタイプ（形態）"""
+
     id: str = ""
     name: str = ""
-    objective_type: str = "kill"          # kill/collect/visit/escort/explore/rescue/delivery
+    objective_type: str = "kill"  # kill/collect/visit/escort/explore/rescue/delivery
     title_template: str = "{setting}のクエスト"
     desc_template: str = "{setting}で任務を遂行せよ。"
     reward_weight: float = 1.0
@@ -39,9 +42,10 @@ class QuestArchetype:
 @dataclass
 class DifficultyTier:
     """難易度ティア（指数スケーリング）"""
+
     id: str = ""
     name: str = ""
-    level_range: List[int] = field(default_factory=lambda: [1, 5])
+    level_range: list[int] = field(default_factory=lambda: [1, 5])
     enemy_multiplier: float = 1.0
     objective_complexity: float = 1.0
     recommended_power: int = 10
@@ -51,22 +55,24 @@ class DifficultyTier:
 @dataclass
 class RewardTable:
     """報酬テーブル"""
+
     id: str = ""
     name: str = ""
-    gold_range: List[int] = field(default_factory=lambda: [20, 80])
-    exp_range: List[int] = field(default_factory=lambda: [10, 40])
-    item_pool: List[str] = field(default_factory=list)
-    bonus: Dict[str, int] = field(default_factory=dict)
+    gold_range: list[int] = field(default_factory=lambda: [20, 80])
+    exp_range: list[int] = field(default_factory=lambda: [10, 40])
+    item_pool: list[str] = field(default_factory=list)
+    bonus: dict[str, int] = field(default_factory=dict)
 
 
 # Step 12: StageSetting
 @dataclass
 class StageSetting:
     """舞台設定"""
+
     id: str = ""
     name: str = ""
     flavor: str = ""
-    enemy_pool: List[str] = field(default_factory=list)
+    enemy_pool: list[str] = field(default_factory=list)
     hazard: str = ""
     depth_modifier: float = 1.0
     environmental_modifier: float = 1.0
@@ -76,8 +82,9 @@ class StageSetting:
 @dataclass
 class NPCQuestTheme:
     """NPC個別クエストテーマ"""
+
     npc_type: str = ""
-    quest_pool: List[str] = field(default_factory=list)
+    quest_pool: list[str] = field(default_factory=list)
     relationship_gate: int = 1
     flavor: str = "{npc}「頼んだよ。」"
 
@@ -86,15 +93,18 @@ class NPCQuestTheme:
 @dataclass
 class QuestObjectiveSpec:
     """生成されたクエストの1目的"""
+
     objective_id: str = ""
     description: str = ""
     target_type: str = "kill"
     target_id: str = ""
     required_count: int = 1
     current_count: int = 0
-    cascade_bonus: Dict[str, int] = field(default_factory=dict)  # 連鎖累積報酬 (Step 14)
+    cascade_bonus: dict[str, int] = field(
+        default_factory=dict
+    )  # 連鎖累積報酬 (Step 14)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "objective_id": self.objective_id,
             "description": self.description,
@@ -106,7 +116,7 @@ class QuestObjectiveSpec:
         }
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> "QuestObjectiveSpec":
+    def from_dict(cls, d: dict[str, Any]) -> QuestObjectiveSpec:
         return cls(
             objective_id=d.get("objective_id", ""),
             description=d.get("description", ""),
@@ -121,25 +131,26 @@ class QuestObjectiveSpec:
 @dataclass
 class GeneratedQuest:
     """自動生成されたクエスト（組み合わせの実体）"""
+
     quest_id: str = ""
     title: str = ""
     description: str = ""
-    source_type: str = "board"            # board / dungeon / npc
+    source_type: str = "board"  # board / dungeon / npc
     archetype_id: str = ""
     difficulty_id: str = ""
     reward_id: str = ""
     setting_id: str = ""
-    npc_id: Optional[str] = None
+    npc_id: str | None = None
     seed: int = 0
     recommended_level: int = 1
-    objectives: List[QuestObjectiveSpec] = field(default_factory=list)
-    reward: Dict[str, Any] = field(default_factory=dict)
+    objectives: list[QuestObjectiveSpec] = field(default_factory=list)
+    reward: dict[str, Any] = field(default_factory=dict)
     expires: int = 0
-    chain_id: str = ""          # 連鎖識別子 (Step 13)
-    parent_id: str = ""         # 親クエストID (Step 13)
-    depth: int = 0              # 連鎖深度 (Step 13)
+    chain_id: str = ""  # 連鎖識別子 (Step 13)
+    parent_id: str = ""  # 親クエストID (Step 13)
+    depth: int = 0  # 連鎖深度 (Step 13)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "quest_id": self.quest_id,
             "title": self.title,
@@ -161,7 +172,7 @@ class GeneratedQuest:
         }
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> "GeneratedQuest":
+    def from_dict(cls, d: dict[str, Any]) -> GeneratedQuest:
         return cls(
             quest_id=d.get("quest_id", ""),
             title=d.get("title", ""),
@@ -174,7 +185,9 @@ class GeneratedQuest:
             npc_id=d.get("npc_id"),
             seed=d.get("seed", 0),
             recommended_level=d.get("recommended_level", 1),
-            objectives=[QuestObjectiveSpec.from_dict(o) for o in d.get("objectives", [])],
+            objectives=[
+                QuestObjectiveSpec.from_dict(o) for o in d.get("objectives", [])
+            ],
             reward=d.get("reward", {}),
             expires=d.get("expires", 0),
             chain_id=d.get("chain_id", ""),
@@ -190,22 +203,24 @@ class GeneratedQuest:
 # フェーズC: レジストリ (Steps 15-18)
 # ============================================================
 
+
 # Step 15, 16: QuestGenerationRegistry (シングルトン)
 class QuestGenerationRegistry:
     """クエスト生成設定レジストリ (Step 15, 16)"""
-    _instance: Optional['QuestGenerationRegistry'] = None
 
-    def __new__(cls) -> 'QuestGenerationRegistry':
+    _instance: QuestGenerationRegistry | None = None
+
+    def __new__(cls) -> QuestGenerationRegistry:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._archetypes: Dict[str, QuestArchetype] = {}
-            cls._difficulties: Dict[str, DifficultyTier] = {}
-            cls._rewards: Dict[str, RewardTable] = {}
-            cls._settings: Dict[str, StageSetting] = {}
-            cls._npc_themes: Dict[str, NPCQuestTheme] = {}
-            cls._board_config: Dict[str, Any] = {}
-            cls._display_names: Dict[str, Dict[str, str]] = {}
-            cls._chain_config: Dict[str, Any] = {}
+            cls._archetypes: dict[str, QuestArchetype] = {}
+            cls._difficulties: dict[str, DifficultyTier] = {}
+            cls._rewards: dict[str, RewardTable] = {}
+            cls._settings: dict[str, StageSetting] = {}
+            cls._npc_themes: dict[str, NPCQuestTheme] = {}
+            cls._board_config: dict[str, Any] = {}
+            cls._display_names: dict[str, dict[str, str]] = {}
+            cls._chain_config: dict[str, Any] = {}
             cls._loaded = False
         return cls._instance
 
@@ -229,13 +244,14 @@ class QuestGenerationRegistry:
 
         try:
             import yaml
-            with open(file_path, "r", encoding="utf-8") as f:
+
+            with open(file_path, encoding="utf-8") as f:
                 raw = yaml.safe_load(f) or {}
             # ペットクエストテンプレートをロード
             pet_quest_path = "data/pet_quests.yaml"
             if os.path.exists(pet_quest_path):
                 try:
-                    with open(pet_quest_path, "r", encoding="utf-8") as f:
+                    with open(pet_quest_path, encoding="utf-8") as f:
                         pet_data = yaml.safe_load(f) or {}
                     self._pet_quest_templates = pet_data.get("pet_quest_templates", {})
                 except Exception:
@@ -248,10 +264,12 @@ class QuestGenerationRegistry:
             self._load_fallback()
         self._loaded = True
 
-    def _build(self, qg: Dict[str, Any]) -> None:
+    def _build(self, qg: dict[str, Any]) -> None:
         for aid, a in (qg.get("archetypes") or {}).items():
             self._archetypes[aid] = QuestArchetype(
-                id=aid, name=a.get("name", aid), objective_type=a.get("objective_type", "kill"),
+                id=aid,
+                name=a.get("name", aid),
+                objective_type=a.get("objective_type", "kill"),
                 title_template=a.get("title_template", "{setting}のクエスト"),
                 desc_template=a.get("desc_template", "{setting}で任務を遂行せよ。"),
                 reward_weight=float(a.get("reward_weight", 1.0)),
@@ -259,7 +277,8 @@ class QuestGenerationRegistry:
             )
         for did, d in (qg.get("difficulty_tiers") or {}).items():
             self._difficulties[did] = DifficultyTier(
-                id=did, name=d.get("name", did),
+                id=did,
+                name=d.get("name", did),
                 level_range=d.get("level_range", [1, 5]),
                 enemy_multiplier=float(d.get("enemy_multiplier", 1.0)),
                 objective_complexity=float(d.get("objective_complexity", 1.0)),
@@ -267,7 +286,8 @@ class QuestGenerationRegistry:
             )
         for rid, r in (qg.get("reward_tables") or {}).items():
             self._rewards[rid] = RewardTable(
-                id=rid, name=r.get("name", rid),
+                id=rid,
+                name=r.get("name", rid),
                 gold_range=r.get("gold_range", [20, 80]),
                 exp_range=r.get("exp_range", [10, 40]),
                 item_pool=r.get("item_pool", []),
@@ -275,8 +295,11 @@ class QuestGenerationRegistry:
             )
         for sid, s in (qg.get("stage_settings") or {}).items():
             self._settings[sid] = StageSetting(
-                id=sid, name=s.get("name", sid), flavor=s.get("flavor", ""),
-                enemy_pool=s.get("enemy_pool", []), hazard=s.get("hazard", ""),
+                id=sid,
+                name=s.get("name", sid),
+                flavor=s.get("flavor", ""),
+                enemy_pool=s.get("enemy_pool", []),
+                hazard=s.get("hazard", ""),
                 depth_modifier=float(s.get("depth_modifier", 1.0)),
                 environmental_modifier=float(s.get("environmental_modifier", 1.0)),
             )
@@ -293,16 +316,22 @@ class QuestGenerationRegistry:
 
     def _load_fallback(self) -> None:
         self._archetypes = {
-            "slay": QuestArchetype("slay", "討伐", "kill", "{setting}の討伐", "", 1.0, 1),
+            "slay": QuestArchetype(
+                "slay", "討伐", "kill", "{setting}の討伐", "", 1.0, 1
+            ),
         }
         self._difficulties = {
             "normal": DifficultyTier("normal", "中", [15, 35], 2.6, 1.6, 120),
         }
         self._rewards = {
-            "gold": RewardTable("gold", "金", [250, 800], [120, 400], ["gem"], {"fame": 8}),
+            "gold": RewardTable(
+                "gold", "金", [250, 800], [120, 400], ["gem"], {"fame": 8}
+            ),
         }
         self._settings = {
-            "forest": StageSetting("forest", "森", "深い森", ["wolf", "goblin"], "毒", 1.0, 1.0),
+            "forest": StageSetting(
+                "forest", "森", "深い森", ["wolf", "goblin"], "毒", 1.0, 1.0
+            ),
         }
         self._npc_themes = {
             "villager": NPCQuestTheme("villager", ["rescue"], 1, "{npc}「お願い…」"),
@@ -316,47 +345,48 @@ class QuestGenerationRegistry:
     def get_display_name(self, category: str, id: str) -> str:
         """英語IDを日本語表示名へ変換（未定義なら元のIDを返す・フォールバック）(Step 10)"""
         return self._display_names.get(category, {}).get(id, id)
-    def get_archetype(self, aid: str) -> Optional[QuestArchetype]:
+
+    def get_archetype(self, aid: str) -> QuestArchetype | None:
         return self._archetypes.get(aid)
 
-    def get_difficulty(self, did: str) -> Optional[DifficultyTier]:
+    def get_difficulty(self, did: str) -> DifficultyTier | None:
         return self._difficulties.get(did)
 
-    def get_reward(self, rid: str) -> Optional[RewardTable]:
+    def get_reward(self, rid: str) -> RewardTable | None:
         return self._rewards.get(rid)
 
-    def get_setting(self, sid: str) -> Optional[StageSetting]:
+    def get_setting(self, sid: str) -> StageSetting | None:
         return self._settings.get(sid)
 
-    def get_npc_theme(self, npc_type: str) -> Optional[NPCQuestTheme]:
+    def get_npc_theme(self, npc_type: str) -> NPCQuestTheme | None:
         return self._npc_themes.get(npc_type)
 
-    def board_config(self) -> Dict[str, Any]:
+    def board_config(self) -> dict[str, Any]:
         return self._board_config
 
-    def chain_config(self) -> Dict[str, Any]:
+    def chain_config(self) -> dict[str, Any]:
         """連鎖クエスト設定 (Step 16)"""
         return self._chain_config
 
-    def display_names(self) -> Dict[str, Dict[str, str]]:
+    def display_names(self) -> dict[str, dict[str, str]]:
         return self._display_names
 
-    def all_archetypes(self) -> Dict[str, QuestArchetype]:
+    def all_archetypes(self) -> dict[str, QuestArchetype]:
         return dict(self._archetypes)
 
-    def all_difficulties(self) -> Dict[str, DifficultyTier]:
+    def all_difficulties(self) -> dict[str, DifficultyTier]:
         return dict(self._difficulties)
 
-    def all_rewards(self) -> Dict[str, RewardTable]:
+    def all_rewards(self) -> dict[str, RewardTable]:
         return dict(self._rewards)
 
-    def all_settings(self) -> Dict[str, StageSetting]:
+    def all_settings(self) -> dict[str, StageSetting]:
         return dict(self._settings)
 
-    def all_npc_themes(self) -> Dict[str, NPCQuestTheme]:
+    def all_npc_themes(self) -> dict[str, NPCQuestTheme]:
         return dict(self._npc_themes)
 
-    def difficulty_order(self) -> List[str]:
+    def difficulty_order(self) -> list[str]:
         """ティアを難易度順（低→高）に並べたIDリスト"""
         tiers = list(self._difficulties.values())
         tiers.sort(key=lambda t: t.recommended_power)
@@ -370,12 +400,13 @@ REGISTRY = QuestGenerationRegistry()
 # フェーズD〜G: 生成エンジン (Steps 19-33)
 # ============================================================
 
+
 class ProceduralQuestGenerator:
     """プロシージャルクエスト生成器 (Steps 19-33)"""
 
-    def __init__(self, registry: Optional[QuestGenerationRegistry] = None):
+    def __init__(self, registry: QuestGenerationRegistry | None = None):
         self.registry = registry or REGISTRY
-        self._pet_quest_templates: Dict[str, Any] = {}
+        self._pet_quest_templates: dict[str, Any] = {}
 
     # Step 19: シード決定論ヘルパー
     def _seeded_rng(self, *keys: Any) -> random.Random:
@@ -385,13 +416,26 @@ class ProceduralQuestGenerator:
         return random.Random(int(digest[:16], 16))
 
     # Step 20: コア合成
-    def _compose(self, source_type: str, archetype: QuestArchetype,
-                 difficulty: DifficultyTier, reward: RewardTable,
-                 setting: StageSetting, seed: int,
-                 npc_id: Optional[str] = None) -> GeneratedQuest:
+    def _compose(
+        self,
+        source_type: str,
+        archetype: QuestArchetype,
+        difficulty: DifficultyTier,
+        reward: RewardTable,
+        setting: StageSetting,
+        seed: int,
+        npc_id: str | None = None,
+    ) -> GeneratedQuest:
         """アーキタイプ × 難易度 × 報酬 × 舞台 を合成 (Step 20)"""
-        rng = self._seeded_rng(source_type, archetype.id, difficulty.id,
-                               reward.id, setting.id, npc_id or "", seed)
+        rng = self._seeded_rng(
+            source_type,
+            archetype.id,
+            difficulty.id,
+            reward.id,
+            setting.id,
+            npc_id or "",
+            seed,
+        )
 
         # Step 21: タイトル/説明文の自動生成
         enemy = rng.choice(setting.enemy_pool) if setting.enemy_pool else "monster"
@@ -401,40 +445,75 @@ class ProceduralQuestGenerator:
         enemy_disp = self.registry.get_display_name("enemy", enemy)
         item_disp = self.registry.get_display_name("item", item)
         boss_disp = self.registry.get_display_name("enemy", boss)
-        setting_disp = self.registry.get_display_name("stage", setting.id) or setting.name
+        setting_disp = (
+            self.registry.get_display_name("stage", setting.id) or setting.name
+        )
 
         # Step 22: 目的オブジェクト自動生成（難易度補正）
-        required_count = self._compute_required_count(archetype, difficulty, setting, rng)
-        objective = self._build_objective(archetype, enemy, item, boss, required_count,
-                                         enemy_disp, item_disp, boss_disp)
+        required_count = self._compute_required_count(
+            archetype, difficulty, setting, rng
+        )
+        objective = self._build_objective(
+            archetype,
+            enemy,
+            item,
+            boss,
+            required_count,
+            enemy_disp,
+            item_disp,
+            boss_disp,
+        )
 
         # Step 23: 報酬合成
         final_reward = self._compose_reward(difficulty, reward, rng)
 
         title = archetype.title_template.format(
-            setting=setting_disp, archetype=archetype.name,
-            enemy=enemy_disp, item=item_disp, boss=boss_disp,
-            required_count=required_count)
+            setting=setting_disp,
+            archetype=archetype.name,
+            enemy=enemy_disp,
+            item=item_disp,
+            boss=boss_disp,
+            required_count=required_count,
+        )
         desc = archetype.desc_template.format(
-            setting=setting_disp, archetype=archetype.name,
-            enemy=enemy_disp, item=item_disp, boss=boss_disp,
-            required_count=required_count, hazard=setting.hazard,
-            flavor=setting.flavor)
+            setting=setting_disp,
+            archetype=archetype.name,
+            enemy=enemy_disp,
+            item=item_disp,
+            boss=boss_disp,
+            required_count=required_count,
+            hazard=setting.hazard,
+            flavor=setting.flavor,
+        )
 
-        recommended_level = int((difficulty.level_range[0] + difficulty.level_range[1]) / 2)
+        recommended_level = int(
+            (difficulty.level_range[0] + difficulty.level_range[1]) / 2
+        )
 
         return GeneratedQuest(
-            quest_id=f"gen_{source_type}_{seed & 0xffffffff:x}_{archetype.id}_{difficulty.id}_{reward.id}_{setting.id}",
-            title=title, description=desc, source_type=source_type,
-            archetype_id=archetype.id, difficulty_id=difficulty.id,
-            reward_id=reward.id, setting_id=setting.id, npc_id=npc_id,
-            seed=seed, recommended_level=recommended_level,
-            objectives=[objective], reward=final_reward, expires=0)
+            quest_id=f"gen_{source_type}_{seed & 0xFFFFFFFF:x}_{archetype.id}_{difficulty.id}_{reward.id}_{setting.id}",
+            title=title,
+            description=desc,
+            source_type=source_type,
+            archetype_id=archetype.id,
+            difficulty_id=difficulty.id,
+            reward_id=reward.id,
+            setting_id=setting.id,
+            npc_id=npc_id,
+            seed=seed,
+            recommended_level=recommended_level,
+            objectives=[objective],
+            reward=final_reward,
+            expires=0,
+        )
 
-    def _compute_required_count(self, archetype: QuestArchetype,
-                                difficulty: DifficultyTier,
-                                setting: StageSetting,
-                                rng: random.Random) -> int:
+    def _compute_required_count(
+        self,
+        archetype: QuestArchetype,
+        difficulty: DifficultyTier,
+        setting: StageSetting,
+        rng: random.Random,
+    ) -> int:
         base = 4 * archetype.base_complexity
         val = base * difficulty.enemy_multiplier * difficulty.objective_complexity
         if archetype.objective_type == "explore":
@@ -443,10 +522,17 @@ class ProceduralQuestGenerator:
         count = max(1, int(round(val * rng.uniform(0.9, 1.1))))
         return count
 
-    def _build_objective(self, archetype: QuestArchetype, enemy: str,
-                          item: str, boss: str, required_count: int,
-                          enemy_disp: str = "", item_disp: str = "",
-                          boss_disp: str = "") -> QuestObjectiveSpec:
+    def _build_objective(
+        self,
+        archetype: QuestArchetype,
+        enemy: str,
+        item: str,
+        boss: str,
+        required_count: int,
+        enemy_disp: str = "",
+        item_disp: str = "",
+        boss_disp: str = "",
+    ) -> QuestObjectiveSpec:
         # target_id は照合用に英語IDのまま保持し、表示文のみ日本語化
         e_disp = enemy_disp or enemy
         i_disp = item_disp or item
@@ -479,29 +565,38 @@ class ProceduralQuestGenerator:
             target_id = "target"
             desc = "任務を遂行"
         return QuestObjectiveSpec(
-            objective_id=f"{archetype.id}_obj", description=desc,
-            target_type=otype, target_id=target_id,
-            required_count=required_count)
+            objective_id=f"{archetype.id}_obj",
+            description=desc,
+            target_type=otype,
+            target_id=target_id,
+            required_count=required_count,
+        )
 
-    def _compose_reward(self, difficulty: DifficultyTier,
-                        reward: RewardTable,
-                        rng: random.Random) -> Dict[str, Any]:
-        gold = int(rng.randint(reward.gold_range[0], reward.gold_range[1])
-                   * difficulty.enemy_multiplier)
-        exp = int(rng.randint(reward.exp_range[0], reward.exp_range[1])
-                  * difficulty.objective_complexity)
+    def _compose_reward(
+        self, difficulty: DifficultyTier, reward: RewardTable, rng: random.Random
+    ) -> dict[str, Any]:
+        gold = int(
+            rng.randint(reward.gold_range[0], reward.gold_range[1])
+            * difficulty.enemy_multiplier
+        )
+        exp = int(
+            rng.randint(reward.exp_range[0], reward.exp_range[1])
+            * difficulty.objective_complexity
+        )
         items = []
         if reward.item_pool and rng.random() < 0.85:
             items.append(rng.choice(reward.item_pool))
         bonus = dict(reward.bonus)
         return {"gold": gold, "exp": exp, "items": items, "bonus": bonus}
 
-    def generate_pet_quest(self, player: Optional["Entity"] = None,
-                           seed: Optional[int] = None) -> Optional[GeneratedQuest]:
+    def generate_pet_quest(
+        self, player: Entity | None = None, seed: int | None = None
+    ) -> GeneratedQuest | None:
         """ペット関連クエストを生成 (Step 29-30)"""
         if player is None or not self._pet_quest_templates:
             return None
         from pet_quest_analyzer import analyze_active_pet
+
         pet_profile = analyze_active_pet(player)
         if pet_profile is None:
             return None
@@ -509,10 +604,14 @@ class ProceduralQuestGenerator:
         matched_templates = []
         for template in self._pet_quest_templates:
             # ワイルドカード "*" をサポート
-            species_match = (template.get("pet_species") == pet_profile.species or
-                           template.get("pet_species") == "*")
-            contract_match = (template.get("pet_contract_type") == pet_profile.contract_type or
-                            template.get("pet_contract_type") == "*")
+            species_match = (
+                template.get("pet_species") == pet_profile.species
+                or template.get("pet_species") == "*"
+            )
+            contract_match = (
+                template.get("pet_contract_type") == pet_profile.contract_type
+                or template.get("pet_contract_type") == "*"
+            )
             if species_match and contract_match:
                 matched_templates.append(template)
         if not matched_templates:
@@ -540,7 +639,7 @@ class ProceduralQuestGenerator:
         if archetype is None:
             return None
         # 難易度をプレイヤーレベルに基づいて選択
-        player_level = getattr(player, 'level', 1)
+        player_level = getattr(player, "level", 1)
         difficulty = self._pick_difficulty_for_level(player_level, rng=rng)
         if difficulty is None:
             difficulty = self.get_difficulty("normal")
@@ -559,21 +658,26 @@ class ProceduralQuestGenerator:
         # NPC IDはなし
         npc_id = None
         # クエストを合成
-        return self._compose("pet_related", archetype, difficulty, reward, setting, seed, npc_id)
+        return self._compose(
+            "pet_related", archetype, difficulty, reward, setting, seed, npc_id
+        )
 
     # ---- 共通: 難易度帯の選択 ----
-    def _pick_difficulty_for_level(self, player_level: int,
-                                   min_id: Optional[str] = None,
-                                   max_id: Optional[str] = None,
-                                   rng: Optional[random.Random] = None) -> DifficultyTier:
+    def _pick_difficulty_for_level(
+        self,
+        player_level: int,
+        min_id: str | None = None,
+        max_id: str | None = None,
+        rng: random.Random | None = None,
+    ) -> DifficultyTier:
         order = self.registry.difficulty_order()
         if min_id:
             while order and order[0] != min_id:
                 order.pop(0)
         if max_id and max_id in order:
             idx = order.index(max_id)
-            order = order[:idx + 1]
-        cand: List[DifficultyTier] = []
+            order = order[: idx + 1]
+        cand: list[DifficultyTier] = []
         for did in order:
             t = self.registry.get_difficulty(did)
             if t:
@@ -589,10 +693,13 @@ class ProceduralQuestGenerator:
         return cand[0]
 
     # ---- Step 24, 25: 依頼ボード ----
-    def generate_board_quest(self, player: Optional["Entity"] = None,
-                             seed: Optional[int] = None,
-                             archetype_id: Optional[str] = None,
-                             difficulty_id: Optional[str] = None) -> GeneratedQuest:
+    def generate_board_quest(
+        self,
+        player: Entity | None = None,
+        seed: int | None = None,
+        archetype_id: str | None = None,
+        difficulty_id: str | None = None,
+    ) -> GeneratedQuest:
         """依頼ボード用クエスト1件を生成 (Step 24)"""
         if seed is None:
             seed = random.randint(0, 10**9)
@@ -603,7 +710,9 @@ class ProceduralQuestGenerator:
         if archetype_id and archetype_id in self.registry.all_archetypes():
             arch = self.registry.get_archetype(archetype_id)
         else:
-            arch = self._weighted_choice(list(self.registry.all_archetypes().items()), weights, rng)
+            arch = self._weighted_choice(
+                list(self.registry.all_archetypes().items()), weights, rng
+            )
         if arch is None:
             arch = QuestArchetype()
 
@@ -612,20 +721,26 @@ class ProceduralQuestGenerator:
             diff = self.registry.get_difficulty(difficulty_id)
         else:
             diff = self._pick_difficulty_for_level(
-                player_level, cfg.get("min_difficulty"), cfg.get("max_difficulty"), rng)
+                player_level, cfg.get("min_difficulty"), cfg.get("max_difficulty"), rng
+            )
         if diff is None:
             diff = DifficultyTier()
 
         reward = self._pick_reward_for_difficulty(diff, rng)
-        setting = rng.choice(list(self.registry.all_settings().values())) if self.registry.all_settings() else StageSetting()
+        setting = (
+            rng.choice(list(self.registry.all_settings().values()))
+            if self.registry.all_settings()
+            else StageSetting()
+        )
         return self._compose("board", arch, diff, reward, setting, seed)
 
-    def generate_board_pool(self, player: Optional["Entity"] = None,
-                            count: Optional[int] = None) -> List[GeneratedQuest]:
+    def generate_board_pool(
+        self, player: Entity | None = None, count: int | None = None
+    ) -> list[GeneratedQuest]:
         """依頼ボード用クエスト複数生成＋重複排除 (Step 25)"""
         cfg = self.registry.board_config()
         max_active = count or int(cfg.get("max_active", 8))
-        quests: List[GeneratedQuest] = []
+        quests: list[GeneratedQuest] = []
         seen_keys = set()
         attempts = 0
         # まず通常のボードクエストを生成するループ
@@ -645,7 +760,12 @@ class ProceduralQuestGenerator:
             pet_q = self.generate_pet_quest(player)
             if pet_q is None:
                 continue
-            key = (pet_q.archetype_id, pet_q.difficulty_id, pet_q.setting_id, pet_q.title)
+            key = (
+                pet_q.archetype_id,
+                pet_q.difficulty_id,
+                pet_q.setting_id,
+                pet_q.title,
+            )
             if key in seen_keys:
                 continue
             seen_keys.add(key)
@@ -653,9 +773,12 @@ class ProceduralQuestGenerator:
         return quests
 
     # ---- Step 28-30: ランダムダンジョン探索 ----
-    def generate_dungeon_quest(self, player: Optional["Entity"] = None,
-                               seed: Optional[int] = None,
-                               theme_id: Optional[str] = None) -> GeneratedQuest:
+    def generate_dungeon_quest(
+        self,
+        player: Entity | None = None,
+        seed: int | None = None,
+        theme_id: str | None = None,
+    ) -> GeneratedQuest:
         """ランダムダンジョン探索クエストを生成 (Step 28)"""
         if seed is None:
             seed = random.randint(0, 10**9)
@@ -664,10 +787,12 @@ class ProceduralQuestGenerator:
         theme = None
         try:
             from procedural_dungeon_generator import REGISTRY as DT_REG
+
             if theme_id:
                 theme = DT_REG.get(theme_id)
             elif player is not None:
                 from procedural_dungeon_generator import ProceduralDungeonGenerator
+
                 gen = ProceduralDungeonGenerator(DT_REG)
                 theme = gen.select_theme_by_story(player)
         except Exception:
@@ -675,12 +800,22 @@ class ProceduralQuestGenerator:
 
         setting = None
         if theme is not None:
-            setting = self.registry.get_setting(theme.theme_id) or self.registry.get_setting("cave")
+            setting = self.registry.get_setting(
+                theme.theme_id
+            ) or self.registry.get_setting("cave")
         if setting is None:
-            setting = rng.choice(list(self.registry.all_settings().values())) if self.registry.all_settings() else StageSetting()
+            setting = (
+                rng.choice(list(self.registry.all_settings().values()))
+                if self.registry.all_settings()
+                else StageSetting()
+            )
 
         # ダンジョン目的: 探索 または ボス討伐 (Step 29)
-        arch = self.registry.get_archetype("explore") or self.registry.get_archetype("boss_hunt") or QuestArchetype()
+        arch = (
+            self.registry.get_archetype("explore")
+            or self.registry.get_archetype("boss_hunt")
+            or QuestArchetype()
+        )
         if rng.random() < 0.4:
             arch = self.registry.get_archetype("boss_hunt") or arch
 
@@ -690,19 +825,19 @@ class ProceduralQuestGenerator:
         # Step 30: 舞台×テーマ合成
         return self._compose("dungeon", arch, diff, reward, setting, seed)
 
-# ---- Step 18-21: ダンジョン同期クエスト生成 (Phase 5) ----
+    # ---- Step 18-21: ダンジョン同期クエスト生成 (Phase 5) ----
     def generate_dungeon_synced_quest(
         self,
         spec_id: str,
         quest_id: str,
         title: str,
         description: str,
-        player: Optional["Entity"] = None,
-        seed: Optional[int] = None,
-        objective_mapping: Optional[Dict[str, str]] = None,
-    ) -> "GeneratedQuest":
+        player: Entity | None = None,
+        seed: int | None = None,
+        objective_mapping: dict[str, str] | None = None,
+    ) -> GeneratedQuest:
         """ダンジョン同期クエストを生成 (Phase 5 Step 21)
-        
+
         1. DungeonSpec を読み込み
         2. generate_from_spec でダンジョン生成
         3. フィードバックで目的を同期
@@ -711,13 +846,13 @@ class ProceduralQuestGenerator:
         if seed is None:
             seed = random.randint(0, 10**9)
         rng = self._seeded_rng("dungeon_synced", spec_id, quest_id, seed)
-        
+
         # 仕様読み込み
         spec = self._load_dungeon_spec(spec_id)
         if spec is None:
             # フォールバック: 通常のダンジョンクエスト生成
             return self.generate_dungeon_quest(player, seed)
-        
+
         # 目的マッピング（デフォルト）
         if objective_mapping is None:
             objective_mapping = {
@@ -727,50 +862,64 @@ class ProceduralQuestGenerator:
                 "find_entrance": "entrance_coords",
                 "defeat_boss": "boss_room_id",
             }
-        
+
         # パイプライン実行
         try:
-            from procedural_dungeon_generator import REGISTRY as DT_REG, ProceduralDungeonGenerator
             from dungeon_quest_feedback import DungeonQuestPipeline
+            from procedural_dungeon_generator import REGISTRY as DT_REG
+            from procedural_dungeon_generator import ProceduralDungeonGenerator
+
             generator = ProceduralDungeonGenerator(DT_REG)
             pipeline = DungeonQuestPipeline(generator)
-            result = pipeline.generate_synced_quest_dungeon(spec_id, quest_id, player, objective_mapping)
+            result = pipeline.generate_synced_quest_dungeon(
+                spec_id, quest_id, player, objective_mapping
+            )
         except Exception:
             # パイプライン失敗時はフォールバック
             return self.generate_dungeon_quest(player, seed)
-        
+
         generated = result["generated"]
         feedback: DungeonGenerationFeedback = result["feedback"]
-        
+
         # アーキタイプ選択（ボス討伐または探索）
         arch = self.registry.get_archetype("explore") or QuestArchetype()
         if rng.random() < 0.4:
             arch = self.registry.get_archetype("boss_hunt") or arch
-        
+
         # 難易度・報酬・舞台
         player_level = int(getattr(player, "level", 1)) if player else 1
         diff = self._pick_difficulty_for_level(player_level, None, None, rng)
         reward = self._pick_reward_for_difficulty(diff, rng)
-        
+
         # 舞台設定（ダンジョンテーマに合わせる）
         setting = None
-        theme_id = getattr(generated.get('theme'), 'theme_id', '') if hasattr(generated.get('theme'), 'theme_id') else generated.get('theme_id', '')
+        theme_id = (
+            getattr(generated.get("theme"), "theme_id", "")
+            if hasattr(generated.get("theme"), "theme_id")
+            else generated.get("theme_id", "")
+        )
         if theme_id:
-            setting = self.registry.get_setting(theme_id) or self.registry.get_setting("cave")
+            setting = self.registry.get_setting(theme_id) or self.registry.get_setting(
+                "cave"
+            )
         if setting is None:
-            setting = rng.choice(list(self.registry.all_settings().values())) if self.registry.all_settings() else StageSetting()
-        
+            setting = (
+                rng.choice(list(self.registry.all_settings().values()))
+                if self.registry.all_settings()
+                else StageSetting()
+            )
+
         # クエスト合成
         quest = self._compose("dungeon_synced", arch, diff, reward, setting, seed)
-        
+
         # クエスト情報を上書き
         quest.quest_id = quest_id
         quest.title = title
         quest.description = description
         quest.source_type = "dungeon_synced"
-        
+
         # フィードバックに基づいて目的を更新
-        if feedback and hasattr(feedback, 'generated_floors'):
+        if feedback and hasattr(feedback, "generated_floors"):
             # オブジェクトマッピングに基づいて目的の説明と必要数を更新
             for obj in quest.objectives:
                 if obj.objective_id in objective_mapping:
@@ -794,7 +943,7 @@ class ProceduralQuestGenerator:
                     elif mapping_key == "exit_coords":
                         obj.required_count = 1 if feedback.exit_coords else 0
                         obj.description = "出口を見つける"
-        
+
         # フィードバック情報を報酬に追加（デバッグ用）
         quest.reward["dungeon_feedback"] = {
             "spec_id": spec.spec_id,
@@ -802,26 +951,36 @@ class ProceduralQuestGenerator:
             "total_rooms": feedback.total_rooms,
             "boss_room_found": feedback.boss_room_coords is not None,
         }
-        
+
         return quest
 
     def _load_dungeon_spec(self, spec_id: str):
         """ダンジョン仕様読み込み（YAMLから）"""
         try:
-            import yaml
             import os
+
+            import yaml
+
             spec_path = "data/quest_dungeon_specs.yaml"
             if os.path.exists(spec_path):
-                with open(spec_path, "r", encoding="utf-8") as f:
+                with open(spec_path, encoding="utf-8") as f:
                     data = yaml.safe_load(f) or {}
                 spec_data = data.get("dungeon_specs", {}).get(spec_id)
                 if spec_data:
                     from quest_dungeon_spec import build_dungeon_spec_from_yaml
+
                     return build_dungeon_spec_from_yaml(spec_data)
         except Exception:
             pass
         return None
-    def generate_npc_quest(self, npc_id: str, npc_type: str, player: Optional["Entity"] = None, seed: Optional[int] = None) -> Optional[GeneratedQuest]:
+
+    def generate_npc_quest(
+        self,
+        npc_id: str,
+        npc_type: str,
+        player: Entity | None = None,
+        seed: int | None = None,
+    ) -> GeneratedQuest | None:
         """NPC個別クエストを生成 (Step 31)"""
         if seed is None:
             seed = random.randint(0, 10**9)
@@ -839,14 +998,22 @@ class ProceduralQuestGenerator:
 
         pool = [self.registry.get_archetype(a) for a in theme.quest_pool]
         pool = [a for a in pool if a is not None]
-        arch = rng.choice(pool) if pool else (self.registry.get_archetype("delivery") or QuestArchetype())
+        arch = (
+            rng.choice(pool)
+            if pool
+            else (self.registry.get_archetype("delivery") or QuestArchetype())
+        )
 
         player_level = int(getattr(player, "level", 1)) if player else 1
         diff = self._pick_difficulty_for_level(player_level, None, None, rng)
         reward = self._pick_reward_for_difficulty(diff, rng)
 
         # Step 33: 個別フレーバー付与
-        setting = rng.choice(list(self.registry.all_settings().values())) if self.registry.all_settings() else StageSetting()
+        setting = (
+            rng.choice(list(self.registry.all_settings().values()))
+            if self.registry.all_settings()
+            else StageSetting()
+        )
         quest = self._compose("npc", arch, diff, reward, setting, seed, npc_id=npc_id)
         # Apply NPC theme flavor
         if theme.flavor:
@@ -855,9 +1022,12 @@ class ProceduralQuestGenerator:
         return quest
 
     # ---- Step 17-18: 連鎖クエスト（報酬カスケード） ----
-    def generate_followup(self, parent: GeneratedQuest,
-                          player: Optional["Entity"] = None,
-                          seed: Optional[int] = None) -> Optional[GeneratedQuest]:
+    def generate_followup(
+        self,
+        parent: GeneratedQuest,
+        player: Entity | None = None,
+        seed: int | None = None,
+    ) -> GeneratedQuest | None:
         """親クエストのフォローアップ（連鎖次世代）を生成 (Step 17)"""
         cfg = self.registry.chain_config()
         max_depth = int(cfg.get("max_depth", 5))
@@ -869,8 +1039,14 @@ class ProceduralQuestGenerator:
 
         # 難易度・報酬のエスカレーション (Step 17)
         diff_order = self.registry.difficulty_order()
-        d_idx = diff_order.index(parent.difficulty_id) if parent.difficulty_id in diff_order else 0
-        d_idx = min(len(diff_order) - 1, d_idx + int(cfg.get("difficulty_escalation", 1)))
+        d_idx = (
+            diff_order.index(parent.difficulty_id)
+            if parent.difficulty_id in diff_order
+            else 0
+        )
+        d_idx = min(
+            len(diff_order) - 1, d_idx + int(cfg.get("difficulty_escalation", 1))
+        )
         diff = self.registry.get_difficulty(diff_order[d_idx]) or DifficultyTier()
 
         r_order = list(self.registry.all_rewards().keys())
@@ -881,7 +1057,9 @@ class ProceduralQuestGenerator:
         arch = self.registry.get_archetype(parent.archetype_id) or QuestArchetype()
         setting = self.registry.get_setting(parent.setting_id) or StageSetting()
 
-        quest = self._compose(parent.source_type, arch, diff, reward, setting, seed, npc_id=parent.npc_id)
+        quest = self._compose(
+            parent.source_type, arch, diff, reward, setting, seed, npc_id=parent.npc_id
+        )
         depth = parent.depth + 1
         quest.chain_id = parent.chain_id or parent.quest_id
         quest.parent_id = parent.quest_id
@@ -890,12 +1068,19 @@ class ProceduralQuestGenerator:
         # Step 18: 報酬カスケード合成（階層累積乗算＋ボーナス加算）
         gm = float(cfg.get("gold_multiplier_per_depth", 1.5))
         em = float(cfg.get("exp_multiplier_per_depth", 1.4))
-        quest.reward["gold"] = int(quest.reward.get("gold", 0) * (gm ** depth))
-        quest.reward["exp"] = int(quest.reward.get("exp", 0) * (em ** depth))
+        quest.reward["gold"] = int(quest.reward.get("gold", 0) * (gm**depth))
+        quest.reward["exp"] = int(quest.reward.get("exp", 0) * (em**depth))
         bonus = quest.reward.get("bonus", {}) or {}
-        bonus["fame"] = bonus.get("fame", 0) + int(cfg.get("cascade_fame_per_depth", 2)) * depth
-        bonus["relationship"] = bonus.get("relationship", 0) + int(cfg.get("cascade_relationship_per_depth", 1)) * depth
-        bonus["meta"] = bonus.get("meta", 0) + int(cfg.get("cascade_meta_per_depth", 1)) * depth
+        bonus["fame"] = (
+            bonus.get("fame", 0) + int(cfg.get("cascade_fame_per_depth", 2)) * depth
+        )
+        bonus["relationship"] = (
+            bonus.get("relationship", 0)
+            + int(cfg.get("cascade_relationship_per_depth", 1)) * depth
+        )
+        bonus["meta"] = (
+            bonus.get("meta", 0) + int(cfg.get("cascade_meta_per_depth", 1)) * depth
+        )
         quest.reward["bonus"] = bonus
 
         # Step 22: 連鎖専用フレーバー
@@ -910,26 +1095,30 @@ class ProceduralQuestGenerator:
         return quest
 
     # ---- 補助 ----
-    def _weighted_choice(self, items: List[Tuple[str, Any]],
-                         weights: Dict[str, int], rng: random.Random) -> Optional[Any]:
+    def _weighted_choice(
+        self, items: list[tuple[str, Any]], weights: dict[str, int], rng: random.Random
+    ) -> Any | None:
         if not items:
             return None
         w = [max(1, int(weights.get(k, 1))) for k, _ in items]
         chosen = rng.choices(items, weights=w, k=1)[0]
         return chosen[1]
 
-    def _pick_reward_for_difficulty(self, diff: DifficultyTier,
-                                    rng: random.Random) -> RewardTable:
+    def _pick_reward_for_difficulty(
+        self, diff: DifficultyTier, rng: random.Random
+    ) -> RewardTable:
         order = list(self.registry.all_rewards().values())
         if not order:
             return RewardTable()
-        idx = int((diff.recommended_power ** 0.5) / 12 + rng.randint(0, 1))
+        idx = int((diff.recommended_power**0.5) / 12 + rng.randint(0, 1))
         idx = max(0, min(len(order) - 1, idx))
         return order[idx]
 
-    def _get_relationship_level(self, player: "Entity", npc_id: str) -> int:
+    def _get_relationship_level(self, player: Entity, npc_id: str) -> int:
         try:
-            from relationship_system import RelationshipManager, REGISTRY as REL_REG
+            from relationship_system import REGISTRY as REL_REG
+            from relationship_system import RelationshipManager
+
             return RelationshipManager(REL_REG).get_relationship_level(player, npc_id)
         except Exception:
             rels = getattr(player, "character_relationships", {})
@@ -995,20 +1184,24 @@ def _target_matches(quest_target: str, event_norm: str) -> bool:
 class ProceduralQuestManager:
     """生成クエストの受諍・進捗・達成・報酬付与管理 (Steps 34-35)"""
 
-    def __init__(self, generator: Optional[ProceduralQuestGenerator] = None):
+    def __init__(self, generator: ProceduralQuestGenerator | None = None):
         self.generator = generator or ProceduralQuestGenerator(REGISTRY)
 
-    def _comp(self, player: "Entity"):
+    def _comp(self, player: Entity):
         return player.procedural_quest
 
     # Step 26, 27: ボード管理
-    def ensure_board(self, player: "Entity", engine: Optional["Engine"] = None) -> List[GeneratedQuest]:
+    def ensure_board(
+        self, player: Entity, engine: Engine | None = None
+    ) -> list[GeneratedQuest]:
         comp = self._comp(player)
         if not comp.active_board:
             self.refresh_board(player, engine)
         return [GeneratedQuest.from_dict(d) for d in comp.active_board]
 
-    def refresh_board(self, player: "Entity", engine: Optional["Engine"] = None) -> List[GeneratedQuest]:
+    def refresh_board(
+        self, player: Entity, engine: Engine | None = None
+    ) -> list[GeneratedQuest]:
         """依頼ボードを再生成 (Step 26, 27)"""
         comp = self._comp(player)
         comp.board_seed = (comp.board_seed + 1) % (10**9)
@@ -1018,39 +1211,54 @@ class ProceduralQuestManager:
             engine.log(f"依頼ボードが更新された（{len(quests)}件）", (200, 220, 255))
         return quests
 
-    def get_available_board(self, player: "Entity") -> List[GeneratedQuest]:
+    def get_available_board(self, player: Entity) -> list[GeneratedQuest]:
         return self.ensure_board(player)
 
-    def get_npc_quests(self, player: "Entity", npc_id: str,
-                       npc_type: str) -> List[GeneratedQuest]:
+    def get_npc_quests(
+        self, player: Entity, npc_id: str, npc_type: str
+    ) -> list[GeneratedQuest]:
         """NPCが提示可能な個別クエスト一覧 (Step 31)"""
         q = self.generator.generate_npc_quest(npc_id, npc_type, player)
         return [q] if q else []
 
-    def accept_quest(self, player: "Entity", quest_id: str) -> bool:
+    def accept_quest(self, player: Entity, quest_id: str) -> bool:
         comp = self._comp(player)
         for bd in comp.active_board:
             if bd.get("quest_id") == quest_id:
                 comp.accepted_quests.append(bd)
-                comp.active_board = [b for b in comp.active_board if b.get("quest_id") != quest_id]
+                comp.active_board = [
+                    b for b in comp.active_board if b.get("quest_id") != quest_id
+                ]
                 return True
         return False
 
     # Step 34: 進捗更新
-    def update_progress(self, player: "Entity", event_type: str,
-                        target_id: str, amount: int = 1,
-                        engine: Optional["Engine"] = None) -> List[str]:
+    def update_progress(
+        self,
+        player: Entity,
+        event_type: str,
+        target_id: str,
+        amount: int = 1,
+        engine: Engine | None = None,
+    ) -> list[str]:
         """イベントに基づき受諾済クエストの目的を進捗 (Step 34)"""
         comp = self._comp(player)
-        logs: List[str] = []
+        logs: list[str] = []
         n_target = _norm_target(target_id)
         for qd in comp.accepted_quests:
             quest = GeneratedQuest.from_dict(qd)
             changed = False
             for obj in quest.objectives:
-                if obj.target_type == event_type and obj.current_count < obj.required_count:
-                    if obj.target_id == target_id or _target_matches(obj.target_id, n_target):
-                        obj.current_count = min(obj.required_count, obj.current_count + amount)
+                if (
+                    obj.target_type == event_type
+                    and obj.current_count < obj.required_count
+                ):
+                    if obj.target_id == target_id or _target_matches(
+                        obj.target_id, n_target
+                    ):
+                        obj.current_count = min(
+                            obj.required_count, obj.current_count + amount
+                        )
                         changed = True
             if changed:
                 qd.clear()
@@ -1062,8 +1270,9 @@ class ProceduralQuestManager:
         return logs
 
     # Step 34: 達成と報酬付与
-    def complete_quest(self, player: "Entity", quest_id: str,
-                       engine: Optional["Engine"] = None) -> Tuple[bool, str, Dict[str, Any]]:
+    def complete_quest(
+        self, player: Entity, quest_id: str, engine: Engine | None = None
+    ) -> tuple[bool, str, dict[str, Any]]:
         comp = self._comp(player)
         target = None
         for qd in comp.accepted_quests:
@@ -1100,14 +1309,23 @@ class ProceduralQuestManager:
         meta = int(bonus.get("meta", 0))
         if fame:
             try:
-                player.guild_contribution = getattr(player, "guild_contribution", 0) + fame
+                player.guild_contribution = (
+                    getattr(player, "guild_contribution", 0) + fame
+                )
             except Exception:
                 pass
         if rel_bonus and quest.npc_id:
             try:
-                from relationship_system import RelationshipManager, REGISTRY as REL_REG
+                from relationship_system import REGISTRY as REL_REG
+                from relationship_system import RelationshipManager
+
                 RelationshipManager(REL_REG).update_relationship(
-                    player, quest.npc_id, action="quest", delta_trust=rel_bonus * 5, delta_mood=rel_bonus * 3)
+                    player,
+                    quest.npc_id,
+                    action="quest",
+                    delta_trust=rel_bonus * 5,
+                    delta_mood=rel_bonus * 3,
+                )
             except Exception:
                 rels = getattr(player, "character_relationships", {})
                 cur = rels.get(quest.npc_id, {"trust": 0, "mood": 0})
@@ -1117,11 +1335,15 @@ class ProceduralQuestManager:
         if meta:
             try:
                 player.meta_progression = getattr(player, "meta_progression", {})
-                player.meta_progression["points"] = player.meta_progression.get("points", 0) + meta
+                player.meta_progression["points"] = (
+                    player.meta_progression.get("points", 0) + meta
+                )
             except Exception:
                 pass
 
-        comp.accepted_quests = [q for q in comp.accepted_quests if q.get("quest_id") != quest_id]
+        comp.accepted_quests = [
+            q for q in comp.accepted_quests if q.get("quest_id") != quest_id
+        ]
         comp.completed_quest_ids.append(quest_id)
         comp.completed_count += 1
         msg = f"生成クエスト【{quest.title}】達成！ 金貨+{gold}G, 経験+{exp} 獲得！"
@@ -1132,8 +1354,9 @@ class ProceduralQuestManager:
         return True, msg, reward
 
     # Step 19: 連鎖フォローアップの提示
-    def present_followup(self, player: "Entity", parent_quest: GeneratedQuest,
-                         engine: Optional["Engine"] = None) -> Optional[GeneratedQuest]:
+    def present_followup(
+        self, player: Entity, parent_quest: GeneratedQuest, engine: Engine | None = None
+    ) -> GeneratedQuest | None:
         """完了時に次の連鎖クエストを生成しボードへ提示 (Step 19)"""
         followup = self.generator.generate_followup(parent_quest, player)
         if followup is None:
@@ -1152,4 +1375,3 @@ class ProceduralQuestManager:
 
 GENERATOR = ProceduralQuestGenerator(REGISTRY)
 MANAGER = ProceduralQuestManager(GENERATOR)
-

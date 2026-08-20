@@ -11,8 +11,8 @@ Verifies that:
 
 import tcod.event
 
-from input_handler import InputHandler
 from input_actions import ActionRegistry
+from input_handler import InputHandler
 
 
 class StubEngine:

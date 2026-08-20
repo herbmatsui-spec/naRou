@@ -3,11 +3,13 @@ Achievement and Trophy System Module (Steps 18-24, 35, 40, 44, 47, 50, 54, 58, 6
 """
 
 from __future__ import annotations
+
 import os
-import yaml
-from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import TYPE_CHECKING, Any
+
+import yaml
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -17,32 +19,34 @@ if TYPE_CHECKING:
 @dataclass
 class AchievementData:
     """実績データクラス (Step 19)"""
+
     id: str
     name: str
     description: str
     icon: str = "🏆"
-    reward_title: Optional[str] = None
+    reward_title: str | None = None
     reward_gold: int = 0
-    reward_item: Optional[str] = None
+    reward_item: str | None = None
     reward_skill_points: int = 0
     hidden: bool = False
-    prerequisites: List[str] = field(default_factory=list)
-    trigger_condition: Dict[str, Any] = field(default_factory=dict)
+    prerequisites: list[str] = field(default_factory=list)
+    trigger_condition: dict[str, Any] = field(default_factory=dict)
     auto_equip_title: bool = False
-    status_bonus: Dict[str, int] = field(default_factory=dict)
-    time_limit: Optional[int] = None
-    available_dates: List[str] = field(default_factory=list)
-    collection_type: Optional[str] = None
+    status_bonus: dict[str, int] = field(default_factory=dict)
+    time_limit: int | None = None
+    available_dates: list[str] = field(default_factory=list)
+    collection_type: str | None = None
     target_count: int = 0
     social_based: bool = False
     meta_progression_based: bool = False
-    requirement: Dict[str, Any] = field(default_factory=dict)
+    requirement: dict[str, Any] = field(default_factory=dict)
 
 
 # Step 20, 21: AchievementRegistry シングルトン
 class AchievementRegistry:
     """実績マスタデータ管理 (Step 20, 21)"""
-    _instance: Optional[AchievementRegistry] = None
+
+    _instance: AchievementRegistry | None = None
 
     def __new__(cls) -> AchievementRegistry:
         if cls._instance is None:
@@ -60,11 +64,11 @@ class AchievementRegistry:
                 name="最初の血",
                 description="初めてモンスターを討伐する。",
                 icon="⚔️",
-                reward_gold=100
+                reward_gold=100,
             )
             return
 
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             raw = yaml.safe_load(f) or {}
 
         ach_dict = raw.get("achievements", {})
@@ -89,13 +93,13 @@ class AchievementRegistry:
                 target_count=data.get("target_count", 0),
                 social_based=data.get("social_based", False),
                 meta_progression_based=data.get("meta_progression_based", False),
-                requirement=data.get("requirement", {})
+                requirement=data.get("requirement", {}),
             )
 
-    def get(self, achievement_id: str) -> Optional[AchievementData]:
+    def get(self, achievement_id: str) -> AchievementData | None:
         return self._achievements.get(achievement_id)
 
-    def all(self) -> Dict[str, AchievementData]:
+    def all(self) -> dict[str, AchievementData]:
         return dict(self._achievements)
 
 
@@ -105,10 +109,13 @@ REGISTRY = AchievementRegistry()
 # Step 22-24, 35, 40, 44, 47, 50, 54, 58, 62, 64, 69: AchievementManager
 class AchievementManager:
     """実績進行管理・判定・報酬付与 (Step 22-24)"""
-    def __init__(self, registry: Optional[AchievementRegistry] = None):
+
+    def __init__(self, registry: AchievementRegistry | None = None):
         self.registry = registry or REGISTRY
 
-    def check_achievement(self, player: "Entity", ach_id: str, engine: Optional[Any] = None) -> bool:
+    def check_achievement(
+        self, player: Entity, ach_id: str, engine: Any | None = None
+    ) -> bool:
         """個別実績の達成条件チェック (Steps 23, 35, 40, 44, 47, 50, 54, 58, 62, 64, 69)"""
         if ach_id in player.achievements:
             return False
@@ -123,7 +130,11 @@ class AchievementManager:
         # 1. 討伐数 (Step 2, 23)
         if ctype == "kill_count":
             target = cond.get("target", 1)
-            tot_kills = sum(player.kill_counts.values()) if hasattr(player, "kill_counts") else 0
+            tot_kills = (
+                sum(player.kill_counts.values())
+                if hasattr(player, "kill_counts")
+                else 0
+            )
             return tot_kills >= target
 
         # 2. モンスター種族討伐数 (Step 3)
@@ -136,12 +147,18 @@ class AchievementManager:
         # 3. ダンジョン探検家 (Step 32, 35)
         elif ctype == "dungeon_floors":
             target = cond.get("target", 10)
-            return len(player.dungeon_floors_visited) >= target or getattr(player, "max_dungeon_depth", 0) >= target
+            return (
+                len(player.dungeon_floors_visited) >= target
+                or getattr(player, "max_dungeon_depth", 0) >= target
+            )
 
         # 4. スピードランナー (Step 37, 40)
         elif ctype == "speedrun":
             limit = cond.get("time_limit_seconds", 3600)
-            return player.play_time_seconds <= limit and getattr(player, "max_dungeon_depth", 0) >= 5
+            return (
+                player.play_time_seconds <= limit
+                and getattr(player, "max_dungeon_depth", 0) >= 5
+            )
 
         # 5. 祭り参加者 (Step 41, 44)
         elif ctype == "festival_date":
@@ -172,7 +189,10 @@ class AchievementManager:
         elif ctype == "reincarnation":
             req_reinc = cond.get("reincarnation_count", 5)
             req_lvl = cond.get("total_level_earned", 1000)
-            return player.reincarnation_count >= req_reinc and player.total_level_earned >= req_lvl
+            return (
+                player.reincarnation_count >= req_reinc
+                and player.total_level_earned >= req_lvl
+            )
 
         # 11. メタマスター (Step 63, 64)
         elif ctype == "meta_progression_all":
@@ -186,7 +206,9 @@ class AchievementManager:
 
         return False
 
-    def grant_achievement(self, player: "Entity", ach_id: str, engine: Optional[Any] = None) -> bool:
+    def grant_achievement(
+        self, player: Entity, ach_id: str, engine: Any | None = None
+    ) -> bool:
         """実績付与および報酬付与 (Step 24)"""
         if ach_id in player.achievements:
             return False
@@ -227,17 +249,24 @@ class AchievementManager:
         if data.status_bonus:
             for attr_name, b_val in data.status_bonus.items():
                 if hasattr(player.attributes, attr_name):
-                    setattr(player.attributes, attr_name, getattr(player.attributes, attr_name) + b_val)
+                    setattr(
+                        player.attributes,
+                        attr_name,
+                        getattr(player.attributes, attr_name) + b_val,
+                    )
 
         # SE再生 & ログ
         if engine:
             from sound_manager import SoundManager
+
             SoundManager.play_se("level_up")
             engine.log(f"★実績解除: 【{data.name}】を獲得！", (255, 215, 0))
 
         return True
 
-    def check_all_achievements(self, player: "Entity", engine: Optional[Any] = None) -> List[str]:
+    def check_all_achievements(
+        self, player: Entity, engine: Any | None = None
+    ) -> list[str]:
         """全未達成実績を一括チェックして付与"""
         granted = []
         for ach_id in self.registry.all().keys():

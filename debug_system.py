@@ -3,7 +3,8 @@ Debug and Wish System Module
 """
 
 from __future__ import annotations
-from typing import Dict, List, Any, TYPE_CHECKING
+
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -12,20 +13,31 @@ if TYPE_CHECKING:
 
 class WishParser:
     """テキスト入力から願いを解析するパーサー"""
-    ITEM_KEYWORDS: Dict[str, str] = {
-        "剣": "longsword", "sword": "longsword",
-        "short": "shortsword", "短剣": "shortsword",
-        "shield": "shield", "盾": "shield",
-        "potion": "potion_heal", "ポーション": "potion_heal", "回復": "potion_heal",
-        "bread": "bread", "パン": "bread",
-        "book": "book_fire", "魔法書": "book_fire",
+
+    ITEM_KEYWORDS: dict[str, str] = {
+        "剣": "longsword",
+        "sword": "longsword",
+        "short": "shortsword",
+        "短剣": "shortsword",
+        "shield": "shield",
+        "盾": "shield",
+        "potion": "potion_heal",
+        "ポーション": "potion_heal",
+        "回復": "potion_heal",
+        "bread": "bread",
+        "パン": "bread",
+        "book": "book_fire",
+        "魔法書": "book_fire",
     }
     GOLD_KEYWORDS = ["gold", "お金", "金", "gold", "ゴールド"]
     SKILL_KEYWORDS = ["skill", "スキル", "経験"]
 
     @classmethod
-    def parse(cls, text: str, player: "Entity", inventory: "Inventory", survival: Any) -> str:
+    def parse(
+        cls, text: str, player: Entity, inventory: Inventory, survival: Any
+    ) -> str:
         from item_system import create_sample_item
+
         text_lower = text.strip().lower()
 
         # Gold
@@ -63,6 +75,7 @@ class WishParser:
 
 class UniqueItemManager:
     """ユニークアイテムの重複出現防止"""
+
     def __init__(self):
         self._spawned: set = set()
 
@@ -72,15 +85,16 @@ class UniqueItemManager:
     def register(self, unique_id: str) -> None:
         self._spawned.add(unique_id)
 
-    def save(self) -> List[str]:
+    def save(self) -> list[str]:
         return list(self._spawned)
 
-    def load(self, data: List[str]) -> None:
+    def load(self, data: list[str]) -> None:
         self._spawned = set(data)
 
 
 class DebugConsole:
     """開発者用デバッグコンソール"""
+
     def __init__(self):
         self.enabled = True
         self.input_buffer = ""
@@ -110,6 +124,7 @@ class DebugConsole:
         elif cmd.startswith("item "):
             item_name = cmd[5:]
             from item_system import create_sample_item
+
             itm = create_sample_item(item_name)
             ok, msg = engine.inventory.add_item(itm)
             return msg
@@ -118,6 +133,7 @@ class DebugConsole:
             return "エーテル病を治療した！"
         elif cmd == "titles":
             from title_system import MANAGER
+
             granted = MANAGER.check_all_titles(engine.player)
             if granted:
                 return f"称号チェック実行: {', '.join(granted)} を獲得！"
@@ -125,6 +141,7 @@ class DebugConsole:
                 return "新しい称号はありません。"
         elif cmd == "titlelist":
             from title_system import REGISTRY
+
             REGISTRY.load()
             p = engine.player
             earned = [REGISTRY.get(t).name for t in p.titles if REGISTRY.get(t)]

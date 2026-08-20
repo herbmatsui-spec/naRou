@@ -5,7 +5,6 @@ Command-line friendly helpers for inspecting and validating localized text.
 """
 
 from __future__ import annotations
-from typing import List, Optional
 
 from localization_manager import LocalizationManager
 

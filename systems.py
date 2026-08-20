@@ -4,71 +4,76 @@ Steps 37-45: 属性耐性, 詠唱失敗率, AoEパターン, Faction/Aggro, 出�
 """
 
 from __future__ import annotations
+
 import random
-from typing import List, Tuple, Optional, Dict, Any, TYPE_CHECKING
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
+
 from constants import Element
 
 if TYPE_CHECKING:
     from entity import Entity
 
 # 状態異常
-STATUS_POISON    = "毒"
+STATUS_POISON = "毒"
 STATUS_PARALYSIS = "麻痺"
 STATUS_CONFUSION = "混乱"
-STATUS_BLIND     = "盲目"
-STATUS_BLEEDING  = "出血"   # ステップ45
-STATUS_HASTE     = "加速"
-STATUS_SLOW      = "鈍足"
-STATUS_RETURN    = "帰還待機" # ステップ63 遅延ワープ
+STATUS_BLIND = "盲目"
+STATUS_BLEEDING = "出血"  # ステップ45
+STATUS_HASTE = "加速"
+STATUS_SLOW = "鈍足"
+STATUS_RETURN = "帰還待機"  # ステップ63 遅延ワープ
 
 # ファクション (ステップ42)
-FACTION_PLAYER    = "player"
-FACTION_MONSTER   = "monster"
+FACTION_PLAYER = "player"
+FACTION_MONSTER = "monster"
 FACTION_TOWNSFOLK = "townsfolk"
-FACTION_GUARD     = "guard"
+FACTION_GUARD = "guard"
 
 
 @dataclass
 class StatusEffect:
     """状態異常 - Tick連動(ステップ16)"""
+
     name: str
-    remaining_ticks: int    # 残り持続Tick
-    power: int = 1          # 効果の強さ
-    source: Optional[str] = None
+    remaining_ticks: int  # 残り持続Tick
+    power: int = 1  # 効果の強さ
+    source: str | None = None
 
 
 class ResistanceSet:
     """属性耐性セット (ステップ37)"""
+
     def __init__(self):
-        self.fire       = 0   # -100〜100, 0=通常, 100=無効, -50=弱点(1.5倍)
-        self.cold       = 0
-        self.lightning  = 0
-        self.darkness   = 0
-        self.chaos      = 0
-        self.magic      = 0
+        self.fire = 0  # -100〜100, 0=通常, 100=無効, -50=弱点(1.5倍)
+        self.cold = 0
+        self.lightning = 0
+        self.darkness = 0
+        self.chaos = 0
+        self.magic = 0
 
     def get(self, element: Element) -> int:
         mapping = {
-            Element.FIRE:      self.fire,
-            Element.COLD:      self.cold,
+            Element.FIRE: self.fire,
+            Element.COLD: self.cold,
             Element.LIGHTNING: self.lightning,
-            Element.DARKNESS:  self.darkness,
-            Element.CHAOS:     self.chaos,
-            Element.MAGIC:     self.magic,
+            Element.DARKNESS: self.darkness,
+            Element.CHAOS: self.chaos,
+            Element.MAGIC: self.magic,
         }
         return mapping.get(element, 0)
 
 
 class AggroList:
     """ヘイトリスト (ステップ42)"""
+
     def __init__(self):
-        self._table: Dict[str, int] = {}  # entity name -> hate_value
+        self._table: dict[str, int] = {}  # entity name -> hate_value
 
     def add_hate(self, target_name: str, amount: int) -> None:
         self._table[target_name] = self._table.get(target_name, 0) + amount
 
-    def top_target(self) -> Optional[str]:
+    def top_target(self) -> str | None:
         if not self._table:
             return None
         return max(self._table, key=lambda k: self._table[k])
@@ -79,7 +84,7 @@ class CombatSystem:
 
     # AoEパターン生成 (ステップ40)
     @staticmethod
-    def aoe_radius(cx: int, cy: int, radius: int = 1) -> List[Tuple[int, int]]:
+    def aoe_radius(cx: int, cy: int, radius: int = 1) -> list[tuple[int, int]]:
         """円形範囲の座標リスト"""
         coords = []
         for dx in range(-radius, radius + 1):
@@ -89,27 +94,44 @@ class CombatSystem:
         return coords
 
     @staticmethod
-    def aoe_beam(sx: int, sy: int, direction: Tuple[int, int], length: int = 5) -> List[Tuple[int, int]]:
+    def aoe_beam(
+        sx: int, sy: int, direction: tuple[int, int], length: int = 5
+    ) -> list[tuple[int, int]]:
         """直線ビーム範囲"""
         dx, dy = direction
         return [(sx + dx * i, sy + dy * i) for i in range(1, length + 1)]
 
     @staticmethod
-    def aoe_nova(cx: int, cy: int) -> List[Tuple[int, int]]:
+    def aoe_nova(cx: int, cy: int) -> list[tuple[int, int]]:
         """周囲全方位（8マス）"""
-        return [(cx + dx, cy + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1) if (dx, dy) != (0, 0)]
+        return [
+            (cx + dx, cy + dy)
+            for dx in (-1, 0, 1)
+            for dy in (-1, 0, 1)
+            if (dx, dy) != (0, 0)
+        ]
 
     @staticmethod
-    def publish_damage_event(event_bus, damage: int, x: int, y: int, is_crit: bool = False, is_kill: bool = False) -> None:
+    def publish_damage_event(
+        event_bus,
+        damage: int,
+        x: int,
+        y: int,
+        is_crit: bool = False,
+        is_kill: bool = False,
+    ) -> None:
         """ダメージイベントを発行 (FXManagerが購読してエフェクトを生成)"""
         if event_bus:
-            event_bus.publish("damage_dealt", {
-                "damage": damage,
-                "x": x,
-                "y": y,
-                "is_crit": is_crit,
-                "is_kill": is_kill,
-            })
+            event_bus.publish(
+                "damage_dealt",
+                {
+                    "damage": damage,
+                    "x": x,
+                    "y": y,
+                    "is_crit": is_crit,
+                    "is_kill": is_kill,
+                },
+            )
 
     @staticmethod
     def publish_kill_event(event_bus, x: int, y: int) -> None:
@@ -131,7 +153,7 @@ class CombatSystem:
         return max(0, int(base_dmg * multiplier))
 
     @staticmethod
-    def calc_spell_success(caster: "Entity", spell_id: str) -> Tuple[bool, Optional[int]]:
+    def calc_spell_success(caster: Entity, spell_id: str) -> tuple[bool, int | None]:
         """魔法詠唱成功率 (ステップ39) - 失敗時にマナ反動ダメージ"""
         skill_lv = caster.skills.get("magic_cast", None)
         skill_val = skill_lv.level if skill_lv else 1
@@ -150,11 +172,11 @@ class CombatSystem:
 
     @staticmethod
     def calculate_melee_attack(
-        attacker: "Entity",
-        defender: "Entity",
+        attacker: Entity,
+        defender: Entity,
         weapon=None,
-        element: Element = Element.PHYSICAL
-    ) -> Tuple[int, bool, str]:
+        element: Element = Element.PHYSICAL,
+    ) -> tuple[int, bool, str]:
         """近接攻撃 + 属性ダメージ + 出血付与 (ステップ37, 38, 45)"""
         hit_rate = 75 + attacker.attributes.dexterity - defender.attributes.dexterity
         if weapon:
@@ -169,7 +191,7 @@ class CombatSystem:
 
         dice_n = weapon.dice_num if weapon else 1
         dice_s = weapon.dice_side if weapon else 4
-        bonus  = weapon.dmg_bonus if weapon else 0
+        bonus = weapon.dmg_bonus if weapon else 0
         roll_dmg = sum(random.randint(1, dice_s) for _ in range(dice_n)) + bonus
         roll_dmg += int(attacker.attributes.strength / 3)
         if is_crit:
@@ -179,7 +201,11 @@ class CombatSystem:
         res = getattr(defender, "resistances", ResistanceSet())
         res_val = res.get(element) if hasattr(res, "get") else 0
         final_dmg = CombatSystem.calc_element_damage(roll_dmg, element, res_val)
-        final_dmg = max(1, final_dmg - random.randint(0, max(1, int(defender.attributes.endurance / 4))))
+        final_dmg = max(
+            1,
+            final_dmg
+            - random.randint(0, max(1, int(defender.attributes.endurance / 4))),
+        )
 
         # 転生スケーリング適用 (Steps 53, 54)
         # TODO: Reincarnation scaling
@@ -190,12 +216,20 @@ class CombatSystem:
                 mult = min(5.0, 1.0 + reinc_count * 0.15)
                 final_dmg = int(final_dmg * mult)
 
+        # 難易度補正 (Step 33): プレイヤーが受けるダメージを難易度で補正
+        if getattr(defender, "is_player", False):
+            from core.difficulty import DifficultyManager
+
+            final_dmg = int(DifficultyManager().player_damage_taken(final_dmg))
+
         # 出血判定 (ステップ45): 大きなダメージ時に5%
         if final_dmg > 8 and random.random() < 0.05:
             if not hasattr(defender, "status_effects"):
                 defender.status_effects = []
             # 既存の出血を更新
-            defender.status_effects = [s for s in defender.status_effects if s.name != STATUS_BLEEDING]
+            defender.status_effects = [
+                s for s in defender.status_effects if s.name != STATUS_BLEEDING
+            ]
             defender.status_effects.append(StatusEffect(STATUS_BLEEDING, 500, power=2))
 
         crit_msg = "★会心の一撃！ " if is_crit else ""
@@ -204,13 +238,13 @@ class CombatSystem:
 
     @staticmethod
     def apply_aoe(
-        caster: "Entity",
-        coords: List[Tuple[int, int]],
-        base_dmg_range: Tuple[int, int],
+        caster: Entity,
+        coords: list[tuple[int, int]],
+        base_dmg_range: tuple[int, int],
         element: Element,
-        entities: List["Entity"],
+        entities: list[Entity],
         karma_ref: Any = None,
-    ) -> List[str]:
+    ) -> list[str]:
         """AoE範囲攻撃 - フレンドリーファイア含む (ステップ40, 41)"""
         logs = []
         for ex, ey in coords:
@@ -219,7 +253,9 @@ class CombatSystem:
                     base = random.randint(*base_dmg_range)
                     res = getattr(e, "resistances", ResistanceSet())
                     res_val = res.get(element) if hasattr(res, "get") else 0
-                    dmg = CombatSystem.calc_element_damage(base + caster.attributes.magic, element, res_val)
+                    dmg = CombatSystem.calc_element_damage(
+                        base + caster.attributes.magic, element, res_val
+                    )
                     e.hp -= dmg
                     logs.append(f"  -> {e.name}に{dmg}の{element.name}ダメージ！")
                     # フレンドリーファイア: ペットや市民を巻き込んだらカルマ低下
@@ -230,7 +266,7 @@ class CombatSystem:
         return logs
 
     @staticmethod
-    def process_status_effects(entity: "Entity") -> List[str]:
+    def process_status_effects(entity: Entity) -> list[str]:
         """状態異常のTick処理 (ステップ16, 45)"""
         if not hasattr(entity, "status_effects"):
             entity.status_effects = []
@@ -264,7 +300,7 @@ class CombatSystem:
         return logs, is_bleeding
 
     @staticmethod
-    def cast_spell(caster: "Entity", spell_name: str, target: "Entity") -> Tuple[int, str]:
+    def cast_spell(caster: Entity, spell_name: str, target: Entity) -> tuple[int, str]:
         """詠唱失敗率つき魔法発動 (ステップ39)"""
         success, backlash = CombatSystem.calc_spell_success(caster, spell_name)
         if not success:
@@ -273,67 +309,77 @@ class CombatSystem:
 
         if spell_name == "magic_dart":
             mp_cost = 4
-            if caster.mp < mp_cost: return 0, "MPが足りない！"
+            if caster.mp < mp_cost:
+                return 0, "MPが足りない！"
             caster.mp -= mp_cost
             dmg = random.randint(1, 6) + int(caster.attributes.magic / 2) + 5
             target.hp -= dmg
             return dmg, f"{caster.name}は魔法の矢を放ち{target.name}に{dmg}ダメージ！"
         elif spell_name == "minor_heal":
             mp_cost = 6
-            if caster.mp < mp_cost: return 0, "MPが足りない！"
+            if caster.mp < mp_cost:
+                return 0, "MPが足りない！"
             caster.mp -= mp_cost
             heal = 25 + int(caster.attributes.will / 2)
             caster.hp = min(caster.max_hp, caster.hp + heal)
             return heal, f"{caster.name}の傷が癒えた！ (HP +{heal})"
         elif spell_name == "fireball":
             mp_cost = 10
-            if caster.mp < mp_cost: return 0, "MPが足りない！"
+            if caster.mp < mp_cost:
+                return 0, "MPが足りない！"
             caster.mp -= mp_cost
+
     # === エクスクルーシブスキル処理 (Steps 62, 63) ===
     @staticmethod
     def is_exclusive_skill(skill_id: str) -> bool:
         """スキルIDがエクスクルーシブスキルか判定 (Step 62)"""
         try:
-            import yaml
             from pathlib import Path
+
+            import yaml
+
             p = Path("data/exclusive_skills.yaml")
             if not p.exists():
                 return False
-            with open(p, 'r', encoding='utf-8') as f:
+            with open(p, encoding="utf-8") as f:
                 data = yaml.safe_load(f) or {}
-            return skill_id in data.get('exclusive_skills', {})
+            return skill_id in data.get("exclusive_skills", {})
         except Exception:
             return False
 
     @staticmethod
-    def get_exclusive_skill_data(skill_id: str) -> Optional[Dict[str, Any]]:
+    def get_exclusive_skill_data(skill_id: str) -> dict[str, Any] | None:
         """エクスクルーシブスキルの定義データを取得 (Step 62)"""
         try:
-            import yaml
             from pathlib import Path
+
+            import yaml
+
             p = Path("data/exclusive_skills.yaml")
             if not p.exists():
                 return None
-            with open(p, 'r', encoding='utf-8') as f:
+            with open(p, encoding="utf-8") as f:
                 data = yaml.safe_load(f) or {}
-            return data.get('exclusive_skills', {}).get(skill_id)
+            return data.get("exclusive_skills", {}).get(skill_id)
         except Exception:
             return None
 
     @staticmethod
-    def execute_exclusive_skill(caster: "Entity", skill_id: str, target: "Entity") -> Tuple[int, str]:
+    def execute_exclusive_skill(
+        caster: Entity, skill_id: str, target: Entity
+    ) -> tuple[int, str]:
         """エクスクルーシブスキル実行 (Step 63)"""
         data = CombatSystem.get_exclusive_skill_data(skill_id)
         if not data:
             return 0, "不明な専用スキル。"
 
-        mp_cost = data.get('mp_cost', 10)
+        mp_cost = data.get("mp_cost", 10)
         if caster.mp < mp_cost:
             return 0, f"MPが足りない！ (必要MP: {mp_cost})"
 
         caster.mp -= mp_cost
-        effects = data.get('effects', {})
-        name = data.get('name', skill_id)
+        effects = data.get("effects", {})
+        name = data.get("name", skill_id)
 
         # ダメージ計算
         dmg = 0
@@ -343,12 +389,20 @@ class CombatSystem:
             if not hasattr(target, "status_effects"):
                 target.status_effects = []
             target.status_effects.append(StatusEffect(STATUS_PARALYSIS, 30, power=2))
-            return dmg, f"{caster.name}の【{name}】！ {target.name}に{dmg}ダメージとスタンを付与！"
+            return (
+                dmg,
+                f"{caster.name}の【{name}】！ {target.name}に{dmg}ダメージとスタンを付与！",
+            )
 
         elif skill_id == "iaijutsu":
-            dmg = int(caster.attributes.dexterity * 2.5 + caster.attributes.strength * 1.2) + random.randint(10, 20)
+            dmg = int(
+                caster.attributes.dexterity * 2.5 + caster.attributes.strength * 1.2
+            ) + random.randint(10, 20)
             target.hp -= dmg
-            return dmg, f"★{caster.name}の神速の【{name}】！ 刀閃が走り{target.name}に{dmg}の致命傷！"
+            return (
+                dmg,
+                f"★{caster.name}の神速の【{name}】！ 刀閃が走り{target.name}に{dmg}の致命傷！",
+            )
 
         elif skill_id == "meteor":
             dmg = int(caster.attributes.magic * 4.0) + random.randint(20, 50)
@@ -356,26 +410,30 @@ class CombatSystem:
             if not hasattr(target, "status_effects"):
                 target.status_effects = []
             target.status_effects.append(StatusEffect(STATUS_BLEEDING, 500, power=5))
-            return dmg, f"🌌{caster.name}の【{name}】！ 天より隕石が降り注ぎ{target.name}に{dmg}の破滅的ダメージ！"
+            return (
+                dmg,
+                f"🌌{caster.name}の【{name}】！ 天より隕石が降り注ぎ{target.name}に{dmg}の破滅的ダメージ！",
+            )
 
         return 0, f"{caster.name}は【{name}】を放った！"
 
 
 class SurvivalSystem:
     """サバイバル・空腹・信仰・カルマ・エーテル病"""
-    def __init__(self):
-        self.hunger      = 8000
-        self.sleepiness  = 0
-        self.karma       = 20
-        self.gold        = 500
-        self.platinum    = 5
-        self.ether_disease = 0
-        self.mutations: List[str] = []
-        self.god         = "なし"
-        self.piety       = 0
-        self.tax_pending = 0    # 未払い税金
 
-    def pass_turn(self, player: "Entity") -> List[str]:
+    def __init__(self):
+        self.hunger = 8000
+        self.sleepiness = 0
+        self.karma = 20
+        self.gold = 500
+        self.platinum = 5
+        self.ether_disease = 0
+        self.mutations: list[str] = []
+        self.god = "なし"
+        self.piety = 0
+        self.tax_pending = 0  # 未払い税金
+
+    def pass_turn(self, player: Entity) -> list[str]:
         logs = []
         self.hunger -= 1
         self.sleepiness += 1
@@ -388,7 +446,7 @@ class SurvivalSystem:
                 logs.append("空腹で倒れそうだ…何か食べないと。")
         return logs
 
-    def eat(self, player: "Entity", food_item: "Item") -> List[str]:
+    def eat(self, player: Entity, food_item: Item) -> list[str]:
         logs = []
         is_rotten = "腐った" in food_item.name
         self.hunger = min(10000, self.hunger + food_item.nutrition)
@@ -406,7 +464,7 @@ class SurvivalSystem:
                 logs.append("力がみなぎってきた！(筋力+1)")
         return logs
 
-    def sleep(self, player: "Entity") -> List[str]:
+    def sleep(self, player: Entity) -> list[str]:
         self.sleepiness = 0
         player.hp = player.max_hp
         player.mp = player.max_mp
@@ -415,6 +473,7 @@ class SurvivalSystem:
 
 
 from dataclasses import dataclass as _dc
+
 
 @_dc
 class Quest:
@@ -445,9 +504,9 @@ class MonsterPreset:
     }
 
     @staticmethod
-    def create(name: str, x: int, y: int) -> "Entity":
-        from entity import Entity, Attributes
+    def create(name: str, x: int, y: int) -> Entity:
         from config_manager import DataCache
+        from entity import Attributes, Entity
 
         m_data = DataCache.get_data("data/monsters.yaml")
         if m_data and name in m_data:
@@ -484,9 +543,27 @@ class MonsterPreset:
 
         # フォールバック
         presets = {
-            "slime":  ("ぷち",    "🍮", (100, 255, 100), 50,  Attributes(strength=5,  endurance=6,  dexterity=6)),
-            "goblin": ("ゴブリン", "👺", (200, 100, 50),  70,  Attributes(strength=8,  endurance=8,  dexterity=8)),
-            "orc":    ("オーク",   "👹", (150, 150, 50),  65,  Attributes(strength=14, endurance=12, dexterity=6)),
+            "slime": (
+                "ぷち",
+                "🍮",
+                (100, 255, 100),
+                50,
+                Attributes(strength=5, endurance=6, dexterity=6),
+            ),
+            "goblin": (
+                "ゴブリン",
+                "👺",
+                (200, 100, 50),
+                70,
+                Attributes(strength=8, endurance=8, dexterity=8),
+            ),
+            "orc": (
+                "オーク",
+                "👹",
+                (150, 150, 50),
+                65,
+                Attributes(strength=14, endurance=12, dexterity=6),
+            ),
         }
         if name not in presets:
             return Entity(x, y, "👾", (255, 255, 255), "モンスター")
@@ -503,7 +580,6 @@ class MonsterPreset:
         return e
 
 
-
 # --- LocalizationManager integration (i18n, Step 3.x) ---
 def localize(key: str, language: str = None, manager=None) -> str:
     """Return localized text for *key* using LocalizationManager.
@@ -512,5 +588,6 @@ def localize(key: str, language: str = None, manager=None) -> str:
     strings without importing the manager directly.
     """
     from localization_manager import LocalizationManager
+
     mgr = manager or LocalizationManager()
     return mgr.get_text(key, language)

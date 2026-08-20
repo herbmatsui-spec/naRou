@@ -5,12 +5,13 @@ from __future__ import annotations
 
 from enum import Enum
 
-from data.schemas._base import DataModel
 from pydantic import ConfigDict, Field, RootModel
+
+from data.schemas._base import DataModel
 
 
 class Prerequisite(RootModel[str]):
-    root: str = Field(..., pattern='^sk_[a-z_][a-z0-9_]*$')
+    root: str = Field(..., pattern="^sk_[a-z_][a-z0-9_]*$")
 
 
 class TargetType(Enum):
@@ -18,11 +19,11 @@ class TargetType(Enum):
     Targeting type
     """
 
-    self = 'self'
-    single = 'single'
-    area = 'area'
-    line = 'line'
-    cone = 'cone'
+    self = "self"
+    single = "single"
+    area = "area"
+    line = "line"
+    cone = "cone"
 
 
 class SkillCategory(Enum):
@@ -30,29 +31,29 @@ class SkillCategory(Enum):
     Skill category for UI grouping
     """
 
-    combat = 'combat'
-    magic = 'magic'
-    craft = 'craft'
-    social = 'social'
+    combat = "combat"
+    magic = "magic"
+    craft = "craft"
+    social = "social"
 
 
 class Type(Enum):
-    damage_bonus = 'damage_bonus'
-    crit_chance = 'crit_chance'
-    mp_cost_reduction = 'mp_cost_reduction'
-    unlock_skill = 'unlock_skill'
-    heal_amount = 'heal_amount'
-    stat_bonus = 'stat_bonus'
-    resistance = 'resistance'
-    unlock_recipe = 'unlock_recipe'
-    speed_bonus = 'speed_bonus'
-    evasion_bonus = 'evasion_bonus'
-    accuracy_bonus = 'accuracy_bonus'
-    lifesteal = 'lifesteal'
-    mana_shield = 'mana_shield'
-    reflect_damage = 'reflect_damage'
-    poison_immunity = 'poison_immunity'
-    stun_chance = 'stun_chance'
+    damage_bonus = "damage_bonus"
+    crit_chance = "crit_chance"
+    mp_cost_reduction = "mp_cost_reduction"
+    unlock_skill = "unlock_skill"
+    heal_amount = "heal_amount"
+    stat_bonus = "stat_bonus"
+    resistance = "resistance"
+    unlock_recipe = "unlock_recipe"
+    speed_bonus = "speed_bonus"
+    evasion_bonus = "evasion_bonus"
+    accuracy_bonus = "accuracy_bonus"
+    lifesteal = "lifesteal"
+    mana_shield = "mana_shield"
+    reflect_damage = "reflect_damage"
+    poison_immunity = "poison_immunity"
+    stun_chance = "stun_chance"
 
 
 class Target(Enum):
@@ -60,19 +61,19 @@ class Target(Enum):
     Effect target type
     """
 
-    melee = 'melee'
-    spell = 'spell'
-    self = 'self'
-    ranged = 'ranged'
-    pet = 'pet'
-    all = 'all'
-    enemy = 'enemy'
-    ally = 'ally'
+    melee = "melee"
+    spell = "spell"
+    self = "self"
+    ranged = "ranged"
+    pet = "pet"
+    all = "all"
+    enemy = "enemy"
+    ally = "ally"
 
 
 class Effect(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     type: Type
     value: float
@@ -95,9 +96,9 @@ class Effect(DataModel):
 
 class SkillDefinition(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
-    id: str = Field(..., pattern='^sk_[a-z_][a-z0-9_]*$')
+    id: str = Field(..., pattern="^sk_[a-z_][a-z0-9_]*$")
     """
     Unique skill ID with 'sk_' prefix
     """
@@ -150,7 +151,7 @@ class SkillDefinition(DataModel):
     """
     Effect range in tiles
     """
-    target_type: TargetType | None = 'single'
+    target_type: TargetType | None = "single"
     """
     Targeting type
     """

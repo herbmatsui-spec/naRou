@@ -4,8 +4,9 @@ Elona Roguelike - Input Action System (Step 6.1)
 """
 
 from __future__ import annotations
-from typing import Protocol, Any
+
 from dataclasses import dataclass
+from typing import Any, Protocol
 
 
 class InputAction(Protocol):
@@ -23,6 +24,7 @@ class InputAction(Protocol):
 @dataclass
 class KeyBinding:
     """キーバインド定義"""
+
     key: int  # tcod.event.KeySym
     action: InputAction
     modifiers: int = 0  # tcod.event.Modifier
@@ -61,9 +63,10 @@ class ActionRegistry:
 # ============================================================
 
 import tcod.event
+
 from constants import GameState
-from sound_manager import SoundManager
 from save_system import SaveSystem
+from sound_manager import SoundManager
 
 
 class MovementAction:
@@ -74,7 +77,10 @@ class MovementAction:
         self.dy = dy
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -88,7 +94,10 @@ class OpenContextMenuAction:
     """コンテキストメニューを開く"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -101,7 +110,10 @@ class LookModeAction:
     """調査モードに入る"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -109,7 +121,9 @@ class LookModeAction:
         engine.game_state = "look"
         engine.look_cursor.x = engine.player.x
         engine.look_cursor.y = engine.player.y
-        engine.log("【調査モード】矢印キーで対象を選択 (Esc/Enter:閉じる)", (255, 255, 120))
+        engine.log(
+            "【調査モード】矢印キーで対象を選択 (Esc/Enter:閉じる)", (255, 255, 120)
+        )
         return True
 
 
@@ -117,7 +131,10 @@ class PickupAction:
     """足元のアイテムを拾う"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -139,7 +156,10 @@ class HelpAction:
     """ヘルプ画面を開く"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -156,7 +176,10 @@ class InventoryAction:
         self.target = target
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -171,7 +194,10 @@ class StatusAction:
     """ステータス画面を開く"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -184,7 +210,10 @@ class JournalAction:
     """ジャーナルを開く"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -197,7 +226,10 @@ class SkillTreeAction:
     """スキルツリー画面を開く"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -210,13 +242,16 @@ class JobAction:
     """ジョブ画面を開く（Shift+Jでジョブ、Jでジャーナル）"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
             return False
         # Shift修飾子の判定は呼び出し元で行う
-        if hasattr(event, 'mod') and event.mod & tcod.event.Modifier.SHIFT:
+        if hasattr(event, "mod") and event.mod & tcod.event.Modifier.SHIFT:
             engine.game_state = "jobs"
         else:
             engine.open_journal()
@@ -227,7 +262,10 @@ class GuildAction:
     """ギルド画面を開く"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -240,7 +278,10 @@ class CastFireballAction:
     """ファイアボール詠唱"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -253,7 +294,10 @@ class MineWallAction:
     """壁採掘"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -277,7 +321,10 @@ class PrayAction:
     """祈り"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -290,7 +337,10 @@ class OfferAltarAction:
     """祭壇への捧げ物"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -303,7 +353,10 @@ class TalkAction:
     """会話"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -316,7 +369,10 @@ class HarvestAction:
     """採取"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -329,7 +385,10 @@ class WishRodAction:
     """願いの杖使用"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -342,7 +401,10 @@ class DescendStairsAction:
     """階段を下りる"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -393,7 +455,10 @@ class WaitAction:
     """待機 (1ターン経過) - スケジューラ再評価トリガー (Phase 3 Step 11)"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -407,7 +472,10 @@ class SleepAction:
     """睡眠 (HP/MP全快 + 長時間経過) - スケジューラ再評価トリガー (Phase 3 Step 11)"""
 
     def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play" or (hasattr(engine, 'current_state') and engine.current_state == GameState.EXPLORING)
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
@@ -431,5 +499,6 @@ class QuitAction:
         print("Auto-saving before quit...")
         SaveSystem.save(engine)
         import sys
+
         sys.exit()
         return True

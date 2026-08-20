@@ -66,7 +66,7 @@ Normal packing:
 packed = normal[:, :, :2].astype(np.float16)
 
 # Unpack in shader:
-z = sqrt(max(1.0 - x*x - y*y, 0.0))
+z = sqrt(max(1.0 - x * x - y * y, 0.0))
 normal = normalize(vec3(x, y, z))
 ```
 
@@ -253,6 +253,7 @@ from core.gbuffer import GBuffer
 from core.lighting import LightVolume, TileCulling, MaterialSystem
 from core.hdr import HDRCompositor
 
+
 class RenderSystem:
     def __init__(self, width, height):
         self.gbuffer = GBuffer(width, height)
@@ -260,28 +261,29 @@ class RenderSystem:
         self.materials = MaterialSystem("data/tile_materials.json")
         self.hdr = HDRCompositor(width, height)
         self.shadow_atlas = ShadowAtlas()
-    
+
     def render_frame(self, scene):
         # 1. G-Buffer pass
         self.gbuffer.clear()
         MapRenderer.render_to_gbuffer(self.gbuffer, scene)
         EntityRenderer.render_to_gbuffer(self.gbuffer, scene)
-        
+
         # 2. Shadow atlas
         self.shadow_atlas.clear()
         for light in scene.lights:
             region = self.shadow_atlas.allocate_light(light.type, 256)
             if region:
                 render_shadow_map(light, region)
-        
+
         # 3. Light culling
         light_grid = self.culling.build_light_grid(
-            width, height, scene.lights, view_proj)
-        
+            width, height, scene.lights, view_proj
+        )
+
         # 4. Light volume pass (deferred)
         # Uses G-Buffer + light_grid + shadow_atlas
         # Output → HDR target
-        
+
         # 5. HDR pipeline (Phase 2)
         self.hdr.begin_frame()
         ldr = self.hdr.end_frame()

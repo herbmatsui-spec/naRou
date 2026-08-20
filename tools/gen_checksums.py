@@ -7,6 +7,7 @@ integrity. Output: ``checksums.txt``.
 Usage:
     python tools/gen_checksums.py --dir dist
 """
+
 from __future__ import annotations
 
 import argparse

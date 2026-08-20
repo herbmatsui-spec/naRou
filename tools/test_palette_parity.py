@@ -7,6 +7,7 @@ Verifies that the three sources of color truth stay in sync:
 
 Run: python tools/test_palette_parity.py
 """
+
 import json
 import os
 import re
@@ -42,7 +43,8 @@ def main() -> int:
 
     # Collect all hex colors from tokens
     token_hex = {
-        k: v for k, v in token_flat.items()
+        k: v
+        for k, v in token_flat.items()
         if isinstance(v, str) and re.fullmatch(r"#[0-9a-fA-F]{3,8}", v)
     }
 

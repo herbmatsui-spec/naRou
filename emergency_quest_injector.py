@@ -5,18 +5,17 @@ Emergency Quest Injector Module (偏執的クエストシステム / 設計書 P
 
 from __future__ import annotations
 
-from typing import Optional
-from world_event_hooks import EVENT_MONITOR, monitor_world_event
-from world_event_system import WorldEventType
 from procedural_quest_generator import ProceduralQuestGenerator
-from entity import Entity
+from world_event_hooks import monitor_world_event
+from world_event_system import WorldEventType
 
 
 class EmergencyQuestInjector:
     """ワールドイベント発生中に緊急クエストを依頼ボードに注入"""
 
-    def __init__(self, quest_generator: Optional[ProceduralQuestGenerator] = None):
+    def __init__(self, quest_generator: ProceduralQuestGenerator | None = None):
         from procedural_quest_generator import PROCEDURAL_QUEST_GENERATOR
+
         self.quest_generator = quest_generator or PROCEDURAL_QUEST_GENERATOR
         self._active = False
         self._emergency_quests: List[GeneratedQuest] = []
@@ -32,7 +31,7 @@ class EmergencyQuestInjector:
         # 実際には、ワールドイベントシステムがイベントの終了を通知する仕組みが必要
         # ここでは、更新時にチェックする
 
-    def _on_event_start(self, event: "WorldEvent") -> None:
+    def _on_event_start(self, event: WorldEvent) -> None:
         """イベント開始時に緊急クエストを生成"""
         self._generate_emergency_quests()
         self._active = True
@@ -42,6 +41,7 @@ class EmergencyQuestInjector:
         # 簡易実装：イベントタイプに基づいてクエストを生成
         # 実際には、ワールドイベントの詳細に基づいてクエストを生成する
         from world_event_system import WORLD_EVENT_SYSTEM
+
         active_event = None
         for event_type, event in WORLD_EVENT_SYSTEM.active_events.items():
             if event.is_active:
@@ -58,27 +58,31 @@ class EmergencyQuestInjector:
             quest.title = f"[緊急] {quest.title}"
             quest.desc = f"[緊急] {quest.desc}"
             # 報酬を増やす（簡易実装）
-            if hasattr(quest, 'reward') and isinstance(quest.reward, dict):
-                quest.reward['gold'] = int(quest.reward.get('gold', 0) * 2)
-                quest.reward['exp'] = int(quest.reward.get('exp', 0) * 2)
+            if hasattr(quest, "reward") and isinstance(quest.reward, dict):
+                quest.reward["gold"] = int(quest.reward.get("gold", 0) * 2)
+                quest.reward["exp"] = int(quest.reward.get("exp", 0) * 2)
             self._emergency_quests.append(quest)
 
     def update(self) -> None:
         """更新：イベントが終了したら緊急クエストをクリア"""
         from world_event_system import WORLD_EVENT_SYSTEM
-        any_active = any(event.is_active for event in WORLD_EVENT_SYSTEM.active_events.values())
+
+        any_active = any(
+            event.is_active for event in WORLD_EVENT_SYSTEM.active_events.values()
+        )
         if not any_active and self._active:
             # イベントが終了したら緊急クエストをクリア
             self._emergency_quests.clear()
             self._active = False
 
-    def inject_emergency_quests(self, board_quests: List[GeneratedQuest]) -> List[GeneratedQuest]:
+    def inject_emergency_quests(
+        self, board_quests: List[GeneratedQuest]
+    ) -> List[GeneratedQuest]:
         """依頼ボードのクエストリストに緊急クエストを注入"""
         if not self._active:
             return board_quests
         # 緊急クエストをボードクエストのリストに追加する
         # ただし、ボードの最大数を超えないようにする
-        from world_event_system import WORLD_EVENT_SYSTEM
         cfg = self.quest_generator.registry.board_config()
         max_active = int(cfg.get("max_active", 8))
         current_count = len(board_quests)

@@ -5,8 +5,9 @@ from __future__ import annotations
 
 from enum import Enum
 
-from data.schemas._base import DataModel
 from pydantic import ConfigDict, Field, RootModel
+
+from data.schemas._base import DataModel
 
 
 class LevelRangeItem(RootModel[int]):
@@ -18,12 +19,12 @@ class QuestType(Enum):
     Quest type for categorization
     """
 
-    main = 'main'
-    guild = 'guild'
-    procedural = 'procedural'
-    faction = 'faction'
-    pet = 'pet'
-    event = 'event'
+    main = "main"
+    guild = "guild"
+    procedural = "procedural"
+    faction = "faction"
+    pet = "pet"
+    event = "event"
 
 
 class Type(Enum):
@@ -31,19 +32,19 @@ class Type(Enum):
     Objective type
     """
 
-    kill = 'kill'
-    collect = 'collect'
-    visit = 'visit'
-    harvest = 'harvest'
-    craft = 'craft'
-    talk = 'talk'
-    explore = 'explore'
-    deliver = 'deliver'
+    kill = "kill"
+    collect = "collect"
+    visit = "visit"
+    harvest = "harvest"
+    craft = "craft"
+    talk = "talk"
+    explore = "explore"
+    deliver = "deliver"
 
 
 class Objective(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     type: Type
     """
@@ -68,20 +69,20 @@ class Type1(Enum):
     Reward type
     """
 
-    gold = 'gold'
-    platinum = 'platinum'
-    item = 'item'
-    exp = 'exp'
-    skill_point = 'skill_point'
-    faction_rep = 'faction_rep'
-    title = 'title'
-    pet = 'pet'
-    recipe = 'recipe'
+    gold = "gold"
+    platinum = "platinum"
+    item = "item"
+    exp = "exp"
+    skill_point = "skill_point"
+    faction_rep = "faction_rep"
+    title = "title"
+    pet = "pet"
+    recipe = "recipe"
 
 
 class Reward(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     type: Type1
     """
@@ -99,18 +100,18 @@ class Type2(Enum):
     Prerequisite type
     """
 
-    quest_complete = 'quest_complete'
-    level = 'level'
-    skill = 'skill'
-    faction_rep = 'faction_rep'
-    guild_rank = 'guild_rank'
-    item_owned = 'item_owned'
-    stat = 'stat'
+    quest_complete = "quest_complete"
+    level = "level"
+    skill = "skill"
+    faction_rep = "faction_rep"
+    guild_rank = "guild_rank"
+    item_owned = "item_owned"
+    stat = "stat"
 
 
 class Prerequisite(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     type: Type2
     """
@@ -128,9 +129,9 @@ class Prerequisite(DataModel):
 
 class QuestDefinition(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
-    id: str = Field(..., pattern='^q_[a-z_][a-z0-9_]*$')
+    id: str = Field(..., pattern="^q_[a-z_][a-z0-9_]*$")
     """
     Unique quest ID with 'q_' prefix
     """

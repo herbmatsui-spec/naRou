@@ -2,18 +2,21 @@
 World State Manager Module
 Encapsulates entity initialization, map generation, and world state setup from game.py Engine.
 """
+
 from __future__ import annotations
-from typing import TYPE_CHECKING, Dict, Any, Tuple
+
+from typing import TYPE_CHECKING
 
 from constants import (
-    MAP_WIDTH, MAP_HEIGHT,
+    MAP_HEIGHT,
+    MAP_WIDTH,
     GameState,
 )
 from entity import Entity
 from game_state import GameStateData
-from map_engine import GameMap
 from item_system import Inventory
-from systems import SurvivalSystem, Quest
+from map_engine import GameMap
+from systems import Quest, SurvivalSystem
 
 if TYPE_CHECKING:
     from game import Engine
@@ -62,7 +65,9 @@ class GameStateInitializer:
 
         # マップ初期化
         state_data.dungeon_level = 1
-        state_data.game_map = GameMap(MAP_WIDTH, MAP_HEIGHT, floor_level=state_data.dungeon_level)
+        state_data.game_map = GameMap(
+            MAP_WIDTH, MAP_HEIGHT, floor_level=state_data.dungeon_level
+        )
         state_data.game_map.generate_dungeon()
         state_data.player.x, state_data.player.y = state_data.game_map.start_pos
         state_data.pet.x = state_data.player.x + 1
@@ -76,8 +81,20 @@ class GameStateInitializer:
 
         # クエスト
         state_data.quests = [
-            Quest(title="ぷち掃討の栄誉", target_monster="ぷち", target_count=3, reward_gold=350, reward_platinum=2),
-            Quest(title="オーク討伐令", target_monster="オーク", target_count=2, reward_gold=750, reward_platinum=3),
+            Quest(
+                title="ぷち掃討の栄誉",
+                target_monster="ぷち",
+                target_count=3,
+                reward_gold=350,
+                reward_platinum=2,
+            ),
+            Quest(
+                title="オーク討伐令",
+                target_monster="オーク",
+                target_count=2,
+                reward_gold=750,
+                reward_platinum=3,
+            ),
         ]
         state_data.current_state = GameState.EXPLORING
         state_data.game_state = "play"

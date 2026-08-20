@@ -5,12 +5,11 @@ Localized help text used by the in-game help screen and tutorials.
 """
 
 from __future__ import annotations
-from typing import Dict, List
 
 from localization_manager import LocalizationManager
 
 
-def help_entries(language: str = "en") -> Dict[str, str]:
+def help_entries(language: str = "en") -> dict[str, str]:
     """Return a mapping of help topic -> localized description."""
     mgr = LocalizationManager()
     topics = ["menu", "play", "save", "load", "settings", "language", "back", "close"]

@@ -1,3 +1,4 @@
+<<<<<<< ours
 {
   "tile_size": 16,
   "atlas_width": 152,
@@ -180,4 +181,188 @@
       "directions": 1
     }
   }
+=======
+{
+  "tile_size": 16,
+  "atlas_width": 152,
+  "atlas_height": 152,
+  "tiles": {
+    "FLOOR_DUNGEON": {
+      "x": 0,
+      "y": 0,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1
+    },
+    "WALL_DUNGEON": {
+      "x": 17,
+      "y": 0,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1
+    },
+    "WATER": {
+      "x": 34,
+      "y": 0,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 3,
+      "fps": 5,
+      "directions": 1
+    },
+    "STAIRS_DOWN": {
+      "x": 85,
+      "y": 0,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 2,
+      "fps": 4,
+      "directions": 1
+    },
+    "STAIRS_UP": {
+      "x": 119,
+      "y": 0,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 2,
+      "fps": 4,
+      "directions": 1
+    },
+    "TRAP": {
+      "x": 0,
+      "y": 17,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1
+    },
+    "PLAYER": {
+      "x": 17,
+      "y": 17,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 1,
+      "directions": 4
+    },
+    "PET": {
+      "x": 136,
+      "y": 34,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 1,
+      "directions": 4
+    },
+    "ENEMY_GOBLIN": {
+      "x": 102,
+      "y": 68,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 1,
+      "directions": 4
+    },
+    "ITEM_GOLD": {
+      "x": 68,
+      "y": 102,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 4,
+      "directions": 1
+    },
+    "ITEM_POTION": {
+      "x": 136,
+      "y": 102,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1
+    },
+    "ITEM_WEAPON": {
+      "x": 0,
+      "y": 119,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1
+    },
+    "ITEM_ARMOR": {
+      "x": 17,
+      "y": 119,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1
+    },
+    "TORCH": {
+      "x": 34,
+      "y": 119,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 1
+    },
+    "BLOOD_SPLAT": {
+      "x": 102,
+      "y": 119,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 3,
+      "fps": 6,
+      "directions": 1
+    },
+    "MAGIC_CAST": {
+      "x": 0,
+      "y": 136,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 3,
+      "fps": 6,
+      "directions": 1
+    }
+  }
+>>>>>>> theirs
 }

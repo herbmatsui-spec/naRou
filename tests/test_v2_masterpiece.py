@@ -10,10 +10,10 @@ _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
-from game import Engine
-from data_manager import DataManager
-from ai_system import AdvancedAISystem, TACTIC_AGGRESSIVE
+from ai_system import TACTIC_AGGRESSIVE, AdvancedAISystem
 from constants import QUALITY_GOD
+from data_manager import DataManager
+from game import Engine
 
 
 def test_data_manager_item_generation():
@@ -52,6 +52,7 @@ def test_advanced_ai_system_integration():
 
 def test_web_server_canvas_state_serialization():
     from web_server import GameHTTPRequestHandler
+
     engine = Engine()
     handler = GameHTTPRequestHandler.__new__(GameHTTPRequestHandler)
     state = handler._serialize_engine_state(engine)

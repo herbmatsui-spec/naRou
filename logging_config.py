@@ -1,6 +1,7 @@
 # Basic logging configuration for naRou
 import logging
 
+
 def configure_logging(level: str = "INFO"):
     """Configure root logger.
     Args:

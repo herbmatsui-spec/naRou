@@ -3,9 +3,8 @@ Elona Roguelike Clone - Rich Game Content, Items, Unique NPCs, & Dialogue
 """
 
 from __future__ import annotations
-from typing import List, Tuple, Optional
-from dataclasses import dataclass
 
+from dataclasses import dataclass
 
 # アイテムエンチャント (Elona名物)
 ENCHANT_FIRE_DMG = "それは火炎属性の追加ダメージを与える"
@@ -18,12 +17,13 @@ ENCHANT_LIFE = "それは生命力を吸い取る"
 @dataclass
 class NPCData:
     """NPCの詳細定義 (ユニークNPC・商人・ガードなど)"""
+
     name: str
     char: str
-    color: Tuple[int, int, int]
+    color: tuple[int, int, int]
     role: str
-    dialogues: List[str]
-    shop_inventory: Optional[List[str]] = None
+    dialogues: list[str]
+    shop_inventory: list[str] | None = None
 
 
 # Elonaを象徴するNPCたち
@@ -37,8 +37,8 @@ NPCS_CATALOG = {
             "「あ、冒険者さん！こんにちは〜！」",
             "「グウェン、お散歩中なの！」",
             "「塩…塩だけは投げないでね…？」",
-            "「えへへ、お花きれいだね！」"
-        ]
+            "「えへへ、お花きれいだね！」",
+        ],
     ),
     "beggar": NPCData(
         name="乞食",
@@ -48,8 +48,8 @@ NPCS_CATALOG = {
         dialogues=[
             "「金貨を…恵んでくだせぇ…」",
             "「酒が…酒が飲みたい…」",
-            "「へへっ、ありがとよ…ゲフッ」"
-        ]
+            "「へへっ、ありがとよ…ゲフッ」",
+        ],
     ),
     "guard": NPCData(
         name="街のガード",
@@ -59,8 +59,8 @@ NPCS_CATALOG = {
         dialogues=[
             "「治安維持中だ。怪しい真似はするなよ。」",
             "「罪を犯した奴には鉄槌を下す！」",
-            "「街の平和は我々が守る！」"
-        ]
+            "「街の平和は我々が守る！」",
+        ],
     ),
     "blackmarket": NPCData(
         name="ブラックマーケットの商人",
@@ -70,9 +70,14 @@ NPCS_CATALOG = {
         dialogues=[
             "「ヘッヘッヘ…上玉が揃ってるぜ。」",
             "「金さえ出せば、どんなアーティファクトでも手に入るのさ。」",
-            "「おいおい、手ぶらで帰る気じゃないだろうな？」"
+            "「おいおい、手ぶらで帰る気じゃないだろうな？」",
         ],
-        shop_inventory=["rubynus_blade", "ether_dagger", "scroll_wish", "potion_cure_ether"]
+        shop_inventory=[
+            "rubynus_blade",
+            "ether_dagger",
+            "scroll_wish",
+            "potion_cure_ether",
+        ],
     ),
     "bartender": NPCData(
         name="バーテンダー",
@@ -81,9 +86,9 @@ NPCS_CATALOG = {
         role="inn",
         dialogues=[
             "「いらっしゃい。酒にするかい？それとも仲間を復活させるかい？」",
-            "「ダンジョンの噂ならいくらでもあるぜ。」"
-        ]
-    )
+            "「ダンジョンの噂ならいくらでもあるぜ。」",
+        ],
+    ),
 }
 
 
@@ -95,5 +100,5 @@ RANDOM_EVENTS = [
     "足元に落ちていた金貨の小袋を見つけた！ (+120G)",
     "通りすがりの吟遊詩人があなたの美しさを讃える歌を歌い始めた。",
     "風が緑色に揺らめいた気がしたが、気のせいだったようだ…",
-    "背後に気配を感じて振り返ったが、誰もいなかった。"
+    "背後に気配を感じて振り返ったが、誰もいなかった。",
 ]

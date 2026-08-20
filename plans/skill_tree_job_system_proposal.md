@@ -588,29 +588,33 @@ synergies:
 @dataclass
 class Entity:
     # ... 既存フィールド ...
-    
+
     # スキルツリー関連
-    skill_tree_progress: Dict[str, List[str]] = field(default_factory=dict)  # tree_id -> [unlocked_skill_ids]
+    skill_tree_progress: Dict[str, List[str]] = field(
+        default_factory=dict
+    )  # tree_id -> [unlocked_skill_ids]
     skill_points: int = 0
     total_skill_points_earned: int = 0
-    
+
     # ジョブ関連
     job: str = "novice"
     job_level: int = 1
     job_exp: int = 0
     previous_jobs: List[str] = field(default_factory=list)
     mastered_jobs: List[str] = field(default_factory=list)
-    
+
     # 専用・継承スキル
     mastered_exclusive_skills: List[str] = field(default_factory=list)
     inherited_skills: List[str] = field(default_factory=list)
     fused_skills: List[str] = field(default_factory=list)
     awakened_skills: List[str] = field(default_factory=list)
-    
+
     # パッシブ・シナジー
     learned_passive_skills: List[str] = field(default_factory=list)
-    recent_skills: List[Tuple[str, int]] = field(default_factory=list)  # (skill_id, turn)
-    
+    recent_skills: List[Tuple[str, int]] = field(
+        default_factory=list
+    )  # (skill_id, turn)
+
     # 継承ポイント
     inheritance_points: int = 0
 ```

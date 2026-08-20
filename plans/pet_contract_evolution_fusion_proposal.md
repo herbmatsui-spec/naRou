@@ -609,25 +609,30 @@ pet_legacy:
 # PetAIクラス内（既存クラスの拡張）
 class PetAI:
     # ... 既存フィールド ...
-    bond: int = 0                    # 契約絆度 (0-1000)
-    contract_id: str = "default"     # 現在の契約タイプ
+    bond: int = 0  # 契約絆度 (0-1000)
+    contract_id: str = "default"  # 現在の契約タイプ
     evolution_path: List[str] = field(default_factory=list)  # 進化履歴
-    evolution_stage: int = 0         # 現在の進化段階
+    evolution_stage: int = 0  # 現在の進化段階
     bloodline: Optional[str] = None  # 血統タイプ
-    bloodline_purity: float = 0.0    # 血統純度 (0.0-1.0)
+    bloodline_purity: float = 0.0  # 血統純度 (0.0-1.0)
     equipment: Dict[str, str] = field(default_factory=dict)  # スロット -> アイテムID
-    recent_pet_skills: List[Tuple[str, int]] = field(default_factory=list)  # (スキルID, ターン数)
+    recent_pet_skills: List[Tuple[str, int]] = field(
+        default_factory=list
+    )  # (スキルID, ターン数)
     training_progress: Dict[str, int] = field(default_factory=list)  # コースID -> 進捗%
-    
+
+
 # Entityクラス内
 class Entity:
     # ... 既存フィールド ...
-    pets: List['Entity'] = field(default_factory=list)  # 既存フィールドを拡張使用
+    pets: List["Entity"] = field(default_factory=list)  # 既存フィールドを拡張使用
     pet_fusion_history: List[Dict] = field(default_factory=list)  # 融合記録
     completed_pet_training: List[str] = field(default_factory=list)  # 修了コース
     pet_guild_id: Optional[str] = None  # 所属ペットギルド
     pet_guild_role: Optional[str] = None  # ギルド内役職
-    pet_legacy_flags: Dict[str, bool] = field(default_factory=dict)  # レガシー条件フラグ
+    pet_legacy_flags: Dict[str, bool] = field(
+        default_factory=dict
+    )  # レガシー条件フラグ
 ```
 
 ### 統合フロー

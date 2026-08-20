@@ -3,10 +3,12 @@ Story Choice and Consequence System Module (Steps 41-46)
 """
 
 from __future__ import annotations
+
 import os
-import yaml
-from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
+
+import yaml
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -16,17 +18,19 @@ if TYPE_CHECKING:
 @dataclass
 class ChoiceConsequenceData:
     """選択肢結果データ (Step 42)"""
+
     id: str
     description: str = ""
-    immediate_effects: List[Dict[str, Any]] = field(default_factory=list)
-    long_term_effects: List[Dict[str, Any]] = field(default_factory=list)
-    world_state_changes: Dict[str, Any] = field(default_factory=dict)
+    immediate_effects: list[dict[str, Any]] = field(default_factory=list)
+    long_term_effects: list[dict[str, Any]] = field(default_factory=list)
+    world_state_changes: dict[str, Any] = field(default_factory=dict)
 
 
 # Step 43, 44: ChoiceRegistry
 class ChoiceRegistry:
     """選択肢結果レジストリ (Step 43, 44)"""
-    _instance: Optional[ChoiceRegistry] = None
+
+    _instance: ChoiceRegistry | None = None
 
     def __new__(cls) -> ChoiceRegistry:
         if cls._instance is None:
@@ -43,7 +47,7 @@ class ChoiceRegistry:
             )
             return
 
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             raw = yaml.safe_load(f) or {}
 
         c_dict = raw.get("choice_consequences", {})
@@ -53,13 +57,13 @@ class ChoiceRegistry:
                 description=cdata.get("description", ""),
                 immediate_effects=cdata.get("immediate_effects", []),
                 long_term_effects=cdata.get("long_term_effects", []),
-                world_state_changes=cdata.get("world_state_changes", {})
+                world_state_changes=cdata.get("world_state_changes", {}),
             )
 
-    def get(self, consequence_id: str) -> Optional[ChoiceConsequenceData]:
+    def get(self, consequence_id: str) -> ChoiceConsequenceData | None:
         return self._consequences.get(consequence_id)
 
-    def all_consequences(self) -> Dict[str, ChoiceConsequenceData]:
+    def all_consequences(self) -> dict[str, ChoiceConsequenceData]:
         return dict(self._consequences)
 
 
@@ -69,13 +73,16 @@ REGISTRY = ChoiceRegistry()
 # Step 45, 46: ChoiceManager
 class ChoiceManager:
     """選択肢結果適用管理 (Steps 45, 46)"""
-    def __init__(self, registry: Optional[ChoiceRegistry] = None):
+
+    def __init__(self, registry: ChoiceRegistry | None = None):
         self.registry = registry or REGISTRY
 
-    def get_consequence(self, consequence_id: str) -> Optional[ChoiceConsequenceData]:
+    def get_consequence(self, consequence_id: str) -> ChoiceConsequenceData | None:
         return self.registry.get(consequence_id)
 
-    def apply_consequence(self, player: "Entity", consequence_id: str, engine: Optional[Any] = None) -> bool:
+    def apply_consequence(
+        self, player: Entity, consequence_id: str, engine: Any | None = None
+    ) -> bool:
         """選択肢結果を適用 (Step 46)"""
         data = self.get_consequence(consequence_id)
         if not data or not player:
@@ -86,10 +93,14 @@ class ChoiceManager:
             eff_type = eff.get("type")
             val = eff.get("value", 0)
             if eff_type == "gain_gold":
-                if hasattr(player, "gold"): player.gold += val
-                if engine and hasattr(engine, "survival"): engine.survival.gold += val
+                if hasattr(player, "gold"):
+                    player.gold += val
+                if engine and hasattr(engine, "survival"):
+                    engine.survival.gold += val
             elif eff_type == "gain_karma":
-                player.karma_good_evil = max(-100, min(100, player.karma_good_evil + val))
+                player.karma_good_evil = max(
+                    -100, min(100, player.karma_good_evil + val)
+                )
             elif eff_type == "gain_exp":
                 player.gain_exp(val)
             elif eff_type == "gain_piety":
@@ -101,6 +112,7 @@ class ChoiceManager:
 
         if engine:
             from sound_manager import SoundManager
+
             SoundManager.play_se("level_up")
             engine.log(f"⚖️【決断の刻】{data.description}", (255, 220, 100))
 

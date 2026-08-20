@@ -4,7 +4,9 @@
 """
 
 from __future__ import annotations
-from typing import Any, Optional
+
+from typing import Any
+
 
 class WebGLManager:
     """シングルトンラッパー。
@@ -13,9 +15,9 @@ class WebGLManager:
     - 2 回以上取得しても同一オブジェクトが返ることを保証。
     """
 
-    _instance: Optional["WebGLManager"] = None
+    _instance: WebGLManager | None = None
 
-    def __new__(cls) -> "WebGLManager":
+    def __new__(cls) -> WebGLManager:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._initialized = False
@@ -47,5 +49,5 @@ class WebGLManager:
 
     # テスト・デバッグ用にシングルトン取得を明示的にエクスポート
     @staticmethod
-    def instance() -> "WebGLManager":
+    def instance() -> WebGLManager:
         return WebGLManager()

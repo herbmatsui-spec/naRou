@@ -5,41 +5,42 @@ from __future__ import annotations
 
 from enum import Enum
 
-from data.schemas._base import DataModel
 from pydantic import ConfigDict, Field
+
+from data.schemas._base import DataModel
 
 
 class Category(Enum):
-    kill = 'kill'
-    explore = 'explore'
-    skill = 'skill'
-    survival = 'survival'
-    faith = 'faith'
-    wealth = 'wealth'
-    pet = 'pet'
-    craft = 'craft'
-    special = 'special'
-    milestone = 'milestone'
+    kill = "kill"
+    explore = "explore"
+    skill = "skill"
+    survival = "survival"
+    faith = "faith"
+    wealth = "wealth"
+    pet = "pet"
+    craft = "craft"
+    special = "special"
+    milestone = "milestone"
 
 
 class Type(Enum):
-    kill_count = 'kill_count'
-    dungeon_depth = 'dungeon_depth'
-    skill_level = 'skill_level'
-    gold_owned = 'gold_owned'
-    piety = 'piety'
-    pet_evolution = 'pet_evolution'
-    craft_count = 'craft_count'
-    reincarnation_count = 'reincarnation_count'
-    game_clear_time = 'game_clear_time'
-    near_death_count = 'near_death_count'
-    level = 'level'
-    pet_count = 'pet_count'
+    kill_count = "kill_count"
+    dungeon_depth = "dungeon_depth"
+    skill_level = "skill_level"
+    gold_owned = "gold_owned"
+    piety = "piety"
+    pet_evolution = "pet_evolution"
+    craft_count = "craft_count"
+    reincarnation_count = "reincarnation_count"
+    game_clear_time = "game_clear_time"
+    near_death_count = "near_death_count"
+    level = "level"
+    pet_count = "pet_count"
 
 
 class Condition(DataModel):
     model_config = ConfigDict(
-        extra='allow',
+        extra="allow",
     )
     type: Type
     target: str | None = None
@@ -56,9 +57,9 @@ class Effect(DataModel):
 
 class Title(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
-    id: str = Field(..., pattern='^[a-z_][a-z0-9_]*$')
+    id: str = Field(..., pattern="^[a-z_][a-z0-9_]*$")
     name: str = Field(..., min_length=1)
     epithet: str
     category: Category
@@ -70,7 +71,7 @@ class Title(DataModel):
 
 class Meta(DataModel):
     model_config = ConfigDict(
-        extra='allow',
+        extra="allow",
     )
     version: str | None = None
     last_updated: str | None = None
@@ -78,7 +79,7 @@ class Meta(DataModel):
 
 class TitlesDefinition(DataModel):
     model_config = ConfigDict(
-        extra='allow',
+        extra="allow",
     )
     titles: dict[str, Title]
     meta: Meta | None = None

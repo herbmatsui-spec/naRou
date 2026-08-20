@@ -4,12 +4,15 @@ Handles the rendering and interaction of the Adventurer's Journal.
 """
 
 from __future__ import annotations
+
 from typing import Any
+
 import tcod
+
 
 class JournalUI:
     """冒険日誌UI管理クラス (設計書 3.2)"""
-    
+
     def __init__(self):
         self.is_open = False
         self.selected_index = 0
@@ -47,7 +50,7 @@ class JournalUI:
         elif key == "ESC" or key == "ENTER":
             self.is_open = False
             return True
-        
+
         return False
 
     def render(self, console: tcod.console.Console, engine: Any) -> None:
@@ -56,7 +59,7 @@ class JournalUI:
             return
 
         # 画面中央に配置
-        screen_w = console.width_px / 8 # 概算
+        screen_w = console.width_px / 8  # 概算
         screen_h = console.height_px / 8
         start_x = int((console.width - self.window_width) // 2)
         start_y = int((console.height - self.window_height) // 2)
@@ -64,26 +67,34 @@ class JournalUI:
         # ウィンドウ枠の描画
         for x in range(start_x, start_x + self.window_width):
             console.print(x, start_y, "═", fg=self.header_color)
-            console.print(x, start_y + self.window_height - 1, "═", fg=self.header_color)
+            console.print(
+                x, start_y + self.window_height - 1, "═", fg=self.header_color
+            )
         for y in range(start_y, start_y + self.window_height):
             console.print(start_x, y, "║", fg=self.header_color)
             console.print(start_x + self.window_width - 1, y, "║", fg=self.header_color)
 
         # ヘッダー: ワールドフェーズの表示
-        from world_state_system import WorldStateManager, REGISTRY
+        from world_state_system import REGISTRY, WorldStateManager
+
         ws_manager = WorldStateManager(REGISTRY)
         phase = ws_manager.get_phase().name
-        
+
         # フェーズに応じた装飾
         phase_decor = {
             "PROLOGUE": "📜",
             "AWAKENING": "🌅",
             "ASCENSION": "✨",
-            "DIVINITY": "👑"
+            "DIVINITY": "👑",
         }.get(phase, "📖")
-        
+
         header_text = f" {phase_decor} 冒険日誌: {phase} {phase_decor} "
-        console.print(start_x + (self.window_width - len(header_text)) // 2, start_y, header_text, fg=self.header_color)
+        console.print(
+            start_x + (self.window_width - len(header_text)) // 2,
+            start_y,
+            header_text,
+            fg=self.header_color,
+        )
 
         # クエストデータの取得
         mqs = engine.main_quest_system
@@ -93,89 +104,143 @@ class JournalUI:
 
         # メインコンテンツの描画
         current_y = start_y + 2
-        
+
         if active_quest:
-            console.print(start_x + 2, current_y, "【現在の目標】", fg=self.highlight_color)
+            console.print(
+                start_x + 2, current_y, "【現在の目標】", fg=self.highlight_color
+            )
             current_y += 1
-            console.print(start_x + 2, current_y, active_quest.title, fg=self.text_color)
+            console.print(
+                start_x + 2, current_y, active_quest.title, fg=self.text_color
+            )
             current_y += 1
-            console.print(start_x + 2, current_y, active_quest.description, fg=self.text_color)
+            console.print(
+                start_x + 2, current_y, active_quest.description, fg=self.text_color
+            )
             current_y += 2
-            
+
             # 達成条件のチェックリスト
             console.print(start_x + 2, current_y, "達成条件:", fg=self.text_color)
             current_y += 1
             for obj in active_quest.objectives:
                 mark = "✓" if obj.is_completed else "○"
                 color = self.completed_color if obj.is_completed else self.text_color
-                console.print(start_x + 4, current_y, f"{mark} {obj.description} ({obj.current_count}/{obj.required_count})", fg=color)
+                console.print(
+                    start_x + 4,
+                    current_y,
+                    f"{mark} {obj.description} ({obj.current_count}/{obj.required_count})",
+                    fg=color,
+                )
                 current_y += 1
         else:
-            console.print(start_x + 2, current_y, "現在アクティブなクエストはありません。", fg=self.text_color)
+            console.print(
+                start_x + 2,
+                current_y,
+                "現在アクティブなクエストはありません。",
+                fg=self.text_color,
+            )
             current_y += 1
 
         # 完了済みクエストの表示
         current_y += 2
-        console.print(start_x + 2, current_y, "【完了した記録】", fg=self.highlight_color)
+        console.print(
+            start_x + 2, current_y, "【完了した記録】", fg=self.highlight_color
+        )
         current_y += 1
-        
-        completed_quests = [q for q in mqs.quests.values() if q.status == 1] # QuestStatus.COMPLETED = 1 (approx)
+
+        completed_quests = [
+            q for q in mqs.quests.values() if q.status == 1
+        ]  # QuestStatus.COMPLETED = 1 (approx)
         # 正確には Enum を使うべきだが、ここでは簡易的に
         from main_quest_system import QuestStatus
-        completed_quests = [q for q in mqs.quests.values() if q.status == QuestStatus.COMPLETED]
+
+        completed_quests = [
+            q for q in mqs.quests.values() if q.status == QuestStatus.COMPLETED
+        ]
 
         for i, q in enumerate(completed_quests):
             if current_y >= start_y + self.window_height - 2:
                 break
-            
-            color = self.highlight_color if i == self.selected_index else self.text_color
+
+            color = (
+                self.highlight_color if i == self.selected_index else self.text_color
+            )
             console.print(start_x + 4, current_y, f"✓ {q.title}", fg=color)
             current_y += 1
 
         # ---- ステップ 27-34: 生成クエスト（プロシージャル）セクション ----
         current_y += 2
-        console.print(start_x + 2, current_y, "【生成クエスト（受諾中）】", fg=self.highlight_color)
+        console.print(
+            start_x + 2,
+            current_y,
+            "【生成クエスト（受諾中）】",
+            fg=self.highlight_color,
+        )
         current_y += 1
         pqm = getattr(engine, "procedural_quest_manager", None)
         player = getattr(engine, "player", None)
         if pqm is not None and player is not None:
             try:
                 from procedural_quest_generator import GeneratedQuest
+
                 comp = player.procedural_quest
                 accepted = [GeneratedQuest.from_dict(q) for q in comp.accepted_quests]
                 if accepted:
                     for q in accepted:
                         if current_y >= start_y + self.window_height - 2:
                             break
-                        console.print(start_x + 2, current_y, f"  📌 {q.title}", fg=self.text_color)
+                        console.print(
+                            start_x + 2,
+                            current_y,
+                            f"  📌 {q.title}",
+                            fg=self.text_color,
+                        )
                         current_y += 1
                         for obj in q.objectives:
                             if current_y >= start_y + self.window_height - 2:
                                 break
-                            mark = "✓" if obj.current_count >= obj.required_count else "○"
-                            color = self.completed_color if mark == "✓" else self.text_color
-                            console.print(start_x + 4, current_y,
-                                          f"{mark} {obj.description} ({obj.current_count}/{obj.required_count})",
-                                          fg=color)
+                            mark = (
+                                "✓" if obj.current_count >= obj.required_count else "○"
+                            )
+                            color = (
+                                self.completed_color if mark == "✓" else self.text_color
+                            )
+                            console.print(
+                                start_x + 4,
+                                current_y,
+                                f"{mark} {obj.description} ({obj.current_count}/{obj.required_count})",
+                                fg=color,
+                            )
                             current_y += 1
                 else:
-                    console.print(start_x + 4, current_y, "（なし）", fg=self.text_color)
+                    console.print(
+                        start_x + 4, current_y, "（なし）", fg=self.text_color
+                    )
                     current_y += 1
                 # 完了済み生成クエスト
                 current_y += 1
-                console.print(start_x + 2, current_y, "【完了した生成クエスト】", fg=self.highlight_color)
+                console.print(
+                    start_x + 2,
+                    current_y,
+                    "【完了した生成クエスト】",
+                    fg=self.highlight_color,
+                )
                 current_y += 1
                 for qid in comp.completed_quest_ids[-10:]:
                     if current_y >= start_y + self.window_height - 2:
                         break
-                    console.print(start_x + 4, current_y, f"✓ {qid}", fg=self.text_color)
+                    console.print(
+                        start_x + 4, current_y, f"✓ {qid}", fg=self.text_color
+                    )
                     current_y += 1
             except Exception:
                 pass
 
         # ---- 考古学・発掘・解読メタゲーム セクション (Step 28) ----
         current_y += 2
-        console.print(start_x + 2, current_y, "【考古学・発掘・解読】", fg=self.highlight_color)
+        console.print(
+            start_x + 2, current_y, "【考古学・発掘・解読】", fg=self.highlight_color
+        )
         current_y += 1
         amgr = getattr(engine, "archaeology_manager", None)
         player = getattr(engine, "player", None)
@@ -183,32 +248,73 @@ class JournalUI:
             comp = player.archaeology
             depth = getattr(engine, "dungeon_level", 1)
             site_id = amgr.registry.find_site_for_depth(depth)
-            marker = f"⛏ [x]で発掘可能: {amgr.registry.get_site(site_id).get('name', site_id)}" if site_id else "（この深度に発掘可能な遺跡なし）"
-            console.print(start_x + 2, current_y, f"  {marker}", fg=self.highlight_color if site_id else self.text_color)
+            marker = (
+                f"⛏ [x]で発掘可能: {amgr.registry.get_site(site_id).get('name', site_id)}"
+                if site_id
+                else "（この深度に発掘可能な遺跡なし）"
+            )
+            console.print(
+                start_x + 2,
+                current_y,
+                f"  {marker}",
+                fg=self.highlight_color if site_id else self.text_color,
+            )
             current_y += 1
-            console.print(start_x + 2, current_y,
-                          f"  出土断片: {len(comp.collected_fragments)}  解読済: {len(comp.decoded_fragments)}  到達真理: {len(comp.reached_truths)}",
-                          fg=self.text_color)
+            console.print(
+                start_x + 2,
+                current_y,
+                f"  出土断片: {len(comp.collected_fragments)}  解読済: {len(comp.decoded_fragments)}  到達真理: {len(comp.reached_truths)}",
+                fg=self.text_color,
+            )
             current_y += 1
 
             # 解釈プロンプト（改善②: インタラクティブ選択）
             if getattr(engine, "arch_interpret_active", False):
-                console.print(start_x + 2, current_y, "  ＜解釈プロンプト: ↑↓真理 / ←→エンディング / Enter決定 / Esc取消＞", fg=self.highlight_color)
+                console.print(
+                    start_x + 2,
+                    current_y,
+                    "  ＜解釈プロンプト: ↑↓真理 / ←→エンディング / Enter決定 / Esc取消＞",
+                    fg=self.highlight_color,
+                )
                 current_y += 1
                 groups = getattr(engine, "arch_interpret_groups_cache", [])
                 for gi, g in enumerate(groups):
                     if current_y >= start_y + self.window_height - 2:
                         break
                     tr = "▶" if gi == engine.arch_interpret_truth_idx else " "
-                    console.print(start_x + 2, current_y, f"{tr} 真理『{g['name']}』", fg=self.completed_color if gi == engine.arch_interpret_truth_idx else self.text_color)
+                    console.print(
+                        start_x + 2,
+                        current_y,
+                        f"{tr} 真理『{g['name']}』",
+                        fg=self.completed_color
+                        if gi == engine.arch_interpret_truth_idx
+                        else self.text_color,
+                    )
                     current_y += 1
                     for ei, eid in enumerate(g["endings"]):
                         if current_y >= start_y + self.window_height - 2:
                             break
                         ending = amgr.registry.get_ending(eid)
                         ename = ending.get("name", eid) if ending else eid
-                        mark = "◎" if (gi == engine.arch_interpret_truth_idx and ei == engine.arch_interpret_ending_idx) else "  "
-                        console.print(start_x + 6, current_y, f"{mark} {ename}", fg=self.highlight_color if (gi == engine.arch_interpret_truth_idx and ei == engine.arch_interpret_ending_idx) else self.text_color)
+                        mark = (
+                            "◎"
+                            if (
+                                gi == engine.arch_interpret_truth_idx
+                                and ei == engine.arch_interpret_ending_idx
+                            )
+                            else "  "
+                        )
+                        console.print(
+                            start_x + 6,
+                            current_y,
+                            f"{mark} {ename}",
+                            fg=self.highlight_color
+                            if (
+                                gi == engine.arch_interpret_truth_idx
+                                and ei == engine.arch_interpret_ending_idx
+                            )
+                            else self.text_color,
+                        )
                         current_y += 1
             else:
                 for tid in comp.reached_truths:
@@ -219,19 +325,39 @@ class JournalUI:
                     ending_id = comp.leaned_endings.get(tid, "（未解釈）")
                     ending = amgr.registry.get_ending(ending_id)
                     ending_name = ending.get("name", ending_id) if ending else ending_id
-                    console.print(start_x + 4, current_y, f"🌟 {name} → 解釈: {ending_name}", fg=self.completed_color)
+                    console.print(
+                        start_x + 4,
+                        current_y,
+                        f"🌟 {name} → 解釈: {ending_name}",
+                        fg=self.completed_color,
+                    )
                     current_y += 1
                 if not comp.reached_truths:
-                    console.print(start_x + 4, current_y, "（まだいずれの真理にも到達していない）", fg=self.text_color)
+                    console.print(
+                        start_x + 4,
+                        current_y,
+                        "（まだいずれの真理にも到達していない）",
+                        fg=self.text_color,
+                    )
                     current_y += 1
                 if comp.reached_truths and current_y < start_y + self.window_height - 2:
-                    console.print(start_x + 4, current_y, "（[e]で解釈を記録）", fg=self.text_color)
+                    console.print(
+                        start_x + 4,
+                        current_y,
+                        "（[e]で解釈を記録）",
+                        fg=self.text_color,
+                    )
                     current_y += 1
 
             # 蓄積された手がかり（改善③: 気づき）
             if comp.decoder_hints_seen and current_y < start_y + self.window_height - 2:
                 current_y += 1
-                console.print(start_x + 2, current_y, "【手がかり（未解読ヒント）】", fg=self.highlight_color)
+                console.print(
+                    start_x + 2,
+                    current_y,
+                    "【手がかり（未解読ヒント）】",
+                    fg=self.highlight_color,
+                )
                 current_y += 1
                 for h in comp.decoder_hints_seen:
                     if current_y >= start_y + self.window_height - 2:
@@ -239,7 +365,14 @@ class JournalUI:
                     console.print(start_x + 4, current_y, f"💡 {h}", fg=self.text_color)
                     current_y += 1
         else:
-            console.print(start_x + 4, current_y, "（考古学システム未登録）", fg=self.text_color)
+            console.print(
+                start_x + 4, current_y, "（考古学システム未登録）", fg=self.text_color
+            )
             current_y += 1
 
-        console.print(start_x + 2, start_y + self.window_height - 2, " (ESCで閉じる)", fg=self.text_color)
+        console.print(
+            start_x + 2,
+            start_y + self.window_height - 2,
+            " (ESCで閉じる)",
+            fg=self.text_color,
+        )

@@ -7,6 +7,7 @@ the full game logic offline in the browser. Requires ``pyodide-build``.
 Usage:
     python tools/build_wasm.py
 """
+
 from __future__ import annotations
 
 import argparse
@@ -32,11 +33,19 @@ def build_wasm() -> bool:
     out = PROJECT_ROOT / "build" / "wasm"
     out.mkdir(parents=True, exist_ok=True)
     # Wrap the game entry point into a callable module bundle.
-    ok = run([
-        sys.executable, "-m", "pyodide_build", "pyoxidizer",
-        "--target", "wasm32-unknown-emscripten", "main.py",
-        "--outdir", str(out),
-    ])
+    ok = run(
+        [
+            sys.executable,
+            "-m",
+            "pyodide_build",
+            "pyoxidizer",
+            "--target",
+            "wasm32-unknown-emscripten",
+            "main.py",
+            "--outdir",
+            str(out),
+        ]
+    )
     if not ok:
         print("[wasm] Pyodide build step skipped (toolchain not present)")
     return True

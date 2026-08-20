@@ -3,15 +3,16 @@
 
 from __future__ import annotations
 
-from data.schemas._base import DataModel
 from pydantic import ConfigDict, Field
+
+from data.schemas._base import DataModel
 
 
 class LocalizationTextDefinition(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
-    locale: str = Field(..., pattern='^[a-z]{2}(-[A-Z]{2})?$')
+    locale: str = Field(..., pattern="^[a-z]{2}(-[A-Z]{2})?$")
     """
     Locale code (ja, en, zh-CN, zh-TW, ko)
     """

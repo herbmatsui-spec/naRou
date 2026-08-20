@@ -9,6 +9,7 @@ Usage:
     python deploy.py --env production --target steam
     python deploy.py --rollback
 """
+
 from __future__ import annotations
 
 import argparse
@@ -33,6 +34,7 @@ STEAM_BUILD_DIR = "build/steam"
 def localize(key: str, language: str = None, manager=None) -> str:
     """Return localized text for *key* using LocalizationManager (dependency-free)."""
     from localization_manager import LocalizationManager
+
     mgr = manager or LocalizationManager()
     return mgr.get_text(key, language)
 
@@ -77,7 +79,15 @@ def deploy_steam(environment: str) -> bool:
     state["previous_build_id"] = state.get("last_build_id")
     state["last_build_id"] = _dt.datetime.utcnow().isoformat()
     _save_state(state)
-    return run(["steamcmd", "+login", "+run_app_build", os.path.join(STEAM_BUILD_DIR, "app_build.vdf"), "+quit"])
+    return run(
+        [
+            "steamcmd",
+            "+login",
+            "+run_app_build",
+            os.path.join(STEAM_BUILD_DIR, "app_build.vdf"),
+            "+quit",
+        ]
+    )
 
 
 def rollback() -> bool:
@@ -108,8 +118,12 @@ def deploy(environment: str = "production", target: str = "itch") -> bool:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Deploy naRou")
     parser.add_argument("--env", default="production", help="Target environment")
-    parser.add_argument("--target", default="itch", choices=["itch", "steam"], help="Deploy target")
-    parser.add_argument("--rollback", action="store_true", help="Rollback to previous build")
+    parser.add_argument(
+        "--target", default="itch", choices=["itch", "steam"], help="Deploy target"
+    )
+    parser.add_argument(
+        "--rollback", action="store_true", help="Rollback to previous build"
+    )
     args = parser.parse_args()
 
     if args.rollback:

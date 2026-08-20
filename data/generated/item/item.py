@@ -5,8 +5,9 @@ from __future__ import annotations
 
 from enum import Enum
 
-from data.schemas._base import DataModel
 from pydantic import ConfigDict, Field, RootModel
+
+from data.schemas._base import DataModel
 
 
 class ColorItem(RootModel[int]):
@@ -18,25 +19,25 @@ class ItemCategory(Enum):
     Item category determines equipment slot and behavior
     """
 
-    weapon = 'weapon'
-    shield = 'shield'
-    helm = 'helm'
-    armor = 'armor'
-    ring = 'ring'
-    potion = 'potion'
-    scroll = 'scroll'
-    food = 'food'
-    spellbook = 'spellbook'
-    tool = 'tool'
-    rod = 'rod'
-    ore = 'ore'
+    weapon = "weapon"
+    shield = "shield"
+    helm = "helm"
+    armor = "armor"
+    ring = "ring"
+    potion = "potion"
+    scroll = "scroll"
+    food = "food"
+    spellbook = "spellbook"
+    tool = "tool"
+    rod = "rod"
+    ore = "ore"
 
 
 class ItemDefinition(DataModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
-    id: str | None = Field(None, pattern='^it_[a-z_][a-z0-9_]*$')
+    id: str | None = Field(None, pattern="^it_[a-z_][a-z0-9_]*$")
     """
     Unique item ID with 'it_' prefix (optional, can be inferred from key)
     """
@@ -89,7 +90,7 @@ class ItemDefinition(DataModel):
     """
     Dodge value
     """
-    material: str | None = 'iron'
+    material: str | None = "iron"
     """
     Material name (affects properties)
     """
@@ -101,7 +102,7 @@ class ItemDefinition(DataModel):
     """
     Nutrition value for food
     """
-    spell_id: str | None = ''
+    spell_id: str | None = ""
     """
     Spell ID for spellbooks/rods
     """

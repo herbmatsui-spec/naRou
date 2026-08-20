@@ -5,7 +5,6 @@ Provides project-level localization helpers used by build/CI tooling.
 """
 
 from __future__ import annotations
-from typing import List, Optional
 
 from localization_manager import LocalizationManager
 
@@ -16,7 +15,7 @@ def localize_project_string(key: str, language: str = "en") -> str:
     return mgr.get_text(key, language)
 
 
-def available_languages() -> List[str]:
+def available_languages() -> list[str]:
     """Return the list of supported project languages."""
     return LocalizationManager().get_supported_languages()
 

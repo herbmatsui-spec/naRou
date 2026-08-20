@@ -3,10 +3,12 @@ Skill Awakening System Module (Steps 43-49)
 """
 
 from __future__ import annotations
+
 import os
-import yaml
-from typing import Dict, Optional, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
+
+import yaml
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -16,20 +18,22 @@ if TYPE_CHECKING:
 @dataclass
 class SkillAwakeningData:
     """スキル覚醒データ (Step 44)"""
+
     id: str
     name: str = ""
     description: str = ""
     base_skill: str = ""
-    requirements: Dict[str, Any] = field(default_factory=dict)
+    requirements: dict[str, Any] = field(default_factory=dict)
     awakened_skill: str = ""
     visual_effect: str = ""
-    passive_effects: Dict[str, Any] = field(default_factory=dict)
+    passive_effects: dict[str, Any] = field(default_factory=dict)
 
 
 # Step 45, 46: SkillAwakeningRegistry
 class SkillAwakeningRegistry:
     """スキル覚醒レジストリ (Step 45, 46)"""
-    _instance: Optional[SkillAwakeningRegistry] = None
+
+    _instance: SkillAwakeningRegistry | None = None
 
     def __new__(cls) -> SkillAwakeningRegistry:
         if cls._instance is None:
@@ -42,11 +46,14 @@ class SkillAwakeningRegistry:
         self._awakenings = {}
         if not os.path.exists(file_path):
             self._awakenings["dragon_slaying_awakening"] = SkillAwakeningData(
-                id="dragon_slaying_awakening", name="竜殺しの覚醒", base_skill="swordsmanship", awakened_skill="true_dragon_slayer"
+                id="dragon_slaying_awakening",
+                name="竜殺しの覚醒",
+                base_skill="swordsmanship",
+                awakened_skill="true_dragon_slayer",
             )
             return
 
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             raw = yaml.safe_load(f) or {}
 
         a_dict = raw.get("awakenings", {})
@@ -59,13 +66,13 @@ class SkillAwakeningRegistry:
                 requirements=adata.get("requirements", {}),
                 awakened_skill=adata.get("awakened_skill", ""),
                 visual_effect=adata.get("visual_effect", ""),
-                passive_effects=adata.get("passive_effects", {})
+                passive_effects=adata.get("passive_effects", {}),
             )
 
-    def get(self, a_id: str) -> Optional[SkillAwakeningData]:
+    def get(self, a_id: str) -> SkillAwakeningData | None:
         return self._awakenings.get(a_id)
 
-    def all(self) -> Dict[str, SkillAwakeningData]:
+    def all(self) -> dict[str, SkillAwakeningData]:
         return dict(self._awakenings)
 
 
@@ -75,10 +82,11 @@ REGISTRY = SkillAwakeningRegistry()
 # Step 47-49: SkillAwakeningManager
 class SkillAwakeningManager:
     """スキル覚醒管理 (Steps 47-49)"""
-    def __init__(self, registry: Optional[SkillAwakeningRegistry] = None):
+
+    def __init__(self, registry: SkillAwakeningRegistry | None = None):
         self.registry = registry or REGISTRY
 
-    def can_awaken(self, player: "Entity", awakening_id: str) -> bool:
+    def can_awaken(self, player: Entity, awakening_id: str) -> bool:
         """スキル覚醒が可能かを判定 (Step 48)"""
         data = self.registry.get(awakening_id)
         if not data or not player:
@@ -106,7 +114,9 @@ class SkillAwakeningManager:
 
         return True
 
-    def awaken_skill(self, player: "Entity", awakening_id: str, engine: Optional[Any] = None) -> bool:
+    def awaken_skill(
+        self, player: Entity, awakening_id: str, engine: Any | None = None
+    ) -> bool:
         """スキルを覚醒させる (Step 49)"""
         if not self.can_awaken(player, awakening_id):
             return False
@@ -117,10 +127,12 @@ class SkillAwakeningManager:
 
         player.awakened_skills.append(awakening_id)
         from entity import Skill
+
         player.skills[data.awakened_skill] = Skill(data.awakened_skill, level=1)
 
         if engine:
             from sound_manager import SoundManager
+
             SoundManager.play_se("level_up")
             engine.log(f"★真の力が目覚めた！ 【{data.name}】が覚醒！", (255, 215, 0))
 

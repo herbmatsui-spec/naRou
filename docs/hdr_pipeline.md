@@ -86,7 +86,7 @@ ae = AutoExposure(
     min_exposure=0.1,
     max_exposure=10.0,
     target_luminance=0.5,
-    adaptation_speed=0.5  # 0=instant, 1=frozen
+    adaptation_speed=0.5,  # 0=instant, 1=frozen
 )
 
 # Per-frame update
@@ -209,17 +209,18 @@ The existing `RenderSystem.render_all()` integrates with HDR pipeline:
 # In render_system.py
 compositor = Compositor(VIEW_WIDTH, VIEW_HEIGHT)
 
+
 def render_all(console, context):
     compositor.begin_frame()
-    
+
     # Render scene to HDR (via renderers)
     MapRenderer.render_to_hdr(compositor.hdr_compositor, ...)
     EntityRenderer.render_to_hdr(compositor.hdr_compositor, ...)
     ParticleRenderer.render_to_hdr(compositor.hdr_compositor, ...)
-    
+
     # Execute HDR pipeline
     ldr = compositor.end_frame()
-    
+
     # Present LDR to console
     present_to_console(console, ldr)
 ```
@@ -279,7 +280,7 @@ Debug passes via compositor:
 ```python
 comp.set_debug_pass(0)  # Show bright extract
 comp.set_debug_pass(5)  # Show downsample level 3
-comp.set_debug_pass(11) # Show bloom composite
+comp.set_debug_pass(11)  # Show bloom composite
 ```
 
 ## Performance

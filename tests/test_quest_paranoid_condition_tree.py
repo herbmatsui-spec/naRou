@@ -10,6 +10,7 @@ import tempfile
 
 import pytest
 
+from main_quest_system import MainQuestSystem, QuestObjective
 from quest_condition_ast import (
     AndCondition,
     LeafCondition,
@@ -18,19 +19,16 @@ from quest_condition_ast import (
     XorCondition,
     is_condition_node,
 )
-from quest_condition_parser import parse_condition, ConditionParseError
 from quest_condition_evaluator import (
-    evaluate,
     DictContext,
-    EvaluationContext,
+    evaluate,
 )
-
-from main_quest_system import MainQuestSystem, QuestObjective, QuestStatus
-
+from quest_condition_parser import ConditionParseError, parse_condition
 
 # ---------------------------------------------------------------------------
 # Step 1 / Step 3: AST + 評価
 # ---------------------------------------------------------------------------
+
 
 def test_leaf_comparison():
     ctx = DictContext({"player": {"level": 10}})
@@ -46,36 +44,60 @@ def test_leaf_membership():
     # 値あり has -> メンバーシップ
     assert LeafCondition("inventory", "has", "sword").evaluate(ctx) is True
     assert LeafCondition("flags.missing", "exists", None).evaluate(ctx) is False
-    assert LeafCondition("player.weapon", "in", ["sword", "axe"]).evaluate(
-        DictContext({"player": {"weapon": "sword"}})
-    ) is True
+    assert (
+        LeafCondition("player.weapon", "in", ["sword", "axe"]).evaluate(
+            DictContext({"player": {"weapon": "sword"}})
+        )
+        is True
+    )
 
 
 def test_and_or_not_xor():
     ctx = DictContext({"player": {"level": 10}, "flags": {"a": True, "b": False}})
-    assert AndCondition([
-        LeafCondition("player.level", ">=", 5),
-        LeafCondition("flags.a", "truthy", None),
-    ]).evaluate(ctx) is True
-    assert OrCondition([
-        LeafCondition("flags.b", "truthy", None),
-        LeafCondition("player.level", ">=", 5),
-    ]).evaluate(ctx) is True
+    assert (
+        AndCondition(
+            [
+                LeafCondition("player.level", ">=", 5),
+                LeafCondition("flags.a", "truthy", None),
+            ]
+        ).evaluate(ctx)
+        is True
+    )
+    assert (
+        OrCondition(
+            [
+                LeafCondition("flags.b", "truthy", None),
+                LeafCondition("player.level", ">=", 5),
+            ]
+        ).evaluate(ctx)
+        is True
+    )
     assert NotCondition(LeafCondition("flags.b", "truthy", None)).evaluate(ctx) is True
-    assert XorCondition([
-        LeafCondition("flags.a", "truthy", None),
-        LeafCondition("flags.b", "truthy", None),
-    ]).evaluate(ctx) is True
+    assert (
+        XorCondition(
+            [
+                LeafCondition("flags.a", "truthy", None),
+                LeafCondition("flags.b", "truthy", None),
+            ]
+        ).evaluate(ctx)
+        is True
+    )
     # 両方真なら xor は偽
-    assert XorCondition([
-        LeafCondition("flags.a", "truthy", None),
-        LeafCondition("player.level", ">=", 1),
-    ]).evaluate(ctx) is False
+    assert (
+        XorCondition(
+            [
+                LeafCondition("flags.a", "truthy", None),
+                LeafCondition("player.level", ">=", 1),
+            ]
+        ).evaluate(ctx)
+        is False
+    )
 
 
 # ---------------------------------------------------------------------------
 # Step 2: パーサ
 # ---------------------------------------------------------------------------
+
 
 def test_parse_leaf():
     node = parse_condition("(>= player.level 10)")
@@ -125,6 +147,7 @@ def test_roundtrip_evaluate_via_parser():
 # Step 4: QuestObjective 統合 + YAML スキーマ拡張
 # ---------------------------------------------------------------------------
 
+
 def test_questobjective_condition_satisfied():
     obj = QuestObjective(
         objective_id="prove",
@@ -136,7 +159,12 @@ def test_questobjective_condition_satisfied():
     # 直接構築時は condition_dsl -> condition_tree を自前で構築（ロード時は _build_condition が行う）
     obj.condition_tree = parse_condition(obj.condition_dsl)
     assert is_condition_node(obj.condition_tree)
-    assert obj.evaluate(DictContext({"player": {"level": 2}, "flags": {"slew_guardian": True}})) is True
+    assert (
+        obj.evaluate(
+            DictContext({"player": {"level": 2}, "flags": {"slew_guardian": True}})
+        )
+        is True
+    )
     assert obj.evaluate(DictContext({"player": {"level": 2}, "flags": {}})) is False
     # 条件なしの場合は従来のカウントベースにフォールバック
     plain = QuestObjective("x", "y", "kill", "z")
@@ -160,7 +188,9 @@ main_quests:
     rewards:
       gold: 10
 """
-    with tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False, encoding="utf-8") as f:
+    with tempfile.NamedTemporaryFile(
+        "w", suffix=".yaml", delete=False, encoding="utf-8"
+    ) as f:
         f.write(yaml_text)
         path = f.name
     try:
@@ -168,7 +198,12 @@ main_quests:
         quest = system.quests["q1"]
         obj = quest.objectives[0]
         assert obj.condition_tree is not None
-        assert obj.evaluate(DictContext({"player": {"level": 1}, "flags": {"slew_guardian": True}})) is True
+        assert (
+            obj.evaluate(
+                DictContext({"player": {"level": 1}, "flags": {"slew_guardian": True}})
+            )
+            is True
+        )
         assert obj.evaluate(DictContext({"player": {"level": 1}, "flags": {}})) is False
     finally:
         os.unlink(path)
@@ -191,4 +226,5 @@ def test_evaluation_context_protocol():
         def resolve(self, key: str):
 
             return {"x": 1}.get(key)
+
     assert evaluate(LeafCondition("x", "==", 1), CustomCtx()) is True

@@ -84,10 +84,10 @@ tests/
 
 ### 具体的実装例（パフォーマンス注釈付きメソッド）
 ```python
-def check_all_titles(self, player: 'Entity') -> List[str]:
+def check_all_titles(self, player: "Entity") -> List[str]:
     """
     全称号の条件をチェックし、満たしているものを返す。
-    
+
     時間計算量: O(n) where n = number of title definitions
     空間計算量: O(k) where k = number of matching titles
     呼び出し頻度: 高（10ターンごとまたはキルごと）
@@ -95,16 +95,16 @@ def check_all_titles(self, player: 'Entity') -> List[str]:
     """
     newly_met = []
     cache_key = self._get_player_state_hash(player)
-    
+
     # キャッシュチェック（実装例）
     if self._is_cache_valid(cache_key):
         return self._get_cached_result(cache_key)
-    
+
     for title_id, title_data in self.REGISTRY.all().items():
         if self.check_condition(player, title_data.condition):
             newly_met.append(title_id)
             # 早期リターン最適化の機会を検討
-            
+
     self._update_cache(cache_key, newly_met)
     return newly_met
 ```
@@ -127,11 +127,11 @@ class TitleManager:
     def __init__(self, registry: TitleRegistry):
         self.registry = registry
         self._event_hooks = defaultdict(list)  # event_type -> List[callable]
-    
+
     def register_hook(self, event_type: str, callback: Callable):
         """タイトル関連イベントにフック関数を登録"""
         self._event_hooks[event_type].append(callback)
-    
+
     def _trigger_hooks(self, event_type: str, *args, **kwargs):
         """登録されたフックをすべて実行"""
         for callback in self._event_hooks[event_type]:
@@ -139,11 +139,11 @@ class TitleManager:
                 callback(*args, **kwargs)
             except Exception as e:
                 self.logger.error(f"Error in hook {callback.__name__}: {e}")
-    
-    def grant_title(self, player: 'Entity', title_id: str) -> bool:
+
+    def grant_title(self, player: "Entity", title_id: str) -> bool:
         # 既存のロジック...
         if success:
-            self._trigger_hooks('title_granted', player, title_id)
+            self._trigger_hooks("title_granted", player, title_id)
             return True
         return False
 ```
@@ -299,39 +299,49 @@ TITLE_SCHEMA = {
                     "condition": {"$ref": "#/definitions/condition"},
                     "effects": {
                         "type": "array",
-                        "items": {"$ref": "#/definitions/effect"}
-                    }
-                }
-            }
-        }
+                        "items": {"$ref": "#/definitions/effect"},
+                    },
+                },
+            },
+        },
     },
     "definitions": {
         "condition": {
             "type": "object",
             "required": ["type"],
             "properties": {
-                "type": {"type": "string", "enum": ["kill_count", "item_collected", "location_visited"]},
+                "type": {
+                    "type": "string",
+                    "enum": ["kill_count", "item_collected", "location_visited"],
+                },
                 "target": {"type": "string"},
                 "count": {"type": "integer", "minimum": 0},
                 "location": {"type": "string"},
-                "item_id": {"type": "string"}
-            }
+                "item_id": {"type": "string"},
+            },
         },
         "effect": {
             "type": "object",
             "required": ["type"],
             "properties": {
-                "type": {"type": "string", "enum": ["stat_bonus", "skill_unlock", "title_grant", "item_gift"]},
+                "type": {
+                    "type": "string",
+                    "enum": ["stat_bonus", "skill_unlock", "title_grant", "item_gift"],
+                },
                 "value": {"oneOf": [{"type": "number"}, {"type": "string"}]},
-                "stat": {"type": "string", "enum": ["attack", "defense", "magic", "speed", "hp", "mp"]},
+                "stat": {
+                    "type": "string",
+                    "enum": ["attack", "defense", "magic", "speed", "hp", "mp"],
+                },
                 "skill_id": {"type": "string"},
                 "title_id": {"type": "string"},
                 "item_id": {"type": "string"},
-                "count": {"type": "integer", "minimum": 1}
-            }
-        }
-    }
+                "count": {"type": "integer", "minimum": 1},
+            },
+        },
+    },
 }
+
 
 def validate_title_data(data: Dict[str, Any]) -> bool:
     try:
@@ -369,53 +379,57 @@ class AccessibleNotificationSystem:
         self.high_contrast_mode = False
         self.font_size = "medium"  # small, medium, large, extra_large
         self.screen_reader_enabled = True
-    
+
     def notify_title_earned(self, title_name: str, title_description: str):
         """アクセシビリティに配慮した称号獲得通知"""
         # 視覚的通知
         visual_elements = []
-        
+
         # 色覚多様性対応：形状とテキストで情報を補完
         if self.color_blind_mode:
-            visual_elements.append({
-                "type": "shape_indicator",
-                "shape": "star",  # 称号獲得を星形で表現
-                "size": "large",
-                "animation": "pulse"
-            })
+            visual_elements.append(
+                {
+                    "type": "shape_indicator",
+                    "shape": "star",  # 称号獲得を星形で表現
+                    "size": "large",
+                    "animation": "pulse",
+                }
+            )
         else:
-            visual_elements.append({
-                "type": "color_indicator",
-                "color": "gold",
-                "animation": "fade_in_out"
-            })
-        
+            visual_elements.append(
+                {"type": "color_indicator", "color": "gold", "animation": "fade_in_out"}
+            )
+
         # テキスト情報（常に提供）
-        visual_elements.extend([
-            {
-                "type": "text",
-                "content": f"新しい称号を獲得しました！: {title_name}",
-                "style": "bold",
-                "font_size": self.font_size
-            },
-            {
-                "type": "text",
-                "content": title_description,
-                "style": "normal",
-                "font_size": self.font_size
-            }
-        ])
-        
+        visual_elements.extend(
+            [
+                {
+                    "type": "text",
+                    "content": f"新しい称号を獲得しました！: {title_name}",
+                    "style": "bold",
+                    "font_size": self.font_size,
+                },
+                {
+                    "type": "text",
+                    "content": title_description,
+                    "style": "normal",
+                    "font_size": self.font_size,
+                },
+            ]
+        )
+
         # 聴覚障害者への配慮：視覚的フィードバック
         if self.screen_reader_enabled:
-            visual_elements.append({
-                "type": "screen_reader_text",
-                "content": f"称号獲得: {title_name}. {title_description}"
-            })
-        
+            visual_elements.append(
+                {
+                    "type": "screen_reader_text",
+                    "content": f"称号獲得: {title_name}. {title_description}",
+                }
+            )
+
         # 実際のUI表示ロジックを呼び出し
         self._display_notification(visual_elements)
-    
+
     def _display_notification(self, elements: List[Dict]):
         """UIシステムに通知を表示（実装は省略）"""
         pass

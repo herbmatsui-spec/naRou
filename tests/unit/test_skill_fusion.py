@@ -1,5 +1,7 @@
 import pytest
-from skill_fusion_system import FusionRegistry, FusionManager
+
+from skill_fusion_system import FusionManager, FusionRegistry
+
 
 @pytest.fixture
 def registry(tmp_path):
@@ -18,17 +20,20 @@ def registry(tmp_path):
     reg.load(str(yaml_path))
     return reg
 
+
 class DummyPlayer:
     def __init__(self):
         self.skill_tree_progress = {}
         self.job = None
-        self.god_id = ''
+        self.god_id = ""
         self.fused_skills = []
+
 
 def test_load_and_get(registry):
     assert "test_fusion" in registry.all()
     data = registry.get("test_fusion")
     assert data.name == "Test Fusion"
+
 
 def test_perform_fusion_success(registry):
     manager = FusionManager(registry)
@@ -36,6 +41,7 @@ def test_perform_fusion_success(registry):
     success = manager.perform_fusion(player, "test_fusion")
     assert success
     assert "test_fusion" in player.fused_skills
+
 
 def test_perform_fusion_duplicate(registry):
     manager = FusionManager(registry)

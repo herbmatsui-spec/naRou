@@ -4,7 +4,10 @@ Python 側では実際の GPU オブジェクトは持てないため、簡易�
 保証します。"""
 
 from __future__ import annotations
-from typing import Any, Callable, Dict, Tuple
+
+from collections.abc import Callable
+from typing import Any
+
 
 class WebGLResourcePool:
     """リソースプール。
@@ -14,7 +17,7 @@ class WebGLResourcePool:
     """
 
     def __init__(self) -> None:
-        self._store: Dict[Tuple[str, str], Any] = {}
+        self._store: dict[tuple[str, str], Any] = {}
 
     def acquire(self, rtype: str, key: str, creator: Callable[[], Any]) -> Any:
         """リソースを取得。未登録なら ``creator`` で生成しキャッシュ。"""
@@ -32,5 +35,5 @@ class WebGLResourcePool:
         self._store.clear()
 
     # デバッグ・テスト用に現在保持しているキー一覧を取得
-    def keys(self) -> list[Tuple[str, str]]:
+    def keys(self) -> list[tuple[str, str]]:
         return list(self._store.keys())

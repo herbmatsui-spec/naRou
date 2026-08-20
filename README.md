@@ -105,7 +105,21 @@ pip install -r requirements.txt
 python main.py
 ```
 
-### 3. テストの実行
+### 3. アクセシビリティ（誰でも遊べる）
+
+- **テキストモード（GPU不要）**: `python main.py` → `3` を選択、または `python main_text.py`。SDL/WebGL が使えない環境でもプレイ可能。
+- **色覚多様性**: 起動メニューで `none/deutan/protan/tritan` を選択、または `COLOR_VISION=deutan` / Web `?a11y=deutan` / `config.yaml` の `accessibility.color_vision`。
+- **難易度**: `easy/normal/hard` を選択（被ダメージ・敵HP・回復を補正）。
+- **チュートリアル**: Web 起動時に操作手順を表示。詳細は `docs/accessibility_report.md`。
+
+### 4. どこでも遊ぶ
+
+- **ワンタッチ Web 起動**: `python main.py --open` でバックエンドを起動し、ブラウザを開く。
+- **デバッグフレンドリー**: `run.py` スクリプトで環境を自動判定（GPU/テキストモード）して最適な起動方法を選択。
+- **モバイル対応**: タッチジェスチャー、オンスクリーン D-pad、レスポンシブレイアウトに対応。
+- **自動品質調整**: FPS が低下したらシェーダー効果を軽減し、快適なプレイを維持。
+
+### 5. テストの実行
 
 ```bash
 # Aの世界（スキル喰い）全統合テストの実行 (43 Tests)

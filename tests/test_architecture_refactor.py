@@ -7,8 +7,8 @@ Verifies:
 4. EventBus integration
 """
 
-import sys
 import os
+import sys
 
 # Add project root to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -17,21 +17,24 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from entity import Entity
 from components import (
-    TitleComponent, GuildFactionComponent, AchievementComponent,
-    ReincarnationComponent, SkillTreeJobComponent, SkillFusionComponent,
-    StorytellerComponent
+    AchievementComponent,
+    GuildFactionComponent,
+    ReincarnationComponent,
+    SkillFusionComponent,
+    SkillTreeJobComponent,
+    StorytellerComponent,
+    TitleComponent,
 )
-from save_system import SaveSystem
 from dialogue_system import DialogueManager
+from entity import Entity
 from game import Engine
-
+from save_system import SaveSystem
 
 
 def test_ecs_component_initialization_and_delegation():
     e = Entity(name="Hero")
-    
+
     # 1. コンポーネントの初期化確認
     assert TitleComponent in e.components
     assert GuildFactionComponent in e.components
@@ -106,7 +109,7 @@ def test_dialogue_manager():
     eng = Engine()
     player = eng.player
     pet = eng.pet
-    
+
     # ペットの対話確認
     speaker, text = DialogueManager.get_dialogue(pet, player, eng)
     assert speaker == pet.name
@@ -117,4 +120,3 @@ def test_dialogue_manager():
     speaker, text = DialogueManager.get_dialogue(dummy_npc, player, eng)
     assert speaker == "村人A"
     assert text == DialogueManager.DEFAULT_NPC_DIALOGUE
-

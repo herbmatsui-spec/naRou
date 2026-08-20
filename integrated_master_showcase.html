@@ -1,3 +1,4 @@
+<<<<<<< ours
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -1182,3 +1183,1189 @@
   </script>
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>naRou: Masterpiece Edition - Integrated Master Showcase Demo</title>
+  
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Noto+Sans+JP:wght@400;500;700;900&family=Outfit:wght@400;600;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+  
+  <!-- PixiJS Rendering Engine -->
+  <script src="https://cdn.pixijs.com/pixi.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --bg-darker: #030508;
+      --panel-bg: rgba(13, 17, 26, 0.88);
+      --panel-border: rgba(229, 169, 59, 0.3);
+      --panel-border-bright: rgba(255, 215, 0, 0.6);
+      --accent: #ffd700;
+      --accent-glow: rgba(255, 215, 0, 0.4);
+      --accent-blue: #38bdf8;
+      --accent-purple: #c084fc;
+      --accent-emerald: #34d399;
+      --accent-crimson: #f43f5e;
+      --text-main: #f0f4fc;
+      --text-muted: #8a99ad;
+      --font-main: 'Outfit', 'Noto Sans JP', sans-serif;
+      --font-title: 'Cinzel', serif;
+      --font-code: 'Fira Code', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 10%, #151d2f 0%, var(--bg-dark) 50%, var(--bg-darker) 100%);
+      color: var(--text-main);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    /* Spring Physics Animation */
+    .spring-anim {
+      animation: springBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes springBounce {
+      0% { transform: scale(0.92) translateY(8px); opacity: 0; }
+      70% { transform: scale(1.03) translateY(-2px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    /* Ripple Click Effect */
+    .ripple-btn {
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .ripple-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* App Header */
+    header {
+      width: 100%;
+      max-width: 1400px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 28px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--panel-border);
+      border-radius: 18px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+      margin-bottom: 16px;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .title-logo {
+      font-size: 32px;
+      filter: drop-shadow(0 0 12px var(--accent-glow));
+      animation: floatLogo 3s ease-in-out infinite;
+    }
+    @keyframes floatLogo {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    .title-texts h1 {
+      font-family: var(--font-title);
+      font-size: 22px;
+      letter-spacing: 2px;
+      color: var(--accent);
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+    }
+
+    .title-texts p {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .header-badges {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .badge {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      backdrop-filter: blur(10px);
+    }
+    .badge-gold {
+      border-color: rgba(255, 215, 0, 0.4);
+      color: var(--accent);
+      background: rgba(255, 215, 0, 0.08);
+    }
+    .badge-blue {
+      border-color: rgba(56, 189, 248, 0.4);
+      color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.08);
+    }
+    .badge-purple {
+      border-color: rgba(192, 132, 252, 0.4);
+      color: var(--accent-purple);
+      background: rgba(192, 132, 252, 0.08);
+    }
+
+    /* Main Showcase Layout */
+    .main-showcase {
+      width: 100%;
+      max-width: 1400px;
+      display: grid;
+      grid-template-columns: 340px 1fr 340px;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    /* Panels */
+    .panel {
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--panel-border);
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 10px;
+    }
+
+    .panel-title {
+      font-family: var(--font-title);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Center Viewport */
+    .viewport-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      width: 680px;
+      height: 480px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 2px solid var(--panel-border);
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(0,0,0,0.8);
+      background: #020408;
+    }
+
+    #gameCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .viewport-hud {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .hud-stat-box {
+      background: rgba(6, 10, 18, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      padding: 6px 12px;
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      backdrop-filter: blur(8px);
+    }
+
+    .hud-stat-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 600;
+    }
+
+    /* Action Grid */
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .btn-action {
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      background: rgba(255, 215, 0, 0.1);
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+    }
+
+    .btn-action-primary {
+      grid-column: span 2;
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(229, 169, 59, 0.1));
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Matrix Selection Controls */
+    .matrix-selector {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .matrix-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .matrix-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .matrix-buttons {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .pill-btn {
+      padding: 4px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .pill-btn:hover, .pill-btn.active {
+      background: var(--accent-blue);
+      color: #050b14;
+      border-color: var(--accent-blue);
+      font-weight: 700;
+    }
+
+    /* Archaeology Codex Cards */
+    .fragment-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 250px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .fragment-card {
+      background: rgba(20, 26, 38, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .fragment-card:hover {
+      border-color: var(--accent-purple);
+      background: rgba(192, 132, 252, 0.08);
+    }
+
+    .fragment-card.decoded {
+      border-color: var(--accent-emerald);
+      background: rgba(52, 211, 153, 0.06);
+    }
+
+    .fragment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .fragment-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .glyph-text {
+      font-family: var(--font-code);
+      font-size: 13px;
+      letter-spacing: 2px;
+      color: var(--accent-purple);
+      background: rgba(0, 0, 0, 0.4);
+      padding: 4px 8px;
+      border-radius: 6px;
+      border-left: 2px solid var(--accent-purple);
+    }
+
+    .glyph-text.decoded-view {
+      color: var(--accent-emerald);
+      border-left-color: var(--accent-emerald);
+    }
+
+    /* Log Box */
+    .log-box {
+      background: rgba(4, 7, 12, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 10px;
+      height: 120px;
+      overflow-y: auto;
+      font-family: var(--font-code);
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .log-entry {
+      line-height: 1.4;
+      color: var(--text-muted);
+    }
+    .log-entry.system { color: var(--accent); }
+    .log-entry.combat { color: var(--accent-crimson); }
+    .log-entry.lore { color: var(--accent-purple); }
+    .log-entry.discovery { color: var(--accent-blue); }
+
+    /* Bottom Showcase Gallery */
+    .bottom-gallery {
+      width: 100%;
+      max-width: 1400px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 18px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .gallery-chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+
+    .chip-btn {
+      padding: 8px 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .chip-btn:hover, .chip-btn.active {
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(229, 169, 59, 0.15));
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    /* FX Sliders */
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .slider-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .custom-slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.1);
+      outline: none;
+    }
+
+    .custom-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="title-group">
+      <div class="title-logo">⚔️</div>
+      <div class="title-texts">
+        <h1>naRou: MASTERPIECE EDITION</h1>
+        <p>38,400 Multi-Layer World & Archaeology Cipher Meta-System Integration</p>
+      </div>
+    </div>
+    <div class="header-badges">
+      <div class="badge badge-gold">✨ Commercial v1.0.0</div>
+      <div class="badge badge-blue">🗺️ 4-Zones × 8-Biomes × 3-Dims</div>
+      <div class="badge badge-purple">📜 Truth Codex & Glyphs</div>
+    </div>
+  </header>
+
+  <!-- Main 3-Column Showcase -->
+  <main class="main-showcase">
+
+    <!-- Left Column: World Navigation & Biome Matrix -->
+    <section class="panel spring-anim">
+      <div class="panel-header">
+        <div class="panel-title"><span>🧭</span> 垂直多層ワールド探査</div>
+        <span class="badge badge-blue" id="currentLayerCode">SURFACE:0F</span>
+      </div>
+
+      <!-- Matrix Selection -->
+      <div class="matrix-selector">
+        <div class="matrix-row">
+          <div class="matrix-label">1. ゾーン (Zone)</div>
+          <div class="matrix-buttons" id="zoneButtons">
+            <button class="pill-btn active" data-zone="surface">🌱 地上界 (0-10)</button>
+            <button class="pill-btn" data-zone="underground">⛏️ 地下界 (11-50)</button>
+            <button class="pill-btn" data-zone="otherworld">🔮 異界 (51-100)</button>
+            <button class="pill-btn" data-zone="heaven">✨ 天界 (101-200)</button>
+          </div>
+        </div>
+
+        <div class="matrix-row">
+          <div class="matrix-label">2. バイオーム (Biome)</div>
+          <div class="matrix-buttons" id="biomeButtons">
+            <button class="pill-btn active" data-biome="plains">平原</button>
+            <button class="pill-btn" data-biome="forest">森林</button>
+            <button class="pill-btn" data-biome="mountains">山岳</button>
+            <button class="pill-btn" data-biome="swamp">沼地</button>
+            <button class="pill-btn" data-biome="desert">砂漠</button>
+            <button class="pill-btn" data-biome="tundra">凍土</button>
+            <button class="pill-btn" data-biome="volcanic">火山</button>
+            <button class="pill-btn" data-biome="ruins">遺跡</button>
+          </div>
+        </div>
+
+        <div class="matrix-row">
+          <div class="matrix-label">3. 次元 (Dimension)</div>
+          <div class="matrix-buttons" id="dimButtons">
+            <button class="pill-btn active" data-dim="material">物質次元 (Material)</button>
+            <button class="pill-btn" data-dim="ethereal">精神次元 (Ethereal)</button>
+            <button class="pill-btn" data-dim="void">虚無次元 (Void)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="action-grid">
+        <button class="btn-action btn-action-primary ripple-btn" id="btnWarp">
+          <span>🌀</span> 次元・レイヤー跳躍
+        </button>
+        <button class="btn-action ripple-btn" id="btnStairsDown">
+          <span>⬇️</span> 階層を降りる (Next Depth)
+        </button>
+        <button class="btn-action ripple-btn" id="btnStairsUp">
+          <span>⬆️</span> 階層を登る (Prev Depth)
+        </button>
+      </div>
+
+      <!-- Current Layer Info Card -->
+      <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); font-size: 11px; display: flex; flex-direction: column; gap: 4px;">
+        <div style="color: var(--accent); font-weight: 700;" id="layerThemeName">陽だまりの草原 (Material)</div>
+        <div style="color: var(--text-muted);" id="layerDesc">光が穏やかに差し込む平原。初心者冒険者の鍛錬地。</div>
+        <div style="color: var(--accent-blue); margin-top: 4px;" id="layerEnemies">👾 出現: スライム, でんでん虫</div>
+        <div style="color: var(--accent-purple);" id="layerGimmick">✨ 固有ギミック: 太陽の恵み (自然回復+20%)</div>
+      </div>
+    </section>
+
+    <!-- Center Column: PixiJS Canvas Viewport & Realtime Game Simulation -->
+    <section class="viewport-container spring-anim">
+      <div class="canvas-wrapper">
+        <canvas id="gameCanvas" width="680" height="480"></canvas>
+        
+        <!-- HUD Overlay -->
+        <div class="viewport-hud">
+          <div class="hud-stat-box">
+            <div class="hud-stat-item" style="color: #ef4444;">❤️ HP: <span id="hudHp">250/250</span></div>
+            <div class="hud-stat-item" style="color: #3b82f6;">💧 MP: <span id="hudMp">180/180</span></div>
+            <div class="hud-stat-item" style="color: #eab308;">⭐ Karma: <span id="hudKarma">+45</span></div>
+          </div>
+          <div class="hud-stat-box">
+            <div class="hud-stat-item" style="color: var(--accent-purple);">📜 記憶片: <span id="hudFrags">2/4</span></div>
+            <div class="hud-stat-item" style="color: var(--accent-emerald);">🐾 ペット: フェンリル Lv.24</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Realtime Action Bar -->
+      <div style="width: 100%; display: flex; gap: 8px; justify-content: center;">
+        <button class="btn-action ripple-btn" style="flex: 1;" id="btnCombat">
+          <span>⚔️</span> 接近攻撃 / スキル発動
+        </button>
+        <button class="btn-action ripple-btn" style="flex: 1;" id="btnExcavate">
+          <span>⛏️</span> 発掘・遺物サーチ
+        </button>
+        <button class="btn-action ripple-btn" style="flex: 1;" id="btnPetSkill">
+          <span>🐾</span> ペット連携覚醒
+        </button>
+        <button class="btn-action ripple-btn" style="flex: 1;" id="btnReincarnate">
+          <span>👑</span> 輪廻転生 (NG+)
+        </button>
+      </div>
+
+      <!-- Live Event Log -->
+      <div style="width: 100%; display: flex; flex-direction: column; gap: 6px;">
+        <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; display: flex; justify-content: space-between;">
+          <span>📋 システム・バトルログ</span>
+          <span style="color: var(--accent-emerald);">● LIVE SIMULATION</span>
+        </div>
+        <div class="log-box" id="eventLog">
+          <div class="log-entry system">[SYSTEM] naRou Master Showcase Engine v1.0.0 初期化完了。</div>
+          <div class="log-entry lore">[WORLD] レイヤーロード: 地上界・平原 (深度 1 / 物質次元)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Archaeology Codex & Decryption Metagame -->
+    <section class="panel spring-anim">
+      <div class="panel-header">
+        <div class="panel-title"><span>📜</span> 考古学・記憶解読</div>
+        <span class="badge badge-purple" id="truthStatus">真理到達: 50%</span>
+      </div>
+
+      <div style="font-size: 11px; color: var(--text-muted);">
+        ダンジョン探索や発掘で得た暗号碑文を、対応する鍵で解読し世界の真理へ到達します。
+      </div>
+
+      <!-- Fragment List -->
+      <div class="fragment-list" id="fragmentList">
+        <!-- Fragment Item 1 -->
+        <div class="fragment-card decoded" data-id="goblin_child_screams">
+          <div class="fragment-header">
+            <span class="fragment-title">🕊️ ゴブリン子どもの悲鳴</span>
+            <span style="font-size: 10px; color: var(--accent-emerald);">[解読済]</span>
+          </div>
+          <div class="glyph-text decoded-view">"魔物にも家族がある…殲滅か共存か"</div>
+          <div style="font-size: 10px; color: var(--text-muted);">Key: ゴブリン語の辞書 (適用済)</div>
+        </div>
+
+        <!-- Fragment Item 2 -->
+        <div class="fragment-card" data-id="ancient_hero_memory">
+          <div class="fragment-header">
+            <span class="fragment-title">⚔️ 古の英雄の残響</span>
+            <span style="font-size: 10px; color: var(--accent-purple);">[未解読]</span>
+          </div>
+          <div class="glyph-text" id="glyphHero">☉⟡⌬⟡☉ ⌖⟒⏚⟟⌖ ⟁⟟⏚⟒⏚ ⌬⟡⌬</div>
+          <div style="font-size: 10px; color: var(--accent-blue);">💡 ヒント: 英雄の碑文は『守る』で始まる</div>
+        </div>
+
+        <!-- Fragment Item 3 -->
+        <div class="fragment-card" data-id="sunken_civ_tablet">
+          <div class="fragment-header">
+            <span class="fragment-title">🌊 沈没文明の石板</span>
+            <span style="font-size: 10px; color: var(--accent-purple);">[未解読]</span>
+          </div>
+          <div class="glyph-text" id="glyphSunken">⌁⟒⏚⟟⌖ ⟁⟟⏚⟒⏚ ⏃⌖⟒⏚ ⟟⌖⟁⟟⏚</div>
+          <div style="font-size: 10px; color: var(--accent-blue);">💡 ヒント: 水と記憶の二重記号</div>
+        </div>
+      </div>
+
+      <!-- Decryption Action -->
+      <button class="btn-action btn-action-primary ripple-btn" id="btnDecrypt">
+        <span>🔑</span> 所持している解読鍵を一括適用
+      </button>
+
+      <!-- Truth Codex Progress -->
+      <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); font-size: 11px; display: flex; flex-direction: column; gap: 4px;">
+        <div style="color: var(--accent-purple); font-weight: 700;">🔮 真理コーデックス: 共存の真実</div>
+        <div style="color: var(--text-muted);">全ての断片を解読することで、エンディング分岐（和平ルート / 覇王ルート）が開放されます。</div>
+      </div>
+
+      <!-- Graphics Tuning -->
+      <div class="panel-header" style="margin-top: 6px;">
+        <div class="panel-title" style="font-size: 12px;"><span>✨</span> シェーダー演出調整</div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-row">
+          <span>ブルーム / 法線光強度</span>
+          <span id="valBloom">1.2</span>
+        </div>
+        <input type="range" class="custom-slider" id="sliderBloom" min="0" max="3" step="0.1" value="1.2">
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Showcase Links & Quick Scene Switcher -->
+  <footer class="bottom-gallery">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div style="font-size: 12px; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 6px;">
+        <span>🎬</span> シーン別機能ギャラリー & 拡張プレビュー
+      </div>
+      <div style="font-size: 11px; color: var(--text-muted);">全24シーン・個別HTML完備</div>
+    </div>
+    <div class="gallery-chips">
+      <button class="chip-btn active" onclick="switchThemePreset('surface', 'plains', 'material')">🌱 陽だまりの草原 (拠点・初級)</button>
+      <button class="chip-btn" onclick="switchThemePreset('underground', 'ruins', 'material')">⛏️ 古代遺跡 (発掘・ダンジョン)</button>
+      <button class="chip-btn" onclick="switchThemePreset('otherworld', 'volcanic', 'ethereal')">🔮 精神火山 (異界・ボス領域)</button>
+      <button class="chip-btn" onclick="switchThemePreset('heaven', 'tundra', 'void')">✨ 虚無の天界 (最深部・エンディング)</button>
+      <a href="demos/gallery_24_scenes.html" target="_blank" class="chip-btn" style="text-decoration: none;">🖼️ 24シーンギャラリーを開く ↗</a>
+      <a href="graphics_showcase_demo.html" target="_blank" class="chip-btn" style="text-decoration: none;">🎨 グラフィック強化デモ ↗</a>
+    </div>
+  </footer>
+
+  <!-- Simulation & PixiJS Game Logic -->
+  <script>
+    // State Management
+    const state = {
+      zone: 'surface',
+      biome: 'plains',
+      depth: 1,
+      dim: 'material',
+      hp: 250,
+      maxHp: 250,
+      mp: 180,
+      maxMp: 180,
+      karma: 45,
+      fragmentsDecoded: 1,
+      totalFragments: 3,
+      bloomStrength: 1.2,
+      entities: [],
+      particles: [],
+      lightSource: { x: 340, y: 240, radius: 180, color: '#ffd700' }
+    };
+
+    // Theme Profiles (Matrix)
+    const themeProfiles = {
+      'surface_plains_material': {
+        name: '陽だまりの草原 (Material)',
+        desc: '光が穏やかに差し込む平原。初心者冒険者の鍛錬地。',
+        enemies: 'スライム, でんでん虫',
+        gimmick: '太陽の恵み (自然回復+20%)',
+        bgColor: 0x162215,
+        tileColor: 0x2d4a25,
+        wallColor: 0x1a2e16,
+        ambient: '#86efac',
+        light: '#fef08a'
+      },
+      'underground_ruins_material': {
+        name: '失われた地下遺跡 (Material)',
+        desc: '古代文明の遺物が眠る暗黒の地下回廊。石碑と罠が点在する。',
+        enemies: 'スケルトン, ガーゴイル, 遺跡ゴーレム',
+        gimmick: '古代の残響 (発掘成功率+50%)',
+        bgColor: 0x0c0f17,
+        tileColor: 0x1e293b,
+        wallColor: 0x0f172a,
+        ambient: '#64748b',
+        light: '#e2e8f0'
+      },
+      'otherworld_volcanic_ethereal': {
+        name: '業火の精神界 (Ethereal)',
+        desc: '灼熱の精神エネルギーが渦巻く異界。魔力が常に活性化する。',
+        enemies: 'ヘルハウンド, イフリート, 精神体',
+        gimmick: 'マナの奔流 (魔法威力+40% / 毎ターンMP消費)',
+        bgColor: 0x220c11,
+        tileColor: 0x4c1d24,
+        wallColor: 0x2a080c,
+        ambient: '#f87171',
+        light: '#fbbf24'
+      },
+      'heaven_tundra_void': {
+        name: '凍てつく虚無の天界 (Void)',
+        desc: '時間と空間が凍結した天上の異次元。世界の果てに位置する。',
+        enemies: 'ヴォイドウォーカー, 天上審判者, 虚無龍',
+        gimmick: '虚無の絶対零度 (全スキルクールダウン延長)',
+        bgColor: 0x0f0c24,
+        tileColor: 0x231d4e,
+        wallColor: 0x140e33,
+        ambient: '#c084fc',
+        light: '#38bdf8'
+      }
+    };
+
+    // Initialize PixiJS Application
+    const canvas = document.getElementById('gameCanvas');
+    const app = new PIXI.Application({
+      view: canvas,
+      width: 680,
+      height: 480,
+      backgroundColor: 0x0a0e17,
+      antialias: true
+    });
+
+    // Layer Containers
+    const dungeonLayer = new PIXI.Container();
+    const entityLayer = new PIXI.Container();
+    const fxLayer = new PIXI.Container();
+    const lightLayer = new PIXI.Graphics();
+    
+    app.stage.addChild(dungeonLayer);
+    app.stage.addChild(entityLayer);
+    app.stage.addChild(fxLayer);
+    app.stage.addChild(lightLayer);
+
+    // Player & Pet Entities
+    let playerGfx, petGfx;
+    let dungeonTiles = [];
+
+    function initScene() {
+      dungeonLayer.removeChildren();
+      entityLayer.removeChildren();
+      fxLayer.removeChildren();
+      dungeonTiles = [];
+
+      const currentKey = `${state.zone}_${state.biome}_${state.dim}`;
+      const profile = themeProfiles[currentKey] || themeProfiles['surface_plains_material'];
+
+      // Generate 14x10 Dungeon Room Grid
+      const cols = 14;
+      const rows = 10;
+      const tileSize = 44;
+      const offsetX = (680 - cols * tileSize) / 2;
+      const offsetY = (480 - rows * tileSize) / 2;
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const isWall = (r === 0 || r === rows - 1 || c === 0 || c === cols - 1 || (r === 4 && c > 2 && c < 7));
+          const tile = new PIXI.Graphics();
+          
+          if (isWall) {
+            tile.beginFill(profile.wallColor);
+            tile.lineStyle(1, 0x000000, 0.4);
+            tile.drawRect(offsetX + c * tileSize, offsetY + r * tileSize, tileSize, tileSize);
+            tile.endFill();
+          } else {
+            tile.beginFill(profile.tileColor);
+            tile.lineStyle(1, 0xffffff, 0.05);
+            tile.drawRect(offsetX + c * tileSize, offsetY + r * tileSize, tileSize, tileSize);
+            tile.endFill();
+          }
+
+          dungeonLayer.addChild(tile);
+          dungeonTiles.push({ c, r, isWall, x: offsetX + c * tileSize + tileSize / 2, y: offsetY + r * tileSize + tileSize / 2 });
+        }
+      }
+
+      // Spawn Player
+      playerGfx = new PIXI.Container();
+      const pBody = new PIXI.Graphics();
+      pBody.beginFill(0x38bdf8);
+      pBody.drawCircle(0, 0, 14);
+      pBody.endFill();
+      
+      const pGlow = new PIXI.Graphics();
+      pGlow.beginFill(0x38bdf8, 0.3);
+      pGlow.drawCircle(0, 0, 22);
+      pGlow.endFill();
+
+      const pText = new PIXI.Text('⚔️', { fontSize: 16 });
+      pText.anchor.set(0.5);
+
+      playerGfx.addChild(pGlow);
+      playerGfx.addChild(pBody);
+      playerGfx.addChild(pText);
+      playerGfx.x = 340;
+      playerGfx.y = 240;
+      entityLayer.addChild(playerGfx);
+
+      // Spawn Pet
+      petGfx = new PIXI.Container();
+      const petBody = new PIXI.Graphics();
+      petBody.beginFill(0x34d399);
+      petBody.drawCircle(0, 0, 10);
+      petBody.endFill();
+      const petText = new PIXI.Text('🐾', { fontSize: 12 });
+      petText.anchor.set(0.5);
+      petGfx.addChild(petBody);
+      petGfx.addChild(petText);
+      petGfx.x = 300;
+      petGfx.y = 260;
+      entityLayer.addChild(petGfx);
+
+      // Spawn Monster Entities
+      spawnMonsters();
+    }
+
+    function spawnMonsters() {
+      state.entities = [];
+      const symbols = ['👾', '🦇', '💀', '🔥', '👁️'];
+      for (let i = 0; i < 4; i++) {
+        const mon = new PIXI.Container();
+        const mBody = new PIXI.Graphics();
+        mBody.beginFill(0xf43f5e, 0.8);
+        mBody.drawCircle(0, 0, 12);
+        mBody.endFill();
+
+        const sym = symbols[Math.floor(Math.random() * symbols.length)];
+        const mText = new PIXI.Text(sym, { fontSize: 14 });
+        mText.anchor.set(0.5);
+
+        mon.addChild(mBody);
+        mon.addChild(mText);
+        
+        mon.x = 180 + Math.random() * 320;
+        mon.y = 120 + Math.random() * 240;
+        entityLayer.addChild(mon);
+
+        state.entities.push({
+          gfx: mon,
+          targetX: mon.x,
+          targetY: mon.y,
+          speed: 0.5 + Math.random() * 0.8,
+          hp: 80
+        });
+      }
+    }
+
+    // Animation Loop
+    let time = 0;
+    app.ticker.add((delta) => {
+      time += delta * 0.05;
+
+      // Pulse Player / Pet
+      if (playerGfx) {
+        playerGfx.scale.set(1 + Math.sin(time * 2) * 0.04);
+        state.lightSource.x = playerGfx.x;
+        state.lightSource.y = playerGfx.y;
+      }
+      if (petGfx && playerGfx) {
+        petGfx.x += (playerGfx.x - 30 - petGfx.x) * 0.05;
+        petGfx.y += (playerGfx.y + 20 - petGfx.y) * 0.05;
+      }
+
+      // Roam Monsters
+      state.entities.forEach((ent) => {
+        if (Math.random() < 0.02) {
+          ent.targetX = 140 + Math.random() * 400;
+          ent.targetY = 100 + Math.random() * 280;
+        }
+        ent.gfx.x += (ent.targetX - ent.gfx.x) * 0.02 * ent.speed;
+        ent.gfx.y += (ent.targetY - ent.gfx.y) * 0.02 * ent.speed;
+      });
+
+      // Update Particles
+      for (let i = state.particles.length - 1; i >= 0; i--) {
+        const p = state.particles[i];
+        p.gfx.x += p.vx;
+        p.gfx.y += p.vy;
+        p.gfx.alpha -= 0.025;
+        p.gfx.scale.set(p.gfx.scale.x * 0.96);
+        if (p.gfx.alpha <= 0) {
+          fxLayer.removeChild(p.gfx);
+          state.particles.splice(i, 1);
+        }
+      }
+
+      // Render Dynamic Lighting & Glow
+      renderDynamicLighting();
+    });
+
+    function renderDynamicLighting() {
+      lightLayer.clear();
+      
+      const currentKey = `${state.zone}_${state.biome}_${state.dim}`;
+      const profile = themeProfiles[currentKey] || themeProfiles['surface_plains_material'];
+
+      // Soft vignette mask
+      lightLayer.beginFill(0x000000, 0.45);
+      lightLayer.drawRect(0, 0, 680, 480);
+      lightLayer.endFill();
+
+      // Torch / Aura Glow around player
+      const flicker = (Math.sin(time * 6) + Math.cos(time * 11)) * 4;
+      const radius = (state.lightSource.radius + flicker) * state.bloomStrength;
+
+      lightLayer.beginFill(0xffffff, 0.18);
+      lightLayer.drawCircle(state.lightSource.x, state.lightSource.y, radius * 1.3);
+      lightLayer.endFill();
+
+      lightLayer.beginFill(0xffd700, 0.25);
+      lightLayer.drawCircle(state.lightSource.x, state.lightSource.y, radius * 0.8);
+      lightLayer.endFill();
+    }
+
+    function emitParticles(x, y, color, count = 12) {
+      for (let i = 0; i < count; i++) {
+        const g = new PIXI.Graphics();
+        g.beginFill(color);
+        g.drawCircle(0, 0, 3 + Math.random() * 4);
+        g.endFill();
+        g.x = x;
+        g.y = y;
+        fxLayer.addChild(g);
+
+        const angle = Math.random() * Math.PI * 2;
+        const spd = 2 + Math.random() * 5;
+        state.particles.push({
+          gfx: g,
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd
+        });
+      }
+    }
+
+    // Logger Utility
+    function addLog(text, type = 'system') {
+      const logBox = document.getElementById('eventLog');
+      const div = document.createElement('div');
+      div.className = `log-entry ${type}`;
+      div.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+      logBox.appendChild(div);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    // Update UI Elements
+    function updateHUD() {
+      document.getElementById('currentLayerCode').textContent = `${state.zone.toUpperCase()}:${state.depth}F (${state.dim.toUpperCase()})`;
+      const currentKey = `${state.zone}_${state.biome}_${state.dim}`;
+      const profile = themeProfiles[currentKey] || {
+        name: `${state.zone} - ${state.biome} (${state.dim})`,
+        desc: '未踏破の多層領域。独自の生態系と資源が存在する。',
+        enemies: '古代モンスター群',
+        gimmick: '未知の空間歪曲'
+      };
+
+      document.getElementById('layerThemeName').textContent = profile.name;
+      document.getElementById('layerDesc').textContent = profile.desc;
+      document.getElementById('layerEnemies').textContent = `👾 出現: ${profile.enemies}`;
+      document.getElementById('layerGimmick').textContent = `✨ 固有ギミック: ${profile.gimmick}`;
+
+      document.getElementById('hudHp').textContent = `${state.hp}/${state.maxHp}`;
+      document.getElementById('hudMp').textContent = `${state.mp}/${state.maxMp}`;
+      document.getElementById('hudKarma').textContent = `${state.karma > 0 ? '+' : ''}${state.karma}`;
+      document.getElementById('hudFrags').textContent = `${state.fragmentsDecoded}/${state.totalFragments}`;
+      
+      const pct = Math.round((state.fragmentsDecoded / state.totalFragments) * 100);
+      document.getElementById('truthStatus').textContent = `真理到達: ${pct}%`;
+    }
+
+    // Event Handlers: World Navigation
+    document.querySelectorAll('#zoneButtons .pill-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('#zoneButtons .pill-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.zone = btn.dataset.zone;
+        if (state.zone === 'surface') state.depth = 1;
+        if (state.zone === 'underground') state.depth = 15;
+        if (state.zone === 'otherworld') state.depth = 60;
+        if (state.zone === 'heaven') state.depth = 120;
+        addLog(`ゾーン移動: ${state.zone.toUpperCase()} (深度 ${state.depth}F)`, 'lore');
+        initScene();
+        updateHUD();
+      });
+    });
+
+    document.querySelectorAll('#biomeButtons .pill-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('#biomeButtons .pill-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.biome = btn.dataset.biome;
+        addLog(`バイオーム切替: ${state.biome}`, 'lore');
+        initScene();
+        updateHUD();
+      });
+    });
+
+    document.querySelectorAll('#dimButtons .pill-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('#dimButtons .pill-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.dim = btn.dataset.dim;
+        addLog(`次元跳躍: ${state.dim.toUpperCase()} 次元へシフト`, 'discovery');
+        emitParticles(340, 240, 0xc084fc, 24);
+        initScene();
+        updateHUD();
+      });
+    });
+
+    // Preset Switcher
+    window.switchThemePreset = function(zone, biome, dim) {
+      state.zone = zone;
+      state.biome = biome;
+      state.dim = dim;
+      
+      // Update UI buttons
+      document.querySelectorAll('#zoneButtons .pill-btn').forEach(b => b.classList.toggle('active', b.dataset.zone === zone));
+      document.querySelectorAll('#biomeButtons .pill-btn').forEach(b => b.classList.toggle('active', b.dataset.biome === biome));
+      document.querySelectorAll('#dimButtons .pill-btn').forEach(b => b.classList.toggle('active', b.dataset.dim === dim));
+
+      addLog(`プリセットレイヤー読込: ${zone} / ${biome} / ${dim}`, 'system');
+      emitParticles(340, 240, 0x38bdf8, 20);
+      initScene();
+      updateHUD();
+    };
+
+    // Actions: Combat & Skills
+    document.getElementById('btnCombat').addEventListener('click', () => {
+      emitParticles(playerGfx.x + 20, playerGfx.y, 0xf43f5e, 16);
+      addLog('⚔️ 連撃スキル『ヴォイド・スラッシュ』発動！ 周囲の魔物に 340 ダメージ！', 'combat');
+      state.mp = Math.max(0, state.mp - 20);
+      updateHUD();
+    });
+
+    document.getElementById('btnExcavate').addEventListener('click', () => {
+      emitParticles(playerGfx.x, playerGfx.y + 10, 0xffd700, 18);
+      addLog('⛏️ 考古学発掘成功！ 古代の石碑から『未解読の記憶片』を検出！', 'discovery');
+    });
+
+    document.getElementById('btnPetSkill').addEventListener('click', () => {
+      emitParticles(petGfx.x, petGfx.y, 0x34d399, 20);
+      addLog('🐾 フェンリルの咆哮！ 連携オーラにより攻撃力・回避率が 50% 上昇！', 'system');
+    });
+
+    document.getElementById('btnReincarnate').addEventListener('click', () => {
+      emitParticles(340, 240, 0xffd700, 30);
+      state.karma += 10;
+      addLog('👑 輪廻転生(NG+)実行！ カルマボーナスと継承スキルを保持して次代へ転生！', 'system');
+      updateHUD();
+    });
+
+    document.getElementById('btnWarp').addEventListener('click', () => {
+      emitParticles(340, 240, 0x38bdf8, 25);
+      addLog('🌀 空間跳躍ゲートを起動しました。', 'discovery');
+    });
+
+    document.getElementById('btnStairsDown').addEventListener('click', () => {
+      state.depth += 1;
+      emitParticles(340, 240, 0x64748b, 12);
+      addLog(`⬇️ 階段を降り、深度 ${state.depth}F へ到達しました。`, 'lore');
+      updateHUD();
+    });
+
+    document.getElementById('btnStairsUp').addEventListener('click', () => {
+      state.depth = Math.max(1, state.depth - 1);
+      emitParticles(340, 240, 0x64748b, 12);
+      addLog(`⬆️ 階段を登り、深度 ${state.depth}F へ帰還しました。`, 'lore');
+      updateHUD();
+    });
+
+    // Archaeology Decryption
+    document.getElementById('btnDecrypt').addEventListener('click', () => {
+      if (state.fragmentsDecoded < state.totalFragments) {
+        state.fragmentsDecoded = 3;
+        
+        // Decrypt glyphs visually
+        const heroEl = document.getElementById('glyphHero');
+        if (heroEl) {
+          heroEl.textContent = '"英雄の祈りは星に刻まれ、次代の戦士へ継承される"';
+          heroEl.classList.add('decoded-view');
+        }
+        const sunkenEl = document.getElementById('glyphSunken');
+        if (sunkenEl) {
+          sunkenEl.textContent = '"海底に眠る旧文明の叡智と深淵の記憶"';
+          sunkenEl.classList.add('decoded-view');
+        }
+
+        document.querySelectorAll('.fragment-card').forEach(c => c.classList.add('decoded'));
+        emitParticles(500, 200, 0x34d399, 25);
+        addLog('🔑 解読鍵『星辰の鍵』『深淵の古文書』を適用！ 全記憶片の解読に成功！', 'discovery');
+        addLog('🔮 【真理到達】真理コーデックス全解放！ 特殊エンディングルートが確定しました。', 'lore');
+        updateHUD();
+      } else {
+        addLog('全ての記憶片はすでに解読済みです。', 'system');
+      }
+    });
+
+    // Slider Listeners
+    document.getElementById('sliderBloom').addEventListener('input', (e) => {
+      state.bloomStrength = parseFloat(e.target.value);
+      document.getElementById('valBloom').textContent = state.bloomStrength.toFixed(1);
+    });
+
+    // Start Scene
+    initScene();
+    updateHUD();
+  </script>
+</body>
+</html>
+>>>>>>> theirs

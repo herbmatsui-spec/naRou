@@ -6,15 +6,14 @@ verify language coverage and fallback behaviour.
 """
 
 from __future__ import annotations
-from typing import Dict, List
 
 from localization_manager import LocalizationManager
 
 
-def run_localization_tests() -> Dict[str, object]:
+def run_localization_tests() -> dict[str, object]:
     """Run basic localization self-tests and return a result summary."""
     mgr = LocalizationManager()
-    results: Dict[str, object] = {
+    results: dict[str, object] = {
         "supported": mgr.get_supported_languages(),
         "stats": mgr.get_stats(),
         "validation": mgr.validate(),

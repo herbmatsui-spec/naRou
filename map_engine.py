@@ -5,20 +5,20 @@ Vertical World Extension: Steps 13-18
 """
 
 from __future__ import annotations
-import random
-import json
-from typing import List, Tuple, Optional, Dict, Any
-import math
-from pathlib import Path
 
-from constants import (
-    TILE_STAIRS_DOWN, TILE_STAIRS_UP
-)
+import json
+import math
+import random
+from pathlib import Path
+from typing import Any
+
+from constants import TILE_STAIRS_DOWN, TILE_STAIRS_UP
 from feature_flags import is_enabled
 
 # ワールドレイヤーシステムのインポート（オプション）
 try:
     from world_layer import WorldLayer
+
     WORLD_LAYER_AVAILABLE = True
 except ImportError:
     WORLD_LAYER_AVAILABLE = False
@@ -27,17 +27,17 @@ except ImportError:
 
 class TileRegistry:
     """Loads tileset_def.json and provides tile ID → atlas UV mapping"""
-    
+
     def __init__(self, def_path: str = "assets/tiles/tileset_def.json"):
         self.def_path = Path(def_path)
-        self.defs: Dict[str, Any] = {}
-        self.atlas_16_meta: Dict[str, Any] = {}
-        self.atlas_32_meta: Dict[str, Any] = {}
-        self.atlas_tiny_rogue_meta: Dict[str, Any] = {}
+        self.defs: dict[str, Any] = {}
+        self.atlas_16_meta: dict[str, Any] = {}
+        self.atlas_32_meta: dict[str, Any] = {}
+        self.atlas_tiny_rogue_meta: dict[str, Any] = {}
         self.tile_size: int = 16
         self._load_definitions()
         self._load_atlas_metadata()
-    
+
     def _load_definitions(self) -> None:
         """Load tile definitions from JSON"""
         if self.def_path.exists():
@@ -52,44 +52,53 @@ class TileRegistry:
                 "tiles": {
                     "TILE_WALL": {"file": "terrain/wall_dungeon.png", "variants": 1},
                     "TILE_FLOOR": {"file": "terrain/floor_dungeon.png", "variants": 1},
-                    "TILE_STAIRS_DOWN": {"file": "terrain/stairs_down.png", "variants": 1},
+                    "TILE_STAIRS_DOWN": {
+                        "file": "terrain/stairs_down.png",
+                        "variants": 1,
+                    },
                     "TILE_STAIRS_UP": {"file": "terrain/stairs_up.png", "variants": 1},
                     "TILE_WATER": {"file": "terrain/water.png", "variants": 1},
                     "TILE_TRAP": {"file": "terrain/trap.png", "variants": 1},
-                }
+                },
             }
             self.tile_size = 16
-    
+
     def _load_atlas_metadata(self) -> None:
         """Load atlas metadata JSON files"""
         atlas_dir = self.def_path.parent
+
+        def _safe_load(path) -> dict[str, Any]:
+            if not path.exists():
+                return {}
+            try:
+                with open(path) as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, OSError):
+                # 壊れた/競合マーカー付きのメタデータは無視して続行
+                return {}
+
         # Load 16x16 metadata
-        meta_16_path = atlas_dir / "tileset_16x16.json"
-        if meta_16_path.exists():
-            with open(meta_16_path) as f:
-                self.atlas_16_meta = json.load(f)
-        
+        self.atlas_16_meta = _safe_load(atlas_dir / "tileset_16x16.json")
+
         # Load 32x32 metadata
-        meta_32_path = atlas_dir / "tileset_32x32.json"
-        if meta_32_path.exists():
-            with open(meta_32_path) as f:
-                self.atlas_32_meta = json.load(f)
-        
+        self.atlas_32_meta = _safe_load(atlas_dir / "tileset_32x32.json")
+
         # Load tiny_rogue_16 metadata
-        meta_tr_path = atlas_dir / "tileset_tiny_rogue_16x16.json"
-        if meta_tr_path.exists():
-            with open(meta_tr_path) as f:
-                self.atlas_tiny_rogue_meta = json.load(f)
-    
-    def get_uv(self, tile_id: str, variant: int = 0, scale: str = "16") -> Tuple[int, int, int, int]:
+        self.atlas_tiny_rogue_meta = _safe_load(
+            atlas_dir / "tileset_tiny_rogue_16x16.json"
+        )
+
+    def get_uv(
+        self, tile_id: str, variant: int = 0, scale: str = "16"
+    ) -> tuple[int, int, int, int]:
         """
         Get UV coordinates for a tile in the atlas.
-        
+
         Args:
             tile_id: The tile identifier (e.g., "TILE_WALL")
             variant: Variant index for tiles with multiple variants
             scale: Either "16", "32", or "tiny_rogue_16" for tile scale
-            
+
         Returns:
             Tuple of (x, y, width, height) in atlas pixels
         """
@@ -97,11 +106,12 @@ class TileRegistry:
         if scale == "tiny_rogue_16":
             try:
                 from feature_flags import is_enabled
+
                 if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
                     scale = "16"  # Fall back to standard 16x16
             except ImportError:
                 pass
-        
+
         # Select appropriate atlas metadata
         if scale == "32":
             atlas_meta = self.atlas_32_meta
@@ -112,7 +122,7 @@ class TileRegistry:
         else:
             atlas_meta = self.atlas_16_meta
             tile_size = 16
-        
+
         # If we don't have metadata, fall back to procedural generation
         if not atlas_meta:
             # Simple fallback: assume tiles are in a grid
@@ -121,14 +131,18 @@ class TileRegistry:
             x = (idx % cols) * tile_size
             y = (idx // cols) * tile_size
             return (x, y, tile_size, tile_size)
-        
+
         # Get tile definition
         if "tiles" not in self.defs or tile_id not in self.defs["tiles"]:
             # Fallback to first tile or a default
-            tile_id = list(self.defs.get("tiles", {}).keys())[0] if self.defs.get("tiles") else "TILE_FLOOR"
-        
+            tile_id = (
+                list(self.defs.get("tiles", {}).keys())[0]
+                if self.defs.get("tiles")
+                else "TILE_FLOOR"
+            )
+
         tile_def = self.defs["tiles"][tile_id]
-        
+
         # Get base position from metadata
         file_key = tile_def["file"]
         if "tiles" not in atlas_meta or file_key not in atlas_meta["tiles"]:
@@ -142,22 +156,24 @@ class TileRegistry:
             meta = atlas_meta["tiles"][file_key]
             base_x, base_y = meta["x"], meta["y"]
             base_w, base_h = meta["width"], meta["height"]
-        
+
         # Apply variant offset
         variant_width = tile_def.get("variant_width", base_w)
         variant_offset = variant * variant_width
-        
+
         return (base_x + variant_offset, base_y, variant_width, base_h)
-    
-    def get_animation_frame(self, tile_id: str, frame: int, scale: str = "16") -> Tuple[int, int, int, int]:
+
+    def get_animation_frame(
+        self, tile_id: str, frame: int, scale: str = "16"
+    ) -> tuple[int, int, int, int]:
         """
         Get UV coordinates for a specific animation frame.
-        
+
         Args:
             tile_id: The tile identifier
             frame: Frame index
             scale: Either "16" or "32" for tile scale
-            
+
         Returns:
             Tuple of (x, y, width, height) in atlas pixels
         """
@@ -165,15 +181,20 @@ class TileRegistry:
         if not tile_def.get("animated", False):
             # Not animated, return first frame
             return self.get_uv(tile_id, 0, scale)
-        
+
         frame_count = tile_def.get("frames", 1)
         frame_index = frame % frame_count
-        
+
         # Get base UV and add frame offset
         base_uv = self.get_uv(tile_id, 0, scale)
         frame_width = tile_def.get("frame_width", base_uv[2])
-        
-        return (base_uv[0] + frame_index * frame_width, base_uv[1], frame_width, base_uv[3])
+
+        return (
+            base_uv[0] + frame_index * frame_width,
+            base_uv[1],
+            frame_width,
+            base_uv[3],
+        )
 
 
 # Global tile registry instance
@@ -182,6 +203,7 @@ TILE_REGISTRY = TileRegistry()
 
 class RectRoom:
     """マップ内の部屋を定義するクラス (ステップ21)"""
+
     def __init__(self, x: int, y: int, width: int, height: int):
         self.x1 = x
         self.y1 = y
@@ -189,7 +211,7 @@ class RectRoom:
         self.y2 = y + height
 
     @property
-    def center(self) -> Tuple[int, int]:
+    def center(self) -> tuple[int, int]:
         center_x = int((self.x1 + self.x2) / 2)
         center_y = int((self.y1 + self.y2) / 2)
         return center_x, center_y
@@ -206,8 +228,15 @@ class RectRoom:
 
 class GameMap:
     """ダンジョンや街などのマップデータ管理 (ステップ21〜30)"""
-    def __init__(self, width: int, height: int, map_type: str = "dungeon", 
-                 floor_level: int = 1, world_layer: Optional[WorldLayer] = None):
+
+    def __init__(
+        self,
+        width: int,
+        height: int,
+        map_type: str = "dungeon",
+        floor_level: int = 1,
+        world_layer: WorldLayer | None = None,
+    ):
         self.width = width
         self.height = height
         self.map_type = map_type
@@ -215,37 +244,37 @@ class GameMap:
         self.world_layer = world_layer  # ワールドレイヤーへの参照（垂直ワールド拡張用）
 
         # タイル初期化: 全て壁 (タイルID文字列で格納)
-        self.tiles = [[ "TILE_WALL" for _ in range(height)] for _ in range(width)]
-        
+        self.tiles = [["TILE_WALL" for _ in range(height)] for _ in range(width)]
+
         # ピクセルアートモードのフラグ (後で設定可能にする)
         self.use_pixel_art = False
-        
+
         # アニメーションタイルの状態追跡
-        self.tile_animations: Dict[Tuple[int, int], Dict[str, Any]] = {}
-        
+        self.tile_animations: dict[tuple[int, int], dict[str, Any]] = {}
+
         # タイルバリアント（オートタイル用）の追跡
-        self.tile_variants: Dict[Tuple[int, int], int] = {}
+        self.tile_variants: dict[tuple[int, int], int] = {}
 
         # Room decorations (TR_DECOR variants)
-        self.decorations: Dict[Tuple[int, int], str] = {}
+        self.decorations: dict[tuple[int, int], str] = {}
 
         # 松明（光源）位置 — ダイナミックライティング用 (Phase 2-A)
-        self.torch_positions: List[Tuple[int, int]] = []
+        self.torch_positions: list[tuple[int, int]] = []
 
         # 視界・探索済みフラグ (ステップ26, 27)
         self.visible = [[False for _ in range(height)] for _ in range(width)]
         self.explored = [[False for _ in range(height)] for _ in range(width)]
 
         # 部屋リスト
-        self.rooms: List[RectRoom] = []
+        self.rooms: list[RectRoom] = []
 
         # 階段・開始位置 (ステップ23)
-        self.stairs_down_pos: Optional[Tuple[int, int]] = None
-        self.stairs_up_pos: Optional[Tuple[int, int]] = None
-        self.start_pos: Tuple[int, int] = (int(width / 2), int(height / 2))
+        self.stairs_down_pos: tuple[int, int] | None = None
+        self.stairs_up_pos: tuple[int, int] | None = None
+        self.start_pos: tuple[int, int] = (int(width / 2), int(height / 2))
 
         # Proposal 8: 緻密なプロシージャル・ディテール (壁画・血文字・刻印・苔)
-        self.micro_details: Dict[Tuple[int, int], Dict[str, Any]] = {}
+        self.micro_details: dict[tuple[int, int], dict[str, Any]] = {}
 
     def is_in_bounds(self, x: int, y: int) -> bool:
         return 0 <= x < self.width and 0 <= y < self.height
@@ -281,7 +310,7 @@ class GameMap:
             if self.tiles[decor_x][decor_y] == "TILE_FLOOR":
                 # Pick a random decor variant from the 12 available
                 decor_variant = random.randint(1, 12)
-                self.decorations = getattr(self, 'decorations', {})
+                self.decorations = getattr(self, "decorations", {})
                 self.decorations[(decor_x, decor_y)] = f"TR_DECOR_{decor_variant:02d}"
 
     def create_h_tunnel(self, x1: int, x2: int, y: int) -> None:
@@ -330,7 +359,7 @@ class GameMap:
                     "frame": 0,
                     "timer": 0.0,
                     "fps": 4,  # 4 FPS for stairs animation
-                    "frames": 4
+                    "frames": 4,
                 }
             else:
                 # 前の部屋と通路で繋ぐ
@@ -356,7 +385,7 @@ class GameMap:
                 "frame": 0,
                 "timer": 0.0,
                 "fps": 4,  # 4 FPS for stairs animation
-                "frames": 4
+                "frames": 4,
             }
 
         # 最後の部屋に下り階段を配置 (ステップ23)
@@ -370,7 +399,7 @@ class GameMap:
                 "frame": 0,
                 "timer": 0.0,
                 "fps": 4,  # 4 FPS for stairs animation
-                "frames": 4
+                "frames": 4,
             }
 
         # 特殊地形・水たまりや罠を配置 (ステップ28)
@@ -388,7 +417,7 @@ class GameMap:
                             "frame": 0,
                             "timer": 0.0,
                             "fps": 8,  # 8 FPS for water animation
-                            "frames": 8
+                            "frames": 8,
                         }
                     else:  # TILE_TRAP
                         self.tile_animations[(rx, ry)] = {
@@ -396,7 +425,7 @@ class GameMap:
                             "frame": 0,
                             "timer": 0.0,
                             "fps": 6,  # 6 FPS for trap animation
-                            "frames": 3
+                            "frames": 3,
                         }
 
         # Proposal 8: 緻密なプロシージャル・ディテール (壁画・血文字・古代刻印の生成)
@@ -404,35 +433,35 @@ class GameMap:
             "『ここに眠る者、我が名を呼ぶなかれ…』",
             "『妹よ…すまない、塩を持ってくるのを忘れた…』",
             "『深層に潜む異形の神に目を合わせるな』",
-            "『エーテル風が吹く夜、この壁に隠れよ』"
+            "『エーテル風が吹く夜、この壁に隠れよ』",
         ]
         mural_descriptions = [
             "古代人が巨大な螺旋を描いた退色した壁画",
             "神ジュアが冒険者に手を差し伸べる神聖な彫刻",
             "黒天使が弓を引く躍動感あるレリーフ",
-            "狂気に堕ちた魔法使いの血染めの術式"
+            "狂気に堕ちた魔法使いの血染めの術式",
         ]
         for room in self.rooms:
             # 確率で壁または床にプロシージャルな詳細を刻む
             if random.random() < 0.4:
                 detail_x = random.randint(room.x1, room.x2)
                 detail_y = random.randint(room.y1, room.y2)
-                is_wall = (self.tiles[detail_x][detail_y] == "TILE_WALL")
+                is_wall = self.tiles[detail_x][detail_y] == "TILE_WALL"
                 if is_wall:
                     self.micro_details[(detail_x, detail_y)] = {
                         "type": "mural",
                         "title": "古代の壁画・彫刻",
                         "description": random.choice(mural_descriptions),
-                        "char": "📜"
+                        "char": "📜",
                     }
                 else:
                     self.micro_details[(detail_x, detail_y)] = {
                         "type": "bloodstain",
                         "title": "先人の血文字",
                         "description": random.choice(blood_messages),
-                        "char": "🩸"
+                        "char": "🩸",
                     }
-        
+
         # Calculate variants for autotiling
         self.calculate_all_variants()
 
@@ -443,7 +472,7 @@ class GameMap:
         """壁でかつ床に接するタイルを松明（光源）として記録する。"""
         self.torch_positions = []
         seen: set = set()
-        candidates: List[Tuple[int, int]] = []
+        candidates: list[tuple[int, int]] = []
         for room in self.rooms:
             count = 0
             # 部屋を囲む外壁のうち、内側に床を持つものを松明にする
@@ -454,13 +483,18 @@ class GameMap:
             for y in range(room.y1, room.y2):
                 border.append((room.x1, y))
                 border.append((room.x2 - 1, y))
-            for (tx, ty) in border:
+            for tx, ty in border:
                 if not self.is_in_bounds(tx, ty) or self.tiles[tx][ty] != "TILE_WALL":
                     continue
                 # 隣接する床（明かりの届く先）があれば松明として成立
                 has_floor = any(
                     self.is_in_bounds(nx, ny) and self.tiles[nx][ny] == "TILE_FLOOR"
-                    for (nx, ny) in ((tx + 1, ty), (tx - 1, ty), (tx, ty + 1), (tx, ty - 1))
+                    for (nx, ny) in (
+                        (tx + 1, ty),
+                        (tx - 1, ty),
+                        (tx, ty + 1),
+                        (tx, ty - 1),
+                    )
                 )
                 if has_floor and (tx, ty) not in seen:
                     seen.add((tx, ty))
@@ -500,7 +534,7 @@ class GameMap:
             self.tiles[int((h.x1 + h.x2) / 2)][h.y2 - 1] = "TILE_FLOOR"
 
         self.start_pos = (25, 20)
-        
+
         # Calculate variants for autotiling
         self.calculate_all_variants()
 
@@ -540,12 +574,15 @@ class GameMap:
                 if not self.is_transparent(ix, iy):
                     break
 
-    def get_faction_tile_color(self, base_color: Tuple[int, int, int], faction_id: Optional[str]) -> Tuple[int, int, int]:
+    def get_faction_tile_color(
+        self, base_color: tuple[int, int, int], faction_id: str | None
+    ) -> tuple[int, int, int]:
         """派閥色に応じたタイルのカラーブレンディング (Steps 59, 60)"""
         if not faction_id:
             return base_color
         try:
             from faction_war_system import REGISTRY as FW_REG
+
             FW_REG.load()
             fw = FW_REG.get(faction_id)
             if fw and fw.color:
@@ -559,10 +596,12 @@ class GameMap:
             pass
         return base_color
 
-    def select_dungeon_for_reincarnation(self, player_reinc_count: int) -> Optional[str]:
+    def select_dungeon_for_reincarnation(self, player_reinc_count: int) -> str | None:
         """転生ダンジョン選択ロジック (Steps 50, 51)"""
         # TODO: Reincarnation dungeon
-        from reincarnation_dungeon_system import REGISTRY as RD_REG, ReincarnationDungeonManager
+        from reincarnation_dungeon_system import REGISTRY as RD_REG
+        from reincarnation_dungeon_system import ReincarnationDungeonManager
+
         RD_REG.load()
         mgr = ReincarnationDungeonManager(RD_REG)
         avail = mgr.get_available_dungeons(player_reinc_count)
@@ -586,32 +625,32 @@ class GameMap:
         """Calculate wall variant based on neighboring tiles (autotiling)"""
         if not self.is_in_bounds(x, y) or self.tiles[x][y] != "TILE_WALL":
             return 0
-        
+
         # Check neighbors: N, E, S, W
         mask = 0
-        if self.is_in_bounds(x, y-1) and self.tiles[x][y-1] == "TILE_WALL":
+        if self.is_in_bounds(x, y - 1) and self.tiles[x][y - 1] == "TILE_WALL":
             mask |= 1  # North
-        if self.is_in_bounds(x+1, y) and self.tiles[x+1][y] == "TILE_WALL":
+        if self.is_in_bounds(x + 1, y) and self.tiles[x + 1][y] == "TILE_WALL":
             mask |= 2  # East
-        if self.is_in_bounds(x, y+1) and self.tiles[x][y+1] == "TILE_WALL":
+        if self.is_in_bounds(x, y + 1) and self.tiles[x][y + 1] == "TILE_WALL":
             mask |= 4  # South
-        if self.is_in_bounds(x-1, y) and self.tiles[x-1][y] == "TILE_WALL":
+        if self.is_in_bounds(x - 1, y) and self.tiles[x - 1][y] == "TILE_WALL":
             mask |= 8  # West
-        
+
         # Simple 4-bit to 4-bit mapping (can be expanded to 47-tile set later)
         # For now, just return the mask as the variant index
         return mask
-    
+
     def calculate_floor_variant(self, x: int, y: int) -> int:
         """Calculate floor variant based on neighboring tiles (for variation)"""
         if not self.is_in_bounds(x, y) or self.tiles[x][y] != "TILE_FLOOR":
             return 0
-        
+
         # For floor tiles, we can use a simple random variant based on position
         # to break up repetition, or use more complex autotiling if desired
         # Using position-based hash for deterministic variation
         return ((x * 73856093) ^ (y * 19349663)) % 8  # 8 variants for floor
-        
+
     def calculate_all_variants(self) -> None:
         """Calculate variants for all tiles on the map"""
         self.tile_variants.clear()
@@ -627,38 +666,39 @@ class GameMap:
         """下り階段が次の層へ続くかチェック（垂直ワールド拡張用）"""
         if not self.world_layer or not self.stairs_down_pos:
             return False
-        
+
         # 基本的には常に利用可能だが、特殊条件がある場合はここでチェック
         # 例: 特定のアイテムが必要、クエスト完了が必要等
         return True
-    
+
     def is_stairs_up_available(self) -> bool:
         """上り階段が前の層へ続くかチェック（垂直ワールド拡張用）"""
         if not self.world_layer or not self.stairs_up_pos:
             return False
-        
+
         return True
-    
-    def get_layer_transition_info(self) -> Dict[str, Any]:
+
+    def get_layer_transition_info(self) -> dict[str, Any]:
         """階層間移動に必要な情報を取得（垂直ワールド拡張用）"""
         if not self.world_layer:
             return {}
-        
+
         return {
             "current_layer": {
                 "zone": self.world_layer.zone,
                 "biome": self.world_layer.biome,
                 "depth": self.world_layer.depth,
-                "dimension": self.world_layer.dimension
+                "dimension": self.world_layer.dimension,
             },
             "can_go_down": self.is_stairs_down_available(),
             "can_go_up": self.is_stairs_up_available(),
             "stairs_down_pos": self.stairs_down_pos,
-            "stairs_up_pos": self.stairs_up_pos
+            "stairs_up_pos": self.stairs_up_pos,
         }
 
-    def handle_stairs_interaction(self, player_x: int, player_y: int, 
-                                 world_manager: 'WorldMapManager') -> Optional[Tuple[int, int, str]]:
+    def handle_stairs_interaction(
+        self, player_x: int, player_y: int, world_manager: WorldMapManager
+    ) -> tuple[int, int, str] | None:
         """
         階段との相互作用を処理し、必要なら層移動を返す
         返り値: (new_x, new_y, target_layer_key) または None（移動なし）
@@ -666,7 +706,7 @@ class GameMap:
         """
         if not self.world_layer:
             return None
-        
+
         # 下り階段に立っているかチェック
         if self.tiles[player_x][player_y] == TILE_STAIRS_DOWN:
             if self.is_stairs_down_available():
@@ -677,7 +717,7 @@ class GameMap:
                     entrance_pos = target_layer.get_entrance_position()
                     layer_key = f"{target_layer.zone}:{target_layer.biome}:{target_layer.depth}:{target_layer.dimension}"
                     return (entrance_pos[0], entrance_pos[1], layer_key)
-        
+
         # 上り階段に立っているかチェック
         elif self.tiles[player_x][player_y] == TILE_STAIRS_UP:
             if self.is_stairs_up_available():
@@ -688,22 +728,24 @@ class GameMap:
                     entrance_pos = target_layer.get_entrance_position()
                     layer_key = f"{target_layer.zone}:{target_layer.biome}:{target_layer.depth}:{target_layer.dimension}"
                     return (entrance_pos[0], entrance_pos[1], layer_key)
-        
+
         return None
-    
-    def _calculate_target_layer_down(self, world_manager: 'WorldMapManager') -> Optional[WorldLayer]:
+
+    def _calculate_target_layer_down(
+        self, world_manager: WorldMapManager
+    ) -> WorldLayer | None:
         """下り階段でのターゲットレイヤーを計算"""
         if not self.world_layer:
             return None
-        
+
         current_zone = self.world_layer.zone
         current_biome = self.world_layer.biome
         current_depth = self.world_layer.depth
         current_dimension = self.world_layer.dimension
-        
+
         # 同じゾーン内での深度増加が基本
         new_depth = current_depth + 1
-        
+
         # ゾーン境界チェック
         if current_zone == "surface" and new_depth > 10:
             # 地上界の上限を超えたら地下界へ
@@ -720,30 +762,34 @@ class GameMap:
         else:
             # 同じゾーン内での移動
             new_zone = current_zone
-        
+
         # 深度上限チェック
         if new_depth > 200:
             return None
-        
-        return world_manager.get_or_create_layer(new_zone, current_biome, new_depth, current_dimension)
-    
-    def _calculate_target_layer_up(self, world_manager: 'WorldMapManager') -> Optional[WorldLayer]:
+
+        return world_manager.get_or_create_layer(
+            new_zone, current_biome, new_depth, current_dimension
+        )
+
+    def _calculate_target_layer_up(
+        self, world_manager: WorldMapManager
+    ) -> WorldLayer | None:
         """上り階段でのターゲットレイヤーを計算"""
         if not self.world_layer:
             return None
-        
+
         current_zone = self.world_layer.zone
         current_biome = self.world_layer.biome
         current_depth = self.world_layer.depth
         current_dimension = self.world_layer.dimension
-        
+
         # 同じゾーン内での深度減少が基本
         new_depth = current_depth - 1
-        
+
         # 深度下限チェック
         if new_depth < 0:
             return None
-        
+
         # ゾーン境界チェック（逆方向）
         if current_zone == "underground" and new_depth < 11:
             # 地下界の下限を下回ったら地上界へ
@@ -760,7 +806,7 @@ class GameMap:
         else:
             # 同じゾーン内での移動
             new_zone = current_zone
-        
-        return world_manager.get_or_create_layer(new_zone, current_biome, new_depth, current_dimension)
 
-
+        return world_manager.get_or_create_layer(
+            new_zone, current_biome, new_depth, current_dimension
+        )

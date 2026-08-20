@@ -7,6 +7,7 @@ binaries support ``--help``). Used by CI/CD after packaging.
 Usage:
     python tools/verify_build.py --binary dist/naRou
 """
+
 from __future__ import annotations
 
 import argparse
@@ -23,7 +24,9 @@ def verify(binary: Path) -> bool:
     try:
         result = subprocess.run(
             [str(binary), "--help"],
-            capture_output=True, text=True, timeout=60,
+            capture_output=True,
+            text=True,
+            timeout=60,
         )
         ok = result.returncode in (0, 1)  # --help often exits 0/1
         print(f"[verify] --help exit={result.returncode} -> {'OK' if ok else 'FAIL'}")

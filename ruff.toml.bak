@@ -1,0 +1,19 @@
+[lint]
+select = ["E", "F", "W", "C90", "I", "UP", "B", "SIM", "S"]
+ignore = ["E501"]
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    "*egg-info",
+    ".venv",
+    "venv",
+    ".tox",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["."]
+
+[tool.ruff.lint.flake8-type-checking]
+enabled = true
