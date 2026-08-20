@@ -88,7 +88,10 @@ def get_effect_tile_id(effect_type: str) -> str:
     
     mappings = load_tiny_rogue_mappings()
     effect_map = mappings.get("effects", {})
-    return effect_map.get(effect_type, effect_type)
+    decor_map = mappings.get("decorations", {})
+    
+    # Check effects first, then decorations (for blood, etc.)
+    return effect_map.get(effect_type, decor_map.get(effect_type, effect_type))
 
 
 def get_ui_tile_id(ui_type: str) -> str:
