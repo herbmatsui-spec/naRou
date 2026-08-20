@@ -416,6 +416,10 @@ class TutorialManager:
                 return guide
         return None
 
+    def update(self, delta_time: float = 1.0) -> None:
+        """チュートリアルマネージャーの更新処理"""
+        pass
+
 
 @dataclass
 class FloatingNotification:
@@ -437,7 +441,7 @@ class NotificationManager:
             title=title, message=message, category=category, duration=duration, color=color
         ))
 
-    def update(self) -> None:
+    def update(self, delta_time: float = 1.0) -> None:
         remaining = []
         for n in self.active_notifications:
             n.duration -= 1

@@ -402,7 +402,7 @@ class FXManager:
         """Proposal 7: 精神世界・次元干渉グリッチをトリガー"""
         self.glitch_duration = duration
 
-    def update(self) -> None:
+    def update(self, delta_time: float = 1.0) -> None:
         """エフェクトのフレーム更新"""
         if self.hit_stop_frames > 0:
             self.hit_stop_frames -= 1
