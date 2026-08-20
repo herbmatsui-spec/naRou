@@ -135,3 +135,72 @@ def get_dungeon_tile_id(tile_type: str) -> str:
     }
     standard_id = mapping.get(tile_type, tile_type)
     return get_tiny_rogue_tile_id(standard_id)
+
+
+# Extra variant helpers for expanded tile set
+def get_extra_floor_id(variant: int = 0) -> str:
+    """Get extra floor variant (13+). Falls back to TR_FLOOR_01 if flag disabled."""
+    try:
+        from feature_flags import is_enabled
+        if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            return "TILE_FLOOR"
+    except ImportError:
+        pass
+    variant = max(0, min(variant, 11))  # 12 variants (0-11)
+    return f"TR_FLOOR_{variant+1:02d}"
+
+
+def get_extra_wall_id(variant: int = 0) -> str:
+    """Get extra wall variant (13+). Falls back to TILE_WALL if flag disabled."""
+    try:
+        from feature_flags import is_enabled
+        if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            return "TILE_WALL"
+    except ImportError:
+        pass
+    variant = max(0, min(variant, 11))
+    return f"TR_WALL_{variant+1:02d}"
+
+
+def get_extra_decor_id(variant: int = 0) -> str:
+    """Get extra decoration variant. Falls back to standard decor if flag disabled."""
+    try:
+        from feature_flags import is_enabled
+        if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            return "DECOR_TORCH"
+    except ImportError:
+        pass
+    variant = max(0, min(variant, 11))
+    return f"TR_DECOR_{variant+1:02d}"
+
+
+def get_monster_tile_id(monster_type: str, variant: int = 0) -> str:
+    """Get monster tile ID with variant support (0-11)."""
+    try:
+        from feature_flags import is_enabled
+        if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            return f"ENEMY_{monster_type.upper()}"
+    except ImportError:
+        pass
+    # Map monster types to base variants
+    monster_base = {
+        "slime": 0, "red_slime": 0, "snail": 1,
+        "goblin": 0, "kobold": 1, "orc": 2,
+        "hound_fire": 0, "rogue_thief": 1, "novice_wizard": 2,
+        "minotaur": 0, "lich": 1, "dragon_red": 2,
+    }
+    base_idx = monster_base.get(monster_type, 0)
+    variant = max(0, min(variant, 11))
+    return f"TR_MONSTER_{base_idx * 3 + variant + 1:02d}"
+
+
+def get_player_tile_id(variant: int = 0) -> str:
+    """Get player/NPC tile ID with variant support (0-11)."""
+    try:
+        from feature_flags import is_enabled
+        if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            return "PLAYER"
+    except ImportError:
+        pass
+    variant = max(0, min(variant, 11))
+    return f"TR_PLAYER_{variant+1:02d}"

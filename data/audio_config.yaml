@@ -31,3 +31,84 @@ ambient:
   cave:
     sound: 'amb_cave_wind'
     volume: 0.6
+
+# Sound Effect mappings to OGG files (ENABLE_AUDIO_PACK)
+se:
+  # UI sounds
+  ui_click: 'metalClick.ogg'
+  ui_hover: 'metalClick.ogg'
+  ui_notify: 'handleCoins.ogg'
+  ui_select: 'metalLatch.ogg'
+  ui_cancel: 'metalClick.ogg'
+  
+  # Footstep variations (terrain-specific)
+  footstep_stone: 'footstep00.ogg'
+  footstep_grass: 'footstep01.ogg'
+  footstep_wood: 'footstep02.ogg'
+  footstep_metal: 'footstep03.ogg'
+  footstep_dirt: 'footstep04.ogg'
+  footstep_water: 'footstep05.ogg'
+  footstep_snow: 'footstep06.ogg'
+  footstep_sand: 'footstep07.ogg'
+  footstep_carpet: 'footstep08.ogg'
+  footstep_gravel: 'footstep09.ogg'
+  
+  # Combat sounds
+  hit_light: 'knifeSlice.ogg'
+  hit_heavy: 'chop.ogg'
+  kill: 'knifeSlice2.ogg'
+  crit: 'metalPot1.ogg'
+  block: 'metalLatch.ogg'
+  dodge: 'cloth1.ogg'
+  
+  # Magic/Spell sounds
+  cast_fire: 'drawKnife1.ogg'
+  cast_ice: 'creak1.ogg'
+  cast_lightning: 'metalClick.ogg'
+  cast_heal: 'bookOpen.ogg'
+  cast_poison: 'dropLeather.ogg'
+  cast_teleport: 'drawKnife2.ogg'
+  
+  # Item/Interaction sounds
+  get_item: 'handleCoins.ogg'
+  get_rare_item: 'handleCoins2.ogg'
+  equip: 'metalLatch.ogg'
+  use_item: 'bookFlip1.ogg'
+  drop_item: 'dropLeather.ogg'
+  open_chest: 'doorOpen_1.ogg'
+  close_chest: 'doorClose_1.ogg'
+  open_door: 'doorOpen_1.ogg'
+  close_door: 'doorClose_1.ogg'
+  pick_lock: 'metalClick.ogg'
+  
+  # Status effects
+  level_up: 'fanfare_victory'
+  heal: 'bookOpen.ogg'
+  poison_tick: 'creak2.ogg'
+  burn_tick: 'chop.ogg'
+  
+  # Monster sounds
+  monster_slime: 'cloth2.ogg'
+  monster_goblin: 'bookPlace1.ogg'
+  monster_orc: 'chop.ogg'
+  monster_dragon: 'knifeSlice.ogg'
+  monster_undead: 'creak3.ogg'
+  monster_alert: 'metalClick.ogg'
+  monster_death: 'dropLeather.ogg'
+  
+  # Environmental
+  trap_trigger: 'metalLatch.ogg'
+  trap_disarm: 'bookClose.ogg'
+  secret_found: 'handleSmallLeather.ogg'
+  stairs_up: 'creak1.ogg'
+  stairs_down: 'creak2.ogg'
+
+# Ambient loop mappings (for depth-based ambient)
+ambient_loops:
+  dungeon_shallow: 'amb_water_drop'
+  dungeon_deep: 'amb_cave_wind'
+  dungeon_crisis: 'amb_cave_wind'
+  town_day: 'amb_town_chatter'
+  town_night: 'amb_town_chatter'
+  forest: 'amb_cave_wind'
+  cave: 'amb_cave_wind'

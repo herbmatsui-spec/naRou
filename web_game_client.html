@@ -723,7 +723,6 @@
 
 // ==================== PIXI.JS WEBGL RENDER ENGINE ====================
     const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
     
     // モジュールロード待機
     function waitForModules(callback, maxAttempts = 50) {
@@ -744,17 +743,81 @@
       check();
     }
     
+    // 2Dフォールバック初期化（WebGL2が利用できない場合）
+    function init2DFallback() {
+        console.log('Initializing 2D Canvas fallback...');
+        const ctx2d = canvas.getContext('2d');
+        if (!ctx2d) return;
+        
+        // 簡易的な2Dレンダリングループ
+        function render2D() {
+            ctx2d.fillStyle = '#0a0b10';
+            ctx2d.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (!gameState) {
+                ctx2d.fillStyle = '#8b9bb4';
+                ctx2d.font = '16px var(--font-main)';
+                ctx2d.textAlign = 'center';
+                ctx2d.fillText('サーバーに接続中……', canvas.width / 2, canvas.height / 2);
+            } else {
+                // 簡易マップ描画
+                const map = gameState.map || [];
+                const viewH = map.length;
+                const viewW = viewH > 0 ? map[0].length : 0;
+                const TILE_SIZE = 24;
+                const offsetX = Math.max(0, (canvas.width - viewW * TILE_SIZE) / 2);
+                const offsetY = Math.max(0, (canvas.height - viewH * TILE_SIZE) / 2);
+                
+                for (let y = 0; y < viewH; y++) {
+                    for (let x = 0; x < viewW; x++) {
+                        const ch = map[y][x];
+                        const px = offsetX + x * TILE_SIZE;
+                        const py = offsetY + y * TILE_SIZE;
+                        ctx2d.fillStyle = ch === '#' ? '#333' : ch === '>' ? '#f00' : '#1a1a2e';
+                        ctx2d.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+                    }
+                }
+                
+                // プレイヤー描画
+                if (gameState.player) {
+                    const p = gameState.player;
+                    const px = offsetX + p.x * TILE_SIZE + TILE_SIZE/2;
+                    const py = offsetY + p.y * TILE_SIZE + TILE_SIZE/2;
+                    ctx2d.fillStyle = '#0f0';
+                    ctx2d.beginPath();
+                    ctx2d.arc(px, py, TILE_SIZE/3, 0, Math.PI*2);
+                    ctx2d.fill();
+                }
+            }
+            requestAnimationFrame(render2D);
+        }
+        render2D();
+    }
+    
     waitForModules(() => {
 
-    // PixiJSアプリケーションの初期化
-    const pixiApp = new PIXI.Application({
-        view: canvas,
-        width: canvas.width,
-        height: canvas.height,
-        backgroundColor: 0x000000,
-        resolution: window.devicePixelRatio || 1,
-        autoDensity: true
-    });
+    // PixiJSアプリケーションの初期化（WebGL2）
+    let pixiApp = null;
+    let use2DFallback = false;
+
+    try {
+        pixiApp = new PIXI.Application({
+            view: canvas,
+            width: canvas.width,
+            height: canvas.height,
+            backgroundColor: 0x000000,
+            resolution: window.devicePixelRatio || 1,
+            autoDensity: true,
+            preferWebGL: true,
+            forceCanvas: false
+        });
+    } catch (error) {
+        console.error('WebGL2 initialization failed:', error);
+        document.getElementById('gl-error-overlay').style.display = 'flex';
+        use2DFallback = true;
+        init2DFallback();
+        return;
+    }
 
     // レイヤー分離のためのコンテナを作成
     const backgroundLayer = new PIXI.Container();
@@ -863,11 +926,11 @@
             
             // PixiJSテクスチャを作成
             const baseTexture = new PIXI.BaseTexture(atlasImage);
-            textureAtlas = new TextureAtlas(baseTexture, metadata);
+            tileAtlas = new TextureAtlas(baseTexture, metadata);
             
             if (normalAtlasImage.complete && normalAtlasImage.naturalWidth > 0) {
                 const normalBaseTexture = new PIXI.BaseTexture(normalAtlasImage);
-                textureAtlas.loadNormalMap(normalBaseTexture);
+                tileAtlas.loadNormalMap(normalBaseTexture);
                 if (lightingSystem && lightingSystem.normalMapFilter) {
                     lightingSystem.normalMapFilter.uniforms.uNormalSampler = normalBaseTexture;
                     tileLayer.filters = [lightingSystem.normalMapFilter];
@@ -875,12 +938,12 @@
             }
 
             // タイル文字と色のマッピング（テクスチャアトラスを使用）
-            tileTextures = {
-                '#': textureAtlas.getTexture('#'),
-                '.': textureAtlas.getTexture('.'),
-                '>': textureAtlas.getTexture('>'),
-                ' ': textureAtlas.getTexture(' '),
-                '⛩️': textureAtlas.getTexture('⛩️')
+            let tileTextures = {
+                '#': tileAtlas.getTexture('#'),
+                '.': tileAtlas.getTexture('.'),
+                '>': tileAtlas.getTexture('>'),
+                ' ': tileAtlas.getTexture(' '),
+                '⛩️': tileAtlas.getTexture('⛩️')
             };
             
             console.log('Texture atlas and normal maps loaded successfully');
@@ -1018,13 +1081,20 @@
       screenShake.update(0.016);
       
       if (!gameState) {
-        // サーバーに接続中... はPixiJSレイヤーには表示しない
-        // Canvas 2Dのまま表示（後でPixiJSに移行可能）
-        ctx.fillStyle = "#8b9bb4";
-        ctx.font = "16px var(--font-main)";
-        ctx.textAlign = "center";
-        ctx.fillText("サーバーに接続中……", canvas.width / 2, canvas.height / 2);
-      } else {
+        // サーバーに接続中... をDOMオーバーレイで表示（Canvas 2Dコンテキストを使用しない）
+        if (!document.getElementById('loading-overlay')) {
+            const overlay = document.createElement('div');
+            overlay.id = 'loading-overlay';
+            overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);color:#8b9bb4;font:16px var(--font-main);z-index:50;pointer-events:none;';
+            overlay.textContent = 'サーバーに接続中……';
+            document.getElementById('viewportPanel').appendChild(overlay);
+        }
+        return;
+    } else {
+        // 接続完了時はローディングオーバーレイを削除
+        const loadingOverlay = document.getElementById('loading-overlay');
+        if (loadingOverlay) loadingOverlay.remove();
+    }
         // Clear layers each frame (except background which is static)
         tileLayer.removeChildren();
         entityLayer.removeChildren();
@@ -1239,10 +1309,9 @@
           if (isAttacking) {
               const id = ent.id || `${ent.world_x},${ent.world_y}`;
               entityAttackTimers.set(id, { timer: 0.5, duration: 0.5 });
-<<<<<<< ours
-          }
-          
-          // 攻撃中は強制的にattack状態維持
+}
+           
+           // 攻撃中は強制的にattack状態維持
           const attackInfo = entityAttackTimers.get(ent.id || `${ent.world_x},${ent.world_y}`);
           if (attackInfo) {
               state = "attack";
@@ -1273,52 +1342,12 @@
               sprite.gotoAndPlay(0);
               sprite._playing = true;
               sprite.onComplete = () => {
-                  sprite._playing = false;
-                  if (state === "dead") sprite.visible = false;
-              };
-          }
-          
-=======
-          }
-          
-          // 攻撃中は強制的にattack状態維持
-          const attackInfo = entityAttackTimers.get(ent.id || `${ent.world_x},${ent.world_y}`);
-          if (attackInfo) {
-              state = "attack";
-              attackInfo.timer -= 1/60;
-              if (attackInfo.timer <= 0) {
-                  entityAttackTimers.delete(ent.id || `${ent.world_x},${ent.world_y}`);
-                  state = "idle";
-              }
-          } else if (ent.hp <= 0) {
-              state = "dead";
-          } else if (ent.moving || (ent.vx !== 0 || ent.vy !== 0)) {
-              state = "walk";
-          }
-
-          // アニメーションキー: tileId_direction_state
-          const animKey = `${tileId}_${dir}_${state}`;
-          if (!entityAnimCache[animKey]) {
-              const loop = state !== "attack" && state !== "dead";
-              const fps = state === "attack" ? 12 : td.fps;
-              entityAnimCache[animKey] = tileAtlas.createAnimatedSprite(tileId, {
-                  direction: dir, state, fps, loop
-              });
-          }
-          const sprite = entityAnimCache[animKey];
-          
-          // 攻撃・死亡アニメは最初から再生
-          if ((state === "attack" || state === "dead") && !sprite._playing) {
-              sprite.gotoAndPlay(0);
-              sprite._playing = true;
-              sprite.onComplete = () => {
-                  sprite._playing = false;
-                  if (state === "dead") sprite.visible = false;
-              };
-          }
-          
->>>>>>> theirs
-          sprite.x = px;
+sprite._playing = false;
+                   if (state === "dead") sprite.visible = false;
+               };
+           }
+           
+           sprite.x = px;
           sprite.y = py + bounce;
           entityLayer.addChild(sprite);
           

@@ -1,7 +1,7 @@
 {
   "tile_size": 16,
-  "atlas_width": 509,
-  "atlas_height": 115,
+  "atlas_width": 1784,
+  "atlas_height": 16,
   "tiles": {
     "TR_FLOOR_01": {
       "x": 0,
@@ -334,8 +334,8 @@
       "directions": 1
     },
     "TR_WALL_VAR_07": {
-      "x": 0,
-      "y": 17,
+      "x": 510,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -345,8 +345,8 @@
       "directions": 1
     },
     "TR_WALL_VAR_08": {
-      "x": 17,
-      "y": 17,
+      "x": 527,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -356,8 +356,8 @@
       "directions": 1
     },
     "TR_WALL_VAR_09": {
-      "x": 34,
-      "y": 17,
+      "x": 544,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -367,8 +367,8 @@
       "directions": 1
     },
     "TR_WALL_VAR_10": {
-      "x": 51,
-      "y": 17,
+      "x": 561,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -378,8 +378,8 @@
       "directions": 1
     },
     "TR_WALL_VAR_11": {
-      "x": 68,
-      "y": 17,
+      "x": 578,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -389,8 +389,8 @@
       "directions": 1
     },
     "TR_WALL_VAR_12": {
-      "x": 85,
-      "y": 17,
+      "x": 595,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -400,8 +400,8 @@
       "directions": 1
     },
     "TR_DECOR_01": {
-      "x": 102,
-      "y": 17,
+      "x": 612,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -411,8 +411,8 @@
       "directions": 1
     },
     "TR_DECOR_02": {
-      "x": 119,
-      "y": 17,
+      "x": 629,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -422,8 +422,8 @@
       "directions": 1
     },
     "TR_DECOR_03": {
-      "x": 136,
-      "y": 17,
+      "x": 646,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -433,8 +433,8 @@
       "directions": 1
     },
     "TR_DECOR_04": {
-      "x": 153,
-      "y": 17,
+      "x": 663,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -444,8 +444,8 @@
       "directions": 1
     },
     "TR_DECOR_05": {
-      "x": 170,
-      "y": 17,
+      "x": 680,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -455,8 +455,8 @@
       "directions": 1
     },
     "TR_DECOR_06": {
-      "x": 187,
-      "y": 17,
+      "x": 697,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -466,8 +466,8 @@
       "directions": 1
     },
     "TR_DECOR_07": {
-      "x": 204,
-      "y": 17,
+      "x": 714,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -477,8 +477,8 @@
       "directions": 1
     },
     "TR_DECOR_08": {
-      "x": 221,
-      "y": 17,
+      "x": 731,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -488,8 +488,8 @@
       "directions": 1
     },
     "TR_DECOR_09": {
-      "x": 238,
-      "y": 17,
+      "x": 748,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -499,8 +499,8 @@
       "directions": 1
     },
     "TR_DECOR_10": {
-      "x": 255,
-      "y": 17,
+      "x": 765,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -510,8 +510,8 @@
       "directions": 1
     },
     "TR_DECOR_11": {
-      "x": 272,
-      "y": 17,
+      "x": 782,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -521,8 +521,8 @@
       "directions": 1
     },
     "TR_DECOR_12": {
-      "x": 289,
-      "y": 17,
+      "x": 799,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -532,8 +532,8 @@
       "directions": 1
     },
     "TR_ITEM_01": {
-      "x": 306,
-      "y": 17,
+      "x": 816,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -543,8 +543,8 @@
       "directions": 1
     },
     "TR_ITEM_02": {
-      "x": 323,
-      "y": 17,
+      "x": 833,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -554,8 +554,8 @@
       "directions": 1
     },
     "TR_ITEM_03": {
-      "x": 340,
-      "y": 17,
+      "x": 850,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -565,8 +565,8 @@
       "directions": 1
     },
     "TR_ITEM_04": {
-      "x": 357,
-      "y": 17,
+      "x": 867,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -576,8 +576,8 @@
       "directions": 1
     },
     "TR_ITEM_05": {
-      "x": 374,
-      "y": 17,
+      "x": 884,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -587,8 +587,8 @@
       "directions": 1
     },
     "TR_ITEM_06": {
-      "x": 391,
-      "y": 17,
+      "x": 901,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -598,8 +598,8 @@
       "directions": 1
     },
     "TR_ITEM_07": {
-      "x": 408,
-      "y": 17,
+      "x": 918,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -609,8 +609,8 @@
       "directions": 1
     },
     "TR_ITEM_08": {
-      "x": 425,
-      "y": 17,
+      "x": 935,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -620,8 +620,8 @@
       "directions": 1
     },
     "TR_ITEM_09": {
-      "x": 442,
-      "y": 17,
+      "x": 952,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -631,8 +631,8 @@
       "directions": 1
     },
     "TR_ITEM_10": {
-      "x": 459,
-      "y": 17,
+      "x": 969,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -642,8 +642,8 @@
       "directions": 1
     },
     "TR_ITEM_11": {
-      "x": 476,
-      "y": 17,
+      "x": 986,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -653,8 +653,8 @@
       "directions": 1
     },
     "TR_ITEM_12": {
-      "x": 493,
-      "y": 17,
+      "x": 1003,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -664,8 +664,8 @@
       "directions": 1
     },
     "TR_MONSTER_01": {
-      "x": 0,
-      "y": 34,
+      "x": 1020,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -675,8 +675,8 @@
       "directions": 4
     },
     "TR_MONSTER_02": {
-      "x": 17,
-      "y": 34,
+      "x": 1037,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -686,8 +686,8 @@
       "directions": 4
     },
     "TR_MONSTER_03": {
-      "x": 34,
-      "y": 34,
+      "x": 1054,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -697,8 +697,8 @@
       "directions": 4
     },
     "TR_MONSTER_VAR_01": {
-      "x": 51,
-      "y": 34,
+      "x": 1071,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -708,8 +708,8 @@
       "directions": 4
     },
     "TR_MONSTER_VAR_02": {
-      "x": 68,
-      "y": 34,
+      "x": 1088,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -719,8 +719,8 @@
       "directions": 4
     },
     "TR_MONSTER_VAR_03": {
-      "x": 85,
-      "y": 34,
+      "x": 1105,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -730,8 +730,8 @@
       "directions": 4
     },
     "TR_EFFECT_01": {
-      "x": 102,
-      "y": 34,
+      "x": 1122,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -741,8 +741,8 @@
       "directions": 1
     },
     "TR_EFFECT_02": {
-      "x": 119,
-      "y": 34,
+      "x": 1139,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -752,8 +752,8 @@
       "directions": 1
     },
     "TR_EFFECT_03": {
-      "x": 136,
-      "y": 34,
+      "x": 1156,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -763,8 +763,8 @@
       "directions": 1
     },
     "TR_EFFECT_04": {
-      "x": 153,
-      "y": 34,
+      "x": 1173,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -774,8 +774,8 @@
       "directions": 1
     },
     "TR_EFFECT_05": {
-      "x": 170,
-      "y": 34,
+      "x": 1190,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -785,8 +785,8 @@
       "directions": 1
     },
     "TR_EFFECT_06": {
-      "x": 187,
-      "y": 34,
+      "x": 1207,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -796,8 +796,8 @@
       "directions": 1
     },
     "TR_EFFECT_07": {
-      "x": 204,
-      "y": 34,
+      "x": 1224,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -807,8 +807,8 @@
       "directions": 1
     },
     "TR_EFFECT_08": {
-      "x": 221,
-      "y": 34,
+      "x": 1241,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -818,8 +818,8 @@
       "directions": 1
     },
     "TR_EFFECT_09": {
-      "x": 238,
-      "y": 34,
+      "x": 1258,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -829,8 +829,8 @@
       "directions": 1
     },
     "TR_EFFECT_10": {
-      "x": 255,
-      "y": 34,
+      "x": 1275,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -840,8 +840,8 @@
       "directions": 1
     },
     "TR_EFFECT_11": {
-      "x": 272,
-      "y": 34,
+      "x": 1292,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -851,8 +851,8 @@
       "directions": 1
     },
     "TR_EFFECT_12": {
-      "x": 289,
-      "y": 34,
+      "x": 1309,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -862,8 +862,8 @@
       "directions": 1
     },
     "TR_UI_01": {
-      "x": 306,
-      "y": 34,
+      "x": 1326,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -873,8 +873,8 @@
       "directions": 1
     },
     "TR_UI_02": {
-      "x": 323,
-      "y": 34,
+      "x": 1343,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -884,8 +884,8 @@
       "directions": 1
     },
     "TR_UI_03": {
-      "x": 340,
-      "y": 34,
+      "x": 1360,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -895,8 +895,8 @@
       "directions": 1
     },
     "TR_UI_04": {
-      "x": 357,
-      "y": 34,
+      "x": 1377,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -906,8 +906,8 @@
       "directions": 1
     },
     "TR_UI_05": {
-      "x": 374,
-      "y": 34,
+      "x": 1394,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -917,8 +917,8 @@
       "directions": 1
     },
     "TR_UI_06": {
-      "x": 391,
-      "y": 34,
+      "x": 1411,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -928,8 +928,8 @@
       "directions": 1
     },
     "TR_UI_07": {
-      "x": 408,
-      "y": 34,
+      "x": 1428,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -939,8 +939,8 @@
       "directions": 1
     },
     "TR_UI_08": {
-      "x": 425,
-      "y": 34,
+      "x": 1445,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -950,8 +950,8 @@
       "directions": 1
     },
     "TR_UI_09": {
-      "x": 442,
-      "y": 34,
+      "x": 1462,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -961,8 +961,8 @@
       "directions": 1
     },
     "TR_UI_10": {
-      "x": 459,
-      "y": 34,
+      "x": 1479,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -972,8 +972,8 @@
       "directions": 1
     },
     "TR_UI_11": {
-      "x": 476,
-      "y": 34,
+      "x": 1496,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -983,8 +983,8 @@
       "directions": 1
     },
     "TR_UI_12": {
-      "x": 493,
-      "y": 34,
+      "x": 1513,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -994,8 +994,8 @@
       "directions": 1
     },
     "TR_PLAYER_01": {
-      "x": 0,
-      "y": 99,
+      "x": 1530,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -1005,8 +1005,8 @@
       "directions": 4
     },
     "TR_PLAYER_02": {
-      "x": 17,
-      "y": 99,
+      "x": 1547,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -1016,8 +1016,8 @@
       "directions": 4
     },
     "TR_PLAYER_03": {
-      "x": 34,
-      "y": 99,
+      "x": 1564,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -1027,8 +1027,8 @@
       "directions": 4
     },
     "TR_MISC_01": {
-      "x": 51,
-      "y": 99,
+      "x": 1581,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -1038,8 +1038,8 @@
       "directions": 1
     },
     "TR_MISC_02": {
-      "x": 68,
-      "y": 99,
+      "x": 1598,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -1049,8 +1049,8 @@
       "directions": 1
     },
     "TR_MISC_03": {
-      "x": 85,
-      "y": 99,
+      "x": 1615,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -1060,8 +1060,8 @@
       "directions": 1
     },
     "TR_MISC_04": {
-      "x": 102,
-      "y": 99,
+      "x": 1632,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -1071,8 +1071,8 @@
       "directions": 1
     },
     "TR_MISC_05": {
-      "x": 119,
-      "y": 99,
+      "x": 1649,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -1082,8 +1082,8 @@
       "directions": 1
     },
     "TR_MISC_06": {
-      "x": 136,
-      "y": 99,
+      "x": 1666,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -1093,8 +1093,8 @@
       "directions": 1
     },
     "TR_MISC_07": {
-      "x": 153,
-      "y": 99,
+      "x": 1683,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -1104,8 +1104,8 @@
       "directions": 1
     },
     "TR_MISC_08": {
-      "x": 170,
-      "y": 99,
+      "x": 1700,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -1115,8 +1115,8 @@
       "directions": 1
     },
     "TR_MISC_09": {
-      "x": 187,
-      "y": 99,
+      "x": 1717,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -1126,8 +1126,8 @@
       "directions": 1
     },
     "TR_MISC_10": {
-      "x": 204,
-      "y": 99,
+      "x": 1734,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -1137,8 +1137,8 @@
       "directions": 1
     },
     "TR_MISC_11": {
-      "x": 221,
-      "y": 99,
+      "x": 1751,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -1148,8 +1148,8 @@
       "directions": 1
     },
     "TR_MISC_12": {
-      "x": 238,
-      "y": 99,
+      "x": 1768,
+      "y": 0,
       "width": 16,
       "height": 16,
       "variants": 1,
@@ -1157,303 +1157,6 @@
       "frames": 1,
       "fps": 1,
       "directions": 1
-    },
-    "TR_MONSTER_04": {
-      "x": 0,
-      "y": 34,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_MONSTER_05": {
-      "x": 17,
-      "y": 34,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_MONSTER_06": {
-      "x": 34,
-      "y": 34,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_MONSTER_07": {
-      "x": 0,
-      "y": 34,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_MONSTER_08": {
-      "x": 17,
-      "y": 34,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_MONSTER_09": {
-      "x": 34,
-      "y": 34,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_MONSTER_10": {
-      "x": 0,
-      "y": 34,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_MONSTER_11": {
-      "x": 17,
-      "y": 34,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_MONSTER_12": {
-      "x": 34,
-      "y": 34,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_MONSTER_VAR_04": {
-      "x": 51,
-      "y": 34,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_MONSTER_VAR_05": {
-      "x": 68,
-      "y": 34,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_MONSTER_VAR_06": {
-      "x": 85,
-      "y": 34,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_MONSTER_VAR_07": {
-      "x": 51,
-      "y": 34,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_MONSTER_VAR_08": {
-      "x": 68,
-      "y": 34,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_MONSTER_VAR_09": {
-      "x": 85,
-      "y": 34,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_MONSTER_VAR_10": {
-      "x": 51,
-      "y": 34,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_MONSTER_VAR_11": {
-      "x": 68,
-      "y": 34,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_MONSTER_VAR_12": {
-      "x": 85,
-      "y": 34,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_PLAYER_04": {
-      "x": 0,
-      "y": 99,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_PLAYER_05": {
-      "x": 17,
-      "y": 99,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_PLAYER_06": {
-      "x": 34,
-      "y": 99,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_PLAYER_07": {
-      "x": 0,
-      "y": 99,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_PLAYER_08": {
-      "x": 17,
-      "y": 99,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_PLAYER_09": {
-      "x": 34,
-      "y": 99,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_PLAYER_10": {
-      "x": 0,
-      "y": 99,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_PLAYER_11": {
-      "x": 17,
-      "y": 99,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
-    },
-    "TR_PLAYER_12": {
-      "x": 34,
-      "y": 99,
-      "width": 16,
-      "height": 16,
-      "variants": 1,
-      "animated": true,
-      "frames": 4,
-      "fps": 8,
-      "directions": 4
     }
   }
 }

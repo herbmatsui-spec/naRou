@@ -226,6 +226,9 @@ class GameMap:
         # タイルバリアント（オートタイル用）の追跡
         self.tile_variants: Dict[Tuple[int, int], int] = {}
 
+        # Room decorations (TR_DECOR variants)
+        self.decorations: Dict[Tuple[int, int], str] = {}
+
         # 松明（光源）位置 — ダイナミックライティング用 (Phase 2-A)
         self.torch_positions: List[Tuple[int, int]] = []
 
@@ -270,6 +273,16 @@ class GameMap:
                     self.tile_variants[(x, y)] = variant
                 else:
                     self.tile_variants[(x, y)] = 0
+
+        # Place random decorations in room (10% chance per room)
+        if is_enabled("ENABLE_TINY_ROGUE_GFX") and random.random() < 0.1:
+            decor_x = random.randint(room.x1 + 1, room.x2 - 1)
+            decor_y = random.randint(room.y1 + 1, room.y2 - 1)
+            if self.tiles[decor_x][decor_y] == "TILE_FLOOR":
+                # Pick a random decor variant from the 12 available
+                decor_variant = random.randint(1, 12)
+                self.decorations = getattr(self, 'decorations', {})
+                self.decorations[(decor_x, decor_y)] = f"TR_DECOR_{decor_variant:02d}"
 
     def create_h_tunnel(self, x1: int, x2: int, y: int) -> None:
         """水平方向の通路を作る (ステップ22)"""

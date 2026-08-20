@@ -380,6 +380,40 @@ class FXManager:
         """Spawn shockwave effect using TR_EFFECT_12 (shockwave) in a circle."""
         self.spawn_tile_effect(x, y, "shockwave", count, color=(255, 255, 200), life=6, vx=0, vy=0)
 
+    def spawn_water_splash(self, x: float, y: float, count: int = 4) -> None:
+        """Spawn water splash using TR_EFFECT_02/03/04 (water frames)."""
+        if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            return
+        for i in range(count):
+            frame = i % 3 + 1  # Cycle through water frames
+            self.spawn_tile_effect(
+                x + random.uniform(-0.3, 0.3),
+                y + random.uniform(-0.3, 0.3),
+                f"water_{frame}",  # Will map to TR_EFFECT_02/03/04
+                count=1,
+                color=(100, 150, 255),
+                life=4,
+                vx=random.uniform(-0.4, 0.4),
+                vy=random.uniform(-0.4, -0.1)
+            )
+
+    def spawn_lava_bubble(self, x: float, y: float, count: int = 3) -> None:
+        """Spawn lava bubble using TR_EFFECT_05/06/07 (lava frames)."""
+        if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            return
+        for i in range(count):
+            frame = i % 3 + 1
+            self.spawn_tile_effect(
+                x + random.uniform(-0.2, 0.2),
+                y + random.uniform(-0.2, 0.2),
+                f"lava_{frame}",  # Will map to TR_EFFECT_05/06/07
+                count=1,
+                color=(255, 100, 0),
+                life=5,
+                vx=random.uniform(-0.1, 0.1),
+                vy=random.uniform(-0.3, -0.1)
+            )
+
     def spawn_footstep_particles(self, x: float, y: float, floor_type: str = "default", direction: Tuple[float, float] = (0, 0)) -> None:
         """Spawn footstep particles matching floor tile type."""
         if not is_enabled("ENABLE_TINY_ROGUE_GFX"):

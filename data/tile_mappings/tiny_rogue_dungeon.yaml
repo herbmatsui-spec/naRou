@@ -85,3 +85,28 @@ characters:
   npc_merchant: "TR_PLAYER_01"
   npc_guard: "TR_PLAYER_02"
   npc_villager: "TR_PLAYER_03"
+  # Extra character variants (4-12)
+  player_variant_04: "TR_PLAYER_04"
+  player_variant_05: "TR_PLAYER_05"
+  player_variant_06: "TR_PLAYER_06"
+  player_variant_07: "TR_PLAYER_07"
+  player_variant_08: "TR_PLAYER_08"
+  player_variant_09: "TR_PLAYER_09"
+  player_variant_10: "TR_PLAYER_10"
+  player_variant_11: "TR_PLAYER_11"
+  player_variant_12: "TR_PLAYER_12"
+
+# Room theme decoration mappings (for extra variety)
+room_themes:
+  dungeon:
+    floor_variants: ["TR_FLOOR_01", "TR_FLOOR_02", "TR_FLOOR_03", "TR_FLOOR_04", "TR_FLOOR_05", "TR_FLOOR_06"]
+    wall_variants: ["TR_WALL_01", "TR_WALL_02", "TR_WALL_03", "TR_WALL_04", "TR_WALL_05", "TR_WALL_06"]
+    decor: ["TR_DECOR_01", "TR_DECOR_02", "TR_DECOR_03", "TR_DECOR_06", "TR_DECOR_10", "TR_DECOR_11", "TR_DECOR_12"]
+  crypt:
+    floor_variants: ["TR_FLOOR_07", "TR_FLOOR_08", "TR_FLOOR_09", "TR_FLOOR_10", "TR_FLOOR_11", "TR_FLOOR_12"]
+    wall_variants: ["TR_WALL_07", "TR_WALL_08", "TR_WALL_09", "TR_WALL_10", "TR_WALL_11", "TR_WALL_12"]
+    decor: ["TR_DECOR_04", "TR_DECOR_05", "TR_DECOR_07", "TR_DECOR_08", "TR_DECOR_09"]
+  sewer:
+    floor_variants: ["TR_FLOOR_02", "TR_FLOOR_03", "TR_FLOOR_05", "TR_FLOOR_06"]
+    wall_variants: ["TR_WALL_02", "TR_WALL_03", "TR_WALL_05", "TR_WALL_06"]
+    decor: ["TR_DECOR_01", "TR_DECOR_09", "TR_DECOR_10", "TR_DECOR_12"]
