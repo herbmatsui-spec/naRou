@@ -330,15 +330,15 @@ def verify_dungeon_against_spec(
 
 
 __all__ = [
-    "RoomType",
-    "TrapType",
-    "EnemyRole",
-    "RoomSpec",
-    "TrapSpec",
-    "EnemySpec",
     "DungeonSpec",
-    "FloorSpec",
     "DungeonVerificationResult",
+    "EnemyRole",
+    "EnemySpec",
+    "FloorSpec",
+    "RoomSpec",
+    "RoomType",
+    "TrapSpec",
+    "TrapType",
     "build_dungeon_spec_from_yaml",
     "verify_dungeon_against_spec",
 ]

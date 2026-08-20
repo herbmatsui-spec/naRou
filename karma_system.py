@@ -1,6 +1,7 @@
 """
 カーマシステム
 """
+from __future__ import annotations
 
 import os
 from dataclasses import dataclass
@@ -57,6 +58,7 @@ class KarmaRegistry:
                     if "actions" in k:
                         actions.update(k["actions"])
             except Exception:
+                # TODO: handle exception properly
                 pass
 
         default_data = KarmaData(

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import importlib.util
 import os
 import subprocess
@@ -23,7 +25,9 @@ def prompt_accessibility():
     """Step 35/36: 色覚対応と難易度を選択し、config に永続化する。"""
     try:
         from config import configure, get_config
-    except Exception:  # noqa: BLE001 - 設定モジュール不在時は何もしない
+    except Exception:
+        # TODO: handle exception properly
+
         return
 
     print("\n--- アクセシビリティ設定（Enter で現在値を維持）---")

@@ -53,6 +53,7 @@ class IntegrityChecker:
 
                 return bool(ctypes.windll.kernel32.IsDebuggerPresent())
             except Exception:
+                # TODO: handle exception properly
                 pass
         # Linux: /proc/self/status TracerPid
         if sys.platform == "linux":
@@ -62,6 +63,7 @@ class IntegrityChecker:
                         if line.startswith("TracerPid:"):
                             return int(line.split(":")[1].strip()) != 0
             except Exception:
+                # TODO: handle exception properly
                 pass
         # macOS: ptrace attach check
         if sys.platform == "darwin":
@@ -72,6 +74,7 @@ class IntegrityChecker:
                 if libc.ptrace(31, 0, 0, 0) == -1:  # PT_DENY_ATTACH
                     return True
             except Exception:
+                # TODO: handle exception properly
                 pass
         # Generic: sys.gettrace() set
         return sys.gettrace() is not None
@@ -143,7 +146,7 @@ class IntegrityChecker:
     # ---- Step 70: Violation logging ----
     def _log_violation(self, vtype: str, details: str) -> None:
         self._violation_count += 1
-        entry = {
+        {
             "type": vtype,
             "details": details,
             "timestamp": time.time(),
@@ -156,6 +159,7 @@ class IntegrityChecker:
             with open(log_path, "a", encoding="utf-8") as f:
                 f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} [{vtype}] {details}\n")
         except Exception:
+            # TODO: handle exception properly
             pass
 
     def get_violation_count(self) -> int:

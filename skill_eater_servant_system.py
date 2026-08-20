@@ -3,6 +3,7 @@ skill_eater_servant_system.py
 Aの世界（スキル喰い） Phase 4: 従属システム（使い捨てオートタレット化）
 提案6: 従属者移植・治癒・自壊のEmote & Audio演出 (Steps 41〜43)
 """
+from __future__ import annotations
 
 from dataclasses import dataclass, field
 

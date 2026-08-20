@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Engine / project localization suite"""
 
 import unittest

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from webgl_manager import WebGLManager
 
 

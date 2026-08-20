@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, List
+from typing import Any
 
 import numpy as np
 import tcod
@@ -54,6 +54,12 @@ class TCODRenderer(RendererBase):
         self._subimage_cache: dict[
             tuple[str, int, int, int, str], tcod.image.Image
         ] = {}
+
+        # Master image cache: master_key -> tcod.image.Image
+        self._master_images: dict[str, tcod.image.Image] = {}
+
+        # Texture cache for create_texture/destroy_texture: texture_id -> tcod.image.Image
+        self._textures: dict[int, tcod.image.Image] = {}
 
         # Animation tracking: (x, y) -> AnimState
         self._tile_animations: dict[tuple[int, int], AnimState] = {}
@@ -189,8 +195,6 @@ class TCODRenderer(RendererBase):
 
         # Load master image if not cached
         master_key = f"master_{master_path}"
-        if not hasattr(self, "_master_images"):
-            self._master_images = {}
         if master_key not in self._master_images:
             self._master_images[master_key] = tcod.image.Image(master_path.as_posix())
         master = self._master_images[master_key]
@@ -198,22 +202,21 @@ class TCODRenderer(RendererBase):
         # Extract sub-image (crop)
         sub = tcod.image.Image(uv.w, uv.h)
         # Use numpy for fast pixel copy
-        try:
-            master_arr = np.array(master)  # (H, W, 4) or (H, W, 3)
-            sub_arr = master_arr[uv.y : uv.y + uv.h, uv.x : uv.x + uv.w]
-            # Create new image from array
-            sub = tcod.image.Image(sub_arr.shape[1], sub_arr.shape[0])
-            # tcod.image.Image doesn't have direct array setter, use put_pixel
-            # This is slow but only done once per unique tile config
-            for py in range(uv.h):
-                for px in range(uv.w):
-                    rgba = sub_arr[py, px]
-                    if rgba.shape[0] == 4:
-                        sub.put_pixel(px, py, tuple(rgba))
-                    else:
-                        sub.put_pixel(px, py, (rgba[0], rgba[1], rgba[2], 255))
-        except Exception:
-            return None
+
+        master_arr = np.array(master)  # (H, W, 4) or (H, W, 3)
+        sub_arr = master_arr[uv.y : uv.y + uv.h, uv.x : uv.x + uv.w]
+        # Create new image from array
+        sub = tcod.image.Image(sub_arr.shape[1], sub_arr.shape[0])
+        # tcod.image.Image doesn't have direct array setter, use put_pixel
+        # This is slow but only done once per unique tile config
+        for py in range(uv.h):
+            for px in range(uv.w):
+                rgba = sub_arr[py, px]
+                if rgba.shape[0] == 4:
+                    sub.put_pixel(px, py, tuple(rgba))
+                else:
+                    sub.put_pixel(px, py, (rgba[0], rgba[1], rgba[2], 255))
+
 
         self._subimage_cache[key] = sub
         return sub
@@ -275,7 +278,7 @@ class TCODRenderer(RendererBase):
         self, tile_id: str, direction: int, state: str, frame: int
     ) -> tcod.image.Image | None:
         """Get or create cached sub-image for an entity configuration."""
-        key = (tile_id, frame, direction, state)
+        key = (tile_id, 0, frame, direction, state)
         if key in self._subimage_cache:
             return self._subimage_cache[key]
 
@@ -299,27 +302,24 @@ class TCODRenderer(RendererBase):
 
         # Load master image if not cached
         master_key = f"master_{master_path}"
-        if not hasattr(self, "_master_images"):
-            self._master_images = {}
         if master_key not in self._master_images:
             self._master_images[master_key] = tcod.image.Image(master_path.as_posix())
         master = self._master_images[master_key]
 
         # Extract sub-image (crop)
         sub = tcod.image.Image(uv.w, uv.h)
-        try:
-            master_arr = np.array(master)
-            sub_arr = master_arr[uv.y : uv.y + uv.h, uv.x : uv.x + uv.w]
-            sub = tcod.image.Image(sub_arr.shape[1], sub_arr.shape[0])
-            for py in range(uv.h):
-                for px in range(uv.w):
-                    rgba = sub_arr[py, px]
-                    if rgba.shape[0] == 4:
-                        sub.put_pixel(px, py, tuple(rgba))
-                    else:
-                        sub.put_pixel(px, py, (rgba[0], rgba[1], rgba[2], 255))
-        except Exception:
-            return None
+
+        master_arr = np.array(master)
+        sub_arr = master_arr[uv.y : uv.y + uv.h, uv.x : uv.x + uv.w]
+        sub = tcod.image.Image(sub_arr.shape[1], sub_arr.shape[0])
+        for py in range(uv.h):
+            for px in range(uv.w):
+                rgba = sub_arr[py, px]
+                if rgba.shape[0] == 4:
+                    sub.put_pixel(px, py, tuple(rgba))
+                else:
+                    sub.put_pixel(px, py, (rgba[0], rgba[1], rgba[2], 255))
+
 
         self._subimage_cache[key] = sub
         return sub
@@ -332,7 +332,7 @@ class TCODRenderer(RendererBase):
         variant: int = 0,
         direction: int = 0,
         state: str = "idle",
-        fps: int = None,
+        fps: int | None = None,
         loop: bool = True,
     ) -> None:
         """Start an animation at a tile position."""
@@ -362,8 +362,8 @@ class TCODRenderer(RendererBase):
         cam_y: int,
         view_w: int,
         view_h: int,
-        visible: List[List[bool]] | None = None,
-        explored: List[List[bool]] | None = None,
+        visible: list[list[bool]] | None = None,
+        explored: list[list[bool]] | None = None,
         time: float = 0.0,
     ) -> None:
         """ライティング完全パス実行 (タイル描画前に呼び出し)"""
@@ -413,24 +413,24 @@ class TCODRenderer(RendererBase):
             raise FileNotFoundError(f"Texture not found: {path}")
 
         image = tcod.image.Image(path.as_posix())
-        texture_id = len(self._subimage_cache) + 1
-        self._subimage_cache[texture_id] = image  # Reuse cache dict
+        texture_id = len(self._textures) + 1
+        self._textures[texture_id] = image
         return texture_id
 
     def destroy_texture(self, texture_id: int) -> None:
-        if texture_id in self._subimage_cache:
-            del self._subimage_cache[texture_id]
+        if texture_id in self._textures:
+            del self._textures[texture_id]
 
     def get_texture_size(self, texture_id: int) -> tuple[int, int]:
-        if texture_id in self._subimage_cache:
-            img = self._subimage_cache[texture_id]
+        if texture_id in self._textures:
+            img = self._textures[texture_id]
             return (img.width, img.height)
         return (0, 0)
 
     def clear(
         self, color: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)
     ) -> None:
-        r, g, b, a = [int(c * 255) for c in color]
+        r, g, b, _a = [int(c * 255) for c in color]
         self.console.clear(fg=(r, g, b), bg=(0, 0, 0))
 
     def present(self) -> None:
@@ -458,4 +458,5 @@ class TCODRenderer(RendererBase):
     def _color_to_tuple(
         self, color: tuple[float, float, float, float]
     ) -> tuple[int, int, int]:
-        return tuple(int(c * 255) for c in color[:3])
+        r, g, b = (int(c * 255) for c in color[:3])
+        return (r, g, b)

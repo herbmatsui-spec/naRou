@@ -136,7 +136,7 @@ class TileRegistry:
         if "tiles" not in self.defs or tile_id not in self.defs["tiles"]:
             # Fallback to first tile or a default
             tile_id = (
-                list(self.defs.get("tiles", {}).keys())[0]
+                next(iter(self.defs.get("tiles", {}).keys()))
                 if self.defs.get("tiles")
                 else "TILE_FLOOR"
             )
@@ -593,6 +593,7 @@ class GameMap:
                 b = int(base_color[2] * 0.8 + fc[2] * 0.2)
                 return (min(255, r), min(255, g), min(255, b))
         except Exception:
+            # If faction lookup fails, just return the base color
             pass
         return base_color
 
@@ -673,10 +674,7 @@ class GameMap:
 
     def is_stairs_up_available(self) -> bool:
         """上り階段が前の層へ続くかチェック（垂直ワールド拡張用）"""
-        if not self.world_layer or not self.stairs_up_pos:
-            return False
-
-        return True
+        return not (not self.world_layer or not self.stairs_up_pos)
 
     def get_layer_transition_info(self) -> dict[str, Any]:
         """階層間移動に必要な情報を取得（垂直ワールド拡張用）"""

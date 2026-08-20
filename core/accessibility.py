@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 # 対応する色覚バリアント -> トークンファイル名
 _TOKEN_FILES = {
@@ -42,19 +42,14 @@ def load_design_tokens(variant: str = "none") -> dict[str, Any]:
     if not path.exists():
         path = Path("design_tokens.json")
     with open(path, encoding="utf-8") as f:
-        return json.load(f)
+        return cast(dict[str, Any], json.load(f))
 
 
 # Step 27: 現在有効なトークンを config から決定して返す
 def get_active_tokens() -> dict[str, Any]:
     """config の accessibility.color_vision を見てトークンを返す。"""
-    variant = "none"
-    try:
-        from config import get_config
-
-        variant = get_config("accessibility.color_vision") or "none"
-    except Exception:  # noqa: BLE001 - 設定欠落時は none へフォールバック
-        variant = "none"
+    from config import get_config
+    variant = get_config("accessibility.color_vision") or "none"
     return load_design_tokens(variant)
 
 

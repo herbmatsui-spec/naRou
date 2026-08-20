@@ -3,10 +3,12 @@
 Gemini Asset Generator for naRou
 Handles batch generation of game assets using Google's Gemini AI.
 """
+from __future__ import annotations
 
 import argparse
 import logging
 import os
+import sys
 import time
 from pathlib import Path
 from typing import Any
@@ -299,4 +301,4 @@ def main():
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())

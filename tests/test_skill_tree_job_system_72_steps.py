@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import sys
 
@@ -58,7 +60,7 @@ def test_all_72_steps():
 
     eff = SkillTreeEffect(type="damage_bonus", value=5, target="melee")  # Step 12
     tier = SkillTreeTier("t1", "Tier 1", "Desc", 5, [], [eff])  # Step 13
-    tree = SkillTree("sword", "Sword", "⚔", [tier])  # Step 14
+    SkillTree("sword", "Sword", "⚔", [tier])  # Step 14
     r1 = SkillTreeRegistry()
     r2 = SkillTreeRegistry()
     assert r1 is r2, "Step 15 Failed"
@@ -120,8 +122,8 @@ def test_all_72_steps():
     # Step 38 - 47: job_system.py
     from job_system import JobData, JobEffect, JobManager, JobRegistry
 
-    je = JobEffect("stat_modifier", 5, "strength")  # Step 39
-    jd = JobData("t_job", "Test Job", 1, "Desc", {}, {}, [], {})  # Step 40
+    JobEffect("stat_modifier", 5, "strength")  # Step 39
+    JobData("t_job", "Test Job", 1, "Desc", {}, {}, [], {})  # Step 40
     jr1 = JobRegistry()
     jr2 = JobRegistry()
     assert jr1 is jr2, "Step 41 Failed"
@@ -181,7 +183,7 @@ def test_all_72_steps():
 
     assert CombatSystem.is_exclusive_skill("shield_bash"), "Step 62 Failed"
     target_dummy = Entity(0, 0, "D")
-    dmg, log_msg = CombatSystem.execute_exclusive_skill(p3, "shield_bash", target_dummy)
+    dmg, _log_msg = CombatSystem.execute_exclusive_skill(p3, "shield_bash", target_dummy)
     assert dmg > 0, "Step 63 Failed"
     print("[OK] Steps 62-63 (CombatSystem exclusive skills)")
 
@@ -202,7 +204,7 @@ def test_all_72_steps():
     from skill_fusion_system import FusionData, FusionEffect, FusionRegistry
 
     fe = FusionEffect("elemental_damage", 20)  # Step 69
-    fd = FusionData(
+    FusionData(
         "test_f", "Test Fusion", "Desc", ["req1"], None, None, ["res1"], [fe]
     )  # Step 70
     fr1 = FusionRegistry()

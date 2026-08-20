@@ -132,6 +132,54 @@ python -m unittest discover tests/ "test_skill_eater_*.py"
 
 ---
 
+## 🎨 Asset Pack Integration
+
+naRou integrates three high-quality asset packs for richer graphics and immersion:
+
+### Tiny Rogue (16x16 Tiles)
+- **132 tiles** covering floors, walls, monsters, items, UI, effects, and player/NPC sprites
+- Directional animation (4 directions × 4 frames) for monsters and player
+- Packed atlas: `assets/tiles/tiny_rogue_atlas_16x16.png` (509×115)
+- Mapped via `data/tile_mappings/tiny_rogue_dungeon.yaml`
+
+### Audio SFX Pack
+- **51 OGG sound effects** for footsteps, doors, UI interactions, ambient, combat
+- Organized by category: `se_` (sound effects), `ui_` (UI), `amb_` (ambient)
+- Manifest: `assets/audio/manifest.csv` with suggested_id mapping
+
+### Emote Pack
+- **256 emote sprites** across 8 pixel styles (32 per style)
+- 18 emote types: anger, heart, question, sleep, laugh, alert, etc.
+- Tilesheets for animated sequences: `assets/emote/tilesheets/pixel_style1.png` etc.
+
+### Quick Usage
+```python
+from asset_manager import ASSET_MANAGER
+from emote_system import play_emote, get_emote_frame, update_emotes
+
+# Initialize
+import yaml
+with open("config.yaml") as f:
+    ASSET_MANAGER.initialize(yaml.safe_load(f))
+
+# Get tile atlas info
+atlas_info = ASSET_MANAGER.get_tile_atlas_info("TR_FLOOR_01")
+
+# Play sound by suggested_id
+footstep = ASSET_MANAGER.get_audio_sfx_by_id("se_footstep_00")
+
+# Play emote on entity
+play_emote("player", "anger")
+frame = get_emote_frame("player")
+
+# Update each frame
+update_emotes(delta_time)
+```
+
+See [ASSETS.md](ASSETS.md) for complete documentation.
+
+---
+
 ## 🛠️ リポジトリ構成
 
 ```text
@@ -143,6 +191,12 @@ narou2/
 ├── skill_eater_servant_system.py      # Husk従属者タレットロジック
 ├── skill_eater_meta_quest_system.py   # ROOTハック・輪廻転生・世界法則改変
 ├── generate_rich_gifs.py              # 高品質フレームアニメーションGIF生成エンジン
+├── asset_manager.py                   # 統合アセット管理（Tiny Rogue / Audio / Emote）
+├── emote_system.py                    # エモート再生・管理システム
+├── scripts/
+│   ├── resize_assets.py               # 画像リサイズツール
+│   ├── convert_audio.py               # 音声変換ツール
+│   └── generate_previews.py           # アセットプレビューHTML生成
 ├── demos/
 │   └── demo_skill_eater_showcase.html # ブラウザ用インタラクティブWebデモ
 ├── assets/
@@ -150,8 +204,26 @@ narou2/
 │   ├── demo_synthesis_economy.gif     # GIF2: 合成・経済篇
 │   ├── demo_meta_reincarnation.gif    # GIF3: メタハック・輪廻転生篇
 │   └── demo_husk_servant.gif          # GIF4: 従属者タレット篇
-├── emote/                             # Kenney Vector Emote アセット (30種)
-└── audio/                             # Kenney SFX オーディオアセット (50種)
+├── tiles/
+│   ├── tiny_rogue_atlas_16x16.png     # パック済みタイルアトラス (509×115)
+│   ├── tiny_rogue_atlas_16x16.json    # アトラスメタデータ (UV座標・アニメ情報)
+│   └── tileset_*.png/.json            # 既存タイルセット (16/32/64)
+├── tiny_rogue/                        # Tiny Rogue ソース画像 (132枚)
+│   └── tiles/tile_0000.png - tile_0131.png
+├── audio/                             # SFXオーディオアセット (51種)
+│   ├── footstep00.ogg - footstep09.ogg
+│   ├── doorOpen_*.ogg, doorClose_*.ogg
+│   ├── book*.ogg, cloth*.ogg, metal*.ogg
+│   └── manifest.csv                   # カテゴリ・suggested_id マッピング
+├── emote/                             # エモートスプライト (256枚)
+│   ├── pixel/style1/ - style8/        # 32エモート × 8スタイル
+│   ├── tilesheets/pixel_style1.png - style8.png
+│   ├── tilesheets/vector_style1.png - style8.png
+│   └── spritesheets/                  # 予約領域
+├── output/previews/                   # 生成プレビュー (HTML)
+│   ├── index.html, tiles.html, audio.html, emotes.html
+└── data/tile_mappings/
+    └── tiny_rogue_dungeon.yaml        # 標準タイル→TR_* マッピング
 ```
 
 ---

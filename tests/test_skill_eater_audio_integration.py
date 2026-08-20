@@ -2,6 +2,7 @@
 test_skill_eater_audio_integration.py
 提案1〜9（全72ステップ）のオーディオ演出・音響統合テストスイート
 """
+from __future__ import annotations
 
 import unittest
 from pathlib import Path

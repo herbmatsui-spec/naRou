@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Component localization suite"""
 
 import unittest

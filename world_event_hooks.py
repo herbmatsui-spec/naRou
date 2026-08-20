@@ -55,7 +55,6 @@ class EventMonitor:
                 del self._active_events[event_type]
                 # 終了ハンドラーがある場合はここで呼び出す（簡易実装では開始ハンドラーのみ）
                 # ここでは終了ハンドラーは別途実装するか、開始ハンドラーに渡すイベントに終了フラグを追加する
-                pass
 
     def _trigger_handlers(self, event_type: WorldEventType, event: WorldEvent) -> None:
         """登録されたハンドラーを呼び出す"""
@@ -84,8 +83,8 @@ def update_world_event_monitor() -> None:
 
 
 __all__ = [
-    "EventMonitor",
     "EVENT_MONITOR",
+    "EventMonitor",
     "monitor_world_event",
     "update_world_event_monitor",
 ]

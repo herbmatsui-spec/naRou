@@ -28,6 +28,15 @@ from rumor_propagation_system import (
     RumorType,
 )
 
+
+# The global memory registry is a process-wide singleton. Several tests populate
+# it with Mock NPCs; clear it after each test so the state does not leak into
+# later tests that pickle a fresh Engine (which reuses this singleton).
+@pytest.fixture(autouse=True)
+def _clear_memory_registry():
+    yield
+    GLOBAL_MEMORY_REGISTRY._managers.clear()
+
 # ---------------------------------------------------------------------------
 # Step 5: NPC Memory System
 # ---------------------------------------------------------------------------
@@ -248,7 +257,7 @@ def test_rumor_propagation_step():
     rumor_engine.register_npc(listener, (5, 5))  # 距離 5
 
     # 高信憑性噂作成
-    rumor = rumor_engine.create_rumor(
+    rumor_engine.create_rumor(
         RumorType.QUEST_SUCCESS, {}, origin, (0, 0), base_credibility=1.0
     )
 
@@ -261,7 +270,7 @@ def test_rumor_propagation_step():
     assert spreads >= 0
 
     # リスナーが知っているはず
-    known = rumor_engine.get_rumors_known_by("listener")
+    rumor_engine.get_rumors_known_by("listener")
     # 伝播した場合のみ含まれる
 
 
@@ -278,7 +287,7 @@ def test_rumor_distance_filter():
     rumor_engine.register_npc(origin, (0, 0))
     rumor_engine.register_npc(far, (20, 20))  # 距離 20 > max_distance 5
 
-    rumor = rumor_engine.create_rumor(RumorType.QUEST_SUCCESS, {}, origin, (0, 0))
+    rumor_engine.create_rumor(RumorType.QUEST_SUCCESS, {}, origin, (0, 0))
     rumor_engine.propagate_step()
 
     # 遠すぎて伝播しない
@@ -529,7 +538,7 @@ def test_memory_rumor_reputation_integration():
     )
 
     player = TestPlayer(relationships={"merchant": {"trust": -30}})
-    fired = gate_sys.check_all_gates(player)
+    gate_sys.check_all_gates(player)
     assert hostile_triggered["done"] is True
 
 

@@ -7,6 +7,7 @@ Checks for missing tiles, mismatched definitions, and autotile readiness.
 from __future__ import annotations
 
 import json
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -119,7 +120,6 @@ def validate_tileset_def() -> ValidationResult:
         # Check directions (vertical stacking)
         directions = tile_def.get("directions", 1)
         if directions > 1:
-            expected_h = meta_h * directions
             # Note: metadata only has single tile entry, directions are vertical stack
             info.append(f"{tile_id}: directions={directions} (vertical stack in atlas)")
 
@@ -141,7 +141,7 @@ def validate_tileset_def() -> ValidationResult:
     for scale in scales:
         if scale in atlas_meta:
             meta_tiles = set(atlas_meta[scale].get("tiles", {}).keys())
-            def_files = set(t.get("file") for t in tiles.values())
+            def_files = {t.get("file") for t in tiles.values()}
             orphaned = meta_tiles - def_files
             if orphaned:
                 warnings.append(
@@ -177,4 +177,4 @@ def main():
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())

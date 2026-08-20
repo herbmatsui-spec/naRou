@@ -73,12 +73,11 @@ def test_entity_uv_parity():
                         frame=0,
                         scale="32",
                     )
-                    curr_uv = atlas.get_uv(
+                    atlas.get_uv(
                         tile_id, direction=direction, state=state, frame=0, scale="32"
                     )
                     # Each direction should be offset by base height
                     # At scale 32, PLAYER base height is 32 (from metadata)
-                    expected_y_diff = 32
                     # Note: The actual metadata has 32px vertical spacing at scale 32
 
         print(

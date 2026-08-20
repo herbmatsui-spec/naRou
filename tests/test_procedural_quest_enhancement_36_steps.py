@@ -2,6 +2,7 @@
 プロシージャル・クエスト生成システム 強化版 総合テスト (全36ステップ)
 ①表示名の日本語ローカライズ ②連鎖クエスト（報酬カスケード） ③既存UI統合 を検証。
 """
+from __future__ import annotations
 
 import os
 import re
@@ -72,9 +73,9 @@ def test_all_36_steps_procedural_quest_enhancement():
             leaks += 1
     assert leaks == 0, f"Step 12 Failed: 英語ID漏れ {leaks}件"
     sample = gen.generate_board_quest(p, seed=42)
-    stage_names = set(
-        REGISTRY.get_display_name("stage", s) for s in REGISTRY.all_settings().keys()
-    )
+    stage_names = {
+        REGISTRY.get_display_name("stage", s) for s in REGISTRY.all_settings()
+    }
     assert any(sn in sample.title for sn in stage_names), (
         "Step 11 Failed: stage not localized"
     )

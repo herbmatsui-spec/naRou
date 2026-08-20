@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Configuration management for naRou deployment."""
 
+from __future__ import annotations
+
 import argparse
 import json
 from pathlib import Path
@@ -170,7 +172,7 @@ def main():
                 "list": list,
                 "dict": dict,
             }[t.strip()]
-        valid, msg = mgr.validate_config(args.validate[0], schema)
+        _valid, msg = mgr.validate_config(args.validate[0], schema)
         print(msg)
     else:
         parser.print_help()

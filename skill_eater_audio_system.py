@@ -31,6 +31,7 @@ class SkillEaterAudioSystem:
                 pygame.mixer.init()
                 self.has_pygame = True
             except Exception:
+                # If pygame not available, disable audio playback
                 self.has_pygame = False
 
     @classmethod
@@ -81,6 +82,7 @@ class SkillEaterAudioSystem:
             snd.play()
             return True
         except Exception:
+            # TODO: handle exception properly
             return False
 
     def get_and_clear_played_sounds(self) -> list[str]:

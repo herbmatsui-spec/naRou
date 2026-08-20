@@ -11,12 +11,15 @@ import random
 from typing import Any
 
 import yaml
+from typing_extensions import Self
 
 from core_framework import BaseSystem
 
 try:
     from components import ReincarnationComponent
-except Exception:  # 循環防止（通常は存在）
+except Exception:
+        # TODO: handle exception properly
+        # 循環防止（通常は存在）
     ReincarnationComponent = None
 
 DATA_DIR = "data"
@@ -27,7 +30,7 @@ class ArchaeologyRegistry:
 
     _instance: ArchaeologyRegistry | None = None
 
-    def __new__(cls) -> ArchaeologyRegistry:
+    def __new__(cls) -> Self:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._fragments: dict[str, Any] = {}
@@ -202,6 +205,7 @@ class ArchaeologyManager(BaseSystem):
                         }
                     )
             except Exception:
+                # TODO: handle exception properly
                 pass
         if engine and hasattr(engine, "log"):
             engine.log(
@@ -249,6 +253,7 @@ class ArchaeologyManager(BaseSystem):
 
             SoundManager.play_se(name)
         except Exception:
+            # TODO: handle exception properly
             pass
 
     # ---------- Step 19: 解読 ----------
@@ -351,6 +356,7 @@ class ArchaeologyManager(BaseSystem):
                 int(player.ending_progress.get(ending_id, 0)), 1
             )
         except Exception:
+            # TODO: handle exception properly
             pass
         if engine and hasattr(engine, "log"):
             scene = ending.get("ending_scene", "") if ending else ""

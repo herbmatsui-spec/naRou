@@ -50,7 +50,7 @@ class DungeonQuestFeedback:
         """生成結果を処理し、フィードバックオブジェクトを作成"""
 
         floors = generated.get("floors", [])
-        generated_floors = len(floors)
+        len(floors)
 
         floor_details = []
         boss_room_coords = None
@@ -180,7 +180,7 @@ class DungeonQuestFeedback:
                     else 0,
                 )
                 # または feedback から直接
-                pass  # 下で統一処理
+                # 下で統一処理
 
         # 統一更新処理
         for obj in quest_objectives:
@@ -188,7 +188,6 @@ class DungeonQuestFeedback:
                 continue
 
             target = objective_mapping[obj.objective_id]
-            old_count = obj.current_count
 
             if target == "generated_floors":
                 obj.current_count = feedback.generated_floors
@@ -299,6 +298,7 @@ class DungeonQuestPipeline:
 
                     return build_dungeon_spec_from_yaml(spec_data)
         except Exception:
+            # TODO: handle exception properly
             pass
         return None
 

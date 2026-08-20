@@ -14,6 +14,8 @@ import yaml
 if TYPE_CHECKING:
     from entity import Entity
 
+from typing_extensions import Self
+
 from community_goal_manager import COMMUNITY_GOAL_MANAGER
 from event_scheduler import EventScheduler
 from ranking_manager import RankingManager
@@ -66,7 +68,7 @@ class WorldEventRegistry:
 
     _instance: WorldEventRegistry | None = None
 
-    def __new__(cls) -> WorldEventRegistry:
+    def __new__(cls) -> Self:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._events = {}
@@ -206,7 +208,6 @@ class WorldEventManager:
 
     def update_active_events(self, player: Entity, engine: Any | None = None) -> None:
         """アクティブイベントの進行 (Step 71)"""
-        pass
 
     # Phase 3 Step 12: ワールドイベント連携 - 動的スケジュール注入
     def inject_event_schedule(

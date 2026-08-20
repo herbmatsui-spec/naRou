@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Scaling script for naRou project."""
 
+from __future__ import annotations
+
 import argparse
 import json
+import shlex
 import subprocess
 import sys
-import shlex
 
 
 def run_command(cmd, cwd=None):

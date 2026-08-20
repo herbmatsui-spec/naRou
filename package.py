@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Package script for naRou project."""
+from __future__ import annotations
 
 import argparse
 import os
+import shlex
 import subprocess
 import sys
-import shlex
 
 
 def run_command(cmd, cwd=None):
@@ -33,8 +34,7 @@ def package():
     with open("package/MANIFEST.txt", "w") as f:
         f.write("naRou Package\n")
         f.write("=============\n")
-        for file in os.listdir("package"):
-            f.write(f"- {file}\n")
+        f.writelines(f"- {file}\n" for file in os.listdir("package"))
 
     print("Packaging completed successfully!")
     return True
@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
 
 # --- LocalizationManager integration (i18n, Step 3.x) ---
-def localize(key: str, language: str = None, manager=None) -> str:
+def localize(key: str, language: str | None = None, manager=None) -> str:
     """Return localized text for *key* using LocalizationManager.
 
     Provides a thin, dependency-free wrapper so callers can localize UI

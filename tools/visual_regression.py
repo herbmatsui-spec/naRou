@@ -14,7 +14,6 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from core.entity_renderer import EntityRenderer
-from core.tcod_renderer import TCODRenderer
 from core.tile_atlas import TileAtlas
 
 
@@ -28,12 +27,10 @@ def generate_entity_reference_images():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     atlas = TileAtlas()
-    renderer = TCODRenderer(40, 24)
     entity_renderer = EntityRenderer(atlas)
 
     entity_types = ["PLAYER", "PET", "ENEMY_GOBLIN"]
     states = ["idle", "walk", "attack"]
-    directions = [0, 1, 2, 3]  # down, left, right, up
     dir_names = ["down", "left", "right", "up"]
 
     for entity_type in entity_types:
@@ -50,7 +47,7 @@ def generate_entity_reference_images():
             for direction in range(td.directions):
                 # Calculate max valid frames for this entity/direction
                 # Based on atlas dimensions and frame_width from metadata
-                base_uv = atlas.get_uv(
+                atlas.get_uv(
                     entity_type,
                     variant=0,
                     frame=0,
@@ -109,7 +106,6 @@ def compare_entity_rendering():
         return False
 
     atlas = TileAtlas()
-    renderer = TCODRenderer(40, 24)
     entity_renderer = EntityRenderer(atlas)
 
     all_passed = True

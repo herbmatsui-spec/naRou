@@ -301,7 +301,8 @@ class DynamicRelationshipSystem:
                 context_multiplier = context_func(context)
                 modifier *= context_multiplier
             except Exception:
-                # 修正子が失敗しても継続
+        # TODO: handle exception properly
+        # 修正子が失敗しても継続
                 continue
 
         return int(base_amount * modifier)
@@ -439,7 +440,7 @@ class DynamicRelationshipSystem:
         ]
 
         # 累積効果のクリーンアップ（古いものはリセット）
-        for key, cum_effect in self._cumulative_effects.items():
+        for cum_effect in self._cumulative_effects.values():
             if current_time - cum_effect.last_reset > max_age_seconds:
                 cum_effect.reset()
 

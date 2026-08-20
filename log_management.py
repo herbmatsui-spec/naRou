@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Log management for naRou deployment."""
 
+from __future__ import annotations
+
 import argparse
 import gzip
 import json

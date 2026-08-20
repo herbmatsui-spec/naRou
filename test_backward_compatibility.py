@@ -3,6 +3,7 @@
 後方互換性テスト
 既存の機能が壊れていないことを確認
 """
+from __future__ import annotations
 
 from map_engine import GameMap
 from world_layer import WorldLayer

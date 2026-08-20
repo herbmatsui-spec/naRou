@@ -1,6 +1,7 @@
 """
 レガシースキルシステム
 """
+from __future__ import annotations
 
 import os
 from dataclasses import dataclass
@@ -52,6 +53,7 @@ class LegacySkillRegistry:
                             unlock_condition=sdata.get("unlock_condition"),
                         )
             except Exception:
+                # TODO: handle exception properly
                 pass
 
         if not self._data:

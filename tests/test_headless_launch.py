@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
-import time
+
 
 def test_headless_launches_text_mode() -> None:
     """DISPLAY を unset にして run.py を実行し、テキストモードが起動することを確認。"""

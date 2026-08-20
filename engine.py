@@ -24,7 +24,7 @@ class GameLocalizer:
     def manager(self) -> LocalizationManager:
         return self._manager
 
-    def localize(self, key: str, language: str = None) -> str:
+    def localize(self, key: str, language: str | None = None) -> str:
         return self._manager.get_text(key, language)
 
     def set_language(self, language: str) -> bool:

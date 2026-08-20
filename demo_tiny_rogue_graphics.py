@@ -3,6 +3,7 @@
 Demo script showcasing all Tiny Rogue Graphics Pack features.
 Run with: python demo_tiny_rogue_graphics.py
 """
+from __future__ import annotations
 
 import os
 import sys

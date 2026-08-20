@@ -224,14 +224,14 @@ class CurlNoise:
         n_z = self.noise3d(x + 2000, y, z)
 
         n_x_eps_y = self.noise3d(x, y + eps, z)
-        n_y_eps_y = self.noise3d(x + 1000, y + eps, z)
+        self.noise3d(x + 1000, y + eps, z)
         n_z_eps_y = self.noise3d(x + 2000, y + eps, z)
 
         n_x_eps_z = self.noise3d(x, y, z + eps)
         n_y_eps_z = self.noise3d(x + 1000, y, z + eps)
-        n_z_eps_z = self.noise3d(x + 2000, y, z + eps)
+        self.noise3d(x + 2000, y, z + eps)
 
-        n_x_eps_x = self.noise3d(x + eps, y, z)
+        self.noise3d(x + eps, y, z)
         n_y_eps_x = self.noise3d(x + 1000 + eps, y, z)
         n_z_eps_x = self.noise3d(x + 2000 + eps, y, z)
 
@@ -310,7 +310,7 @@ class SDFCollision:
         if self.sdf is None:
             return 1e6  # No collision
 
-        min_x, max_x, min_y, max_y, min_z, max_z = self.world_bounds
+        min_x, _max_x, min_y, _max_y, min_z, _max_z = self.world_bounds
 
         # Convert to grid coordinates
         gx = (pos[0] - min_x) / self.cell_size
@@ -414,7 +414,7 @@ class Emitter:
         rate: float = 100.0,
         position: np.ndarray = None,
         direction: np.ndarray = None,
-        params: dict = None,
+        params: dict | None = None,
     ):
         self.type = emitter_type
         self.rate = rate  # Particles per second
@@ -582,7 +582,7 @@ def simulate_particles_cpu(
 
         # SDF Collision
         if sdf_collision is not None:
-            new_pos, vel, collided = sdf_collision.collide_particle(
+            new_pos, vel, _collided = sdf_collision.collide_particle(
                 new_pos, vel, buffer.size[idx, 2]
             )
 

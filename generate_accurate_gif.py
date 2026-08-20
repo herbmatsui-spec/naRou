@@ -8,6 +8,7 @@ Accurately renders:
 5. True Cinematic Log & Tooltip System
 6. In-game features: Exploration -> Combat -> God Prayer -> Inventory/Skill Tree -> NG+ Reincarnation
 """
+from __future__ import annotations
 
 import math
 

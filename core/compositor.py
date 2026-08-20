@@ -5,7 +5,8 @@ from typing import Any
 
 import numpy as np
 
-from core.hdr import AutoExposure, HDRCompositor
+from core.auto_exposure import AutoExposure
+from core.hdr import HDRCompositor
 from core.renderer_base import RendererBase
 
 
@@ -54,7 +55,6 @@ class Compositor:
     def render_scene(self, renderer: RendererBase, scene_data: dict[str, Any]) -> None:
         """Render main scene to HDR. Delegate to game-specific renderer."""
         # This is called by the game's render system
-        pass
 
     def execute_passes(self, renderer: RendererBase) -> np.ndarray:
         """Execute all render passes and return final LDR frame."""

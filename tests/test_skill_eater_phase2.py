@@ -2,6 +2,7 @@
 test_skill_eater_phase2.py
 Phase 2: バトルエンジン＆《喰らい》システムの検証テスト
 """
+from __future__ import annotations
 
 import unittest
 from pathlib import Path

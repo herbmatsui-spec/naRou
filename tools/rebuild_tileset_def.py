@@ -2,6 +2,7 @@
 """
 Rebuild tileset_def.json from scratch: original tiles + tiny_rogue atlas tiles.
 """
+from __future__ import annotations
 
 import json
 from pathlib import Path

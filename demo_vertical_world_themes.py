@@ -3,6 +3,7 @@
 Vertical World System テーマデモ
 実際のYAMLテーマデータを使用したデモ
 """
+from __future__ import annotations
 
 from world_layer import WorldLayer
 from world_map_manager import WorldMapManager

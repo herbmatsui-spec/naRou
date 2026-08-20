@@ -4,6 +4,7 @@ Mirrors web_server._serialize_engine_state's use of fov.compute_light_map:
 a viewport window, a blocked grid derived from GameMap.is_transparent, and
 light sources for the player lantern + torches.
 """
+from __future__ import annotations
 
 import os
 import sys
@@ -11,8 +12,8 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from fov import compute_light_map  # noqa: E402
-from map_engine import GameMap  # noqa: E402
+from fov import compute_light_map
+from map_engine import GameMap
 
 
 def _build_viewport(game_map, cam_x, cam_y, view_w, view_h, sources):

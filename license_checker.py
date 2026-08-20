@@ -67,6 +67,7 @@ class LicenseChecker:
             expected = hmac.new(self.secret.encode(), payload, hashlib.sha256).digest()
             return hmac.compare_digest(sig, expected)
         except Exception:
+            # TODO: handle exception properly
             return False
 
     def _load_cache(self) -> dict | None:
@@ -75,6 +76,7 @@ class LicenseChecker:
                 with open(CACHE_FILE) as f:
                     return json.load(f)
             except Exception:
+                # TODO: handle exception properly
                 pass
         return None
 
@@ -83,6 +85,7 @@ class LicenseChecker:
             with open(CACHE_FILE, "w") as f:
                 json.dump(data, f)
         except Exception:
+            # TODO: handle exception properly
             pass
 
 

@@ -6,6 +6,7 @@ Tests for MetaProgressionSystem:
 4. Reincarnation integration with memory fragments and cycle modifiers
 5. SaveSystem serialization & restoration of memory fragments & cycle modifiers
 """
+from __future__ import annotations
 
 import os
 import sys
@@ -84,7 +85,6 @@ def test_meta_goals_evaluation_and_bonuses():
     mgr = eng.meta_progression_manager
 
     # 初期状態
-    initial_str = player.attributes.strength
 
     # 10個の記憶の欠片を付与
     categories = ["combat", "magic", "survival", "exploration", "social"]

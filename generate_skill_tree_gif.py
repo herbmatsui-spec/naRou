@@ -1,6 +1,7 @@
 """
 Generate GIF showcasing Skill Tree & Job System features.
 """
+from __future__ import annotations
 
 from PIL import Image, ImageDraw
 

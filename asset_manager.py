@@ -9,7 +9,6 @@ import csv
 import json
 import logging
 import os
-from typing import Dict, Optional, List, Any
 from pathlib import Path
 
 # Setup logger
@@ -26,15 +25,15 @@ class AssetManager:
         self.base_path = base_path
         self.event_assets_path = os.path.join(base_path, "events")
         # アセットのキャッシュ
-        self._asset_cache: Dict[str, str] = {}
-        self._tiny_rogue_tiles: Dict[str, str] = {}
-        self._audio_sfx: Dict[str, str] = {}
-        self._emote_sprites: Dict[str, str] = {}
-        self._tiny_rogue_atlas_meta: Optional[Dict] = None
-        self._audio_manifest: Optional[List[Dict]] = None
+        self._asset_cache: dict[str, str] = {}
+        self._tiny_rogue_tiles: dict[str, str] = {}
+        self._audio_sfx: dict[str, str] = {}
+        self._emote_sprites: dict[str, str] = {}
+        self._tiny_rogue_atlas_meta: dict | None = None
+        self._audio_manifest: list[dict] | None = None
         self._initialized = False
 
-    def initialize(self, config: Optional[Dict] = None) -> None:
+    def initialize(self, config: dict | None = None) -> None:
         """Initialize asset manager with config paths."""
         if self._initialized:
             return
@@ -112,7 +111,7 @@ class AssetManager:
         logger.info(f"Total emote sprites loaded: {len(self._emote_sprites)}")
 
     # --- Event Asset Methods (existing) ---
-    def get_event_asset_path(self, event_id: str, asset_type: str, asset_name: str) -> Optional[str]:
+    def get_event_asset_path(self, event_id: str, asset_type: str, asset_name: str) -> str | None:
         """
         イベント固有のアセットパスを取得する。
         :param event_id: イベントID
@@ -125,19 +124,19 @@ class AssetManager:
             return path
         return None
 
-    def get_event_image_path(self, event_id: str, image_name: str) -> Optional[str]:
+    def get_event_image_path(self, event_id: str, image_name: str) -> str | None:
         """イベント画像のパスを取得する"""
         return self.get_event_asset_path(event_id, "image", image_name)
 
-    def get_event_sound_path(self, event_id: str, sound_name: str) -> Optional[str]:
+    def get_event_sound_path(self, event_id: str, sound_name: str) -> str | None:
         """イベントサウンドのパスを取得する"""
         return self.get_event_asset_path(event_id, "sound", sound_name)
 
-    def get_event_story_path(self, event_id: str, story_name: str) -> Optional[str]:
+    def get_event_story_path(self, event_id: str, story_name: str) -> str | None:
         """イベントストーリーのパスを取得する"""
         return self.get_event_asset_path(event_id, "story", story_name)
 
-    def list_event_assets(self, event_id: str) -> Dict[str, List[str]]:
+    def list_event_assets(self, event_id: str) -> dict[str, list[str]]:
         """
         イベントのすべてのアセットをリストする。
         :param event_id: イベントID
@@ -156,18 +155,18 @@ class AssetManager:
         return assets
 
     # --- Tiny Rogue Tile Methods ---
-    def get_tiny_rogue_tile_path(self, tile_name: str) -> Optional[str]:
+    def get_tiny_rogue_tile_path(self, tile_name: str) -> str | None:
         """Get path to a tiny rogue tile by stem name (e.g., 'tile_0001')."""
         path = self._tiny_rogue_tiles.get(tile_name)
         if path is None:
             logger.warning(f"Tiny rogue tile not found: {tile_name}")
         return path
 
-    def get_tiny_rogue_atlas_meta(self) -> Optional[Dict]:
+    def get_tiny_rogue_atlas_meta(self) -> dict | None:
         """Get the tiny rogue atlas metadata."""
         return self._tiny_rogue_atlas_meta
 
-    def get_tile_atlas_info(self, tile_id: str) -> Optional[Dict]:
+    def get_tile_atlas_info(self, tile_id: str) -> dict | None:
         """Get atlas coordinate info for a tile ID (e.g., 'TR_FLOOR_01')."""
         if self._tiny_rogue_atlas_meta and "tiles" in self._tiny_rogue_atlas_meta:
             info = self._tiny_rogue_atlas_meta["tiles"].get(tile_id)
@@ -176,7 +175,7 @@ class AssetManager:
             return info
         return None
 
-    def get_tile_atlas_info_or_fallback(self, tile_id: str, fallback_id: str = "TR_FLOOR_01") -> Dict:
+    def get_tile_atlas_info_or_fallback(self, tile_id: str, fallback_id: str = "TR_FLOOR_01") -> dict:
         """Get atlas coordinate info with fallback to a default tile."""
         info = self.get_tile_atlas_info(tile_id)
         if info is None:
@@ -184,19 +183,19 @@ class AssetManager:
             info = self.get_tile_atlas_info(fallback_id)
         return info or {"x": 0, "y": 0, "width": 16, "height": 16, "animated": False, "frames": 1, "fps": 1, "directions": 1, "variants": 1}
 
-    def list_tiny_rogue_tiles(self) -> List[str]:
+    def list_tiny_rogue_tiles(self) -> list[str]:
         """List all available tiny rogue tile names."""
         return list(self._tiny_rogue_tiles.keys())
 
     # --- Audio SFX Methods ---
-    def get_audio_sfx_path(self, sfx_name: str) -> Optional[str]:
+    def get_audio_sfx_path(self, sfx_name: str) -> str | None:
         """Get path to an audio SFX by stem name."""
         path = self._audio_sfx.get(sfx_name)
         if path is None:
             logger.warning(f"Audio SFX not found: {sfx_name}")
         return path
 
-    def get_audio_sfx_by_id(self, suggested_id: str) -> Optional[str]:
+    def get_audio_sfx_by_id(self, suggested_id: str) -> str | None:
         """Get audio path by suggested_id from manifest."""
         if self._audio_manifest:
             for entry in self._audio_manifest:
@@ -209,7 +208,7 @@ class AssetManager:
         logger.warning(f"Audio manifest entry not found for suggested_id: {suggested_id}")
         return None
 
-    def get_audio_sfx_or_fallback(self, suggested_id: str, fallback_id: str = "se_footstep_00") -> Optional[str]:
+    def get_audio_sfx_or_fallback(self, suggested_id: str, fallback_id: str = "se_footstep_00") -> str | None:
         """Get audio SFX by suggested_id with fallback."""
         path = self.get_audio_sfx_by_id(suggested_id)
         if path is None:
@@ -217,23 +216,23 @@ class AssetManager:
             path = self.get_audio_sfx_by_id(fallback_id)
         return path
 
-    def list_audio_sfx(self) -> List[str]:
+    def list_audio_sfx(self) -> list[str]:
         """List all available audio SFX names."""
         return list(self._audio_sfx.keys())
 
-    def get_audio_manifest(self) -> Optional[List[Dict]]:
+    def get_audio_manifest(self) -> list[dict] | None:
         """Get the full audio manifest."""
         return self._audio_manifest
 
     # --- Emote Sprite Methods ---
-    def get_emote_sprite_path(self, emote_name: str) -> Optional[str]:
+    def get_emote_sprite_path(self, emote_name: str) -> str | None:
         """Get path to an emote sprite by relative name."""
         path = self._emote_sprites.get(emote_name)
         if path is None:
             logger.warning(f"Emote sprite not found: {emote_name}")
         return path
 
-    def get_emote_sprite_or_fallback(self, emote_name: str, fallback_name: str = "style1/emote_anger") -> Optional[str]:
+    def get_emote_sprite_or_fallback(self, emote_name: str, fallback_name: str = "style1/emote_anger") -> str | None:
         """Get emote sprite path with fallback."""
         path = self.get_emote_sprite_path(emote_name)
         if path is None:
@@ -241,11 +240,11 @@ class AssetManager:
             path = self.get_emote_sprite_path(fallback_name)
         return path
 
-    def list_emote_sprites(self) -> List[str]:
+    def list_emote_sprites(self) -> list[str]:
         """List all available emote sprite names."""
         return list(self._emote_sprites.keys())
 
-    def get_emote_tilesheet_path(self, style_name: str) -> Optional[str]:
+    def get_emote_tilesheet_path(self, style_name: str) -> str | None:
         """Get path to an emote tilesheet (e.g., 'pixel_style1')."""
         path = self._emote_sprites.get(style_name)
         if path is None:

@@ -3,6 +3,7 @@
 Asset analysis script for performing deeper analysis on assets.
 Includes quality analysis, optimization recommendations, and asset usage patterns.
 """
+from __future__ import annotations
 
 import argparse
 import json
@@ -215,7 +216,7 @@ def analyze_font_quality(font_dir: str, config: dict) -> dict:
                             )
 
                         # Check character coverage
-                        ascii_chars = sum(1 for c in metrics.keys() if ord(c) < 128)
+                        ascii_chars = sum(1 for c in metrics if ord(c) < 128)
                         total_chars = len(metrics)
                         if total_chars > 0:
                             ascii_ratio = ascii_chars / total_chars
@@ -284,8 +285,8 @@ def analyze_sound_quality(sound_dir: str, config: dict) -> dict:
                 return int(br[:-4])
         return 0
 
-    music_threshold_kbps = bitrate_to_kbps(music_bitrate_threshold)
-    sfx_threshold_kbps = bitrate_to_kbps(sfx_bitrate_threshold)
+    bitrate_to_kbps(music_bitrate_threshold)
+    bitrate_to_kbps(sfx_bitrate_threshold)
 
     extensions = [".ogg", ".mp3", ".wav", ".flac"]
 
@@ -414,6 +415,7 @@ def analyze_model_quality(model_dir: str, config: dict) -> dict:
                                     elif line.startswith("f "):
                                         face_count += 1
                         except Exception:
+                            # TODO: handle exception properly
                             pass
 
                         # Check for high polygon count
@@ -679,7 +681,7 @@ def main():
         total_opportunities = 0
         total_recommendations = set()
 
-        for analysis_name, analysis in report["analyses"].items():
+        for analysis in report["analyses"].values():
             total_issues += len(analysis.get("quality_issues", []))
             total_opportunities += len(analysis.get("optimization_opportunities", []))
             total_recommendations.update(analysis.get("recommendations", []))
@@ -693,9 +695,8 @@ def main():
         }
 
     # Save or output results
-    if args.output:
-        if not save_analysis(report, args.output):
-            sys.exit(1)
+    if args.output and not save_analysis(report, args.output):
+        sys.exit(1)
 
     if not args.summary_only:
         # Print full JSON

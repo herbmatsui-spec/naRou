@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Tests for the dynamic-lighting FOV / light-map foundation (Plan 2-A)."""
 
 import os
@@ -8,7 +10,7 @@ import pytest
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from fov import (  # noqa: E402
+from fov import (
     compute_light_map,
     line_of_sight,
     recursive_shadowcast,

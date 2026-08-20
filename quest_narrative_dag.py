@@ -75,6 +75,7 @@ class NarrativeEdge:
                 node = parse_condition(self.condition_dsl)
                 return evaluate(node, context)
             except Exception:
+                # TODO: handle exception properly
                 return False
         return True
 
@@ -291,11 +292,11 @@ def build_dag_from_yaml(dag_id: str, data: dict[str, Any]) -> NarrativeDAG:
 
 
 __all__ = [
-    "NarrativeNodeType",
-    "NarrativeEdgeType",
-    "NarrativeEdge",
-    "NarrativeNode",
     "NarrativeContext",
     "NarrativeDAG",
+    "NarrativeEdge",
+    "NarrativeEdgeType",
+    "NarrativeNode",
+    "NarrativeNodeType",
     "build_dag_from_yaml",
 ]

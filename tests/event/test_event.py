@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Event / input localization suite"""
 
 import unittest

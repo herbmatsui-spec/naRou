@@ -144,7 +144,6 @@ class DataModel(BaseModel):
 class DataClassBase:
     """Base for generated frozen dataclasses (slots=True for performance)"""
 
-    pass
 
 
 @dataclass(frozen=True, slots=True)
@@ -225,24 +224,24 @@ def validate_id_format(value: str, prefix: str) -> str:
 
 
 __all__ = [
-    "ItemCategory",
-    "Quality",
-    "SkillCategory",
-    "EffectType",
-    "EffectTarget",
-    "QuestType",
-    "ObjectiveType",
-    "RewardType",
-    "PrerequisiteType",
     "AIType",
-    "DataModel",
     "DataClassBase",
-    "EffectData",
-    "PrerequisiteData",
-    "RewardData",
-    "ObjectiveData",
+    "DataModel",
     "DropEntryData",
-    "MonsterTableEntryData",
+    "EffectData",
+    "EffectTarget",
+    "EffectType",
+    "ItemCategory",
     "ItemTableEntryData",
+    "MonsterTableEntryData",
+    "ObjectiveData",
+    "ObjectiveType",
+    "PrerequisiteData",
+    "PrerequisiteType",
+    "Quality",
+    "QuestType",
+    "RewardData",
+    "RewardType",
+    "SkillCategory",
     "validate_id_format",
 ]

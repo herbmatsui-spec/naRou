@@ -6,14 +6,9 @@ Step 10: エンティティ管理の委譲
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from entity import Entity
 from item_system import Item
 from resource_node import ResourceNode
-
-if TYPE_CHECKING:
-    pass
 
 
 class EntityManager:

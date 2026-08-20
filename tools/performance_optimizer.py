@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Performance optimization tool for naRou project."""
+from __future__ import annotations
 
 import json
 import sys
@@ -107,7 +108,7 @@ class PerformanceOptimizer:
             return {"leak_detected": False, "confidence": 0}
 
         memory_values = [s.get("memory_mb", 0) for s in snapshots]
-        timestamps = [s.get("timestamp", 0) for s in snapshots]
+        [s.get("timestamp", 0) for s in snapshots]
 
         # Calculate trend
         if len(memory_values) >= 3:
@@ -371,6 +372,7 @@ class PerformanceOptimizer:
                 latencies.append((exec_end - exec_start) * 1000)
                 executions += 1
             except Exception:
+                # TODO: handle exception properly
                 errors += 1
 
             elapsed = time.perf_counter() - exec_start
@@ -415,6 +417,7 @@ class PerformanceOptimizer:
                     end = time.perf_counter()
                     count_list.append((end - start) * 1000)
                 except Exception:
+                    # TODO: handle exception properly
                     count_list.append(-1)  # Error marker
                 time.sleep(0.01)
 
@@ -479,6 +482,7 @@ class PerformanceOptimizer:
                 exec_end = time.perf_counter()
                 latencies.append((exec_end - exec_start) * 1000)
             except Exception:
+                # TODO: handle exception properly
                 pass
 
             # Sample memory
@@ -570,7 +574,7 @@ class PerformanceOptimizer:
 
         while time.time() < end_time:
             checks += 1
-            check_start = time.perf_counter()
+            time.perf_counter()
             try:
                 func(*args, **kwargs)
                 check_end = time.perf_counter()
@@ -580,6 +584,7 @@ class PerformanceOptimizer:
                     total_downtime += check_end - last_failure
                     last_failure = None
             except Exception:
+                # TODO: handle exception properly
                 if last_failure is None:
                     last_failure = time.perf_counter()
 

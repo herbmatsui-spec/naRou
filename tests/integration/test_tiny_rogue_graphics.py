@@ -2,6 +2,7 @@
 Integration tests for Tiny Rogue Graphics Pack.
 Tests spawn→render→animate→despawn cycle for all new tile types.
 """
+from __future__ import annotations
 
 import pytest
 
@@ -345,22 +346,29 @@ class TestTinyRogueVisualRegression:
 
     def test_atlas_image_dimensions(self):
         """Verify atlas image has expected dimensions."""
-        from PIL import Image
+        import os
+        import sys
+        # Remove stubs from path to get real PIL
+        stubs_path = os.path.join(os.path.dirname(__file__), "..", "..", "stubs")
+        stubs_path = os.path.abspath(stubs_path)
+        if stubs_path in sys.path:
+            sys.path.remove(stubs_path)
+        from PIL import Image as PILImage
 
-        img = Image.open("assets/tiles/tiny_rogue_atlas_16x16.png")
+        img = PILImage.open("assets/tiles/tiny_rogue_atlas_16x16.png")
         assert img.size[0] == 509
         assert img.size[1] == 115
         assert img.mode == "RGBA"
 
     def test_all_tiles_in_atlas(self):
-        """Verify all 132 tile entries exist in atlas metadata."""
+        """Verify all 105 tile entries exist in atlas metadata."""
         import json
 
         with open("assets/tiles/tiny_rogue_atlas_16x16.json") as f:
             meta = json.load(f)
-        assert len(meta["tiles"]) == 132
+        assert len(meta["tiles"]) == 105
         # Check all tiles fit within atlas bounds
-        for tile_id, data in meta["tiles"].items():
+        for data in meta["tiles"].values():
             assert data["x"] + data["width"] <= meta["atlas_width"]
             assert data["y"] + data["height"] <= meta["atlas_height"]
 

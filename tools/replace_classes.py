@@ -6,6 +6,7 @@ design-token alias classes defined in `assets/css/demo.css`.
 
 Run: python tools/replace_classes.py
 """
+from __future__ import annotations
 
 import json
 import os

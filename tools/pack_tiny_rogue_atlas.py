@@ -75,7 +75,7 @@ def pack_atlas(
     group_counters = {}  # category -> group count
 
     while i < len(tiles):
-        idx, filename, suggested_id, category = tiles[i]
+        _idx, filename, suggested_id, category = tiles[i]
 
         # Check if this is a directional tile group (4 consecutive tiles in a directional category)
         if category in DIRECTIONAL_CATEGORIES and i + 3 < len(tiles):

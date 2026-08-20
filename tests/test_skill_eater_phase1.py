@@ -2,6 +2,7 @@
 test_skill_eater_phase1.py
 Phase 1: スキルデータ管理および《解析》プロトタイプの検証テスト
 """
+from __future__ import annotations
 
 import unittest
 from pathlib import Path

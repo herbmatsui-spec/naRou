@@ -120,7 +120,7 @@ class WorldLayer:
         )
 
         # テーマ固有の修正を適用
-        difficulty_mod = self.theme_data.get("difficulty_modifier", 1.0)
+        # TODO: difficulty_modifier をトラップ配置へ適用する
         # ここで難易度に基づくトラップ配置等を行う
 
     def get_monster_pool(self) -> dict[str, list[str]]:

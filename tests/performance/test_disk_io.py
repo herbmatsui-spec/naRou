@@ -3,8 +3,10 @@
 Disk I/O Performance Test
 ディスクI/Oパフォーマンステスト
 """
+from __future__ import annotations
 
 import os
+import sys
 import tempfile
 import unittest
 
@@ -75,4 +77,4 @@ def run_disk_io_tests():
 
 if __name__ == "__main__":
     success = run_disk_io_tests()
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

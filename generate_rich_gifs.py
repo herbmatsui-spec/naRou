@@ -3,6 +3,7 @@ generate_rich_gifs.py
 Aの世界（スキル喰い）用の高品質なGIFアニメーション生成スクリプト
 Pillow (PIL) を確実に読み込み、フレームアニメーションを生成する基盤
 """
+from __future__ import annotations
 
 import math
 import sys
@@ -34,6 +35,7 @@ def get_font(size: int = 14):
     try:
         return ImageFont.truetype("arial.ttf", size)
     except Exception:
+        # TODO: handle exception properly
         return ImageFont.load_default()
 
 

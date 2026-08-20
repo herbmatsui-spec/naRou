@@ -3,7 +3,9 @@
 Response Time Performance Test
 応答時間パフォーマンステスト
 """
+from __future__ import annotations
 
+import sys
 import time
 import unittest
 
@@ -66,4 +68,4 @@ def run_response_time_tests():
 
 if __name__ == "__main__":
     success = run_response_time_tests()
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

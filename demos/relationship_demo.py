@@ -84,7 +84,7 @@ relationship_templates:
     )
 
     # 師弟関係
-    mentorship_state = engine.mentorship.establish_mentorship("gareth", "player")
+    engine.mentorship.establish_mentorship("gareth", "player")
     teach_result = engine.mentorship.teach_skill("gareth", "player", "basic_sword")
     print(f"[6] 師弟関係: スキル伝授 = {teach_result.get('success', False)}")
 

@@ -172,14 +172,13 @@ class MeleeAttackAction(BehaviorNode):
             (-1, 1),
         ]:
             ent = engine.get_entity_at(actor.x + dx, actor.y + dy)
-            if ent and ent.hp > 0:
-                if (
-                    actor.faction == "monster"
-                    and (ent.is_player or getattr(ent, "is_pet", False))
-                    or getattr(actor, "is_pet", False)
-                    and ent.faction == "monster"
-                ):
-                    return ent
+            if ent and ent.hp > 0 and (
+                actor.faction == "monster"
+                and (ent.is_player or getattr(ent, "is_pet", False))
+                or getattr(actor, "is_pet", False)
+                and ent.faction == "monster"
+            ):
+                return ent
         return None
 
 

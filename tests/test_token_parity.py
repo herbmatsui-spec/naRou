@@ -3,6 +3,7 @@ Verify visual token parity across platforms (Plan 1-B acceptance):
 the tcod palette (core/palette.py) and the generated web theme must derive from
 the same design_tokens.json values.
 """
+from __future__ import annotations
 
 import json
 import os
@@ -60,7 +61,7 @@ def _resolve(d, dotted):
 
 def test_palette_matches_design_tokens():
     sys.path.insert(0, ROOT)
-    from core.palette import COLORS  # noqa: E402
+    from core.palette import COLORS
 
     tokens = _load_tokens()["color"]["semantic"]
     for palette_key, dotted in PARITY_MAP.items():

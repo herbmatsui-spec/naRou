@@ -3,16 +3,19 @@
 Skill Tree System for naRou
 Manages skill trees, tiers, effects, and player progression.
 """
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
 try:
     from components import SkillTreeJobComponent
-except Exception:  # pragma: no cover - optional dependency
+except Exception:
+        # TODO: handle exception properly
+        # pragma: no cover - optional dependency
     SkillTreeJobComponent = None
 
 
@@ -53,7 +56,7 @@ class SkillTree:
 class SkillTreeRegistry:
     """Singleton registry for loading and accessing skill trees."""
 
-    _instance: Optional["SkillTreeRegistry"] = None
+    _instance: SkillTreeRegistry | None = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -128,11 +131,11 @@ class SkillTreeRegistry:
 
         logger.info(f"Loaded {len(self._trees)} skill trees")
 
-    def all(self) -> dict[str, "SkillTree"]:
+    def all(self) -> dict[str, SkillTree]:
         """Return all loaded skill trees."""
         return self._trees.copy()
 
-    def get(self, tree_id: str) -> Optional["SkillTree"]:
+    def get(self, tree_id: str) -> SkillTree | None:
         """Get a specific skill tree by ID."""
         return self._trees.get(tree_id)
 
@@ -216,7 +219,6 @@ class SkillTreeManager:
 
     def _apply_tier_effects(self, player, tier):
         """Apply tier effects to player (placeholder for future expansion)."""
-        pass
 
     def get_available_skills(self, player) -> list[dict]:
         """Get list of available (learnable) skills for player."""
@@ -266,9 +268,7 @@ class SkillTreeManager:
     def check_exclusive_learnable(self, player, skill_data: dict[str, Any]) -> bool:
         """Check if player can learn exclusive skill."""
         req_job = skill_data.get("job")
-        if req_job and getattr(player, "job", None) != req_job:
-            return False
-        return True
+        return not (req_job and getattr(player, "job", None) != req_job)
 
     def learn_exclusive_skill(self, player, skill_id: str, cost: int = 5) -> bool:
         """Learn an exclusive skill."""
@@ -323,7 +323,7 @@ class PassiveSkill:
 class PassiveSkillRegistry:
     """Loads and stores passive skill definitions from YAML."""
 
-    _instance: Optional["PassiveSkillRegistry"] = None
+    _instance: PassiveSkillRegistry | None = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -562,16 +562,16 @@ class SkillInheritanceManager:
 
 
 __all__ = [
-    "SkillTreeEffect",
-    "SkillTreeTier",
-    "SkillTree",
-    "SkillTreeRegistry",
-    "SkillTreeManager",
-    "PassiveSkill",
-    "PassiveSkillRegistry",
-    "PassiveSkillManager",
-    "get_passive_skill_registry",
-    "get_passive_skill_manager",
     "InheritanceRule",
+    "PassiveSkill",
+    "PassiveSkillManager",
+    "PassiveSkillRegistry",
     "SkillInheritanceManager",
+    "SkillTree",
+    "SkillTreeEffect",
+    "SkillTreeManager",
+    "SkillTreeRegistry",
+    "SkillTreeTier",
+    "get_passive_skill_manager",
+    "get_passive_skill_registry",
 ]

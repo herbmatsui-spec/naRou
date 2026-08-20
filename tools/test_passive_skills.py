@@ -1,5 +1,7 @@
 """Tests for Proposal 6: Passive Skills System."""
 
+from __future__ import annotations
+
 import os
 import sys
 

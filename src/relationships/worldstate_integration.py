@@ -167,7 +167,7 @@ class WorldStateRelationshipIntegration:
         relationships = self.rm.get_all_relationships(player_id)
 
         for target_id, rel_dict in relationships.items():
-            for rel_type, level in rel_dict.items():
+            for rel_type in rel_dict:
                 if rel_type in modifiers:
                     modifier = modifiers[rel_type]
                     # 修飾子が1.0より大きければポジティブな方向、小さければネガティブな方向
@@ -195,6 +195,7 @@ class WorldStateRelationshipIntegration:
                     None, "relationship_phase_effects", results
                 )
             except Exception:
+                # TODO: handle exception properly
                 pass
 
         return results
@@ -323,7 +324,7 @@ class WorldStateRelationshipIntegration:
         conflict_count = 0
         rel_type_counts: dict[RelationshipType, int] = defaultdict(int)
 
-        for target_id, rel_dict in relationships.items():
+        for rel_dict in relationships.values():
             for rel_type, level in rel_dict.items():
                 rel_type_counts[rel_type] += 1
                 if rel_type == RelationshipType.FAVORABILITY:
@@ -444,6 +445,7 @@ class WorldStateRelationshipIntegration:
                 try:
                     self.world_state_manager.set_variable(None, key, severity)
                 except Exception:
+                    # TODO: handle exception properly
                     pass
 
         return results

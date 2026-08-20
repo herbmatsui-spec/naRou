@@ -5,7 +5,6 @@ Render System Module - Handles map, UI, overlays, and windows rendering
 from __future__ import annotations
 
 import math
-from typing import TYPE_CHECKING
 
 import tcod
 
@@ -28,9 +27,6 @@ from ui_fx_systems import (
     WeatherAtmosphereLayer,
 )
 from uirenderer import UIRenderer
-
-if TYPE_CHECKING:
-    pass
 
 
 class RenderSystem:

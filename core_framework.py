@@ -197,15 +197,13 @@ class BaseSystem:
 
     def initialize(self, engine: Any = None) -> None:
         """システムの初期化フック"""
-        pass
 
     def update(self, engine: Any = None, delta_time: float = 1.0) -> None:
         """毎ターンのシステム更新フック"""
-        pass
 
 
 # --- LocalizationManager integration (i18n, Step 3.x) ---
-def localize(key: str, language: str = None, manager=None) -> str:
+def localize(key: str, language: str | None = None, manager=None) -> str:
     """Return localized text for *key* using LocalizationManager.
 
     Provides a thin, dependency-free wrapper so callers can localize UI

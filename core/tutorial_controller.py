@@ -19,13 +19,10 @@ class TutorialController:
     def _load(self) -> list[dict[str, Any]]:
         if not self.path.exists():
             return []
-        try:
-            with open(self.path, encoding="utf-8") as f:
-                data = json.load(f)
-            if isinstance(data, list):
-                return data
-        except Exception:  # noqa: BLE001, S110 - 破損ファイルは空リストへ
-            pass
+        with open(self.path, encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, list):
+            return data
         return []
 
     def current(self) -> dict[str, Any] | None:

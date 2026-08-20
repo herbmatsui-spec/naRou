@@ -3,6 +3,7 @@
 Generate normal_atlas.png for 2.5D normal mapped lighting.
 Creates normal maps matching the layout in demos/assets/font_atlas.json
 """
+from __future__ import annotations
 
 import json
 

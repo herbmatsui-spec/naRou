@@ -3,7 +3,9 @@
 Reliability Test
 信頼性テスト
 """
+from __future__ import annotations
 
+import sys
 import time
 import unittest
 
@@ -100,4 +102,4 @@ def run_reliability_tests():
 
 if __name__ == "__main__":
     success = run_reliability_tests()
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

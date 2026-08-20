@@ -107,7 +107,6 @@ class WorldMapManager:
             return
 
         # 優先度キューをクリーンアップ（古いエントリを除去）
-        current_time = time.time()
         valid_entries = []
         for entry in self.layer_priority_queue:
             if (

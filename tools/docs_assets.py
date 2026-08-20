@@ -3,6 +3,7 @@
 Documentation generator script for creating documentation about assets.
 Generates API references, usage guides, and asset catalogs.
 """
+from __future__ import annotations
 
 import argparse
 import json
@@ -84,7 +85,7 @@ function getTileByPosition(row, col, tilesetData) {{
 """
 
                         # Add tile details if available
-                        if "tiles" in metadata and metadata["tiles"]:
+                        if metadata.get("tiles"):
                             doc_content += "\n| Index | Name | X | Y | Width | Height | U | V | U Width | V Height |\n"
                             doc_content += "|-------|------|---|---|-------|--------|---|---|---------|----------|\n"
                             for tile in metadata["tiles"][
@@ -282,9 +283,9 @@ function getKerning(fontData, char1, char2) {{
                         metrics = metadata.get("metrics", {})
                         if metrics:
                             # Group characters by type
-                            ascii_chars = [c for c in metrics.keys() if ord(c) < 128]
+                            ascii_chars = [c for c in metrics if ord(c) < 128]
                             extended_chars = [
-                                c for c in metrics.keys() if ord(c) >= 128
+                                c for c in metrics if ord(c) >= 128
                             ]
 
                             doc_content += f"""- **Total Characters**: {len(metrics)}
@@ -684,6 +685,7 @@ def generate_model_docs(model_dir: str, output_dir: str, config: dict) -> dict:
                                     elif line.startswith("f "):
                                         face_count += 1
                         except Exception:
+                            # TODO: handle exception properly
                             pass
 
                     doc_content = f"""# Model: {model_name}
@@ -1509,9 +1511,8 @@ def main():
         }
 
     # Save or output results
-    if args.output:
-        if not save_documentation(docs, args.output):
-            sys.exit(1)
+    if args.output and not save_documentation(docs, args.output):
+        sys.exit(1)
 
     if not args.summary_only:
         # Print full JSON

@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 import threading
 import time
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from feature_flags import is_enabled
 
@@ -31,13 +34,13 @@ class BGMPlayer:
             self._backend = "pygame"
             return
         except Exception:
-            pass
+            logger.exception("ロード失敗")
 
         try:
             self._backend = "simpleaudio"
             return
         except Exception:
-            pass
+            logger.exception("ロード失敗")
 
         self._backend = "none"
 
@@ -95,8 +98,8 @@ class BGMPlayer:
                         self._current_path = str(path)
                         self._volume = volume
 
-                except Exception as e:
-                    print(f"BGM playback failed: {e}")
+                except Exception:
+                    logger.exception("ロード失敗")
 
         threading.Thread(target=_play_bgm, daemon=True).start()
         return True
@@ -120,7 +123,7 @@ class BGMPlayer:
                         self._current_bgm = None
                         self._current_path = None
                 except Exception:
-                    pass
+                    logger.exception("ロード失敗")
 
         threading.Thread(target=_stop_bgm, daemon=True).start()
 

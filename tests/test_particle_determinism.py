@@ -5,6 +5,8 @@ Step 30 of Visual Obsessive Implementation Plan.
 
 from __future__ import annotations
 
+import sys
+
 import numpy as np
 
 from core.particles import (
@@ -206,8 +208,8 @@ def test_deterministic_simulation():
             if i in buf.free_list:
                 buf.free_list.remove(i)
 
-    curl1 = CurlNoise(seed=42)
-    curl2 = CurlNoise(seed=42)
+    CurlNoise(seed=42)
+    CurlNoise(seed=42)
 
     sdf1 = SDFCollision(grid_size=32, world_bounds=(-10, 10, -10, 10, -5, 15))
     sdf2 = SDFCollision(grid_size=32, world_bounds=(-10, 10, -10, 10, -5, 15))
@@ -236,8 +238,8 @@ def test_deterministic_simulation():
     buffer3 = ParticleBuffer(1000)
     buffer4 = ParticleBuffer(1000)
 
-    curl3 = CurlNoise(seed=42)
-    curl4 = CurlNoise(seed=42)
+    CurlNoise(seed=42)
+    CurlNoise(seed=42)
 
     sdf3 = SDFCollision(grid_size=32, world_bounds=(-10, 10, -10, 10, -5, 15))
     sdf4 = SDFCollision(grid_size=32, world_bounds=(-10, 10, -10, 10, -5, 15))
@@ -291,8 +293,8 @@ def test_deterministic_simulation():
     buffer5 = ParticleBuffer(1000)
     buffer6 = ParticleBuffer(1000)
 
-    curl5 = CurlNoise(seed=42)
-    curl6 = CurlNoise(seed=43)
+    CurlNoise(seed=42)
+    CurlNoise(seed=43)
 
     sdf5 = SDFCollision(grid_size=32, world_bounds=(-10, 10, -10, 10, -5, 15))
     sdf6 = SDFCollision(grid_size=32, world_bounds=(-10, 10, -10, 10, -5, 15))
@@ -370,4 +372,4 @@ def run_all_tests():
 
 if __name__ == "__main__":
     success = run_all_tests()
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

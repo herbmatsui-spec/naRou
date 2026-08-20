@@ -3,6 +3,7 @@
 Interoperability Test
 相互運用性テスト
 """
+from __future__ import annotations
 
 import json
 import subprocess
@@ -101,4 +102,4 @@ def run_interoperability_tests():
 
 if __name__ == "__main__":
     success = run_interoperability_tests()
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

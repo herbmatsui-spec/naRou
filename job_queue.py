@@ -25,7 +25,7 @@ class JobQueue:
         *,
         priority: int = 10,
         args: tuple = (),
-        kwargs: dict = None,
+        kwargs: dict | None = None,
     ) -> None:
         """Add a job to the queue.
         Args:
@@ -45,7 +45,7 @@ class JobQueue:
         """
         if not self._heap:
             raise IndexError("JobQueue is empty")
-        priority, count, func, args, kwargs = heapq.heappop(self._heap)
+        _priority, _count, func, args, kwargs = heapq.heappop(self._heap)
         return func(*args, **kwargs)
 
     def __len__(self) -> int:

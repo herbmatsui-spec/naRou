@@ -1,6 +1,7 @@
 """
 総合テストスクリプト: 実績・トロフィーシステム全72ステップの完全検証
 """
+from __future__ import annotations
 
 import os
 import sys
@@ -159,7 +160,7 @@ def test_all_72_steps_achievement_trophy_system():
     eng.player.achievements = ["first_blood"]
     save_msg = SaveSystem.save(eng)
     assert "セーブ完了" in save_msg, "Step 30 Save failed"
-    loaded_eng, load_msg = SaveSystem.load()
+    loaded_eng, _load_msg = SaveSystem.load()
     assert loaded_eng is not None and "first_blood" in loaded_eng.player.achievements, (
         "Step 31 Load failed"
     )
@@ -170,7 +171,7 @@ def test_all_72_steps_achievement_trophy_system():
     assert dungeon_exp is not None and dungeon_exp.reward_title == "dungeon_explorer", (
         "Step 32 Failed"
     )
-    eng.player.dungeon_floors_visited = set((1, i) for i in range(1, 12))
+    eng.player.dungeon_floors_visited = {(1, i) for i in range(1, 12)}
     assert mgr.check_achievement(eng.player, "dungeon_explorer", eng), "Step 35 Failed"
     print("[OK] Steps 32-35 (ダンジョン探検家実績)")
 

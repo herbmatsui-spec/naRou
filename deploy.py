@@ -31,7 +31,7 @@ STEAM_BUILD_DIR = "build/steam"
 
 
 # --- LocalizationManager integration (i18n) ---
-def localize(key: str, language: str = None, manager=None) -> str:
+def localize(key: str, language: str | None = None, manager=None) -> str:
     """Return localized text for *key* using LocalizationManager (dependency-free)."""
     from localization_manager import LocalizationManager
 

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 """Inventory all emote PNGs grouped by style."""
 
 from pathlib import Path

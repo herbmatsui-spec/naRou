@@ -1,6 +1,7 @@
 """
 総合テストスクリプト: スキル合成・進化システム全72ステップの完全検証
 """
+from __future__ import annotations
 
 import os
 import sys
@@ -210,7 +211,7 @@ def test_all_72_steps_skill_synthesis_system():
     e.skill_fusion_materials["fire_essence"] = 1
     e.skills["magic_dart"] = Skill("magic_dart", level=5)
     assert fmgr.can_fuse(e, "fireball_fusion"), "Step 34 Failed: can_fuse"
-    ok, fmsg = fmgr.fuse_skills(e, "fireball_fusion")
+    ok, _fmsg = fmgr.fuse_skills(e, "fireball_fusion")
     assert ok and "mega_fireball" in e.skills, "Step 35 Failed: fuse_skills"
     print("[OK] Steps 29-35 (skill_fusion_system.py Data/Registry/Manager)")
 

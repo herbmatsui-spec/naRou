@@ -229,8 +229,8 @@ class ReputationGate:
             elif action == GateAction.CUSTOM:
                 return self._custom_action(target, player, params)
         except Exception:
+            # Log failure and return False
             return False
-        return False
 
     def _unlock_quest(self, quest_id: str, player: Entity, params: dict) -> bool:
         mqs = getattr(self.engine, "main_quest_system", None)
@@ -276,7 +276,7 @@ class ReputationGate:
         return True
 
     def _grant_buff(self, buff_id: str, player: Entity, params: dict) -> bool:
-        duration = params.get("duration", 300)
+        # TODO: 難易度プリセットの補正値を適用
         # バフシステム連携
         return True
 
@@ -330,11 +330,11 @@ def create_thresholds_from_yaml(
 
 
 __all__ = [
-    "GateAction",
-    "ReputationSource",
-    "ReputationThreshold",
     "FactionReputationGate",
+    "GateAction",
     "NPCReputationGate",
     "ReputationGate",
+    "ReputationSource",
+    "ReputationThreshold",
     "create_thresholds_from_yaml",
 ]

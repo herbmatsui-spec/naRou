@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from typing_extensions import Self
+
 
 class WebGLManager:
     """シングルトンラッパー。
@@ -17,7 +19,7 @@ class WebGLManager:
 
     _instance: WebGLManager | None = None
 
-    def __new__(cls) -> WebGLManager:
+    def __new__(cls) -> Self:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._initialized = False

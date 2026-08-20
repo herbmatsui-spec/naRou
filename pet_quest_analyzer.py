@@ -61,8 +61,8 @@ def analyze_active_pet(player: Entity) -> PetProfile | None:
 
 
 __all__ = [
+    "PET_QUEST_ANALYZER",
     "PetProfile",
     "PetQuestAnalyzer",
-    "PET_QUEST_ANALYZER",
     "analyze_active_pet",
 ]

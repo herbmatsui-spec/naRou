@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 import yaml
+from typing_extensions import Self
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -35,7 +36,7 @@ class SkillInheritanceRegistry:
 
     _instance: SkillInheritanceRegistry | None = None
 
-    def __new__(cls) -> SkillInheritanceRegistry:
+    def __new__(cls) -> Self:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._rules = {}

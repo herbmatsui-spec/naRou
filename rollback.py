@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Rollback script for naRou project."""
 
+from __future__ import annotations
+
 import argparse
 import os
+import shlex
 import shutil
 import subprocess
 import sys
-import shlex
 
 
 def run_command(cmd, cwd=None):
@@ -33,7 +35,7 @@ def rollback_deployment(target_tag=None):
     else:
         # Rollback to previous tag
         run_command("git fetch --tags")
-        success, stdout, _ = run_command("git tag -l 'v*' --sort=-v:refname")
+        _success, stdout, _ = run_command("git tag -l 'v*' --sort=-v:refname")
         tag_list = stdout.strip().split("\n")
         if len(tag_list) > 1:
             run_command(f"git checkout {tag_list[1]}")

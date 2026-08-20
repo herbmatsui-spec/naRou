@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Tests for Proposal 8 (Synergy) and Proposal 9 (Skill Tree UI)."""
 
 import os

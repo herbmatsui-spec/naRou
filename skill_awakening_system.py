@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 import yaml
+from typing_extensions import Self
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -35,7 +36,7 @@ class SkillAwakeningRegistry:
 
     _instance: SkillAwakeningRegistry | None = None
 
-    def __new__(cls) -> SkillAwakeningRegistry:
+    def __new__(cls) -> Self:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._awakenings = {}
@@ -109,10 +110,7 @@ class SkillAwakeningManager:
                 return False
 
         # 信仰値チェック
-        if "piety" in req and player.piety < req["piety"]:
-            return False
-
-        return True
+        return not ("piety" in req and player.piety < req["piety"])
 
     def awaken_skill(
         self, player: Entity, awakening_id: str, engine: Any | None = None

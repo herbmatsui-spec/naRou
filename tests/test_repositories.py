@@ -4,6 +4,7 @@ Repository-layer test suite for Elona Masterpiece Edition (v2.0).
 Validates that every generated repository correctly indexes and queries the
 schema-validated game data exposed through DataManager.
 """
+from __future__ import annotations
 
 import os
 import sys
@@ -154,7 +155,7 @@ def test_faction_territory_index(dm):
 
 
 def test_faction_allies_rivals(dm):
-    for fid, faction in dm.factions._data.items():
+    for fid in dm.factions._data:
         allies = dm.factions.get_allies(fid)
         rivals = dm.factions.get_rivals(fid)
         assert all(a is not None for a in allies)

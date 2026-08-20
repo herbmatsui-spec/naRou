@@ -23,7 +23,8 @@ class DifficultyManager:
                 from config import get_config
 
                 difficulty = get_config("game.difficulty")
-            except Exception:  # noqa: BLE001 - 設定欠落時は None のまま
+            except ImportError:
+                # TODO: handle exception properly
                 difficulty = None
         if difficulty not in self._DEFAULTS:
             difficulty = "normal"
@@ -43,7 +44,8 @@ class DifficultyManager:
                     "enemy_hp": float(preset.get("enemy_hp", 1.0)),
                     "player_regen": float(preset.get("player_regen", 1.0)),
                 }
-        except Exception:  # noqa: BLE001, S110 - プリセット未取得時は既定値へ
+        except ImportError:
+            # TODO: handle exception properly
             pass
         return dict(self._DEFAULTS.get(difficulty, self._DEFAULTS["normal"]))
 

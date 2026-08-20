@@ -17,6 +17,7 @@ Examples:
     python tools/atlas_packer.py my_tiles assets/tiles/my_atlas \\
         --tile-size 32 --max-size 1024
 """
+from __future__ import annotations
 
 import argparse
 import csv
@@ -81,7 +82,7 @@ def pack_atlas(
     tile_size: int = 16,
     max_atlas_size: int = 2048,
     padding: int = 1,
-    directional_categories: set = None,
+    directional_categories: set | None = None,
 ) -> tuple[Image.Image, dict[str, dict[str, Any]]]:
     """Pack tiles into atlas. Returns (atlas_image, metadata_dict)."""
     if directional_categories is None:
@@ -97,7 +98,7 @@ def pack_atlas(
     group_counters = {}
 
     while i < len(tiles):
-        idx, filename, suggested_id, category = tiles[i]
+        _idx, filename, suggested_id, category = tiles[i]
         tile_path = tiles_dir / filename
 
         if not tile_path.exists():

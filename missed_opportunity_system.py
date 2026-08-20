@@ -135,12 +135,12 @@ def get_ending_modifier(entity: Entity) -> dict[str, Any]:
 
 
 __all__ = [
+    "MISSED_OPPORTUNITY_SYSTEM",
     "MissedOpportunity",
     "MissedOpportunitySystem",
-    "MISSED_OPPORTUNITY_SYSTEM",
-    "record_missed_opportunity",
-    "get_missed_opportunities",
     "clear_missed_opportunities",
-    "get_npc_dialogue_modifier",
     "get_ending_modifier",
+    "get_missed_opportunities",
+    "get_npc_dialogue_modifier",
+    "record_missed_opportunity",
 ]

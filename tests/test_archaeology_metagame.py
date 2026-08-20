@@ -3,6 +3,7 @@
 memory_fragments.yaml と story_endings.yaml を truth_codex 経由で連携し、
 「発掘→収集→解読→真理到達→解釈によるエンディング分岐」のループを検証する。
 """
+from __future__ import annotations
 
 import os
 import pickle
@@ -148,7 +149,7 @@ def test_archaeology_metagame_full_36_steps():
     print("[OK] Step 15 (ArchaeologyRegistry / ArchaeologyManager 構築)")
 
     # Step 16: 発掘ドロップ解決
-    fid, kid = mgr.resolve_excavation("goblin_ruins")
+    fid, _kid = mgr.resolve_excavation("goblin_ruins")
     assert fid in sites["goblin_ruins"]["fragment_pool"], "Step 16 Failed"
     print("[OK] Step 16 (resolve_excavation 重み付き抽選)")
 

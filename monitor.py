@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Monitoring script for naRou project."""
 
+from __future__ import annotations
+
 import argparse
 import os
+import shlex
 import subprocess
 import sys
 import time
-import shlex
 from datetime import datetime
 
 

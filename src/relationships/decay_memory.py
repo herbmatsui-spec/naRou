@@ -381,7 +381,7 @@ class MemorySystem:
         for rel_type_str, amount in influence.items():
             if amount == 0:
                 continue
-            rel_type = RelationshipType(rel_type_str)
+            RelationshipType(rel_type_str)
             self.rm.modify_relationship(
                 character_id, other_id, InteractionType.TALK, amount
             )

@@ -11,12 +11,12 @@ from debug_system import DebugConsole, UniqueItemManager, WishParser
 from save_system import SaveSystem
 
 __all__ = [
-    "ResourceNode",
-    "Recipe",
     "CRAFTING_RECIPES",
-    "try_craft",
-    "WishParser",
-    "UniqueItemManager",
     "DebugConsole",
+    "Recipe",
+    "ResourceNode",
     "SaveSystem",
+    "UniqueItemManager",
+    "WishParser",
+    "try_craft",
 ]

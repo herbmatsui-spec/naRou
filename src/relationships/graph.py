@@ -396,7 +396,7 @@ class RelationshipGraph:
         graph = cls()
 
         # ノードを復元
-        for char_id, node_data in data.get("nodes", {}).items():
+        for node_data in data.get("nodes", {}).values():
             faction_affils = {}
             for fid, aff_str in node_data.get("faction_affiliations", {}).items():
                 try:
@@ -415,7 +415,7 @@ class RelationshipGraph:
             graph.add_node(node)
 
         # エッジを復元
-        for edge_key, edge_data in data.get("edges", {}).items():
+        for edge_data in data.get("edges", {}).values():
             try:
                 rel_type = RelationshipType(edge_data["relationship_type"])
                 edge = RelationshipEdge(

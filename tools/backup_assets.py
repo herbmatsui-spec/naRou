@@ -3,6 +3,7 @@
 Asset backup script for backing up asset pipeline outputs and configurations.
 Supports full backups, incremental backups, and restoration points.
 """
+from __future__ import annotations
 
 import argparse
 import hashlib
@@ -27,6 +28,7 @@ def get_file_hash(file_path: str) -> str | None:
                 hash_md5.update(chunk)
         return hash_md5.hexdigest()
     except Exception:
+        # TODO: handle exception properly
         return None
 
 
@@ -210,7 +212,7 @@ def create_backup_rotation_policy(backup_dir: str, config: dict) -> dict:
     try:
         # Get rotation policy from config
         max_full_backups = config.get("backup", {}).get("max_full_backups", 5)
-        max_incremental_backups = config.get("backup", {}).get(
+        config.get("backup", {}).get(
             "max_incremental_backups", 20
         )
         max_age_days = config.get("backup", {}).get("max_age_days", 30)
@@ -237,6 +239,7 @@ def create_backup_rotation_policy(backup_dir: str, config: dict) -> dict:
                             manifest = json.load(f)
                         backup_time = manifest.get("backup_info", {}).get("timestamp")
                     except Exception:
+                        # TODO: handle exception properly
                         pass
 
                 # Fallback to directory modification time
@@ -279,6 +282,7 @@ def create_backup_rotation_policy(backup_dir: str, config: dict) -> dict:
                             try:
                                 backup_size += os.path.getsize(file_path)
                             except Exception:
+                                # TODO: handle exception properly
                                 pass
 
                 # Remove backup directory

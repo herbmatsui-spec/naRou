@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 """Backup management for naRou deployment."""
 
+from __future__ import annotations
+
 import argparse
 import json
+import logging
 import tarfile
 from datetime import datetime, timedelta
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 import yaml
 
@@ -219,8 +224,8 @@ class BackupManager:
         try:
             with tarfile.open(backup_path, "r:gz") as tar:
                 tar.getmembers()
-        except Exception as e:
-            print(f"Tar integrity check failed: {e}")
+        except Exception:
+            logger.exception("ロード失敗")
             return False
 
         print(f"Backup {name} verified successfully")

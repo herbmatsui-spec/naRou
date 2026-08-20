@@ -1,6 +1,7 @@
 """
 転生専用ダンジョンシステム
 """
+from __future__ import annotations
 
 import os
 from dataclasses import dataclass
@@ -144,9 +145,8 @@ class ReincarnationDungeonManager:
         # その他のアンロック条件をチェック（簡易版）
         unlock_condition = dungeon_data.unlock_condition
         for key, value in unlock_condition.items():
-            if key == "reincarnation_count":
-                if reinc_count != value:
-                    return False
+            if key == "reincarnation_count" and reinc_count != value:
+                return False
             # ここで他の条件も追加可能
 
         return True

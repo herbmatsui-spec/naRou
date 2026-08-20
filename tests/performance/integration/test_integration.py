@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Performance test suite integration."""
 
+from __future__ import annotations
+
 import time
 
 # Import all test modules

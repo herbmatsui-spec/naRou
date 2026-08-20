@@ -10,6 +10,7 @@ This script:
 
 Run manually: `python tools/convert_demos_to_template.py`
 """
+from __future__ import annotations
 
 import os
 import re

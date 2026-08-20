@@ -3,7 +3,9 @@
 Energy Consumption Performance Test
 エネルギー消費量パフォーマンステスト
 """
+from __future__ import annotations
 
+import sys
 import unittest
 
 from tools.performance_monitor import PerformanceMonitor
@@ -61,4 +63,4 @@ def run_energy_tests():
 
 if __name__ == "__main__":
     success = run_energy_tests()
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

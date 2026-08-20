@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import json
+import sys
 
 from asset_manager import ASSET_MANAGER
 from balance_tool import BALANCE_TOOL
@@ -170,4 +171,4 @@ if __name__ == "__main__":
         print("\n🎉 すべてのテストが成功しました！")
     else:
         print("\n❌ テストが失敗しました。")
-        exit(1)
+        sys.exit(1)

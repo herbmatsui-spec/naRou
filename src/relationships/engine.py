@@ -305,7 +305,7 @@ class RelationshipManager:
             return {}
 
         # 関係変更の修正子を作成
-        modifier = RelationshipModifier(
+        RelationshipModifier(
             interaction_type=interaction_type,
             amount=amount,
             multiplier=multiplier,
@@ -363,7 +363,7 @@ class RelationshipManager:
         self, source_id: str, target_id: str, relationship_type: RelationshipType
     ) -> RelationshipLevel:
         """関係レベルのカテゴリを取得"""
-        level = self.get_relationship_level(source_id, target_id, relationship_type)
+        self.get_relationship_level(source_id, target_id, relationship_type)
         edge = self.graph.get_edge(source_id, target_id, relationship_type)
         return edge.get_level_category() if edge else RelationshipLevel.NEUTRAL
 
@@ -390,7 +390,7 @@ class RelationshipManager:
         self._last_decay_check = current_time
 
         # すべてのエッジに減衰を適用
-        changes = self.graph.apply_decay_to_all(current_time)
+        self.graph.apply_decay_to_all(current_time)
 
         # 変更をキャラクターごとにグループ化
         character_changes: dict[str, dict[RelationshipType, int]] = defaultdict(dict)

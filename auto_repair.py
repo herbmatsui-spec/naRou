@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 """Auto-repair script for naRou project."""
 
+from __future__ import annotations
+
 import argparse
+import logging
 import os
 import subprocess
 import sys
 import time
+
+logger = logging.getLogger(__name__)
 
 
 def run_command(cmd, cwd=None):
@@ -86,8 +91,8 @@ def repair_config():
             with open("config.yaml") as f:
                 yaml.safe_load(f)
             print("Configuration valid")
-        except Exception as e:
-            print(f"Configuration error: {e}")
+        except Exception:
+            logger.exception("ロード失敗")
             # Restore from backup
             if os.path.exists("config.yaml.bak"):
                 import shutil
@@ -110,15 +115,15 @@ def repair_data():
         # Validate YAML files
         for root, dirs, files in os.walk("data"):
             for file in files:
-                if file.endswith(".yaml") or file.endswith(".yml"):
+                if file.endswith((".yaml", ".yml")):
                     filepath = os.path.join(root, file)
                     try:
                         import yaml
 
                         with open(filepath) as f:
                             yaml.safe_load(f)
-                    except Exception as e:
-                        print(f"Corrupted data file: {filepath} - {e}")
+                    except Exception:
+                        logger.exception("ロード失敗")
                         # Restore from backup
                         backup_dir = "backups"
                         if os.path.exists(backup_dir):
@@ -188,8 +193,8 @@ def monitor_and_repair(interval=300):
         except KeyboardInterrupt:
             print("\nAuto-repair monitor stopped")
             break
-        except Exception as e:
-            print(f"Error: {e}")
+        except Exception:
+            logger.exception("ロード失敗")
             time.sleep(interval)
 
 

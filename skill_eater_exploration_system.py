@@ -3,6 +3,7 @@ skill_eater_exploration_system.py
 Aの世界（スキル喰い） 探索・移動・環境音システム
 提案7: ダンジョン探索・足音・扉・トラップのEmote & Audio演出 (Steps 49〜56)
 """
+from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field

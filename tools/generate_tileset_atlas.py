@@ -17,6 +17,7 @@ Each tile may declare:
 The generator draws real pixel-art tiles procedurally so the pipeline never
 emits flat placeholder images.
 """
+from __future__ import annotations
 
 import argparse
 import json
@@ -464,7 +465,7 @@ def generate_tileset(
 
     # Determine grid layout (fit within max_atlas, keep it roughly square)
     n = len(slots)
-    cols = min(int(max_atlas // (tile_size + padding)), int(math.ceil(n**0.5)))
+    cols = min(int(max_atlas // (tile_size + padding)), math.ceil(n**0.5))
     cols = max(1, cols)
     rows = math.ceil(n / cols)
     atlas_w = cols * (tile_size + padding) - padding
@@ -564,7 +565,7 @@ def generate_autotile_set(
         for var in generate_tile_variants(base, tile_size, count):
             cells.append((f"{name}_var{len(cells)}", var))
 
-    cols = max(1, int(math.ceil(len(cells) ** 0.5)))
+    cols = max(1, math.ceil(len(cells) ** 0.5))
     rows = math.ceil(len(cells) / cols)
     atlas = Image.new("RGBA", (cols * tile_size, rows * tile_size), (0, 0, 0, 0))
     meta = {}
@@ -690,7 +691,7 @@ def test_tileset(
         issues.append("PNG not produced")
     if not os.path.exists(json_path):
         issues.append("JSON not produced")
-    valid, v_issues = validate_tileset_json(json_path)
+    _valid, v_issues = validate_tileset_json(json_path)
     issues.extend(v_issues)
     # Confirm every declared tile coordinate is inside the atlas bounds
     with open(json_path) as f:

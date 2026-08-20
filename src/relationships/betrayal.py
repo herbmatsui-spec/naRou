@@ -214,12 +214,11 @@ class BetrayalConflictSystem:
         """復讐トリガーをチェック"""
         # 深刻な裏切りで、クールダウン中でない場合
         current_time = time.time()
-        if victim_id in self.revenge_cooldowns:
-            if (
-                current_time - self.revenge_cooldowns[victim_id]
-                < self._config["revenge_cooldown"]
-            ):
-                return False
+        if victim_id in self.revenge_cooldowns and (
+            current_time - self.revenge_cooldowns[victim_id]
+            < self._config["revenge_cooldown"]
+        ):
+            return False
 
         # 復讐の深刻度しきい値
         if severity >= 6:
@@ -553,7 +552,7 @@ class BetrayalConflictSystem:
         # ソースの影響力（派閥所属による）
         source_node = self.graph.get_node(source_id)
         if source_node:
-            for faction_id, affiliation in source_node.faction_affiliations.items():
+            for affiliation in source_node.faction_affiliations.values():
                 if affiliation in [FactionAffiliation.LEADER, FactionAffiliation.ELDER]:
                     multiplier *= 1.3
 
@@ -642,7 +641,7 @@ class BetrayalConflictSystem:
             self.betrayal_by_victim[record.victim_id].append(record)
 
         self.conflict_records.clear()
-        for key, r_data in data.get("conflict_records", {}).items():
+        for r_data in data.get("conflict_records", {}).values():
             record = ConflictRecord(
                 party_a=r_data["party_a"],
                 party_b=r_data["party_b"],

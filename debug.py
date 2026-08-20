@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Debug script for naRou project."""
 
+from __future__ import annotations
+
 import argparse
 import os
 import subprocess
@@ -62,7 +64,7 @@ def debug_env():
 def debug_game():
     """Debug game startup."""
     print("Debugging game startup...")
-    success, stdout, stderr = run_command(
+    success, _stdout, _stderr = run_command(
         ["python", "-c", "import game; print('Game module loaded')"]
     )
     if not success:

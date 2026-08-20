@@ -8,12 +8,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import yaml
-
-if TYPE_CHECKING:
-    pass
 
 from protocols import MemoryRegistryProtocol
 
@@ -82,6 +79,7 @@ class FactionWarRegistry:
                 self._factions[fid] = faction
             self._loaded = True
         except Exception:
+            # TODO: handle exception properly
             self._loaded = True
 
     def get(self, faction_id: str) -> FactionWarData | None:
@@ -132,21 +130,18 @@ class FactionWarManager:
         if not f1 or not f2:
             return False
         # ライバル関係にあるか
-        if faction2_id in f1.rival_factions or faction1_id in f2.rival_factions:
-            return True
-        return False
+        return bool(faction2_id in f1.rival_factions or faction1_id in f2.rival_factions)
 
     def apply_influence_effects(self, faction_id: str, change: int) -> None:
         """影響力変動を適用 (Step 56)"""
         faction = self.registry.get(faction_id)
         if not faction:
             return
-        old_influence = faction.influence
         faction.influence = max(0, min(100, faction.influence + change))
 
         # Phase 2 連携：派閥影響力変動を NPC 記憶に記録
         if self.memory_registry and change != 0:
-            for npc_id, mgr in self.memory_registry.all_managers().items():
+            for mgr in self.memory_registry.all_managers().values():
                 # 同派閥 NPC に記録
                 if getattr(mgr.npc, "faction_id", None) == faction_id:
                     importance = (
@@ -176,7 +171,7 @@ class FactionWarManager:
     def get_all_faction_reputations(self, player: Entity) -> dict[str, int]:
         """全派閥評判取得（噂伝播・評判ゲート用）"""
         result = {}
-        for fid, faction in self.registry.all().items():
+        for fid in self.registry.all():
             result[fid] = self.get_faction_reputation_for_gate(player, fid)
         return result
 

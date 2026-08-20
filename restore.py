@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """Restore script for naRou project."""
 
+from __future__ import annotations
+
 import argparse
+import logging
 import os
+import shlex
 import shutil
 import subprocess
 import sys
 import tarfile
-import shlex
+
+logger = logging.getLogger(__name__)
 
 
 def run_command(cmd, cwd=None):
@@ -36,8 +41,8 @@ def restore_backup(backup_file, target_dir="."):
         try:
             with tarfile.open(backup_file, "r:gz") as tar:
                 tar.extractall(tmpdir)
-        except Exception as e:
-            print(f"Failed to extract: {e}")
+        except Exception:
+            logger.exception("ロード失敗")
             return False
 
         # Find extracted directory

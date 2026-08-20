@@ -364,7 +364,7 @@ class MetaProgressionManager:
         """メタゴールの達成状況を評価"""
         ach_comp = player.get_component(AchievementComponent)
         reinc_comp = player.get_component(ReincarnationComponent)
-        title_comp = player.get_component(TitleComponent)
+        player.get_component(TitleComponent)
 
         completed_new: list[str] = []
 

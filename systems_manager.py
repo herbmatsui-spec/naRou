@@ -61,7 +61,7 @@ class SystemManager:
 
     def initialize_all(self, engine: Any) -> None:
         """登録されている全 BaseSystem の initialize() を一括実行 (Step 14)"""
-        for name, system in self.systems.items():
+        for system in self.systems.values():
             if hasattr(system, "initialize") and callable(system.initialize):
                 try:
                     system.initialize(engine)
@@ -70,7 +70,7 @@ class SystemManager:
 
     def update_all(self, engine: Any, delta_time: float = 1.0) -> None:
         """登録されている全 BaseSystem の update() を一括実行 (Step 15)"""
-        for name, system in self.systems.items():
+        for system in self.systems.values():
             if hasattr(system, "update") and callable(system.update):
                 try:
                     system.update(engine, delta_time)

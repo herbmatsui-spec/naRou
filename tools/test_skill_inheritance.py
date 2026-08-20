@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Tests for Proposal 7: Skill Inheritance / Reincarnation Bonuses."""
 
 import os

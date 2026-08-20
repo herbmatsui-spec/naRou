@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import sys
 
@@ -40,7 +42,7 @@ def test_save_checksum_and_backup():
     assert os.path.exists(f"{SaveSystem.SAVE_PATH}.bak1")
 
     # Normal load
-    loaded, l_msg = SaveSystem.load()
+    loaded, _l_msg = SaveSystem.load()
     assert loaded is not None
     assert loaded.player.gold == 9999
 
@@ -87,7 +89,6 @@ def test_json_serialization_and_migration():
 def test_stress_turn_simulation():
     """Step 63: 高速ターン回しテスト（メモリリーク・破綻監視）"""
     eng = Engine()
-    initial_hp = eng.player.hp
     for _ in range(500):
         eng.turns += 1
         eng.systems_mgr.update_all(eng)

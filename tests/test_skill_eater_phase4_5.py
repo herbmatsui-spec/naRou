@@ -2,6 +2,7 @@
 test_skill_eater_phase4_5.py
 Phase 4 (従属・移植・AI) & Phase 5 (派閥・経済・買収) の検証テスト
 """
+from __future__ import annotations
 
 import unittest
 from pathlib import Path

@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Maintenance script for naRou project."""
 
+from __future__ import annotations
+
 import argparse
 import os
+import shlex
 import subprocess
 import sys
-import shlex
 from datetime import datetime, timedelta
 
 

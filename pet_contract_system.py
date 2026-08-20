@@ -69,6 +69,7 @@ class PetContractRegistry:
                 self._contracts[cid] = contract
             self._loaded = True
         except Exception:
+            # TODO: handle exception properly
             self._loaded = True
 
     def get(self, contract_id: str) -> PetContractData | None:

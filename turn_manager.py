@@ -95,4 +95,3 @@ class TurnQueue:
 
     def process(self, engine: Any, delta_time: float = 1.0) -> None:
         """Process turn queue update in continuous game loop."""
-        pass

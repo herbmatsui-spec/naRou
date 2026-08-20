@@ -3,8 +3,10 @@
 Network Performance Test
 ネットワークパフォーマンステスト
 """
+from __future__ import annotations
 
 import socket
+import sys
 import unittest
 
 from tools.performance_monitor import PerformanceMonitor
@@ -65,4 +67,4 @@ def run_network_tests():
 
 if __name__ == "__main__":
     success = run_network_tests()
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

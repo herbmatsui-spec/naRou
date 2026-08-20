@@ -75,6 +75,7 @@ class GuildQuestRegistry:
                     self._quests[guild_id][q_type] = quest_objs
             self._loaded = True
         except Exception:
+            # TODO: handle exception properly
             self._loaded = True
 
     def get(self, guild_id: str, quest_type: str | None = None) -> list[GuildQuestData]:
@@ -149,7 +150,7 @@ class GuildQuestManager:
 
         contrib = reward.get("contribution", 30)
         gold = reward.get("gold", 50)
-        item_name = reward.get("item")
+        reward.get("item")
 
         player.guild_contribution = getattr(player, "guild_contribution", 0) + contrib
         player.gold = getattr(player, "gold", 0) + gold

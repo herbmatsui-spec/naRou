@@ -126,7 +126,7 @@ class DebugConsole:
             from item_system import create_sample_item
 
             itm = create_sample_item(item_name)
-            ok, msg = engine.inventory.add_item(itm)
+            _ok, msg = engine.inventory.add_item(itm)
             return msg
         elif cmd == "ether":
             engine.survival.ether_disease = 0

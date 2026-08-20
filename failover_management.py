@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Failover management for naRou deployment."""
 
+from __future__ import annotations
+
 import argparse
 import json
 import time
@@ -193,7 +195,6 @@ class FailoverManager:
     def monitor(self):
         """Run one monitoring cycle."""
         current = self.state["current"]
-        target = "backup" if current == "primary" else "primary"
 
         # Check current target
         healthy, status = self.check_health(current)

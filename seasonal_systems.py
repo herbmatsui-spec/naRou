@@ -3,6 +3,7 @@
 Consolidated managers for the seasonal content pipeline proposal. These are
 tooling/process systems that operate on world-event data.
 """
+from __future__ import annotations
 
 import logging
 import time

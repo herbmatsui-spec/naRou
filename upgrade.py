@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """Upgrade script for naRou project."""
 
+from __future__ import annotations
+
 import argparse
+import logging
 import os
 import subprocess
 import sys
+
+logger = logging.getLogger(__name__)
 
 
 def run_command(cmd, cwd=None):

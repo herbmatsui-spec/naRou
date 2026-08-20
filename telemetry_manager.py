@@ -102,7 +102,8 @@ class TelemetryManager:
         if self._queue_file.exists():
             try:
                 self._queue = json.load(open(self._queue_file, encoding="utf-8"))
-            except Exception:  # noqa: BLE001
+            except Exception:
+        # TODO: handle exception properly
                 self._queue = []
 
     # ----- step 50: performance -----
@@ -124,7 +125,8 @@ class TelemetryManager:
             sentry_sdk.init(dsn=dsn, traces_sample_rate=0.1)
             self.sentry_initialized = True
             return True
-        except Exception:  # noqa: BLE001
+        except Exception:
+        # TODO: handle exception properly
             return False
 
     # ----- step 48 / 49: exception handling + crash send -----
@@ -193,7 +195,8 @@ def get_telemetry_manager() -> TelemetryManager:
         from config_manager import get_config_manager
 
         enabled = get_config_manager().get_telemetry_enabled()
-    except Exception:  # noqa: BLE001
+    except Exception:
+        # TODO: handle exception properly
         enabled = False
     mgr = TelemetryManager()
     # The flag is surfaced via config; manager itself always instantiable.

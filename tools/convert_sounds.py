@@ -3,6 +3,7 @@
 Sound conversion script for converting audio files to game-appropriate formats.
 Supports WAV to OGG/MP3 conversion, quality optimization, and metadata extraction.
 """
+from __future__ import annotations
 
 import argparse
 import json
@@ -13,7 +14,7 @@ import wave
 from pathlib import Path
 
 
-def scan_sound_files(directory: str, extensions: list[str] = None) -> list[str]:
+def scan_sound_files(directory: str, extensions: list[str] | None = None) -> list[str]:
     """Scan directory for sound files with specified extensions."""
     if extensions is None:
         extensions = [".wav", ".mp3", ".ogg", ".flac", ".aiff"]
@@ -180,7 +181,7 @@ def validate_sound(file_path: str) -> tuple[bool, list[str]]:
 
 
 def test_sounds(
-    sound_files: list[str], output_dir: str = None
+    sound_files: list[str], output_dir: str | None = None
 ) -> tuple[bool, list[str]]:
     """Step 50: Run validation tests on a list of sound files.
 
@@ -225,7 +226,7 @@ def document_sounds(sound_files: list[str], output_path: str) -> str:
     return output_path
 
 
-def log_sound_event(message: str, log_path: str = None, level: str = "INFO") -> str:
+def log_sound_event(message: str, log_path: str | None = None, level: str = "INFO") -> str:
     """Step 52: Append a timestamped log entry for a sound operation."""
     if log_path is None:
         log_path = os.path.join("assets", "logs", "sound_build.log")

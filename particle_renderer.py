@@ -30,7 +30,7 @@ class ParticleRenderer:
                 # Check if particle has a tile_id for Tiny Rogue tile rendering
                 if getattr(pt, "tile_id", None):
                     # Render using tile atlas
-                    uv = TILE_REGISTRY.get_uv(pt.tile_id, scale="tiny_rogue_16")
+                    TILE_REGISTRY.get_uv(pt.tile_id, scale="tiny_rogue_16")
                     # Draw semigraphics using the tile
                     # For now, fall back to character if tile rendering not available
                     console.print(x=vx, y=vy, string=pt.char or "•", fg=pt.color)

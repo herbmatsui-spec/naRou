@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # Basic logging configuration for naRou
 import logging
 

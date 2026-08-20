@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from PIL import Image
 
 img = Image.open("assets/tiles/tiny_rogue/tilemap_packed.png")

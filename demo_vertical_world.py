@@ -3,6 +3,7 @@
 Vertical World System デモスクリプト
 基本的な機能を示すシンプルな例
 """
+from __future__ import annotations
 
 from world_layer import WorldLayer
 from world_map_manager import WorldMapManager

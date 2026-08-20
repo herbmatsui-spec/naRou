@@ -2,6 +2,7 @@
 Generate a high quality animated GIF preview for naRou: Masterpiece Edition gameplay.
 Creates demo_gameplay.gif showing a rogue adventure loop in naRou: Masterpiece Edition.
 """
+from __future__ import annotations
 
 import math
 

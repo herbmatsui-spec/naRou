@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Simple feature flag system.
 Stores flags in memory; can be extended to load from config or env.
 """
@@ -28,7 +30,7 @@ def get_text_mode_enabled() -> bool:
 
         if get_config("accessibility.text_mode") is True:
             return True
-    except Exception:
+    except (ImportError, KeyError):
         pass
     return False
 

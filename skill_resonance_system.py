@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 import yaml
+from typing_extensions import Self
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -34,7 +35,7 @@ class SkillResonanceRegistry:
 
     _instance: SkillResonanceRegistry | None = None
 
-    def __new__(cls) -> SkillResonanceRegistry:
+    def __new__(cls) -> Self:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._sets = {}
@@ -112,4 +113,3 @@ class SkillResonanceManager:
 
     def remove_resonance_effects(self, player: Entity) -> None:
         """共鳴効果を解除 (Step 64)"""
-        pass

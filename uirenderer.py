@@ -4,7 +4,11 @@ UI Renderer Module - Handles inline UI drawing: popup text, look cursor, map leg
 
 from __future__ import annotations
 
+import logging
+
 import tcod
+
+logger = logging.getLogger(__name__)
 
 from constants import (
     COLOR_GOLD_YELLOW,
@@ -20,7 +24,6 @@ from constants import (
 from core.tiny_rogue_tiles import get_ui_tile_id
 from entity import GodInfo
 from feature_flags import is_enabled
-from map_engine import TILE_REGISTRY
 from render_context import RenderContext
 from systems import STATUS_BLEEDING
 from ui_fx_systems import GaugeBar
@@ -202,7 +205,7 @@ class UIRenderer:
         x: int,
         y: int,
         ui_type: str,
-        color: tuple[int, int, int] = None,
+        color: tuple[int, int, int] | None = None,
     ) -> int:
         """Draw a UI icon using Tiny Rogue tile if enabled, else return 0."""
         if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
@@ -211,7 +214,7 @@ class UIRenderer:
         if not tile_id:
             return 0
         try:
-            uv = TILE_REGISTRY.get_uv(tile_id, scale="tiny_rogue_16")
+            # TODO: Use UV from TILE_REGISTRY for actual tile rendering
             icon_char = ""
             if ui_type == "heart":
                 icon_char = "♥"
@@ -233,5 +236,5 @@ class UIRenderer:
                 console.print(x=x, y=y, string=icon_char, fg=color or (255, 255, 255))
             return 2  # width of icon
         except Exception:
+            logger.exception("UI アイコン描画失敗")
             return 0
-        return 0

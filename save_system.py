@@ -4,10 +4,13 @@ import base64
 import gzip
 import hashlib
 import hmac
+import logging
 import os
 import pickle
 import shutil
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from exceptions import SaveDataCorruptedError
 from migration_pipeline import DEFAULT_FIELD_FACTORIES, MigrationPipeline
@@ -31,6 +34,8 @@ class SaveSystem:
             try:
                 return base64.b64decode(key_b64)
             except Exception:
+                # Log exception and use fallback key
+                # In test environments, a deterministic fallback is acceptable
                 pass
         # Dev fallback: deterministic key from project root hash
         return hashlib.sha256(b"naRou_dev_hmac_key_fallback").digest()
@@ -64,8 +69,8 @@ class SaveSystem:
                     shutil.copy2(src, dst)
             # savegame.bin -> savegame.bin.bak1
             shutil.copy2(cls.SAVE_PATH, f"{cls.SAVE_PATH}.bak1")
-        except Exception as e:
-            print(f"[SaveSystem] Backup rotation failed: {e}")
+        except Exception:
+            logger.exception("セーブ失敗")
 
     @classmethod
     def _ensure_compatibility(cls, player: Any) -> None:
@@ -105,6 +110,7 @@ class SaveSystem:
 
             return f"セーブ完了！ ({len(compressed)} bytes, チェックサム検証済, 圧縮率{100 - int(len(compressed) / len(pickled) * 100)}%)"
         except Exception as e:
+            logger.exception("セーブ失敗")
             return f"セーブ失敗: {e}"
 
     @classmethod
@@ -175,14 +181,17 @@ class SaveSystem:
                     if os.path.exists(bak_file):
                         try:
                             shutil.copy2(bak_file, cls.SAVE_PATH)
-                            res, msg = cls.load(allow_backup_recovery=False)
+                            res, _msg = cls.load(allow_backup_recovery=False)
                             if res is not None:
                                 return (
                                     res,
                                     f"【警告】セーブデータ破損のため、バックアップ(世代{i})から復旧しました。",
                                 )
                         except Exception:
+                            # Log backup load failure and continue to next backup
+                            logger.exception("ロード失敗")
                             continue
+            logger.exception("ロード失敗")
             return None, f"ロード失敗: {e}"
 
     # ==========================================
@@ -298,8 +307,9 @@ class SaveSystem:
             with open(target_path, "w", encoding="utf-8") as f:
                 json.dump(payload, f, ensure_ascii=False, indent=2)
             return f"JSONセーブ完了！ ({target_path}, SHA256: {checksum[:8]}...)"
-        except Exception as e:
-            return f"JSONセーブ失敗: {e}"
+        except Exception:
+            logger.exception("セーブ失敗")
+            return "JSONセーブ失敗"
 
     @classmethod
     def load_json(cls, file_path: str | None = None) -> tuple[Any | None, str]:
@@ -329,8 +339,9 @@ class SaveSystem:
 
             engine = cls.deserialize_dict_to_engine(dict_data)
             return engine, "JSONロード完了！ ゲームが正常に復元されました。"
-        except Exception as e:
-            return None, f"JSONロード失敗: {e}"
+        except Exception:
+            logger.exception("ロード失敗")
+            return None, "JSONロード失敗"
 
     @classmethod
     def convert_pickle_to_json(cls) -> str:

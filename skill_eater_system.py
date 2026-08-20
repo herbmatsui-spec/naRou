@@ -2,11 +2,12 @@
 skill_eater_system.py
 Aの世界（スキル喰い）コアデータ構造および管理システム
 """
+from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
@@ -33,7 +34,7 @@ class SkillEffect:
     params: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "SkillEffect":
+    def from_dict(cls, data: dict[str, Any]) -> SkillEffect:
         data_copy = dict(data)
         effect_type = data_copy.pop("type", "Unknown")
         target = data_copy.pop("target", "Self")
@@ -57,7 +58,7 @@ class SkillDef:
     is_encrypted: bool = False
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "SkillDef":
+    def from_dict(cls, data: dict[str, Any]) -> SkillDef:
         tier_val = SkillTier(data.get("tier", "Common"))
         type_val = SkillType(data.get("type", "Passive"))
         effects_data = data.get("effects", [])
@@ -94,13 +95,13 @@ class SkillDef:
 
 
 class SkillEaterRegistry:
-    _instance: Optional["SkillEaterRegistry"] = None
+    _instance: SkillEaterRegistry | None = None
 
     def __init__(self):
         self._skills: dict[str, SkillDef] = {}
 
     @classmethod
-    def get_instance(cls) -> "SkillEaterRegistry":
+    def get_instance(cls) -> SkillEaterRegistry:
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance

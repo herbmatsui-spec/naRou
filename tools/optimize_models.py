@@ -3,6 +3,7 @@
 3D model optimization script for optimizing game models.
 Supports model scanning, optimization, compression, and format conversion.
 """
+from __future__ import annotations
 
 import argparse
 import json
@@ -12,7 +13,7 @@ import time
 from pathlib import Path
 
 
-def scan_3d_models(directory: str, extensions: list[str] = None) -> list[str]:
+def scan_3d_models(directory: str, extensions: list[str] | None = None) -> list[str]:
     """Scan directory for 3D model files with specified extensions."""
     if extensions is None:
         extensions = [
@@ -94,6 +95,7 @@ def parse_stl_metadata(file_path: str) -> dict:
 
                 return {"vertex_count": vertex_count, "face_count": face_count}
     except Exception:
+        # TODO: handle exception properly
         pass
 
     return {"vertex_count": 0, "face_count": 0}

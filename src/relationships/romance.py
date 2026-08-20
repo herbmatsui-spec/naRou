@@ -595,7 +595,7 @@ class RomanceMechanics:
         self.romance_states.clear()
         self._romance_stats = data.get("stats", self._romance_stats)
 
-        for key, state_data in data.get("romance_states", {}).items():
+        for state_data in data.get("romance_states", {}).values():
             couple_id = tuple(state_data["couple_id"])
             state = RomanceState(
                 couple_id=couple_id,

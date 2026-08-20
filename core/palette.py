@@ -4,6 +4,8 @@ Provides consistent color definitions between web and tcod rendering.
 """
 
 # RGB Color tuple for tcod (values 0-255)
+from __future__ import annotations
+
 RGB = tuple[int, int, int]
 
 # Terminal 16-color palette generated from design_tokens.json (Step 11/12).

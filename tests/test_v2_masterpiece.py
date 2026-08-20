@@ -2,6 +2,7 @@
 Test suite for Elona Masterpiece Edition (v2.0)
 Validates DataManager, AdvancedAISystem, and Canvas Web API data serialization.
 """
+from __future__ import annotations
 
 import os
 import sys

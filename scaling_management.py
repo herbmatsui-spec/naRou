@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Scaling management for naRou deployment."""
 
+from __future__ import annotations
+
 import argparse
 import json
 import time
@@ -157,7 +159,7 @@ class ScalingManager:
         """Auto-scale based on metrics."""
         cpu_percent = metrics.get("cpu_percent", 0)
         memory_percent = metrics.get("memory_percent", 0)
-        request_rate = metrics.get("request_rate", 0)
+        metrics.get("request_rate", 0)
 
         current = self.get_current_replicas()
         min_replicas = self.config["horizontal"]["min_replicas"]

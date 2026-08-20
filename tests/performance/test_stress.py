@@ -3,7 +3,9 @@
 Stress Test
 ストレステスト
 """
+from __future__ import annotations
 
+import sys
 import threading
 import time
 import unittest
@@ -87,4 +89,4 @@ def run_stress_tests():
 
 if __name__ == "__main__":
     success = run_stress_tests()
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

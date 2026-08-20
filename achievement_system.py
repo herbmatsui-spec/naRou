@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 import yaml
+from typing_extensions import Self
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -48,7 +49,7 @@ class AchievementRegistry:
 
     _instance: AchievementRegistry | None = None
 
-    def __new__(cls) -> AchievementRegistry:
+    def __new__(cls) -> Self:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._achievements = {}
@@ -269,7 +270,7 @@ class AchievementManager:
     ) -> list[str]:
         """全未達成実績を一括チェックして付与"""
         granted = []
-        for ach_id in self.registry.all().keys():
+        for ach_id in self.registry.all():
             if ach_id not in player.achievements:
                 if self.check_achievement(player, ach_id, engine):
                     if self.grant_achievement(player, ach_id, engine):

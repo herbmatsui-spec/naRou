@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Failover script for naRou project."""
 
+from __future__ import annotations
+
 import argparse
 import subprocess
 import sys
@@ -30,6 +32,7 @@ def check_health(endpoint="http://localhost:8080/health"):
         response = requests.get(endpoint, timeout=5)
         return response.status_code == 200
     except Exception:
+        # TODO: handle exception properly
         return False
 
 

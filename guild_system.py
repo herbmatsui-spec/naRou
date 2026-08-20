@@ -69,6 +69,7 @@ class GuildRegistry:
                     )
                     self._guilds[gid] = guild
             except Exception:
+                # TODO: handle exception properly
                 pass
 
         p_rewards = Path(rewards_path)
@@ -78,6 +79,7 @@ class GuildRegistry:
                     data = yaml.safe_load(f) or {}
                 self._rewards = data.get("guild_rewards", {})
             except Exception:
+                # TODO: handle exception properly
                 pass
 
         self._loaded = True
@@ -111,9 +113,7 @@ class GuildManager:
         guild = self.registry.get(guild_id)
         if not guild:
             return False
-        if self.get_guild_members_count(guild_id) >= guild.max_members:
-            return False
-        return True
+        return not self.get_guild_members_count(guild_id) >= guild.max_members
 
     def join_guild(self, player: Entity, guild_id: str) -> bool:
         """ギルドに加入 (Step 21)"""
@@ -197,13 +197,12 @@ class GuildManager:
                     if (
                         hasattr(player, "_base_attributes")
                         and player._base_attributes is not None
-                    ):
-                        if hasattr(player._base_attributes, attr):
-                            setattr(
-                                player._base_attributes,
-                                attr,
-                                getattr(player._base_attributes, attr) + bonus,
-                            )
+                    ) and hasattr(player._base_attributes, attr):
+                        setattr(
+                            player._base_attributes,
+                            attr,
+                            getattr(player._base_attributes, attr) + bonus,
+                        )
                 player.recalculate_stats()
 
             elif rtype == "skill_unlock" and isinstance(rval, str):

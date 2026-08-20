@@ -3,6 +3,7 @@
 Asset deployment script for deploying processed assets to target environments.
 Supports various deployment targets including local directories, FTP, and packaging.
 """
+from __future__ import annotations
 
 import argparse
 import json
@@ -73,8 +74,8 @@ def deploy_to_sftp(
     username: str,
     remote_path: str,
     port: int = 22,
-    password: str = None,
-    key_file: str = None,
+    password: str | None = None,
+    key_file: str | None = None,
 ) -> bool:
     """Deploy assets via SFTP."""
     try:
@@ -141,7 +142,7 @@ def deploy_to_ftp(
     username: str,
     remote_path: str,
     port: int = 21,
-    password: str = None,
+    password: str | None = None,
 ) -> bool:
     """Deploy assets via FTP."""
     try:

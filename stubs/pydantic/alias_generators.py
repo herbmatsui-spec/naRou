@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Stub for pydantic.alias_generators.to_camel"""
 
 

@@ -3,6 +3,7 @@
 Performance Validator Tool
 パフォーマンス検証ツール
 """
+from __future__ import annotations
 
 import json
 import os
@@ -34,10 +35,11 @@ class PerformanceValidator:
         try:
             result = func(*args, **kwargs)
             success = True
-        except Exception as e:
+        except Exception:
+            # TODO: handle exception properly
             result = None
             success = False
-            raise e
+            raise
         finally:
             end_time = time.time()
             self.monitor.stop()
@@ -156,13 +158,12 @@ class PerformanceValidator:
         failed_criteria = []
 
         # 実行時間目標チェック
-        if "max_execution_time" in target_criteria:
-            if (
-                validation_result["execution_time"]
-                > target_criteria["max_execution_time"]
-            ):
-                target_met = False
-                failed_criteria.append("max_execution_time")
+        if "max_execution_time" in target_criteria and (
+            validation_result["execution_time"]
+            > target_criteria["max_execution_time"]
+        ):
+            target_met = False
+            failed_criteria.append("max_execution_time")
 
         # CPU使用率目標チェック
         if "max_cpu_percent" in target_criteria:
@@ -516,7 +517,7 @@ def main():
 
     # レポート生成
     print("\nGenerating report...")
-    report = validator.generate_report()
+    validator.generate_report()
     print("Report generated successfully")
 
     # アーティファクト化

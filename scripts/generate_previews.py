@@ -6,9 +6,10 @@ Generates HTML preview pages for tiny rogue tiles, audio, and emote assets.
 
 from __future__ import annotations
 
-import json
-import yaml
 from pathlib import Path
+
+import yaml
+
 from asset_manager import ASSET_MANAGER
 
 
@@ -124,7 +125,7 @@ def generate_audio_preview(output_path: Path) -> None:
         for entry in sorted(entries, key=lambda x: x['filename']):
             filename = entry['filename']
             suggested = entry.get('suggested_id', '')
-            stem = filename.replace('.ogg', '').replace('.wav', '')
+            filename.replace('.ogg', '').replace('.wav', '')
             audio_path = f"assets/audio/{filename}"
             html += f'''
             <div class="audio-row">

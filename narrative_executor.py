@@ -493,10 +493,9 @@ class NarrativeExecutor:
                 if edge.edge_type in (
                     NarrativeEdgeType.AUTO,
                     NarrativeEdgeType.CONDITION_TRUE,
-                ):
-                    if edge.is_available(context):
-                        auto_edge = edge
-                        break
+                ) and edge.is_available(context):
+                    auto_edge = edge
+                    break
 
             if not auto_edge:
                 break  # 自動遷移なし = ここで停止
@@ -549,6 +548,7 @@ class NarrativeExecutor:
             self._active_states[player_id] = state
             return True
         except Exception:
+            # If deserialization fails, indicate failure
             return False
 
     def force_transition(self, player: Entity, target_node_id: str) -> list[str]:
@@ -585,7 +585,7 @@ NARRATIVE_EXECUTOR = NarrativeExecutor()
 
 
 __all__ = [
-    "NarrativeState",
-    "NarrativeExecutor",
     "NARRATIVE_EXECUTOR",
+    "NarrativeExecutor",
+    "NarrativeState",
 ]

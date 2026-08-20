@@ -14,6 +14,8 @@ import random
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Self
+
 if TYPE_CHECKING:
     from entity import Entity
     from game import Engine
@@ -210,7 +212,7 @@ class QuestGenerationRegistry:
 
     _instance: QuestGenerationRegistry | None = None
 
-    def __new__(cls) -> QuestGenerationRegistry:
+    def __new__(cls) -> Self:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._archetypes: dict[str, QuestArchetype] = {}
@@ -255,14 +257,14 @@ class QuestGenerationRegistry:
                         pet_data = yaml.safe_load(f) or {}
                     self._pet_quest_templates = pet_data.get("pet_quest_templates", {})
                 except Exception:
+                    # TODO: handle exception properly
                     self._pet_quest_templates = {}
-            else:
-                self._pet_quest_templates = {}
             qg = raw.get("quest_generation", {})
             self._build(qg)
+            self._loaded = True
         except Exception:
+            # TODO: handle exception properly
             self._load_fallback()
-        self._loaded = True
 
     def _build(self, qg: dict[str, Any]) -> None:
         for aid, a in (qg.get("archetypes") or {}).items():
@@ -519,7 +521,7 @@ class ProceduralQuestGenerator:
         if archetype.objective_type == "explore":
             val *= setting.depth_modifier
         val *= setting.environmental_modifier
-        count = max(1, int(round(val * rng.uniform(0.9, 1.1))))
+        count = max(1, round(val * rng.uniform(0.9, 1.1)))
         return count
 
     def _build_objective(
@@ -646,12 +648,12 @@ class ProceduralQuestGenerator:
         if difficulty is None:
             return None
         # 報酬をデフォルトから選択
-        reward_id = list(self._rewards.keys())[0] if self._rewards else "gold"
+        reward_id = next(iter(self._rewards.keys())) if self._rewards else "gold"
         reward = self.get_reward(reward_id)
         if reward is None:
             return None
         # 舞台をデフォルトから選択
-        setting_id = list(self._settings.keys())[0] if self._settings else "forest"
+        setting_id = next(iter(self._settings.keys())) if self._settings else "forest"
         setting = self.get_setting(setting_id)
         if setting is None:
             return None
@@ -796,6 +798,7 @@ class ProceduralQuestGenerator:
                 gen = ProceduralDungeonGenerator(DT_REG)
                 theme = gen.select_theme_by_story(player)
         except Exception:
+            # TODO: handle exception properly
             theme = None
 
         setting = None
@@ -875,7 +878,8 @@ class ProceduralQuestGenerator:
                 spec_id, quest_id, player, objective_mapping
             )
         except Exception:
-            # パイプライン失敗時はフォールバック
+        # TODO: handle exception properly
+        # パイプライン失敗時はフォールバック
             return self.generate_dungeon_quest(player, seed)
 
         generated = result["generated"]
@@ -971,6 +975,7 @@ class ProceduralQuestGenerator:
 
                     return build_dungeon_spec_from_yaml(spec_data)
         except Exception:
+            # TODO: handle exception properly
             pass
         return None
 
@@ -1035,7 +1040,7 @@ class ProceduralQuestGenerator:
             return None  # Step 21: 深度上限で打ち切り
         if seed is None:
             seed = random.randint(0, 10**9)
-        rng = self._seeded_rng("chain", parent.chain_id or parent.quest_id, seed)
+        self._seeded_rng("chain", parent.chain_id or parent.quest_id, seed)
 
         # 難易度・報酬のエスカレーション (Step 17)
         diff_order = self.registry.difficulty_order()
@@ -1121,6 +1126,7 @@ class ProceduralQuestGenerator:
 
             return RelationshipManager(REL_REG).get_relationship_level(player, npc_id)
         except Exception:
+            # TODO: handle exception properly
             rels = getattr(player, "character_relationships", {})
             return int((rels.get(npc_id, {}) or {}).get("trust", 0) // 30)
 
@@ -1252,14 +1258,13 @@ class ProceduralQuestManager:
                 if (
                     obj.target_type == event_type
                     and obj.current_count < obj.required_count
-                ):
-                    if obj.target_id == target_id or _target_matches(
-                        obj.target_id, n_target
-                    ):
-                        obj.current_count = min(
-                            obj.required_count, obj.current_count + amount
-                        )
-                        changed = True
+                ) and (obj.target_id == target_id or _target_matches(
+                    obj.target_id, n_target
+                )):
+                    obj.current_count = min(
+                        obj.required_count, obj.current_count + amount
+                    )
+                    changed = True
             if changed:
                 qd.clear()
                 qd.update(quest.to_dict())
@@ -1297,12 +1302,14 @@ class ProceduralQuestManager:
         try:
             player.job_exp = getattr(player, "job_exp", 0) + exp
         except Exception:
+            # TODO: handle exception properly
             pass
         try:
             if hasattr(player, "inventory") and items:
                 for it in items:
                     player.inventory.add_item(it, 1)
         except Exception:
+            # TODO: handle exception properly
             pass
         fame = int(bonus.get("fame", 0))
         rel_bonus = int(bonus.get("relationship", 0))
@@ -1313,6 +1320,7 @@ class ProceduralQuestManager:
                     getattr(player, "guild_contribution", 0) + fame
                 )
             except Exception:
+                # TODO: handle exception properly
                 pass
         if rel_bonus and quest.npc_id:
             try:
@@ -1327,6 +1335,7 @@ class ProceduralQuestManager:
                     delta_mood=rel_bonus * 3,
                 )
             except Exception:
+                # TODO: handle exception properly
                 rels = getattr(player, "character_relationships", {})
                 cur = rels.get(quest.npc_id, {"trust": 0, "mood": 0})
                 cur["trust"] = cur.get("trust", 0) + rel_bonus * 5
@@ -1339,6 +1348,7 @@ class ProceduralQuestManager:
                     player.meta_progression.get("points", 0) + meta
                 )
             except Exception:
+                # TODO: handle exception properly
                 pass
 
         comp.accepted_quests = [

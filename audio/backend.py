@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 import threading
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 # Try to import simpleaudio
 try:
@@ -47,7 +50,7 @@ class AudioBackend:
                 self._backend = "pygame"
                 return
             except Exception:
-                pass
+                logger.exception("ロード失敗")
         if HAS_SIMPLEAUDIO:
             self._backend = "simpleaudio"
             return
@@ -79,8 +82,8 @@ class AudioBackend:
                     wave_obj = sa.WaveObject.from_wave_file(str(path))
                     self._sounds[sound_id] = wave_obj
             return True
-        except Exception as e:
-            print(f"Failed to load sound {sound_id}: {e}")
+        except Exception:
+            logger.exception("ロード失敗")
             return False
 
     def play_sound(
@@ -107,8 +110,8 @@ class AudioBackend:
                         p for p in self._play_objects if p.is_playing()
                     ]
             return True
-        except Exception as e:
-            print(f"Failed to play sound {sound_id}: {e}")
+        except Exception:
+            logger.exception("ロード失敗")
             return False
 
     def play_bgm(
@@ -149,8 +152,8 @@ class AudioBackend:
                     self._current_bgm_path = str(path)
                     self._bgm_volume = volume
             return True
-        except Exception as e:
-            print(f"Failed to play BGM {filepath}: {e}")
+        except Exception:
+            logger.exception("ロード失敗")
             return False
 
     def stop_bgm(self, fade_out: float = 1.0) -> bool:
@@ -170,6 +173,7 @@ class AudioBackend:
                     self._current_bgm_path = None
             return True
         except Exception:
+            logger.exception("ロード失敗")
             return False
 
     def set_master_volume(self, volume: float):

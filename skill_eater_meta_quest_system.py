@@ -5,9 +5,10 @@ Phase 6 (クエスト＆改善案5: 複数解法メタ特効)
 Phase 7 (改善案6: コスト消費型法則書き換え) + 演出 (Steps 60, 61: emote_exclamations/stars + bookFlip3, metalPot3)
 Phase 8 (改善案7: 世界の初期値変動＆輪廻転生) + 演出 (Steps 62, 63: emote_cross/heart + doorClose_3, bookClose, doorOpen_2)
 """
+from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 from skill_eater_audio_system import SkillEaterAudioSystem
 from skill_eater_presentation_system import (
@@ -21,7 +22,7 @@ from skill_eater_system import CharacterState, SkillEaterRegistry, SkillTier
 
 
 class GlobalRuleEngine:
-    _instance: Optional["GlobalRuleEngine"] = None
+    _instance: GlobalRuleEngine | None = None
 
     def __init__(
         self,
@@ -40,7 +41,7 @@ class GlobalRuleEngine:
         self.override_count: int = 0
 
     @classmethod
-    def get_instance(cls) -> "GlobalRuleEngine":
+    def get_instance(cls) -> GlobalRuleEngine:
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance

@@ -3,6 +3,7 @@
 Log management script for the asset pipeline.
 Handles log rotation, analysis, archiving, and reporting.
 """
+from __future__ import annotations
 
 import argparse
 import gzip
@@ -158,7 +159,7 @@ def analyze_logs(log_dir: str, hours: int = 24) -> dict:
         log_files = []
         for root, dirs, files in os.walk(log_dir):
             for file in files:
-                if file.endswith(".log") or file.endswith(".log.gz"):
+                if file.endswith((".log", ".log.gz")):
                     log_files.append(os.path.join(root, file))
 
         # Process each log file
@@ -207,6 +208,7 @@ def analyze_logs(log_dir: str, hours: int = 24) -> dict:
                                     }
                                 hourly_counts[hour_key]["total"] += 1
                             except Exception:
+                                # TODO: handle exception properly
                                 pass  # If timestamp parsing fails, skip timeline tracking
 
                         # Count log levels
@@ -298,7 +300,7 @@ def archive_logs(
         files_to_archive = []
         for root, dirs, files in os.walk(log_dir):
             for file in files:
-                if file.endswith(".log") or file.endswith(".log.gz"):
+                if file.endswith((".log", ".log.gz")):
                     file_path = os.path.join(root, file)
                     if os.path.getmtime(file_path) < cutoff_time:
                         files_to_archive.append(file_path)
@@ -360,7 +362,7 @@ def clear_old_logs(log_dir: str, days: int = 30, dry_run: bool = False) -> dict:
         old_files = []
         for root, dirs, files in os.walk(log_dir):
             for file in files:
-                if file.endswith(".log") or file.endswith(".log.gz"):
+                if file.endswith((".log", ".log.gz")):
                     file_path = os.path.join(root, file)
                     if os.path.getmtime(file_path) < cutoff_time:
                         old_files.append(file_path)

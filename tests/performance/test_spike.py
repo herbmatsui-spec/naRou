@@ -3,7 +3,9 @@
 Spike Test
 スパイクテスト
 """
+from __future__ import annotations
 
+import sys
 import threading
 import time
 import unittest
@@ -97,7 +99,7 @@ class TestSpikePerformance(unittest.TestCase):
         for _ in range(10):
             latency_task()
 
-        normal_avg = sum(latencies) / len(latencies)
+        sum(latencies) / len(latencies)
         latencies.clear()
 
         # スパイク負荷実行中にレイテンシ測定
@@ -127,4 +129,4 @@ def run_spike_tests():
 
 if __name__ == "__main__":
     success = run_spike_tests()
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

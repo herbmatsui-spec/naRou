@@ -1,6 +1,7 @@
 """
 特典継承システム
 """
+from __future__ import annotations
 
 import os
 from dataclasses import dataclass
@@ -45,6 +46,7 @@ class InheritanceRegistry:
                     always_keep = inh.get("always_keep", [])
                     selective_rules = inh.get("selective_keep", {})
             except Exception:
+                # TODO: handle exception properly
                 pass
 
         default_data = InheritanceData(
