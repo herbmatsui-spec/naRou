@@ -32,6 +32,7 @@ class TileRegistry:
         self.defs: Dict[str, Any] = {}
         self.atlas_16_meta: Dict[str, Any] = {}
         self.atlas_32_meta: Dict[str, Any] = {}
+        self.atlas_tiny_rogue_meta: Dict[str, Any] = {}
         self.tile_size: int = 16
         self._load_definitions()
         self._load_atlas_metadata()
@@ -72,6 +73,12 @@ class TileRegistry:
         if meta_32_path.exists():
             with open(meta_32_path) as f:
                 self.atlas_32_meta = json.load(f)
+        
+        # Load tiny_rogue_16 metadata
+        meta_tr_path = atlas_dir / "tileset_tiny_rogue_16x16.json"
+        if meta_tr_path.exists():
+            with open(meta_tr_path) as f:
+                self.atlas_tiny_rogue_meta = json.load(f)
     
     def get_uv(self, tile_id: str, variant: int = 0, scale: str = "16") -> Tuple[int, int, int, int]:
         """
@@ -80,19 +87,34 @@ class TileRegistry:
         Args:
             tile_id: The tile identifier (e.g., "TILE_WALL")
             variant: Variant index for tiles with multiple variants
-            scale: Either "16" or "32" for tile scale
+            scale: Either "16", "32", or "tiny_rogue_16" for tile scale
             
         Returns:
             Tuple of (x, y, width, height) in atlas pixels
         """
+        # Check feature flag for tiny_rogue_16
+        if scale == "tiny_rogue_16":
+            try:
+                from feature_flags import is_enabled
+                if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
+                    scale = "16"  # Fall back to standard 16x16
+            except ImportError:
+                pass
+        
         # Select appropriate atlas metadata
-        atlas_meta = self.atlas_16_meta if scale == "16" else self.atlas_32_meta
+        if scale == "32":
+            atlas_meta = self.atlas_32_meta
+            tile_size = 32
+        elif scale == "tiny_rogue_16":
+            atlas_meta = self.atlas_tiny_rogue_meta
+            tile_size = 16
+        else:
+            atlas_meta = self.atlas_16_meta
+            tile_size = 16
         
         # If we don't have metadata, fall back to procedural generation
         if not atlas_meta:
-            tile_size = 16 if scale == "16" else 32
             # Simple fallback: assume tiles are in a grid
-            # This is just for backward compatibility during transition
             idx = hash(tile_id) % 256  # Simple hash to get consistent position
             cols = 16
             x = (idx % cols) * tile_size
@@ -110,7 +132,6 @@ class TileRegistry:
         file_key = tile_def["file"]
         if "tiles" not in atlas_meta or file_key not in atlas_meta["tiles"]:
             # Fallback: calculate position based on hash
-            tile_size = 16 if scale == "16" else 32
             idx = hash(tile_id + file_key) % 256
             cols = 16
             x = (idx % cols) * tile_size

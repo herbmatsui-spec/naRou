@@ -109,6 +109,10 @@ class MeleeAttackAction(BehaviorNode):
 
         dmg, is_crit, msg = CombatSystem.calculate_melee_attack(actor, target, None)
         target.hp -= dmg
+        
+        # Publish damage event for FX (blood splatter, etc.)
+        CombatSystem.publish_damage_event(engine.event_bus, dmg, target.x, target.y, is_crit, target.hp <= 0)
+        
         engine.log(msg, (255, 120, 120) if target == engine.player else (220, 220, 220))
         SoundManager.play_se("hit")
 
@@ -123,6 +127,8 @@ class MeleeAttackAction(BehaviorNode):
                 engine.log(f"{target.name} は力尽きて倒れた！", (255, 100, 100))
             else:
                 engine._on_kill(target)
+                # Publish kill event for FX
+                CombatSystem.publish_kill_event(engine.event_bus, target.x, target.y)
 
         actor.energy -= ENERGY_THRESHOLD
         return True

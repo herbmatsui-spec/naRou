@@ -9,6 +9,8 @@ import math
 from typing import List, Tuple, Optional, Any
 from ui_fx_systems import FloatingText, Particle, ScreenShake
 from core_framework import EventBus
+from core.tiny_rogue_tiles import get_effect_tile_id
+from feature_flags import is_enabled
 
 
 class FXManager:
@@ -36,9 +38,14 @@ class FXManager:
         x = data.get("x", 0)
         y = data.get("y", 0)
         is_crit = data.get("is_crit", False)
+        is_kill = data.get("is_kill", False)
         
         color = (255, 230, 80) if is_crit else (255, 100, 100)
         self.add_floating_text(f"-{dmg}", x, y - 0.2, color)
+        
+        # Spawn blood splatter using TR_DECOR_BLOOD (or TR_DECOR_10) tile
+        if is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            self.spawn_blood_splatter(x, y, is_crit=is_crit, is_kill=is_kill)
         
         if is_crit:
             # 衝撃方向を計算 (攻撃側から対象側へ)
@@ -55,6 +62,10 @@ class FXManager:
         y = data.get("y", 0)
         self.trigger_shake(intensity=1.2, duration=3)
         self.spawn_explosion(x, y, count=3)
+        
+        # Spawn blood pool on kill
+        if is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            self.spawn_blood_pool(x, y)
 
     def _on_trap_triggered(self, data: Any) -> None:
         if not isinstance(data, dict):
@@ -64,6 +75,41 @@ class FXManager:
         y = data.get("y", 0)
         self.trigger_shake(intensity=1.0, duration=3)
         self.add_floating_text(f"-{dmg}", x, y - 0.2, (255, 80, 80))
+
+    def spawn_blood_splatter(self, x: float, y: float, is_crit: bool = False, is_kill: bool = False) -> None:
+        """Spawn blood splatter using TR_DECOR_BLOOD (TR_DECOR_10) tile."""
+        # Use tile effect for blood - spawn at impact point
+        self.spawn_tile_effect(x, y, "blood", count=1)
+        # Also add some directional blood particles for crit/kill
+        if is_crit or is_kill:
+            for angle in range(0, 360, 90):
+                rad = math.radians(angle)
+                self.spawn_tile_effect(
+                    x + math.cos(rad) * 0.5, 
+                    y + math.sin(rad) * 0.5, 
+                    "blood", 
+                    count=1,
+                    vx=math.cos(rad) * 0.1,
+                    vy=math.sin(rad) * 0.1,
+                    life=8
+                )
+
+    def spawn_blood_pool(self, x: float, y: float) -> None:
+        """Spawn a persistent blood pool using TR_DECOR_BLOOD tile at the kill location."""
+        # Spawn a larger blood pool that stays on the ground
+        self.spawn_tile_effect(x, y, "blood", count=1, vx=0, vy=0, life=120)
+        # Add some surrounding splatter
+        for angle in range(0, 360, 60):
+            rad = math.radians(angle)
+            self.spawn_tile_effect(
+                x + math.cos(rad) * 0.8, 
+                y + math.sin(rad) * 0.8, 
+                "blood", 
+                count=1,
+                vx=0,
+                vy=0,
+                life=60
+            )
 
     def add_floating_text(self, text: str, x: float, y: float, color: Tuple[int, int, int]) -> None:
         self.floating_texts.append(FloatingText(text, x, y, color))
@@ -82,8 +128,8 @@ class FXManager:
                 )
             )
 
-    def trigger_shake(self, intensity: float = 1.0, duration: int = 3) -> None:
-        self.screen_shake.trigger(intensity=intensity, duration=duration)
+    def trigger_shake(self, intensity: float = 1.0, duration: int = 3, direction: Tuple[float, float] = (0.0, 0.0)) -> None:
+        self.screen_shake.trigger(intensity=intensity, duration=duration, direction=direction)
 
     def trigger_hit_stop(self, duration: int = 4) -> None:
         """攻撃命中時の瞬間停止をトリガー"""
@@ -152,6 +198,106 @@ class FXManager:
                     vy=random.uniform(-speed_range[1], speed_range[1])
                 )
             )
+
+    # --- Tiny Rogue Tile-based Effects ---
+    
+    def spawn_tile_effect(self, x: float, y: float, effect_type: str, count: int = 1, **kwargs) -> None:
+        """
+        Spawn particles using Tiny Rogue TR_EFFECT_* tiles.
+        Uses the new asset pack when ENABLE_TINY_ROGUE_GFX is enabled.
+        
+        Args:
+            x, y: World coordinates
+            effect_type: One of 'magic_cast', 'fire', 'ice', 'lightning', 'poison', 
+                        'heal', 'teleport', 'explosion', 'sparkle', 'smoke', 'slash', 'shockwave'
+            count: Number of particles to spawn
+            **kwargs: Additional Particle kwargs (vx, vy, life, etc.)
+        """
+        if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            # Fallback to existing particle methods
+            fallback_map = {
+                "fire": lambda: self.spawn_material_particles(x, y, "default", count),
+                "ice": lambda: self.spawn_material_particles(x, y, "crystal", count),
+                "magic_cast": lambda: self.spawn_emotion_particles(x, y, "happy"),
+                "heal": lambda: self.spawn_emotion_particles(x, y, "happy"),
+                "explosion": lambda: self.spawn_explosion(x, y, count),
+                "slash": lambda: self.spawn_shockwave(x, y, (255, 100, 100)),
+            }
+            fallback_map.get(effect_type, lambda: None)()
+            return
+        
+        tile_id = get_effect_tile_id(effect_type)
+        
+        for _ in range(count):
+            self.particles.append(
+                Particle(
+                    char="",  # Empty char - will be rendered via tile
+                    x=x,
+                    y=y,
+                    color=kwargs.get("color", (255, 255, 255)),
+                    life=kwargs.get("life", 5),
+                    vx=kwargs.get("vx", random.uniform(-0.3, 0.3)),
+                    vy=kwargs.get("vy", random.uniform(-0.3, 0.3)),
+                    tile_id=tile_id,  # Store tile ID for rendering
+                )
+            )
+
+    def spawn_magic_cast(self, x: float, y: float, color: Tuple[int, int, int] = (100, 200, 255), count: int = 3) -> None:
+        """Spawn magic cast effect using TR_EFFECT_01 (magic_cast)."""
+        self.spawn_tile_effect(x, y, "magic_cast", count, color=color, life=8, vx=random.uniform(-0.2, 0.2), vy=random.uniform(-0.4, -0.1))
+
+    def spawn_fire_effect(self, x: float, y: float, count: int = 5) -> None:
+        """Spawn fire effect using TR_EFFECT_02 (fire)."""
+        self.spawn_tile_effect(x, y, "fire", count, color=(255, 100, 0), life=6, vx=random.uniform(-0.3, 0.3), vy=random.uniform(-0.5, -0.1))
+
+    def spawn_ice_effect(self, x: float, y: float, count: int = 4) -> None:
+        """Spawn ice effect using TR_EFFECT_03 (ice)."""
+        self.spawn_tile_effect(x, y, "ice", count, color=(100, 200, 255), life=7, vx=random.uniform(-0.2, 0.2), vy=random.uniform(-0.3, 0.1))
+
+    def spawn_lightning_effect(self, x: float, y: float, count: int = 3) -> None:
+        """Spawn lightning effect using TR_EFFECT_04 (lightning)."""
+        self.spawn_tile_effect(x, y, "lightning", count, color=(255, 255, 100), life=4, vx=random.uniform(-0.5, 0.5), vy=random.uniform(-0.5, 0.5))
+
+    def spawn_poison_effect(self, x: float, y: float, count: int = 6) -> None:
+        """Spawn poison effect using TR_EFFECT_05 (poison)."""
+        self.spawn_tile_effect(x, y, "poison", count, color=(100, 255, 100), life=10, vx=random.uniform(-0.2, 0.2), vy=random.uniform(-0.1, 0.2))
+
+    def spawn_heal_effect(self, x: float, y: float, count: int = 8) -> None:
+        """Spawn heal effect using TR_EFFECT_06 (heal)."""
+        self.spawn_tile_effect(x, y, "heal", count, color=(100, 255, 150), life=8, vx=random.uniform(-0.1, 0.1), vy=random.uniform(-0.4, -0.1))
+
+    def spawn_teleport_effect(self, x: float, y: float, count: int = 10) -> None:
+        """Spawn teleport effect using TR_EFFECT_07 (teleport)."""
+        self.spawn_tile_effect(x, y, "teleport", count, color=(200, 100, 255), life=6, vx=random.uniform(-0.4, 0.4), vy=random.uniform(-0.4, 0.4))
+
+    def spawn_explosion_effect(self, x: float, y: float, count: int = 12) -> None:
+        """Spawn explosion effect using TR_EFFECT_08 (explosion)."""
+        self.spawn_tile_effect(x, y, "explosion", count, color=(255, 150, 0), life=5, vx=random.uniform(-0.6, 0.6), vy=random.uniform(-0.6, 0.6))
+
+    def spawn_sparkle_effect(self, x: float, y: float, count: int = 5) -> None:
+        """Spawn sparkle effect using TR_EFFECT_09 (sparkle)."""
+        self.spawn_tile_effect(x, y, "sparkle", count, color=(255, 255, 200), life=4, vx=random.uniform(-0.2, 0.2), vy=random.uniform(-0.3, 0.1))
+
+    def spawn_smoke_effect(self, x: float, y: float, count: int = 6) -> None:
+        """Spawn smoke effect using TR_EFFECT_10 (smoke)."""
+        self.spawn_tile_effect(x, y, "smoke", count, color=(150, 150, 150), life=12, vx=random.uniform(-0.3, 0.3), vy=random.uniform(-0.2, 0.2))
+
+    def spawn_slash_effect(self, x: float, y: float, direction: Tuple[float, float] = (1, 0), count: int = 3) -> None:
+        """Spawn slash effect using TR_EFFECT_11 (slash) in a line."""
+        dx, dy = direction
+        for i in range(count):
+            self.spawn_tile_effect(
+                x + dx * i * 0.5, y + dy * i * 0.5, 
+                "slash", 1, 
+                color=(255, 200, 100), 
+                life=3, 
+                vx=dx * 0.1, 
+                vy=dy * 0.1
+            )
+
+    def spawn_shockwave_effect(self, x: float, y: float, count: int = 16) -> None:
+        """Spawn shockwave effect using TR_EFFECT_12 (shockwave) in a circle."""
+        self.spawn_tile_effect(x, y, "shockwave", count, color=(255, 255, 200), life=6, vx=0, vy=0)
 
     def trigger_glitch(self, duration: int = 5) -> None:
         """Proposal 7: 精神世界・次元干渉グリッチをトリガー"""

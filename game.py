@@ -1169,10 +1169,12 @@ class Engine:
             if nearest and min_dist <= 6:
                 if min_dist == 1:
                     weapon = self.pet_inventory.equipment.get("main_hand") if hasattr(self, "pet_inventory") else None
-                    dmg, _, msg = CombatSystem.calculate_melee_attack(self.pet, nearest, weapon=weapon)
-                    self.log(f"【シエル】「えいっ！」-> {nearest.name}に{dmg}ダメージ！", COLOR_PET_PINK)
+                    dmg, is_crit, msg = CombatSystem.calculate_melee_attack(self.pet, nearest, weapon=weapon)
                     nearest.hp -= dmg
+                    CombatSystem.publish_damage_event(self.event_bus, dmg, nearest.x, nearest.y, is_crit, nearest.hp <= 0)
+                    self.log(f"【シエル】「えいっ！」-> {nearest.name}に{dmg}ダメージ！", COLOR_PET_PINK)
                     if nearest.hp <= 0:
+                        CombatSystem.publish_kill_event(self.event_bus, nearest.x, nearest.y)
                         self.log(f"【シエル】が{nearest.name}を倒した！", (255, 200, 220))
                         for l in self.pet.gain_exp(40): self.log(l, COLOR_PET_PINK)
                         self.entity_manager.remove_entity(nearest)
@@ -1210,9 +1212,10 @@ class Engine:
         can_see = self.has_los(Point(npc.x, npc.y), Point(target.x, target.y))
 
         if dist == 1:
-            dmg, _, msg = CombatSystem.calculate_melee_attack(npc, target)
-            self.log(msg, (255, 100, 100))
+            dmg, is_crit, msg = CombatSystem.calculate_melee_attack(npc, target)
             target.hp -= dmg
+            CombatSystem.publish_damage_event(self.event_bus, dmg, target.x, target.y, is_crit, target.hp <= 0)
+            self.log(msg, (255, 100, 100))
             if target.hp <= 0:
                 if target == self.player:
                     self.log("★あなたは力尽きた… 【GAME OVER】", (255, 50, 50))
@@ -1220,6 +1223,7 @@ class Engine:
                     self.log("【悲痛】シエル「お兄ちゃん…ごめんね…」", (255, 80, 150))
                     if hasattr(self.pet, 'pet_ai'):
                         self.pet.pet_ai.increase_bond(-50, "defeated")
+                    CombatSystem.publish_kill_event(self.event_bus, target.x, target.y)
         elif dist <= 8 and can_see:
             blocked = self.get_blocked_positions()
             path = AStar.get_path(Point(npc.x, npc.y), Point(target.x, target.y), lambda x, y: self.is_tile_free(x, y, blocked))

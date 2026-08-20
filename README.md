@@ -108,9 +108,13 @@ python main.py
 ### 3. テストの実行
 
 ```bash
-# Aの世界（スキル喰い）全統合テストの実行
+# Aの世界（スキル喰い）全統合テストの実行 (43 Tests)
 python -m unittest tests/test_skill_eater_presentation_integration.py
+
+# 各種フェーズ別単体テストの実行
+python -m unittest discover tests/ "test_skill_eater_*.py"
 ```
+
 
 ---
 

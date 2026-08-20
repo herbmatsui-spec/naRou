@@ -1,0 +1,87 @@
+# Tiny Rogue Asset Pack - Tile ID Mappings for Dungeon Generation
+# Maps standard tile IDs to TR_* tile IDs when ENABLE_TINY_ROGUE_GFX is enabled
+
+# Standard -> Tiny Rogue tile mappings (used when feature flag is enabled)
+standard_to_tiny_rogue:
+  TILE_FLOOR: "TR_FLOOR_01"       # Base floor, autotile variants 1-12
+  TILE_WALL: "TR_WALL_01"         # Base wall, autotile variants 1-12
+  TILE_STAIRS_DOWN: "TR_DECOR_07" # Stairs down
+  TILE_STAIRS_UP: "TR_DECOR_08"   # Stairs up
+  TILE_WATER: "TR_EFFECT_02"      # Water (animated)
+  TILE_TRAP: "TR_DECOR_09"        # Trap
+  TILE_WALL_VAR: "TR_WALL_VAR_01" # Wall variants (non-autotile)
+
+# Monster mappings (handled by MonsterPreset.MONSTER_TILE_MAP)
+# See systems.py
+
+# Item mappings (for ground items)
+items:
+  default: "TR_ITEM_12"
+  potion: "TR_ITEM_01"
+  scroll: "TR_ITEM_03"
+  weapon: "TR_ITEM_04"
+  armor: "TR_ITEM_07"
+  gold: "TR_ITEM_09"
+  food: "TR_ITEM_11"
+
+# Decoration mappings
+decorations:
+  torch: "TR_DECOR_01"
+  chest: "TR_DECOR_02"
+  altar: "TR_DECOR_03"
+  fountain: "TR_DECOR_04"
+  statue: "TR_DECOR_05"
+  door: "TR_DECOR_06"
+  stairs_down: "TR_DECOR_07"
+  stairs_up: "TR_DECOR_08"
+  trap: "TR_DECOR_09"
+  blood: "TR_DECOR_10"
+  sign: "TR_DECOR_11"
+  lever: "TR_DECOR_12"
+
+# Effect mappings
+effects:
+  magic_cast: "TR_EFFECT_01"
+  fire: "TR_EFFECT_02"
+  ice: "TR_EFFECT_03"
+  lightning: "TR_EFFECT_04"
+  poison: "TR_EFFECT_05"
+  heal: "TR_EFFECT_06"
+  teleport: "TR_EFFECT_07"
+  explosion: "TR_EFFECT_08"
+  sparkle: "TR_EFFECT_09"
+  smoke: "TR_EFFECT_10"
+  slash: "TR_EFFECT_11"
+  shockwave: "TR_EFFECT_12"
+
+# UI mappings
+ui:
+  heart: "TR_UI_01"
+  mana: "TR_UI_02"
+  stamina: "TR_UI_03"
+  exp: "TR_UI_04"
+  level: "TR_UI_05"
+  key: "TR_UI_06"
+  coin: "TR_UI_07"
+  sword_icon: "TR_UI_08"
+  shield_icon: "TR_UI_09"
+  potion_icon: "TR_UI_10"
+  scroll_icon: "TR_UI_11"
+  menu_arrow: "TR_UI_12"
+
+# Terrain autotile configuration
+terrain:
+  floor_base: "TR_FLOOR"
+  floor_variants: 12
+  wall_base: "TR_WALL"
+  wall_variants: 12
+  wall_variant_base: "TR_WALL_VAR"
+
+# Character mappings (for future player customization)
+characters:
+  player_human: "TR_PLAYER_01"
+  player_elf: "TR_PLAYER_02"
+  player_dwarf: "TR_PLAYER_03"
+  npc_merchant: "TR_PLAYER_01"
+  npc_guard: "TR_PLAYER_02"
+  npc_villager: "TR_PLAYER_03"
