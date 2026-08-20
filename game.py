@@ -1612,7 +1612,6 @@ class Engine:
         # Create or reuse renderer
         if not hasattr(self, '_tcod_renderer') or self._tcod_renderer is None:
             self._tcod_renderer = TCODRenderer(console.width, console.height)
-            self._tcod_renderer.initialize_context(sdl_window=False)
             # Use the existing console
             self._tcod_renderer.console = console
             self._tcod_renderer.context = None  # Will use console directly
@@ -1858,10 +1857,21 @@ def main() -> None:
     engine = Engine()
     print("DEBUG: Engine created successfully")
 
+    # Load tileset to avoid libtcod font fallback warning
+    from pathlib import Path
+    tileset_path = Path("assets/tiles/tileset_32x32.png")
+    if tileset_path.exists():
+        tileset = tcod.tileset.load_tilesheet(
+            tileset_path.as_posix(), 32, 8, tcod.tileset.CHARMAP_TCOD
+        )
+    else:
+        tileset = tcod.tileset.procedural_block_elements()
+
     try:
         with tcod.context.new(
             columns=SCREEN_WIDTH,
             rows=SCREEN_HEIGHT,
+            tileset=tileset,
             title="naRou: Masterpiece Edition - Steps 1~72 Complete",
             vsync=True,
         ) as context:
