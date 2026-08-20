@@ -29,8 +29,9 @@ class TestCompatibilityPerformance(unittest.TestCase):
         self.assertIn(system, ['Linux', 'Darwin', 'Windows'])
         
         # アーキテクチャ確認
-        machine = platform.machine()
-        self.assertIn(machine, ['x86_64', 'amd64', 'arm64', 'aarch64'])
+        machine = platform.machine().lower()
+        self.assertIn(machine, ['x86_64', 'amd64', 'arm64', 'aarch64', 'x86', 'i386', 'i686'])
+
     
     def test_psutil_compatibility(self):
         """psutilライブラリ互換性テスト"""

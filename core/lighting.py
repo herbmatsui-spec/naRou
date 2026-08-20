@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from typing import List, Tuple, Optional, Dict, Any
 from collections import defaultdict
 from random import random, choice
+from pathlib import Path
 import math
 
 
@@ -665,8 +666,120 @@ def compute_ssao_from_tiles(console, cam_x: int, cam_y: int, view_w: int, view_h
     normal_buffer = np.zeros((view_h, view_w, 3), dtype=np.float32)
     normal_buffer[..., 2] = 1.0  # デフォルト: 上向き
     
-    # コンソールからタイル情報取得して法線推定
-    # ここでは簡易版: 何もしない（平坦な AO=1.0）
-    # 実際には game_map から壁/床判定して法線生成
-    
     return ssao.compute(normal_buffer)
+
+
+# --- Visual Obsessive Lighting Extensions (Step 23) ---
+from core.gbuffer import GBuffer
+
+
+@dataclass
+class LightVolume:
+    """Light Volume data class for deferred rendering."""
+    light_type: str  # "point", "spot", "decal"
+    position: Tuple[float, float, float]
+    color: Tuple[float, float, float] = (1.0, 1.0, 1.0)
+    radius: float = 10.0
+    intensity: float = 1.0
+    # Spot light parameters
+    direction: Tuple[float, float, float] = (0.0, 0.0, -1.0)
+    inner_cone: float = 0.5
+    outer_cone: float = 1.0
+    # Decal parameters
+    size: Tuple[float, float] = (1.0, 1.0)
+    rotation: float = 0.0
+
+
+class ShadowAtlas:
+    """Manages allocation and lookup of shadow map atlas regions."""
+    def __init__(self, size: int = 2048, max_lights: int = 64):
+        self.size = size
+        self.max_lights = max_lights
+        self.allocations: Dict[int, Tuple[int, int, int, int]] = {}
+        self.grid_size = int(math.ceil(math.sqrt(max_lights)))
+        self.slot_size = size // self.grid_size
+
+    def allocate_light(self, light_type: str, resolution: int = 128) -> Optional[Tuple[int, int, int, int]]:
+        idx = len(self.allocations)
+        if idx >= self.max_lights:
+            return None
+        row = idx // self.grid_size
+        col = idx % self.grid_size
+        x = col * self.slot_size
+        y = row * self.slot_size
+        w = min(resolution, self.slot_size)
+        h = min(resolution, self.slot_size)
+        region = (x, y, w, h)
+        self.allocations[idx] = region
+        return region
+
+    def get_light_region(self, light_index: int) -> Optional[Tuple[int, int, int, int]]:
+        return self.allocations.get(light_index)
+
+
+class TileCulling:
+    """Tile-based light culling for Forward+/deferred lighting."""
+    def __init__(self, tile_size: int = 16, max_lights_per_tile: int = 256):
+        self.tile_size = tile_size
+        self.max_lights_per_tile = max_lights_per_tile
+
+    def build_light_grid(
+        self, width: int, height: int, lights: List[LightVolume], view_proj: Any
+    ) -> Any:
+        import numpy as np
+        grid_w = max(1, width // self.tile_size)
+        grid_h = max(1, height // self.tile_size)
+        grid = np.full((grid_h, grid_w, self.max_lights_per_tile), 0xFFFFFFFF, dtype=np.uint32)
+        tile_counts = np.zeros((grid_h, grid_w), dtype=np.int32)
+
+        for light_idx, light in enumerate(lights):
+            lx, ly, _ = light.position
+            rad = light.radius
+            min_tx = max(0, int((lx - rad) // self.tile_size))
+            max_tx = min(grid_w - 1, int((lx + rad) // self.tile_size))
+            min_ty = max(0, int((ly - rad) // self.tile_size))
+            max_ty = min(grid_h - 1, int((ly + rad) // self.tile_size))
+
+            for ty in range(min_ty, max_ty + 1):
+                for tx in range(min_tx, max_tx + 1):
+                    count = tile_counts[ty, tx]
+                    if count < self.max_lights_per_tile:
+                        grid[ty, tx, count] = light_idx
+                        tile_counts[ty, tx] += 1
+
+        return grid
+
+
+class MaterialSystem:
+    """PBR Tile Material System."""
+    DEFAULT_MATERIAL = {
+        "albedo": "default",
+        "normal": "default_normal",
+        "roughness": 0.5,
+        "metallic": 0.0,
+        "emissive": 0.0,
+        "ao": 1.0,
+    }
+
+    def __init__(self, material_file_path: Optional[str] = None):
+        self.materials: Dict[str, Dict[str, Any]] = {}
+        if material_file_path and Path(material_file_path).exists():
+            import json
+            with open(material_file_path, "r", encoding="utf-8") as f:
+                self.materials = json.load(f)
+
+    def get_material(self, name: str) -> Dict[str, Any]:
+        return self.materials.get(name, dict(self.DEFAULT_MATERIAL))
+
+    def get_material_array(self, names: List[str]) -> Any:
+        import numpy as np
+        data = []
+        for name in names:
+            mat = self.get_material(name)
+            data.append([
+                float(mat.get("roughness", 0.5)),
+                float(mat.get("metallic", 0.0)),
+                float(mat.get("emissive", 0.0)),
+                float(mat.get("ao", 1.0)),
+            ])
+        return np.array(data, dtype=np.float32)

@@ -148,3 +148,8 @@ class RenderSystem:
             glitch_duration=glitch_dur,
             frame_count=tick
         )
+
+        # TODO: Achievement notification
+        # Render achievement_notifications and achievements screen when active
+        if getattr(context, "achievement_notifications", None):
+            pass

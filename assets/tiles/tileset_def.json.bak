@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "tile_size": 16,
+  "tiles": {
+    "TILE_WALL": {"file": "WALL_DUNGEON", "variants": 16, "autotile": true, "variant_width": 16, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"]},
+    "TILE_FLOOR": {"file": "FLOOR_DUNGEON", "variants": 8, "autotile": true, "variant_width": 16, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"]},
+    "TILE_STAIRS_DOWN": {"file": "STAIRS_DOWN", "animated": true, "frames": 2, "fps": 4, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"]},
+    "TILE_STAIRS_UP": {"file": "STAIRS_UP", "animated": true, "frames": 2, "fps": 4, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"]},
+    "TILE_WATER": {"file": "WATER", "animated": true, "frames": 3, "fps": 5, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"]},
+    "TILE_TRAP": {"file": "TRAP", "variants": 1, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"]},
+    "PLAYER": {"file": "PLAYER", "animated": true, "frames": 4, "fps": 8, "directions": 4, "states": ["idle", "walk", "attack"], "atlas_scale": "16", "frame_width": 16, "anchor_x": 0.5, "anchor_y": 1.0},
+    "PET": {"file": "PET", "animated": true, "frames": 4, "fps": 8, "directions": 4, "states": ["idle", "walk"], "atlas_scale": "16", "frame_width": 16, "anchor_x": 0.5, "anchor_y": 1.0},
+    "ENEMY_GOBLIN": {"file": "ENEMY_GOBLIN", "animated": true, "frames": 4, "fps": 8, "directions": 4, "states": ["idle", "walk", "attack"], "atlas_scale": "16", "frame_width": 16, "anchor_x": 0.5, "anchor_y": 1.0},
+    "ITEM_POTION": {"file": "ITEM_POTION", "variants": 1, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"], "anchor_x": 0.5, "anchor_y": 0.5},
+    "ITEM_WEAPON": {"file": "ITEM_WEAPON", "variants": 1, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"], "anchor_x": 0.5, "anchor_y": 0.5},
+    "ITEM_ARMOR": {"file": "ITEM_ARMOR", "variants": 1, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"], "anchor_x": 0.5, "anchor_y": 0.5},
+    "ITEM_GOLD": {"file": "ITEM_GOLD", "animated": true, "frames": 4, "fps": 8, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"], "anchor_x": 0.5, "anchor_y": 0.5},
+    "DECOR_TORCH": {"file": "TORCH", "animated": true, "frames": 4, "fps": 8, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"], "anchor_x": 0.5, "anchor_y": 0.5},
+    "DECOR_BLOOD": {"file": "BLOOD_SPLAT", "variants": 4, "variant_width": 16, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"]},
+    "EFFECT_MAGIC": {"file": "MAGIC_CAST", "animated": true, "frames": 3, "fps": 12, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["cast"]}
+  }
+}

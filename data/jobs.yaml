@@ -73,8 +73,9 @@ jobs:
     stat_modifiers:
       intelligence: 10
       will: 10
-      magic: 10
+      magic: 12
       endurance: -5
+
     equipment_restrictions:
       can_use_staff: true
       can_use_robe: true

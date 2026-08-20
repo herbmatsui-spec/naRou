@@ -31,23 +31,17 @@ class GuildData:
 class GuildRegistry:
     """ギルドレジストリ (シングルトン) (Steps 17, 18)"""
     _instance: Optional['GuildRegistry'] = None
-    _guilds: Dict[str, GuildData] = {}
-    _rewards: Dict[str, Any] = {}
-    _loaded: bool = False
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._guilds = {}
-            cls._rewards = {}
-            cls._loaded = False
+            cls._instance._guilds = {}
+            cls._instance._rewards = {}
+            cls._instance._loaded = False
         return cls._instance
 
     def load(self, guilds_path: str = "data/guilds.yaml", rewards_path: str = "data/guild_rewards.yaml") -> None:
         """YAMLからギルド定義および報酬定義をロード (Step 18)"""
-        if self._loaded:
-            return
-
         p_guilds = Path(guilds_path)
         if p_guilds.exists():
             try:
@@ -79,6 +73,8 @@ class GuildRegistry:
                 pass
 
         self._loaded = True
+
+
 
     def get(self, guild_id: str) -> Optional[GuildData]:
         """特定ギルドデータを取得 (Step 17)"""
@@ -188,7 +184,11 @@ class GuildManager:
                 for attr, bonus in rval.items():
                     if hasattr(player.attributes, attr):
                         setattr(player.attributes, attr, getattr(player.attributes, attr) + bonus)
+                    if hasattr(player, "_base_attributes") and player._base_attributes is not None:
+                        if hasattr(player._base_attributes, attr):
+                            setattr(player._base_attributes, attr, getattr(player._base_attributes, attr) + bonus)
                 player.recalculate_stats()
+
             elif rtype == "skill_unlock" and isinstance(rval, str):
                 if rval not in getattr(player, 'gene_skills', []):
                     player.gene_skills.append(rval)

@@ -26,7 +26,6 @@ if TYPE_CHECKING:
     from game import Engine
 
 _ENGINE_INSTANCE: Optional["Engine"] = None
-_ENGINE_LOCK: threading.Lock = threading.Lock()
 
 # 開発環境ではlocalhostを許可、本番環境では適切なドメインに制限する
 ALLOWED_ORIGINS = [
@@ -87,6 +86,11 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self._set_headers()
     def do_GET(self):
+        # Health check endpoint
+        if self.path == "/health":
+            self._set_headers("application/json")
+            self.wfile.write(json.dumps({"status": "ok"}).encode('utf-8'))
+            return
         # レート制限チェック
         client_ip = self.client_address[0]
         if not _is_rate_allowed(client_ip):
@@ -96,15 +100,14 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"error": "Rate limit exceeded"}).encode('utf-8'))
             return
 
-        global _ENGINE_INSTANCE, _ENGINE_LOCK
+        global _ENGINE_INSTANCE
         if self.path == "/api/state":
             if _ENGINE_INSTANCE is None:
                 self._set_headers()
                 self.wfile.write(json.dumps({"error": "Engine not initialized"}).encode('utf-8'))
                 return
 
-            with _ENGINE_LOCK:
-                state = self._serialize_engine_state(_ENGINE_INSTANCE)
+            state = self._serialize_engine_state(_ENGINE_INSTANCE)
             self._set_headers("application/json; charset=utf-8")
             self.wfile.write(json.dumps(state, ensure_ascii=False).encode('utf-8'))
         elif self.path == "/api/event/info":
@@ -145,7 +148,14 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             all_rankings = get_all_event_rankings()
             self._set_headers("application/json; charset=utf-8")
             self.wfile.write(json.dumps(all_rankings, ensure_ascii=False).encode('utf-8'))
-        elif self.path in ("/", "/index.html"):
+            return
+        elif self.path == "/api/webgl/info":
+            self._set_headers("application/json; charset=utf-8")
+            from webgl_manager import WebGLManager
+            ctx = WebGLManager.instance().get_context()
+            self.wfile.write(json.dumps({"webgl_context": str(ctx)}).encode('utf-8'))
+            return
+        elif self.path == "/" or self.path.endswith(".html") or self.path == "/index.html":
             html_path = os.path.join(os.path.dirname(__file__), "web_game_client.html")
             if os.path.exists(html_path):
                 with open(html_path, "rb") as f:
@@ -156,30 +166,11 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(404)
                 self.end_headers()
         else:
-            # 静的ファイル（HTML, JS, PNG, JSON, CSS 等）の配信
-            rel_path = self.path.lstrip("/").split("?")[0]
-            file_path = os.path.join(os.path.dirname(__file__), rel_path)
-            if os.path.isfile(file_path):
-                ext = os.path.splitext(file_path)[1].lower()
-                content_types = {
-                    ".html": "text/html; charset=utf-8",
-                    ".js": "application/javascript; charset=utf-8",
-                    ".css": "text/css; charset=utf-8",
-                    ".json": "application/json; charset=utf-8",
-                    ".png": "image/png",
-                    ".jpg": "image/jpeg",
-                    ".gif": "image/gif"
-                }
-                ctype = content_types.get(ext, "application/octet-stream")
-                self._set_headers(ctype)
-                with open(file_path, "rb") as f:
-                    self.wfile.write(f.read())
-            else:
-                self.send_response(404)
-                self.end_headers()
+            self.send_response(404)
+            self.end_headers()
 
     def do_POST(self):
-        global _ENGINE_INSTANCE, _ENGINE_LOCK
+        global _ENGINE_INSTANCE
         if self.path == "/api/action":
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length).decode('utf-8')
@@ -188,11 +179,10 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             action = data.get("action")
             result_msg = "OK"
 
-            with _ENGINE_LOCK:
-                if _ENGINE_INSTANCE and action:
-                    result_msg = self._handle_web_action(_ENGINE_INSTANCE, action, data)
+            if _ENGINE_INSTANCE and action:
+                result_msg = self._handle_web_action(_ENGINE_INSTANCE, action, data)
 
-                state = self._serialize_engine_state(_ENGINE_INSTANCE) if _ENGINE_INSTANCE else {}
+            state = self._serialize_engine_state(_ENGINE_INSTANCE) if _ENGINE_INSTANCE else {}
             state["action_result"] = result_msg
 
             self._set_headers("application/json; charset=utf-8")
@@ -550,7 +540,6 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 "category": latest_notif.category,
                 "color": list(latest_notif.color)
             } if (latest_notif := getattr(engine, "notification_manager", None) and engine.notification_manager.get_latest()) else None,
-            "fog_density": getattr(engine, "fog_density", 0.35 + (engine.dungeon_level % 5) * 0.05),
             "screen_shake": screen_shake
         }
 
@@ -633,15 +622,13 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
 
 
 def start_web_server(engine: "Engine", port: int = 8080) -> Optional[HTTPServer]:
-    global _ENGINE_INSTANCE, _ENGINE_LOCK
+    global _ENGINE_INSTANCE
     _ENGINE_INSTANCE = engine
-    _ENGINE_LOCK = threading.Lock()
 
     try:
         server = HTTPServer(("0.0.0.0", port), GameHTTPRequestHandler)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
-        print(f"[WebServer] Server started on port {port} with Thread-Safety (Lock) enabled.")
         return server
     except Exception as e:
         print(f"Web server failed to bind on port {port}: {e}")

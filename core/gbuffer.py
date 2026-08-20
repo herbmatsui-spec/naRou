@@ -35,7 +35,7 @@ class GBuffer:
         # Depth: float32
         self.depth = np.full((height, width), 1.0, dtype=np.float32)
     
-    def clear(self, albedo: Tuple[int, int, int, int] = (0, 0, 0, 255),
+    def clear(self, albedo: Tuple[int, int, int, int] = (0, 0, 0, 0),
               normal: Tuple[float, float] = (0.0, 0.0),
               material: Tuple[int, int, int, int] = (128, 0, 0, 255),
               depth: float = 1.0) -> None:
@@ -43,6 +43,7 @@ class GBuffer:
         self.normal[:, :] = normal
         self.material[:, :] = material
         self.depth[:, :] = depth
+
     
     def get_attachments(self) -> List[np.ndarray]:
         """Get all color attachments for MRT."""

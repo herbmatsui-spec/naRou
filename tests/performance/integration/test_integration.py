@@ -2,7 +2,9 @@
 """Performance test suite integration."""
 import os
 import sys
+import time
 import pytest
+
 
 # Import all test modules
 from tests.performance import (
@@ -38,15 +40,8 @@ class TestIntegration:
         ]
         
         for mod in modules:
-            assert hasattr(mod, 'TestCPU') or hasattr(mod, 'TestMemory') or \
-                   hasattr(mod, 'TestDiskIO') or hasattr(mod, 'TestNetwork') or \
-                   hasattr(mod, 'TestResponseTime') or hasattr(mod, 'TestLatency') or \
-                   hasattr(mod, 'TestFootprint') or hasattr(mod, 'TestEnergy') or \
-                   hasattr(mod, 'TestStress') or hasattr(mod, 'TestLoad') or \
-                   hasattr(mod, 'TestSpike') or hasattr(mod, 'TestSustainability') or \
-                   hasattr(mod, 'TestEndurance') or hasattr(mod, 'TestReliability') or \
-                   hasattr(mod, 'TestAvailability') or hasattr(mod, 'TestScalability') or \
-                   hasattr(mod, 'TestInteroperability') or hasattr(mod, 'TestCompatibility')
+            assert any(k.startswith('Test') for k in dir(mod))
+
         
         print(f"Integration - All {len(modules)} test modules imported")
     

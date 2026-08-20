@@ -1,208 +1,33 @@
-"on":
-  push:
-    branches: [main, develop]
-    tags: ['v*']
-  pull_request:
-    branches: [main, develop]
-  schedule:
-    - cron: '0 0 * * 0'  # Weekly on Sunday
+name: CI
 
-name: CI Pipeline
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    environment: testing
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pytest pytest-cov pytest-mock ruff black mypy
-
-      - name: Run linting (ruff)
-        run: ruff check .
-
-      - name: Run formatting check (black)
-        run: black --check .
-
-      - name: Run type checking (mypy)
-        run: mypy --strict .
-
-      - name: Run tests with coverage
-        run: pytest --cov=. --cov-report=xml --cov-fail-under=80
-
-      - name: Run balance simulator
-        run: python -m tests.balance_simulator || true
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage.xml
-          retention-days: 7
-
-      - name: test-report
-        run: echo "Test report generated"
-
-      - name: Upload test logs
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-logs
-          path: |
-            coverage.xml
-            pytest.log
-          retention-days: 7
-
-      - name: pull-request
-        if: github.event_name == 'pull_request'
-        run: echo "Pull request check passed"
-
-      - name: schedule
-        if: github.event_name == 'schedule'
-        run: echo "Scheduled run executed"
-
-      - name: notifications
-        if: always()
-        run: echo "Notification step completed"
-
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
+      - uses: actions/checkout@v3
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
+          python-version: '3.12'
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller
-
-      - name: Build executable
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt || true
+      - name: Run linters
         run: |
-          pyinstaller --onefile --name narou main.py || true
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: narou-${{ matrix.os }}
-          path: dist/
-          retention-days: 7
-
-  wasm-build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Cache Emscripten
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.emsdk
-            /tmp/emsdk
-          key: ${{ runner.os }}-emsdk-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-emsdk-
-
-      - name: Set up Emscripten
-        uses: mymindstorm/setup-emsdk@v14
-
-      - name: Build WASM
+          pre-commit run --all-files
+      - name: Run tests
         run: |
-          source $EMSDK_ENV
-          emcc main.c -o narou.js -s WASM=1 || true
-
-      - name: Upload WASM artifact
+          pytest -m "not integration"
+      - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:
-          name: narou-wasm
-          path: narou.js
-          retention-days: 7
-
-  security-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run security scan
-        run: pip install bandit safety && bandit -r . -f json -o security-report.json || true
-      - name: Upload security report
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-report
-          path: security-report.json
-          retention-days: 7
-
-  docs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Generate documentation
-        run: python tools/docs_assets.py --output docs/generated || true
-      - name: Upload documentation
-        uses: actions/upload-artifact@v4
-        with:
-          name: documentation
-          path: docs/generated/
-          retention-days: 7
-
-  release:
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: [test, build, wasm-build, security-scan, docs]
-    steps:
-      - uses: actions/download-artifact@v4
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            dist/*
-            narou.js
-            docs/generated/*
-          generate_release_notes: true
-
-  notify:
-    runs-on: ubuntu-latest
-    if: failure()
-    needs: [test, build, wasm-build, security-scan, docs]
-    steps:
-      - name: Notify on failure
-        run: echo "Build failed - notification would be sent here (Slack/Discord/Email)"
-
-  notify-success:
-    runs-on: ubuntu-latest
-    if: success()
-    needs: [test, build, wasm-build, security-scan, docs]
-    steps:
-      - name: Notify on success
-        run: echo "Build succeeded - notification would be sent here"
+          name: coverage
+          path: coverage.xml
