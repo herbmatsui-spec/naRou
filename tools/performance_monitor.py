@@ -4,7 +4,6 @@ Performance Monitor for naRou
 Handles CPU, memory, disk I/O, network, and response time monitoring.
 """
 
-import os
 import time
 import psutil
 import threading
@@ -280,7 +279,7 @@ class PerformanceMonitor:
             If single arg / test expects float: duration in seconds
         """
         start = time.perf_counter()
-        result = func(*args, **kwargs)
+        func(*args, **kwargs)
         duration = time.perf_counter() - start
         return duration
 

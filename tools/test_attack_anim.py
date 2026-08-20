@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from core.tile_atlas import TileAtlas
-from core.entity_renderer import EntityRenderer, EntityAnimState
+from core.entity_renderer import EntityRenderer
 
 
 def test_attack_animation_sync():

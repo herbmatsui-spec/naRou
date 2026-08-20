@@ -9,9 +9,7 @@ import sys
 import json
 import argparse
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
-import subprocess
-import tempfile
+from typing import Dict, List, Tuple
 
 
 def load_config(config_path: str = "tools/asset_pipeline_config.json") -> Dict:
@@ -269,7 +267,6 @@ def test_performance_baselines(assets_dir: str, config: Dict) -> Tuple[bool, Lis
     # Check that textures are not excessively large
     tileset_dir = os.path.join(assets_dir, 'tilesets')
     if os.path.exists(tileset_dir):
-        max_size = config['tileset'].get('max_atlas_size', 2048)
         for root, dirs, files in os.walk(tileset_dir):
             for file in files:
                 if file.endswith('.png'):

@@ -9,8 +9,7 @@ import sys
 import json
 import argparse
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
-import subprocess
+from typing import Dict, List, Tuple
 
 
 def load_config(config_path: str = "tools/asset_pipeline_config.json") -> Dict:

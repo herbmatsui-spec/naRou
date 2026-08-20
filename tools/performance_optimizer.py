@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 """Performance optimization tool for naRou project."""
-import os
-import sys
 import time
 import json
-import subprocess
-import threading
 import psutil
 from datetime import datetime
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Callable
+from typing import Dict, List, Any, Callable
 from dataclasses import dataclass, asdict
 from tools.performance_monitor import PerformanceMonitor
 
@@ -98,7 +93,6 @@ class PerformanceOptimizer:
             return {"leak_detected": False, "confidence": 0}
         
         memory_values = [s.get("memory_mb", 0) for s in snapshots]
-        timestamps = [s.get("timestamp", 0) for s in snapshots]
         
         # Calculate trend
         if len(memory_values) >= 3:
@@ -341,7 +335,7 @@ class PerformanceOptimizer:
                 exec_end = time.perf_counter()
                 latencies.append((exec_end - exec_start) * 1000)
                 executions += 1
-            except Exception as e:
+            except Exception:
                 errors += 1
             
             elapsed = time.perf_counter() - exec_start
@@ -512,7 +506,6 @@ class PerformanceOptimizer:
         
         while time.time() < end_time:
             checks += 1
-            check_start = time.perf_counter()
             try:
                 func(*args, **kwargs)
                 check_end = time.perf_counter()

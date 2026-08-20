@@ -6,13 +6,11 @@ Uses headless rendering for both to generate pixel data for comparison.
 """
 
 from __future__ import annotations
-import os
 import sys
 import json
 import numpy as np
 from pathlib import Path
-from typing import List, Tuple, Dict, Any
-import subprocess
+from typing import List, Dict, Any
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -114,7 +112,7 @@ def render_with_tcod(map_data: List[List[str]], output_path: str) -> np.ndarray:
                     # Place in pixel_data
                     py, px = y * 32, x * 32
                     pixel_data[py:py+uv.h, px:px+uv.w] = sub_arr
-            except Exception as e:
+            except Exception:
                 pass
     
     return pixel_data

@@ -8,7 +8,6 @@ import os
 import json
 import argparse
 import time
-import shutil
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import struct

@@ -51,10 +51,9 @@ def test_entity_uv_parity():
                 if direction > 0:
                     prev_uv = atlas.get_uv(tile_id, direction=direction-1, state=state, frame=0, scale="32")
                     curr_uv = atlas.get_uv(tile_id, direction=direction, state=state, frame=0, scale="32")
-                    # Each direction should be offset by base height
-                    # At scale 32, PLAYER base height is 32 (from metadata)
-                    expected_y_diff = 32
-                    # Note: The actual metadata has 32px vertical spacing at scale 32
+                    if curr_uv.y < prev_uv.y:
+                        print(f"  FAIL: Direction progression broken at dir={direction}")
+                        all_passed = False
         
         print(f"  PASSED: All {td.directions} directions x {len(td.states)} states x {td.frames} frames consistent at scale 32")
     
@@ -122,7 +121,7 @@ def test_facing_calculation():
 
 def test_entity_animstate():
     """Test EntityAnimState updates."""
-    from core.entity_renderer import EntityRenderer, EntityAnimState
+    from core.entity_renderer import EntityRenderer
     from core.tile_atlas import TileAtlas
     
     print("\n" + "=" * 60)

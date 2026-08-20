@@ -14,7 +14,6 @@ def get_player_titles(player: Entity) -> List[Dict[str, Any]]:
     :return: [{"title": str, "description": str, "event_id": str}, ...]
     """
     # ここでは簡易実装：実際には称号に関連するイベントや説明を保持する必要がある
-    player_id = getattr(player, 'id', str(id(player)))
     title_ids = TITLE_MANAGER.get_player_titles(player)
     # タイトルIDから詳細を取得するためには、イベントデータを参照する必要がある
     # ここではプレースホルダーとしてタイトルIDのみを返す

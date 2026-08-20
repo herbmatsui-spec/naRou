@@ -5,14 +5,13 @@ Handles log rotation, analysis, archiving, and reporting.
 """
 
 import os
+import sys
 import json
 import argparse
 import shutil
 import gzip
-from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict
 import time
-import glob
 
 
 def load_config(config_path: str = "tools/asset_pipeline_config.json") -> Dict:
@@ -143,8 +142,6 @@ def analyze_logs(log_dir: str, hours: int = 24) -> Dict:
     if not os.path.exists(log_dir):
         stats['errors'].append(f"Log directory does not exist: {log_dir}")
         return stats
-    
-    cutoff_time = time.time() - (hours * 3600)
     
     try:
         # Find log files

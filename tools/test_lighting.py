@@ -97,8 +97,6 @@ def test_lighting_draw_calls():
     """Test LightingDrawCall integration."""
     print("Testing LightingDrawCall...")
     
-    lighting = TerminalLightingSystem(40, 24)
-    
     lm = LightMap(
         intensity=[[1.0, 0.5], [0.0, -1.0]],
         color=[[(255, 240, 210), (200, 200, 150)], [(100, 100, 100), (0, 0, 0)]]

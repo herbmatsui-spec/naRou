@@ -7,7 +7,7 @@ Checks for missing tiles, mismatched definitions, and autotile readiness.
 from __future__ import annotations
 import json
 from pathlib import Path
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Any
 from dataclasses import dataclass
 
 
@@ -114,7 +114,6 @@ def validate_tileset_def() -> ValidationResult:
         # Check directions (vertical stacking)
         directions = tile_def.get("directions", 1)
         if directions > 1:
-            expected_h = meta_h * directions
             # Note: metadata only has single tile entry, directions are vertical stack
             info.append(f"{tile_id}: directions={directions} (vertical stack in atlas)")
 

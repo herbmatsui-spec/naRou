@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Validation script for naRou project."""
-import os
 import sys
 import subprocess
 import argparse

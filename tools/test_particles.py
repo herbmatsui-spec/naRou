@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from core.lighting import (
-    TerminalParticleSystem, Particle, ParticleDrawCall,
+    TerminalParticleSystem,
     PARTICLE_TYPES, PARTICLE_EFFECTS
 )
 import tcod
@@ -181,7 +181,6 @@ def test_preset_effects():
         ps.emit_effect(effect, 20, 12, 5)
         
         active = sum(1 for p in ps.particles if p.active)
-        expected = PARTICLE_EFFECTS[effect]['count'] * 5  # count=5
         # Allow some variance due to random count
         assert active > 0, f"Effect {effect} should create particles"
         assert ps.particles[0].type == PARTICLE_EFFECTS[effect]['type']

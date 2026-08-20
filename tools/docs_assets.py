@@ -5,10 +5,11 @@ Generates API references, usage guides, and asset catalogs.
 """
 
 import os
+import sys
 import json
 import argparse
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict
 import time
 
 
@@ -1357,7 +1358,7 @@ def save_documentation(docs: Dict, output_path: str) -> bool:
         return False
 
 
-def print_documentation_summary(docs: Dict):
+def print_documentation_summary(docs: Dict, verbose: bool = False):
     """Print a formatted summary of the documentation generation."""
     print(f"\n{'='*70}")
     print(f"ASSET DOCUMENTATION GENERATION SUMMARY")
@@ -1379,7 +1380,7 @@ def print_documentation_summary(docs: Dict):
             print(f"    Files Generated: {result.get('files_generated', 0)}")
             print(f"    Errors: {len(result.get('errors', []))}")
             
-            if result.get('errors') and args.verbose:
+            if result.get('errors') and verbose:
                 print(f"    Error Details:")
                 for error in result['errors'][:3]:
                     print(f"      - {error}")
@@ -1460,7 +1461,7 @@ def main():
         print(json.dumps(docs, indent=2))
     else:
         # Print formatted summary
-        print_documentation_summary(docs)
+        print_documentation_summary(docs, verbose=args.verbose)
     
     sys.exit(0)
 

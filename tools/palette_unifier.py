@@ -4,15 +4,14 @@ Palette Unifier for naRou
 Unifies asset palettes to match the game's master palette from design_tokens.json.
 """
 
-import os
 import json
 import argparse
 from pathlib import Path
-from typing import List, Tuple, Dict, Optional
+from typing import List, Tuple, Optional
 import logging
 
 try:
-    from PIL import Image
+    import PIL  # noqa: F401
     PIL_AVAILABLE = True
 except ImportError:
     PIL_AVAILABLE = False

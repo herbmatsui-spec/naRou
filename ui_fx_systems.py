@@ -850,7 +850,6 @@ class ScreenFilterManager:
                 offset = random.randint(-4, 4)
                 for gx in range(w):
                     target_x = max(0, min(w - 1, gx + offset))
-                    cur_ch = console.ch[gx, gy]
                     console.ch[gx, gy] = console.ch[target_x, gy]
                     # サイケデリックな色変調
                     console.fg[gx, gy] = (random.choice([255, 50]), random.choice([0, 255]), 255)
@@ -1072,7 +1071,6 @@ def format_job_display(registry: JobRegistry, player) -> str:
         lines.append("")
     
     # 利用可能なジョブ
-    available = []
     for job_id, job in registry.all().items():
         if job_id == "novice":
             continue

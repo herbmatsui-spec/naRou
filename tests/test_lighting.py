@@ -6,8 +6,8 @@ from __future__ import annotations
 import numpy as np
 from pathlib import Path
 
-from core.lighting import LightVolume, GBuffer, ShadowAtlas, TileCulling, MaterialSystem
-from core.gbuffer import GBuffer as GBuffer2, pack_normal_xy, unpack_normal_xy, pack_material, unpack_material
+from core.lighting import LightVolume, ShadowAtlas, TileCulling, MaterialSystem
+from core.gbuffer import GBuffer, pack_normal_xy, unpack_normal_xy, pack_material, unpack_material
 
 
 def test_gbuffer():

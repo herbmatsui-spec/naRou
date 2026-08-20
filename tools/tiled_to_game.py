@@ -19,14 +19,6 @@ def convert_tmx_to_json(tmx_path: Path, output_path: Path, tileset_def_path: Pat
         output_path: Path to output JSON file
         tileset_def_path: Path to tileset definition JSON
     """
-    # Load tileset definition for tile ID mapping
-    if tileset_def_path.exists():
-        with open(tileset_def_path) as f:
-            tileset_defs = json.load(f)
-    else:
-        tileset_defs = {"tiles": {}}
-        print(f"Warning: {tileset_def_path} not found, using empty tile definitions")
-    
     # Parse the TMX file
     tree = ET.parse(tmx_path)
     root = tree.getroot()

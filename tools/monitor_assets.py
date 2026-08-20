@@ -5,10 +5,10 @@ Tracks build times, asset counts, resource usage, and trends.
 """
 
 import os
+import sys
 import json
 import argparse
-from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict
 import time
 import datetime
 
