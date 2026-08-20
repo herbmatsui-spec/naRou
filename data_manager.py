@@ -5,11 +5,19 @@ Centralized loading, caching, schema validation, and repository pattern for all 
 
 from __future__ import annotations
 
-import random
+import sys
 from pathlib import Path
+
+# site-packages (本物の Pydantic, Pillow 等) をローカルスタブより優先
+for sp in [r'C:\Users\keide\AppData\Roaming\Python\Python314\site-packages', r'C:\Python314\Lib\site-packages']:
+    if sp not in sys.path:
+        sys.path.insert(0, sp)
+
+import random
 from typing import TYPE_CHECKING, Any
 
 import yaml
+
 
 from constants import (
     QUALITY_BAD,

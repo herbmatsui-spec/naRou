@@ -22,15 +22,50 @@ class BaseModel:
     def __init__(self, **data):
         for k, v in data.items():
             setattr(self, k, v)
-    def dict(self):
+
+    @classmethod
+    def model_validate(cls, obj, *args, **kwargs):
+        if isinstance(obj, cls):
+            return obj
+        if isinstance(obj, dict):
+            return cls(**obj)
+        if isinstance(obj, (list, tuple)):
+            return cls(*obj)
+        return cls(obj)
+
+    @classmethod
+    def parse_obj(cls, obj):
+        return cls.model_validate(obj)
+
+    def model_dump(self, *args, **kwargs):
         return self.__dict__
+
+    def dict(self, *args, **kwargs):
+        return self.__dict__
+
     def __repr__(self):
-        return f"<BaseModel {self.__dict__}>"
+        return f"<{self.__class__.__name__} {self.__dict__}>"
 
 class RootModel(BaseModel):
     """Simple stub for pydantic.RootModel used in generated code.
     Supports subscript syntax like ``RootModel[MyModel]``.
     """
+    def __init__(self, root=None, **data):
+        if root is not None:
+            self.root = root
+        elif data:
+            self.root = data
+        else:
+            self.root = None
+
+    @classmethod
     def __class_getitem__(cls, item):
         return cls
-    pass
+
+    @classmethod
+    def model_validate(cls, obj, *args, **kwargs):
+        if isinstance(obj, cls):
+            return obj
+        instance = cls(root=obj)
+        return instance
+

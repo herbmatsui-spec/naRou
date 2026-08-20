@@ -2,6 +2,12 @@ import subprocess
 import sys
 import os
 
+# 本物のPydantic/Pillow等のsite-packagesを最優先に設定
+for _sp in [r'C:\Users\keide\AppData\Roaming\Python\Python314\site-packages', r'C:\Python314\Lib\site-packages']:
+    if _sp not in sys.path:
+        sys.path.insert(0, _sp)
+
+
 def run_script(script_name):
     if os.path.exists(script_name):
         print(f"\n--- {script_name} を実行しています ---")
