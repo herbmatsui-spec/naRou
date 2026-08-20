@@ -404,6 +404,22 @@ class Quest:
 
 
 class MonsterPreset:
+    # Map monster names to Tiny Rogue tile IDs
+    MONSTER_TILE_MAP = {
+        "slime": "TR_MONSTER_01",
+        "red_slime": "TR_MONSTER_01",
+        "snail": "TR_MONSTER_02",
+        "goblin": "TR_MONSTER_01",
+        "kobold": "TR_MONSTER_02",
+        "orc": "TR_MONSTER_03",
+        "hound_fire": "TR_MONSTER_VAR_01",
+        "rogue_thief": "TR_MONSTER_VAR_02",
+        "novice_wizard": "TR_MONSTER_VAR_03",
+        "minotaur": "TR_MONSTER_VAR_01",
+        "lich": "TR_MONSTER_VAR_02",
+        "dragon_red": "TR_MONSTER_VAR_03",
+    }
+
     @staticmethod
     def create(name: str, x: int, y: int) -> "Entity":
         from entity import Entity, Attributes
@@ -438,6 +454,8 @@ class MonsterPreset:
             e.aggro = AggroList()
             e.resistances = ResistanceSet()
             e.status_effects = []
+            # Store monster type for tile rendering
+            e.monster_type = name
             return e
 
         # フォールバック
@@ -457,6 +475,7 @@ class MonsterPreset:
         e.aggro = AggroList()
         e.resistances = ResistanceSet()
         e.status_effects = []
+        e.monster_type = name
         return e
 
 

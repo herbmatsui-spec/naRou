@@ -175,17 +175,17 @@ class JobManager:
         
         # Add current job to previous_jobs
         current_job = getattr(player, 'job', 'novice')
-        if current_job != 'novice':
-            if not hasattr(player, 'previous_jobs'):
-                player.previous_jobs = []
-            if current_job not in player.previous_jobs:
-                player.previous_jobs.append(current_job)
-            
-            # Add to mastered_jobs if not already
-            if not hasattr(player, 'mastered_jobs'):
-                player.mastered_jobs = []
-            if current_job not in player.mastered_jobs:
-                player.mastered_jobs.append(current_job)
+        if not hasattr(player, 'previous_jobs'):
+            player.previous_jobs = []
+        if current_job not in player.previous_jobs:
+            player.previous_jobs.append(current_job)
+        
+        # Add to mastered_jobs if not already
+        if not hasattr(player, 'mastered_jobs'):
+            player.mastered_jobs = []
+        if current_job not in player.mastered_jobs:
+            player.mastered_jobs.append(current_job)
+
         
         # Change job
         player.job = job_id

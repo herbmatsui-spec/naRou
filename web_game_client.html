@@ -1239,6 +1239,7 @@
           if (isAttacking) {
               const id = ent.id || `${ent.world_x},${ent.world_y}`;
               entityAttackTimers.set(id, { timer: 0.5, duration: 0.5 });
+<<<<<<< ours
           }
           
           // 攻撃中は強制的にattack状態維持
@@ -1277,6 +1278,46 @@
               };
           }
           
+=======
+          }
+          
+          // 攻撃中は強制的にattack状態維持
+          const attackInfo = entityAttackTimers.get(ent.id || `${ent.world_x},${ent.world_y}`);
+          if (attackInfo) {
+              state = "attack";
+              attackInfo.timer -= 1/60;
+              if (attackInfo.timer <= 0) {
+                  entityAttackTimers.delete(ent.id || `${ent.world_x},${ent.world_y}`);
+                  state = "idle";
+              }
+          } else if (ent.hp <= 0) {
+              state = "dead";
+          } else if (ent.moving || (ent.vx !== 0 || ent.vy !== 0)) {
+              state = "walk";
+          }
+
+          // アニメーションキー: tileId_direction_state
+          const animKey = `${tileId}_${dir}_${state}`;
+          if (!entityAnimCache[animKey]) {
+              const loop = state !== "attack" && state !== "dead";
+              const fps = state === "attack" ? 12 : td.fps;
+              entityAnimCache[animKey] = tileAtlas.createAnimatedSprite(tileId, {
+                  direction: dir, state, fps, loop
+              });
+          }
+          const sprite = entityAnimCache[animKey];
+          
+          // 攻撃・死亡アニメは最初から再生
+          if ((state === "attack" || state === "dead") && !sprite._playing) {
+              sprite.gotoAndPlay(0);
+              sprite._playing = true;
+              sprite.onComplete = () => {
+                  sprite._playing = false;
+                  if (state === "dead") sprite.visible = false;
+              };
+          }
+          
+>>>>>>> theirs
           sprite.x = px;
           sprite.y = py + bounce;
           entityLayer.addChild(sprite);

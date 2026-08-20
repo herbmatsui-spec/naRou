@@ -37,10 +37,13 @@ def validate_tileset_def() -> ValidationResult:
     defs = load_json(def_path)
 
     # 2. Load atlas metadata for each scale
-    scales = ["16", "32", "64"]
+    scales = ["16", "32", "64", "tiny_rogue_16"]
     atlas_meta = {}
     for scale in scales:
-        meta_path = base / f"tileset_{scale}x{scale}.json"
+        if scale == "tiny_rogue_16":
+            meta_path = base / "tileset_tiny_rogue_16x16.json"
+        else:
+            meta_path = base / f"tileset_{scale}x{scale}.json"
         if meta_path.exists():
             atlas_meta[scale] = load_json(meta_path)
             info.append(f"Loaded metadata: {meta_path}")
@@ -49,7 +52,10 @@ def validate_tileset_def() -> ValidationResult:
 
     # 3. Check image files exist
     for scale in scales:
-        img_path = base / f"tileset_{scale}x{scale}.png"
+        if scale == "tiny_rogue_16":
+            img_path = base / "tileset_tiny_rogue_16x16.png"
+        else:
+            img_path = base / f"tileset_{scale}x{scale}.png"
         if img_path.exists():
             info.append(f"Found image: {img_path} ({img_path.stat().st_size} bytes)")
         else:

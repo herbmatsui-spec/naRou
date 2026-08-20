@@ -126,8 +126,11 @@ class TileAtlas:
             self.defs[tile_id] = TileDef(tile_id=tile_id, **d)
 
         # 2. Load atlas metadata for each scale
-        for scale in ("16", "32", "64"):
-            meta_path = self.def_path.parent / f"tileset_{scale}x{scale}.json"
+        for scale in ("16", "32", "64", "tiny_rogue_16"):
+            if scale == "tiny_rogue_16":
+                meta_path = self.def_path.parent / "tileset_tiny_rogue_16x16.json"
+            else:
+                meta_path = self.def_path.parent / f"tileset_{scale}x{scale}.json"
             if meta_path.exists():
                 with open(meta_path) as f:
                     self.atlas_meta[scale] = json.load(f)

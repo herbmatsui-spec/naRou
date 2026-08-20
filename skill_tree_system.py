@@ -240,8 +240,34 @@ class SkillTreeManager:
         learned = []
         for tree_id, skills in player.skill_tree_progress.items():
             for skill_id in skills:
-                learned.append(f"{tree_id}:{skill_id}")
+                if skill_id not in learned:
+                    learned.append(skill_id)
+                prefixed = f"{tree_id}:{skill_id}"
+                if prefixed not in learned:
+                    learned.append(prefixed)
         return learned
+
+    def check_exclusive_learnable(self, player, skill_data: Dict[str, Any]) -> bool:
+        """Check if player can learn exclusive skill."""
+        req_job = skill_data.get("job")
+        if req_job and getattr(player, "job", None) != req_job:
+            return False
+        return True
+
+    def learn_exclusive_skill(self, player, skill_id: str, cost: int = 5) -> bool:
+        """Learn an exclusive skill."""
+        if not hasattr(player, "mastered_exclusive_skills"):
+            player.mastered_exclusive_skills = []
+        if skill_id in player.mastered_exclusive_skills:
+            return False
+        if player.skill_points < cost:
+            return False
+        player.skill_points -= cost
+        player.mastered_exclusive_skills.append(skill_id)
+        return True
+
+
+
 
 
 # Module-level registry instance

@@ -12,7 +12,7 @@ from constants import (
 )
 from entity import GodInfo
 from item_system import Item
-from systems import STATUS_BLEEDING
+from systems import STATUS_BLEEDING, MonsterPreset
 from ui_fx_systems import DynamicLighting
 from render_context import RenderContext
 from crafting_system import ResourceNode
@@ -37,17 +37,27 @@ class EntityRenderer:
             cls._tile_atlas = TileAtlas(default_scale="32")
             cls._core_renderer = CoreEntityRenderer(cls._tile_atlas)
         return cls._core_renderer
-    
+
     @classmethod
     def _get_tile_id(cls, ent) -> str:
         """エンティティからTileDef IDを決定"""
+        from feature_flags import is_enabled
+        from systems import MonsterPreset
+        # Tiny Rogueグラフィックが無効な場合は従来のタイルを使用
+        if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            if ent.is_player:
+                return "PLAYER"
+            elif ent.is_pet:
+                return "PET"
+            else:
+                return "ENEMY_GOBLIN"
+        
         if ent.is_player:
             return "PLAYER"
         elif ent.is_pet:
             return "PET"
-        # 将来的に種別対応:
-        # elif hasattr(ent, 'monster_type') and ent.monster_type:
-        #     return MONSTER_TYPE_MAP.get(ent.monster_type, "ENEMY_GOBLIN")
+        elif hasattr(ent, 'monster_type') and ent.monster_type:
+            return MonsterPreset.MONSTER_TILE_MAP.get(ent.monster_type, "ENEMY_GOBLIN")
         else:
             return "ENEMY_GOBLIN"
     

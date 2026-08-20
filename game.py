@@ -63,6 +63,8 @@ from dialogue_system import DialogueManager
 from systems_manager import SystemManager
 from quest_scheduler import QuestScheduler, ScheduleContext
 from localization_manager import LocalizationManager
+from logging_config import configure_logging
+configure_logging()
 
 # Feature Package Architecture
 from packages.core.kernel.kernel import Kernel
@@ -243,25 +245,50 @@ class Engine:
         """プレイヤーエンティティ"""
         return self.game_state_data.player
     
+    @player.setter
+    def player(self, value: Entity) -> None:
+        self.game_state_data.player = value
+
     @property
     def pet(self) -> Entity:
         """ペットエンティティ"""
         return self.game_state_data.pet
-    
+
+    @pet.setter
+    def pet(self, value: Entity) -> None:
+        self.game_state_data.pet = value
+
     @property
     def inventory(self) -> Inventory:
         """プレイヤーのインベントリ"""
         return self.game_state_data.inventory
-    
+
+    @inventory.setter
+    def inventory(self, value: Inventory) -> None:
+        self.game_state_data.inventory = value
+
     @property
     def pet_inventory(self) -> Inventory:
         """ペットのインベントリ"""
         return self.game_state_data.pet_inventory
-    
+
+    @pet_inventory.setter
+    def pet_inventory(self, value: Inventory) -> None:
+        self.game_state_data.pet_inventory = value
+
     @property
     def survival(self) -> SurvivalSystem:
         """サバイバルシステム"""
         return self.game_state_data.survival
+
+    @survival.setter
+    def survival(self, value: SurvivalSystem) -> None:
+        self.game_state_data.survival = value
+
+    @property
+    def systems_mgr(self) -> Any:
+        """互換用システムコーディネーター"""
+        return self.systems_coordinator
     
     @property
     def dungeon_level(self) -> int:
@@ -623,8 +650,19 @@ class Engine:
         return self.kernel.get_system("procedural_quest_manager")
 
     @property
+    def quest_generation_registry(self):
+        from procedural_quest_generator import REGISTRY
+        return REGISTRY
+
+    @property
+    def procedural_quest_generator(self):
+        from procedural_quest_generator import GENERATOR
+        return GENERATOR
+
+    @property
     def quest_scheduler(self):
         return self.kernel.get_system("quest_scheduler")
+
 
     # Meta package systems
     @property
@@ -730,8 +768,14 @@ class Engine:
         self.data_manager = self.systems_coordinator.register_system("data_manager", DataManager())
         self.ai_system = self.systems_coordinator.register_system("ai_system", AdvancedAISystem())
 
+        # UX & FX Systems
+        from ui_fx_systems import TutorialManager, NotificationManager
+        self.tutorial_manager = TutorialManager("data/tutorial_guides.yaml")
+        self.notification_manager = NotificationManager()
+
         # 一括初期化 (Step 14)
         self.systems_coordinator.initialize_all(self)
+
     @property
     def floating_texts(self) -> List[FloatingText]:
         return self.fx_manager.floating_texts

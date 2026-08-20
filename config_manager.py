@@ -1,4 +1,8 @@
 import yaml
+import logging
+from pydantic import BaseModel, ValidationError
+from dotenv import load_dotenv
+load_dotenv()
 import os
 from typing import Any, Dict, Optional
 from cryptography.fernet import Fernet
@@ -108,6 +112,21 @@ class ConfigManager:
         """Update telemetry opt-in state and persist to settings."""
         self.telemetry_enabled = bool(value)
         self.config.setdefault("settings", {})["telemetry_enabled"] = self.telemetry_enabled
+
+# Pydantic validation model
+class ConfigModel(BaseModel):
+    settings: dict = {}
+    player: dict = {}
+    pet: dict = {}
+
+    def validate(self) -> bool:
+        try:
+            self.__class__(**self.dict())
+            return True
+        except ValidationError as e:
+            logger = logging.getLogger(__name__)
+            logger.error(f"Config validation error: {e}")
+            return False
 
 
 # グローバルインスタンス

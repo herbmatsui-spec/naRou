@@ -1148,3 +1148,8 @@ class ProceduralQuestManager:
         if engine:
             engine.log(f"連鎖クエスト【{followup.title}】が発生！", (255, 180, 255))
         return followup
+
+
+GENERATOR = ProceduralQuestGenerator(REGISTRY)
+MANAGER = ProceduralQuestManager(GENERATOR)
+

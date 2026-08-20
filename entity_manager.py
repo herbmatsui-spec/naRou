@@ -26,6 +26,8 @@ class EntityManager:
         self.entities: List[Entity] = []
         self.items_on_ground: List[Item] = []
         self.resource_nodes: List[ResourceNode] = []
+        # Deferred removal set – entities scheduled for deletion after current loop
+        self._pending_removal: Set[Entity] = set()
     
     def add_entity(self, entity: Entity) -> None:
         """
@@ -51,6 +53,16 @@ class EntityManager:
             return True
         except ValueError:
             return False
+
+    def schedule_removal(self, entity: Entity) -> None:
+        """Mark an entity for deferred removal after the current update loop."""
+        self._pending_removal.add(entity)
+
+    def process_pending_removals(self) -> None:
+        """Remove all entities that were scheduled via `schedule_removal`."""
+        for e in list(self._pending_removal):
+            self.remove_entity(e)
+        self._pending_removal.clear()
     
     def get_entities(self) -> List[Entity]:
         """

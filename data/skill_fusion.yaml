@@ -86,6 +86,19 @@ fusions:
       - type: "undead_bane"
         value: 100
 
+fusion_recipes:
+  fireball_fusion:
+    id: "fireball_fusion"
+    name: "火炎爆砕合成"
+    description: "魔力詠唱と魔力矢を融合し、強力な火炎爆砕魔法を生み出す。"
+    base_skill: "magic_cast"
+    materials:
+      fire_essence: 1
+      magic_dart: 5
+    output: "mega_fireball"
+    required_level: 10
+    success_rate: 1.0
+
 meta:
   version: "1.0.0"
-  last_updated: "2026-08-19"
+  last_updated: "2026-08-19"

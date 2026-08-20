@@ -2,21 +2,1667 @@
   "version": "1.0",
   "tile_size": 16,
   "tiles": {
-    "TILE_WALL": {"file": "WALL_DUNGEON", "variants": 16, "autotile": true, "variant_width": 16, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"]},
-    "TILE_FLOOR": {"file": "FLOOR_DUNGEON", "variants": 8, "autotile": true, "variant_width": 16, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"]},
-    "TILE_STAIRS_DOWN": {"file": "STAIRS_DOWN", "animated": true, "frames": 2, "fps": 4, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"]},
-    "TILE_STAIRS_UP": {"file": "STAIRS_UP", "animated": true, "frames": 2, "fps": 4, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"]},
-    "TILE_WATER": {"file": "WATER", "animated": true, "frames": 3, "fps": 5, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"]},
-    "TILE_TRAP": {"file": "TRAP", "variants": 1, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"]},
-    "PLAYER": {"file": "PLAYER", "animated": true, "frames": 4, "fps": 8, "directions": 4, "states": ["idle", "walk", "attack"], "atlas_scale": "16", "frame_width": 16, "anchor_x": 0.5, "anchor_y": 1.0},
-    "PET": {"file": "PET", "animated": true, "frames": 4, "fps": 8, "directions": 4, "states": ["idle", "walk"], "atlas_scale": "16", "frame_width": 16, "anchor_x": 0.5, "anchor_y": 1.0},
-    "ENEMY_GOBLIN": {"file": "ENEMY_GOBLIN", "animated": true, "frames": 4, "fps": 8, "directions": 4, "states": ["idle", "walk", "attack"], "atlas_scale": "16", "frame_width": 16, "anchor_x": 0.5, "anchor_y": 1.0},
-    "ITEM_POTION": {"file": "ITEM_POTION", "variants": 1, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"], "anchor_x": 0.5, "anchor_y": 0.5},
-    "ITEM_WEAPON": {"file": "ITEM_WEAPON", "variants": 1, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"], "anchor_x": 0.5, "anchor_y": 0.5},
-    "ITEM_ARMOR": {"file": "ITEM_ARMOR", "variants": 1, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"], "anchor_x": 0.5, "anchor_y": 0.5},
-    "ITEM_GOLD": {"file": "ITEM_GOLD", "animated": true, "frames": 4, "fps": 8, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"], "anchor_x": 0.5, "anchor_y": 0.5},
-    "DECOR_TORCH": {"file": "TORCH", "animated": true, "frames": 4, "fps": 8, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"], "anchor_x": 0.5, "anchor_y": 0.5},
-    "DECOR_BLOOD": {"file": "BLOOD_SPLAT", "variants": 4, "variant_width": 16, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["idle"]},
-    "EFFECT_MAGIC": {"file": "MAGIC_CAST", "animated": true, "frames": 3, "fps": 12, "atlas_scale": "16", "frame_width": 16, "directions": 1, "states": ["cast"]}
+    "TILE_WALL": {
+      "file": "WALL_DUNGEON",
+      "variants": 16,
+      "autotile": true,
+      "variant_width": 16,
+      "atlas_scale": "16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TILE_FLOOR": {
+      "file": "FLOOR_DUNGEON",
+      "variants": 8,
+      "autotile": true,
+      "variant_width": 16,
+      "atlas_scale": "16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TILE_STAIRS_DOWN": {
+      "file": "STAIRS_DOWN",
+      "animated": true,
+      "frames": 2,
+      "fps": 4,
+      "atlas_scale": "16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TILE_STAIRS_UP": {
+      "file": "STAIRS_UP",
+      "animated": true,
+      "frames": 2,
+      "fps": 4,
+      "atlas_scale": "16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TILE_WATER": {
+      "file": "WATER",
+      "animated": true,
+      "frames": 3,
+      "fps": 5,
+      "atlas_scale": "16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TILE_TRAP": {
+      "file": "TRAP",
+      "variants": 1,
+      "atlas_scale": "16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "PLAYER": {
+      "file": "PLAYER",
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "atlas_scale": "16",
+      "frame_width": 16,
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "PET": {
+      "file": "PET",
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk"
+      ],
+      "atlas_scale": "16",
+      "frame_width": 16,
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "ENEMY_GOBLIN": {
+      "file": "ENEMY_GOBLIN",
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "atlas_scale": "16",
+      "frame_width": 16,
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "ITEM_POTION": {
+      "file": "ITEM_POTION",
+      "variants": 1,
+      "atlas_scale": "16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "ITEM_WEAPON": {
+      "file": "ITEM_WEAPON",
+      "variants": 1,
+      "atlas_scale": "16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "ITEM_ARMOR": {
+      "file": "ITEM_ARMOR",
+      "variants": 1,
+      "atlas_scale": "16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "ITEM_GOLD": {
+      "file": "ITEM_GOLD",
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "atlas_scale": "16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "DECOR_TORCH": {
+      "file": "TORCH",
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "atlas_scale": "16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "DECOR_BLOOD": {
+      "file": "BLOOD_SPLAT",
+      "variants": 4,
+      "variant_width": 16,
+      "atlas_scale": "16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "EFFECT_MAGIC": {
+      "file": "MAGIC_CAST",
+      "animated": true,
+      "frames": 3,
+      "fps": 12,
+      "atlas_scale": "16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "cast"
+      ]
+    },
+    "TR_DECOR_01": {
+      "file": "TR_DECOR_01",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_DECOR_02": {
+      "file": "TR_DECOR_02",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_DECOR_03": {
+      "file": "TR_DECOR_03",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_DECOR_04": {
+      "file": "TR_DECOR_04",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_DECOR_05": {
+      "file": "TR_DECOR_05",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_DECOR_06": {
+      "file": "TR_DECOR_06",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_DECOR_07": {
+      "file": "TR_DECOR_07",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_DECOR_08": {
+      "file": "TR_DECOR_08",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_DECOR_09": {
+      "file": "TR_DECOR_09",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_DECOR_10": {
+      "file": "TR_DECOR_10",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_DECOR_11": {
+      "file": "TR_DECOR_11",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_DECOR_12": {
+      "file": "TR_DECOR_12",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_EFFECT_01": {
+      "file": "TR_EFFECT_01",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "cast"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_EFFECT_02": {
+      "file": "TR_EFFECT_02",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "cast"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_EFFECT_03": {
+      "file": "TR_EFFECT_03",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "cast"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_EFFECT_04": {
+      "file": "TR_EFFECT_04",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "cast"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_EFFECT_05": {
+      "file": "TR_EFFECT_05",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "cast"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_EFFECT_06": {
+      "file": "TR_EFFECT_06",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "cast"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_EFFECT_07": {
+      "file": "TR_EFFECT_07",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "cast"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_EFFECT_08": {
+      "file": "TR_EFFECT_08",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "cast"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_EFFECT_09": {
+      "file": "TR_EFFECT_09",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "cast"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_EFFECT_10": {
+      "file": "TR_EFFECT_10",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "cast"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_EFFECT_11": {
+      "file": "TR_EFFECT_11",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "cast"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_EFFECT_12": {
+      "file": "TR_EFFECT_12",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "cast"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_FLOOR_01": {
+      "file": "TR_FLOOR_01",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_FLOOR_02": {
+      "file": "TR_FLOOR_02",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_FLOOR_03": {
+      "file": "TR_FLOOR_03",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_FLOOR_04": {
+      "file": "TR_FLOOR_04",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_FLOOR_05": {
+      "file": "TR_FLOOR_05",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_FLOOR_06": {
+      "file": "TR_FLOOR_06",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_FLOOR_07": {
+      "file": "TR_FLOOR_07",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_FLOOR_08": {
+      "file": "TR_FLOOR_08",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_FLOOR_09": {
+      "file": "TR_FLOOR_09",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_FLOOR_10": {
+      "file": "TR_FLOOR_10",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_FLOOR_11": {
+      "file": "TR_FLOOR_11",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_FLOOR_12": {
+      "file": "TR_FLOOR_12",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_ITEM_01": {
+      "file": "TR_ITEM_01",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_ITEM_02": {
+      "file": "TR_ITEM_02",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_ITEM_03": {
+      "file": "TR_ITEM_03",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_ITEM_04": {
+      "file": "TR_ITEM_04",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_ITEM_05": {
+      "file": "TR_ITEM_05",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_ITEM_06": {
+      "file": "TR_ITEM_06",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_ITEM_07": {
+      "file": "TR_ITEM_07",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_ITEM_08": {
+      "file": "TR_ITEM_08",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_ITEM_09": {
+      "file": "TR_ITEM_09",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_ITEM_10": {
+      "file": "TR_ITEM_10",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_ITEM_11": {
+      "file": "TR_ITEM_11",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_ITEM_12": {
+      "file": "TR_ITEM_12",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_MISC_01": {
+      "file": "TR_MISC_01",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_MISC_02": {
+      "file": "TR_MISC_02",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_MISC_03": {
+      "file": "TR_MISC_03",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_MISC_04": {
+      "file": "TR_MISC_04",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_MISC_05": {
+      "file": "TR_MISC_05",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_MISC_06": {
+      "file": "TR_MISC_06",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_MISC_07": {
+      "file": "TR_MISC_07",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_MISC_08": {
+      "file": "TR_MISC_08",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_MISC_09": {
+      "file": "TR_MISC_09",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_MISC_10": {
+      "file": "TR_MISC_10",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_MISC_11": {
+      "file": "TR_MISC_11",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_MISC_12": {
+      "file": "TR_MISC_12",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_MONSTER_01": {
+      "file": "TR_MONSTER_01",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_02": {
+      "file": "TR_MONSTER_02",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_03": {
+      "file": "TR_MONSTER_03",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_VAR_01": {
+      "file": "TR_MONSTER_VAR_01",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_VAR_02": {
+      "file": "TR_MONSTER_VAR_02",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_MONSTER_VAR_03": {
+      "file": "TR_MONSTER_VAR_03",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_PLAYER_01": {
+      "file": "TR_PLAYER_01",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_PLAYER_02": {
+      "file": "TR_PLAYER_02",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_PLAYER_03": {
+      "file": "TR_PLAYER_03",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "TR_UI_01": {
+      "file": "TR_UI_01",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_UI_02": {
+      "file": "TR_UI_02",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_UI_03": {
+      "file": "TR_UI_03",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_UI_04": {
+      "file": "TR_UI_04",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_UI_05": {
+      "file": "TR_UI_05",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_UI_06": {
+      "file": "TR_UI_06",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_UI_07": {
+      "file": "TR_UI_07",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_UI_08": {
+      "file": "TR_UI_08",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_UI_09": {
+      "file": "TR_UI_09",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_UI_10": {
+      "file": "TR_UI_10",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_UI_11": {
+      "file": "TR_UI_11",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_UI_12": {
+      "file": "TR_UI_12",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "animated": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 0.5
+    },
+    "TR_WALL_01": {
+      "file": "TR_WALL_01",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_02": {
+      "file": "TR_WALL_02",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_03": {
+      "file": "TR_WALL_03",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_04": {
+      "file": "TR_WALL_04",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_05": {
+      "file": "TR_WALL_05",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_06": {
+      "file": "TR_WALL_06",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_07": {
+      "file": "TR_WALL_07",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_08": {
+      "file": "TR_WALL_08",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_09": {
+      "file": "TR_WALL_09",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_10": {
+      "file": "TR_WALL_10",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_11": {
+      "file": "TR_WALL_11",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_12": {
+      "file": "TR_WALL_12",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 12,
+      "autotile": true,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_VAR_01": {
+      "file": "TR_WALL_VAR_01",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "autotile": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_VAR_02": {
+      "file": "TR_WALL_VAR_02",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "autotile": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_VAR_03": {
+      "file": "TR_WALL_VAR_03",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "autotile": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_VAR_04": {
+      "file": "TR_WALL_VAR_04",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "autotile": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_VAR_05": {
+      "file": "TR_WALL_VAR_05",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "autotile": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_VAR_06": {
+      "file": "TR_WALL_VAR_06",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "autotile": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_VAR_07": {
+      "file": "TR_WALL_VAR_07",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "autotile": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_VAR_08": {
+      "file": "TR_WALL_VAR_08",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "autotile": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_VAR_09": {
+      "file": "TR_WALL_VAR_09",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "autotile": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_VAR_10": {
+      "file": "TR_WALL_VAR_10",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "autotile": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_VAR_11": {
+      "file": "TR_WALL_VAR_11",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "autotile": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    },
+    "TR_WALL_VAR_12": {
+      "file": "TR_WALL_VAR_12",
+      "atlas_scale": "tiny_rogue_16",
+      "frame_width": 16,
+      "variant_width": 16,
+      "variants": 1,
+      "autotile": false,
+      "directions": 1,
+      "states": [
+        "idle"
+      ]
+    }
   }
 }

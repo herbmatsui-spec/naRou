@@ -140,27 +140,150 @@ class PerformanceMonitor:
             footprint_mb=footprint_mb,
         )
     
-    @contextmanager
-    def measure_response_time(self, operation_name: str = "operation"):
-        """Context manager to measure response time of an operation."""
-        start = time.perf_counter()
-        try:
-            yield
-        finally:
-            elapsed_ms = (time.perf_counter() - start) * 1000
-            self.logger.debug(f"{operation_name} took {elapsed_ms:.2f}ms")
+    def start_monitoring(self) -> None:
+        """Alias for start()."""
+        self.start()
+
+    def stop_monitoring(self) -> None:
+        """Alias for stop()."""
+        self.stop()
+
+    def measure_cpu(self) -> float:
+        """Measure current CPU usage percentage."""
+        return float(self._process.cpu_percent(interval=0.01))
+
+    def measure_memory(self) -> Dict[str, Any]:
+        """Measure current system and process memory."""
+        vmem = psutil.virtual_memory()
+        mem_info = self._process.memory_info()
+        return {
+            "total": vmem.total,
+            "available": vmem.available,
+            "used": vmem.used,
+            "percent": vmem.percent,
+            "rss": mem_info.rss,
+            "vms": mem_info.vms,
+            "process_mb": mem_info.rss / (1024 * 1024),
+        }
+
+    def measure_disk_io(self) -> Dict[str, Any]:
+        """Measure disk I/O metrics."""
+        disk_io = psutil.disk_io_counters()
+        if not disk_io:
+            return {}
+        return {
+            "read_bytes": disk_io.read_bytes,
+            "write_bytes": disk_io.write_bytes,
+            "read_count": disk_io.read_count,
+            "write_count": disk_io.write_count,
+        }
+
+    def measure_network(self) -> Dict[str, Any]:
+        """Measure network I/O metrics."""
+        net = psutil.net_io_counters()
+        if not net:
+            return {}
+        return {
+            "bytes_sent": net.bytes_sent,
+            "bytes_recv": net.bytes_recv,
+            "packets_sent": net.packets_sent,
+            "packets_recv": net.packets_recv,
+        }
+
+    def measure_footprint(self) -> Dict[str, Any]:
+        """Measure memory footprint."""
+        mem_info = self._process.memory_info()
+        mem_percent = self._process.memory_percent()
+        return {
+            "rss": mem_info.rss,
+            "vms": mem_info.vms,
+            "percent": mem_percent,
+            "rss_mb": mem_info.rss / (1024 * 1024),
+        }
+
+    def get_footprint(self) -> Dict[str, Any]:
+        """Get footprint dictionary."""
+        return self.measure_footprint()
+
+    def measure_energy(self) -> Dict[str, Any]:
+        """Estimate energy consumption."""
+        cpu = self.measure_cpu()
+        # Typical 65W TDP estimation
+        estimated_watts = (cpu / 100.0) * 65.0
+        return {
+            "cpu_percent": cpu,
+            "estimated_watts": max(1.0, estimated_watts),
+        }
+
+    def get_energy_consumption(self) -> Dict[str, Any]:
+        """Get energy consumption dictionary."""
+        return self.measure_energy()
+
+    def collect_baseline(self, duration: int = 3) -> Dict[str, Any]:
+        """Collect baseline metrics over duration."""
+        measurements = []
+        cpu_vals = []
+        mem_vals = []
+        for _ in range(max(1, duration)):
+            cpu = self.measure_cpu()
+            mem = self.measure_memory()
+            fp = self.measure_footprint()
+            net = self.measure_network()
+            energy = self.measure_energy()
+            cpu_vals.append(cpu)
+            mem_vals.append(mem["percent"])
+            measurements.append({
+                "cpu": cpu,
+                "memory": mem,
+                "footprint": fp,
+                "network": net,
+                "energy": energy,
+            })
+            time.sleep(0.1)
+
+        return {
+            "duration": duration,
+            "measurements": measurements,
+            "statistics": {
+                "cpu_avg": sum(cpu_vals) / len(cpu_vals),
+                "cpu_max": max(cpu_vals),
+                "cpu_min": min(cpu_vals),
+                "memory_avg": sum(mem_vals) / len(mem_vals),
+                "memory_max": max(mem_vals),
+                "memory_min": min(mem_vals),
+            }
+        }
+
+    def measure_response_time(self, operation: Any = None):
+        """Measure response time for a callable task or context manager."""
+        if callable(operation):
+            start = time.perf_counter()
+            operation()
+            return time.perf_counter() - start
+
+        @contextmanager
+        def _cm():
+            start = time.perf_counter()
+            try:
+                yield
+            finally:
+                elapsed_ms = (time.perf_counter() - start) * 1000
+                self.logger.debug(f"{operation or 'operation'} took {elapsed_ms:.2f}ms")
+
+        return _cm()
     
-    def measure_latency(self, func: Callable, *args, **kwargs) -> tuple:
+    def measure_latency(self, func: Callable, *args, **kwargs) -> Any:
         """
         Measure latency of a function call.
         
         Returns:
-            Tuple of (result, latency_ms)
+            If single arg / test expects float: duration in seconds
         """
         start = time.perf_counter()
         result = func(*args, **kwargs)
-        latency_ms = (time.perf_counter() - start) * 1000
-        return result, latency_ms
+        duration = time.perf_counter() - start
+        return duration
+
     
     def get_current_metrics(self) -> PerformanceMetrics:
         """Get current metrics snapshot."""

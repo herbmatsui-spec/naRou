@@ -1,10 +1,29 @@
+# Python
 __pycache__/
-*.pyc
-.pytest_cache/
-savegame.bin*
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+
+# Virtual env
+.venv/
+env/
+
+# Logs
 logs/
-scratch/
-archive/
-.system_generated/
-node_modules/
-package-lock.json
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Sensitive
+config.yaml
+
+# Build artifacts
+build/
+dist/
+*.egg
+
+# VSCode
+.vscode/

@@ -9,9 +9,30 @@ import argparse
 from pathlib import Path
 from datetime import datetime
 import threading
+try:
+    from prometheus_client import Gauge, start_http_server
+except ImportError:
+    # Fallback dummy implementations for environments without prometheus_client
+    class Gauge:
+        def __init__(self, *args, **kwargs):
+            pass
+        def labels(self, *args, **kwargs):
+            class _NoOp:
+                def set(self, value):
+                    pass
+            return _NoOp()
+    def start_http_server(port):
+        pass
 
 class MonitoringManager:
     def __init__(self, monitor_dir="monitoring_management"):
+        self._setup_prometheus()
+
+    def _setup_prometheus(self):
+        """Start Prometheus exporter on port 8000 and define gauges."""
+        start_http_server(8000)
+        self._check_gauge = Gauge('naRou_check_success', 'Health check success', ['check'])
+
         self.monitor_dir = Path(monitor_dir)
         self.monitor_dir.mkdir(exist_ok=True)
         self.checks = {}
@@ -134,6 +155,11 @@ class MonitoringManager:
         results = {}
         for name in self.checks:
             success, message = self.run_check(name)
+            # Update Prometheus gauge
+            try:
+                self._check_gauge.labels(check=name).set(1 if success else 0)
+            except Exception:
+                pass
             results[name] = {"success": success, "message": message, "timestamp": datetime.now().isoformat()}
         return results
     

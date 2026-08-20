@@ -88,16 +88,20 @@ class CachedRepository(InMemoryRepository[T, ID]):
     def __init__(self, data: dict[ID, T], cache_size: int = 128):
         super().__init__(data)
         self._cache_size = cache_size
-        self._get_cache = lru_cache(maxsize=cache_size)(self._uncached_get)
-    
-    def _uncached_get(self, id: ID) -> T | None:
-        return self._data.get(id)
+        self._cache: dict[ID, T | None] = {}
     
     def get(self, id: ID) -> T | None:
-        return self._get_cache(id)
+        if id in self._cache:
+            return self._cache[id]
+        val = self._data.get(id)
+        if len(self._cache) >= self._cache_size:
+            self._cache.pop(next(iter(self._cache)))
+        self._cache[id] = val
+        return val
     
     def invalidate_cache(self) -> None:
-        self._get_cache.cache_clear()
+        self._cache.clear()
+
 
 
 __all__ = [

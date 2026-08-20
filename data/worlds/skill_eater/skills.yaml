@@ -1,0 +1,206 @@
+# data/worlds/skill_eater/skills.yaml
+skills:
+  - id: "com_labor_001"
+    name: "荷運び"
+    tier: "Common"
+    type: "Passive"
+    mp_cost: 0
+    cooldown: 0
+    market_value: 500
+    tags: ["Labor", "Passive", "Utility"]
+    flavor_text: "肉体労働者の必須スキル。これがないと倉庫街では雇われない。"
+    effects:
+      - type: "StatMod"
+        target: "Self"
+        stat: "max_carry_weight"
+        formula: "+50"
+
+  - id: "com_labor_002"
+    name: "夜目"
+    tier: "Common"
+    type: "Passive"
+    mp_cost: 0
+    cooldown: 0
+    market_value: 800
+    tags: ["Labor", "Passive", "Vision"]
+    flavor_text: "炭鉱夫や夜間警備員の証。商会はこれを持つ者を24時間働かせる。"
+    effects:
+      - type: "PassiveEffect"
+        target: "Self"
+        effect_name: "night_vision"
+
+  - id: "com_combat_001"
+    name: "初級剣術"
+    tier: "Common"
+    type: "Passive"
+    mp_cost: 0
+    cooldown: 0
+    market_value: 1200
+    tags: ["Combat", "Sword", "Passive"]
+    flavor_text: "チンピラや下級兵士の基本技。"
+    effects:
+      - type: "DamageMod"
+        target: "Self"
+        weapon_type: "Sword"
+        formula: "*1.05"
+
+  - id: "com_combat_002"
+    name: "小ヒール"
+    tier: "Common"
+    type: "Active"
+    mp_cost: 10
+    cooldown: 5
+    market_value: 2500
+    tags: ["Magic", "Heal", "Active"]
+    flavor_text: "治癒の最低ランク。これ一つでスラムでは「先生」と呼ばれる。"
+    effects:
+      - type: "Heal"
+        target: "Ally"
+        formula: "int * 1.2 + 20"
+
+  - id: "com_magic_001"
+    name: "火種"
+    tier: "Common"
+    type: "Active"
+    mp_cost: 5
+    cooldown: 2
+    market_value: 300
+    tags: ["Magic", "Fire", "Active"]
+    flavor_text: "タバコに火をつけるか、ゴミを燃やす程度の魔術。"
+    effects:
+      - type: "Damage"
+        target: "Enemy"
+        element: "Fire"
+        formula: "int * 0.5 + 5"
+
+  - id: "com_craft_001"
+    name: "帳簿計算"
+    tier: "Common"
+    type: "Passive"
+    mp_cost: 0
+    cooldown: 0
+    market_value: 1500
+    tags: ["Economy", "Passive", "Utility"]
+    flavor_text: "商会の下働き用スキル。"
+    effects:
+      - type: "EconomyMod"
+        target: "Self"
+        sell_multiplier: 1.02
+        buy_multiplier: 0.98
+
+  - id: "rar_combat_012"
+    name: "鋼鉄の皮膚"
+    tier: "Rare"
+    type: "Passive"
+    mp_cost: 0
+    cooldown: 0
+    market_value: 85000
+    tags: ["Combat", "Defense", "Passive"]
+    flavor_text: "ミダス商会スラム支店長の自慢の防御スキル。物理攻撃を弾く。"
+    effects:
+      - type: "DamageReduction"
+        target: "Self"
+        damage_type: "Physical"
+        multiplier: 0.7
+      - type: "ResistanceMod"
+        target: "Self"
+        element: "Slash"
+        value: 50
+
+  - id: "rar_magic_008"
+    name: "業火球(ヘルボール)"
+    tier: "Rare"
+    type: "Active"
+    mp_cost: 40
+    cooldown: 12
+    market_value: 120000
+    tags: ["Magic", "Fire", "AoE", "Active"]
+    flavor_text: "焼き討ち部隊が多用する広範囲殲滅魔法。"
+    effects:
+      - type: "Damage"
+        target: "EnemyAoE"
+        element: "Fire"
+        formula: "int * 3.5"
+      - type: "ApplyStatus"
+        target: "EnemyAoE"
+        status: "Burn"
+        duration: 3
+
+  - id: "rar_stealth_003"
+    name: "気配遮断"
+    tier: "Rare"
+    type: "Passive"
+    mp_cost: 0
+    cooldown: 0
+    market_value: 150000
+    tags: ["Stealth", "Passive", "Utility"]
+    flavor_text: "闇ブローカーや暗殺者の必須スキル。"
+    effects:
+      - type: "AggroMod"
+        target: "Self"
+        multiplier: 0.3
+
+  - id: "rar_utility_005"
+    name: "思考加速"
+    tier: "Rare"
+    type: "Active"
+    mp_cost: 20
+    cooldown: 60
+    market_value: 200000
+    tags: ["Time", "Buff", "Active"]
+    flavor_text: "監査官が戦闘・交渉時に優位に立つためのチートまがいの技術。"
+    effects:
+      - type: "SpeedBuff"
+        target: "Self"
+        duration: 10
+        multiplier: 2.0
+
+  - id: "uni_midas_001"
+    name: "黄金錬成"
+    tier: "Unique"
+    type: "Active"
+    mp_cost: 100
+    cooldown: 45
+    market_value: -1
+    tags: ["Midas", "Unique", "InstantKill", "Active"]
+    flavor_text: "ミダス商会CEOの象徴。人を金に変える悪魔の権能。"
+    effects:
+      - type: "TransmuteInstantKill"
+        target: "Enemy"
+        threshold_hp_ratio: 0.2
+        reward_item: "gold_bar"
+
+  - id: "uni_resist_001"
+    name: "不屈の解放"
+    tier: "Unique"
+    type: "Passive"
+    mp_cost: 0
+    cooldown: 0
+    market_value: -1
+    tags: ["Resistance", "Unique", "Guts", "Passive"]
+    flavor_text: "開放戦線リーダーのスキル。何度踏みにじられても立ち上がる意思。"
+    effects:
+      - type: "LethalSurvive"
+        target: "Self"
+        count_per_battle: 1
+        buff_on_trigger:
+          stat: "atk"
+          multiplier: 2.0
+
+  - id: "con_fire_001"
+    name: "概念：炎"
+    tier: "Concept"
+    type: "Passive"
+    mp_cost: 0
+    cooldown: 0
+    market_value: -1
+    tags: ["Concept", "Fire", "Passive"]
+    flavor_text: "世界の「熱」の法則そのもの。"
+    effects:
+      - type: "ElementAbsorb"
+        target: "Self"
+        element: "Fire"
+      - type: "DamageMod"
+        target: "Self"
+        element: "Fire"
+        multiplier: 4.0

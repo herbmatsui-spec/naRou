@@ -5,7 +5,7 @@ Manages skill fusion mechanics allowing combination of skills into new abilities
 """
 
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any, Union
+from typing import List, Optional, Dict, Any, Union, Tuple
 import yaml
 import logging
 from pathlib import Path
@@ -159,7 +159,7 @@ class FusionManager:
             return False
         
         # Check conditions
-        if not self.check_fusion_conditions(player, fusion_id):
+        if not self.check_fusion_conditions(player, fusion_data):
             return False
         
         # Check if already fused
@@ -174,7 +174,7 @@ class FusionManager:
         player.fused_skills.append(fusion_id)
         
         # Grant result skills
-        for skill_id in fusion_id.result_skills:
+        for skill_id in fusion_data.result_skills:
             # Add to player's skill tree progress (simplified)
             # In a full implementation, this would add to appropriate skill tree
             pass
@@ -204,35 +204,129 @@ class FusionManager:
         return available
 
 
-# Module-level registry instance
-_fusion_registry: Optional[FusionRegistry] = None
+@dataclass
+class SkillFusionRecipe:
+    """スキル融合レシピデータ (Step 30)"""
+    id: str
+    name: str = ""
+    description: str = ""
+    base_skill: str = ""
+    materials: Dict[str, int] = field(default_factory=dict)
+    output: str = ""
+    required_level: int = 1
+    success_rate: float = 1.0
 
 
-def get_fusion_registry(path: str = "data/skill_fusion.yaml") -> FusionRegistry:
+# エイリアス
+SkillFusionData = FusionData
+
+
+class SkillFusionRegistry(FusionRegistry):
+    """スキル融合レジストリ (Step 31, 32)"""
+    def __init__(self):
+        super().__init__()
+        self._recipes: Dict[str, SkillFusionRecipe] = {}
+
+    def load(self, path: str = "data/skill_fusion.yaml") -> None:
+        super().load(path)
+        self._recipes.clear()
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                data = yaml.safe_load(f) or {}
+            for rid, rdata in data.get('fusion_recipes', {}).items():
+                self._recipes[rid] = SkillFusionRecipe(
+                    id=rid,
+                    name=rdata.get('name', rid),
+                    description=rdata.get('description', ''),
+                    base_skill=rdata.get('base_skill', ''),
+                    materials=rdata.get('materials', {}),
+                    output=rdata.get('output', ''),
+                    required_level=rdata.get('required_level', 1),
+                    success_rate=rdata.get('success_rate', 1.0)
+                )
+        except Exception:
+            pass
+
+    def get_recipe(self, recipe_id: str) -> Optional[SkillFusionRecipe]:
+        return self._recipes.get(recipe_id)
+
+    def all_recipes(self) -> Dict[str, SkillFusionRecipe]:
+        return self._recipes.copy()
+
+
+class SkillFusionManager(FusionManager):
+    """スキル融合マネージャー (Step 33-35)"""
+    def can_fuse(self, player, recipe_id: str) -> bool:
+        recipe = getattr(self.registry, "_recipes", {}).get(recipe_id)
+        if not recipe:
+            # 汎用融合チェック
+            f_data = self.registry.get(recipe_id)
+            return self.check_fusion_conditions(player, f_data) if f_data else False
+
+        if player.level < recipe.required_level:
+            return False
+
+        # 素材チェック
+        mats = getattr(player, "skill_fusion_materials", {})
+        for mat_id, count in recipe.materials.items():
+            if mat_id in getattr(player, "skills", {}):
+                if player.skills[mat_id].level < count:
+                    return False
+            elif mats.get(mat_id, 0) < count:
+                return False
+
+        return True
+
+    def fuse_skills(self, player, recipe_id: str) -> Tuple[bool, str]:
+        recipe = getattr(self.registry, "_recipes", {}).get(recipe_id)
+        if not recipe:
+            ok = self.perform_fusion(player, recipe_id)
+            return ok, "融合完了" if ok else "融合失敗"
+
+        if not self.can_fuse(player, recipe_id):
+            return False, "融合条件を満たしていません"
+
+        # 素材消費
+        mats = getattr(player, "skill_fusion_materials", {})
+        for mat_id, count in recipe.materials.items():
+            if mat_id in mats:
+                mats[mat_id] -= count
+
+        # 出力スキル獲得
+        from entity import Skill
+        if not hasattr(player, "skills"):
+            player.skills = {}
+        player.skills[recipe.output] = Skill(recipe.output, level=1)
+
+        return True, f"スキル【{recipe.name}】が完成しました！"
+
+
+REGISTRY = SkillFusionRegistry()
+_fusion_registry = REGISTRY
+
+
+def get_fusion_registry(path: str = "data/skill_fusion.yaml") -> SkillFusionRegistry:
     """Get or create the default FusionRegistry instance."""
     global _fusion_registry
     if _fusion_registry is None:
-        _fusion_registry = FusionRegistry()
+        _fusion_registry = SkillFusionRegistry()
         _fusion_registry.load(path)
     return _fusion_registry
 
 
-def get_fusion_manager() -> FusionManager:
+def get_fusion_manager() -> SkillFusionManager:
     """Get a FusionManager with the default registry."""
     registry = get_fusion_registry()
-    return FusionManager(registry)
-
-
-# Backward compatibility aliases
-SkillFusionRegistry = FusionRegistry
-SkillFusionManager = FusionManager
+    return SkillFusionManager(registry)
 
 
 __all__ = [
     "FusionEffect",
     "FusionData",
+    "SkillFusionData",
     "FusionRegistry",
-    "FusionManager",
     "SkillFusionRegistry",
+    "FusionManager",
     "SkillFusionManager",
-]
+    "REGISTRY",
+]
