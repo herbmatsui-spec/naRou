@@ -273,9 +273,7 @@ class EquipmentSlot:
     disabled: bool = False  # 変異でスロットが使用不可になる場合
 
     def can_equip(self, item: Item) -> bool:
-        if self.disabled:
-            return False
-        return True
+        return not self.disabled
 
 
 class Inventory:

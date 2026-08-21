@@ -3,6 +3,7 @@
 Generate TileDef entries for tiny_rogue tiles and merge into tileset_def.json.
 Reads the actual atlas metadata to know which tile IDs exist.
 """
+from __future__ import annotations
 
 import json
 from pathlib import Path

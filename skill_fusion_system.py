@@ -3,10 +3,10 @@
 Skill Fusion System for naRou
 Manages skill fusion mechanics allowing combination of skills into new abilities.
 """
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
 
 import yaml
 
@@ -38,7 +38,7 @@ class FusionData:
 class FusionRegistry:
     """Singleton registry for loading and accessing skill fusions."""
 
-    _instance: Optional["FusionRegistry"] = None
+    _instance: FusionRegistry | None = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -128,7 +128,7 @@ class FusionManager:
         # Check required skills
         for skill_id in fusion_data.required_skills:
             learned = False
-            for tree_id, skills in player.skill_tree_progress.items():
+            for skills in player.skill_tree_progress.values():
                 if skill_id in skills:
                     learned = True
                     break
@@ -136,9 +136,8 @@ class FusionManager:
                 return False
 
         # Check required job
-        if fusion_data.required_job:
-            if player.job != fusion_data.required_job:
-                return False
+        if fusion_data.required_job and player.job != fusion_data.required_job:
+            return False
 
         # Check required god
         if fusion_data.required_god:
@@ -184,7 +183,7 @@ class FusionManager:
             pass
 
         # Apply bonus effects
-        for effect in fusion_id.bonus_effects:
+        for effect in fusion_data.bonus_effects:
             self._apply_fusion_effect(player, effect)
 
         return True
@@ -192,7 +191,6 @@ class FusionManager:
     def _apply_fusion_effect(self, player, effect) -> None:
         """Apply a fusion bonus effect to the player."""
         # This would apply passive bonuses, could be expanded
-        pass
 
     def get_available_fusions(self, player) -> list[FusionData]:
         """Get list of available fusions for player."""
@@ -251,6 +249,7 @@ class SkillFusionRegistry(FusionRegistry):
                     success_rate=rdata.get("success_rate", 1.0),
                 )
         except Exception:
+            # Load failure, ignore and keep recipe dict empty
             pass
 
     def get_recipe(self, recipe_id: str) -> SkillFusionRecipe | None:
@@ -329,12 +328,12 @@ def get_fusion_manager() -> SkillFusionManager:
 
 
 __all__ = [
-    "FusionEffect",
-    "FusionData",
-    "SkillFusionData",
-    "FusionRegistry",
-    "SkillFusionRegistry",
-    "FusionManager",
-    "SkillFusionManager",
     "REGISTRY",
+    "FusionData",
+    "FusionEffect",
+    "FusionManager",
+    "FusionRegistry",
+    "SkillFusionData",
+    "SkillFusionManager",
+    "SkillFusionRegistry",
 ]

@@ -236,12 +236,11 @@ class GameplayLoop:
             else:
                 self.engine._npc_ai(actor)
 
-        player_bleeding = False
         for entity in list(self.engine.entity_manager.get_living_entities()):
             if entity.hp > 0:
-                logs, is_bleeding = CombatSystem.process_status_effects(entity)
+                logs, _is_bleeding = CombatSystem.process_status_effects(entity)
                 if entity == self.engine.player:
-                    player_bleeding = is_bleeding
+                    pass
                 if logs and (
                     entity == self.engine.player
                     or self.engine.has_los(

@@ -79,12 +79,12 @@ class AnimState:
             self.timer = 0.0
             td = self.atlas.defs.get(self.tile_id)
             if td:
-                max_frames = td.frames if self.state == "idle" else td.frames
+                max_frames = td.frames
                 self.frame = (self.frame + 1) % max_frames
             return True
         return False
 
-    def get_uv(self, scale: str = None) -> TileUV:
+    def get_uv(self, scale: str | None = None) -> TileUV:
         """Get current frame UV."""
         s = scale or self.atlas.default_scale
         return self.atlas.get_uv(
@@ -159,7 +159,7 @@ class TileAtlas:
         frame: int = 0,
         direction: int = 0,
         state: str = "idle",
-        scale: str = None,
+        scale: str | None = None,
     ) -> TileUV:
         """Get UV coordinates for a specific tile configuration."""
         s = scale or self.default_scale
@@ -177,7 +177,7 @@ class TileAtlas:
 
         base = meta["tiles"][file_key]
         bx, by = base["x"], base["y"]
-        bw, bh = base["width"], base["height"]
+        _bw, bh = base["width"], base["height"]
 
         # Variant offset (horizontal)
         vw = td.variant_width
@@ -221,7 +221,7 @@ class TileAtlas:
         variant: int = 0,
         direction: int = 0,
         state: str = "idle",
-        fps: int = None,
+        fps: int | None = None,
         loop: bool = True,
     ) -> AnimState:
         """Create an AnimState for runtime animation."""
@@ -251,7 +251,7 @@ class TileAtlas:
         uv = self.get_uv(tile_id, variant, frame, direction, state, scale)
         return (uv.x, uv.y, uv.w, uv.h)
 
-    def get_master_image_path(self, tile_id: str, scale: str = None) -> Path | None:
+    def get_master_image_path(self, tile_id: str, scale: str | None = None) -> Path | None:
         """Get path to master atlas image for a tile."""
         s = scale or self.default_scale
         td = self.defs.get(tile_id)

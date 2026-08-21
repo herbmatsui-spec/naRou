@@ -17,7 +17,7 @@ def get_all_event_rankings() -> dict[str, list[tuple]]:
     :return: {event_id: [(player_id, score), ...]}
     """
     rankings = {}
-    for event_id in REGISTRY.all_events().keys():
+    for event_id in REGISTRY.all_events():
         rankings[event_id] = RANKING_MANAGER.get_ranking(event_id)
     return rankings
 

@@ -7,8 +7,11 @@ Status Screen, Tabbed Inventory, Colored Logs, Faction/Aggro
 
 from __future__ import annotations
 
+import logging
 import sys
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 try:
     import pydantic
@@ -132,8 +135,8 @@ class Engine:
 
         # --- 設定管理 (Step 4) ---
         self.config_mgr = get_config_manager()
-        player_cfg = self.config_mgr.get_player_config()
-        pet_cfg = self.config_mgr.get_pet_config()
+        self.config_mgr.get_player_config()
+        self.config_mgr.get_pet_config()
 
         # --- LocalizationManager (Phase 3: Step 41) ---
         self.localization_manager = LocalizationManager()
@@ -829,9 +832,8 @@ class Engine:
         self.game_state = state_mapping.get(new_state, "play")
 
         # on_enter hook
-        if new_state == GameState.MENU:
-            if hasattr(self, "look_cursor"):
-                self.look_cursor.active = False
+        if new_state == GameState.MENU and hasattr(self, "look_cursor"):
+            self.look_cursor.active = False
 
     def open_journal(self) -> None:
         """冒険日誌を開く"""
@@ -1165,9 +1167,8 @@ class Engine:
                 self.pet.hp = min(self.pet.max_hp, self.pet.hp + 1)
 
         # 世界のニュース・噂の動的生成 (Step 8.1)
-        if self.turns % 30 == 0:
-            if hasattr(self, "world_state_manager"):
-                self.world_state_manager.generate_world_news(self)
+        if self.turns % 30 == 0 and hasattr(self, "world_state_manager"):
+            self.world_state_manager.generate_world_news(self)
 
         # 動的サウンドスケープ: 危機状態のBGM判定 (Step 7.3)
         if hasattr(self, "player") and self.player:
@@ -1188,7 +1189,7 @@ class Engine:
             if self.player.total_turns % TITLE_CHECK_INTERVAL == 0:
                 from title_system import MANAGER
 
-                granted = MANAGER.check_all_titles(self.player)
+                MANAGER.check_all_titles(self.player)
                 # 通知は自動で player.title_notifications に入る
 
         # === ジョブ経験値加算 & レベルアップ (Step 51) ===
@@ -1226,7 +1227,7 @@ class Engine:
 
         # === 派閥影響力定期変動 (Step 62) ===
         if self.turns % FACTION_INFLUENCE_INTERVAL == 0:
-            for fid in self.faction_war_registry.all().keys():
+            for fid in self.faction_war_registry.all():
                 chg = self.faction_war_manager.calculate_influence_change(fid, self)
                 self.faction_war_manager.apply_influence_effects(fid, chg)
 
@@ -1287,7 +1288,7 @@ class Engine:
                         if hasattr(self, "pet_inventory")
                         else None
                     )
-                    dmg, is_crit, msg = CombatSystem.calculate_melee_attack(
+                    dmg, is_crit, _msg = CombatSystem.calculate_melee_attack(
                         self.pet, nearest, weapon=weapon
                     )
                     nearest.hp -= dmg
@@ -1433,7 +1434,7 @@ class Engine:
                 self.log(msg, (180, 255, 180))
                 SoundManager.play_se("get_item")
                 if itm:
-                    ok, add_msg = self.inventory.add_item(itm)
+                    _ok, add_msg = self.inventory.add_item(itm)
                     self.log(add_msg, (200, 255, 200))
                     self.floating_texts.append(
                         FloatingText(
@@ -1909,11 +1910,10 @@ class Engine:
         renderer = self._tcod_renderer
 
         # Frame time for lighting/particles
-        frame_time = 1.0 / 60.0  # Assume 60 FPS
         if hasattr(self, "_last_render_time"):
             import time
 
-            frame_time = time.time() - self._last_render_time
+            time.time() - self._last_render_time
         self._last_render_time = time.time() if "time" in dir() else 0
 
         renderer.begin_frame()
@@ -2365,7 +2365,8 @@ def main() -> None:
                                 pass
                             continue
                     InputHandler.handle_event(event, engine)
-    except Exception as e:
+    except Exception:
+        logger.exception("ロード失敗")
         # SDL コンテキストを作れない場合（ヘッドレス/ GPU なし等）のフォールバック
         from feature_flags import get_text_mode_enabled
 

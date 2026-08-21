@@ -2,6 +2,7 @@
 
 Consolidated managers for the pet contract/evolution/fusion proposal.
 """
+from __future__ import annotations
 
 import logging
 from typing import Any

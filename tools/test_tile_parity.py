@@ -123,6 +123,7 @@ def render_with_tcod(map_data: list[list[str]], output_path: str) -> np.ndarray:
                     py, px = y * 32, x * 32
                     pixel_data[py : py + uv.h, px : px + uv.w] = sub_arr
             except Exception:
+                # TODO: handle exception properly
                 pass
 
     return pixel_data
@@ -288,7 +289,7 @@ def main():
     print("UV lookup consistency: PASSED")
     print("Autotile variant calculation: PASSED")
     print("Animation state management: PASSED")
-    print("")
+    print()
     print("Note: Full pixel-by-pixel comparison requires")
     print("      headless browser rendering (Playwright/Puppeteer)")
     print("      which is beyond this unit test scope.")
@@ -298,4 +299,4 @@ def main():
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())

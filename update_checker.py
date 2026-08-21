@@ -7,9 +7,12 @@ whether a newer build is available. Designed to be cheap (single HTTP HEAD)."""
 from __future__ import annotations
 
 import json
+import logging
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 VERSION_FILE = PROJECT_ROOT / "VERSION"
@@ -41,7 +44,8 @@ def fetch_remote_version(manifest_url: str, timeout: int = 5) -> Version | None:
         with urllib.request.urlopen(manifest_url, timeout=timeout) as resp:
             data = json.loads(resp.read().decode())
         return Version.parse(data.get("version", "0.0.0"))
-    except Exception:  # noqa: BLE001
+    except Exception:
+        logger.warning("バージョン取得失敗")
         return None
 
 

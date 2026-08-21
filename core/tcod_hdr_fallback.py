@@ -3,8 +3,8 @@ from __future__ import annotations
 import numpy as np
 import tcod
 
+from core.auto_exposure import AutoExposure
 from core.compositor import PseudoHDR
-from core.hdr import AutoExposure
 
 
 class TCODHDRFallback:

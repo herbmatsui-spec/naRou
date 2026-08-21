@@ -3,6 +3,7 @@
 Localization Manager for naRou
 Handles multi-language text loading, caching, and retrieval with fallback support.
 """
+from __future__ import annotations
 
 import logging
 from pathlib import Path

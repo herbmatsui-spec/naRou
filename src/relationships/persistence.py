@@ -150,7 +150,7 @@ class RelationshipPersistence:
 
         try:
             # 拡張子からフォーマットを判定
-            if filename.endswith(".gz") or filename.endswith(".pkl.gz"):
+            if filename.endswith((".gz", ".pkl.gz")):
                 with gzip.open(filename, "rb") as f:
                     data = pickle.load(f)
             elif filename.endswith(".pkl"):
@@ -416,7 +416,7 @@ class ComprehensiveRelationshipSaveSystem:
         # 関係を復元
         from .faction import FactionRelation, FactionRelationType
 
-        for key, r_data in faction_data.get("relations", {}).items():
+        for r_data in faction_data.get("relations", {}).values():
             relation = FactionRelation(
                 faction_a=r_data["faction_a"],
                 faction_b=r_data["faction_b"],

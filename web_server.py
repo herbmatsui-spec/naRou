@@ -6,11 +6,14 @@ Provides HTTP server and REST/JSON API for HTML5 Canvas interactive rendering & 
 from __future__ import annotations
 
 import json
+import logging
 import math
 import os
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import TYPE_CHECKING, Any
+
+logger = logging.getLogger(__name__)
 
 from ui_event_panel import (
     get_current_event_info,
@@ -25,7 +28,8 @@ try:
     from fov import compute_light_map as _compute_light_map
 
     _FOV_AVAILABLE = True
-except Exception:  # noqa: BLE001 - fov モジュールが利用できない場合は False
+except Exception:
+    logger.exception("FOV モジュール利用不可")
     _FOV_AVAILABLE = False
 
 if TYPE_CHECKING:
@@ -198,13 +202,15 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                     if not force_variant
                     else load_design_tokens(force_variant)
                 )
-            except Exception:  # noqa: BLE001 - トークン取得失敗は空 dict
+            except Exception:
+                logger.exception("トークン取得失敗")
                 tokens = {}
             try:
                 from config import get_config
 
                 font_scale = get_config("accessibility.font_scale") or 1.0
-            except Exception:  # noqa: BLE001 - フォントスケール取得失敗はデフォルト
+            except Exception:
+                logger.exception("フォントスケール取得失敗")
                 font_scale = 1.0
             self.wfile.write(
                 json.dumps(
@@ -220,7 +226,8 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 from core.tutorial_controller import TutorialController
 
                 steps = TutorialController().steps
-            except Exception:  # noqa: BLE001 - チュートリアル読み込み失敗は空リスト
+            except Exception:
+                logger.exception("チュートリアル読み込み失敗")
                 steps = []
             self.wfile.write(
                 json.dumps({"steps": steps}, ensure_ascii=False).encode("utf-8")
@@ -252,7 +259,8 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             try:
                 data = json.loads(body) if body else {}
                 set_selected_renderer(str(data.get("selected", "unknown")))
-            except Exception:  # noqa: BLE001, S110 - レンダラ記録失敗は無視
+            except Exception:
+                # TODO: handle exception properly
                 pass
             self._set_headers("application/json; charset=utf-8")
             self.wfile.write(json.dumps(get_capabilities(), ensure_ascii=False).encode("utf-8"))
@@ -356,7 +364,8 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 light_intensity, light_rgb = _compute_light_map(
                     blocked, sources, view_w, view_h, ambient=0.06
                 )
-            except Exception:  # noqa: BLE001 - 読み込み失敗時はデフォルト値へ
+            except Exception:
+                logger.exception("ライトマップ計算失敗")
                 light_intensity = None
 
         for vy in range(view_h):
@@ -828,7 +837,8 @@ def launch_browser(url: str = "http://localhost:8080") -> bool:
         import webbrowser
 
         return webbrowser.open(url)
-    except Exception:  # noqa: BLE001 - ブラウザ起動不可環境では単に失敗扱い
+    except Exception:
+        logger.warning("ブラウザ起動不可")
         return False
 
 
@@ -857,3 +867,27 @@ def set_selected_renderer(renderer: str) -> None:
 def get_capabilities() -> dict:
     """Step 66: 検出結果と選択レンダラを返す。"""
     return {"detected": _DETECTED_GRAPHICS, "selected": _SELECTED_RENDERER}
+
+
+if __name__ == "__main__":
+    # テスト用: モックエンジンでサーバー起動
+    class MockEngine:
+        player = None
+        pet = None
+        entities = []
+        items_on_ground = []
+        floating_texts = []
+        particles = []
+        game_map = None
+        message_log = type('MockLog', (), {'history': []})()
+        turns = 0
+        dungeon_level = 1
+
+    server = start_web_server(MockEngine(), port=8080)
+    if server:
+        print("Web server started on port 8080")
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            print("\nShutting down...")
+            server.shutdown()

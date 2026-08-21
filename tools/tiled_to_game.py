@@ -3,6 +3,7 @@
 Tiled Map Editor Converter
 Converts .tmx files from Tiled Map Editor to game JSON format.
 """
+from __future__ import annotations
 
 import argparse
 import json
@@ -29,8 +30,8 @@ def convert_tmx_to_json(
         with open(tileset_def_path) as f:
             tileset_defs = json.load(f)
     else:
-        tileset_defs = {"tiles": {}}
         print(f"Warning: {tileset_def_path} not found, using empty tile definitions")
+        tileset_defs = {}
 
     # Parse the TMX file
     tree = ET.parse(tmx_path)
@@ -180,10 +181,8 @@ def parse_object(obj_elem: ET.Element) -> dict[str, Any] | None:
     if obj_elem.attrib.get("point") == "1":
         obj_data["point"] = True
         # Remove width/height for point objects
-        if "width" in obj_data:
-            del obj_data["width"]
-        if "height" in obj_data:
-            del obj_data["height"]
+        obj_data.pop("width", None)
+        obj_data.pop("height", None)
 
     return obj_data
 

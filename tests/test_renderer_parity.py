@@ -227,7 +227,7 @@ def compare_images(
 
     diff = np.abs(img1.astype(np.float32) - img2.astype(np.float32)) / 255.0
     max_diff = np.max(diff)
-    mean_diff = np.mean(diff)
+    np.mean(diff)
 
     return max_diff <= threshold, max_diff
 
@@ -253,9 +253,10 @@ def test_renderer_parity():
     else:
         # Fallback if no TTF found in standard paths
         try:
-            pil_font = ImageFont.load_default()
+            ImageFont.load_default()
             atlas.font_size = 16
         except Exception:
+            # TODO: handle exception properly
             pass
 
     # Create TCOD renderer

@@ -6,6 +6,8 @@ Steps 68-72
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -72,6 +74,8 @@ class GuildSkillRegistry:
                 self._skills[guild_id] = skill_list
             self._loaded = True
         except Exception:
+            logger.exception("Unhandled exception")
+            # TODO: handle exception properly
             self._loaded = True
 
     def get(self, guild_id: str) -> list[GuildSkillData]:
@@ -108,7 +112,7 @@ class GuildSkillManager:
         """スキル効果をプレイヤーに適用 (Step 72)"""
         for eff in skill_data.effects:
             eff_type = eff.get("type")
-            eff_val = eff.get("value")
+            eff.get("value")
             if eff_type == "exp_bonus" and hasattr(player, "attributes"):
                 # 経験値ボーナス効果フック
                 pass

@@ -3,6 +3,7 @@
 Asset restoration script for restoring assets from backups.
 Supports restoring from full backups, incremental backups, and specific points in time.
 """
+from __future__ import annotations
 
 import argparse
 import json
@@ -197,6 +198,7 @@ def list_available_backups(backup_dir: str) -> list[dict]:
                         backup_info["datetime"] = info.get("datetime")
                         backup_info["type"] = info.get("backup_type", "unknown")
                     except Exception:
+                        # TODO: handle exception properly
                         pass
 
                 # Calculate backup size and file count
@@ -212,10 +214,12 @@ def list_available_backups(backup_dir: str) -> list[dict]:
                                         size += os.path.getsize(file_path)
                                         count += 1
                                     except Exception:
+                                        # TODO: handle exception properly
                                         pass
                     backup_info["size_bytes"] = size
                     backup_info["file_count"] = count
                 except Exception:
+                    # TODO: handle exception properly
                     pass
 
                 # Fallback to filesystem timestamps
@@ -274,7 +278,7 @@ def main():
             backup_dir = args.backup_source
         else:
             # Assume it's a backup name within the configured backup directory
-            backup_config = config.get("backup", {})
+            config.get("backup", {})
             backup_dir = os.path.join(
                 config["directories"].get("cache", "assets/cache"),
                 "backups",

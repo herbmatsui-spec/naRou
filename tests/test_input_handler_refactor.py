@@ -8,6 +8,7 @@ Verifies that:
   - Keys without a registry binding fall back to the legacy handler
   - The registry is scoped to the "play" state (modal states fall back to legacy)
 """
+from __future__ import annotations
 
 import tcod.event
 

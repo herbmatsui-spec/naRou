@@ -3,6 +3,7 @@
 Consolidated managers for the guild/faction ranking proposal. Each manager
 loads its YAML data and exposes the core logic described in the proposal.
 """
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field

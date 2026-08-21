@@ -2,6 +2,7 @@
 test_skill_eater_phase6_7_8.py
 Phase 6 (クエスト・メタ特効), Phase 7 (法則書き換え), Phase 8 (輪廻転生) の検証テスト
 """
+from __future__ import annotations
 
 import unittest
 from pathlib import Path

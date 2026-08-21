@@ -3,6 +3,7 @@
 Asset monitoring script for monitoring asset pipeline performance, health, and metrics.
 Tracks build times, asset counts, resource usage, and trends.
 """
+from __future__ import annotations
 
 import argparse
 import datetime
@@ -65,6 +66,7 @@ def get_pipeline_metrics(config: dict) -> dict:
                             if file_size < smallest_file["size"]:
                                 smallest_file = {"path": file_path, "size": file_size}
                         except Exception:
+                            # TODO: handle exception properly
                             pass  # Skip files we can't read
 
             asset_info["file_count"] = len(file_sizes)
@@ -144,6 +146,7 @@ def get_performance_metrics(config: dict) -> dict:
                         if time_match:
                             build_times.append(float(time_match.group(1)))
                 except Exception:
+                    # TODO: handle exception properly
                     pass  # Skip unreadable logs
 
             if build_times:
@@ -157,6 +160,7 @@ def get_performance_metrics(config: dict) -> dict:
 
             perf_metrics["recent_builds"] = total_count
         except Exception:
+            # TODO: handle exception properly
             pass  # If we can't read logs, leave metrics as None
 
     return perf_metrics
@@ -192,9 +196,11 @@ def get_storage_metrics(config: dict) -> dict:
                             try:
                                 total_size += os.path.getsize(file_path)
                             except Exception:
+                                # TODO: handle exception properly
                                 pass
                 storage_metrics[metric_key] = total_size
             except Exception:
+                # TODO: handle exception properly
                 pass  # If we can't calculate size, leave as 0
 
     return storage_metrics
@@ -353,9 +359,8 @@ def main():
         metrics["trends"] = get_trend_data(config)
 
         # Output based on args
-        if args.output:
-            if not save_metrics(metrics, args.output):
-                sys.exit(1)
+        if args.output and not save_metrics(metrics, args.output):
+            sys.exit(1)
 
         if not args.summary_only and not args.continuous:
             # Print full JSON if requested

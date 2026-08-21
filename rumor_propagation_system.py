@@ -344,8 +344,8 @@ class RumorEngine:
 import time  # Rumor.timestamp 用
 
 __all__ = [
-    "RumorType",
     "Rumor",
-    "RumorPropagationConfig",
     "RumorEngine",
+    "RumorPropagationConfig",
+    "RumorType",
 ]

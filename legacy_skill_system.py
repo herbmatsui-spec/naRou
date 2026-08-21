@@ -1,7 +1,10 @@
 """
 レガシースキルシステム
 """
+from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import os
 from dataclasses import dataclass
 from typing import Any
@@ -52,6 +55,8 @@ class LegacySkillRegistry:
                             unlock_condition=sdata.get("unlock_condition"),
                         )
             except Exception:
+                logger.exception("Unhandled exception")
+                # TODO: handle exception properly
                 pass
 
         if not self._data:

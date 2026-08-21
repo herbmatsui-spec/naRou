@@ -27,7 +27,7 @@ def load_tiny_rogue_mappings() -> dict:
     return _MAPPINGS_CACHE
 
 
-def get_tiny_rogue_tile_id(standard_tile_id: str, fallback: str = None) -> str:
+def get_tiny_rogue_tile_id(standard_tile_id: str, fallback: str | None = None) -> str:
     """
     Get the Tiny Rogue tile ID for a standard tile ID.
 

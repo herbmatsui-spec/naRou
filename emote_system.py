@@ -7,9 +7,8 @@ from __future__ import annotations
 
 import logging
 import time
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any
-from asset_manager import ASSET_MANAGER
+from dataclasses import dataclass
+from typing import Any
 
 # Setup logger
 logger = logging.getLogger(__name__)
@@ -24,7 +23,7 @@ if not logger.handlers:
 class EmoteAnimation:
     """Represents a single emote animation."""
     name: str
-    frames: List[str]  # List of sprite paths
+    frames: list[str]  # List of sprite paths
     fps: int = 8
     loop: bool = False
     duration: float = 1.0  # seconds
@@ -37,10 +36,10 @@ class EmoteAnimation:
 @dataclass
 class EmoteState:
     """Tracks the current emote state of an entity."""
-    current_emote: Optional[str] = None
+    current_emote: str | None = None
     start_time: float = 0.0
     frame_index: int = 0
-    animation: Optional[EmoteAnimation] = None
+    animation: EmoteAnimation | None = None
     
     def is_playing(self) -> bool:
         return self.current_emote is not None and self.animation is not None
@@ -69,7 +68,7 @@ class EmoteState:
         self.frame_index = 0
         self.animation = None
     
-    def get_current_frame(self) -> Optional[str]:
+    def get_current_frame(self) -> str | None:
         if not self.is_playing() or not self.animation or not self.animation.frames:
             return None
         idx = min(self.frame_index, len(self.animation.frames) - 1)
@@ -80,7 +79,7 @@ class EmoteSystem:
     """Manages emote animations for all entities."""
     
     # Predefined emote animations mapped to sprite paths
-    EMOTE_DEFINITIONS: Dict[str, Dict[str, Any]] = {
+    EMOTE_DEFINITIONS: dict[str, dict[str, Any]] = {
         "anger": {"pattern": "emote_anger", "fps": 10, "duration": 0.5},
         "exclamation": {"pattern": "emote_exclamation", "fps": 8, "duration": 0.6},
         "question": {"pattern": "emote_question", "fps": 8, "duration": 0.6},
@@ -103,8 +102,8 @@ class EmoteSystem:
     
     def __init__(self, style: str = "style1"):
         self.style = style
-        self.entity_states: Dict[str, EmoteState] = {}  # entity_id -> EmoteState
-        self._animation_cache: Dict[str, EmoteAnimation] = {}
+        self.entity_states: dict[str, EmoteState] = {}  # entity_id -> EmoteState
+        self._animation_cache: dict[str, EmoteAnimation] = {}
         self._build_animations()
     
     def _build_animations(self) -> None:
@@ -125,7 +124,7 @@ class EmoteSystem:
             else:
                 logger.warning(f"Emote '{emote_name}' (pattern: {pattern}) not found in style '{self.style}'")
     
-    def _find_emote_frames(self, pattern: str) -> List[str]:
+    def _find_emote_frames(self, pattern: str) -> list[str]:
         """Find all frames matching a pattern in the current style."""
         frames = []
         # First try exact match in pixel style
@@ -186,7 +185,7 @@ class EmoteSystem:
         for state in self.entity_states.values():
             state.update(dt)
     
-    def get_current_frame(self, entity_id: str) -> Optional[str]:
+    def get_current_frame(self, entity_id: str) -> str | None:
         """Get the current emote frame path for an entity."""
         if entity_id in self.entity_states:
             return self.entity_states[entity_id].get_current_frame()
@@ -198,7 +197,7 @@ class EmoteSystem:
             return self.entity_states[entity_id].is_playing()
         return False
     
-    def get_available_emotes(self) -> List[str]:
+    def get_available_emotes(self) -> list[str]:
         """Get list of available emote names."""
         return list(self._animation_cache.keys())
 
@@ -225,6 +224,6 @@ def update_emotes(dt: float) -> None:
     EMOTE_SYSTEM.update(dt)
 
 
-def get_emote_frame(entity_id: str) -> Optional[str]:
+def get_emote_frame(entity_id: str) -> str | None:
     """Get current emote frame for an entity."""
     return EMOTE_SYSTEM.get_current_frame(entity_id)

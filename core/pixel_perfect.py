@@ -83,7 +83,7 @@ def get_tcod_offset(sub_x: float, sub_y: float) -> tuple[int, int]:
     Get tcod console draw offset for subpixel rendering.
     tcod doesn't support subpixel directly, so this returns the nearest pixel.
     """
-    return (int(round(sub_x)), int(round(sub_y)))
+    return (round(sub_x), round(sub_y))
 
 
 def calculate_optimal_scale(
@@ -111,8 +111,8 @@ def lerp_subpixel(
     """Linear interpolation between two physical positions with subpixel precision"""
     x = start.x + (end.x - start.x) * t
     y = start.y + (end.y - start.y) * t
-    sub_x = start.sub_x + (end.sub_x - start.sub_x) * t
-    sub_y = start.sub_y + (end.sub_y - start.sub_y) * t
+    start.sub_x + (end.sub_x - start.sub_x) * t
+    start.sub_y + (end.sub_y - start.sub_y) * t
 
     int_x = int(x)
     int_y = int(y)

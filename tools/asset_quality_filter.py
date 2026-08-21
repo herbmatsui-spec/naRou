@@ -3,9 +3,11 @@
 Asset Quality Filter for naRou
 Filters and validates generated assets based on quality criteria.
 """
+from __future__ import annotations
 
 import argparse
 import logging
+import sys
 from pathlib import Path
 
 try:
@@ -23,7 +25,6 @@ logger = logging.getLogger(__name__)
 class AssetQualityFilter:
     def __init__(self):
         """Initialize the Asset Quality Filter."""
-        pass
 
     def check_resolution(
         self, image_path: Path, expected_size: tuple[int, int]
@@ -240,9 +241,8 @@ class AssetQualityFilter:
                 issues.append(f"Too many colors: maximum {max_colors} allowed")
 
         # Seamless tiling check
-        if check_seamless:
-            if not self.check_seamless_tiling(image_path):
-                issues.append("Image does not tile seamlessly")
+        if check_seamless and not self.check_seamless_tiling(image_path):
+            issues.append("Image does not tile seamlessly")
 
         is_valid = len(issues) == 0
         return is_valid, issues
@@ -391,4 +391,4 @@ def main():
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())

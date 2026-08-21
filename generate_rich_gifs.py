@@ -3,7 +3,10 @@ generate_rich_gifs.py
 Aの世界（スキル喰い）用の高品質なGIFアニメーション生成スクリプト
 Pillow (PIL) を確実に読み込み、フレームアニメーションを生成する基盤
 """
+from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import math
 import sys
 from pathlib import Path
@@ -34,6 +37,8 @@ def get_font(size: int = 14):
     try:
         return ImageFont.truetype("arial.ttf", size)
     except Exception:
+        # TODO: handle exception properly
+        logger.exception("Unhandled exception")
         return ImageFont.load_default()
 
 
@@ -117,6 +122,7 @@ class EmoteManager:
             self._cache[cache_key] = img
             return img
         except Exception as e:
+            logger.exception("Unhandled exception")
             print(f"Error loading emote {name}: {e}")
             img = Image.new("RGBA", (size, size), (255, 0, 0, 0))
             return img

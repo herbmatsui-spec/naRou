@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 
@@ -22,7 +23,7 @@ class HDRTarget:
     # Current read/write buffer
     read_buffer: int = 0  # 0 = A, 1 = B
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.resize(self.width, self.height)
 
     def resize(self, width: int, height: int) -> None:
@@ -36,10 +37,14 @@ class HDRTarget:
         self.read_buffer = 0
 
     def get_read_texture(self) -> np.ndarray:
-        return self.color_a if self.read_buffer == 0 else self.color_b
+        tex = self.color_a if self.read_buffer == 0 else self.color_b
+        assert tex is not None
+        return tex
 
     def get_write_texture(self) -> np.ndarray:
-        return self.color_b if self.read_buffer == 0 else self.color_a
+        tex = self.color_b if self.read_buffer == 0 else self.color_a
+        assert tex is not None
+        return tex
 
     def swap_buffers(self) -> None:
         self.read_buffer = 1 - self.read_buffer
@@ -49,9 +54,11 @@ class HDRTarget:
     ) -> None:
         write_tex = self.get_write_texture()
         write_tex[:, :] = color
-        self.depth[:, :] = depth
+        depth_tex = self.get_depth_texture()
+        depth_tex[:, :] = depth
 
     def get_depth_texture(self) -> np.ndarray:
+        assert self.depth is not None
         return self.depth
 
 
@@ -77,9 +84,8 @@ class HDRCompositor:
     def begin_frame(self) -> None:
         self.hdr_target.clear()
 
-    def render_scene_to_hdr(self, scene_renderer) -> None:
+    def render_scene_to_hdr(self, scene_renderer: Any) -> None:
         """Render scene to HDR target. Implement in renderer-specific code."""
-        pass
 
     def apply_bloom(self) -> None:
         """Apply Kawase dual-filter bloom."""
@@ -107,9 +113,9 @@ class HDRCompositor:
         mask = luminance > self.bloom_threshold
         bright = np.zeros_like(hdr)
         bright[mask] = hdr[mask] * self.bloom_intensity
-        return bright
+        return bright  # type: ignore[no-any-return]
 
-    def _downsample_pyramid(self, bright: np.ndarray) -> list:
+    def _downsample_pyramid(self, bright: np.ndarray) -> list[np.ndarray]:
         """Create mip pyramid for bloom."""
         pyramid = [bright]
         current = bright
@@ -134,7 +140,7 @@ class HDRCompositor:
 
         return pyramid
 
-    def _upsample_kawase(self, pyramid: list) -> np.ndarray:
+    def _upsample_kawase(self, pyramid: list[np.ndarray]) -> np.ndarray:
         """Kawase blur upsample."""
         current = pyramid[-1]
 
@@ -158,7 +164,7 @@ class HDRCompositor:
     ) -> np.ndarray:
         """Bilinear upsample."""
         src_h, src_w = src.shape[:2]
-        result = np.zeros((target_h, target_w, 2), dtype=np.float16)
+        result: np.ndarray = np.zeros((target_h, target_w, 2), dtype=np.float16)
 
         for y in range(target_h):
             for x in range(target_w):
@@ -195,7 +201,7 @@ class HDRCompositor:
 
         for y in range(h):
             for x in range(w):
-                acc = np.zeros(2, dtype=np.float16)
+                acc: np.ndarray = np.zeros(2, dtype=np.float16)
                 total_w = 0.0
 
                 for w_i, offset in zip(weights, offsets):
@@ -211,7 +217,7 @@ class HDRCompositor:
                 else:
                     result[y, x] = src[y, x]
 
-        return result
+        return result  # type: ignore[no-any-return]
 
     def _composite_bloom(self, bloom: np.ndarray) -> None:
         """Add bloom to HDR buffer."""
@@ -249,14 +255,14 @@ class HDRCompositor:
         tonemapped = np.clip(tonemapped, 0, 1)
         tonemapped = np.power(tonemapped, 1.0 / self.gamma)
 
-        return tonemapped
+        return tonemapped  # type: ignore[no-any-return]
 
     def _reinhard_tonemap(self, hdr: np.ndarray) -> np.ndarray:
         """Reinhard tonemapping."""
         hdr = hdr * self.exposure
         tonemapped = hdr / (1.0 + hdr)
         tonemapped = np.power(tonemapped, 1.0 / self.gamma)
-        return tonemapped
+        return tonemapped  # type: ignore[no-any-return]
 
     def _filmic_tonemap(self, hdr: np.ndarray) -> np.ndarray:
         """Filmic tonemapping (Unreal-style)."""
@@ -285,7 +291,7 @@ class HDRCompositor:
         tonemapped = np.clip(tonemapped, 0, 1)
         tonemapped = np.power(tonemapped, 1.0 / self.gamma)
 
-        return tonemapped
+        return tonemapped  # type: ignore[no-any-return]
 
     def end_frame(self) -> np.ndarray:
         """Complete frame and return LDR output."""

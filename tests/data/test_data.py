@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Data integration localization suite"""
 
 import unittest

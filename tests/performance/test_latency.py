@@ -3,7 +3,9 @@
 Latency Performance Test
 レイテンシパフォーマンステスト
 """
+from __future__ import annotations
 
+import sys
 import time
 import unittest
 
@@ -61,7 +63,7 @@ class TestLatencyPerformance(unittest.TestCase):
 
         avg_latency = sum(latencies) / len(latencies)
         max_latency = max(latencies)
-        min_latency = min(latencies)
+        min(latencies)
 
         # 最大値が平均の10倍以内であること（安定性の目安）
         self.assertLess(max_latency, avg_latency * 10)
@@ -77,4 +79,4 @@ def run_latency_tests():
 
 if __name__ == "__main__":
     success = run_latency_tests()
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

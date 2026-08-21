@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 from skill_fusion_system import FusionManager, FusionRegistry

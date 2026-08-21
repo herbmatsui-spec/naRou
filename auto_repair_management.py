@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 """Auto-repair management for naRou deployment."""
 
+from __future__ import annotations
+
 import argparse
 import json
+import logging
 import os
 import shlex
 import subprocess
 import time
 from datetime import datetime
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 import yaml
 
@@ -200,8 +205,8 @@ class AutoRepairManager:
 
             try:
                 requests.post(notif["webhook_url"], json={"text": message})
-            except Exception as e:
-                print(f"Failed to send notification: {e}")
+            except Exception:
+                logger.exception("ロード失敗")
 
     def run_monitor(self, interval=None):
         """Run continuous monitoring and auto-repair."""

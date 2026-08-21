@@ -3,9 +3,11 @@
 Animation Interpolator for naRou
 Interpolates animation frames to create smoother animations.
 """
+from __future__ import annotations
 
 import argparse
 import logging
+import sys
 from pathlib import Path
 
 try:
@@ -23,7 +25,6 @@ logger = logging.getLogger(__name__)
 class AnimationInterpolator:
     def __init__(self):
         """Initialize the Animation Interpolator."""
-        pass
 
     def interpolate_frames(
         self, frames: list[Path], target_frame_count: int, output_dir: Path
@@ -244,4 +245,4 @@ def main():
 if __name__ == "__main__":
     import time
 
-    exit(main())
+    sys.exit(main())

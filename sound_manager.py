@@ -1,8 +1,13 @@
+from __future__ import annotations
+
+import logging
 import os
 import threading
 from typing import Any
 
 import yaml
+
+logger = logging.getLogger(__name__)
 
 try:
     import winsound
@@ -39,8 +44,8 @@ class BGMManager:
                 with open(self.config_path, encoding="utf-8") as f:
                     return yaml.safe_load(f) or {}
             except Exception:
-                pass
-        return {}
+                logger.exception("ロード失敗")
+            return {}
 
     def play_bgm(self, theme: str, fade_in: bool = True) -> str:
         """指定テーマのBGMを再生/クロスフェード切り替え (Step 7.1)"""
@@ -79,8 +84,8 @@ class AmbientLayer:
                 with open(self.config_path, encoding="utf-8") as f:
                     return yaml.safe_load(f) or {}
             except Exception:
-                pass
-        return {}
+                logger.exception("ロード失敗")
+            return {}
 
     def update_ambient(self, location_type: str) -> str:
         """場所に応じた環境音の動的切り替え (Step 7.2)"""
@@ -113,7 +118,7 @@ class SoundManager:
         try:
             winsound.Beep(frequency, duration_ms)
         except Exception:
-            pass
+            logger.exception("ロード失敗")
 
     @classmethod
     def play_se(cls, se_type: str):
@@ -205,12 +210,12 @@ class SoundManager:
                     cls._se_cache[se_type] = suggested_id
 
                 # Load terrain footstep mapping
-                footstep_keys = [k for k in se_map.keys() if k.startswith("footstep_")]
+                footstep_keys = [k for k in se_map if k.startswith("footstep_")]
                 for key in footstep_keys:
                     terrain = key.replace("footstep_", "")
                     cls._terrain_footstep_map[terrain] = cls._se_cache.get(key, "")
         except Exception:
-            pass
+            logger.exception("ロード失敗")
 
     @classmethod
     def play_se_ogg(cls, se_type: str, volume: float = 1.0):

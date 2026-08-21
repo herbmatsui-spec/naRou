@@ -209,7 +209,7 @@ def test_narrative_executor_choices():
     executor = NarrativeExecutor("data/quest_narratives.yaml")
     player = MockEntity("test_player2")
 
-    state = executor.start_narrative("prologue_branching", player)
+    executor.start_narrative("prologue_branching", player)
     choices = executor.get_available_choices(player)
 
     # prologue_start は AUTO 遷移で choice ノードへ進む
@@ -222,7 +222,7 @@ def test_narrative_executor_make_choice():
     executor = NarrativeExecutor("data/quest_narratives.yaml")
     player = MockEntity("test_player3")
 
-    state = executor.start_narrative("prologue_branching", player)
+    executor.start_narrative("prologue_branching", player)
 
     # 選択肢があるノードまで自動遷移するか、手動で選択可能な状態にする
     choices = executor.get_available_choices(player)

@@ -5,6 +5,8 @@ Steps 37-45: 属性耐性, 詠唱失敗率, AoEパターン, Faction/Aggro, 出�
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import random
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -345,6 +347,8 @@ class CombatSystem:
                 data = yaml.safe_load(f) or {}
             return skill_id in data.get("exclusive_skills", {})
         except Exception:
+            # TODO: handle exception properly
+            logger.exception("Unhandled exception")
             return False
 
     @staticmethod
@@ -362,6 +366,8 @@ class CombatSystem:
                 data = yaml.safe_load(f) or {}
             return data.get("exclusive_skills", {}).get(skill_id)
         except Exception:
+            logger.exception("Unhandled exception")
+            # TODO: handle exception properly
             return None
 
     @staticmethod
@@ -378,7 +384,7 @@ class CombatSystem:
             return 0, f"MPが足りない！ (必要MP: {mp_cost})"
 
         caster.mp -= mp_cost
-        effects = data.get("effects", {})
+        data.get("effects", {})
         name = data.get("name", skill_id)
 
         # ダメージ計算
@@ -581,7 +587,7 @@ class MonsterPreset:
 
 
 # --- LocalizationManager integration (i18n, Step 3.x) ---
-def localize(key: str, language: str = None, manager=None) -> str:
+def localize(key: str, language: str | None = None, manager=None) -> str:
     """Return localized text for *key* using LocalizationManager.
 
     Provides a thin, dependency-free wrapper so callers can localize UI

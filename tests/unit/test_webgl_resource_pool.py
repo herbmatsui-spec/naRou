@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from webgl_resource_pool import WebGLResourcePool
 
 

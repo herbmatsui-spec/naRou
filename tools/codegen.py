@@ -65,7 +65,7 @@ class CodeGenerator:
                 if dry_run:
                     print(f"[codegen] Would generate: {out_file}")
                 else:
-                    result = generate(
+                    generate(
                         input_=schema_file.read_text(encoding="utf-8"),
                         input_filename=str(schema_file),
                         output_model_type=DataModelType.PydanticV2BaseModel,

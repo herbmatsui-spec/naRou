@@ -1,6 +1,7 @@
 """
 総合テストスクリプト: ペット契約・進化・融合システム全72ステップの検証
 """
+from __future__ import annotations
 
 import ast
 import os
@@ -58,9 +59,9 @@ def test_all_72_steps_pet_contract_evolution_fusion():
     from entity import Entity
 
     tree = ast.parse(open("entity.py", encoding="utf-8").read())
-    petai_class = [
+    petai_class = next(
         n for n in ast.walk(tree) if isinstance(n, ast.ClassDef) and n.name == "PetAI"
-    ][0]
+    )
     fields = [n.target.id for n in petai_class.body if isinstance(n, ast.AnnAssign)]
     assert "bond" in fields, "Step 15 Failed"
     assert "contract_id" in fields, "Step 16 Failed"
@@ -80,7 +81,7 @@ def test_all_72_steps_pet_contract_evolution_fusion():
         PetContractRegistry,
     )
 
-    pcd = PetContractData("test", "Test Contract", "🤝", 1000, {}, {}, [])  # Step 20
+    PetContractData("test", "Test Contract", "🤝", 1000, {}, {}, [])  # Step 20
     pcr1 = PetContractRegistry()
     pcr2 = PetContractRegistry()
     assert pcr1 is pcr2, "Step 21 Failed"
@@ -105,7 +106,7 @@ def test_all_72_steps_pet_contract_evolution_fusion():
         PetEvolutionRegistry,
     )
 
-    ped = PetEvolutionData("test", "Test Evo", {}, {}, {}, {})  # Step 38
+    PetEvolutionData("test", "Test Evo", {}, {}, {}, {})  # Step 38
     per1 = PetEvolutionRegistry()
     per2 = PetEvolutionRegistry()
     assert per1 is per2, "Step 39 Failed"
@@ -160,7 +161,7 @@ def test_all_72_steps_pet_contract_evolution_fusion():
     # Step 59 - 64: pet_fusion_system.py
     from pet_fusion_system import PetFusionData, PetFusionManager, PetFusionRegistry
 
-    pfd = PetFusionData(
+    PetFusionData(
         "test", "Test", "Desc", "🔬", [], [], [], [], None, "", 0.7, 0.1, {}, [], []
     )  # Step 60
     pfr1 = PetFusionRegistry()
@@ -195,11 +196,11 @@ def test_all_72_steps_pet_contract_evolution_fusion():
         "save_system.py" if os.path.exists("save_system.py") else "advanced_systems.py"
     )
     save_tree = ast.parse(open(save_file, encoding="utf-8").read())
-    save_class = [
+    save_class = next(
         n
         for n in ast.walk(save_tree)
         if isinstance(n, ast.ClassDef) and n.name == "SaveSystem"
-    ][0]
+    )
     save_code = ast.dump(save_class)
     assert "pet_fusion_history" in save_code or "pet" in save_code, "Step 70 Failed"
     print("[OK] Step 70 (SaveSystem pet logic)")

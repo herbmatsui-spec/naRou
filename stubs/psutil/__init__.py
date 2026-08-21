@@ -2,6 +2,7 @@
 Provides minimal interfaces returning zero or dummy values so that the code
 can run without the external dependency.
 """
+from __future__ import annotations
 
 from collections import namedtuple
 

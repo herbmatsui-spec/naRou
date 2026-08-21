@@ -2,6 +2,7 @@
 """
 ワールドステートの簡単なテスト
 """
+from __future__ import annotations
 
 from world_state_system import WorldStateManager
 

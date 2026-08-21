@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Failover management for naRou deployment."""
 
+from __future__ import annotations
+
+import logging
+logger = logging.getLogger(__name__)
 import argparse
 import json
 import time
@@ -86,6 +90,7 @@ class FailoverManager:
             return response.status_code == 200, response.status_code
         except Exception as e:
             return False, str(e)
+            logger.exception("Unhandled exception")
 
     def failover(self, reason="manual"):
         """Perform failover to backup."""
@@ -188,12 +193,12 @@ class FailoverManager:
             try:
                 requests.post(webhook, json={"text": message})
             except Exception as e:
+                logger.exception("Unhandled exception")
                 print(f"Failed to send notification: {e}")
 
     def monitor(self):
         """Run one monitoring cycle."""
         current = self.state["current"]
-        target = "backup" if current == "primary" else "primary"
 
         # Check current target
         healthy, status = self.check_health(current)

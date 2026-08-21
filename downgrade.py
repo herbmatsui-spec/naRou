@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 """Downgrade script for naRou project."""
 
+from __future__ import annotations
+
 import argparse
+import logging
 import os
+import shlex
 import subprocess
 import sys
-import shlex
+
+logger = logging.getLogger(__name__)
 
 
 def run_command(cmd, cwd=None):

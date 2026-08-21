@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import math
 import os
@@ -28,7 +30,7 @@ class BattleScenario:
         self.expected_win_rate = expected_win_rate
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "BattleScenario":
+    def from_dict(cls, data: dict[str, Any]) -> BattleScenario:
         return cls(
             name=data.get("name", "Scenario"),
             player_level=data.get("player_level", 1),
@@ -112,7 +114,7 @@ class BalanceSimulator:
             while player.hp > 0 and mob.hp > 0 and turns < 100:
                 turns += 1
                 # Player attacks mob
-                p_dmg, p_crit, _ = CombatSystem.calculate_melee_attack(player, mob)
+                p_dmg, _p_crit, _ = CombatSystem.calculate_melee_attack(player, mob)
                 if p_dmg >= initial_mob_hp:
                     one_shot_warnings += 1
                 mob.hp -= p_dmg
@@ -121,7 +123,7 @@ class BalanceSimulator:
                     break
 
                 # Mob attacks player
-                m_dmg, m_crit, _ = CombatSystem.calculate_melee_attack(mob, player)
+                m_dmg, _m_crit, _ = CombatSystem.calculate_melee_attack(mob, player)
                 if m_dmg >= initial_player_hp:
                     one_shot_warnings += 1
                 player.hp -= m_dmg

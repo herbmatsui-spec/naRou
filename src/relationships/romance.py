@@ -5,6 +5,8 @@ Step 9: Romance relationship mechanics
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import random
 import time
 from collections import defaultdict
@@ -539,6 +541,7 @@ class RomanceMechanics:
             try:
                 handler(event_type, state)
             except Exception as e:
+                logger.exception("Unhandled exception")
                 print(f"Error in romance event handler: {e}")
 
     def get_romance_state(self, char_a: str, char_b: str) -> RomanceState | None:
@@ -595,7 +598,7 @@ class RomanceMechanics:
         self.romance_states.clear()
         self._romance_stats = data.get("stats", self._romance_stats)
 
-        for key, state_data in data.get("romance_states", {}).items():
+        for state_data in data.get("romance_states", {}).values():
             couple_id = tuple(state_data["couple_id"])
             state = RomanceState(
                 couple_id=couple_id,

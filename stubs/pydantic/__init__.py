@@ -2,6 +2,7 @@
 Provides BaseModel that accepts any fields and does nothing.
 ValidationError is just an Exception subclass.
 """
+from __future__ import annotations
 
 
 class ValidationError(Exception):

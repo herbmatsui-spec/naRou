@@ -283,10 +283,10 @@ GLOBAL_MEMORY_REGISTRY = GlobalMemoryRegistry()
 
 
 __all__ = [
-    "MemoryType",
-    "MemoryImportance",
-    "MemoryEntry",
-    "NPCMemoryManager",
-    "GlobalMemoryRegistry",
     "GLOBAL_MEMORY_REGISTRY",
+    "GlobalMemoryRegistry",
+    "MemoryEntry",
+    "MemoryImportance",
+    "MemoryType",
+    "NPCMemoryManager",
 ]

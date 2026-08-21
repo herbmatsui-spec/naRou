@@ -1,7 +1,10 @@
 """
 転生専用ダンジョンシステム
 """
+from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import os
 from dataclasses import dataclass
 from typing import Any
@@ -90,6 +93,7 @@ class ReincarnationDungeonRegistry:
                 self._data["first_life_trial"] = default_data
 
         except Exception as e:
+            logger.exception("Unhandled exception")
             print(f"Error loading reincarnation dungeon data: {e}")
             # エラー時のデフォルトデータ
             default_data = ReincarnationDungeonData(
@@ -144,9 +148,8 @@ class ReincarnationDungeonManager:
         # その他のアンロック条件をチェック（簡易版）
         unlock_condition = dungeon_data.unlock_condition
         for key, value in unlock_condition.items():
-            if key == "reincarnation_count":
-                if reinc_count != value:
-                    return False
+            if key == "reincarnation_count" and reinc_count != value:
+                return False
             # ここで他の条件も追加可能
 
         return True

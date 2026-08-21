@@ -1,5 +1,7 @@
 """Unit tests for animated tile system."""
 
+from __future__ import annotations
+
 import sys
 
 sys.path.insert(0, ".")

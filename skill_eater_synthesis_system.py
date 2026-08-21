@@ -3,6 +3,7 @@ skill_eater_synthesis_system.py
 Aの世界（スキル喰い） Phase 3: 《合成》システム＆ダイナミックスキルツリー
 提案4: 合成錬金のEmote & Audio演出 (Steps 25〜32)
 """
+from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
@@ -276,7 +277,7 @@ class SkillEaterSynthesisSystem:
             if not s_def:
                 continue
 
-            is_syn = s_id.startswith("proc_syn_") or s_id.startswith("rar_gold_")
+            is_syn = s_id.startswith(("proc_syn_", "rar_gold_"))
             nodes.append(
                 TreeNode(
                     skill_id=s_def.id,

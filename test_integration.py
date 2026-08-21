@@ -3,6 +3,7 @@
 垂直ワールドシステム 統合テスト
 すべてのコンポーネントが連携して動作することを確認
 """
+from __future__ import annotations
 
 from world_map_manager import WorldMapManager
 from world_state_system import WorldStateManager

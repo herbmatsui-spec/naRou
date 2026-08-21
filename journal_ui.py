@@ -5,6 +5,8 @@ Handles the rendering and interaction of the Adventurer's Journal.
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 from typing import Any
 
 import tcod
@@ -59,8 +61,8 @@ class JournalUI:
             return
 
         # 画面中央に配置
-        screen_w = console.width_px / 8  # 概算
-        screen_h = console.height_px / 8
+        console.width_px / 8  # 概算
+        console.height_px / 8
         start_x = int((console.width - self.window_width) // 2)
         start_y = int((console.height - self.window_height) // 2)
 
@@ -234,6 +236,8 @@ class JournalUI:
                     )
                     current_y += 1
             except Exception:
+                logger.exception("Unhandled exception")
+                # TODO: handle exception properly
                 pass
 
         # ---- 考古学・発掘・解読メタゲーム セクション (Step 28) ----

@@ -5,6 +5,8 @@ Quest Narrative DAG Module (偏執的クエストシステム / 設計書 Phase 
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Any
@@ -75,6 +77,8 @@ class NarrativeEdge:
                 node = parse_condition(self.condition_dsl)
                 return evaluate(node, context)
             except Exception:
+                logger.exception("Unhandled exception")
+                # TODO: handle exception properly
                 return False
         return True
 
@@ -291,11 +295,11 @@ def build_dag_from_yaml(dag_id: str, data: dict[str, Any]) -> NarrativeDAG:
 
 
 __all__ = [
-    "NarrativeNodeType",
-    "NarrativeEdgeType",
-    "NarrativeEdge",
-    "NarrativeNode",
     "NarrativeContext",
     "NarrativeDAG",
+    "NarrativeEdge",
+    "NarrativeEdgeType",
+    "NarrativeNode",
+    "NarrativeNodeType",
     "build_dag_from_yaml",
 ]

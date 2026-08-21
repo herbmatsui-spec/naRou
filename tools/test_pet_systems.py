@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Tests for Pet Proposals 6-9."""
 
 import os

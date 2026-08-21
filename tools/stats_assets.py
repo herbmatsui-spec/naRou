@@ -3,6 +3,7 @@
 Asset statistics script for generating comprehensive statistics about assets.
 Analyzes asset collections, generates reports, and provides insights.
 """
+from __future__ import annotations
 
 import argparse
 import collections
@@ -99,6 +100,9 @@ def analyze_tileset_collection(tileset_dir: str, config: dict) -> dict:
                         all_tile_signatures.append(signature)
 
                     except Exception:
+
+                        # TODO: handle exception properly
+
                         pass  # Skip invalid tilesets
 
     # Calculate averages
@@ -191,6 +195,9 @@ def analyze_font_collection(font_dir: str, config: dict) -> dict:
                         all_chars.update(metrics.keys())
 
                     except Exception:
+
+                        # TODO: handle exception properly
+
                         pass  # Skip invalid fonts
 
     # Calculate averages
@@ -200,7 +207,7 @@ def analyze_font_collection(font_dir: str, config: dict) -> dict:
         )
 
     # Character coverage (ASCII printable)
-    ascii_printable = set(chr(i) for i in range(32, 127))
+    ascii_printable = {chr(i) for i in range(32, 127)}
     covered_chars = all_chars & ascii_printable
     stats["character_coverage"] = {
         "ascii_printable_total": len(ascii_printable),
@@ -208,7 +215,7 @@ def analyze_font_collection(font_dir: str, config: dict) -> dict:
         "percentage": (len(covered_chars) / len(ascii_printable)) * 100
         if ascii_printable
         else 0,
-        "missing_chars": sorted(list(ascii_printable - covered_chars)),
+        "missing_chars": sorted(ascii_printable - covered_chars),
     }
 
     # Find largest and smallest
@@ -294,6 +301,9 @@ def analyze_sound_collection(sound_dir: str, config: dict) -> dict:
                     )
 
                 except Exception:
+
+                    # TODO: handle exception properly
+
                     pass  # Skip invalid sound files
 
     # Calculate averages
@@ -374,6 +384,7 @@ def analyze_model_collection(model_dir: str, config: dict) -> dict:
                                     elif line.startswith("f "):
                                         face_count += 1
                         except Exception:
+                            # TODO: handle exception properly
                             pass
 
                     model_info = {
@@ -424,6 +435,9 @@ def analyze_model_collection(model_dir: str, config: dict) -> dict:
                     )
 
                 except Exception:
+
+                    # TODO: handle exception properly
+
                     pass  # Skip invalid model files
 
     # Calculate averages
@@ -633,9 +647,8 @@ def main():
         }
 
     # Save or output results
-    if args.output:
-        if not save_stats(stats, args.output):
-            sys.exit(1)
+    if args.output and not save_stats(stats, args.output):
+        sys.exit(1)
 
     if not args.summary_only:
         # Print full JSON

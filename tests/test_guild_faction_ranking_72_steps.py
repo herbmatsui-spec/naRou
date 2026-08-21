@@ -1,6 +1,7 @@
 """
 総合テストスクリプト: ギルド・派閥・ランキングシステム全72ステップの検証
 """
+from __future__ import annotations
 
 import os
 import sys
@@ -63,7 +64,7 @@ def test_all_72_steps_guild_faction():
     # Step 15 - 24: guild_system.py & Game.py
     from guild_system import GuildData, GuildManager, GuildRegistry
 
-    gd = GuildData(
+    GuildData(
         "t_g", "Test Guild", "🏰", "Desc", "town", ["f1"], [], {}, 10
     )  # Step 16
     gr1 = GuildRegistry()
@@ -101,7 +102,7 @@ def test_all_72_steps_guild_faction():
     # Step 31 - 41: guild_quest_system.py
     from guild_quest_system import GuildQuestData, GuildQuestManager, GuildQuestRegistry
 
-    gqd = GuildQuestData("t_q", "Test Q", "Desc", {}, {})  # Step 32
+    GuildQuestData("t_q", "Test Q", "Desc", {}, {})  # Step 32
     gqr1 = GuildQuestRegistry()
     gqr2 = GuildQuestRegistry()
     assert gqr1 is gqr2, "Step 33 Failed"
@@ -113,7 +114,7 @@ def test_all_72_steps_guild_faction():
     assert len(avail_q) >= 1, "Step 36 Failed"
     assert gqm.update_quest_progress(p, "slay_goblins", 100), "Step 37 Failed"
     assert gqm.can_complete_quest(p, "slay_goblins"), "Step 38 Failed"
-    q_ok, q_msg, q_rew = gqm.complete_quest(p, "slay_goblins")
+    q_ok, _q_msg, _q_rew = gqm.complete_quest(p, "slay_goblins")
     assert q_ok and p.guild_contribution >= 50, "Step 39 Failed"
     print("[OK] Steps 31-41 (guild_quest_system.py & quest progress)")
 
@@ -140,7 +141,7 @@ def test_all_72_steps_guild_faction():
     assert len(fw_data["faction_war_conditions"]) >= 3, "Step 51 Failed"
     from faction_war_system import FactionWarData, FactionWarManager, FactionWarRegistry
 
-    fwd = FactionWarData(
+    FactionWarData(
         "t_f", "Test", [0, 0, 0], ["t1"], ["a1"], ["r1"], 50
     )  # Step 53
     fwr1 = FactionWarRegistry()
@@ -173,7 +174,7 @@ def test_all_72_steps_guild_faction():
 
     from guild_skill_system import GuildSkillData, GuildSkillManager, GuildSkillRegistry
 
-    gsd = GuildSkillData("t_s", "Test", "Desc", "passive", 0, 0, [])  # Step 69
+    GuildSkillData("t_s", "Test", "Desc", "passive", 0, 0, [])  # Step 69
     gsr1 = GuildSkillRegistry()
     gsr2 = GuildSkillRegistry()
     assert gsr1 is gsr2, "Step 70 Failed"

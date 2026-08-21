@@ -1,6 +1,7 @@
 """
 総合テストスクリプト: ダンジョン・ワールド自動生成ストーリーテラー 全72ステップの完全検証
 """
+from __future__ import annotations
 
 import os
 import sys

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Font / rendering suite (locale coverage)"""
 
 import unittest

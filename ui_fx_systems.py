@@ -11,6 +11,8 @@ Elona Roguelike - UI & Visual FX Systems (Phases 2 - 8)
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import math
 import random
 from dataclasses import dataclass
@@ -318,10 +320,7 @@ class DynamicLighting:
                 )
             # Reflective surfaces
             elif (
-                tile_id.startswith("TR_ITEM_04")
-                or tile_id.startswith("TR_ITEM_05")
-                or tile_id.startswith("TR_ITEM_07")
-                or tile_id.startswith("TR_ITEM_08")
+                tile_id.startswith(("TR_ITEM_04", "TR_ITEM_05", "TR_ITEM_07", "TR_ITEM_08"))
             ):  # Weapons
                 props.update(
                     {
@@ -359,9 +358,9 @@ class DynamicLighting:
                     }
                 )
             # Material types for floor/wall
-            elif tile_id.startswith("TR_FLOOR") or tile_id.startswith("TR_WALL"):
+            elif tile_id.startswith(("TR_FLOOR", "TR_WALL")):
                 props.update({"material": "stone"})
-            elif tile_id.startswith("TR_MONSTER") or tile_id.startswith("TR_PLAYER"):
+            elif tile_id.startswith(("TR_MONSTER", "TR_PLAYER")):
                 props.update({"material": "flesh"})
 
         return props
@@ -527,6 +526,7 @@ class TutorialManager:
                     action_required=gdata.get("action_required", ""),
                 )
         except Exception as e:
+            logger.exception("Unhandled exception")
             print(f"[TutorialManager] Failed to load {self.file_path}: {e}")
 
     def check_triggers(
@@ -543,7 +543,6 @@ class TutorialManager:
 
     def update(self, delta_time: float = 1.0) -> None:
         """チュートリアルマネージャーの更新処理"""
-        pass
 
 
 @dataclass
@@ -1064,7 +1063,6 @@ class ScreenFilterManager:
                 offset = random.randint(-4, 4)
                 for gx in range(w):
                     target_x = max(0, min(w - 1, gx + offset))
-                    cur_ch = console.ch[gx, gy]
                     console.ch[gx, gy] = console.ch[target_x, gy]
                     # サイケデリックな色変調
                     console.fg[gx, gy] = (
@@ -1289,7 +1287,7 @@ def format_skill_tree_display(registry: SkillTreeRegistry) -> str:
     """スキルツリーデータを簡単なテキスト形式で返す"""
     lines = []
     lines.append("=== スキルツリー ===")
-    for tree_id, tree in registry.all().items():
+    for tree in registry.all().values():
         lines.append(f"{tree.icon} {tree.name}")
         for tier in tree.tiers:
             learned_marker = (
@@ -1337,7 +1335,6 @@ def format_job_display(registry: JobRegistry, player) -> str:
         lines.append("")
 
     # 利用可能なジョブ
-    available = []
     for job_id, job in registry.all().items():
         if job_id == "novice":
             continue
@@ -1369,7 +1366,7 @@ def format_job_display(registry: JobRegistry, player) -> str:
 
 
 # --- LocalizationManager integration (i18n, Step 3.x) ---
-def localize(key: str, language: str = None, manager=None) -> str:
+def localize(key: str, language: str | None = None, manager=None) -> str:
     """Return localized text for *key* using LocalizationManager.
 
     Provides a thin, dependency-free wrapper so callers can localize UI

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Environment management for naRou deployment."""
 
+from __future__ import annotations
+
 import argparse
 from pathlib import Path
 

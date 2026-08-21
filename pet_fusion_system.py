@@ -6,6 +6,8 @@ Steps 59-64
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import random
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -87,6 +89,8 @@ class PetFusionRegistry:
                 self._recipes[fid] = recipe
             self._loaded = True
         except Exception:
+            logger.exception("Unhandled exception")
+            # TODO: handle exception properly
             self._loaded = True
 
     def get(self, fusion_id: str) -> PetFusionData | None:
@@ -126,7 +130,7 @@ class PetFusionManager:
         p1_level = getattr(pet1, "level", 1)
         p2_level = getattr(pet2, "level", 1)
 
-        for fid, recipe in self.registry.all().items():
+        for recipe in self.registry.all().values():
             req_pets = recipe.required_pets
             if len(req_pets) >= 2:
                 match_direct = p1_type == req_pets[0] and p2_type == req_pets[1]

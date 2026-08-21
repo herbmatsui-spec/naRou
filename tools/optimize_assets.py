@@ -3,6 +3,7 @@
 Asset optimization script for running optimization passes on processed assets.
 Applies various optimization techniques to reduce file sizes and improve performance.
 """
+from __future__ import annotations
 
 import argparse
 import json
@@ -483,9 +484,8 @@ def main():
     results = run_optimization_pass(config, asset_types)
 
     # Save or output results
-    if args.output:
-        if not save_optimization_results(results, args.output):
-            sys.exit(1)
+    if args.output and not save_optimization_results(results, args.output):
+        sys.exit(1)
 
     if not args.summary_only:
         # Print full JSON

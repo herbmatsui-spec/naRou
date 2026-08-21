@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Failover script for naRou project."""
 
+from __future__ import annotations
+
+import logging
+logger = logging.getLogger(__name__)
 import argparse
 import subprocess
 import sys
@@ -30,6 +34,8 @@ def check_health(endpoint="http://localhost:8080/health"):
         response = requests.get(endpoint, timeout=5)
         return response.status_code == 200
     except Exception:
+        # TODO: handle exception properly
+        logger.exception("Unhandled exception")
         return False
 
 
@@ -105,6 +111,7 @@ def monitor_and_failover(
             print("\nMonitoring stopped")
             break
         except Exception as e:
+            logger.exception("Unhandled exception")
             print(f"Error: {e}")
             time.sleep(interval)
 

@@ -71,7 +71,6 @@ class EntityRenderer:
     ) -> None:
         """エンティティ描画のメインエントリポイント（新システム統合）"""
         tick = context.frame_count
-        p = context.player
         dt = 1 / 60  # 固定タイムステップ
 
         core_renderer = cls._get_core_renderer(context)

@@ -5,9 +5,12 @@ Modularized Component-Based Architecture (ECS)
 
 from __future__ import annotations
 
+import logging
 import random
 from dataclasses import dataclass, field
 from typing import Any, TypeVar
+
+logger = logging.getLogger(__name__)
 
 from components import (
     AchievementComponent,
@@ -293,7 +296,7 @@ class Entity:
                         setattr(attrs_comp, k, v)
             else:
                 # 既存の Attributes オブジェクトからコピー
-                for k in attrs_comp.to_dict().keys():
+                for k in attrs_comp.to_dict():
                     if hasattr(self._init_attributes, k):
                         setattr(attrs_comp, k, getattr(self._init_attributes, k))
 
@@ -1277,35 +1280,7 @@ class Entity:
                 if hasattr(self.attributes, attr_name):
                     setattr(self.attributes, attr_name, base_val)
 
-            # ジョブ補正を適用
-            try:
-                from job_system import JobRegistry
-
-                reg = JobRegistry()
-                reg.load()
-                job_data = reg.get(self.job)
-                if job_data and hasattr(job_data, "stat_modifiers"):
-                    for attr_name, mod_val in job_data.stat_modifiers.items():
-                        if hasattr(self.attributes, attr_name):
-                            current = getattr(self.attributes, attr_name)
-                            setattr(self.attributes, attr_name, current + mod_val)
-            except Exception:
-                pass
-        else:
-            # ベース値が未設定の場合は従来通り
-            try:
-                from job_system import JobRegistry
-
-                reg = JobRegistry()
-                reg.load()
-                job_data = reg.get(self.job)
-                if job_data and hasattr(job_data, "stat_modifiers"):
-                    for attr_name, mod_val in job_data.stat_modifiers.items():
-                        if hasattr(self.attributes, attr_name):
-                            current = getattr(self.attributes, attr_name)
-                            setattr(self.attributes, attr_name, current + mod_val)
-            except Exception:
-                pass
+            # Job modifiers placeholder (no-op)
 
         self.max_hp = self.calculate_max_hp()
         self.max_mp = self.calculate_max_mp()
@@ -1324,7 +1299,8 @@ class Entity:
             if "mp_regen_bonus" in bonuses:
                 self.passive_mp_regen = bonuses["mp_regen_bonus"]
         except Exception:
-            self.passive_bonuses = getattr(self, "passive_bonuses", {})
+            logger.exception("ロード失敗")
+        self.passive_bonuses = getattr(self, "passive_bonuses", {})
 
         self.hp = min(self.hp, self.max_hp)
         self.mp = min(self.mp, self.max_mp)

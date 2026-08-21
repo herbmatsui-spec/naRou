@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from feature_flags import set_flag
 
 set_flag("ENABLE_TINY_ROGUE_GFX", True)

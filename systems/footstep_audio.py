@@ -75,8 +75,8 @@ class FootstepAudioSystem:
         terrain = self.get_terrain_at(new_x, new_y)
 
         # Determine direction for directional audio
-        dx = new_x - old_x
-        dy = new_y - old_y
+        new_x - old_x
+        new_y - old_y
 
         # Play footstep
         SoundManager.play_footstep(terrain)
@@ -89,7 +89,6 @@ class FootstepAudioSystem:
 
                 # We can't easily access FXManager here without passing it
                 # The game loop should handle particle spawning
-                pass
             except ImportError:
                 pass
 

@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import json
 import subprocess
 import sys
 import time
 import urllib.error
 import urllib.request
-from pathlib import Path
 
 
 def test_web_server_smoke() -> None:

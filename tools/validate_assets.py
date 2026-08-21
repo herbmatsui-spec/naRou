@@ -3,6 +3,7 @@
 Asset validation script for validating processed assets.
 Checks integrity, format compliance, and quality of all asset types.
 """
+from __future__ import annotations
 
 import argparse
 import json

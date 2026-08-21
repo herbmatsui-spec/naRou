@@ -7,6 +7,7 @@ Verifies that the three sources of color truth stay in sync:
 
 Run: python tools/test_palette_parity.py
 """
+from __future__ import annotations
 
 import json
 import os
@@ -56,7 +57,7 @@ def main() -> int:
 
     # 3. core/palette.py COLORS
     sys.path.insert(0, ROOT)
-    from core.palette import COLORS  # noqa: E402
+    from core.palette import COLORS
 
     errors = []
 
@@ -64,12 +65,12 @@ def main() -> int:
     for name, hexval in token_hex.items():
         if hexval.lower() not in [v.lower() for v in css_vars.values()]:
             # allow CSS var references; just warn, not error, for non-color tokens
-            if name.startswith("color") or name.startswith("tiles"):
+            if name.startswith(("color", "tiles")):
                 errors.append(f"Token color {name}={hexval} missing from CSS variables")
 
     # Every palette RGB should be derivable from a token hex
     token_rgb_set = {hex_to_rgb(v) for v in token_hex.values()}
-    for cname, rgb in COLORS.items():
+    for rgb in COLORS.values():
         if rgb not in token_rgb_set and rgb != (0, 0, 0):
             # not strictly required, but report for visibility
             pass

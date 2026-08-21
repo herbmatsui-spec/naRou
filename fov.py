@@ -94,8 +94,8 @@ def _cast_light(
 
             if is_blocked(x, y):
                 if not blocked_prev:
-                    nx = ox + (dx - 1) * xx + dy * xy
-                    ny = oy + (dx - 1) * yx + dy * yy
+                    ox + (dx - 1) * xx + dy * xy
+                    oy + (dx - 1) * yx + dy * yy
                     _cast_light(
                         visible,
                         is_blocked,
@@ -198,8 +198,7 @@ def compute_light_map(
                 f = peak * (1.0 - d / radius)
                 if f <= 0:
                     continue
-                if f > intensity[y][x]:
-                    intensity[y][x] = f
+                intensity[y][x] = max(intensity[y][x], f)
                 # Accumulate a distance-weighted colour so warm torches tint
                 # nearby tiles while the player lantern stays neutral.
                 cr[y][x] += f * r0

@@ -3,6 +3,7 @@
 Font atlas generator for rendering text with bitmap fonts.
 Generates font atlases with character metrics and UV coordinates.
 """
+from __future__ import annotations
 
 import argparse
 import json
@@ -16,7 +17,7 @@ def generate_font_atlas(
     font_path: str,
     output_dir: str,
     font_size: int = 16,
-    chars: str = None,
+    chars: str | None = None,
     padding: int = 2,
 ) -> dict:
     """Generate a font atlas from a TrueType font."""
@@ -44,6 +45,7 @@ def generate_font_atlas(
             else:
                 char_images[char] = Image.new("RGBA", (1, 1), (0, 0, 0, 0))
         except Exception:
+            # TODO: handle exception properly
             char_images[char] = Image.new("RGBA", (1, 1), (0, 0, 0, 0))
 
     cols = int(len(chars) ** 0.5) + 1

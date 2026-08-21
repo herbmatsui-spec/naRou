@@ -7,6 +7,7 @@ Python list of RGB tuples suitable for tcod rendering. Run:
 
     python tools/generate_palette.py > core/palette_generated.py
 """
+from __future__ import annotations
 
 import json
 import os
@@ -39,7 +40,7 @@ def build_palette(tokens: dict) -> list[tuple[int, int, int]]:
     danger = pick("danger", default="#dc2626")
     success = pick("success", default="#16a34a")
     warning = pick("warning", default="#d97706")
-    info = pick("info", default="#2563eb")
+    pick("info", default="#2563eb")
 
     wall = tiles.get("wall", "#2c3e50")
     floor = tiles.get("floor", "#1c2230")

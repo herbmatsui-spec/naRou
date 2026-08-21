@@ -2,6 +2,7 @@
 プロシージャル・クエスト生成システム ゲームプレイ統合テスト
 実際のゲームイベント（撃破/採取/探索）から生成クエストが進捗・達成されることを検証。
 """
+from __future__ import annotations
 
 import os
 import sys

@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 """Backup script for naRou project."""
 
+from __future__ import annotations
+
 import argparse
+import logging
 import os
 import shutil
 import subprocess
 import tarfile
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 
 def run_command(cmd, cwd=None):

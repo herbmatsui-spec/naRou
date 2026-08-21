@@ -36,12 +36,10 @@ class RewardManager:
     def _grant_currency(self, player: Entity, currency_id: str, amount: int) -> None:
         """プレイヤーに通貨を付与する（実装は省略）"""
         # TODO: 実際の通貨システムと連携
-        pass
 
     def _grant_item(self, player: Entity, item_id: str, quantity: int) -> None:
         """プレイヤーにアイテムを付与する（実装は省略）"""
         # TODO: 実際のアイテムシステムと連携
-        pass
 
 
 REWARD_MANAGER = RewardManager()

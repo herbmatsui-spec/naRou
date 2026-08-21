@@ -2,6 +2,7 @@
 test_skill_eater_presentation_integration.py
 提案1〜9（全72ステップ）のEmote & Audio演出統合テストスイート
 """
+from __future__ import annotations
 
 import unittest
 from pathlib import Path

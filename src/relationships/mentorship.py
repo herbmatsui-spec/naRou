@@ -5,6 +5,8 @@ Step 10: Master-disciple relationship mechanics
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import time
 from collections import defaultdict
 from collections.abc import Callable
@@ -537,6 +539,7 @@ class MentorshipMechanics:
             try:
                 handler(event_type, state, **kwargs)
             except Exception as e:
+                logger.exception("Unhandled exception")
                 print(f"Error in mentorship event handler: {e}")
 
     def get_mentorship_state(
@@ -594,7 +597,7 @@ class MentorshipMechanics:
         self.mentorship_states.clear()
         self._mentorship_stats = data.get("stats", self._mentorship_stats)
 
-        for key, state_data in data.get("mentorship_states", {}).items():
+        for state_data in data.get("mentorship_states", {}).values():
             state = MentorshipState(
                 master_id=state_data["master_id"],
                 disciple_id=state_data["disciple_id"],

@@ -39,11 +39,9 @@ class SystemCoordinator:
 
     def initialize_all(self, engine: Any) -> None:
         """パッケージ経由で初期化されるため、ここでは何もしない（互換用空実装）"""
-        pass
 
     def update_all(self, engine: Any, delta_time: float = 1.0) -> None:
         """パッケージ経由で更新されるため、ここでは何もしない（互換用空実装）"""
-        pass
 
     def get_system(self, name: str) -> Any:
         return self._kernel.get_system(name)

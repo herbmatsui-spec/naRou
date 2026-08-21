@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import os
 from dataclasses import dataclass, field
 from typing import Any
@@ -70,6 +72,7 @@ class WorldLayer:
             else:
                 self.theme_data = self._get_default_theme()
         except Exception as e:
+            logger.exception("Unhandled exception")
             print(
                 f"テーマロードエラー ({self.zone}:{self.biome}:{self.depth}:{self.dimension}): {e}"
             )
@@ -120,7 +123,7 @@ class WorldLayer:
         )
 
         # テーマ固有の修正を適用
-        difficulty_mod = self.theme_data.get("difficulty_modifier", 1.0)
+        # TODO: difficulty_modifier をトラップ配置へ適用する
         # ここで難易度に基づくトラップ配置等を行う
 
     def get_monster_pool(self) -> dict[str, list[str]]:

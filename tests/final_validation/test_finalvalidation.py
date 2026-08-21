@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Final i18n validation suite"""
 
 import unittest

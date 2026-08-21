@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Configuration script for naRou project."""
+from __future__ import annotations
 
 import argparse
 import os
@@ -78,7 +79,7 @@ if __name__ == "__main__":
 
 
 # --- LocalizationManager integration (i18n, Step 3.x) ---
-def localize(key: str, language: str = None, manager=None) -> str:
+def localize(key: str, language: str | None = None, manager=None) -> str:
     """Return localized text for *key* using LocalizationManager.
 
     Provides a thin, dependency-free wrapper so callers can localize UI

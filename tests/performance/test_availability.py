@@ -3,7 +3,9 @@
 Availability Test
 可用性テスト
 """
+from __future__ import annotations
 
+import sys
 import threading
 import time
 import unittest
@@ -93,4 +95,4 @@ def run_availability_tests():
 
 if __name__ == "__main__":
     success = run_availability_tests()
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

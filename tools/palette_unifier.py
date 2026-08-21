@@ -3,10 +3,12 @@
 Palette Unifier for naRou
 Unifies asset palettes to match the game's master palette from design_tokens.json.
 """
+from __future__ import annotations
 
 import argparse
 import json
 import logging
+import sys
 from pathlib import Path
 
 try:
@@ -288,4 +290,4 @@ def main():
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())

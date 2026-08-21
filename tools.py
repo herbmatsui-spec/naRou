@@ -21,4 +21,4 @@ def dump_language(language: str) -> dict:
     return mgr.get_language_data(language)
 
 
-__all__ = ["list_missing_keys", "dump_language"]
+__all__ = ["dump_language", "list_missing_keys"]

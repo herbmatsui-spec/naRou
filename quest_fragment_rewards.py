@@ -128,8 +128,8 @@ def load_fragment_drop_tables_from_yaml() -> None:
 __all__ = [
     "FragmentDrop",
     "FragmentDropTable",
-    "register_fragment_drop_table",
-    "get_fragment_drop_table",
     "drop_fragments_for_quest",
+    "get_fragment_drop_table",
     "load_fragment_drop_tables_from_yaml",
+    "register_fragment_drop_table",
 ]

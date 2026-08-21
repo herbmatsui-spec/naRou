@@ -1,6 +1,7 @@
 """
 テスト: シーズンイベントのトリガーとスケジューラー
 """
+from __future__ import annotations
 
 from event_scheduler import EventScheduler
 from world_event_system import REGISTRY, WorldEventManager

@@ -20,4 +20,4 @@ def available_languages() -> list[str]:
     return LocalizationManager().get_supported_languages()
 
 
-__all__ = ["localize_project_string", "available_languages"]
+__all__ = ["available_languages", "localize_project_string"]

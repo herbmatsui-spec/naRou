@@ -2,6 +2,7 @@
 test_skill_eater_full_72_steps.py
 全72ステップ（9つの改善案）を包括的に検証する総合ユニットテストスイート
 """
+from __future__ import annotations
 
 import unittest
 from pathlib import Path

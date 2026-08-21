@@ -43,7 +43,7 @@ class EmergencyQuestInjector:
         from world_event_system import WORLD_EVENT_SYSTEM
 
         active_event = None
-        for event_type, event in WORLD_EVENT_SYSTEM.active_events.items():
+        for event in WORLD_EVENT_SYSTEM.active_events.values():
             if event.is_active:
                 active_event = event
                 break
@@ -109,8 +109,8 @@ def update_emergency_quest_injector() -> None:
 
 
 __all__ = [
-    "EmergencyQuestInjector",
     "EMERGENCY_QUEST_INJECTOR",
+    "EmergencyQuestInjector",
     "inject_emergency_quests",
     "update_emergency_quest_injector",
 ]

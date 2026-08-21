@@ -5,6 +5,8 @@ Reputation Gate System Module (偏執的クエストシステム / 設計書 Pha
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum, auto
@@ -229,8 +231,9 @@ class ReputationGate:
             elif action == GateAction.CUSTOM:
                 return self._custom_action(target, player, params)
         except Exception:
+            logger.exception("Unhandled exception")
+            # Log failure and return False
             return False
-        return False
 
     def _unlock_quest(self, quest_id: str, player: Entity, params: dict) -> bool:
         mqs = getattr(self.engine, "main_quest_system", None)
@@ -276,7 +279,7 @@ class ReputationGate:
         return True
 
     def _grant_buff(self, buff_id: str, player: Entity, params: dict) -> bool:
-        duration = params.get("duration", 300)
+        # TODO: 難易度プリセットの補正値を適用
         # バフシステム連携
         return True
 
@@ -330,11 +333,11 @@ def create_thresholds_from_yaml(
 
 
 __all__ = [
-    "GateAction",
-    "ReputationSource",
-    "ReputationThreshold",
     "FactionReputationGate",
+    "GateAction",
     "NPCReputationGate",
     "ReputationGate",
+    "ReputationSource",
+    "ReputationThreshold",
     "create_thresholds_from_yaml",
 ]

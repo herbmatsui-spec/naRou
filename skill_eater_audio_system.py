@@ -5,6 +5,8 @@ Phase 1: オーディオ基盤 (Kenney Foley / Sound Effect System)
 """
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 from pathlib import Path
 from typing import Any
 
@@ -31,6 +33,8 @@ class SkillEaterAudioSystem:
                 pygame.mixer.init()
                 self.has_pygame = True
             except Exception:
+                # If pygame not available, disable audio playback
+                logger.exception("Unhandled exception")
                 self.has_pygame = False
 
     @classmethod
@@ -81,6 +85,8 @@ class SkillEaterAudioSystem:
             snd.play()
             return True
         except Exception:
+            logger.exception("Unhandled exception")
+            # TODO: handle exception properly
             return False
 
     def get_and_clear_played_sounds(self) -> list[str]:

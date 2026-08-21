@@ -2,6 +2,7 @@
 プロシージャル・クエスト生成システム 総合テスト (全36ステップ)
 依頼ボード / ランダムダンジョン探索 / NPC個別クエスト の自動生成を検証。
 """
+from __future__ import annotations
 
 import os
 import sys
@@ -317,7 +318,6 @@ def test_all_36_steps_procedural_quest_generation():
     eng.player.procedural_quest.completed_quest_ids = ["gen_x"]
     import tempfile
 
-    old_path = None
     try:
         from save_system import SaveSystem
 

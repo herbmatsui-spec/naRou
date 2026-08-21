@@ -5,6 +5,8 @@ Step 5: Dynamic relationship change system
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import time
 from collections import defaultdict, deque
 from collections.abc import Callable
@@ -301,7 +303,9 @@ class DynamicRelationshipSystem:
                 context_multiplier = context_func(context)
                 modifier *= context_multiplier
             except Exception:
-                # 修正子が失敗しても継続
+                logger.exception("Unhandled exception")
+        # TODO: handle exception properly
+        # 修正子が失敗しても継続
                 continue
 
         return int(base_amount * modifier)
@@ -439,7 +443,7 @@ class DynamicRelationshipSystem:
         ]
 
         # 累積効果のクリーンアップ（古いものはリセット）
-        for key, cum_effect in self._cumulative_effects.items():
+        for cum_effect in self._cumulative_effects.values():
             if current_time - cum_effect.last_reset > max_age_seconds:
                 cum_effect.reset()
 

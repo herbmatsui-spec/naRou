@@ -8,6 +8,8 @@ Provides:
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 import os
 import random
 from dataclasses import dataclass, field
@@ -142,6 +144,7 @@ class MetaProgressionRegistry:
 
                 self.fragment_templates = raw.get("fragment_templates", {})
             except Exception as e:
+                logger.exception("Unhandled exception")
                 print(f"[MetaProgressionRegistry] Load failed: {e}")
 
         # フォールバックデフォルト
@@ -364,7 +367,7 @@ class MetaProgressionManager:
         """メタゴールの達成状況を評価"""
         ach_comp = player.get_component(AchievementComponent)
         reinc_comp = player.get_component(ReincarnationComponent)
-        title_comp = player.get_component(TitleComponent)
+        player.get_component(TitleComponent)
 
         completed_new: list[str] = []
 

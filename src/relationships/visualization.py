@@ -307,7 +307,7 @@ class RelationshipVisualizer:
 
         # 孤立したノードを検出
         isolated_nodes = []
-        for char_id, node in self.graph.nodes.items():
+        for char_id in self.graph.nodes:
             if not self.graph.get_related_nodes(char_id):
                 isolated_nodes.append(char_id)
 

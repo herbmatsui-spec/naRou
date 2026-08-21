@@ -6,6 +6,8 @@ Steps 31-39
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -75,6 +77,8 @@ class GuildQuestRegistry:
                     self._quests[guild_id][q_type] = quest_objs
             self._loaded = True
         except Exception:
+            logger.exception("Unhandled exception")
+            # TODO: handle exception properly
             self._loaded = True
 
     def get(self, guild_id: str, quest_type: str | None = None) -> list[GuildQuestData]:
@@ -149,7 +153,7 @@ class GuildQuestManager:
 
         contrib = reward.get("contribution", 30)
         gold = reward.get("gold", 50)
-        item_name = reward.get("item")
+        reward.get("item")
 
         player.guild_contribution = getattr(player, "guild_contribution", 0) + contrib
         player.gold = getattr(player, "gold", 0) + gold

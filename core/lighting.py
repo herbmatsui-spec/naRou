@@ -9,8 +9,13 @@ import math
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from random import choice, random
-from typing import Any
+from random import choice, random, uniform
+from typing import Any, ClassVar
+
+try:
+    from scipy import ndimage
+except ImportError:
+    ndimage = None
 
 import numpy as np
 
@@ -268,16 +273,16 @@ class TerminalLightingSystem:
                     continue
 
                 # 視界チェック
+                if visible and not visible[my][mx] and explored and explored[my][mx]:
+                    # 探索済み: 環境光のみ
+                    if vy < len(lm.intensity) and vx < len(lm.intensity[0]):
+                        r, g, b = lm.color[vy][vx]
+                        r = int(r * self.ambient_light)
+                        g = int(g * self.ambient_light)
+                        b = int(b * self.ambient_light)
+                        console.tiles_rgb["bg"][vx, vy] = (r, g, b)
+                    continue
                 if visible and not visible[my][mx]:
-                    # 視界外: 探索済みなら暗く、未探索なら真っ暗
-                    if explored and explored[my][mx]:
-                        # 探索済み: 環境光のみ
-                        if vy < len(lm.intensity) and vx < len(lm.intensity[0]):
-                            r, g, b = lm.color[vy][vx]
-                            r = int(r * self.ambient_light)
-                            g = int(g * self.ambient_light)
-                            b = int(b * self.ambient_light)
-                            console.tiles_rgb["bg"][vx, vy] = (r, g, b)
                     # 未探索は何もしない (デフォルトの黒のまま)
                     continue
 
@@ -585,31 +590,27 @@ class SimpleSSAO:
         self._kernel = self._generate_kernel(samples)
         self._noise = self._generate_noise(4, 4)
 
-    def _generate_kernel(self, n: int):
+    def _generate_kernel(self, n: int) -> list[tuple[float, float, float]]:
         """半球内ランダムカーネル生成"""
-        import math
-        import random
-
         kernel = []
         for _ in range(n):
             # 半球内均一サンプリング
-            u = random.random()
-            v = random.random()
+            u = random()
+            v = random()
             theta = 2 * math.pi * u
             phi = math.acos(2 * v - 1)
-            r = math.pow(random.random(), 0.5)  # sqrt で重み付け
+            r = math.pow(random(), 0.5)  # sqrt で重み付け
             x = r * math.sin(phi) * math.cos(theta)
             y = r * math.sin(phi) * math.sin(theta)
             z = r * math.cos(phi)
             kernel.append((x, y, z))
         return kernel
 
-    def _generate_noise(self, w: int, h: int):
+    def _generate_noise(self, w: int, h: int) -> list[list[tuple[float, float]]]:
         """回転ノイズテクスチャ生成"""
-        import random
 
         return [
-            [(random.uniform(-1, 1), random.uniform(-1, 1)) for _ in range(w)]
+            [(uniform(-1, 1), uniform(-1, 1)) for _ in range(w)]
             for _ in range(h)
         ]
 
@@ -623,12 +624,11 @@ class SimpleSSAO:
             (H, W) float32 AO 値 (0..1, 1=遮蔽なし)
         """
         from scipy import ndimage
-
         H, W = normal_buffer.shape[:2]
         ao = np.ones((H, W), dtype=np.float32)
 
         if H == 0 or W == 0:
-            return ao
+            return ao  # type: ignore[no-any-return]
 
         # 法線のエッジ（深度不連続）を検出 → 擬似 AO
         # Sobel フィルタで勾配計算
@@ -667,15 +667,17 @@ class SimpleSSAO:
         # ガウシアンブラーで平滑化
         ao = ndimage.gaussian_filter(ao, sigma=1.0)
 
-        return np.clip(ao, 0.3, 1.0).astype(np.float32)
+        return np.clip(ao, 0.3, 1.0).astype(np.float32)  # type: ignore[no-any-return]
 
     def apply_to_lightmap(self, lightmap: np.ndarray, ao: np.ndarray) -> np.ndarray:
         """ライトマップに AO 適用（乗算）"""
 
         # lightmap: (H, W, 3) or (H, W)
         if lightmap.ndim == 3:
-            return lightmap * ao[..., np.newaxis]
-        return lightmap * ao
+            return lightmap * ao[..., np.newaxis]  # type: ignore[no-any-return]
+        return lightmap * ao  # type: ignore[no-any-return]
+
+
 
 
 # シングルトンインスタンス（遅延初期化）
@@ -695,7 +697,7 @@ def get_ssao(width: int = 80, height: int = 50) -> SimpleSSAO:
 
 
 def compute_ssao_from_tiles(
-    console, cam_x: int, cam_y: int, view_w: int, view_h: int
+    console: Any, cam_x: int, cam_y: int, view_w: int, view_h: int
 ) -> np.ndarray:
     """
     タイルマップから簡易法線バッファを構築し SSAO 計算。
@@ -705,7 +707,7 @@ def compute_ssao_from_tiles(
 
     # 簡易法線バッファ構築
     # 壁=上向き法線、床=上向き、境界=側面法線
-    normal_buffer = np.zeros((view_h, view_w, 3), dtype=np.float32)
+    normal_buffer: np.ndarray = np.zeros((view_h, view_w, 3), dtype=np.float32)
     normal_buffer[..., 2] = 1.0  # デフォルト: 上向き
 
     return ssao.compute(normal_buffer)
@@ -739,7 +741,7 @@ class ShadowAtlas:
         self.size = size
         self.max_lights = max_lights
         self.allocations: dict[int, tuple[int, int, int, int]] = {}
-        self.grid_size = int(math.ceil(math.sqrt(max_lights)))
+        self.grid_size = math.ceil(math.sqrt(max_lights))
         self.slot_size = size // self.grid_size
 
     def allocate_light(
@@ -771,13 +773,13 @@ class TileCulling:
 
     def build_light_grid(
         self, width: int, height: int, lights: list[LightVolume], view_proj: Any
-    ) -> Any:
+    ) -> np.ndarray:
         grid_w = max(1, width // self.tile_size)
         grid_h = max(1, height // self.tile_size)
-        grid = np.full(
+        grid: np.ndarray = np.full(
             (grid_h, grid_w, self.max_lights_per_tile), 0xFFFFFFFF, dtype=np.uint32
         )
-        tile_counts = np.zeros((grid_h, grid_w), dtype=np.int32)
+        tile_counts: np.ndarray = np.zeros((grid_h, grid_w), dtype=np.int32)
 
         for light_idx, light in enumerate(lights):
             lx, ly, _ = light.position
@@ -800,7 +802,7 @@ class TileCulling:
 class MaterialSystem:
     """PBR Tile Material System."""
 
-    DEFAULT_MATERIAL = {
+    DEFAULT_MATERIAL: ClassVar[dict[str, Any]] = {
         "albedo": "default",
         "normal": "default_normal",
         "roughness": 0.5,

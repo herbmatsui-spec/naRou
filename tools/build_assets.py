@@ -3,6 +3,7 @@
 Main build script for the asset pipeline.
 Orchestrates the processing of all asset types through the pipeline.
 """
+from __future__ import annotations
 
 import argparse
 import json

@@ -1,6 +1,7 @@
 """
 Generate GIF showcasing Pet System & Web Client features.
 """
+from __future__ import annotations
 
 from PIL import Image, ImageDraw
 

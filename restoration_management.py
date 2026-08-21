@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Restoration management for naRou deployment."""
 
+from __future__ import annotations
+
 import argparse
 import json
 import tarfile
@@ -138,17 +140,16 @@ class RestorationManager:
             rp = self.create_restore_point(backup_name, target_dir)
 
         # Verify checksum if enabled
-        if self.config.get("verify_checksums", True):
-            if "checksum" in backup:
-                import hashlib
+        if self.config.get("verify_checksums", True) and "checksum" in backup:
+            import hashlib
 
-                sha256 = hashlib.sha256()
-                with open(backup_path, "rb") as f:
-                    for chunk in iter(lambda: f.read(8192), b""):
-                        sha256.update(chunk)
-                if sha256.hexdigest() != backup["checksum"]:
-                    print("Checksum verification failed!")
-                    return False
+            sha256 = hashlib.sha256()
+            with open(backup_path, "rb") as f:
+                for chunk in iter(lambda: f.read(8192), b""):
+                    sha256.update(chunk)
+            if sha256.hexdigest() != backup["checksum"]:
+                print("Checksum verification failed!")
+                return False
 
         print(f"Restoring {backup_name} to {target_dir}")
 

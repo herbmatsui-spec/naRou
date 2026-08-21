@@ -2,6 +2,7 @@
 """
 World State System 垂直ワールド拡張 デモ
 """
+from __future__ import annotations
 
 from world_state_system import WorldStateManager
 
@@ -37,7 +38,7 @@ def demo_world_state_extension():
     print("3. 訪問済みレイヤーの確認")
     visited_layers = ws_manager.get_visited_layers()
     print(f"   訪問済みレイヤー数: {len(visited_layers)}")
-    for layer in sorted(list(visited_layers))[:5]:  # 最初の5つを表示
+    for layer in sorted(visited_layers)[:5]:  # 最初の5つを表示
         print(f"   - {layer}")
     if len(visited_layers) > 5:
         print(f"   ...および{len(visited_layers) - 5}つ以上のその他のレイヤー")

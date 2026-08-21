@@ -2,6 +2,7 @@
 """
 Create simple colored placeholder PNG files for asset source.
 """
+from __future__ import annotations
 
 import os
 

@@ -5,10 +5,13 @@ Step 15 of Visual Obsessive Implementation Plan.
 
 from __future__ import annotations
 
+import sys
+
 import numpy as np
 
+from core.auto_exposure import AutoExposure
 from core.compositor import Compositor, PseudoHDR
-from core.hdr import AutoExposure, HDRCompositor, HDRTarget
+from core.hdr import HDRCompositor, HDRTarget
 
 
 def test_hdr_target():
@@ -22,7 +25,7 @@ def test_hdr_target():
     print("  PASS: Buffer shapes correct")
 
     # Test swap
-    read_before = target.get_read_texture()
+    target.get_read_texture()
     target.swap_buffers()
     read_after = target.get_read_texture()
     assert read_after is target.color_b
@@ -280,4 +283,4 @@ def run_all_tests():
 
 if __name__ == "__main__":
     success = run_all_tests()
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

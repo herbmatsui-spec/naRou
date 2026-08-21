@@ -5,6 +5,8 @@ Step 16: Integration with main quest system
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -414,6 +416,7 @@ class QuestRelationshipIntegration:
             try:
                 handler(event_type, data)
             except Exception as e:
+                logger.exception("Unhandled exception")
                 print(f"Error in quest integration event handler: {e}")
 
     def get_integration_statistics(self) -> dict[str, Any]:

@@ -3,10 +3,11 @@
 Job System for naRou
 Manages jobs, job changes, stat modifiers, and unlock conditions.
 """
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
@@ -40,7 +41,7 @@ class JobData:
 class JobRegistry:
     """Singleton registry for loading and accessing jobs."""
 
-    _instance: Optional["JobRegistry"] = None
+    _instance: JobRegistry | None = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -121,9 +122,8 @@ class JobManager:
             return True
 
         # Level check
-        if "level" in conditions:
-            if player.level < conditions["level"]:
-                return False
+        if "level" in conditions and player.level < conditions["level"]:
+            return False
 
         # Skill requirements
         if "skills" in conditions:
@@ -251,8 +251,8 @@ def get_job_manager() -> JobManager:
 
 
 __all__ = [
-    "JobEffect",
     "JobData",
-    "JobRegistry",
+    "JobEffect",
     "JobManager",
+    "JobRegistry",
 ]

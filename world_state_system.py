@@ -16,6 +16,8 @@ if TYPE_CHECKING:
 
 from enum import Enum, auto
 
+from typing_extensions import Self
+
 
 class WorldPhase(Enum):
     """ワールドの物語進行フェーズ (設計書 2.1)"""
@@ -55,7 +57,7 @@ class WorldStateRegistry:
 
     _instance: WorldStateRegistry | None = None
 
-    def __new__(cls) -> WorldStateRegistry:
+    def __new__(cls) -> Self:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._template = None

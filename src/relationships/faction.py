@@ -222,7 +222,7 @@ class FactionRelationshipSystem:
             if member_id not in self.graph.nodes:
                 continue
 
-            member_node = self.graph.get_node(member_id)
+            self.graph.get_node(member_id)
             member_weight = self._get_member_weight(member_id, faction_id)
 
             # メンバーのすべての関係を取得
@@ -232,12 +232,11 @@ class FactionRelationshipSystem:
                     continue
 
                 # 他の派閥所属をチェック
-                for other_faction_id, _ in other_node.faction_affiliations.items():
+                for other_faction_id in other_node.faction_affiliations:
                     if other_faction_id == faction_id:
                         continue  # 同じ派閥はスキップ
 
                     # 重み付きで集計
-                    rel_key = (other_faction_id, edge.relationship_type)
                     aggregated[other_faction_id][edge.relationship_type.value] += (
                         edge.level * member_weight
                     )
@@ -475,7 +474,7 @@ class FactionRelationshipSystem:
         influences: dict[str, int] = {}
 
         # 各派閥所属について影響を計算
-        for faction_id, affiliation in node.faction_affiliations.items():
+        for faction_id in node.faction_affiliations:
             if faction_id not in self.factions:
                 continue
 

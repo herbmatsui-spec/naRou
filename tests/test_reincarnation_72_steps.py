@@ -1,6 +1,7 @@
 """
 総合テストスクリプト: 輪廻転生・ニューゲーム+システム全72ステップの完全検証
 """
+from __future__ import annotations
 
 import os
 import sys

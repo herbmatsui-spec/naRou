@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 import yaml
+from typing_extensions import Self
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -32,7 +33,7 @@ class ReincarnationChallengeRegistry:
 
     _instance: ReincarnationChallengeRegistry | None = None
 
-    def __new__(cls) -> ReincarnationChallengeRegistry:
+    def __new__(cls) -> Self:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._challenges = {}
@@ -139,9 +140,8 @@ class ReincarnationChallengeManager:
             player.skill_points += rew["skill_points"]
             player.total_skill_points_earned += rew["skill_points"]
 
-        if rew.get("title"):
-            if rew["title"] not in player.titles:
-                player.titles.append(rew["title"])
+        if rew.get("title") and rew["title"] not in player.titles:
+            player.titles.append(rew["title"])
 
         if engine:
             from sound_manager import SoundManager

@@ -3,6 +3,7 @@
 Asset cleanup script for cleaning up temporary files, caches, and old builds.
 Helps maintain a clean asset pipeline workspace.
 """
+from __future__ import annotations
 
 import argparse
 import json
@@ -32,7 +33,7 @@ def is_old_file(file_path: str, max_age_seconds: float) -> bool:
 def cleanup_directory(
     directory: str,
     max_age_hours: float = 24,
-    patterns: list[str] = None,
+    patterns: list[str] | None = None,
     dry_run: bool = False,
 ) -> dict:
     """Clean up old files in a directory."""

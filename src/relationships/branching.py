@@ -421,7 +421,7 @@ class BranchingScenarioGenerator:
         for char_id, node in self.graph.nodes.items():
             if char_id == player_id:
                 continue
-            for faction_id, affiliation in node.faction_affiliations.items():
+            for faction_id in node.faction_affiliations:
                 faction_members[faction_id].append(char_id)
 
         # 緊張状態を検出（プレイヤーの派閥と敵対派閥のメンバーが接近）

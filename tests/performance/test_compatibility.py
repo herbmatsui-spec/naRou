@@ -3,6 +3,7 @@
 Compatibility Test
 互換性テスト
 """
+from __future__ import annotations
 
 import platform
 import sys
@@ -98,4 +99,4 @@ def run_compatibility_tests():
 
 if __name__ == "__main__":
     success = run_compatibility_tests()
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

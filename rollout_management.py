@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Rollout management for naRou deployment."""
 
+from __future__ import annotations
+
 import argparse
 from datetime import datetime
 from pathlib import Path

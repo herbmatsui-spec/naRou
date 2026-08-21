@@ -3,7 +3,9 @@
 Memory Performance Test
 メモリパフォーマンステスト
 """
+from __future__ import annotations
 
+import sys
 import unittest
 
 from tools.performance_monitor import PerformanceMonitor
@@ -53,4 +55,4 @@ def run_memory_tests():
 
 if __name__ == "__main__":
     success = run_memory_tests()
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

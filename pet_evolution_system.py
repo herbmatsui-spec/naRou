@@ -6,6 +6,8 @@ Steps 37-43
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -71,7 +73,9 @@ class PetEvolutionRegistry:
                     evo_list.append(evo)
                 self._evolutions[pet_type] = evo_list
             self._loaded = True
-        except Exception:
+        except Exception as e:
+            logger.exception("Unhandled exception")
+            # TODO: handle exception properly
             self._loaded = True
 
     def get(self, pet_type: str) -> list[PetEvolutionData]:
@@ -104,7 +108,7 @@ class PetEvolutionManager:
         from pet_contract_system import PetContractManager
 
         CONTRACT_REG.load()
-        contract_mgr = PetContractManager(CONTRACT_REG)
+        PetContractManager(CONTRACT_REG)
 
         available = []
         cur_path = getattr(pet, "evolution_path", [])

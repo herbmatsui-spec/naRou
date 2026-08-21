@@ -5,6 +5,8 @@ World Event Hooks Module (偏執的クエストシステム / 設計書 Phase 9 
 
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger(__name__)
 from collections.abc import Callable
 
 from world_event_system import WorldEvent, WorldEventSystem, WorldEventType
@@ -55,7 +57,6 @@ class EventMonitor:
                 del self._active_events[event_type]
                 # 終了ハンドラーがある場合はここで呼び出す（簡易実装では開始ハンドラーのみ）
                 # ここでは終了ハンドラーは別途実装するか、開始ハンドラーに渡すイベントに終了フラグを追加する
-                pass
 
     def _trigger_handlers(self, event_type: WorldEventType, event: WorldEvent) -> None:
         """登録されたハンドラーを呼び出す"""
@@ -63,6 +64,7 @@ class EventMonitor:
             try:
                 handler(event)
             except Exception as e:
+                logger.exception("Unhandled exception")
                 # エラーはログに記録するが、監視を停止しない
                 print(f"[EventMonitor Error] Handler for {event_type} failed: {e}")
 
@@ -84,8 +86,8 @@ def update_world_event_monitor() -> None:
 
 
 __all__ = [
-    "EventMonitor",
     "EVENT_MONITOR",
+    "EventMonitor",
     "monitor_world_event",
     "update_world_event_monitor",
 ]

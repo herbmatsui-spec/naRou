@@ -76,14 +76,12 @@ class EventScheduler:
             ):
                 in_quarter = True
                 event_start = event_data.start_turn
-                event_end = event_data.end_turn
             else:
                 if not in_quarter:
                     continue
                 quarter_start = (current_quarter - 1) * 90
-                quarter_end = quarter_start + 90
+                quarter_start + 90
                 event_start = quarter_start
-                event_end = quarter_end
 
             announcement_period = getattr(event_data, "announcement_period", 0)
             if announcement_period > 0:
@@ -135,16 +133,14 @@ class EventScheduler:
                     True  # スケジュールされている場合はクォーターに関係なく考慮
                 )
                 event_start = event_data.start_turn
-                event_end = event_data.end_turn
             else:
                 # スケジュールターンが設定されていないが、quarterが一致する場合は四半期中ずっとアクティブとみなす
                 if not in_quarter:
                     continue
                 # 四半期の概算開始ターンと終了ターンを計算
                 quarter_start = (current_quarter - 1) * 90
-                quarter_end = quarter_start + 90
+                quarter_start + 90
                 event_start = quarter_start
-                event_end = quarter_end
 
             # アナウンス期間を計算: イベント開始ターン - announcement_period
             announcement_period = getattr(event_data, "announcement_period", 0)

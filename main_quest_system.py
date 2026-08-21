@@ -239,24 +239,21 @@ class MainQuestSystem:
             return logs
 
         # コンテキスト作成
-        evaluator_func, EvaluationContext = _get_evaluator()
+        _evaluator_func, EvaluationContext = _get_evaluator()
         context = EvaluationContext(player, engine)
 
         # 全ての目的をチェック
-        changed = False
         for obj in quest.objectives:
             # 自動評価が有効かつ条件ツリーがある場合は評価
             if obj.auto_evaluate and obj.condition_tree:
                 # イベントタイプが条件に関連しているかチェック（簡易版）
                 if obj.evaluate(context):
-                    changed = True
                     logs.append(
                         f"【クエスト進行】{quest.title}: {obj.description} (達成！)"
                     )
             # 従来の更新ロジック（後方互換性）
             elif obj.target_type == event_type:
                 if obj.update(target_id, amount):
-                    changed = True
                     logs.append(
                         f"【クエスト進行】{quest.title}: {obj.description} ({obj.current_count}/{obj.required_count})"
                     )
@@ -273,10 +270,10 @@ class MainQuestSystem:
         from world_state_system import REGISTRY, WorldStateManager
 
         ws_manager = WorldStateManager(REGISTRY)
-        current_phase = ws_manager.get_phase().name
+        # TODO: フェーズ名をログ/UI に使用
 
         # コンテキスト作成
-        evaluator_func, EvaluationContext = _get_evaluator()
+        _evaluator_func, EvaluationContext = _get_evaluator()
         context = EvaluationContext(player, engine)
 
         for q_id, q in self.quests.items():
@@ -353,6 +350,7 @@ class MainQuestSystem:
 
             return NARRATIVE_EXECUTOR.get_current_node(player)
         except Exception:
+            # TODO: handle exception properly
             return None
 
     def get_narrative_choices(self, player: Entity) -> list[dict[str, Any]]:
@@ -370,6 +368,7 @@ class MainQuestSystem:
                 for e in edges
             ]
         except Exception:
+            # TODO: handle exception properly
             return []
 
     def get_available_endings(self, player: Entity) -> list[dict[str, Any]]:
@@ -398,6 +397,7 @@ class MainQuestSystem:
                 for e in endings
             ]
         except Exception:
+            # TODO: handle exception properly
             return []
 
     def get_narrative_state(self, player: Entity) -> dict[str, Any] | None:
@@ -409,6 +409,7 @@ class MainQuestSystem:
             if state:
                 return state.to_dict()
         except Exception:
+            # TODO: handle exception properly
             pass
         return None
 
@@ -419,4 +420,5 @@ class MainQuestSystem:
 
             return NARRATIVE_EXECUTOR.load_state(player, data)
         except Exception:
+            # TODO: handle exception properly
             return False

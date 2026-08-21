@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Monitoring management for naRou deployment."""
 
+from __future__ import annotations
+
 import argparse
 import json
 import threading
@@ -31,6 +33,7 @@ except ImportError:
 
 class MonitoringManager:
     def __init__(self, monitor_dir="monitoring_management"):
+        self.monitor_dir = Path(monitor_dir)
         self._setup_prometheus()
 
     def _setup_prometheus(self):
@@ -40,7 +43,6 @@ class MonitoringManager:
             "naRou_check_success", "Health check success", ["check"]
         )
 
-        self.monitor_dir = Path(monitor_dir)
         self.monitor_dir.mkdir(exist_ok=True)
         self.checks = {}
         self.alerts = {}
@@ -129,8 +131,8 @@ class MonitoringManager:
                 return True, "TCP connection OK"
 
             elif check_type == "command":
-                import subprocess
                 import shlex
+                import subprocess
 
                 cmd = shlex.split(target)
                 result = subprocess.run(
@@ -178,6 +180,7 @@ class MonitoringManager:
             try:
                 self._check_gauge.labels(check=name).set(1 if success else 0)
             except Exception:
+                # TODO: handle exception properly
                 pass
             results[name] = {
                 "success": success,
@@ -224,8 +227,8 @@ class MonitoringManager:
                 print(f"Failed to send webhook: {e}")
 
         elif action == "command":
-            import subprocess
             import shlex
+            import subprocess
 
             try:
                 cmd = shlex.split(params.get("cmd", ""))
@@ -254,10 +257,7 @@ class MonitoringManager:
                 # Log results
                 log_file = self.monitor_dir / "checks.log"
                 with open(log_file, "a") as f:
-                    for name, result in results.items():
-                        f.write(
-                            f"{result['timestamp']} - {name}: {'OK' if result['success'] else 'FAIL'} - {result['message']}\n"
-                        )
+                    f.writelines(f"{result['timestamp']} - {name}: {'OK' if result['success'] else 'FAIL'} - {result['message']}\n" for name, result in results.items())
 
                 time.sleep(interval)
 

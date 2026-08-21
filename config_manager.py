@@ -1,4 +1,8 @@
+from __future__ import annotations
+
 import logging
+
+logger = logging.getLogger(__name__)
 
 import yaml
 from pydantic import BaseModel, ValidationError
@@ -29,6 +33,7 @@ class DataCache:
                 cls._cache[file_path] = data
                 return data
         except Exception:
+            logger.exception("ロード失敗")
             return None
 
     @classmethod
@@ -59,7 +64,8 @@ class ConfigManager:
             try:
                 cls._fernet = Fernet(key_b64.encode())
             except Exception:
-                pass
+                # If key is invalid, ignore and generate dev key
+                logger.exception("ロード失敗")
         if not cls._fernet:
             # Dev: ephemeral key (won't persist across restarts)
             cls._fernet = Fernet(Fernet.generate_key())
@@ -86,8 +92,9 @@ class ConfigManager:
             try:
                 return self._decrypt_value(token)
             except Exception:
+                logger.exception("ロード失敗")
                 return default
-        return default
+
 
     def _load_config(self) -> dict[str, Any]:
         cached = DataCache.get_data(self.config_path)

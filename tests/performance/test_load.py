@@ -3,7 +3,9 @@
 Load Test
 負荷テスト
 """
+from __future__ import annotations
 
+import sys
 import threading
 import time
 import unittest
@@ -98,4 +100,4 @@ def run_load_tests():
 
 if __name__ == "__main__":
     success = run_load_tests()
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

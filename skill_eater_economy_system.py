@@ -3,6 +3,7 @@ skill_eater_economy_system.py
 Aの世界（スキル喰い） Phase 5: 派閥影響力＆経済システム＆拠点買収
 提案5: 経済・闇市場・買収・建築のEmote & Audio演出 (Steps 33〜40)
 """
+from __future__ import annotations
 
 from dataclasses import dataclass
 

@@ -3,6 +3,7 @@
 Produces structured progress info and an ASCII visualization of a player's
 skill tree, mirroring the spec's UI layout.
 """
+from __future__ import annotations
 
 from dataclasses import dataclass
 

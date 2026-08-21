@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import logging
+logger = logging.getLogger(__name__)
 import math
 import sys
 from pathlib import Path
@@ -132,6 +136,8 @@ def render_frame(scene, progress):
                 width=1,
             )
         except Exception:
+            logger.exception("Unhandled exception")
+            # TODO: handle exception properly
             pass
 
     # HP/MPゲージ演出（擬似）

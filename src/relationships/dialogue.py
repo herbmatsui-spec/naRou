@@ -293,11 +293,10 @@ class DialogueGenerationSystem:
             return None
 
         # パーソナリティに基づく修正
-        personality_modifier = 1.0
         if self.personality_system:
             speaker_profile = self.personality_system.get_profile(speaker_id)
             if speaker_profile:
-                personality_modifier = speaker_profile.get_trait(
+                speaker_profile.get_trait(
                     PersonalityTrait.EXTRAVERSION
                 )
 
@@ -513,7 +512,6 @@ class DialogueGenerationSystem:
         listener_node: Any,
     ) -> str:
         """ベーステキストを生成"""
-        speaker_name = speaker_node.name
         listener_name = listener_node.name
 
         if context == DialogueContext.GREETING:

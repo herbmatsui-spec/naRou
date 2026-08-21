@@ -3,6 +3,7 @@
 Asset testing script for testing processed assets.
 Runs functional tests to ensure assets work correctly in the game context.
 """
+from __future__ import annotations
 
 import argparse
 import json
@@ -288,7 +289,7 @@ def test_performance_baselines(assets_dir: str, config: dict) -> tuple[bool, lis
     # Check that textures are not excessively large
     tileset_dir = os.path.join(assets_dir, "tilesets")
     if os.path.exists(tileset_dir):
-        max_size = config["tileset"].get("max_atlas_size", 2048)
+        config["tileset"].get("max_atlas_size", 2048)
         for root, dirs, files in os.walk(tileset_dir):
             for file in files:
                 if file.endswith(".png"):
@@ -302,6 +303,7 @@ def test_performance_baselines(assets_dir: str, config: dict) -> tuple[bool, lis
                                 f"Texture excessively large: {tile_path} ({size_mb:.1f}MB)"
                             )
                     except Exception:
+                        # TODO: handle exception properly
                         pass  # Skip if we can't get size
 
     # Check that audio files are reasonable length
@@ -320,6 +322,7 @@ def test_performance_baselines(assets_dir: str, config: dict) -> tuple[bool, lis
                                 f"Audio file excessively large: {sound_path} ({file_size / (1024 * 1024):.1f}MB)"
                             )
                     except Exception:
+                        # TODO: handle exception properly
                         pass
 
     return len(issues) == 0, issues

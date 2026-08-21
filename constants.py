@@ -2,6 +2,7 @@
 Elona Roguelike Masterpiece - Core Constants & Enums
 Step 1 of the Ultimate Plan
 """
+from __future__ import annotations
 
 from enum import Enum, auto
 

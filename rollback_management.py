@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """Rollback management for naRou deployment."""
 
+from __future__ import annotations
+
 import argparse
+import logging
 import time
 from datetime import datetime
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 import yaml
 
@@ -153,6 +158,7 @@ class RollbackManager:
                     failures = 0
                     print("Health check passed")
             except Exception:
+                logger.exception("ロード失敗")
                 failures += 1
                 print(f"Health check error ({failures}/{max_failures})")
 
