@@ -9,12 +9,15 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import os
 import random
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from typing_extensions import Self
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -256,14 +259,14 @@ class QuestGenerationRegistry:
                     with open(pet_quest_path, encoding="utf-8") as f:
                         pet_data = yaml.safe_load(f) or {}
                     self._pet_quest_templates = pet_data.get("pet_quest_templates", {})
-                except Exception:
-                    # TODO: handle exception properly
+                except Exception as e:
+                    logger.warning("Failed to load pet quests from %s: %s", pet_quest_path, e)
                     self._pet_quest_templates = {}
             qg = raw.get("quest_generation", {})
             self._build(qg)
             self._loaded = True
-        except Exception:
-            # TODO: handle exception properly
+        except Exception as e:
+            logger.exception("Failed to load quest generation data from %s: %s. Using fallback.", file_path, e)
             self._load_fallback()
 
     def _build(self, qg: dict[str, Any]) -> None:
@@ -797,8 +800,8 @@ class ProceduralQuestGenerator:
 
                 gen = ProceduralDungeonGenerator(DT_REG)
                 theme = gen.select_theme_by_story(player)
-        except Exception:
-            # TODO: handle exception properly
+        except Exception as e:
+            logger.warning("Failed to select dungeon theme by story: %s", e)
             theme = None
 
         setting = None
@@ -877,9 +880,8 @@ class ProceduralQuestGenerator:
             result = pipeline.generate_synced_quest_dungeon(
                 spec_id, quest_id, player, objective_mapping
             )
-        except Exception:
-        # TODO: handle exception properly
-        # パイプライン失敗時はフォールバック
+        except Exception as e:
+            logger.warning("Failed to generate synced quest dungeon for spec %s: %s. Falling back to standard dungeon quest.", spec_id, e)
             return self.generate_dungeon_quest(player, seed)
 
         generated = result["generated"]
@@ -974,9 +976,8 @@ class ProceduralQuestGenerator:
                     from quest_dungeon_spec import build_dungeon_spec_from_yaml
 
                     return build_dungeon_spec_from_yaml(spec_data)
-        except Exception:
-            # TODO: handle exception properly
-            pass
+        except Exception as e:
+            logger.warning("Failed to load dungeon spec %s from yaml: %s", spec_id, e)
         return None
 
     def generate_npc_quest(
@@ -1125,8 +1126,8 @@ class ProceduralQuestGenerator:
             from relationship_system import RelationshipManager
 
             return RelationshipManager(REL_REG).get_relationship_level(player, npc_id)
-        except Exception:
-            # TODO: handle exception properly
+        except Exception as e:
+            logger.debug("RelationshipManager unavailable, falling back to character_relationships: %s", e)
             rels = getattr(player, "character_relationships", {})
             return int((rels.get(npc_id, {}) or {}).get("trust", 0) // 30)
 
@@ -1301,16 +1302,14 @@ class ProceduralQuestManager:
         player.gold = getattr(player, "gold", 0) + gold
         try:
             player.job_exp = getattr(player, "job_exp", 0) + exp
-        except Exception:
-            # TODO: handle exception properly
-            pass
+        except Exception as e:
+            logger.warning("Failed to add job_exp to player: %s", e)
         try:
             if hasattr(player, "inventory") and items:
                 for it in items:
                     player.inventory.add_item(it, 1)
-        except Exception:
-            # TODO: handle exception properly
-            pass
+        except Exception as e:
+            logger.warning("Failed to add quest reward items to player inventory: %s", e)
         fame = int(bonus.get("fame", 0))
         rel_bonus = int(bonus.get("relationship", 0))
         meta = int(bonus.get("meta", 0))
@@ -1319,9 +1318,8 @@ class ProceduralQuestManager:
                 player.guild_contribution = (
                     getattr(player, "guild_contribution", 0) + fame
                 )
-            except Exception:
-                # TODO: handle exception properly
-                pass
+            except Exception as e:
+                logger.warning("Failed to update guild_contribution: %s", e)
         if rel_bonus and quest.npc_id:
             try:
                 from relationship_system import REGISTRY as REL_REG
@@ -1334,8 +1332,8 @@ class ProceduralQuestManager:
                     delta_trust=rel_bonus * 5,
                     delta_mood=rel_bonus * 3,
                 )
-            except Exception:
-                # TODO: handle exception properly
+            except Exception as e:
+                logger.debug("Falling back to direct character_relationships update: %s", e)
                 rels = getattr(player, "character_relationships", {})
                 cur = rels.get(quest.npc_id, {"trust": 0, "mood": 0})
                 cur["trust"] = cur.get("trust", 0) + rel_bonus * 5
@@ -1347,9 +1345,8 @@ class ProceduralQuestManager:
                 player.meta_progression["points"] = (
                     player.meta_progression.get("points", 0) + meta
                 )
-            except Exception:
-                # TODO: handle exception properly
-                pass
+            except Exception as e:
+                logger.warning("Failed to update meta_progression points: %s", e)
 
         comp.accepted_quests = [
             q for q in comp.accepted_quests if q.get("quest_id") != quest_id

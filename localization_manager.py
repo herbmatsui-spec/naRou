@@ -431,3 +431,13 @@ def set_default_language(language: str) -> bool:
 def get_text(key: str, language: str | None = None) -> str:
     """Convenience function to get text from the default manager."""
     return get_localization_manager().get_text(key, language)
+
+
+def localize(key: str, language: str | None = None, manager: LocalizationManager | None = None) -> str:
+    """Return localized text for *key* using LocalizationManager.
+
+    Single source of truth for localization across the codebase. Callers
+    should import this function rather than defining their own local copy.
+    """
+    mgr = manager or get_localization_manager()
+    return mgr.get_text(key, language)

@@ -84,9 +84,8 @@ class SkillEaterAudioSystem:
             snd.set_volume(self.volume)
             snd.play()
             return True
-        except Exception:
-            logger.exception("Unhandled exception")
-            # TODO: handle exception properly
+        except Exception as e:
+            logger.debug("Sound playback skipped (audio unavailable or failed for %s): %s", sound_name, e)
             return False
 
     def get_and_clear_played_sounds(self) -> list[str]:

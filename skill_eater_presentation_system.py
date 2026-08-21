@@ -22,6 +22,7 @@ class PresentationEvent:
     audio_file: str | None = None
     message: str = ""
     duration_ms: int = 1000
+    vr_grid_effect: bool = False
 
 
 class SkillEaterPresentationSystem:

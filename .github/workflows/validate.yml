@@ -26,6 +26,14 @@ jobs:
           pip install -r requirements.txt
           pip install mypy ruff black pytest
 
+      - name: Lint (ruff)
+        run: |
+          ruff check .
+
+      - name: Type check (mypy)
+        run: |
+          mypy . || true
+
       - name: Validate Code Quality (Linter & Types)
         run: |
           python validate.py --code || true

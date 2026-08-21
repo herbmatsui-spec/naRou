@@ -74,8 +74,7 @@ class PetEvolutionRegistry:
                 self._evolutions[pet_type] = evo_list
             self._loaded = True
         except Exception as e:
-            logger.exception("Unhandled exception")
-            # TODO: handle exception properly
+            logger.warning("Failed to load pet evolution data from %s: %s", self._data_path, e)
             self._loaded = True
 
     def get(self, pet_type: str) -> list[PetEvolutionData]:

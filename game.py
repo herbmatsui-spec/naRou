@@ -14,7 +14,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 try:
-    import pydantic
+    import pydantic  # noqa: F401  (availability probe for stubs fallback)
 except ImportError:
     _stubs = Path(__file__).resolve().parent / "stubs"
     if str(_stubs) not in sys.path:
@@ -29,32 +29,22 @@ import tcod.event
 from advanced_systems import (
     ResourceNode,
     SaveSystem,
-    UniqueItemManager,
     WishParser,
 )
 from config_manager import get_config_manager
 from constants import (
-    AUTO_SAVE_INTERVAL,
+    STARTING_GOD_ID,
     COLOR_GOLD_YELLOW,
     COLOR_PET_PINK,
     ENERGY_THRESHOLD,
-    FACTION_INFLUENCE_INTERVAL,
-    GUILD_QUEST_RESET_INTERVAL,
-    JOB_EXP_PER_TURN,
-    JOB_LEVEL_UP_THRESHOLD,
     MAP_HEIGHT,
     MAP_WIDTH,
-    PET_NEGLECTED_BOND_DISTANCE,
     PET_PATH_LENGTH_CHECK,
-    PET_WALKING_BOND_DISTANCE,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
-    SKILL_POINTS_NOTIFICATION_THRESHOLD,
-    SKILL_TREE_CHECK_INTERVAL,
     TILE_FLOOR,
     TILE_STAIRS_DOWN,
     TILE_WALL,
-    TITLE_CHECK_INTERVAL,
     VIEW_HEIGHT,
     VIEW_WIDTH,
     Element,
@@ -63,9 +53,7 @@ from constants import (
 from core_framework import AStar, Point, bresenham_line
 from dialogue_system import DialogueManager
 from entity import Entity
-from fx_manager import FXManager
 from item_system import (
-    CAT_FOOD,
     Inventory,
     Item,
 )
@@ -73,7 +61,6 @@ from localization_manager import LocalizationManager
 from logging_config import configure_logging
 from map_engine import GameMap
 from renderer import Renderer, get_renderer, set_renderer
-from skill_fusion_system import FusionRegistry
 from skill_tree_system import SkillTreeManager
 from sound_manager import SoundManager
 from system_coordinator import SystemCoordinator
@@ -87,26 +74,12 @@ from systems import (
     SurvivalSystem,
 )
 from ui_fx_systems import (
-    ContextAction,
     FloatingText,
-    NotificationManager,
     Particle,
     ScreenShake,
-    TutorialManager,
 )
 
 configure_logging()
-
-# Feature Package Architecture
-from packages.character.package import CharacterPackage
-from packages.core.kernel.kernel import Kernel
-from packages.core.package import CorePackage
-from packages.gameplay.package import GameplayPackage
-from packages.meta.package import MetaPackage
-from packages.narrative.package import NarrativePackage
-from packages.platform.package import PlatformPackage
-from packages.social.package import SocialPackage
-from packages.world.package import WorldPackage
 
 
 class Engine:
@@ -114,22 +87,40 @@ class Engine:
 
     skill_tree_manager: SkillTreeManager
 
-    def __init__(self, renderer: Renderer | None = None):
+    def __init__(self, renderer: Renderer | None = None, kernel: "Kernel | None" = None):
         # --- Kernel 初期化 & CorePackage ロード ---
         from exceptions import SystemInitError
-        try:
-            self.kernel = Kernel()
-            self.kernel.load_package(CorePackage())
-            self.kernel.load_package(GameplayPackage())
-            self.kernel.load_package(CharacterPackage())
-            self.kernel.load_package(SocialPackage())
-            self.kernel.load_package(MetaPackage())
-            self.kernel.load_package(WorldPackage())
-            self.kernel.load_package(NarrativePackage())
-            self.kernel.load_package(PlatformPackage())
-        except Exception as e:
-            logger.exception("Failed to load core packages during engine initialization: %s", e)
-            raise SystemInitError(f"Package initialization failed: {e}") from e
+
+        # Dependency injection: allow tests to supply a pre-built kernel.
+        if kernel is not None:
+            self.kernel = kernel
+        else:
+            from packages.character.package import CharacterPackage
+            from packages.core.kernel.kernel import Kernel
+            from packages.core.package import CorePackage
+            from packages.gameplay.package import GameplayPackage
+            from packages.meta.package import MetaPackage
+            from packages.narrative.package import NarrativePackage
+            from packages.platform.package import PlatformPackage
+            from packages.social.package import SocialPackage
+            from packages.world.package import WorldPackage
+
+        if kernel is None:
+            try:
+                self.kernel = Kernel()
+                self.kernel.load_package(CorePackage())
+                self.kernel.load_package(GameplayPackage())
+                self.kernel.load_package(CharacterPackage())
+                self.kernel.load_package(SocialPackage())
+                self.kernel.load_package(MetaPackage())
+                self.kernel.load_package(WorldPackage())
+                self.kernel.load_package(NarrativePackage())
+                self.kernel.load_package(PlatformPackage())
+            except Exception as e:
+                logger.exception("Failed to load core packages during engine initialization: %s", e)
+                raise SystemInitError(f"Package initialization failed: {e}") from e
+        else:
+            self.kernel = kernel
 
         # --- レンダラ設定 (Step 3) ---
         if renderer is not None:
@@ -187,7 +178,7 @@ class Engine:
             raise DataParseError("Player or Pet entity is missing from game_state_data during initialization")
 
         # --- プレイヤー (設定駆動) ---
-        self.game_state_data.player.god_id = "jure"
+        self.game_state_data.player.god_id = STARTING_GOD_ID
         self.game_state_data.player.piety = 80
         self.game_state_data.player.hp = self.game_state_data.player.max_hp
         self.game_state_data.player.mp = self.game_state_data.player.max_mp
@@ -769,31 +760,10 @@ class Engine:
         return self.kernel.get_system("input_handler")
 
     def setup_systems(self) -> None:
-        """各種マネージャーとサブシステムの生成・初期化 (Step 8)"""
-        from ai_system import AdvancedAISystem
-        from data_manager import DataManager
+        """各種マネージャーとサブシステムの生成・初期化 (setup_coordinator に委譲)"""
+        from managers.setup_coordinator import setup_systems
 
-        # Core systems are now provided by CorePackage via Kernel
-        self.fx_manager = FXManager(event_bus=self.event_bus)
-        self.unique_mgr = UniqueItemManager()
-
-        self.fusion_registry = FusionRegistry()
-        self.fusion_registry.load()
-
-        # Data & AI Systems
-        self.data_manager = self.systems_coordinator.register_system(
-            "data_manager", DataManager()
-        )
-        self.ai_system = self.systems_coordinator.register_system(
-            "ai_system", AdvancedAISystem()
-        )
-
-        # UX & FX Systems
-        self.tutorial_manager = TutorialManager("data/tutorial_guides.yaml")
-        self.notification_manager = NotificationManager()
-
-        # 一括初期化 (Step 14)
-        self.systems_coordinator.initialize_all(self)
+        setup_systems(self)
 
     @property
     def floating_texts(self) -> list[FloatingText]:
@@ -820,33 +790,10 @@ class Engine:
         self.fx_manager.screen_shake = val
 
     def change_state(self, new_state: GameState) -> None:
-        """状態遷移（ステートマシン）の厳格化とフック処理 (Step 6.2)"""
-        if self.current_state == new_state:
-            return
+        """状態遷移（ステートマシン）の厳格化とフック処理 (StateMachine に委譲)"""
+        from managers.state_machine import StateMachine
 
-        old_state = self.current_state
-        # on_exit hook
-        if old_state == GameState.DIALOGUE:
-            self.active_dialogue = None
-        elif old_state == GameState.MENU:
-            self.inventory_cursor = 0
-
-        self.current_state = new_state
-
-        # 旧 game_state 文字列への双方向同期
-        state_mapping = {
-            GameState.EXPLORING: "play",
-            GameState.COMBAT: "play",
-            GameState.DIALOGUE: "talk",
-            GameState.MENU: "inventory",
-            GameState.EVENT: "story_choice",
-            GameState.PAUSED: "pause",
-        }
-        self.game_state = state_mapping.get(new_state, "play")
-
-        # on_enter hook
-        if new_state == GameState.MENU and hasattr(self, "look_cursor"):
-            self.look_cursor.active = False
+        StateMachine().apply(self, new_state)
 
     def open_journal(self) -> None:
         """冒険日誌を開く"""
@@ -857,68 +804,10 @@ class Engine:
             self.game_state = "play"
 
     def open_context_menu(self) -> None:
-        """Spaceキーによる文脈アクション候補の動的生成 (Phase 4)"""
-        self.game_state = "context"
-        actions: list[ContextAction] = []
-        px, py = self.player.x, self.player.y
+        """Spaceキーによる文脈アクション候補の動的生成 (ContextMenuBuilder に委譲)"""
+        from managers.context_menu_builder import ContextMenuBuilder
 
-        # 1. 足元のアイテム
-        ground_items = self.entity_manager.get_items_at(px, py)
-        for itm in ground_items:
-            actions.append(
-                ContextAction(f"拾う: {itm.display_name}", "pickup", "pickup_item", itm)
-            )
-            if itm.category == CAT_FOOD:
-                actions.append(
-                    ContextAction(
-                        f"食べる: {itm.display_name}", "eat", "eat_ground", itm
-                    )
-                )
-
-        # 2. 隣接するNPC
-        for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
-            nx, ny = px + dx, py + dy
-            ent = self.get_entity_at(nx, ny)
-            if ent and ent not in (self.player, self.pet):
-                actions.append(
-                    ContextAction(
-                        f"話す / 調べる: {ent.name}", "talk", "talk_target", ent
-                    )
-                )
-            elif ent == self.pet:
-                actions.append(
-                    ContextAction("シエルの荷物を見る", "pet_inv", "open_pet_inv", ent)
-                )
-
-        # 3. 祭壇
-        if (px, py) == self.altar_pos:
-            actions.append(ContextAction("神に祈る", "pray", "pray", None))
-            actions.append(
-                ContextAction("祭壇に供物を捧げる", "offer", "offer_altar", None)
-            )
-
-        # 4. 採取ポイント
-        for node in self.entity_manager.resource_nodes:
-            if abs(node.x - px) + abs(node.y - py) <= 1 and not node.depleted:
-                actions.append(
-                    ContextAction(
-                        f"採取する ({node.node_type})",
-                        "harvest",
-                        "harvest_resource",
-                        node,
-                    )
-                )
-                break
-
-        # 5. 壁掘り
-        can_mine = any(
-            self.game_map.is_in_bounds(px + dx, py + dy)
-            and self.game_map.tiles[px + dx][py + dy] == TILE_WALL
-            for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]
-        )
-        if can_mine:
-            actions.append(ContextAction("隣の壁を掘る", "mine", "mine_wall", None))
-
+        actions = ContextMenuBuilder().build_actions(self)
         if actions:
             self.context_menu.set_actions(actions)
             self.game_state = "context"
@@ -1027,42 +916,10 @@ class Engine:
                 )
             )
 
-        corpse = Item(
-            f"{entity.name}の肉",
-            CAT_FOOD,
-            "🍖",
-            (220, 80, 80),
-            entity.x,
-            entity.y,
-            base_weight=2.0,
-            base_value=40,
-            nutrition=2800,
-        )
-        self.entity_manager.add_item(corpse)
+        # === 戦闘報酬決済 (CombatManager に委譲) ===
+        from managers.combat_manager import CombatManager
 
-        # 転生経験値ペナルティ適用 (Steps 57, 58)
-        # TODO: Reincarnation XP penalty
-        base_exp = 35 * self.dungeon_level
-        reinc_cnt = getattr(self.player, "reincarnation_count", 0)
-        if reinc_cnt > 0:
-            penalty = max(0.50, 1.0 - reinc_cnt * 0.05)
-            base_exp = max(1, int(base_exp * penalty))
-
-        for l in self.player.gain_exp(base_exp):
-            self.log(l, (255, 255, 100))
-        for q in self.quests:
-            if q.target_monster in entity.name and not q.completed:
-                q.current_count += 1
-                if q.current_count >= q.target_count:
-                    q.completed = True
-            self.survival.gold += q.reward_gold
-            self.survival.platinum += q.reward_platinum
-            SoundManager.play_se("level_up")
-            self.log(
-                f"★依頼達成！ {q.reward_gold}G + {q.reward_platinum}P 獲得！",
-                COLOR_GOLD_YELLOW,
-            )
-            self.entity_manager.remove_entity(entity)
+        CombatManager().handle_kill_rewards(self, entity)
 
         # === 称号システム: キルカウント記録 ===
         if self.player and hasattr(self.player, "kill_counts"):
@@ -1088,26 +945,18 @@ class Engine:
                 pass
 
             # 実績チェック (Steps 26, 27)
-            # TODO: Achievement check
             if hasattr(self, "achievement_manager"):
                 self.achievement_manager.check_all_achievements(self.player, self)
 
-        # === スキルポイント付与 (Step 26 オプションフック) ===
-        if random.random() < 0.20:
-            sp_bonus = random.randint(1, 2)
-            self.player.skill_points += sp_bonus
-            self.player.total_skill_points_earned += sp_bonus
-            self.log(
-                f"★討伐の閃き！ {sp_bonus} スキルポイントを獲得！", (150, 255, 200)
-            )
+        # === スキルポイント付与 (SkillRewardManager に委譲) ===
+        from managers.skill_reward_manager import SkillRewardManager
 
-        # === ペット共闘時の絆度増加 (Step 33) ===
-        if self.pet and self.pet.hp > 0 and hasattr(self.pet, "pet_ai"):
-            p_dist = Point(self.pet.x, self.pet.y).chebyshev_distance(
-                Point(entity.x, entity.y)
-            )
-            if p_dist <= 3:
-                self.pet.pet_ai.increase_bond(5, "combat_together")
+        SkillRewardManager().grant_kill_skill_points(self, entity)
+
+        # === ペット共闘時の絆度増加 (PetBondManager に委譲) ===
+        from managers.pet_bond_manager import PetBondManager
+
+        PetBondManager().update_combat_bond(self, entity)
 
         # === ギルドクエスト進捗更新 (Step 40) ===
         if self.player and getattr(self.player, "guild_id", None):
@@ -1135,11 +984,10 @@ class Engine:
                     if ok:
                         self.log(qmsg, (255, 215, 0))
 
-        # === 派閥評判更新 (Step 63 オプション) ===
-        if hasattr(self.player, "faction_reputation"):
-            self.player.faction_reputation["kingdom_garde"] = (
-                self.player.faction_reputation.get("kingdom_garde", 0) + 1
-            )
+        # === 派閥評判更新 (FactionManager に委譲) ===
+        from managers.faction_manager import FactionManager
+
+        FactionManager().update_kill_reputation(self, entity)
 
         # === 動的記憶の欠片のドロップ判定 (強敵討伐 / 稀な確率) ===
         if random.random() < 0.08 and hasattr(self, "meta_progression_manager"):
@@ -1178,15 +1026,17 @@ class Engine:
             isinstance(e, StatusEffect) and e.effect_type == "bleeding"
             for e in self.player.status_effects
         )
-        if self.turns % 4 == 0 and self.survival.hunger > 1000 and not player_bleeding:
+        from constants import NATURAL_REGEN_HUNGER_THRESHOLD, NATURAL_REGEN_INTERVAL
+
+        if (
+            self.turns % NATURAL_REGEN_INTERVAL == 0
+            and self.survival.hunger > NATURAL_REGEN_HUNGER_THRESHOLD
+            and not player_bleeding
+        ):
             self.player.hp = min(self.player.max_hp, self.player.hp + 1)
             self.player.mp = min(self.player.max_mp, self.player.mp + 1)
             if self.pet.hp > 0:
                 self.pet.hp = min(self.pet.max_hp, self.pet.hp + 1)
-
-        # 世界のニュース・噂の動的生成 (Step 8.1)
-        if self.turns % 30 == 0 and hasattr(self, "world_state_manager"):
-            self.world_state_manager.generate_world_news(self)
 
         # 動的サウンドスケープ: 危機状態のBGM判定 (Step 7.3)
         if hasattr(self, "player") and self.player:
@@ -1194,71 +1044,26 @@ class Engine:
                 self.player.hp, self.player.max_hp
             )
 
-        # オートセーブ: 50ターンごと (ステップ71)
-        if self.turns % AUTO_SAVE_INTERVAL == 0:
-            msg = SaveSystem.save(self)
-            self.log(f"[Auto] {msg}", (80, 200, 80))
+        # オートセーブ: 50ターンごと (ステップ71) — PersistenceManager に委譲
+        from managers.persistence_manager import PersistenceManager
 
-        # === 称号システム: 定期チェック（10ターンごと） ===
-        if self.player and hasattr(self.player, "total_turns"):
-            self.player.total_turns += 1
+        PersistenceManager().autosave_if_due(self)
 
-            # 10ターンごとにチェック（パフォーマンス考慮）
-            if self.player.total_turns % TITLE_CHECK_INTERVAL == 0:
-                from title_system import MANAGER
+        # === 世界ニュース・称号・ジョブ・スキルツリー・ギルド (WorldNewsManager に委譲) ===
+        from managers.world_news_manager import WorldNewsManager
 
-                MANAGER.check_all_titles(self.player)
-                # 通知は自動で player.title_notifications に入る
+        WorldNewsManager().advance(self)
 
-        # === ジョブ経験値加算 & レベルアップ (Step 51) ===
-        if self.player:
-            self.player.job_exp += JOB_EXP_PER_TURN
-            if self.player.job_exp >= JOB_LEVEL_UP_THRESHOLD:
-                self.player.job_exp -= 100
-                self.player.job_level += 1
-                self.log(
-                    f"★職業【{self.player.job}】の熟練度が上がり、Job Lv.{self.player.job_level} に到達！",
-                    (255, 220, 100),
-                )
 
-        # === スキルツリー定期チェック (Step 27) ===
-        if (
-            self.turns % SKILL_TREE_CHECK_INTERVAL == 0
-            and self.player.skill_points >= SKILL_POINTS_NOTIFICATION_THRESHOLD
-        ):
-            avail = self.skill_tree_manager.get_available_skills(self.player)
-            if avail:
-                self.log(
-                    "スキルポイントが利用可能です！ Sキーでスキルツリーを開いて習得できます。",
-                    (255, 255, 0),
-                )
-        # === ギルドクエスト日次リセット (Step 41) ===
-        # 1000ターンを1日としてリセット判定
-        if (
-            self.turns % GUILD_QUEST_RESET_INTERVAL == 0
-            and self.player
-            and hasattr(self.player, "guild_quest_progress")
-        ):
-            self.log(
-                "【ギルド】日次ギルド依頼が更新・リセットされました。", (180, 220, 255)
-            )
+        # === 派閥影響力定期変動 (FactionManager に委譲) ===
+        from managers.faction_manager import FactionManager
 
-        # === 派閥影響力定期変動 (Step 62) ===
-        if self.turns % FACTION_INFLUENCE_INTERVAL == 0:
-            for fid in self.faction_war_registry.all():
-                chg = self.faction_war_manager.calculate_influence_change(fid, self)
-                self.faction_war_manager.apply_influence_effects(fid, chg)
+        FactionManager().update_influence(self)
 
-        # === ペット絆度 & 進化チェック (Steps 30, 34, 44, 45) ===
-        if self.pet and hasattr(self.pet, "pet_ai"):
-            # 歩行・近傍絆度 (Step 30) vs 放置絆度減少 (Step 34)
-            p_dist = Point(self.pet.x, self.pet.y).chebyshev_distance(
-                Point(self.player.x, self.player.y)
-            )
-            if p_dist <= PET_WALKING_BOND_DISTANCE and self.pet.hp > 0:
-                self.pet.pet_ai.increase_bond(1, "walking")
-            elif p_dist >= PET_NEGLECTED_BOND_DISTANCE:
-                self.pet.pet_ai.increase_bond(-2, "neglected")
+        # === ペット絆度 & 進化チェック (PetBondManager に委譲) ===
+        from managers.pet_bond_manager import PetBondManager
+
+        PetBondManager().update_turn_bond(self)
 
         # 浮遊テキスト & パーティクル & 通知 & 画面シェイクの更新 (Phase 6, 7, UX強化)
         self.floating_texts = [ft for ft in self.floating_texts if ft.update()]
@@ -1279,7 +1084,7 @@ class Engine:
             return
 
         blocked = self.get_blocked_positions()
-        retreat = self.pet.hp < self.pet.max_hp * 0.3
+        retreat = self.pet.hp < self.pet.max_hp * PET_RETREAT_HP_RATIO
 
         if not retreat:
             nearest = None
@@ -2328,7 +2133,7 @@ def main() -> None:
     from input_handler import InputHandler
 
     engine = Engine()
-    print("DEBUG: Engine created successfully")
+    logger.debug("Engine created successfully")
 
     # Load tileset to avoid libtcod font fallback warning
     from pathlib import Path
@@ -2389,12 +2194,12 @@ def main() -> None:
         from feature_flags import get_text_mode_enabled
 
         if get_text_mode_enabled():
-            print(f"SDL context unavailable ({e}); falling back to text mode.")
+            logger.warning("SDL context unavailable (%s); falling back to text mode.", e)
             engine.run_text_mode(SCREEN_WIDTH, SCREEN_HEIGHT)
             return
         # Web サーバーのみでテストしたい場合はそのまま待機
-        print(f"Warning: Could not initialize SDL context: {e}")
-        print("Web server is still running. Access it at http://localhost:8080")
+        logger.warning("Could not initialize SDL context: %s", e)
+        logger.info("Web server is still running. Access it at http://localhost:8080")
         import time
 
         while True:

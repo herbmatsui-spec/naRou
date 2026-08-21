@@ -47,10 +47,8 @@ class InheritanceRegistry:
                     inh = raw["inheritance"]
                     always_keep = inh.get("always_keep", [])
                     selective_rules = inh.get("selective_keep", {})
-            except Exception:
-                logger.exception("Unhandled exception")
-                # TODO: handle exception properly
-                pass
+            except Exception as e:
+                logger.warning("Failed to load inheritance data from %s: %s", path, e)
 
         default_data = InheritanceData(
             id="default",

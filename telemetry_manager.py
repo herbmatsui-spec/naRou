@@ -104,10 +104,9 @@ class TelemetryManager:
         if self._queue_file.exists():
             try:
                 self._queue = json.load(open(self._queue_file, encoding="utf-8"))
-            except Exception:
-        # TODO: handle exception properly
+            except Exception as e:
                 self._queue = []
-                logger.exception("Unhandled exception")
+                logger.warning("Failed to load telemetry queue from %s: %s", self._queue_file, e)
 
     # ----- step 50: performance -----
     def track_performance(self, metrics: dict[str, Any]) -> None:
@@ -128,9 +127,8 @@ class TelemetryManager:
             sentry_sdk.init(dsn=dsn, traces_sample_rate=0.1)
             self.sentry_initialized = True
             return True
-        except Exception:
-        # TODO: handle exception properly
-            logger.exception("Unhandled exception")
+        except Exception as e:
+            logger.warning("Failed to initialize Sentry SDK: %s", e)
             return False
 
     # ----- step 48 / 49: exception handling + crash send -----
@@ -199,9 +197,8 @@ def get_telemetry_manager() -> TelemetryManager:
         from config_manager import get_config_manager
 
         enabled = get_config_manager().get_telemetry_enabled()
-    except Exception:
-        logger.exception("Unhandled exception")
-        # TODO: handle exception properly
+    except Exception as e:
+        logger.debug("Failed to read telemetry config from config_manager, defaulting to False: %s", e)
         enabled = False
     mgr = TelemetryManager()
     # The flag is surfaced via config; manager itself always instantiable.

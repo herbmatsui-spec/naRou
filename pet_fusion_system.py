@@ -88,9 +88,8 @@ class PetFusionRegistry:
                 )
                 self._recipes[fid] = recipe
             self._loaded = True
-        except Exception:
-            logger.exception("Unhandled exception")
-            # TODO: handle exception properly
+        except Exception as e:
+            logger.warning("Failed to load pet fusion recipes from %s: %s", self._data_path, e)
             self._loaded = True
 
     def get(self, fusion_id: str) -> PetFusionData | None:

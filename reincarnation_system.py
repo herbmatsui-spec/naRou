@@ -3,11 +3,14 @@
 """
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass
 from typing import Any
 
 import yaml
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -74,7 +77,7 @@ class ReincarnationRegistry:
                 self._data["default"] = default_data
 
         except Exception as e:
-            print(f"Error loading reincarnation data: {e}")
+            logger.warning("Error loading reincarnation data from yaml: %s", e)
             # エラー時のデフォルトデータ
             default_data = ReincarnationData(
                 id="default",
@@ -148,7 +151,7 @@ class ReincarnationManager:
             else:
                 MetaProgressionManager().add_memory_fragment(player, frag, engine)
         except Exception as e:
-            print(f"[ReincarnationManager] Memory fragment creation failed: {e}")
+            logger.warning("[ReincarnationManager] Memory fragment creation failed: %s", e)
 
         # 2. 次世代のランダム周回特異点・フラグの抽選
         try:
@@ -162,7 +165,7 @@ class ReincarnationManager:
             mods = mgr.roll_cycle_modifiers(count=2)
             player.cycle_modifiers = mods
         except Exception as e:
-            print(f"[ReincarnationManager] Cycle modifier rolling failed: {e}")
+            logger.warning("[ReincarnationManager] Cycle modifier rolling failed: %s", e)
 
         # 3. 転生処理
         player.reincarnation_count += 1
@@ -186,7 +189,7 @@ class ReincarnationManager:
             )
             mgr.recalculate_and_apply_bonuses(player)
         except Exception as e:
-            print(f"[ReincarnationManager] Bonus recalculation failed: {e}")
+            logger.warning("[ReincarnationManager] Bonus recalculation failed: %s", e)
 
         if engine and hasattr(engine, "log"):
             engine.log(

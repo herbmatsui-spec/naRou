@@ -97,12 +97,13 @@ def test_all_72_steps_reincarnation_system():
     assert s_enemy.get("per_reincarnation") == 0.15, "Step 10 Failed: per_reincarnation"
     print("[OK] Step 10 (敵ステータススケーリング)")
 
-    # Steps 11-20: entity.py 転生関連フィールド追加
+    # Steps 11-20: Entity 転生関連フィールド (ReincarnationComponent へ委譲)
     from entity import Entity
+    from components import ReincarnationComponent
 
-    ent_code = open("entity.py", encoding="utf-8").read()
-    assert "# TODO: Reincarnation fields" in ent_code, (
-        "Step 11 Failed: placeholder comment missing"
+    comp_code = open("components.py", encoding="utf-8").read()
+    assert "class ReincarnationComponent" in comp_code, (
+        "Step 11 Failed: ReincarnationComponent missing"
     )
 
     e = Entity()

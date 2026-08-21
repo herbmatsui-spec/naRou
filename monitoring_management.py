@@ -5,12 +5,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import threading
 import time
 from datetime import datetime
 from pathlib import Path
 
 import yaml
+
+logger = logging.getLogger(__name__)
 
 try:
     from prometheus_client import Gauge, start_http_server
@@ -179,9 +182,8 @@ class MonitoringManager:
             # Update Prometheus gauge
             try:
                 self._check_gauge.labels(check=name).set(1 if success else 0)
-            except Exception:
-                # TODO: handle exception properly
-                pass
+            except Exception as e:
+                logger.debug("Failed to set prometheus gauge for check %s: %s", name, e)
             results[name] = {
                 "success": success,
                 "message": message,

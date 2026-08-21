@@ -106,6 +106,17 @@ class GameState(Enum):
     PAUSED = "paused"  # 一時停止状態
 
 
+# 状態遷移: GameState値 -> 旧 game_state 文字列 (Step 6.2)
+GAME_STATE_TO_LEGACY: dict[str, str] = {
+    GameState.EXPLORING.value: "play",
+    GameState.COMBAT.value: "play",
+    GameState.DIALOGUE.value: "talk",
+    GameState.MENU.value: "inventory",
+    GameState.EVENT.value: "story_choice",
+    GameState.PAUSED.value: "pause",
+}
+
+
 # ゲームバランス定数
 SPAWN_SNAIL_CHANCE = 0.35
 SPAWN_MONSTER_CHANCE = 0.85
@@ -124,3 +135,20 @@ PET_WALKING_BOND_DISTANCE = 2
 PET_NEGLECTED_BOND_DISTANCE = 8
 PET_PATH_LENGTH_CHECK = 1
 AUTO_SAVE_INTERVAL = 50
+
+# --- 追加のマジックナンバー集約 (リファクタリング計画 Step 31-34) ---
+REINCARNATION_XP_PENALTY_BASE = 0.50
+REINCARNATION_XP_PENALTY_STEP = 0.05
+SKILL_DROP_CHANCE = 0.20
+SKILL_DROP_MIN = 1
+SKILL_DROP_MAX = 2
+BOSS_FRAGMENT_DROP_CHANCE = 0.08
+NATURAL_REGEN_INTERVAL = 4
+NATURAL_REGEN_HUNGER_THRESHOLD = 1000
+WORLD_NEWS_INTERVAL = 30
+PET_RETREAT_HP_RATIO = 0.3
+DEFAULT_GOD_ID = "eyth"
+STARTING_GOD_ID = "jure"
+BOND_WALKING_GAIN = 1
+BOND_NEGLECTED_LOSS = 2
+COMBAT_BOND_GAIN = 5

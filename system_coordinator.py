@@ -7,9 +7,10 @@ Kernel の薄い互換ラッパーとして機能
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
-from packages.core.kernel.kernel import Kernel
+if TYPE_CHECKING:
+    from packages.core.kernel.kernel import Kernel
 
 
 class SystemCoordinator:

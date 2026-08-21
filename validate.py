@@ -4,14 +4,19 @@
 from __future__ import annotations
 
 import argparse
+import shlex
 import subprocess
 import sys
 
 
 def run_command(cmd, cwd=None):
-    """Run a command and return success status."""
+    """Run a command and return success status.
+
+    Uses shell=False with shlex.split to avoid shell injection.
+    """
     print(f"Running: {cmd}")
-    result = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, text=True)
+    parts = shlex.split(cmd)
+    result = subprocess.run(parts, cwd=cwd, capture_output=True, text=True)
     if result.stdout:
         print(result.stdout)
     if result.stderr:

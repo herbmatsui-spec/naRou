@@ -5,180 +5,47 @@ Modularized Component-Based Architecture (ECS)
 
 from __future__ import annotations
 
-import json
 import logging
-import os
 import random
-from dataclasses import dataclass, field
-from pathlib import Path
+from dataclasses import field
 from typing import Any, TypeVar
+
+from constants import DEFAULT_GOD_ID
 
 logger = logging.getLogger(__name__)
 
 from components import (
     AchievementComponent,
     ArchaeologyComponent,
+    Attributes,
     AttributesComponent,
     BaseStatsComponent,
+    AffectionComponent,
+    PetProfileComponent,
+    EmoteComponent,
+    PetAIComponent,
     EconomyComponent,
     GuildFactionComponent,
     LevelComponent,
     ProceduralQuestComponent,
     ReincarnationComponent,
+    Skill,
     SkillFusionComponent,
     SkillTreeJobComponent,
     StorytellerComponent,
     TitleComponent,
 )
 
+# 後方互換: PetAI を PetAIComponent の別名として再エクスポート
+PetAI = PetAIComponent
+
+# 後方互換: GodInfo を god_system から再エクスポート (Step 26)
+from god_system import GodInfo  # noqa: E402
+
+# プロパティ委譲ヘルパ (Step 41)
+from delegate_utils import delegate  # noqa: E402
+
 T = TypeVar("T")
-
-
-@dataclass
-class Skill:
-    """スキル情報"""
-
-    name: str
-    level: int = 1
-    experience: int = 0
-    potential: int = 100  # 潜在能力(%)
-
-
-@dataclass
-class Attributes:
-    """主能力 8種 (Step 23)"""
-
-    strength: int = 10  # 筋力
-    endurance: int = 10  # 耐久
-    dexterity: int = 10  # 器用
-    perception: int = 10  # 感覚
-    learning: int = 10  # 習得
-    will: int = 10  # 意思
-    magic: int = 10  # 魔力
-    charisma: int = 10  # 魅力
-
-    def to_dict(self) -> dict[str, int]:
-        return {
-            "strength": self.strength,
-            "endurance": self.endurance,
-            "dexterity": self.dexterity,
-            "perception": self.perception,
-            "learning": self.learning,
-            "will": self.will,
-            "magic": self.magic,
-            "charisma": self.charisma,
-        }
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Attributes:
-        return cls(
-            strength=data.get("strength", 10),
-            endurance=data.get("endurance", 10),
-            dexterity=data.get("dexterity", 10),
-            perception=data.get("perception", 10),
-            learning=data.get("learning", 10),
-            will=data.get("will", 10),
-            magic=data.get("magic", 10),
-            charisma=data.get("charisma", 10),
-        )
-
-
-class GodInfo:
-    """神々の定義 (ステップ83〜88, 外部YAMLデータ連携 & JSONフォールバック)"""
-
-    _cached_fallback: dict[str, Any] | None = None
-
-    @classmethod
-    def get_fallback_gods(cls) -> dict[str, Any]:
-        """フォールバック用神データを外部JSONからロード (Steps 27-31)"""
-        if cls._cached_fallback is not None:
-            return cls._cached_fallback
-        json_path = Path(__file__).resolve().parent / "data" / "gods_fallback.json"
-        if json_path.exists():
-            try:
-                with open(json_path, "r", encoding="utf-8") as f:
-                    cls._cached_fallback = json.load(f)
-                    return cls._cached_fallback
-            except Exception as e:
-                logger.warning("Failed to load gods_fallback.json: %s", e)
-        cls._cached_fallback = {}
-        return cls._cached_fallback
-
-    @classmethod
-    def get_all(cls) -> dict[str, Any]:
-        from config_manager import DataCache
-
-        data = DataCache.get_data("data/gods.yaml")
-        if data and isinstance(data, dict):
-            return data
-        return cls.get_fallback_gods()
-
-    class _GodDict(dict):
-        def __getitem__(self, key):
-            return GodInfo.get_all().get(key, GodInfo.get_fallback_gods().get(key))
-
-        def get(self, key, default=None):
-            return GodInfo.get_all().get(key, default)
-
-        def keys(self):
-            return GodInfo.get_all().keys()
-
-        def values(self):
-            return GodInfo.get_all().values()
-
-        def items(self):
-            return GodInfo.get_all().items()
-
-        def __contains__(self, key):
-            return key in GodInfo.get_all()
-
-    GODS = _GodDict()
-
-
-class PetAI:
-    """ペットの作戦指示および絆・進化・装備データ (ECSコンポーネント) (Steps 34, 37-39)"""
-
-    _cached_tactics: dict[str, str] | None = None
-
-    @classmethod
-    def _load_tactics(cls) -> dict[str, str]:
-        if cls._cached_tactics is not None:
-            return cls._cached_tactics
-        json_path = Path(__file__).resolve().parent / "data" / "pet_tactic_default.json"
-        if json_path.exists():
-            try:
-                with open(json_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    cls._cached_tactics = data.get("tactics", {})
-                    return cls._cached_tactics
-            except Exception as e:
-                logger.warning("Failed to load pet_tactic_default.json: %s", e)
-        cls._cached_tactics = {
-            "assault": "突撃 (近くの敵を殲滅)",
-            "follow": "追従 (主人の傍を離れない)",
-            "heal": "支援 (回復・援護優先)",
-            "escape": "待避 (危険時は逃走)",
-        }
-        return cls._cached_tactics
-
-    TACTIC_ASSAULT = "突撃 (近くの敵を殲滅)"
-    TACTIC_FOLLOW = "追従 (主人の傍を離れない)"
-    TACTIC_HEAL = "支援 (回復・援護優先)"
-    TACTIC_ESCAPE = "待避 (危険時は逃走)"
-
-    def __init__(self, owner: Entity | None = None):
-        self.owner = owner
-        self.bond: int = 0
-        self.contract_id: str = "default"
-        self.evolution_path: list[str] = []
-        self.evolution_stage: int = 0
-        self.equipment: dict[str, str] = {}
-
-    def increase_bond(self, amount: int, reason: str = "") -> int:
-        """後方互換性メソッド: 処理本体は pet_systems.PetBondSystem に委譲 (Phase 3)"""
-        from pet_systems import PetBondSystem
-        return PetBondSystem.increase_bond(self, amount, reason)
-
 
 
 class Entity:
@@ -221,19 +88,8 @@ class Entity:
         self.exp = 0
         self.exp_next = 100
 
-        # ペット関連 (ステップ73, 74, 80)
-        self.affection: int = 50  # 好感度 (親密・魂の友など)
+        # ペット関連 (ステップ73, 74, 80) — AffectionComponent/PetProfileComponent に委譲
         self.tactic: str = PetAI.TACTIC_ASSAULT
-        self.is_mounted: bool = False  # 騎乗中フラグ (ステップ79)
-        self.gene_skills: list[str] = []  # 遺伝子合成で獲得した追加スキル (ステップ82)
-        self.pet_ai: PetAI = PetAI(self)  # PetAIインスタンス
-        self.pet_type: str = "puppy"  # 原種ID
-        self.pet_fusion_history: list[dict[str, Any]] = []  # 融合記録 (Step 69)
-
-        # エモート状態 (アセットパック統合用)
-        self.emote_state: str | None = None  # 現在再生中のエモート名
-        self.emote_timer: float = 0.0  # エモート再生タイマー
-        self.emote_frame: int = 0  # 現在のエモートフレーム
 
         # スキル一覧
         if self.is_player or self.is_pet:
@@ -242,7 +98,7 @@ class Entity:
             self._skills: dict[str, Skill] | None = None
 
         # 信仰システム (ステップ84, 86)
-        self.god_id: str = "eyth"
+        self.god_id: str = DEFAULT_GOD_ID
         self.piety: int = 0  # 信仰深度
         self.received_servant: bool = False
         self.received_artifact: bool = False
@@ -294,6 +150,10 @@ class Entity:
         """サブシステムごとのコンポーネントを初期化"""
         self.components[TitleComponent] = TitleComponent()
         self.components[GuildFactionComponent] = GuildFactionComponent()
+        self.components[AffectionComponent] = AffectionComponent()
+        self.components[PetProfileComponent] = PetProfileComponent()
+        self.components[EmoteComponent] = EmoteComponent()
+        self.components[PetAIComponent] = PetAIComponent()
         self.components[AchievementComponent] = AchievementComponent()
         self.components[ReincarnationComponent] = ReincarnationComponent()
         self.components[SkillTreeJobComponent] = SkillTreeJobComponent()
@@ -419,23 +279,10 @@ class Entity:
         self.get_component(BaseStatsComponent).max_mp = val
 
     # -------------------------------------------------------------
-    # 経済プロパティ (EconomyComponent への委譲)
+    # 経済プロパティ (EconomyComponent への委譲) — delegate_utils 使用 (Step 41)
     # -------------------------------------------------------------
-    @property
-    def gold(self) -> int:
-        return self.get_component(EconomyComponent).gold
-
-    @gold.setter
-    def gold(self, val: int):
-        self.get_component(EconomyComponent).gold = val
-
-    @property
-    def platinum(self) -> int:
-        return self.get_component(EconomyComponent).platinum
-
-    @platinum.setter
-    def platinum(self, val: int):
-        self.get_component(EconomyComponent).platinum = val
+    gold = delegate(lambda self: self.get_component(EconomyComponent), "gold")
+    platinum = delegate(lambda self: self.get_component(EconomyComponent), "platinum")
 
     # -------------------------------------------------------------
     # レベル・経験値プロパティ (LevelComponent への委譲)
@@ -626,7 +473,6 @@ class Entity:
 
     # -------------------------------------------------------------
     # 実績・メタ進行プロパティ (AchievementComponent への委譲)
-    # # TODO: Achievement fields will be added here
     # -------------------------------------------------------------
     @property
     def achievements(self) -> list[str]:
@@ -758,7 +604,6 @@ class Entity:
 
     # -------------------------------------------------------------
     # 輪廻転生・カーマプロパティ (ReincarnationComponent への委譲)
-    # # TODO: Reincarnation fields will be added here
     # -------------------------------------------------------------
     @property
     def reincarnation_count(self) -> int:
@@ -853,10 +698,6 @@ class Entity:
     # -------------------------------------------------------------
     # スキルツリー・ジョブプロパティ (SkillTreeJobComponent への委譲)
     # -------------------------------------------------------------
-
-    skill_tree_progress: dict[str, list[str]] = field(default_factory=dict)
-    skill_points: int = 0
-    total_skill_points_earned: int = 0
 
     @property
     def skill_tree_progress(self) -> dict[str, list[str]]:
@@ -954,7 +795,6 @@ class Entity:
 
     # -------------------------------------------------------------
     # スキル合成・進化プロパティ (SkillFusionComponent への委譲)
-    # # TODO: Skill synthesis/evolution fields will be added here
     # -------------------------------------------------------------
     @property
     def skill_fusion_materials(self) -> dict[str, int]:
@@ -1030,7 +870,6 @@ class Entity:
 
     # -------------------------------------------------------------
     # ストーリーテラー・ワールドプロパティ (StorytellerComponent への委譲)
-    # # TODO: Story/world state fields will be added here
     # -------------------------------------------------------------
     @property
     def story_flags(self) -> dict[str, bool]:
@@ -1199,6 +1038,77 @@ class Entity:
     @interpretation_notes.setter
     def interpretation_notes(self, val: dict[str, str]):
         self.get_component(ArchaeologyComponent).interpretation_notes = val
+
+    # -------------------------------------------------------------
+    # 好感度・ペットプロフィール・エモート (コンポーネント委譲, Step 24)
+    # -------------------------------------------------------------
+    @property
+    def affection(self) -> int:
+        return self.get_component(AffectionComponent).affection
+
+    @affection.setter
+    def affection(self, val: int) -> None:
+        self.get_component(AffectionComponent).affection = val
+
+    @property
+    def is_mounted(self) -> bool:
+        return self.get_component(AffectionComponent).is_mounted
+
+    @is_mounted.setter
+    def is_mounted(self, val: bool) -> None:
+        self.get_component(AffectionComponent).is_mounted = val
+
+    @property
+    def gene_skills(self) -> list[str]:
+        return self.get_component(PetProfileComponent).gene_skills
+
+    @gene_skills.setter
+    def gene_skills(self, val: list[str]) -> None:
+        self.get_component(PetProfileComponent).gene_skills = val
+
+    @property
+    def pet_type(self) -> str:
+        return self.get_component(PetProfileComponent).pet_type
+
+    @pet_type.setter
+    def pet_type(self, val: str) -> None:
+        self.get_component(PetProfileComponent).pet_type = val
+
+    @property
+    def pet_fusion_history(self) -> list[dict[str, Any]]:
+        return self.get_component(PetProfileComponent).pet_fusion_history
+
+    @pet_fusion_history.setter
+    def pet_fusion_history(self, val: list[dict[str, Any]]) -> None:
+        self.get_component(PetProfileComponent).pet_fusion_history = val
+
+    @property
+    def emote_state(self) -> str | None:
+        return self.get_component(EmoteComponent).emote_state
+
+    @emote_state.setter
+    def emote_state(self, val: str | None) -> None:
+        self.get_component(EmoteComponent).emote_state = val
+
+    @property
+    def emote_timer(self) -> float:
+        return self.get_component(EmoteComponent).emote_timer
+
+    @emote_timer.setter
+    def emote_timer(self, val: float) -> None:
+        self.get_component(EmoteComponent).emote_timer = val
+
+    @property
+    def emote_frame(self) -> int:
+        return self.get_component(EmoteComponent).emote_frame
+
+    @emote_frame.setter
+    def emote_frame(self, val: int) -> None:
+        self.get_component(EmoteComponent).emote_frame = val
+
+    @property
+    def pet_ai(self) -> "PetAIComponent":
+        return self.get_component(PetAIComponent)
 
     def _init_default_skills(self) -> dict[str, Skill]:
         return {
@@ -1407,16 +1317,21 @@ class Entity:
                 for k, v in comp.__dict__.items():
                     if callable(v):
                         continue
-                    elif isinstance(v, (set, tuple)):
-                        comp_dict[k] = list(v)
-                    elif isinstance(v, dict):
-                        comp_dict[k] = {
-                            str(dk): (list(dv) if isinstance(dv, (set, tuple)) else dv)
-                            for dk, dv in v.items()
-                            if not callable(dv)
-                        }
-                    else:
-                        comp_dict[k] = v
+                    try:
+                        if isinstance(v, (set, tuple)):
+                            comp_dict[k] = list(v)
+                        elif isinstance(v, dict):
+                            comp_dict[k] = {
+                                str(dk): (list(dv) if isinstance(dv, (set, tuple)) else dv)
+                                for dk, dv in v.items()
+                                if not callable(dv)
+                            }
+                        else:
+                            comp_dict[k] = v
+                    except Exception:  # noqa: BLE001
+                        logger.debug(
+                            "Skip non-serializable component field %s.%s", comp_name, k
+                        )
                 data["components"][comp_name] = comp_dict
 
         # スキルのシリアライズ

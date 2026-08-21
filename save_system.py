@@ -33,10 +33,9 @@ class SaveSystem:
         if key_b64:
             try:
                 return base64.b64decode(key_b64)
-            except Exception:
+            except Exception as e:
                 # Log exception and use fallback key
-                # In test environments, a deterministic fallback is acceptable
-                pass
+                logger.warning("Failed to decode SAVE_HMAC_KEY, using dev fallback key: %s", e)
         # Dev fallback: deterministic key from project root hash
         return hashlib.sha256(b"naRou_dev_hmac_key_fallback").digest()
 
@@ -69,8 +68,8 @@ class SaveSystem:
                     shutil.copy2(src, dst)
             # savegame.bin -> savegame.bin.bak1
             shutil.copy2(cls.SAVE_PATH, f"{cls.SAVE_PATH}.bak1")
-        except Exception:
-            logger.exception("セーブ失敗")
+        except Exception as e:
+            logger.exception("Failed to create save backup: %s", e)
 
     @classmethod
     def _ensure_compatibility(cls, player: Any) -> None:
@@ -187,11 +186,11 @@ class SaveSystem:
                                     res,
                                     f"【警告】セーブデータ破損のため、バックアップ(世代{i})から復旧しました。",
                                 )
-                        except Exception:
+                        except Exception as e:
                             # Log backup load failure and continue to next backup
-                            logger.exception("ロード失敗")
+                            logger.warning("Failed to recover from backup %s: %s", bak_file, e)
                             continue
-            logger.exception("ロード失敗")
+            logger.exception("Save load failed: %s", e)
             return None, f"ロード失敗: {e}"
 
     # ==========================================
@@ -307,8 +306,8 @@ class SaveSystem:
             with open(target_path, "w", encoding="utf-8") as f:
                 json.dump(payload, f, ensure_ascii=False, indent=2)
             return f"JSONセーブ完了！ ({target_path}, SHA256: {checksum[:8]}...)"
-        except Exception:
-            logger.exception("セーブ失敗")
+        except Exception as e:
+            logger.exception("JSON save failed for %s: %s", target_path, e)
             return "JSONセーブ失敗"
 
     @classmethod
@@ -339,8 +338,8 @@ class SaveSystem:
 
             engine = cls.deserialize_dict_to_engine(dict_data)
             return engine, "JSONロード完了！ ゲームが正常に復元されました。"
-        except Exception:
-            logger.exception("ロード失敗")
+        except Exception as e:
+            logger.exception("JSON load failed from %s: %s", target_path, e)
             return None, "JSONロード失敗"
 
     @classmethod

@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Tiny Rogue Graphics Pack integration (Kenney "Tiny Rogue" asset pack)
+
+### Refactored
+- Split `Engine` god-class into `managers/` (Combat, SkillReward, PetBond, WorldNews, Persistence, Faction, ContextMenu, StateMachine, SetupCoordinator)
+- Componentized `Entity`: `affection`, `pet_type`, `emote_*`, `pet_ai` now ECS components
+- Moved `GodInfo` → `god_system.py`, `Skill`/`Attributes` → `components.py`
+- Centralized `localize()` in `localization_manager.py`; magic numbers → `constants.py`
+- Added `data_validation.py` YAML loader; `Kernel.get_system` default overload; DI-friendly `Engine(renderer, kernel)`
+- Added unit tests (core_framework, event_bus, entity, config_manager, kernel) and `tools/cli.py`
 - 132 new tiles across 12 categories: floors, walls, decorations, items, monsters, effects, UI
 - New `tiny_rogue_16` atlas scale (509×115) with 105 tile entries
 - Monster rendering: 12 monster types mapped to `TR_MONSTER_01/02/03` and `TR_MONSTER_VAR_01/02/03` with 4-directional animation

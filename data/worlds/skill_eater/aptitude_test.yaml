@@ -1,0 +1,20 @@
+# data/worlds/skill_eater/aptitude_test.yaml
+questions:
+  - id: "q1_combat_role"
+    prompt: "当社におけるあなたの希望適性スキルを選択してください。"
+    options:
+      - id: "opt_attack"
+        text: "強力な攻撃魔法（炎・雷等）"
+        detected_as: "FIRE_MAGIC_POTENTIAL"
+      - id: "opt_defense"
+        text: "鉄壁の防御スキル"
+        detected_as: "SHIELD_POTENTIAL"
+      - id: "opt_analysis"
+        text: "スキルの構造を覗き見るだけの《解析》"
+        detected_as: "ANALYSIS_ONLY"
+        is_useless: true
+        meta_optimal: true
+
+evaluator_reactions:
+  incompetent: "……は？《解析》だと？戦力にもならんゴミスキルではないか！即刻クビだ！"
+  glitch: "な、なんだこの生体波形は……！？過去世界の干渉コードが検出されたぞ！？"

@@ -217,6 +217,54 @@ class BaseStatsComponent:
 
 
 @dataclass
+class AffectionComponent:
+    """ペット/キャラクターの好感度・騎乗状態用コンポーネント (Step 73, 79)"""
+
+    affection: int = 50  # 好感度 (親密・魂の友など)
+    is_mounted: bool = False  # 騎乗中フラグ (ステップ79)
+
+
+@dataclass
+class PetProfileComponent:
+    """ペットの原種・遺伝・融合記録用コンポーネント (Steps 69, 82)"""
+
+    gene_skills: list[str] = field(default_factory=list)  # 遺伝子合成で獲得した追加スキル
+    pet_type: str = "puppy"  # 原種ID
+    pet_fusion_history: list[dict[str, Any]] = field(default_factory=list)  # 融合記録
+
+
+@dataclass
+class EmoteComponent:
+    """エモート再生状態用コンポーネント (アセットパック統合用)"""
+
+    emote_state: str | None = None  # 現在再生中のエモート名
+    emote_timer: float = 0.0  # エモート再生タイマー
+    emote_frame: int = 0  # 現在のエモートフレーム
+
+
+@dataclass
+class PetAIComponent:
+    """ペットの作戦指示および絆・進化・装備データ (ECSコンポーネント)"""
+
+    bond: int = 0
+    contract_id: str = "default"
+    evolution_path: list[str] = field(default_factory=list)
+    evolution_stage: int = 0
+    equipment: dict[str, str] = field(default_factory=dict)
+
+    TACTIC_ASSAULT: str = "突撃 (近くの敵を殲滅)"
+    TACTIC_FOLLOW: str = "追従 (主人の傍を離れない)"
+    TACTIC_HEAL: str = "支援 (回復・援護優先)"
+    TACTIC_ESCAPE: str = "待避 (危険時は逃走)"
+
+    def increase_bond(self, amount: int, reason: str = "") -> int:
+        """後方互換性メソッド: 処理本体は pet_systems.PetBondSystem に委譲 (Phase 3)"""
+        from pet_systems import PetBondSystem
+
+        return PetBondSystem.increase_bond(self, amount, reason)
+
+
+@dataclass
 class EconomyComponent:
     """所持金・経済用ECSコンポーネント"""
 
@@ -236,13 +284,53 @@ class LevelComponent:
 
 
 # --- LocalizationManager integration (i18n, Step 3.x) ---
-def localize(key: str, language: str | None = None, manager=None) -> str:
-    """Return localized text for *key* using LocalizationManager.
+from localization_manager import localize  # noqa: E402,F401
 
-    Provides a thin, dependency-free wrapper so callers can localize UI
-    strings without importing the manager directly.
-    """
-    from localization_manager import LocalizationManager
 
-    mgr = manager or LocalizationManager()
-    return mgr.get_text(key, language)
+@dataclass
+class Skill:
+    """スキル情報"""
+
+    name: str
+    level: int = 1
+    experience: int = 0
+    potential: int = 100  # 潜在能力(%)
+
+
+@dataclass
+class Attributes:
+    """主能力 8種 (Step 23)"""
+
+    strength: int = 10  # 筋力
+    endurance: int = 10  # 耐久
+    dexterity: int = 10  # 器用
+    perception: int = 10  # 感覚
+    learning: int = 10  # 習得
+    will: int = 10  # 意思
+    magic: int = 10  # 魔力
+    charisma: int = 10  # 魅力
+
+    def to_dict(self) -> dict[str, int]:
+        return {
+            "strength": self.strength,
+            "endurance": self.endurance,
+            "dexterity": self.dexterity,
+            "perception": self.perception,
+            "learning": self.learning,
+            "will": self.will,
+            "magic": self.magic,
+            "charisma": self.charisma,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "Attributes":
+        return cls(
+            strength=data.get("strength", 10),
+            endurance=data.get("endurance", 10),
+            dexterity=data.get("dexterity", 10),
+            perception=data.get("perception", 10),
+            learning=data.get("learning", 10),
+            will=data.get("will", 10),
+            magic=data.get("magic", 10),
+            charisma=data.get("charisma", 10),
+        )

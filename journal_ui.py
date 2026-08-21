@@ -235,10 +235,8 @@ class JournalUI:
                         start_x + 4, current_y, f"✓ {qid}", fg=self.text_color
                     )
                     current_y += 1
-            except Exception:
-                logger.exception("Unhandled exception")
-                # TODO: handle exception properly
-                pass
+            except Exception as e:
+                logger.warning("Failed to render completed quests list in journal UI: %s", e)
 
         # ---- 考古学・発掘・解読メタゲーム セクション (Step 28) ----
         current_y += 2

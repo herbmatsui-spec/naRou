@@ -55,12 +55,13 @@ def test_all_72_steps_pet_contract_evolution_fusion():
     assert "kitten" in pe_data["pet_evolutions"], "Step 36 Failed"
     print("[OK] Steps 7-13, 36 (data/pet_evolutions.yaml)")
 
-    # Step 14 - 18, 65, 66, 69: entity.py PetAI & Entity fields
-    from entity import Entity
+    # Step 14 - 18, 65, 66, 69: Entity pet_ai component & Entity fields
+    from entity import Entity, PetAI
 
-    tree = ast.parse(open("entity.py", encoding="utf-8").read())
+    tree = ast.parse(open("components.py", encoding="utf-8").read())
     petai_class = next(
-        n for n in ast.walk(tree) if isinstance(n, ast.ClassDef) and n.name == "PetAI"
+        n for n in ast.walk(tree)
+        if isinstance(n, ast.ClassDef) and n.name == "PetAIComponent"
     )
     fields = [n.target.id for n in petai_class.body if isinstance(n, ast.AnnAssign)]
     assert "bond" in fields, "Step 15 Failed"
@@ -72,7 +73,7 @@ def test_all_72_steps_pet_contract_evolution_fusion():
     ent_inst = Entity()
     assert hasattr(ent_inst, "pet_ai"), "PetAI field failed"
     assert hasattr(ent_inst, "pet_fusion_history"), "Step 69 Failed"
-    print("[OK] Steps 14-18, 65, 66, 69 (entity.py PetAI & Entity fields)")
+    print("[OK] Steps 14-18, 65, 66, 69 (Entity pet_ai component & Entity fields)")
 
     # Step 19 - 28: pet_contract_system.py & methods
     from pet_contract_system import (

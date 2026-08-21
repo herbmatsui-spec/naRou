@@ -1,19 +1,23 @@
 from __future__ import annotations
 
 import logging
-
-logger = logging.getLogger(__name__)
-
-import yaml
-from pydantic import BaseModel, ValidationError
-
-from dotenv import load_dotenv
-
-load_dotenv()
 import os
 from typing import Any
 
-from cryptography.fernet import Fernet
+import yaml
+try:
+    from cryptography.fernet import Fernet
+    HAS_CRYPTOGRAPHY = True
+except ImportError:
+    Fernet = None  # type: ignore
+    HAS_CRYPTOGRAPHY = False
+
+from dotenv import load_dotenv
+from pydantic import BaseModel, ValidationError
+
+load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 
 class DataCache:
@@ -32,8 +36,14 @@ class DataCache:
                 data = yaml.safe_load(f)
                 cls._cache[file_path] = data
                 return data
-        except Exception:
-            logger.exception("ロード失敗")
+        except FileNotFoundError:
+            logger.warning("File not found for DataCache: %s", file_path)
+            return None
+        except yaml.YAMLError as e:
+            logger.error("YAML parsing error in %s: %s", file_path, e)
+            return None
+        except Exception as e:
+            logger.exception("Unexpected error loading %s: %s", file_path, e)
             return None
 
     @classmethod
@@ -44,7 +54,7 @@ class DataCache:
 class ConfigManager:
     """ConfigManager with optional encryption for sensitive settings (Step 66)."""
 
-    _fernet: Fernet | None = None
+    _fernet: Any | None = None
 
     def __init__(self, config_path: str = "config.yaml"):
         self.config_path = config_path
@@ -55,17 +65,19 @@ class ConfigManager:
         )
 
     @classmethod
-    def _get_fernet(cls) -> Fernet:
+    def _get_fernet(cls) -> Any:
         """Return Fernet instance from env key or generate ephemeral (dev)."""
+        if not HAS_CRYPTOGRAPHY or Fernet is None:
+            return None
         if cls._fernet:
             return cls._fernet
         key_b64 = os.environ.get("CONFIG_ENCRYPTION_KEY")
         if key_b64:
             try:
                 cls._fernet = Fernet(key_b64.encode())
-            except Exception:
+            except Exception as e:
                 # If key is invalid, ignore and generate dev key
-                logger.exception("ロード失敗")
+                logger.warning("Failed to initialize Fernet key from CONFIG_ENCRYPTION_KEY: %s", e)
         if not cls._fernet:
             # Dev: ephemeral key (won't persist across restarts)
             cls._fernet = Fernet(Fernet.generate_key())
@@ -74,11 +86,15 @@ class ConfigManager:
     def _encrypt_value(self, value: str) -> str:
         """Encrypt a string value."""
         f = self._get_fernet()
+        if f is None:
+            return value
         return f.encrypt(value.encode()).decode()
 
     def _decrypt_value(self, token: str) -> str:
         """Decrypt a string value."""
         f = self._get_fernet()
+        if f is None:
+            return token
         return f.decrypt(token.encode()).decode()
 
     def set_sensitive(self, key: str, value: str) -> None:
@@ -91,16 +107,22 @@ class ConfigManager:
         if token:
             try:
                 return self._decrypt_value(token)
-            except Exception:
-                logger.exception("ロード失敗")
+            except Exception as e:
+                logger.warning("Failed to decrypt sensitive config for key '%s': %s", key, e)
                 return default
-
+        return default
 
     def _load_config(self) -> dict[str, Any]:
-        cached = DataCache.get_data(self.config_path)
-        if cached is not None:
-            return cached
-        return {}
+        from data_validation import load_yaml_validated
+
+        try:
+            return load_yaml_validated(self.config_path)
+        except FileNotFoundError:
+            logger.warning("Config file not found: %s", self.config_path)
+            return {}
+        except Exception as e:  # noqa: BLE001
+            logger.exception("Failed to load config from %s: %s", self.config_path, e)
+            return {}
 
     def get(self, key: str, default: Any = None) -> Any:
         return self.config.get("settings", {}).get(key, default)

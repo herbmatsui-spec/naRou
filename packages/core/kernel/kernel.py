@@ -19,7 +19,15 @@ class Kernel:
         self._systems[name] = system
         return system
 
-    def get_system(self, name: str) -> Any:
+    def get_system(self, name: str, default: Any = None) -> Any:
+        if name in self._systems:
+            return self._systems[name]
+        if default is not None:
+            return default
+        raise KeyError(f"System not found: {name}")
+
+    def get_system_strict(self, name: str) -> Any:
+        """Backward-compatible alias that always raises when missing."""
         if name not in self._systems:
             raise KeyError(f"System not found: {name}")
         return self._systems[name]

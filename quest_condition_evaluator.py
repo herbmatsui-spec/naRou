@@ -222,6 +222,10 @@ class EvaluationContext:
         return None
 
 
+# 後方互換性エイリアス
+ParanoidEvaluationContext = EvaluationContext
+
+
 def _apply_operator(op: str, left: Any, right: Any) -> bool:
     """Leaf の比較/述語演算子を実行する。（quest_condition_astからコピー）"""
     if op == "==":

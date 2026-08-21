@@ -54,10 +54,8 @@ class LegacySkillRegistry:
                             effect_value=sdata.get("effect_value", 0),
                             unlock_condition=sdata.get("unlock_condition"),
                         )
-            except Exception:
-                logger.exception("Unhandled exception")
-                # TODO: handle exception properly
-                pass
+            except Exception as e:
+                logger.warning("Failed to load legacy skills from %s: %s", path, e)
 
         if not self._data:
             default_data = LegacySkillData(

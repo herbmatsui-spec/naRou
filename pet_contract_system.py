@@ -70,9 +70,8 @@ class PetContractRegistry:
                 )
                 self._contracts[cid] = contract
             self._loaded = True
-        except Exception:
-            logger.exception("Unhandled exception")
-            # TODO: handle exception properly
+        except Exception as e:
+            logger.warning("Failed to load pet contracts from %s: %s", self._data_path, e)
             self._loaded = True
 
     def get(self, contract_id: str) -> PetContractData | None:

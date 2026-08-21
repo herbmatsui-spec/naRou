@@ -73,9 +73,8 @@ class GuildSkillRegistry:
                     skill_list.append(skill)
                 self._skills[guild_id] = skill_list
             self._loaded = True
-        except Exception:
-            logger.exception("Unhandled exception")
-            # TODO: handle exception properly
+        except Exception as e:
+            logger.warning("Failed to load guild skills from %s: %s", self._data_path, e)
             self._loaded = True
 
     def get(self, guild_id: str) -> list[GuildSkillData]:

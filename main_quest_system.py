@@ -5,12 +5,15 @@ Handles the progression of the primary story line, quest tracking, and reward di
 
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Any
 
 import yaml
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from entity import Entity
@@ -349,8 +352,8 @@ class MainQuestSystem:
             from narrative_executor import NARRATIVE_EXECUTOR
 
             return NARRATIVE_EXECUTOR.get_current_node(player)
-        except Exception:
-            # TODO: handle exception properly
+        except Exception as e:
+            logger.warning("Failed to get active narrative node: %s", e)
             return None
 
     def get_narrative_choices(self, player: Entity) -> list[dict[str, Any]]:
@@ -367,8 +370,8 @@ class MainQuestSystem:
                 }
                 for e in edges
             ]
-        except Exception:
-            # TODO: handle exception properly
+        except Exception as e:
+            logger.warning("Failed to get narrative choices: %s", e)
             return []
 
     def get_available_endings(self, player: Entity) -> list[dict[str, Any]]:
@@ -396,8 +399,8 @@ class MainQuestSystem:
                 }
                 for e in endings
             ]
-        except Exception:
-            # TODO: handle exception properly
+        except Exception as e:
+            logger.warning("Failed to get available endings: %s", e)
             return []
 
     def get_narrative_state(self, player: Entity) -> dict[str, Any] | None:
@@ -408,9 +411,8 @@ class MainQuestSystem:
             state = NARRATIVE_EXECUTOR.get_active_state(player)
             if state:
                 return state.to_dict()
-        except Exception:
-            # TODO: handle exception properly
-            pass
+        except Exception as e:
+            logger.warning("Failed to get narrative state: %s", e)
         return None
 
     def load_narrative_state(self, player: Entity, data: dict[str, Any]) -> bool:
@@ -419,6 +421,6 @@ class MainQuestSystem:
             from narrative_executor import NARRATIVE_EXECUTOR
 
             return NARRATIVE_EXECUTOR.load_state(player, data)
-        except Exception:
-            # TODO: handle exception properly
+        except Exception as e:
+            logger.warning("Failed to load narrative state: %s", e)
             return False

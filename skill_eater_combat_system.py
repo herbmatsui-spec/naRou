@@ -2,11 +2,13 @@
 skill_eater_combat_system.py
 Aの世界（スキル喰い）の戦闘エンジン＆《喰らい（Devour）》システム
 提案2 & 3: 戦闘・喰らい・解析・ハックのEmote & Audio演出 (Steps 9〜24, 45〜47, 57〜59)
+Phase 1 Tactical Combat Manager (Phase1CombatManager)
 """
 from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Tuple
 
 from skill_eater_audio_system import SkillEaterAudioSystem
 from skill_eater_presentation_system import (
@@ -231,7 +233,10 @@ class SkillEaterCombatSystem:
 
     # Step 57〜59: ハッキング実行コマンド（Emote & Audio演出）
     def execute_hack(
-        self, analyzer: CharacterState, target: CharacterState
+        self,
+        analyzer: CharacterState,
+        target: CharacterState,
+        force_success: bool | None = None,
     ) -> BattleActionResult:
         sounds = []
         events = []
@@ -245,7 +250,9 @@ class SkillEaterCombatSystem:
         events.append(evt1)
 
         hack_chance = min(0.95, 0.40 + (analyzer.intelligence * 0.02))
-        is_success = random.random() <= hack_chance
+        is_success = (
+            force_success if force_success is not None else (random.random() <= hack_chance)
+        )
 
         if is_success:
             target.encryption_broken = True
@@ -633,3 +640,149 @@ class SkillEaterCombatSystem:
             )
 
         return logs, sounds, events
+
+
+# -------------------------------------------------------------
+# Phase 1 Environmental Combat System
+# -------------------------------------------------------------
+
+@dataclass
+class EnvironmentalObject:
+    """Interactable environmental hazard that can be triggered via Analysis."""
+
+    obj_id: str
+    name: str
+    hazard_type: str  # 'COLLAPSING_SCAFFOLD', 'MAGIC_PIPE', 'STEAM_VENT'
+    trigger_cost_mp: int = 5
+    damage: int = 150
+    inflicts_stun: bool = True
+    is_triggered: bool = False
+    weak_spot_description: str = ""
+
+
+@dataclass
+class TacticalEnemy:
+    """Enemy with structural flaw weak points revealable by Analysis."""
+
+    enemy_id: str
+    name: str
+    hp: int
+    max_hp: int
+    atk: int
+    structural_flaw: str  # e.g., 'CORE_OVERHEAT_VENT', 'ARMOR_JOINT_GAP'
+    weakness_revealed: bool = False
+    is_stunned: bool = False
+    dropped_scraps: List[str] = field(default_factory=list)
+
+
+class Phase1CombatManager:
+    """Manages Phase 1 tactical combat, environment triggers, and weak point analysis."""
+
+    def __init__(self) -> None:
+        self.is_initialized: bool = True
+        self.environment_objects: List[EnvironmentalObject] = []
+        self.current_enemies: List[TacticalEnemy] = []
+
+    def analyze_environmental_hazards(self) -> List[Dict[str, Any]]:
+        """Uses Analysis to highlight interactable environmental traps."""
+        results = []
+        for obj in self.environment_objects:
+            if not obj.is_triggered:
+                results.append({
+                    "obj_id": obj.obj_id,
+                    "name": obj.name,
+                    "hazard_type": obj.hazard_type,
+                    "trigger_cost_mp": obj.trigger_cost_mp,
+                    "damage": obj.damage,
+                    "weak_spot": obj.weak_spot_description,
+                    "highlight_color": "CYAN_PULSE",
+                })
+        return results
+
+    def analyze_enemy_weakness(self, enemy_id: str) -> Dict[str, Any]:
+        """Analyzes specific enemy to reveal structural flaws and targetable hitbox."""
+        for enemy in self.current_enemies:
+            if enemy.enemy_id == enemy_id:
+                enemy.weakness_revealed = True
+                return {
+                    "success": True,
+                    "enemy_id": enemy_id,
+                    "structural_flaw": enemy.structural_flaw,
+                    "hitbox_unlocked": True,
+                    "multiplier": 3.0,
+                    "description": f"《解析完了》弱点部位【{enemy.structural_flaw}】を捕捉！クリティカル率100%",
+                }
+        return {"success": False, "error": "ENEMY_NOT_FOUND"}
+
+    def attack_weak_point(self, enemy_id: str, base_atk: int = 10) -> Dict[str, Any]:
+        """Attacks the analyzed weak point, dealing 3x critical damage and triggering stagger."""
+        for enemy in self.current_enemies:
+            if enemy.enemy_id == enemy_id:
+                if not enemy.weakness_revealed:
+                    # Weak normal damage
+                    enemy.hp -= base_atk
+                    return {"success": True, "critical": False, "damage": base_atk, "enemy_hp": max(0, enemy.hp)}
+                dmg = int(base_atk * 3.0) + 20
+                enemy.hp -= dmg
+                enemy.is_stunned = True
+                return {
+                    "success": True,
+                    "critical": True,
+                    "damage": dmg,
+                    "enemy_hp": max(0, enemy.hp),
+                    "enemy_stunned": True,
+                    "message": f"弱点直撃！致命的な{dmg}ダメージを与え、敵をスタンさせた！",
+                }
+        return {"success": False, "error": "ENEMY_NOT_FOUND"}
+
+    def trigger_environmental_hazard(self, obj_id: str) -> Dict[str, Any]:
+        """Triggers an environmental hazard dealing area damage and stunning all active enemies."""
+        for obj in self.environment_objects:
+            if obj.obj_id == obj_id:
+                if obj.is_triggered:
+                    return {"success": False, "error": "ALREADY_TRIGGERED"}
+                obj.is_triggered = True
+                total_affected = 0
+                for enemy in self.current_enemies:
+                    if enemy.hp > 0:
+                        enemy.hp -= obj.damage
+                        if obj.inflicts_stun:
+                            enemy.is_stunned = True
+                        total_affected += 1
+                return {
+                    "success": True,
+                    "hazard_name": obj.name,
+                    "damage_dealt": obj.damage,
+                    "enemies_affected": total_affected,
+                    "message": f"【環境トラップ発動】『{obj.name}』が崩壊！周囲の敵全員に{obj.damage}ダメージ＆スタン！",
+                }
+        return {"success": False, "error": "OBJECT_NOT_FOUND"}
+
+    def setup_slum_tutorial_encounter(self) -> Dict[str, Any]:
+        """Sets up the initial Slum tutorial fight showcasing Environmental Kills."""
+        self.environment_objects = [
+            EnvironmentalObject(
+                obj_id="SCAFFOLD_01",
+                name="腐食した足場",
+                hazard_type="COLLAPSING_SCAFFOLD",
+                damage=120,
+                weak_spot_description="支柱の接合ボルト（《解析》で看破）",
+            )
+        ]
+        self.current_enemies = [
+            TacticalEnemy(
+                enemy_id="SLUM_RAT_01",
+                name="変異スラムラット",
+                hp=100,
+                max_hp=100,
+                atk=15,
+                structural_flaw="露出した首筋の生体コア",
+                dropped_scraps=["SCRAP_BEAST_FANG", "SCRAP_AGILITY_FRAGMENT"],
+            )
+        ]
+        return {
+            "encounter": "SLUM_FIRST_FIGHT",
+            "enemies_count": len(self.current_enemies),
+            "hazards_count": len(self.environment_objects),
+            "hint": "正面攻撃は危険！《解析》で足場のボルトかラットの首筋を狙え！",
+        }

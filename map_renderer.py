@@ -57,10 +57,9 @@ class ParallaxBackground:
                 cls._layer_images.append(layer_img)
 
             cls._initialized = True
-        except Exception:
-        # TODO: handle exception properly
-            logger.exception("Unhandled exception")
-        # Fallback: create simple gradient layers
+        except Exception as e:
+            logger.warning("Failed to load tiny_rogue tilemap, using procedural gradient layers: %s", e)
+            # Fallback: create simple gradient layers
             cls._layer_images = []
             for i in range(4):
                 img = tcod.image.Image(VIEW_WIDTH, VIEW_HEIGHT // 4)
@@ -115,13 +114,8 @@ class MapRenderer:
             try:
                 cls._atlas_16 = tcod.image.Image.load("assets/tiles/tileset_16x16.png")
                 cls._atlas_32 = tcod.image.Image.load("assets/tiles/tileset_32x32.png")
-            except Exception:
-                logger.exception("Unhandled exception")
-        # TODO: handle exception properly
-        # ロードに失敗した場合はピクセルアートモードを無効にする
-                # 注意: これはゲームマップの use_pixel_art フラグに変更を加えるわけではない
-                # ここでフラグを変更すると副作用があるため、呼び出し側で判断する
-                pass
+            except Exception as e:
+                logger.warning("Failed to load tileset atlas images: %s", e)
 
     @classmethod
     def render(

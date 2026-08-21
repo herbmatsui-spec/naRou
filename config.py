@@ -79,13 +79,4 @@ if __name__ == "__main__":
 
 
 # --- LocalizationManager integration (i18n, Step 3.x) ---
-def localize(key: str, language: str | None = None, manager=None) -> str:
-    """Return localized text for *key* using LocalizationManager.
-
-    Provides a thin, dependency-free wrapper so callers can localize UI
-    strings without importing the manager directly.
-    """
-    from localization_manager import LocalizationManager
-
-    mgr = manager or LocalizationManager()
-    return mgr.get_text(key, language)
+from localization_manager import localize  # noqa: E402,F401

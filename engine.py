@@ -7,6 +7,7 @@ other systems can fetch localized strings through a shared entry point.
 
 from __future__ import annotations
 
+import atexit
 import logging
 
 from localization_manager import LocalizationManager
@@ -38,9 +39,6 @@ class GameLocalizer:
 def get_localizer(engine: object = None, language: str = "en") -> GameLocalizer:
     """Return a GameLocalizer instance bound to *engine*."""
     return GameLocalizer(engine=engine, language=language)
-
-
-import atexit
 
 
 def _shutdown_hook():

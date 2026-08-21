@@ -7,15 +7,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import yaml
-
 logger = logging.getLogger(__name__)
 
 
 def _load_yaml(path: str) -> dict:
+    from data_validation import load_yaml_validated
+
     try:
-        with open(path, encoding="utf-8") as f:
-            return yaml.safe_load(f) or {}
+        return load_yaml_validated(path)
     except FileNotFoundError:
         logger.warning(f"File not found: {path}")
         return {}

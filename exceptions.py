@@ -13,12 +13,18 @@ class ElonaError(Exception):
         self.timestamp = datetime.now().isoformat()
 
     def log_to_file(self, log_dir="logs"):
+        import sys
+
         os.makedirs(log_dir, exist_ok=True)
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         fn = os.path.join(log_dir, f"error_log_{ts}.txt")
         with open(fn, "w", encoding="utf-8") as f:
             f.write(f"=== Error: {self.__class__.__name__} ===\n{self.message}\n")
-            traceback.print_exc(file=f)
+            exc = sys.exc_info()[1]
+            if exc:
+                traceback.print_exception(type(exc), exc, exc.__traceback__, file=f)
+            else:
+                traceback.print_stack(file=f)
         return fn
 
 

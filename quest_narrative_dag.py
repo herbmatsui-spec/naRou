@@ -76,9 +76,8 @@ class NarrativeEdge:
             try:
                 node = parse_condition(self.condition_dsl)
                 return evaluate(node, context)
-            except Exception:
-                logger.exception("Unhandled exception")
-                # TODO: handle exception properly
+            except Exception as e:
+                logger.warning("Failed to evaluate narrative transition condition '%s': %s", self.condition_dsl, e)
                 return False
         return True
 
