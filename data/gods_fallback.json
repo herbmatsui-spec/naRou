@@ -1,0 +1,65 @@
+{
+  "eyth": {
+    "name": "無垢なる信仰 (無信仰)",
+    "domain": "なし",
+    "favored_offer": [],
+    "bonus_attr": {},
+    "servant": null,
+    "artifact": null
+  },
+  "jure": {
+    "name": "癒やしのジュア",
+    "domain": "治癒・愛・鉱石",
+    "favored_offer": ["ore", "bread"],
+    "bonus_attr": {
+      "will": 5,
+      "endurance": 3
+    },
+    "servant": "防衛者",
+    "artifact": "ジュアの聖なる十字架"
+  },
+  "lulwy": {
+    "name": "風のルルウィ",
+    "domain": "弓・風・速度",
+    "favored_offer": ["bow", "corpse"],
+    "bonus_attr": {
+      "dexterity": 6,
+      "perception": 4
+    },
+    "servant": "黒天使",
+    "artifact": "ルルウィの神速の弓"
+  },
+  "mani": {
+    "name": "機械のマニ",
+    "domain": "銃・機械・鉱石",
+    "favored_offer": ["ore", "gun"],
+    "bonus_attr": {
+      "dexterity": 4,
+      "learning": 6
+    },
+    "servant": "アンドロイド",
+    "artifact": "ウィンチェスター・プレミアム"
+  },
+  "itzpalt": {
+    "name": "元素のイツパロトル",
+    "domain": "元素魔法・魔力",
+    "favored_offer": ["staff", "potion"],
+    "bonus_attr": {
+      "magic": 8,
+      "will": 4
+    },
+    "servant": "追放者",
+    "artifact": "エレメンタルスタッフ"
+  },
+  "kumiromi": {
+    "name": "収穫のクミロミ",
+    "domain": "農業・採取・種",
+    "favored_offer": ["seed", "food"],
+    "bonus_attr": {
+      "learning": 5,
+      "perception": 5
+    },
+    "servant": "妖精さん",
+    "artifact": "クミロミの活性の鎌"
+  }
+}

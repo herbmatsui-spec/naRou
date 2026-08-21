@@ -180,6 +180,25 @@ See [ASSETS.md](ASSETS.md) for complete documentation.
 
 ---
 
+## 🎨 臨場感・演出拡張システム (Audio / Emote / Visual FX)
+
+Kenneyアセット（`audio`, `emote`, `tiny rogue`）を最大限に活用し、探索・戦闘・UIの臨場感を引き上げる**72ステップの演出モジュール**を統合しています。
+
+- 🎵 **ダイナミックオーディオ (`audio/dynamic_audio.py`)**:
+  - 10種類の足音のランダム選定 + 動的ピッチ揺らぎ（0.95〜1.05）
+  - 本を開く音・布擦れ・コインなどのダイエグゼティックUI効果音
+  - 距離減衰と左右パンニングによる3D空間オーディオ（敵の足音や開扉音の察知）
+- 💬 **エモート＆フィードバック (`emote_feedback_system.py`)**:
+  - 発見（！）や状態異常（汗・怒り・睡眠）の頭上ポップアップ
+  - インタラクティブ対象接近時の弾むイージング（バウンス）アニメーション予兆
+  - クリティカルヒット時の星アイコン・数字飛び出し演出（Floating Feedback）
+- 🌟 **2Dライティング＆グラフィック演出 (`visual_fx_system.py`)**:
+  - 松明の揺らぎ・暗闇レイヤー・視界くり抜きによる2D動的ライティング
+  - 攻撃ヒット時のスクワッシュ＆ストレッチ変形＋画面シェイク（Juicy Animation）
+  - ダンジョン内の浮遊ダスト粒子＆雪・泥・砂タイルの足跡デカール
+
+---
+
 ## 🛠️ リポジトリ構成
 
 ```text
@@ -225,6 +244,18 @@ narou2/
 └── data/tile_mappings/
     └── tiny_rogue_dungeon.yaml        # 標準タイル→TR_* マッピング
 ```
+
+## 🏗️ アーキテクチャ (リファクタリング後)
+
+本プロジェクトは「Feature Package Architecture」に基づく疎結合設計です。
+
+- **Kernel** (`packages/core/kernel/`): システム登録・依存解決・イベント配送のみを担う薄いカーネル。
+- **Packages** (`packages/*/package.py`): Core/Gameplay/Character/Social/Meta/World/Narrative/Platform の各機能ドメイン。
+- **Components** (`components.py`): ECS データコンポーネント（Attributes, Title, GuildFaction, Achievement, Reincarnation, Skill*, Storyteller, Archaeology, BaseStats, Economy, Level, Affection, PetProfile, Emote, PetAI）。
+- **Managers** (`managers/`): Engine から抽出した処理単位（Combat, SkillReward, PetBond, WorldNews, Persistence, Faction, ContextMenu, StateMachine, SetupCoordinator）。
+- **Entity** (`entity.py`): コンポーネントコンテナとしてのキャラクター基底クラス。`GodInfo` は `god_system.py` に分離。
+
+詳細は `ARCHITECTURE.md` / `API.md` を参照。
 
 ---
 

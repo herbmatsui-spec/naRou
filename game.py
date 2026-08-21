@@ -116,15 +116,20 @@ class Engine:
 
     def __init__(self, renderer: Renderer | None = None):
         # --- Kernel 初期化 & CorePackage ロード ---
-        self.kernel = Kernel()
-        self.kernel.load_package(CorePackage())
-        self.kernel.load_package(GameplayPackage())
-        self.kernel.load_package(CharacterPackage())
-        self.kernel.load_package(SocialPackage())
-        self.kernel.load_package(MetaPackage())
-        self.kernel.load_package(WorldPackage())
-        self.kernel.load_package(NarrativePackage())
-        self.kernel.load_package(PlatformPackage())
+        from exceptions import SystemInitError
+        try:
+            self.kernel = Kernel()
+            self.kernel.load_package(CorePackage())
+            self.kernel.load_package(GameplayPackage())
+            self.kernel.load_package(CharacterPackage())
+            self.kernel.load_package(SocialPackage())
+            self.kernel.load_package(MetaPackage())
+            self.kernel.load_package(WorldPackage())
+            self.kernel.load_package(NarrativePackage())
+            self.kernel.load_package(PlatformPackage())
+        except Exception as e:
+            logger.exception("Failed to load core packages during engine initialization: %s", e)
+            raise SystemInitError(f"Package initialization failed: {e}") from e
 
         # --- レンダラ設定 (Step 3) ---
         if renderer is not None:
@@ -177,6 +182,10 @@ class Engine:
 
     def _initialize_player_and_pet(self) -> None:
         """プレイヤーとペットの初期化処理"""
+        from exceptions import DataParseError
+        if not self.game_state_data.player or not self.game_state_data.pet:
+            raise DataParseError("Player or Pet entity is missing from game_state_data during initialization")
+
         # --- プレイヤー (設定駆動) ---
         self.game_state_data.player.god_id = "jure"
         self.game_state_data.player.piety = 80
@@ -198,11 +207,15 @@ class Engine:
 
     def _setup_initial_inventory(self) -> None:
         """初期インベントリアイテムの設定 (GameplayPackage 経由)"""
+        from exceptions import ResourceLoadError
         starter_items = self.starter_items_factory(self.kernel)
+        if not starter_items:
+            raise ResourceLoadError("Failed to generate starter items from factory")
         for itm in starter_items:
             self.game_state_data.inventory.add_item(itm)
-        self.game_state_data.inventory.equip(starter_items[0], "main_hand")
-        self.game_state_data.inventory.equip(starter_items[1], "off_hand")
+        if len(starter_items) >= 2:
+            self.game_state_data.inventory.equip(starter_items[0], "main_hand")
+            self.game_state_data.inventory.equip(starter_items[1], "off_hand")
 
         # --- 初期ログ ---
         self.log(
@@ -950,7 +963,12 @@ class Engine:
 
     def _spawn_dungeon(self) -> None:
         """ダンジョン内のエンティティ生成 (GameplayPackage 経由)"""
-        self.dungeon_spawner(self.kernel, self)
+        try:
+            self.dungeon_spawner(self.kernel, self)
+        except Exception as e:
+            logger.exception("Failed to spawn dungeon entities: %s", e)
+            from exceptions import ResourceLoadError
+            raise ResourceLoadError(f"Dungeon spawn failure: {e}") from e
 
     def has_los(self, p1: Point, p2: Point) -> bool:
         """射線判定 (ステップ21)"""

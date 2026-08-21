@@ -5,9 +5,12 @@ Modularized Component-Based Architecture (ECS)
 
 from __future__ import annotations
 
+import json
 import logging
+import os
 import random
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, TypeVar
 
 logger = logging.getLogger(__name__)
@@ -81,58 +84,25 @@ class Attributes:
 
 
 class GodInfo:
-    """神々の定義 (ステップ83〜88, 外部YAMLデータ連携)"""
+    """神々の定義 (ステップ83〜88, 外部YAMLデータ連携 & JSONフォールバック)"""
 
-    _FALLBACK_GODS = {
-        "eyth": {
-            "name": "無垢なる信仰 (無信仰)",
-            "domain": "なし",
-            "favored_offer": [],
-            "bonus_attr": {},
-            "servant": None,
-            "artifact": None,
-        },
-        "jure": {
-            "name": "癒やしのジュア",
-            "domain": "治癒・愛・鉱石",
-            "favored_offer": ["ore", "bread"],
-            "bonus_attr": {"will": 5, "endurance": 3},
-            "servant": "防衛者",
-            "artifact": "ジュアの聖なる十字架",
-        },
-        "lulwy": {
-            "name": "風のルルウィ",
-            "domain": "弓・風・速度",
-            "favored_offer": ["bow", "corpse"],
-            "bonus_attr": {"dexterity": 6, "perception": 4},
-            "servant": "黒天使",
-            "artifact": "ルルウィの神速の弓",
-        },
-        "mani": {
-            "name": "機械のマニ",
-            "domain": "銃・機械・鉱石",
-            "favored_offer": ["ore", "gun"],
-            "bonus_attr": {"dexterity": 4, "learning": 6},
-            "servant": "アンドロイド",
-            "artifact": "ウィンチェスター・プレミアム",
-        },
-        "itzpalt": {
-            "name": "元素のイツパロトル",
-            "domain": "元素魔法・魔力",
-            "favored_offer": ["staff", "potion"],
-            "bonus_attr": {"magic": 8, "will": 4},
-            "servant": "追放者",
-            "artifact": "エレメンタルスタッフ",
-        },
-        "kumiromi": {
-            "name": "収穫のクミロミ",
-            "domain": "農業・採取・種",
-            "favored_offer": ["seed", "food"],
-            "bonus_attr": {"learning": 5, "perception": 5},
-            "servant": "妖精さん",
-            "artifact": "クミロミの活性の鎌",
-        },
-    }
+    _cached_fallback: dict[str, Any] | None = None
+
+    @classmethod
+    def get_fallback_gods(cls) -> dict[str, Any]:
+        """フォールバック用神データを外部JSONからロード (Steps 27-31)"""
+        if cls._cached_fallback is not None:
+            return cls._cached_fallback
+        json_path = Path(__file__).resolve().parent / "data" / "gods_fallback.json"
+        if json_path.exists():
+            try:
+                with open(json_path, "r", encoding="utf-8") as f:
+                    cls._cached_fallback = json.load(f)
+                    return cls._cached_fallback
+            except Exception as e:
+                logger.warning("Failed to load gods_fallback.json: %s", e)
+        cls._cached_fallback = {}
+        return cls._cached_fallback
 
     @classmethod
     def get_all(cls) -> dict[str, Any]:
@@ -141,11 +111,11 @@ class GodInfo:
         data = DataCache.get_data("data/gods.yaml")
         if data and isinstance(data, dict):
             return data
-        return cls._FALLBACK_GODS
+        return cls.get_fallback_gods()
 
     class _GodDict(dict):
         def __getitem__(self, key):
-            return GodInfo.get_all().get(key, GodInfo._FALLBACK_GODS.get(key))
+            return GodInfo.get_all().get(key, GodInfo.get_fallback_gods().get(key))
 
         def get(self, key, default=None):
             return GodInfo.get_all().get(key, default)
@@ -166,36 +136,49 @@ class GodInfo:
 
 
 class PetAI:
-    """ペットの作戦指示および絆・進化・装備データ (Steps 14-18, 28, 65, 66)"""
+    """ペットの作戦指示および絆・進化・装備データ (ECSコンポーネント) (Steps 34, 37-39)"""
+
+    _cached_tactics: dict[str, str] | None = None
+
+    @classmethod
+    def _load_tactics(cls) -> dict[str, str]:
+        if cls._cached_tactics is not None:
+            return cls._cached_tactics
+        json_path = Path(__file__).resolve().parent / "data" / "pet_tactic_default.json"
+        if json_path.exists():
+            try:
+                with open(json_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    cls._cached_tactics = data.get("tactics", {})
+                    return cls._cached_tactics
+            except Exception as e:
+                logger.warning("Failed to load pet_tactic_default.json: %s", e)
+        cls._cached_tactics = {
+            "assault": "突撃 (近くの敵を殲滅)",
+            "follow": "追従 (主人の傍を離れない)",
+            "heal": "支援 (回復・援護優先)",
+            "escape": "待避 (危険時は逃走)",
+        }
+        return cls._cached_tactics
 
     TACTIC_ASSAULT = "突撃 (近くの敵を殲滅)"
     TACTIC_FOLLOW = "追従 (主人の傍を離れない)"
     TACTIC_HEAL = "支援 (回復・援護優先)"
     TACTIC_ESCAPE = "待避 (危険時は逃走)"
 
-    bond: int = 0
-    contract_id: str = "default"
-    evolution_path: list[str] = field(default_factory=list)
-    evolution_stage: int = 0
-    equipment: dict[str, str] = field(default_factory=dict)
-
     def __init__(self, owner: Entity | None = None):
         self.owner = owner
-        self.bond = 0
-        self.contract_id = "default"
-        self.evolution_path = []
-        self.evolution_stage = 0
-        self.equipment = {}
+        self.bond: int = 0
+        self.contract_id: str = "default"
+        self.evolution_path: list[str] = []
+        self.evolution_stage: int = 0
+        self.equipment: dict[str, str] = {}
 
     def increase_bond(self, amount: int, reason: str = "") -> int:
-        """絆度を増加 (Step 28)"""
-        from pet_contract_system import REGISTRY as CONTRACT_REG
-        from pet_contract_system import PetContractManager
+        """後方互換性メソッド: 処理本体は pet_systems.PetBondSystem に委譲 (Phase 3)"""
+        from pet_systems import PetBondSystem
+        return PetBondSystem.increase_bond(self, amount, reason)
 
-        CONTRACT_REG.load()
-        mgr = PetContractManager(CONTRACT_REG)
-        new_val = mgr.update_bond(self, amount)
-        return new_val
 
 
 class Entity:

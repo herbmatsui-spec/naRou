@@ -40,3 +40,28 @@ class ConfigError(ElonaError):
 
 class NetworkError(ElonaError):
     pass
+
+
+class ResourceLoadError(ElonaError):
+    pass
+
+
+class DataParseError(ElonaError):
+    pass
+
+
+class AIBehaviorError(ElonaError):
+    pass
+
+
+class RenderingError(ElonaError):
+    pass
+
+
+class SystemInitError(ElonaError):
+    pass
+
+
+
+
+

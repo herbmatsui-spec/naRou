@@ -191,3 +191,29 @@ class PetLegacyManager:
             pet.pet_legacy_flags = {}
         pet.pet_legacy_flags[transfer["type"]] = True
         return True
+
+
+# ============================================================
+# Phase 3 (ECS Refactoring): Pet Bond System
+# ============================================================
+
+
+class PetBondSystem:
+    """ペットの絆値操作と契約更新を担うECSシステムクラス (Steps 40-45)"""
+
+    @classmethod
+    def increase_bond(cls, pet_ai, amount: int, reason: str = "") -> int:
+        from pet_contract_system import REGISTRY as CONTRACT_REG
+        from pet_contract_system import PetContractManager
+
+        try:
+            CONTRACT_REG.load()
+            mgr = PetContractManager(CONTRACT_REG)
+            new_val = mgr.update_bond(pet_ai, amount)
+            logger.debug("Pet bond increased by %d (reason: %s), current: %d", amount, reason, new_val)
+            return new_val
+        except Exception as e:
+            logger.warning("Failed to update bond via PetBondSystem: %s", e)
+            pet_ai.bond = getattr(pet_ai, "bond", 0) + amount
+            return pet_ai.bond
+

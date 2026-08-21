@@ -28,7 +28,11 @@ class GameLocalizer:
         return self._manager.get_text(key, language)
 
     def set_language(self, language: str) -> bool:
-        return self._manager.set_language(language)
+        success = self._manager.set_language(language)
+        if not success:
+            from exceptions import ResourceLoadError
+            raise ResourceLoadError(f"Failed to set localization language to '{language}'")
+        return success
 
 
 def get_localizer(engine: object = None, language: str = "en") -> GameLocalizer:
@@ -40,8 +44,11 @@ import atexit
 
 
 def _shutdown_hook():
-    logging.getLogger(__name__).info("Engine shutdown hook executed")
-    logging.shutdown()
+    try:
+        logging.getLogger(__name__).info("Engine shutdown hook executed")
+        logging.shutdown()
+    except Exception:  # noqa: BLE001
+        pass
 
 
 atexit.register(_shutdown_hook)

@@ -27,10 +27,9 @@ def prompt_accessibility():
     """Step 35/36: 色覚対応と難易度を選択し、config に永続化する。"""
     try:
         from config import configure, get_config
-    except Exception:
-        # TODO: handle exception properly
-
-        logger.exception("Unhandled exception")
+    except Exception as e:
+        print(f"警告: 設定モジュールの読み込みに失敗しました: {e}")
+        logger.exception("Failed to load config module: %s", e)
         return
 
     print("\n--- アクセシビリティ設定（Enter で現在値を維持）---")
@@ -63,8 +62,13 @@ def start_web_backend(open_browser: bool = False, port: int = 8080):
             web_server.launch_browser(f"http://localhost:{port}")
         return srv
     except Exception as exc:  # noqa: BLE001 - バックエンド起動失敗は致命的ではない
-        print(f"Web バックエンド起動に失敗しました: {exc}")
-        logger.exception("Unhandled exception")
+        from exceptions import SystemInitError, ElonaError
+        err_msg = f"Web バックエンド起動に失敗しました: {exc}"
+        print(err_msg)
+        if isinstance(exc, (SystemInitError, ElonaError)):
+            logger.error("Web backend initialization error: %s", exc)
+        else:
+            logger.exception("Unexpected exception during Web backend startup: %s", exc)
         return None
 
 
@@ -135,14 +139,18 @@ def main():
                 import game
 
                 game.main()
-            except ImportError:
-                print("エラー: game.py が見つからないか、エラーがあります。")
+            except ImportError as e:
+                print(f"エラー: モジュールが見つからないか、インポートエラーがあります: {e}")
+                logger.exception("Import error during game launch: %s", e)
             except Exception as e:  # noqa: BLE001
-                logger.exception("Unhandled exception")
                 from exceptions import ElonaError
-
                 print(f"\n【重大なエラーが発生しました】: {e}")
-                err = ElonaError(str(e)) if not isinstance(e, ElonaError) else e
+                if isinstance(e, ElonaError):
+                    logger.error("Elona domain error caught: %s", e)
+                    err = e
+                else:
+                    logger.exception("Unhandled runtime exception wrapped into ElonaError: %s", e)
+                    err = ElonaError(f"Unexpected error: {e}", context={"original_error": repr(e)})
                 log_file = err.log_to_file()
                 print(f"詳細ログを保存しました: {log_file}\n")
         elif choice == "3":
