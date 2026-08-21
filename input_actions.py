@@ -489,6 +489,138 @@ class SleepAction:
         return True
 
 
+class ActionScan:
+    """《解析》アクション (Step 14, 20, 22)"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+
+        current_world = getattr(
+            getattr(engine, "game_state_data", None), "current_world", "main"
+        )
+        if current_world != "skill_eater" and not getattr(
+            engine, "devour_debug_enabled", False
+        ):
+            engine.log(
+                "《解析》はAの世界（スキル喰い）でのみ使用可能です。",
+                (180, 180, 180),
+            )
+            return True
+
+        if hasattr(engine, "execute_scan"):
+            return engine.execute_scan()
+
+        engine.log("【解析スキャン】周囲の生体構造をスキャン中...", (100, 255, 100))
+        combat_sys = (
+            engine.kernel.get_system("skill_eater_combat_system")
+            if hasattr(engine, "kernel") and engine.kernel.has_system("skill_eater_combat_system")
+            else None
+        )
+        if combat_sys:
+            # Find nearest monster
+            from core_framework import Point
+            nearest = None
+            min_dist = 999.0
+            player_pos = Point(engine.player.x, engine.player.y)
+            for entity in engine.entity_manager.get_living_entities():
+                if entity != engine.player and not getattr(entity, "is_pet", False):
+                    p = Point(entity.x, entity.y)
+                    dist = ((p.x - player_pos.x) ** 2 + (p.y - player_pos.y) ** 2) ** 0.5
+                    if dist < min_dist:
+                        min_dist = dist
+                        nearest = entity
+
+            if nearest:
+                from skill_eater_system import CharacterState
+                analyzer = CharacterState(
+                    id="player", name=engine.player.name, hp=engine.player.hp, max_hp=engine.player.max_hp,
+                    mp=engine.player.mp, max_mp=engine.player.max_mp, atk=10, defense=5, intelligence=10, speed=100,
+                    analysis_level=getattr(engine.player, "analysis_level", 1)
+                )
+                target_state = CharacterState(
+                    id=str(getattr(nearest, "id", "enemy")), name=nearest.name, hp=nearest.hp, max_hp=nearest.max_hp,
+                    mp=10, max_mp=10, atk=5, defense=2, intelligence=5, speed=80
+                )
+                res = combat_sys.analyze_target(analyzer, target_state)
+                engine.log(f"【解析結果】対象: {res.target_name} (捕食成功率: {int(res.devour_success_rate * 100)}%)", (100, 255, 200))
+                for sk in res.revealed_skills:
+                    engine.log(f" - スキル: [{sk.tier}] {sk.name}", (255, 215, 0))
+            else:
+                engine.log("周囲に解析可能な対象が見つかりません。", (200, 200, 200))
+        return True
+
+
+class ActionDevour:
+    """《喰らい》アクション (Step 13, 19, 22, 23)"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+
+        current_world = getattr(
+            getattr(engine, "game_state_data", None), "current_world", "main"
+        )
+        if current_world != "skill_eater" and not getattr(
+            engine, "devour_debug_enabled", False
+        ):
+            engine.log(
+                "《喰らい》はAの世界（スキル喰い）でのみ使用可能です。",
+                (180, 180, 180),
+            )
+            return True
+
+        if hasattr(engine, "execute_devour"):
+            return engine.execute_devour()
+
+        engine.log("【捕食コマンド】《喰らい》を発動！", (255, 100, 100))
+        return True
+
+
+class ActionSynthesisMenu:
+    """スキル合成メニュー (Step 15, 21)"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state")
+            and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+
+        current_world = getattr(
+            getattr(engine, "game_state_data", None), "current_world", "main"
+        )
+        if current_world != "skill_eater" and not getattr(
+            engine, "devour_debug_enabled", False
+        ):
+            engine.log(
+                "《スキル合成》はAの世界（スキル喰い）でのみ使用可能です。",
+                (180, 180, 180),
+            )
+            return True
+
+        if hasattr(engine, "execute_synthesis"):
+            return engine.execute_synthesis()
+
+        engine.log("【キメラ合成炉】スキル合成メニューを展開します。", (200, 150, 255))
+        return True
+
+
 class QuitAction:
     """終了"""
 

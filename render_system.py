@@ -144,9 +144,6 @@ class RenderSystem:
             frame_count=tick,
         )
 
-        # 10. モーダル・サブウィンドウ描画
-        cls._render_sub_screens(console, context)
-
         # 11. 全画面ポストプロセッシング・状態デグラデーション (Proposal 3, 7)
         is_poisoned = any(
             getattr(e, "name", "") == "毒" for e in getattr(p, "status_effects", [])

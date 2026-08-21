@@ -253,7 +253,7 @@ class ChaseAction(BehaviorNode):
             closest_mob = None
             min_d = 999
             for e in engine.entities:
-                if e.faction == "monster" and e.hp > 0:
+                if getattr(e, "faction", "monster") == "monster" and getattr(e, "hp", 1) > 0:
                     d = Point(actor.x, actor.y).chebyshev_distance(Point(e.x, e.y))
                     if (
                         d < min_d

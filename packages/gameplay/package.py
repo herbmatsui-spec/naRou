@@ -251,6 +251,18 @@ class GameplayLoop:
                     for l in logs:
                         self.engine.log(l, (200, 80, 80))
 
+        # 提案2: 敵の意図予測を更新（描画・予測のみ。失敗しても進行を止めない）
+        try:
+            from enemy_intent import compute_intent
+
+            for ent in list(self.engine.entity_manager.get_living_entities()):
+                if getattr(ent, "faction", None) == "monster" and ent.hp > 0:
+                    ent.next_intent = compute_intent(ent, self.engine)
+                else:
+                    ent.next_intent = None
+        except Exception:  # noqa: BLE001
+            pass
+
         for msg in self.engine.inventory.tick_food_rot(ticks=5):
             self.engine.log(msg, (180, 120, 60))
         for item in self.engine.entity_manager.items_on_ground:
@@ -268,6 +280,31 @@ class GameplayLoop:
             )
             for schedule in available:
                 pass  # Quest scheduling handled elsewhere
+
+        # World A (Skill Eater) Turn Tick (Steps 49-56)
+        if getattr(getattr(self.engine, "game_state_data", None), "current_world", "main") == "skill_eater":
+            w_data = self.engine.game_state_data.world_a_data
+            toxicity = w_data.get("toxicity", 0) + 1
+            w_data["toxicity"] = min(100, toxicity)
+            if w_data["toxicity"] >= 80:
+                self.engine.player.hp = max(1, self.engine.player.hp - 2)
+                if w_data["toxicity"] == 80 or w_data["toxicity"] % 10 == 0:
+                    self.engine.log(
+                        f"【毒性侵食警報】スキル拒絶反応により体力が蝕まれる！（毒性: {w_data['toxicity']}%）",
+                        (255, 80, 80),
+                    )
+
+            dispatches = w_data.get("pet_dispatches", [])
+            for disp in list(dispatches):
+                disp["remaining_turns"] -= 1
+                if disp["remaining_turns"] <= 0:
+                    dispatches.remove(disp)
+                    reward_gold = disp.get("reward_gold", 500)
+                    self.engine.player.gold = getattr(self.engine.player, "gold", 0) + reward_gold
+                    self.engine.log(
+                        f"【ペット帰還】派遣任務『{disp['mission_name']}』が完了し、報酬 {reward_gold} アルドを獲得！",
+                        (255, 215, 0),
+                    )
 
 
 class GameplayPackage(IPackage):

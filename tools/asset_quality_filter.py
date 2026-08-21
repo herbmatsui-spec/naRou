@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import shutil
 import sys
 from pathlib import Path
 
@@ -365,7 +366,7 @@ def main():
                     rel_path = file_path.relative_to(input_path)
                     dest_path = output_dir / rel_path
                     dest_path.parent.mkdir(parents=True, exist_ok=True)
-                    sh.copy2(file_path, dest_path)
+                    shutil.copy2(file_path, dest_path)
                     passed += 1
                     logger.debug(f"PASSED: {file_path.name}")
                 else:
@@ -374,7 +375,7 @@ def main():
                         rel_path = file_path.relative_to(input_path)
                         dest_path = reject_dir / rel_path
                         dest_path.parent.mkdir(parents=True, exist_ok=True)
-                        sh.move(str(file_path), str(dest_path))
+                        shutil.move(str(file_path), str(dest_path))
                     else:
                         # Just delete or leave in place - here we'll leave in place and log
                         logger.info(f"FAILED: {file_path.name} - {', '.join(issues)}")

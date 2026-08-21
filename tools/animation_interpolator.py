@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import shutil
 import sys
 from pathlib import Path
 
@@ -97,7 +98,7 @@ class AnimationInterpolator:
             output_path = output_dir / f"frame_{i:04d}.png"
             try:
                 # Copy the frame to output
-                sh.copy2(frame_path, output_path)
+                shutil.copy2(frame_path, output_path)
                 saved_paths.append(output_path)
             except Exception as e:
                 logger.error(f"Error saving frame {i}: {e}")

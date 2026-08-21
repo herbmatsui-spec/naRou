@@ -98,6 +98,8 @@ class GameStateInitializer:
         ]
         state_data.current_state = GameState.EXPLORING
         state_data.game_state = "play"
+        state_data.current_world = player_cfg.get("world", "main")
+        state_data.world_a_data = {}
         state_data.help_tab = 0
         state_data.inventory_target = "player"
         state_data.inventory_cursor = 0

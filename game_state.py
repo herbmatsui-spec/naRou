@@ -50,6 +50,8 @@ class GameStateData:
     # ゲーム状態
     current_state: GameStateEnum = GameStateEnum.EXPLORING
     game_state: str = "play"  # 旧互換用
+    current_world: str = "main"  # "main", "skill_eater", etc.
+    world_a_data: dict[str, Any] = field(default_factory=dict)
 
     # UI状態
     help_tab: int = 0

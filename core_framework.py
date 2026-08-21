@@ -120,6 +120,24 @@ class AStar:
 
         return []  # 経路なし
 
+    @classmethod
+    def find_path(
+        cls,
+        start: Point,
+        goal: Point,
+        game_map: Any = None,
+        blocked_positions: set[tuple[int, int]] | None = None,
+    ) -> list[Point]:
+        blocked = blocked_positions or set()
+
+        def is_walkable(x: int, y: int) -> bool:
+            if game_map and hasattr(game_map, "is_walkable"):
+                if not game_map.is_walkable(x, y):
+                    return False
+            return (x, y) not in blocked
+
+        return cls.get_path(start, goal, is_walkable)
+
 
 class EventBus:
     """モジュール間の疎結合イベント通知バス (ステップ7, 商用高信頼性対応)"""
@@ -177,6 +195,13 @@ class MessageLog:
     def __init__(self, max_history: int = 150):
         self.history: list[LogMessage] = []
         self.max_history = max_history
+
+    def __len__(self) -> int:
+        return len(self.history)
+
+    @property
+    def messages(self) -> list[LogMessage]:
+        return self.history
 
     def add(
         self,

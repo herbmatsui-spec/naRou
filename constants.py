@@ -30,6 +30,47 @@ TILE_STAIRS_UP = "<"
 TILE_WATER = "~"
 TILE_TRAP = "^"
 
+# 敵の「次回行動（意図）」種別 (提案2: 意図可視化)
+INTENT_ATTACK = "attack"
+INTENT_CAST = "cast"
+INTENT_FLEE = "flee"
+INTENT_HEAL = "heal"
+INTENT_MOVE = "move"
+INTENT_GUARD = "guard"
+
+# 意図アイコン (頭上描画用)
+INTENT_GLYPH = {
+    INTENT_ATTACK: "⚔",
+    INTENT_CAST: "✷",
+    INTENT_FLEE: "➛",
+    INTENT_HEAL: "✚",
+    INTENT_MOVE: "·",
+    INTENT_GUARD: "🛡",
+}
+
+# 意図ラベル (JA)
+INTENT_LABEL_JA = {
+    INTENT_ATTACK: "突撃",
+    INTENT_CAST: "詠唱",
+    INTENT_FLEE: "逃走",
+    INTENT_HEAL: "回復",
+    INTENT_MOVE: "接近",
+    INTENT_GUARD: "防御",
+}
+
+# 敵AIロール (提案4: 陣形・連携タクティクス)
+AI_ROLE_BRUTE = "brute"      # 接近してぶつかる（既定）
+AI_ROLE_KITER = "kiter"      # 間合いを維持して遠隔
+AI_ROLE_FLANKER = "flanker"  # プレイヤーの裏を取る
+AI_ROLE_SUPPORT = "support"  # 回復・バフ優先
+
+# 陣形・連携用定数
+KITER_PREFERRED_RANGE = 4     # kiter が維持する理想距離
+FLEE_HP_RATIO = 0.30          # このHP比率未満で逃走を検討
+FORMATION_SPREAD_GAP = 1      # 味方と重ならないための最低間隔
+FLANK_SIDE_OFFSET = 1         # 挟撃時の側面オフセット
+PINCER_MIN_ALLIES = 2         # 連携(挟撃)発動に必要な視界内味方数
+
 
 # 属性Enum
 class Element(Enum):

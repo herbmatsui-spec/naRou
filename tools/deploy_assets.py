@@ -10,6 +10,8 @@ import json
 import os
 import shutil
 import subprocess
+import sys
+import time
 
 
 def load_config(config_path: str = "tools/asset_pipeline_config.json") -> dict:

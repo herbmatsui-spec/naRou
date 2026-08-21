@@ -351,11 +351,11 @@ class TerminalLightingSystem:
                     ty = int(py + math.sin(angle) * rr)
 
                     if 0 <= tx < console.width and 0 <= ty < console.height:
-                        bg = console.tiles_rgb["bg"][tx, ty]
-                        console.tiles_rgb["bg"][tx, ty] = (
-                            min(255, bg[0] + cr),
-                            min(255, bg[1] + cg),
-                            min(255, bg[2] + cb),
+                        bg = console.rgb["bg"][tx, ty]
+                        console.rgb["bg"][tx, ty] = (
+                            min(255, int(bg[0]) + cr),
+                            min(255, int(bg[1]) + cg),
+                            min(255, int(bg[2]) + cb),
                         )
 
     def draw_enemy_cones(
@@ -391,11 +391,11 @@ class TerminalLightingSystem:
                     ty = int(py + math.sin(angle) * dist)
 
                     if 0 <= tx < console.width and 0 <= ty < console.height:
-                        bg = console.tiles_rgb["bg"][tx, ty]
-                        console.tiles_rgb["bg"][tx, ty] = (
-                            min(255, bg[0] + cr),
-                            min(255, bg[1] + cg),
-                            min(255, bg[2] + cb),
+                        bg = console.rgb["bg"][tx, ty]
+                        console.rgb["bg"][tx, ty] = (
+                            min(255, int(bg[0]) + cr),
+                            min(255, int(bg[1]) + cg),
+                            min(255, int(bg[2]) + cb),
                         )
 
     def render_pass(

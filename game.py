@@ -40,6 +40,7 @@ from constants import (
     MAP_HEIGHT,
     MAP_WIDTH,
     PET_PATH_LENGTH_CHECK,
+    PET_RETREAT_HP_RATIO,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
     TILE_FLOOR,
@@ -104,6 +105,7 @@ class Engine:
             from packages.platform.package import PlatformPackage
             from packages.social.package import SocialPackage
             from packages.world.package import WorldPackage
+            from packages.world_a.package import WorldAPackage
 
         if kernel is None:
             try:
@@ -116,6 +118,7 @@ class Engine:
                 self.kernel.load_package(WorldPackage())
                 self.kernel.load_package(NarrativePackage())
                 self.kernel.load_package(PlatformPackage())
+                self.kernel.load_package(WorldAPackage())
             except Exception as e:
                 logger.exception("Failed to load core packages during engine initialization: %s", e)
                 raise SystemInitError(f"Package initialization failed: {e}") from e
@@ -754,6 +757,252 @@ class Engine:
     @property
     def web_server_factory(self):
         return self.kernel.get_system("web_server_factory")
+
+    # World A (Skill Eater) package systems
+    @property
+    def skill_eater_combat_system(self):
+        return self.kernel.get_system("skill_eater_combat_system") if self.kernel.has_system("skill_eater_combat_system") else None
+
+    @property
+    def skill_eater_registry(self):
+        return self.kernel.get_system("skill_eater_registry") if self.kernel.has_system("skill_eater_registry") else None
+
+    @property
+    def skill_eater_synthesis_system(self):
+        return self.kernel.get_system("skill_eater_synthesis_system") if self.kernel.has_system("skill_eater_synthesis_system") else None
+
+    @property
+    def skill_eater_toxicity_manager(self):
+        return self.kernel.get_system("skill_eater_toxicity_manager") if self.kernel.has_system("skill_eater_toxicity_manager") else None
+
+    @property
+    def slum_base_expansion_manager(self):
+        return self.kernel.get_system("slum_base_expansion_manager") if self.kernel.has_system("slum_base_expansion_manager") else None
+
+    @property
+    def skill_eater_pet_dispatch_manager(self):
+        return self.kernel.get_system("skill_eater_pet_dispatch_manager") if self.kernel.has_system("skill_eater_pet_dispatch_manager") else None
+
+    @property
+    def skill_eater_underground_arena(self):
+        return self.kernel.get_system("skill_eater_underground_arena") if self.kernel.has_system("skill_eater_underground_arena") else None
+
+    @property
+    def skill_eater_bounty_system(self):
+        return self.kernel.get_system("skill_eater_bounty_system") if self.kernel.has_system("skill_eater_bounty_system") else None
+
+    @property
+    def skill_eater_ascension_board(self):
+        return self.kernel.get_system("skill_eater_ascension_board") if self.kernel.has_system("skill_eater_ascension_board") else None
+
+    @property
+    def skill_eater_concept_crystal(self):
+        return self.kernel.get_system("skill_eater_concept_crystal") if self.kernel.has_system("skill_eater_concept_crystal") else None
+
+    @property
+    def skill_eater_temporal_vault(self):
+        return self.kernel.get_system("skill_eater_temporal_vault") if self.kernel.has_system("skill_eater_temporal_vault") else None
+
+    @property
+    def skill_eater_epilogue_manager(self):
+        return self.kernel.get_system("skill_eater_epilogue_manager") if self.kernel.has_system("skill_eater_epilogue_manager") else None
+
+    def execute_scan(self) -> bool:
+        """周囲の対象をスキャン・解析する (Step 14, 20, 38, 39)"""
+        combat_sys = self.skill_eater_combat_system
+        if not combat_sys:
+            self.log("解析システムが見つかりません。", (255, 100, 100))
+            return False
+
+        nearest = None
+        min_dist = 999.0
+        for entity in self.entity_manager.get_living_entities():
+            if entity != self.player and not getattr(entity, "is_pet", False):
+                dist = ((entity.x - self.player.x) ** 2 + (entity.y - self.player.y) ** 2) ** 0.5
+                if dist < min_dist:
+                    min_dist = dist
+                    nearest = entity
+
+        if not nearest:
+            self.log("周囲に解析可能な対象が見つかりません。", (200, 200, 200))
+            return True
+
+        from skill_eater_system import CharacterState
+        analyzer = CharacterState(
+            id="player", name=self.player.name, hp=self.player.hp, max_hp=self.player.max_hp,
+            mp=self.player.mp, max_mp=self.player.max_mp, atk=15, defense=10, intelligence=15, speed=100,
+            analysis_level=getattr(self.player, "analysis_level", 1)
+        )
+        target_state = CharacterState(
+            id=str(getattr(nearest, "id", "enemy")), name=nearest.name, hp=nearest.hp, max_hp=nearest.max_hp,
+            mp=10, max_mp=10, atk=getattr(nearest, "atk", 10), defense=getattr(nearest, "defense", 5),
+            intelligence=5, speed=getattr(nearest, "speed", 80)
+        )
+        res = combat_sys.analyze_target(analyzer, target_state)
+        self.log(f"【深度解析】{res.target_name} (HP: {int(res.target_hp_ratio*100)}% / 喰らい成功率: {int(res.devour_success_rate * 100)}%)", (100, 255, 200))
+        for sk in res.revealed_skills:
+            self.log(f" - [{sk.tier}] {sk.name} (タグ: {', '.join(sk.tags)})", (255, 215, 0))
+        return True
+
+    def execute_devour(self) -> bool:
+        """隣接する敵からスキルを強奪する《喰らい》 (Steps 25-36)"""
+        combat_sys = self.skill_eater_combat_system
+        if not combat_sys:
+            self.log("喰らいシステムが見つかりません。", (255, 100, 100))
+            return False
+
+        target = None
+        for entity in self.entity_manager.get_living_entities():
+            if entity != self.player and not getattr(entity, "is_pet", False):
+                dist = ((entity.x - self.player.x) ** 2 + (entity.y - self.player.y) ** 2) ** 0.5
+                if dist <= 1.5:
+                    target = entity
+                    break
+
+        if not target:
+            self.log("隣接する捕食対象がいません。（敵に隣接して発動してください）", (200, 200, 200))
+            return True
+
+        from skill_eater_system import CharacterState, SkillEaterRegistry
+        analyzer = CharacterState(
+            id="player", name=self.player.name, hp=self.player.hp, max_hp=self.player.max_hp,
+            mp=self.player.mp, max_mp=self.player.max_mp, atk=15, defense=10, intelligence=15, speed=100,
+            analysis_level=getattr(self.player, "analysis_level", 1)
+        )
+        target_state = CharacterState(
+            id=str(getattr(target, "id", "enemy")), name=target.name, hp=target.hp, max_hp=target.max_hp,
+            mp=10, max_mp=10, atk=getattr(target, "atk", 10), defense=getattr(target, "defense", 5),
+            intelligence=5, speed=getattr(target, "speed", 80)
+        )
+        if not target_state.skills:
+            target_state.add_skill("com_combat_001")
+
+        rate = combat_sys.calculate_devour_rate(analyzer, target_state)
+        roll = random.random()
+        if roll <= rate:
+            stolen_slot = target_state.remove_skill("com_combat_001") or (next(iter(target_state.skills.values()), None) if target_state.skills else None)
+            stolen_id = stolen_slot.skill_id if stolen_slot else "com_combat_001"
+            reg = SkillEaterRegistry.get_instance()
+            sk_def = reg.get_skill(stolen_id)
+            sk_name = sk_def.name if sk_def else stolen_id
+
+            if "skills" not in self.game_state_data.world_a_data:
+                self.game_state_data.world_a_data["skills"] = []
+            self.game_state_data.world_a_data["skills"].append(stolen_id)
+
+            self.log(f"【捕食成功！】{target.name} から 《{sk_name}》 を喰らい尽くした！", (255, 100, 255))
+            if hasattr(self, "sound_manager") and self.sound_manager:
+                self.sound_manager.play_se("eat")
+
+            target.hp = max(1, target.hp - 15)
+            if target_state.is_husk or len(target_state.skills) == 0:
+                target.is_husk = True
+                self.log(f"{target.name} はスキルを奪われ、抜け殻（Husk）と化した！", (180, 180, 180))
+        else:
+            backlash = random.randint(3, 8)
+            self.player.hp = max(1, self.player.hp - backlash)
+            self.log(f"【捕食失敗】拒絶反応！ 胃袋から激痛が走る！（-{backlash} HP）", (255, 80, 80))
+            if hasattr(self, "screen_shake") and self.screen_shake:
+                self.screen_shake.trigger(intensity=1.5, duration=4)
+
+        self.player.energy -= ENERGY_THRESHOLD
+        self.advance_world()
+        return True
+
+    def execute_synthesis(self, skill_a: str | None = None, skill_b: str | None = None) -> bool:
+        """スキル合成を実行する (Steps 43-47)"""
+        synth_sys = self.skill_eater_synthesis_system
+        if not synth_sys:
+            self.log("合成システムが見つかりません。", (255, 100, 100))
+            return False
+
+        if "skills" not in self.game_state_data.world_a_data:
+            self.game_state_data.world_a_data["skills"] = []
+
+        skills = self.game_state_data.world_a_data["skills"]
+        if len(skills) < 2:
+            self.log(f"【キメラ合成炉】合成には少なくとも2つのスキルが必要です。（現在所持: {len(skills)}個）", (200, 200, 200))
+            return True
+
+        id_a = skill_a or skills[0]
+        id_b = skill_b or skills[1]
+
+        from skill_eater_system import CharacterState
+        char_state = CharacterState(
+            id="player", name=self.player.name, hp=self.player.hp, max_hp=self.player.max_hp,
+            mp=self.player.mp, max_mp=self.player.max_mp, atk=15, defense=10, intelligence=15, speed=100,
+        )
+        for s in skills:
+            char_state.add_skill(s)
+
+        res = synth_sys.synthesize(char_state, id_a, id_b)
+        if res.success and res.result_skill:
+            if id_a in skills:
+                skills.remove(id_a)
+            if id_b in skills:
+                skills.remove(id_b)
+            skills.append(res.result_skill.id)
+            self.log(f"【合成成功！】《{res.result_skill.name}》[{res.result_skill.tier.value}] が誕生した！", (255, 215, 0))
+            if hasattr(self, "sound_manager") and self.sound_manager:
+                self.sound_manager.play_se("cast")
+        else:
+            self.log("【合成失敗】魔力が反発し、合成に失敗した...", (255, 100, 100))
+        return True
+
+    def execute_pet_dispatch(self, mission_name: str, duration_turns: int = 10, reward_gold: int = 500) -> bool:
+        """ペットをスラム街の探索・調達任務に派遣する (Step 54-56)"""
+        if "pet_dispatches" not in self.game_state_data.world_a_data:
+            self.game_state_data.world_a_data["pet_dispatches"] = []
+
+        self.game_state_data.world_a_data["pet_dispatches"].append({
+            "mission_name": mission_name,
+            "remaining_turns": duration_turns,
+            "reward_gold": reward_gold,
+        })
+        self.log(f"【ペット派遣】『{mission_name}』へ派遣を開始しました（所要: {duration_turns}ターン）。", (100, 255, 200))
+        return True
+
+    def execute_base_upgrade(self, facility_id: str, cost_aldo: int = 1000) -> bool:
+        """スラム街の拠点を拡張・改修する (Step 54)"""
+        if "facilities" not in self.game_state_data.world_a_data:
+            self.game_state_data.world_a_data["facilities"] = {}
+
+        facs = self.game_state_data.world_a_data["facilities"]
+        current_lv = facs.get(facility_id, 1)
+        facs[facility_id] = current_lv + 1
+        self.log(f"【拠点改修完了】施設『{facility_id}』が Lv.{facs[facility_id]} にアップグレードされました！", (255, 215, 0))
+        return True
+
+    def execute_solve_puzzle(self, puzzle_type: str, used_skill_tag: str) -> bool:
+        """環境パズルを所持スキルで解除する (Step 57-59)"""
+        match = (puzzle_type == "ice_barrier" and "Fire" in used_skill_tag) or \
+                (puzzle_type == "dark_gate" and "Light" in used_skill_tag) or \
+                (puzzle_type == "iron_lock" and "Labor" in used_skill_tag)
+        if match:
+            self.log(f"【ギミック解除！】スキル特性[{used_skill_tag}]により『{puzzle_type}』の封鎖を突破した！", (100, 255, 100))
+            return True
+        else:
+            self.log(f"【解除失敗】『{puzzle_type}』に対して[{used_skill_tag}]は効果が薄いようだ...", (255, 100, 100))
+            return False
+
+    def switch_world(self, world_id: str) -> bool:
+        """ワールド間遷移（Aの世界 / 本編ワールドの切り替え） (Step 61-62)"""
+        self.game_state_data.current_world = world_id
+        if world_id == "skill_eater":
+            self.log("【次元遷移】Aの世界（スキル喰い）へ転移しました！ 《解析(X)》と《喰らい(V)》が解放されます。", (150, 255, 150))
+            if hasattr(self, "sound_manager") and self.sound_manager:
+                self.sound_manager.play_se("warp")
+        else:
+            self.log(f"【次元遷移】ワールド『{world_id}』へ帰還しました。", (180, 200, 255))
+        return True
+
+    def execute_epilogue_world_transition(self) -> bool:
+        """Aの世界エピローグ＆次元ゲート開放 (Step 69-70)"""
+        self.log("【次元ゲート開放】Aの世界の境界線が溶解し、概念の残滓がプレイヤーに宿る！", (255, 215, 0))
+        if "meta_artifacts" not in self.game_state_data.world_a_data:
+            self.game_state_data.world_a_data["meta_artifacts"] = []
+        self.game_state_data.world_a_data["meta_artifacts"].append("concept_eater_mark")
+        return self.switch_world("main")
 
     @property
     def input_handler(self):
@@ -2188,7 +2437,7 @@ def main() -> None:
                                 pass
                             continue
                     InputHandler.handle_event(event, engine)
-    except Exception:
+    except Exception as e:
         logger.exception("ロード失敗")
         # SDL コンテキストを作れない場合（ヘッドレス/ GPU なし等）のフォールバック
         from feature_flags import get_text_mode_enabled

@@ -1,7 +1,16 @@
 accessibility:
-  color_vision: deutan
+  color_vision: none
   font_scale: 1.0
   text_mode: false
+assets:
+  audio_manifest: assets/audio/manifest.csv
+  audio_sfx: assets/audio
+  emote_pixel: assets/emote/pixel
+  emote_spritesheets: assets/emote/spritesheets
+  emote_tilesheets: assets/emote/tilesheets
+  tiny_rogue_atlas: assets/tiles/tiny_rogue_atlas_16x16.png
+  tiny_rogue_atlas_meta: assets/tiles/tiny_rogue_atlas_16x16.json
+  tiny_rogue_tiles: assets/tiles/tiny_rogue/tiles
 game:
   difficulty: easy
   difficulty_presets:
@@ -59,13 +68,3 @@ settings:
   default_output_dir: output
   log_level: INFO
   version: 1.0.0
-
-assets:
-  tiny_rogue_tiles: "assets/tiles/tiny_rogue/tiles"
-  tiny_rogue_atlas: "assets/tiles/tiny_rogue_atlas_16x16.png"
-  tiny_rogue_atlas_meta: "assets/tiles/tiny_rogue_atlas_16x16.json"
-  audio_sfx: "assets/audio"
-  audio_manifest: "assets/audio/manifest.csv"
-  emote_pixel: "assets/emote/pixel"
-  emote_tilesheets: "assets/emote/tilesheets"
-  emote_spritesheets: "assets/emote/spritesheets"

@@ -73,6 +73,12 @@ class Entity:
         self.speed = speed
         self.energy = 0
 
+        # 敵意図予測 (提案2) — 次回ターンに取る行動の予測。描画のみに使用。
+        self.next_intent: dict | None = None
+        # 敵AIロール・陣形 (提案4)
+        self.ai_role: str = self._default_ai_role(name)
+        self.preferred_range: int = 1
+
         # === ECS コンポーネントコンテナ ===
         self.components: dict[type, Any] = {}
         self._init_components()
@@ -1110,6 +1116,21 @@ class Entity:
     def pet_ai(self) -> "PetAIComponent":
         return self.get_component(PetAIComponent)
 
+    def _default_ai_role(self, name: str) -> str:
+        """敵の名前から陣形AIロールを自動判定 (提案4)"""
+        from constants import (
+            AI_ROLE_BRUTE,
+            AI_ROLE_FLANKER,
+            AI_ROLE_KITER,
+        )
+
+        n = name or ""
+        if any(k in n for k in ("弓", "魔", "術", "caster", "Mage", "Archer")):
+            return AI_ROLE_KITER
+        if any(k in n for k in ("騎", "騎士", "knight", "Knight")):
+            return AI_ROLE_FLANKER
+        return AI_ROLE_BRUTE
+
     def _init_default_skills(self) -> dict[str, Skill]:
         return {
             "martial_arts": Skill("格闘"),
@@ -1284,6 +1305,10 @@ class Entity:
             "is_pet": self.is_pet,
             "speed": self.speed,
             "energy": self.energy,
+            # 提案2/4: 一時情報なのでセーブ時は常に None/既定値
+            "next_intent": None,
+            "ai_role": self.ai_role,
+            "preferred_range": self.preferred_range,
             "attributes": self.attributes.to_dict(),
             "level": self.level,
             "exp": self.exp,
@@ -1363,6 +1388,10 @@ class Entity:
             attributes=attrs,
         )
         ent.energy = data.get("energy", 0)
+        # 提案2/4: 一時情報 next_intent は常に None で再開
+        ent.next_intent = None
+        ent.ai_role = data.get("ai_role", "brute")
+        ent.preferred_range = data.get("preferred_range", 1)
         ent.level = data.get("level", 1)
         ent.exp = data.get("exp", 0)
         ent.exp_next = data.get("exp_next", 100)

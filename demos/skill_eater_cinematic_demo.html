@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skill Eater — Cinematic Demo | naRou: 九世界転移譚</title>
+  <meta name="description" content="Aの世界（スキル喰い）の実際のゲームプレイに近い3分間のシネマティックデモ。適性検査、スラム探索、戦闘、《喰らい》システムを体験。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Fira+Code:wght@400;600&family=Cinzel:wght@600;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-void: #04060b;
+      --bg-dark: #0a0e18;
+      --bg-panel: rgba(10, 14, 26, 0.92);
+      --bg-panel-light: rgba(20, 28, 50, 0.85);
+      --border-gold: rgba(255, 200, 40, 0.35);
+      --border-gold-bright: rgba(255, 215, 0, 0.7);
+      --border-cyan: rgba(0, 220, 255, 0.4);
+      --border-red: rgba(255, 60, 80, 0.5);
+      --gold: #ffd700;
+      --gold-dim: #c9a800;
+      --cyan: #00dcff;
+      --cyan-dim: #00a8c4;
+      --magenta: #ff3cff;
+      --crimson: #ff3050;
+      --emerald: #2bff88;
+      --purple: #b050ff;
+      --orange: #ff8c20;
+      --blue: #3888ff;
+      --text: #e8ecf4;
+      --text-dim: #7888a0;
+      --text-dark: #3a4860;
+      --font: 'Outfit', 'Noto Sans JP', sans-serif;
+      --font-jp: 'Noto Sans JP', sans-serif;
+      --font-mono: 'Fira Code', monospace;
+      --font-title: 'Cinzel', serif;
+      --hp-green: #44ff88;
+      --hp-red: #ff4060;
+      --mp-blue: #44aaff;
+      --exp-purple: #c888ff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg-void); color: var(--text); font-family: var(--font); }
+
+    #game-viewport { width: 100vw; height: 100vh; position: relative; display: flex; flex-direction: column; }
+
+    /* TOP HUD */
+    #top-hud {
+      position: absolute; top: 0; left: 0; right: 0; height: 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px;
+      background: linear-gradient(180deg, rgba(4,6,11,0.95) 0%, rgba(4,6,11,0.6) 100%);
+      border-bottom: 1px solid var(--border-gold); z-index: 100; font-size: 13px;
+    }
+    #top-hud .hud-left { display: flex; gap: 16px; align-items: center; }
+    #top-hud .hud-right { display: flex; gap: 16px; align-items: center; }
+    .hud-label { color: var(--text-dim); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+    .hud-value { color: var(--gold); font-family: var(--font-mono); font-weight: 600; font-size: 12px; }
+    .hud-world-name { font-family: var(--font-title); color: var(--gold); font-size: 14px; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,215,0,0.3); }
+    .hud-phase { background: rgba(255,215,0,0.12); border: 1px solid var(--border-gold); border-radius: 6px; padding: 2px 10px; font-size: 11px; color: var(--gold); font-family: var(--font-mono); }
+
+    /* MAP AREA */
+    #map-area { flex: 1; position: relative; margin: 48px 0 0 0; display: flex; overflow: hidden; }
+    #map-canvas { flex: 1; position: relative; font-family: var(--font-mono); font-size: 15px; line-height: 19px; padding: 12px; overflow: hidden; white-space: pre; background: var(--bg-dark); letter-spacing: 2px; }
+
+    /* SIDE PANEL */
+    #side-panel { position: absolute; top: 52px; right: 4px; width: 260px; bottom: 180px; display: flex; flex-direction: column; gap: 5px; z-index: 50; pointer-events: none; overflow-y: auto; }
+    .status-card { background: var(--bg-panel); border: 1px solid var(--border-gold); border-radius: 10px; padding: 10px 12px; backdrop-filter: blur(12px); }
+    .status-card h3 { font-size: 10px; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; font-family: var(--font-mono); }
+    .stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; font-size: 12px; }
+    .stat-label { color: var(--text-dim); }
+    .stat-value { font-family: var(--font-mono); font-weight: 600; }
+    .bar-container { width: 100%; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; margin: 2px 0 5px 0; }
+    .bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease, background 0.3s ease; }
+    .bar-hp { background: linear-gradient(90deg, var(--hp-green), #22cc66); }
+    .bar-mp { background: linear-gradient(90deg, var(--mp-blue), #2288ff); }
+    .bar-addiction { background: linear-gradient(90deg, var(--purple), var(--crimson)); }
+    .bar-memory { background: linear-gradient(90deg, var(--cyan), var(--blue)); }
+
+    .skill-slot { display: flex; align-items: center; gap: 6px; padding: 3px 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 5px; margin-bottom: 3px; font-size: 11px; }
+    .skill-icon { width: 20px; height: 20px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+    .skill-tier-common { background: rgba(120,140,170,0.2); border: 1px solid rgba(120,140,170,0.3); }
+    .skill-tier-rare { background: rgba(50,130,255,0.2); border: 1px solid rgba(50,130,255,0.4); }
+    .skill-tier-unique { background: rgba(200,100,255,0.2); border: 1px solid rgba(200,100,255,0.4); }
+    .skill-tier-concept { background: rgba(255,60,80,0.2); border: 1px solid rgba(255,60,80,0.4); }
+    .skill-name { color: var(--text); flex: 1; }
+    .skill-mem { color: var(--text-dim); font-family: var(--font-mono); font-size: 9px; }
+
+    /* BOTTOM PANEL */
+    #bottom-panel { position: absolute; bottom: 0; left: 0; right: 0; height: 180px; background: linear-gradient(0deg, rgba(4,6,11,0.98) 0%, rgba(4,6,11,0.85) 100%); border-top: 1px solid var(--border-gold); display: flex; z-index: 100; }
+    #log-window { flex: 1; padding: 8px 14px; overflow-y: auto; font-size: 12px; line-height: 1.65; scroll-behavior: smooth; }
+    #log-window::-webkit-scrollbar { width: 3px; }
+    #log-window::-webkit-scrollbar-track { background: transparent; }
+    #log-window::-webkit-scrollbar-thumb { background: var(--border-gold); border-radius: 2px; }
+    .log-line { margin-bottom: 1px; opacity: 0; animation: logFadeIn 0.3s ease forwards; }
+    @keyframes logFadeIn { to { opacity: 1; } }
+    .log-system { color: var(--cyan); }
+    .log-combat { color: var(--crimson); }
+    .log-skill { color: var(--magenta); }
+    .log-success { color: var(--emerald); }
+    .log-warning { color: var(--orange); }
+    .log-dialogue { color: var(--gold); }
+    .log-lore { color: var(--purple); }
+    .log-meta { color: var(--cyan); font-style: italic; }
+
+    #cmd-area { width: 240px; border-left: 1px solid var(--border-gold); padding: 8px 12px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+    #cmd-area h4 { font-size: 9px; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 3px; }
+    .cmd-btn { background: rgba(255,215,0,0.06); border: 1px solid var(--border-gold); border-radius: 5px; color: var(--text); font-family: var(--font); font-size: 11px; padding: 5px 10px; cursor: pointer; transition: all 0.2s ease; text-align: left; }
+    .cmd-btn:hover { background: rgba(255,215,0,0.15); border-color: var(--border-gold-bright); transform: translateX(2px); }
+    .cmd-btn.active { background: rgba(255,215,0,0.2); border-color: var(--gold); color: var(--gold); }
+    .cmd-btn.danger { border-color: var(--border-red); color: var(--crimson); }
+
+    /* ANALYSIS HUD */
+    #analysis-hud { position: absolute; top: 56px; left: 8px; width: 300px; background: var(--bg-panel); border: 1px solid var(--border-cyan); border-radius: 10px; padding: 12px; z-index: 80; display: none; backdrop-filter: blur(16px); box-shadow: 0 0 30px rgba(0,220,255,0.1); }
+    #analysis-hud.visible { display: block; animation: hudSlideIn 0.4s ease; }
+    @keyframes hudSlideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    #analysis-hud h3 { font-size: 10px; color: var(--cyan); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    #analysis-hud h3::before { content: ''; width: 6px; height: 6px; background: var(--cyan); border-radius: 50%; animation: analysisPulse 1s ease infinite; }
+    @keyframes analysisPulse { 0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--cyan); } 50% { opacity: 0.4; } }
+    .analysis-row { display: flex; justify-content: space-between; font-size: 11px; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .analysis-label { color: var(--text-dim); }
+    .analysis-value { font-family: var(--font-mono); }
+    .analysis-weakness { color: var(--crimson); font-weight: 700; }
+    .analysis-skill-list { margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(0,220,255,0.15); }
+    .analysis-skill-item { display: flex; align-items: center; gap: 5px; padding: 3px 5px; margin-bottom: 2px; background: rgba(0,220,255,0.05); border-radius: 3px; font-size: 10px; }
+    .analysis-devour-rate { margin-top: 8px; padding: 6px; background: rgba(255,60,255,0.08); border: 1px solid rgba(255,60,255,0.2); border-radius: 5px; text-align: center; font-size: 11px; }
+    .devour-rate-num { font-size: 22px; font-family: var(--font-mono); font-weight: 700; color: var(--magenta); }
+
+    /* FLOATING TEXT */
+    .float-text { position: absolute; font-family: var(--font-mono); font-weight: 700; font-size: 18px; pointer-events: none; z-index: 200; animation: floatUp 1.2s ease-out forwards; text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
+    @keyframes floatUp { 0% { transform: translateY(0) scale(1.2); opacity: 1; } 100% { transform: translateY(-50px) scale(0.8); opacity: 0; } }
+    .float-damage { color: var(--crimson); }
+    .float-heal { color: var(--hp-green); }
+    .float-devour { color: var(--magenta); font-size: 22px; }
+    .float-skill { color: var(--cyan); }
+
+    /* SCREEN EFFECTS */
+    #screen-effects { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 300; }
+    .vignette { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%); }
+    .scanline { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.02) 2px, rgba(0,0,0,0.02) 4px); }
+    .shake { animation: screenShake 0.3s ease; }
+    @keyframes screenShake { 0%, 100% { transform: translate(0); } 20% { transform: translate(-4px, 2px); } 40% { transform: translate(3px, -3px); } 60% { transform: translate(-2px, 4px); } 80% { transform: translate(4px, -1px); } }
+    .flash-red { animation: flashRed 0.5s ease; }
+    @keyframes flashRed { 0% { background: rgba(255,40,60,0.3); } 100% { background: transparent; } }
+    .flash-cyan { animation: flashCyan 0.5s ease; }
+    @keyframes flashCyan { 0% { background: rgba(0,220,255,0.2); } 100% { background: transparent; } }
+    .flash-magenta { animation: flashMagenta 0.6s ease; }
+    @keyframes flashMagenta { 0% { background: rgba(255,60,255,0.3); } 100% { background: transparent; } }
+    .glitch-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; animation: glitchFx 0.15s steps(3) 6; }
+    @keyframes glitchFx { 0% { clip-path: inset(20% 0 60% 0); transform: translateX(-3px); background: rgba(0,220,255,0.05); } 33% { clip-path: inset(50% 0 10% 0); transform: translateX(3px); background: rgba(255,60,255,0.05); } 66% { clip-path: inset(30% 0 40% 0); transform: translateX(-2px); background: rgba(255,215,0,0.05); } 100% { clip-path: inset(0); transform: none; background: transparent; } }
+
+    /* DIALOGUE BOX */
+    #dialogue-box { position: absolute; bottom: 184px; left: 50%; transform: translateX(-50%); width: min(680px, 90vw); background: var(--bg-panel); border: 1px solid var(--border-gold); border-radius: 12px; padding: 16px 20px; z-index: 150; display: none; backdrop-filter: blur(16px); box-shadow: 0 8px 40px rgba(0,0,0,0.6); }
+    #dialogue-box.visible { display: block; animation: dialogIn 0.35s ease; }
+    @keyframes dialogIn { from { transform: translateX(-50%) translateY(10px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+    .dialog-speaker { font-size: 11px; color: var(--gold); font-weight: 700; margin-bottom: 5px; font-family: var(--font-mono); }
+    .dialog-text { font-size: 14px; line-height: 1.8; font-family: var(--font-jp); color: var(--text); }
+    .dialog-choices { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
+    .dialog-choice { background: rgba(255,215,0,0.06); border: 1px solid var(--border-gold); border-radius: 7px; padding: 7px 12px; color: var(--text); font-size: 12px; cursor: pointer; transition: all 0.2s ease; }
+    .dialog-choice:hover { background: rgba(255,215,0,0.15); border-color: var(--gold); transform: translateX(4px); }
+    .dialog-choice.meta-optimal { border-color: var(--border-cyan); position: relative; }
+    .dialog-choice.meta-optimal::after { content: '★ META'; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 8px; color: var(--cyan); font-family: var(--font-mono); letter-spacing: 1px; }
+
+    /* CENTER NOTIFY */
+    #center-notify { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 250; pointer-events: none; display: none; }
+    #center-notify.visible { display: block; animation: notifyPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    @keyframes notifyPop { from { transform: translate(-50%, -50%) scale(0.7); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+    .notify-title { font-family: var(--font-title); font-size: 32px; color: var(--gold); text-shadow: 0 0 30px rgba(255,215,0,0.5); letter-spacing: 3px; margin-bottom: 6px; }
+    .notify-subtitle { font-size: 13px; color: var(--text-dim); letter-spacing: 2px; }
+
+    /* SCENE TRANSITION */
+    #scene-transition { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-void); z-index: 400; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.6s ease; }
+    #scene-transition.active { opacity: 1; pointer-events: auto; }
+    .scene-label { font-family: var(--font-title); font-size: 26px; color: var(--gold); letter-spacing: 4px; text-shadow: 0 0 20px rgba(255,215,0,0.4); }
+    .scene-desc { font-size: 13px; color: var(--text-dim); margin-top: 8px; letter-spacing: 2px; }
+
+    /* ADDICTION WARNING */
+    .addiction-warning { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(180, 30, 60, 0.15); border: 2px solid rgba(255, 60, 80, 0.6); border-radius: 14px; padding: 18px 26px; z-index: 210; text-align: center; backdrop-filter: blur(8px); display: none; animation: warnPulse 0.8s ease; }
+    @keyframes warnPulse { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; } 50% { transform: translate(-50%, -50%) scale(1.05); } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+    .addiction-warning.visible { display: block; }
+    .addiction-warning h2 { font-size: 16px; color: var(--crimson); font-family: var(--font-mono); margin-bottom: 6px; }
+    .addiction-warning p { font-size: 12px; color: var(--text); line-height: 1.6; }
+
+    /* PROGRESS BAR */
+    #demo-progress { position: absolute; top: 48px; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.05); z-index: 110; }
+    #demo-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--cyan), var(--gold), var(--magenta)); transition: width 0.5s linear; }
+
+    /* PLAY OVERLAY */
+    #play-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(4,6,11,0.92); z-index: 500; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: opacity 0.5s ease; }
+    #play-overlay.hidden { opacity: 0; pointer-events: none; }
+    .play-title { font-family: var(--font-title); font-size: 42px; color: var(--gold); text-shadow: 0 0 40px rgba(255,215,0,0.4); letter-spacing: 5px; margin-bottom: 6px; }
+    .play-subtitle { font-size: 15px; color: var(--text-dim); margin-bottom: 36px; letter-spacing: 3px; font-family: var(--font-jp); }
+    .play-btn { width: 76px; height: 76px; border-radius: 50%; border: 2px solid var(--gold); background: rgba(255,215,0,0.08); display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; animation: playPulse 2s ease infinite; }
+    .play-btn:hover { background: rgba(255,215,0,0.2); transform: scale(1.1); box-shadow: 0 0 40px rgba(255,215,0,0.3); }
+    @keyframes playPulse { 0%, 100% { box-shadow: 0 0 20px rgba(255,215,0,0.15); } 50% { box-shadow: 0 0 30px rgba(255,215,0,0.3); } }
+    .play-btn svg { width: 30px; height: 30px; fill: var(--gold); margin-left: 4px; }
+    .play-hint { margin-top: 22px; font-size: 11px; color: var(--text-dark); letter-spacing: 2px; }
+  </style>
+</head>
+<body>
+  <div id="game-viewport">
+    <div id="top-hud">
+      <div class="hud-left">
+        <span class="hud-world-name">W4: SKILL EATER</span>
+        <span class="hud-phase" id="hud-phase">Phase 0</span>
+      </div>
+      <div class="hud-right">
+        <span class="hud-label">Floor</span>
+        <span class="hud-value" id="hud-floor">Midas Corp. HQ</span>
+        <span class="hud-label">Turn</span>
+        <span class="hud-value" id="hud-turn">1</span>
+        <span class="hud-label">Meta</span>
+        <span class="hud-value" id="hud-meta">0</span>
+      </div>
+    </div>
+    <div id="demo-progress"><div id="demo-progress-fill"></div></div>
+    <div id="map-area"><div id="map-canvas"></div></div>
+    <div id="side-panel">
+      <div class="status-card" id="player-status">
+        <h3>▷ Player Status</h3>
+        <div class="stat-row"><span class="stat-label">HP</span><span class="stat-value" id="stat-hp" style="color:var(--hp-green)">240 / 240</span></div>
+        <div class="bar-container"><div class="bar-fill bar-hp" id="bar-hp" style="width:100%"></div></div>
+        <div class="stat-row"><span class="stat-label">MP</span><span class="stat-value" id="stat-mp" style="color:var(--mp-blue)">80 / 80</span></div>
+        <div class="bar-container"><div class="bar-fill bar-mp" id="bar-mp" style="width:100%"></div></div>
+        <div class="stat-row"><span class="stat-label">ATK</span><span class="stat-value" id="stat-atk">18</span></div>
+        <div class="stat-row"><span class="stat-label">DEF</span><span class="stat-value" id="stat-def">12</span></div>
+        <div class="stat-row"><span class="stat-label">INT</span><span class="stat-value" id="stat-int">22</span></div>
+        <div class="stat-row"><span class="stat-label">解析Lv</span><span class="stat-value" id="stat-analysis" style="color:var(--cyan)">3</span></div>
+      </div>
+      <div class="status-card" id="memory-status">
+        <h3>▷ Brain Memory</h3>
+        <div class="stat-row"><span class="stat-label">使用量</span><span class="stat-value" id="stat-memory" style="color:var(--cyan)">1 / 10</span></div>
+        <div class="bar-container"><div class="bar-fill bar-memory" id="bar-memory" style="width:10%"></div></div>
+        <div class="stat-row"><span class="stat-label">精神侵食</span><span class="stat-value" id="stat-addiction" style="color:var(--purple)">0 / 100</span></div>
+        <div class="bar-container"><div class="bar-fill bar-addiction" id="bar-addiction" style="width:0%"></div></div>
+      </div>
+      <div class="status-card" id="skill-slots">
+        <h3>▷ Devoured Skills</h3>
+        <div id="skill-list">
+          <div class="skill-slot"><div class="skill-icon skill-tier-common">🔍</div><span class="skill-name">《解析》</span><span class="skill-mem">1 MEM</span></div>
+        </div>
+      </div>
+    </div>
+    <div id="analysis-hud"><h3>ANALYSIS SCANNER</h3><div id="analysis-content"></div></div>
+    <div id="dialogue-box">
+      <div class="dialog-speaker" id="dialog-speaker"></div>
+      <div class="dialog-text" id="dialog-text"></div>
+      <div class="dialog-choices" id="dialog-choices"></div>
+    </div>
+    <div id="center-notify"><div class="notify-title" id="notify-title"></div><div class="notify-subtitle" id="notify-subtitle"></div></div>
+    <div class="addiction-warning" id="addiction-warning"><h2>⚠ 精神侵食警告</h2><p id="addiction-text"></p></div>
+    <div id="bottom-panel">
+      <div id="log-window"></div>
+      <div id="cmd-area"><h4>Commands</h4><div id="cmd-buttons"></div></div>
+    </div>
+    <div id="scene-transition"><div class="scene-label" id="scene-label"></div><div class="scene-desc" id="scene-desc"></div></div>
+    <div id="screen-effects"><div class="vignette"></div><div class="scanline"></div></div>
+    <div id="play-overlay" onclick="startDemo()">
+      <div class="play-title">SKILL EATER</div>
+      <div class="play-subtitle">Aの世界 — スキル喰い・解析チート</div>
+      <div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></div>
+      <div class="play-hint">CLICK TO START DEMO ▶</div>
+    </div>
+  </div>
+
+<script>
+const state = {
+  turn: 1, metaScore: 0, phase: 'Phase 0', floor: 'Midas Corp. HQ',
+  player: { hp: 240, maxHp: 240, mp: 80, maxMp: 80, atk: 18, def: 12, int: 22, spd: 15, analysisLv: 3, memoryUsed: 1, memoryMax: 10, addiction: 0,
+    skills: [{ id: 'analysis', name: '《解析》', tier: 'common', icon: '🔍', mem: 1 }]
+  },
+  demoRunning: false, totalDuration: 180, elapsed: 0,
+};
+
+const TILE = {
+  WALL: { ch: '█', fg: '#2a2838' }, FLOOR: { ch: '·', fg: '#3a3850' },
+  PLAYER: { ch: '@', fg: '#ffd700' },
+};
+
+const $ = id => document.getElementById(id);
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function log(text, cls = '') {
+  const line = document.createElement('div');
+  line.className = 'log-line ' + cls;
+  line.innerHTML = text;
+  $('log-window').appendChild(line);
+  $('log-window').scrollTop = $('log-window').scrollHeight;
+}
+
+function updateHud() {
+  $('hud-phase').textContent = state.phase;
+  $('hud-floor').textContent = state.floor;
+  $('hud-turn').textContent = state.turn;
+  $('hud-meta').textContent = state.metaScore;
+}
+
+function updateStats() {
+  const p = state.player;
+  $('stat-hp').textContent = `${p.hp} / ${p.maxHp}`;
+  $('bar-hp').style.width = `${(p.hp/p.maxHp)*100}%`;
+  if(p.hp/p.maxHp<0.3) $('bar-hp').style.background='linear-gradient(90deg,#ff4060,#ff6060)';
+  else $('bar-hp').style.background='linear-gradient(90deg,#44ff88,#22cc66)';
+  $('stat-mp').textContent = `${p.mp} / ${p.maxMp}`;
+  $('bar-mp').style.width = `${(p.mp/p.maxMp)*100}%`;
+  $('stat-atk').textContent = p.atk; $('stat-def').textContent = p.def;
+  $('stat-int').textContent = p.int; $('stat-analysis').textContent = p.analysisLv;
+  $('stat-memory').textContent = `${p.memoryUsed} / ${p.memoryMax}`;
+  $('bar-memory').style.width = `${(p.memoryUsed/p.memoryMax)*100}%`;
+  $('stat-addiction').textContent = `${p.addiction} / 100`;
+  $('bar-addiction').style.width = `${p.addiction}%`;
+}
+
+function updateSkills() {
+  $('skill-list').innerHTML = state.player.skills.map(s => `
+    <div class="skill-slot"><div class="skill-icon skill-tier-${s.tier}">${s.icon}</div><span class="skill-name">${s.name}</span><span class="skill-mem">${s.mem}M</span></div>
+  `).join('');
+}
+
+function showCmds(cmds) {
+  $('cmd-buttons').innerHTML = cmds.map(c=>`<div class="cmd-btn ${c.c||''}">${c.l}</div>`).join('');
+}
+
+function fx(cls) {
+  const el = document.createElement('div');
+  el.className = cls; el.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;';
+  $('screen-effects').appendChild(el);
+  setTimeout(()=>el.remove(), 1000);
+}
+
+function shake() {
+  $('game-viewport').classList.add('shake');
+  setTimeout(()=>$('game-viewport').classList.remove('shake'), 300);
+}
+
+function floatText(text, cls, x, y) {
+  const el = document.createElement('div');
+  el.className = 'float-text ' + cls; el.textContent = text;
+  el.style.left = x+'px'; el.style.top = y+'px';
+  $('map-area').appendChild(el);
+  setTimeout(()=>el.remove(), 1200);
+}
+
+async function notify(title, sub, dur=2000) {
+  $('notify-title').textContent=title; $('notify-subtitle').textContent=sub;
+  $('center-notify').classList.add('visible');
+  await sleep(dur);
+  $('center-notify').classList.remove('visible');
+}
+
+async function sceneTrans(label, desc, dur=1500) {
+  $('scene-label').textContent=label; $('scene-desc').textContent=desc;
+  $('scene-transition').classList.add('active');
+  await sleep(dur);
+  $('scene-transition').classList.remove('active');
+}
+
+async function dialog(speaker, text, choices=null) {
+  $('dialog-speaker').textContent=speaker; $('dialog-text').textContent=''; $('dialog-choices').innerHTML='';
+  $('dialogue-box').classList.add('visible');
+  for(let i=0;i<text.length;i++){$('dialog-text').textContent+=text[i];await sleep(20);}
+  if(choices){await sleep(300);$('dialog-choices').innerHTML=choices.map(c=>`<div class="dialog-choice ${c.m?'meta-optimal':''}">${c.t}</div>`).join('');await sleep(1200);}
+  await sleep(600);
+  $('dialogue-box').classList.remove('visible');
+}
+
+function setAnalysis(vis, html='') {
+  if(vis){$('analysis-content').innerHTML=html;$('analysis-hud').classList.add('visible');}
+  else $('analysis-hud').classList.remove('visible');
+}
+
+function addMeta(pts) { state.metaScore+=pts; updateHud(); }
+function nextTurn() { state.turn++; updateHud(); }
+
+// MAP
+function renderMap(map, ents=[]) {
+  let h='';
+  for(let y=0;y<map.length;y++){
+    for(let x=0;x<map[y].length;x++){
+      const e=ents.find(e=>e.x===x&&e.y===y);
+      if(e) h+=`<span style="color:${e.fg};text-shadow:0 0 8px ${e.fg}40">${e.ch}</span>`;
+      else{const t=map[y][x]; h+=`<span style="color:${t.fg}">${t.ch}</span>`;}
+    }
+    h+='\n';
+  }
+  $('map-canvas').innerHTML=h;
+}
+
+function makeMap(W,H,wallCh='█',wallFg='#2a2838',floorCh='·',floorFg='#3a3850',innerFn=null) {
+  const m=[];
+  for(let y=0;y<H;y++){m[y]=[];for(let x=0;x<W;x++){
+    if(y===0||y===H-1||x===0||x===W-1) m[y][x]={ch:wallCh,fg:wallFg};
+    else if(innerFn) m[y][x]=innerFn(x,y)||{ch:floorCh,fg:floorFg};
+    else m[y][x]={ch:floorCh,fg:floorFg};
+  }}
+  return m;
+}
+
+function officeMap() {
+  return makeMap(42,20,'█','#2a2838','·','#3a3850',(x,y)=>{
+    if((x===10||x===20||x===30)&&y!==5&&y!==10&&y!==15) return {ch:'│',fg:'#2a2838'};
+    if(y===7&&x>1&&x<9) return {ch:'─',fg:'#2a2838'};
+    if(y===13&&x>11&&x<19) return {ch:'─',fg:'#2a2838'};
+    return null;
+  });
+}
+
+function slumMap() {
+  return makeMap(45,22,'▓','#1a1828','·','#2a2840',(x,y)=>{
+    if(Math.random()<0.04) return {ch:'░',fg:'#22203a'};
+    if((x===15||x===30)&&(y>2&&y<8||y>12&&y<18)) return {ch:'▓',fg:'#1a1828'};
+    if(Math.random()<0.02) return {ch:'~',fg:'#1a3050'};
+    const fc=['·','·','.',','];
+    return {ch:fc[Math.floor(Math.random()*fc.length)],fg:'#2a2840'};
+  });
+}
+
+function battleMap() {
+  return makeMap(45,22,'▓','#201028','·','#2a1a38',(x,y)=>{
+    const fc=['·','·','·','.'];
+    return {ch:fc[Math.floor(Math.random()*fc.length)],fg:'#2a1a38'};
+  });
+}
+
+// PROGRESS
+function startProgress() {
+  const st=Date.now();
+  setInterval(()=>{
+    const p=Math.min(100,((Date.now()-st)/1000/state.totalDuration)*100);
+    $('demo-progress-fill').style.width=p+'%';
+  },500);
+}
+
+// ===== SCENES =====
+
+async function scene0() {
+  state.floor='Midas Corp. HQ — 適性検査室'; updateHud();
+  const m=officeMap();
+  renderMap(m,[{x:5,y:5,ch:'@',fg:'#ffd700'},{x:15,y:5,ch:'👔',fg:'#ff8c20'},{x:8,y:10,ch:'🖥',fg:'#00dcff'},{x:25,y:3,ch:'💀',fg:'#555'},{x:38,y:18,ch:'🚪',fg:'#c9a800'}]);
+
+  log('【System】Aの世界《スキル喰い》── 着地フェーズ開始','log-system');
+  await sleep(700);
+  log('【System】テンプレート認識中... ID: skill_eater / スキル資本主義アルディナ商業連合','log-meta');
+  await sleep(1000);
+  await notify('PHASE 0','着地・認識',1500);
+  await sleep(400);
+  log('【ナレーション】あなたはミダス商会に雇われた見習い社員。今日は新人適性検査の日だ。','log-lore');
+  await sleep(1200);
+
+  await dialog('査定官','当社におけるあなたの希望適性スキルを選択してください。正直に答えなさい。',
+    [{t:'① 強力な攻撃魔法（炎・雷等）',m:false},{t:'② 鉄壁の防御スキル',m:false},{t:'③ スキルの構造を覗き見るだけの《解析》',m:true}]);
+
+  log('【Player】③《解析》を選択','log-success'); addMeta(150);
+  await sleep(400);
+  log('【META +150】本来の力を隠し、最適メタ選択を実行','log-meta');
+  await sleep(600);
+
+  fx('flash-cyan');
+  log('【適性スキャナー】生体波形スキャン中...','log-system');
+  await sleep(1000);
+  fx('glitch-overlay'); shake(); await sleep(300);
+  log('【ERROR】ERR: UNKNOWN_ARTIFACT_HEX_0x3F8A...[OUT_OF_BOUNDS]','log-warning');
+  await sleep(500);
+  log('【Scanner】過去世界の干渉コードが検出！','log-warning');
+  await sleep(800);
+
+  await dialog('査定課長ゴルドー','適性結果：《解析》のみ。戦闘適性ゼロ、生産適性ゼロ。……貴様、即刻解雇（クビ）だ！');
+  log('【ゴルドー】「即刻クビだ！出て行け！」','log-dialogue');
+  await sleep(800);
+
+  fx('flash-cyan');
+  log('【《原典閲覧》自動発動】因果予測：破滅ルート検出','log-meta');
+  await sleep(400);
+  log('  → 残留 → 強制労働 → スキル搾取 → 廃人化','log-warning');
+  await sleep(500);
+  log('【推奨】解雇通知を受諾し、速やかに社外へ脱出せよ','log-meta');
+  await sleep(400);
+
+  await dialog('《原典閲覧》警告','⚠ 因果予測：ここに残留すると強制労働→スキル搾取→廃人化が確定。解雇通知を受諾し脱出してください。',
+    [{t:'解雇通知に署名する（脱出）',m:true},{t:'拒否する（破滅ルート確定）',m:false}]);
+
+  log('【Player】解雇通知に署名 ── 破滅ルート回避！','log-success');
+  addMeta(200); fx('flash-cyan');
+  log('【META +200】最適メタ行動：解雇受諾','log-meta');
+  await sleep(600);
+}
+
+async function scene1() {
+  log('【System】UIハッキング開始 ── UI構造を書き換え中...','log-system');
+  await sleep(400);
+  for(let i=0;i<4;i++){fx('glitch-overlay');await sleep(180);}
+  shake(); await sleep(200);
+  fx('flash-cyan');
+  log('【SYSTEM HACK】SKILL_SCANNER モード起動','log-system');
+  await sleep(400);
+  log('【BGM】bgm_peaceful_office → bgm_cyber_synth_slum','log-system');
+  await sleep(300);
+  log('【世界法則解析完了】テンプレート：スキル資本主義 / 指針：下剋上・スキル強奪','log-meta');
+  await sleep(600);
+}
+
+async function scene2() {
+  state.floor='Midas Corp. — 脱出'; updateHud();
+  await sceneTrans('STEALTH ESCAPE','ミダス商会オフィスからの脱出',1200);
+
+  const m=officeMap();
+  let px=1,py=10;
+  const drawEsc=()=>renderMap(m,[{x:px,y:py,ch:'@',fg:'#ffd700'},{x:5,y:5,ch:'⚔',fg:'#ff6060'},{x:15,y:12,ch:'⚔',fg:'#ff6060'},{x:3,y:3,ch:'💀',fg:'#555'},{x:8,y:3,ch:'🖥',fg:'#00dcff'},{x:12,y:8,ch:'📷',fg:'#ff8c20'},{x:38,y:18,ch:'🚪',fg:'#ffd700'}]);
+  drawEsc();
+
+  log('【System】脱出開始 ── 警備をかいくぐれ','log-system');
+  await sleep(400);
+  log('【《解析》】危険ゾーン・監視カメラの死角を可視化','log-skill');
+  await sleep(300);
+  showCmds([{l:'▶ 移動（自動パス）',c:'active'},{l:'🖥 端末ハック'},{l:'🫥 物陰に隠れる'}]);
+
+  const path=[[2,10],[3,10],[4,10],[5,9],[6,8],[7,7],[8,6],[9,5],[10,5],[11,5],[12,5]];
+  for(const[x,y]of path){px=x;py=y;drawEsc();nextTurn();await sleep(160);}
+
+  log('【Player】社内端末へアクセス ── ハッキング開始','log-skill');
+  await sleep(400);
+  fx('flash-cyan');
+  log('【HACKING】セキュリティ暗号突破... 78% → 91% → 100%','log-system');
+  await sleep(600);
+  log('【HACK SUCCESS】裏帳簿 500G を横領！','log-success');
+  addMeta(150);
+  await sleep(300);
+  log('【HACK SUCCESS】スラム街地下構造マップ入手！','log-success');
+  await sleep(400);
+
+  const path2=[[14,5],[16,6],[18,8],[20,10],[22,12],[24,14],[26,15],[28,16],[30,17],[32,17],[34,18],[36,18],[38,18]];
+  for(const[x,y]of path2){px=x;py=y;drawEsc();nextTurn();await sleep(140);}
+
+  fx('flash-cyan');
+  log('【脱出成功】非常口突破！裏路地に待ち伏せの気配……','log-success');
+  addMeta(200);
+  await sleep(700);
+}
+
+async function scene3() {
+  state.phase='Phase 1'; state.floor='スラム街 — 裏路地'; updateHud();
+  await sceneTrans('PHASE 1: SLUM','スラムの裏路地 ── 薄暗く湿った路地',1500);
+
+  const m=slumMap();
+  let px=3,py=10;
+  const npcs=[{x:8,y:5,ch:'💀',fg:'#555'},{x:20,y:14,ch:'💀',fg:'#555'}];
+  const drawSlum=()=>renderMap(m,[{x:px,y:py,ch:'@',fg:'#ffd700'},...npcs,{x:35,y:5,ch:'🔒',fg:'#b050ff'},{x:40,y:18,ch:'▽',fg:'#00dcff'}]);
+  drawSlum();
+
+  log('【エリア進入】スラムの裏路地に到達','log-lore');
+  await sleep(400);
+  log('【環境】薄暗く湿った路地。遠くでサイレンが鳴り響く。','log-lore');
+  await sleep(400);
+  log('【スキル市場速報】《剛力Lv5》▲12.4% | 《上級火魔法》▼3.1%','log-system');
+  await sleep(400);
+  showCmds([{l:'▶ 探索する',c:'active'},{l:'🔍 Husk NPC解析'},{l:'🔒 隠し金庫'}]);
+
+  const path=[[4,9],[5,8],[6,7],[7,6],[8,5]];
+  for(const[x,y]of path){px=x;py=y;drawSlum();nextTurn();await sleep(200);}
+
+  log('【発見】スキルを抜かれ虚ろな目の元社員を発見','log-lore');
+  await sleep(400);
+  log('【《解析》】Husk NPC の残存記憶をスキャン...','log-skill');
+  fx('flash-cyan'); await sleep(600);
+
+  setAnalysis(true,`
+    <div class="analysis-row"><span class="analysis-label">対象</span><span class="analysis-value">元査定係の老人 [HUSK]</span></div>
+    <div class="analysis-row"><span class="analysis-label">状態</span><span class="analysis-value" style="color:var(--crimson)">DRAINED</span></div>
+    <div class="analysis-row"><span class="analysis-label">残存記憶</span><span class="analysis-value" style="color:var(--emerald)">検出: 1件</span></div>
+    <div style="margin-top:6px;padding:6px;background:rgba(0,220,255,0.05);border-radius:4px;font-size:10px;">
+      <div style="color:var(--cyan);margin-bottom:3px;">▶ 記憶残滓 #001</div>
+      <div style="color:var(--text-dim)">「わしの…帳簿…配電盤裏…暗証コードは4989じゃ…」</div>
+    </div>`);
+  await sleep(1200);
+  log('【記憶抽出成功】暗証コード「4989」サルベージ！','log-success');
+  await sleep(500);
+  setAnalysis(false);
+
+  const path2=[[12,5],[16,5],[20,5],[24,5],[28,5],[32,5],[35,5]];
+  for(const[x,y]of path2){px=x;py=y;drawSlum();nextTurn();await sleep(150);}
+
+  log('【Player】隠し金庫にコード「4989」入力...','log-skill');
+  await sleep(400);
+  fx('flash-cyan');
+  log('【金庫開錠！】1200G + 星屑の破片 獲得！','log-success');
+  floatText('+1200G','float-skill',400,200);
+  await sleep(600);
+}
+
+async function scene4() {
+  state.floor='スラム街 — 戦闘'; updateHud();
+  await sceneTrans('ENCOUNTER','変異スラムラット出現！',1000);
+
+  const m=battleMap();
+  const enemy={x:30,y:11,hp:100,maxHp:100};
+  const drawBattle=()=>renderMap(m,[{x:8,y:11,ch:'@',fg:'#ffd700'},{x:enemy.x,y:enemy.y,ch:'🐀',fg:'#ff4060'},{x:20,y:5,ch:'⚠',fg:'#ff8c20'}]);
+  drawBattle();
+
+  log('【戦闘開始】変異スラムラット HP:100 ATK:15','log-combat');
+  await sleep(400);
+  showCmds([{l:'⚔ 通常攻撃'},{l:'🔍 《解析》',c:'active'},{l:'👄 《喰らい》',c:'danger'},{l:'⚠ 環境トラップ'}]);
+
+  // Analyze
+  nextTurn();
+  log(`【Turn ${state.turn}】《解析》発動！`,'log-skill');
+  fx('flash-cyan'); state.player.mp-=10; updateStats();
+  await sleep(500);
+
+  setAnalysis(true,`
+    <div class="analysis-row"><span class="analysis-label">対象</span><span class="analysis-value">変異スラムラット</span></div>
+    <div class="analysis-row"><span class="analysis-label">HP</span><span class="analysis-value" style="color:var(--crimson)">100 / 100</span></div>
+    <div class="analysis-row"><span class="analysis-label">構造欠陥</span><span class="analysis-value analysis-weakness">露出した首筋の生体コア</span></div>
+    <div class="analysis-row"><span class="analysis-label">弱点</span><span class="analysis-value analysis-weakness">Water/Ice</span></div>
+    <div class="analysis-skill-list">
+      <div style="color:var(--cyan);font-size:9px;margin-bottom:3px;">▷ DETECTED SKILLS</div>
+      <div class="analysis-skill-item"><span>🗡 初級剣術</span><span style="color:var(--text-dim);margin-left:auto">Common/1200G</span></div>
+      <div class="analysis-skill-item"><span>🔥 火種</span><span style="color:var(--text-dim);margin-left:auto">Common/300G</span></div>
+    </div>
+    <div class="analysis-devour-rate">
+      <div style="color:var(--text-dim);font-size:9px;">DEVOUR RATE</div>
+      <div class="devour-rate-num">60%</div>
+    </div>`);
+  log('[SCAN] 構造解析完了。検出:2個, 成功率:60%','log-system');
+  await sleep(1500);
+
+  // Attack
+  nextTurn();
+  log(`【Turn ${state.turn}】通常攻撃！`,'log-combat');
+  await sleep(200);
+  enemy.hp-=25; floatText('-25','float-damage',500,250); shake();
+  log(`  → 25ダメージ！ (HP:${enemy.hp}/100)`,'log-combat');
+  await sleep(400);
+  log('  → 反撃！12ダメージ！','log-combat');
+  state.player.hp-=12; updateStats(); floatText('-12','float-damage',200,250); shake(); fx('flash-red');
+  await sleep(400);
+
+  // Attack again
+  nextTurn(); enemy.hp-=28; floatText('-28','float-damage',510,240); shake();
+  log(`【Turn ${state.turn}】通常攻撃 → 28ダメージ (HP:${enemy.hp}/100)`,'log-combat');
+  await sleep(400);
+
+  // Update analysis with higher devour rate
+  setAnalysis(true,`
+    <div class="analysis-row"><span class="analysis-label">対象</span><span class="analysis-value">変異スラムラット</span></div>
+    <div class="analysis-row"><span class="analysis-label">HP</span><span class="analysis-value" style="color:var(--crimson)">${enemy.hp} / 100</span></div>
+    <div class="analysis-row"><span class="analysis-label">構造欠陥</span><span class="analysis-value analysis-weakness">生体コア露出</span></div>
+    <div class="analysis-skill-list">
+      <div style="color:var(--cyan);font-size:9px;margin-bottom:3px;">▷ SKILLS</div>
+      <div class="analysis-skill-item" style="border:1px solid rgba(43,255,136,0.3)"><span style="color:var(--emerald)">🗡 初級剣術</span><span style="color:var(--text-dim);margin-left:auto">TARGET</span></div>
+      <div class="analysis-skill-item"><span>🔥 火種</span></div>
+    </div>
+    <div class="analysis-devour-rate">
+      <div style="color:var(--text-dim);font-size:9px;">DEVOUR RATE</div>
+      <div class="devour-rate-num" style="color:var(--emerald)">83%</div>
+      <div style="color:var(--text-dim);font-size:8px;">HP低下ボーナス +23%</div>
+    </div>`);
+  await sleep(400);
+
+  // DEVOUR!
+  nextTurn();
+  log(`【Turn ${state.turn}】《喰らい》発動！ 対象:《初級剣術》(成功率:83%)`,'log-skill');
+  fx('flash-magenta'); shake(); await sleep(600);
+  for(let i=0;i<3;i++){fx('glitch-overlay');await sleep(120);}
+  floatText('DEVOUR!','float-devour',350,220); await sleep(400);
+
+  log('【捕食成功！】《初級剣術》を喰らい尽くした！','log-success');
+  await sleep(300);
+  state.player.skills.push({id:'sword',name:'《初級剣術》',tier:'common',icon:'🗡',mem:1});
+  state.player.memoryUsed=2; state.player.atk+=5; updateStats(); updateSkills();
+  floatText('+ATK','float-skill',200,180);
+  log('  → 《初級剣術》獲得！メモリ:2/10, ATK+5','log-success');
+  await sleep(400);
+
+  log('  → スキル喪失ショック！DEF/ATK低下','log-combat');
+  await sleep(300);
+
+  nextTurn(); enemy.hp=0; floatText('-47','float-damage',510,250); shake(); fx('flash-red');
+  log(`【Turn ${state.turn}】止めの一撃！ 変異スラムラットは倒れた！`,'log-combat');
+  await sleep(500);
+  setAnalysis(false);
+  log('【戦利品】SCRAP_BEAST_FANG, SCRAP_AGILITY_FRAGMENT','log-success');
+  await sleep(400);
+}
+
+async function scene5() {
+  state.floor='ミダスタワー裏路地 — ボス戦'; updateHud();
+  await sceneTrans('BOSS','査定課長ゴルドー ── 《黄金重力圧》',1500);
+
+  const m=battleMap();
+  const boss={x:32,y:11,hp:5000,maxHp:5000};
+  const drawBoss=()=>renderMap(m,[{x:8,y:11,ch:'@',fg:'#ffd700'},{x:boss.x,y:boss.y,ch:'💀',fg:'#ffd700'},{x:20,y:5,ch:'⚠',fg:'#ff8c20'}]);
+  drawBoss();
+
+  log('【BOSS】査定課長ゴルドー HP:5000 ATK:250','log-combat');
+  log('  → スキル:《黄金重力圧（ゴールド・プレス）》','log-combat');
+  await sleep(400);
+  await dialog('ゴルドー','逃げたと思ったか？クビになった分際で横領まで……ミダスの裁きを受けろ！');
+  await sleep(500);
+
+  showCmds([{l:'🔍 《解析》',c:'active'},{l:'⚔ 攻撃'},{l:'👄 《喰らい》',c:'danger'},{l:'💻 ハッキング'},{l:'⚠ 環境トラップ'}]);
+
+  // Analyze boss
+  nextTurn();
+  log(`【Turn ${state.turn}】《解析》→ ゴルドーの構造スキャン`,'log-skill');
+  fx('flash-cyan'); state.player.mp-=10; updateStats();
+  await sleep(500);
+
+  setAnalysis(true,`
+    <div class="analysis-row"><span class="analysis-label">対象</span><span class="analysis-value" style="color:var(--gold)">査定課長ゴルドー [BOSS]</span></div>
+    <div class="analysis-row"><span class="analysis-label">HP</span><span class="analysis-value" style="color:var(--crimson)">5000 / 5000</span></div>
+    <div class="analysis-row"><span class="analysis-label">弱点</span><span class="analysis-value analysis-weakness">Magic/ArmorPierce</span></div>
+    <div class="analysis-skill-list">
+      <div style="color:var(--cyan);font-size:9px;margin-bottom:3px;">▷ SKILLS</div>
+      <div class="analysis-skill-item"><span style="color:var(--blue)">🛡 鋼鉄の皮膚</span><span style="color:var(--text-dim);margin-left:auto">Rare/85kG</span></div>
+      <div class="analysis-skill-item"><span style="color:var(--orange)">🔥 業火球</span><span style="color:var(--text-dim);margin-left:auto">Rare/120kG</span></div>
+      <div class="analysis-skill-item" style="border:1px solid rgba(200,100,255,0.3)"><span style="color:var(--purple)">🔒 暗号化プロテクト</span><span style="color:var(--text-dim);margin-left:auto">???</span></div>
+    </div>
+    <div class="analysis-devour-rate">
+      <div style="color:var(--text-dim);font-size:9px;">DEVOUR RATE</div>
+      <div class="devour-rate-num">60%</div>
+      <div style="color:var(--orange);font-size:8px;">⚠ Rare: ペナルティあり</div>
+    </div>`);
+  log('[SCAN] Rareスキル2個 + 暗号化1個検出','log-system');
+  log('  → 暗号化プロテクト検出 ── ハッキングで開示可能','log-warning');
+  await sleep(1200);
+
+  // Hack
+  nextTurn();
+  log(`【Turn ${state.turn}】《ハッキング》発動！ 防壁侵入中...`,'log-skill');
+  fx('flash-cyan'); await sleep(400);
+  for(let i=0;i<3;i++){fx('glitch-overlay');await sleep(150);}
+  log('  → 防壁突破！ 暗号化スキルの正体:《黄金錬成》(Unique)','log-success');
+  await sleep(800);
+
+  // Environmental trap
+  nextTurn();
+  log(`【Turn ${state.turn}】腐食した足場を《解析》で看破 → 環境トラップ発動！`,'log-skill');
+  fx('flash-red'); shake(); await sleep(300);
+  boss.hp-=120; floatText('-120','float-damage',500,230);
+  log('【環境トラップ】崩壊！120ダメージ＆スタン！','log-combat');
+  await sleep(600);
+
+  // Devour 鋼鉄の皮膚
+  nextTurn();
+  log(`【Turn ${state.turn}】スタン中に《喰らい》！ 対象:《鋼鉄の皮膚》`,'log-skill');
+  fx('flash-magenta'); shake(); await sleep(500);
+  for(let i=0;i<3;i++){fx('glitch-overlay');await sleep(120);}
+  floatText('DEVOUR!','float-devour',350,220); await sleep(400);
+
+  log('【捕食成功！】《鋼鉄の皮膚》を喰らい尽くした！','log-success');
+  state.player.skills.push({id:'iron',name:'《鋼鉄の皮膚》',tier:'rare',icon:'🛡',mem:2});
+  state.player.memoryUsed=4; state.player.def+=15; state.player.addiction+=15; updateStats(); updateSkills();
+  floatText('+DEF','float-skill',200,180);
+  await sleep(400);
+
+  // Synergy!
+  log('★ シナジー！【Sword】×【Defense】→《剛剣両断》！','log-success');
+  fx('flash-magenta'); shake();
+  boss.hp-=350; floatText('SYNERGY -350!','float-devour',400,200);
+  log('【連鎖シナジー】防御貫通の一撃！追加350ダメージ！','log-success');
+  await sleep(700);
+  log('※精神侵食度上昇(15/100)','log-warning');
+  await sleep(400);
+
+  // Boss charge
+  nextTurn();
+  log(`【Turn ${state.turn}】ゴルドー:《黄金重力圧》チャージ開始！2ターン後に壊滅攻撃！`,'log-combat');
+  await sleep(400);
+
+  // Devour 業火球
+  nextTurn(); boss.hp-=200; floatText('-200','float-damage',510,250); shake();
+  log(`【Turn ${state.turn}】通常攻撃 → 200ダメージ (残:${boss.hp})`,'log-combat');
+  await sleep(400);
+
+  nextTurn();
+  log(`【Turn ${state.turn}】《喰らい》→ 《業火球》(成功率:85%)`,'log-skill');
+  fx('flash-magenta'); shake(); await sleep(400);
+  for(let i=0;i<4;i++){fx('glitch-overlay');await sleep(100);}
+  floatText('DEVOUR!','float-devour',360,210); await sleep(300);
+
+  log('【捕食成功！】《業火球》喰らい尽くした！','log-success');
+  state.player.skills.push({id:'hell',name:'《業火球》',tier:'rare',icon:'🔥',mem:2});
+  state.player.memoryUsed=6; state.player.int+=10; state.player.addiction+=20; updateStats(); updateSkills();
+  floatText('+INT','float-skill',200,170);
+  await sleep(400);
+  log(`※精神侵食度上昇(${state.player.addiction}/100)`,'log-warning');
+  await sleep(300);
+
+  // Final unique devour
+  nextTurn(); setAnalysis(false);
+  log(`【Turn ${state.turn}】最終手段 ── Unique《黄金錬成》を《喰らい》！(成功率:45%)`,'log-skill');
+  await sleep(300);
+  log('  ⚠ Uniqueスキル捕食：精神侵食リスク極大','log-warning');
+  fx('flash-magenta'); shake(); await sleep(500);
+  for(let i=0;i<6;i++){fx('glitch-overlay');await sleep(80);}
+  shake(); await sleep(300);
+
+  floatText('UNIQUE DEVOUR!!','float-devour',300,200);
+  fx('flash-magenta'); fx('flash-cyan'); await sleep(500);
+
+  log('【捕食成功！！】《黄金錬成》(Unique)を完全に喰らい尽くした！！','log-success');
+  state.player.skills.push({id:'gold',name:'《黄金錬成》',tier:'unique',icon:'👑',mem:4});
+  state.player.memoryUsed=10; state.player.addiction+=40; updateStats(); updateSkills();
+  await sleep(400);
+  log('  → メモリ: 10/10 ── 脳内メモリ限界！','log-warning');
+  await sleep(300);
+
+  // Addiction warning
+  $('addiction-text').textContent=`精神侵食度 ${state.player.addiction}/100 ── Uniqueスキル保持により急速に精神が侵食されています。`;
+  $('addiction-warning').classList.add('visible');
+  fx('flash-red');
+  log(`【精神侵食警告！】侵食度 ${state.player.addiction}/100`,'log-warning');
+  await sleep(2000);
+  $('addiction-warning').classList.remove('visible');
+
+  boss.hp=0;
+  log('  → ゴルドーの全スキル消滅 →「空っぽ（Husk）」','log-lore');
+  await sleep(400);
+  await dialog('ゴルドー [HUSK]','な……なんだ……お前は……何者だ……オレの……スキルを……返せ……');
+  await sleep(500);
+  log('【BOSS DEFEATED】査定課長ゴルドー 撃破！','log-success');
+  await notify('BOSS CLEAR','査定課長ゴルドー 撃破',1800);
+  await sleep(300);
+}
+
+async function scene6() {
+  state.phase='Phase 1 Complete'; updateHud();
+  log('','');
+  log('══════════════════════════════════════','log-system');
+  log('【Phase 0 攻略完了】スキル喰い ── 着地・認識フェーズクリア','log-meta');
+  log('══════════════════════════════════════','log-system');
+  await sleep(600);
+  log('【継承準備】次世界へのリソース選定中...','log-meta');
+  await sleep(400);
+  log('  → archive: [《解析》,《初級剣術》,《鋼鉄の皮膚》,《業火球》,《黄金錬成》]','log-system');
+  await sleep(300);
+  log('  → concept_pillar_fragment: 1/9','log-system');
+  await sleep(300);
+  log(`  → META SCORE: ${state.metaScore}`,'log-meta');
+  await sleep(400);
+  await notify('DEMO COMPLETE','九世界転移譚：スキル喰いの世界',3000);
+  log('','');
+  log('【System】デモ終了。9つの世界を巡る壮大な冒険が待っています。','log-system');
+}
+
+// MAIN
+async function startDemo() {
+  $('play-overlay').classList.add('hidden');
+  state.demoRunning=true;
+  startProgress(); updateHud(); updateStats(); updateSkills();
+  await sleep(400);
+  await scene0(); await sleep(300);
+  await scene1(); await sleep(300);
+  await scene2(); await sleep(300);
+  await scene3(); await sleep(300);
+  await scene4(); await sleep(300);
+  await scene5(); await sleep(300);
+  await scene6();
+  state.demoRunning=false;
+}
+
+window.addEventListener('load',()=>{renderMap(officeMap(),[]);});
+</script>
+</body>
+</html>

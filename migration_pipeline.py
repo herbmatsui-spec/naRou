@@ -97,6 +97,12 @@ DEFAULT_FIELD_FACTORIES: dict[str, Any] = {
     "leaned_endings": dict,
     "interpretation_notes": dict,
     "decoder_hints_seen": list,
+    # World A (Skill Eater)
+    "skill_eater_skills": dict,
+    "devour_stats": dict,
+    "world_a_unlocked": lambda: False,
+    "toxicity_level": int,
+    "slum_reputation": int,
     # 数値型
     "karma_law_chaos": int,
     "karma_good_evil": int,

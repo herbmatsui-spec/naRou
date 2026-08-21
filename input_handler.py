@@ -18,7 +18,10 @@ import tcod.event
 from constants import COLOR_PET_PINK, ENERGY_THRESHOLD
 from core_framework import Point
 from input_actions import (
+    ActionDevour,
     ActionRegistry,
+    ActionScan,
+    ActionSynthesisMenu,
     CastFireballAction,
     DebugAction,
     DescendStairsAction,
@@ -195,6 +198,16 @@ class InputHandler:
         reg.register("play", KeyBinding(KS.R, LoadAction(), description="ロード"))
         reg.register(
             "play", KeyBinding(KS.GRAVE, DebugAction(), description="デバッグ")
+        )
+        # World A (Skill Eater) 専用アクション (Steps 16-18)
+        reg.register(
+            "play", KeyBinding(KS.V, ActionDevour(), description="《喰らい》")
+        )
+        reg.register(
+            "play", KeyBinding(KS.X, ActionScan(), description="《解析》")
+        )
+        reg.register(
+            "play", KeyBinding(KS.T, ActionSynthesisMenu(), SHIFT, description="《スキル合成》")
         )
 
         cls._actions_registered = True

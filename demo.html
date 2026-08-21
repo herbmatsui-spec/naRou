@@ -1,64 +1,11 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>スタートからクリアまでデモ</title>
-    <style>
-        body {
-            display: flex;
-            height: 100vh;
-            margin: 0;
-            justify-content: center;
-            align-items: center;
-            background: #f0f0f0;
-            font-family: sans-serif;
-        }
-        #container {
-            text-align: center;
-        }
-        #progress-bg {
-            width: 400px;
-            height: 40px;
-            background: #eee;
-            border-radius: 20px;
-            overflow: hidden;
-            margin: 20px auto;
-        }
-        #progress-bar {
-            width: 0%;
-            height: 100%;
-            background: #4caf50;
-            transition: width 2s linear; /* will be overridden by animation */
-        }
-        /* Animation: fill over 150 minutes (9000 seconds) */
-        @keyframes fill {
-            from { width: 0%; }
-            to   { width: 100%; }
-        }
-        #progress-bar.animate {
-            animation: fill 9000s linear forwards;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0; url=demos/demo_skill_eater_showcase.html">
+  <title>Redirecting to World A Showcase</title>
 </head>
 <body>
-    <div id="container">
-        <h1>スタートからクリアまでデモ</h1>
-        <div id="progress-bg">
-            <div id="progress-bar"></div>
-        </div>
-        <button id="startBtn">スタート</button>
-    </div>
-    <script>
-        document.getElementById('startBtn').addEventListener('click', function() {
-            const bar = document.getElementById('progress-bar');
-            bar.classList.add('animate');
-            this.disabled = true;
-        });
-    </script>
+  <p>Redirecting to <a href="demos/demo_skill_eater_showcase.html">World A: Skill Eater Showcase</a>...</p>
 </body>
 </html>
