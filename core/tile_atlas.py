@@ -257,9 +257,19 @@ class TileAtlas:
         td = self.defs.get(tile_id)
         if not td:
             return None
-        # Use the requested scale for the master image
-        img_scale = s
-        return self.def_path.parent / f"tileset_{img_scale}x{img_scale}.png"
+        # Explicit mapping from scale key -> master atlas image file.
+        # The Tiny Rogue sprites live in a separately named atlas image.
+        master_files = {
+            "16": "tileset_16x16.png",
+            "32": "tileset_32x32.png",
+            "64": "tileset_64x64.png",
+            "tiny_rogue_16": "tiny_rogue_atlas_16x16.png",
+        }
+        img_name = master_files.get(s)
+        if img_name is None:
+            # Fallback to the conventional tileset_<scale>x<scale>.png naming.
+            img_name = f"tileset_{s}x{s}.png"
+        return self.def_path.parent / img_name
 
     def get_all_tile_ids(self) -> list[str]:
         """Get list of all defined tile IDs."""

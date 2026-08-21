@@ -166,7 +166,20 @@ class TestTinyRogueEntityRendering:
 
         pet = Entity(0, 0, "d", (255, 200, 100), "Pet")
         pet.is_pet = True
+        # Pets now use Tiny Rogue art when a known pet_type is present.
+        pet.pet_type = "puppy"
+        assert EntityRenderer._get_tile_id(pet) == "TR_MONSTER_VAR_01"
+
+        # Unknown pet types fall back to the generic PET placeholder.
+        pet2 = Entity(0, 0, "d", (255, 200, 100), "Pet")
+        pet2.is_pet = True
+        pet2.pet_type = "mystery_pet"
+        assert EntityRenderer._get_tile_id(pet2) == "PET"
+
+        # With Tiny Rogue GFX disabled, pets use the generic placeholder.
+        set_flag("ENABLE_TINY_ROGUE_GFX", False)
         assert EntityRenderer._get_tile_id(pet) == "PET"
+        set_flag("ENABLE_TINY_ROGUE_GFX", True)
 
     def test_feature_flag_toggle(self):
         from entity_renderer import EntityRenderer

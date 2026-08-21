@@ -104,6 +104,9 @@ class EntityRenderer:
         if ent.is_player:
             return "PLAYER"
         elif ent.is_pet:
+            if is_enabled("ENABLE_TINY_ROGUE_GFX"):
+                pet_type = getattr(ent, "pet_type", None)
+                return MonsterPreset.PET_TILE_MAP.get(pet_type, "PET")
             return "PET"
         elif hasattr(ent, "monster_type") and ent.monster_type:
             return MonsterPreset.MONSTER_TILE_MAP.get(ent.monster_type, "ENEMY_GOBLIN")

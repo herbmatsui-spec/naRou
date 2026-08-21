@@ -156,8 +156,13 @@ class EntityRenderer:
             return self._subimage_cache[key]
 
         # UV取得 → マスター画像から切り出し
-        uv = anim.get_uv("32")
-        master_path = self.tile_atlas.get_master_image_path(anim.tile_id, "32")
+        # Use the tile definition's own atlas scale so both the generic
+        # (16x16) sprites and the Tiny Rogue (tiny_rogue_16) sprites resolve
+        # to the correct master image and metadata.
+        td = self.tile_atlas.defs.get(anim.tile_id)
+        scale = td.atlas_scale if td else "32"
+        uv = anim.get_uv(scale)
+        master_path = self.tile_atlas.get_master_image_path(anim.tile_id, scale)
         if not master_path or not master_path.exists():
             return None
 

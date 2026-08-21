@@ -509,6 +509,23 @@ class MonsterPreset:
         "dragon_red": "TR_MONSTER_VAR_03",
     }
 
+    # Map pet types to Tiny Rogue tile IDs so pets render with real art
+    # instead of the generic placeholder. Falls back to "PET" when unknown.
+    PET_TILE_MAP = {
+        "puppy": "TR_MONSTER_VAR_01",
+        "hound": "TR_MONSTER_VAR_01",
+        "hound_fire": "TR_MONSTER_VAR_01",
+        "guard_dog": "TR_MONSTER_VAR_01",
+        "magic_hound": "TR_MONSTER_VAR_01",
+        "wolf": "TR_MONSTER_VAR_01",
+        "panther": "TR_MONSTER_VAR_02",
+        "cat": "TR_MONSTER_VAR_02",
+        "tiger": "TR_MONSTER_VAR_02",
+        "slime": "TR_MONSTER_01",
+        "dragon": "TR_MONSTER_VAR_03",
+        "dragon_red": "TR_MONSTER_VAR_03",
+    }
+
     @staticmethod
     def create(name: str, x: int, y: int) -> Entity:
         from config_manager import DataCache
