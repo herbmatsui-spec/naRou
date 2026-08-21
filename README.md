@@ -24,11 +24,13 @@
 
 ## 🎬 Aの世界：スキル喰い（Skill Eater） 4大コアシステム
 
+> 📺 以下のデモGIFは、ゲームの実際の描画パイプライン（`render_system.py` / `uirenderer.py` / `map_renderer.py` 等）に準拠して **実際のゲーム画面と同じコンソールUI（HUD・ミニマップ凡例・シネマティックログ）** でレンダリングされています。再生成は `python generate_readme_gifs.py` で行えます。
+
 ### 1. ⚔️ 【捕食とシナジー】 深度解析・強奪・エレメント爆発
 敵の構造をスキャン解析し、弱体化した隙に《喰らい》を発動。胃袋内での属性衝突（熱爆発・磁気嵐）をコントロールせよ。
 
 <p align="center">
-  <img src="assets/demo_combat_devour.gif" alt="Combat & Devour Demo" width="640">
+  <img src="assets/demo_combat_devour.gif" alt="Combat & Devour Demo" width="760">
 </p>
 
 - **深度解析（Scan）**: 敵のスキル構成、弱点、核残量を可視化
@@ -41,7 +43,7 @@
 強奪したスキルを炉で融合し、新たな認可外キメラスキルを創出。不要なスキルは闇市場で高値で売り抜けろ。
 
 <p align="center">
-  <img src="assets/demo_synthesis_economy.gif" alt="Synthesis & Economy Demo" width="640">
+  <img src="assets/demo_synthesis_economy.gif" alt="Synthesis & Economy Demo" width="760">
 </p>
 
 - **動的キメラ合成（Procedural Synthesis）**: 2つのスキルを掛け合わせ、強力な複合スキルを錬成
@@ -54,7 +56,7 @@
 生命力と精神侵食（Sanity）を代償に、ゲーム世界の根幹パラメータ（ダメージ倍率、ドロップ率など）をハックして改変。
 
 <p align="center">
-  <img src="assets/demo_meta_reincarnation.gif" alt="Meta ROOT Hack & Reincarnation Demo" width="640">
+  <img src="assets/demo_meta_reincarnation.gif" alt="Meta ROOT Hack & Reincarnation Demo" width="760">
 </p>
 
 - **ROOT Law Override**: 世界の物理定数・倍率パラメータをリアルタイム書き換え
@@ -67,7 +69,7 @@
 スキルを抜き取られた敵の抜け殻（Husk）に魔力回路を繋ぎ、使い捨ての自動射撃タレットとして使役。
 
 <p align="center">
-  <img src="assets/demo_husk_servant.gif" alt="Husk Servant Turret Demo" width="640">
+  <img src="assets/demo_husk_servant.gif" alt="Husk Servant Turret Demo" width="760">
 </p>
 
 - **魔力回路移植**: Huskにスキルを再注入し、自律迎撃タレット化
@@ -210,6 +212,7 @@ narou2/
 ├── skill_eater_servant_system.py      # Husk従属者タレットロジック
 ├── skill_eater_meta_quest_system.py   # ROOTハック・輪廻転生・世界法則改変
 ├── generate_rich_gifs.py              # 高品質フレームアニメーションGIF生成エンジン
+├── generate_readme_gifs.py            # README用デモGIF生成（実ゲーム画面準拠のコンソール再現）
 ├── asset_manager.py                   # 統合アセット管理（Tiny Rogue / Audio / Emote）
 ├── emote_system.py                    # エモート再生・管理システム
 ├── scripts/
