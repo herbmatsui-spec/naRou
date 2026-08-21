@@ -3,20 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🌌 Aの世界：スキル喰い (Skill Eater) - Master Showcase & Story Demo</title>
+  <title>🌌 Aの世界：スキル喰い (Skill Eater) - Gameplay Mechanics Showcase</title>
   <style>
     :root {
-      --bg: #0b0d14;
-      --card-bg: rgba(20, 24, 36, 0.85);
-      --border: rgba(80, 140, 255, 0.3);
+      --bg: #0a0a10;
+      --card-bg: #12141c;
+      --border: #2a3441;
       --accent: #50a0ff;
-      --accent-glow: rgba(80, 160, 255, 0.4);
       --danger: #ff4d6d;
       --gold: #ffd166;
       --success: #06d6a0;
       --purple: #b5179e;
       --text: #e2e8f0;
-      --text-muted: #94a3b8;
+      --text-muted: #8b9bb4;
+      --term-bg: #080a10;
+      --term-text: #a0b0c0;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -24,22 +25,16 @@
       background: var(--bg);
       color: var(--text);
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background-image: 
-        radial-gradient(circle at 10% 20%, rgba(80, 160, 255, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(181, 23, 158, 0.08) 0%, transparent 40%);
+      line-height: 1.6;
     }
 
     header {
       padding: 1.5rem 2rem;
       border-bottom: 1px solid var(--border);
+      background: #0f111a;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(11, 13, 20, 0.9);
-      backdrop-filter: blur(10px);
       position: sticky;
       top: 0;
       z-index: 100;
@@ -48,226 +43,172 @@
     .brand {
       display: flex;
       align-items: center;
-      gap: 0.8rem;
+      gap: 1rem;
     }
-    .brand-badge {
+    .brand h1 { font-size: 1.3rem; font-weight: 700; color: #fff; }
+    .badge {
       background: linear-gradient(135deg, var(--accent), var(--purple));
-      color: #fff;
-      font-size: 0.75rem;
-      font-weight: 800;
       padding: 0.2rem 0.6rem;
       border-radius: 4px;
-      letter-spacing: 1px;
-    }
-    .brand h1 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      letter-spacing: 0.5px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: #fff;
     }
 
     main {
-      flex: 1;
       max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem;
-      width: 100%;
-    }
-
-    /* Phase Tabs */
-    .phase-nav {
+      margin: 2rem auto;
+      padding: 0 2rem;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 0.8rem;
-      margin-bottom: 2rem;
-    }
-
-    .phase-btn {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      padding: 1rem;
-      border-radius: 8px;
-      color: var(--text-muted);
-      cursor: pointer;
-      text-align: left;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      overflow: hidden;
-    }
-    .phase-btn:hover {
-      border-color: var(--accent);
-      color: var(--text);
-      transform: translateY(-2px);
-    }
-    .phase-btn.active {
-      background: rgba(80, 160, 255, 0.12);
-      border-color: var(--accent);
-      color: #fff;
-      box-shadow: 0 0 20px var(--accent-glow);
-    }
-    .phase-btn.active::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: var(--accent);
-    }
-    .phase-btn .p-num {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      font-weight: 800;
-      color: var(--accent);
-      margin-bottom: 0.2rem;
-    }
-    .phase-btn .p-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-    }
-
-    /* Showcase Content Panel */
-    .showcase-panel {
-      display: none;
-      animation: fadeIn 0.3s ease forwards;
-    }
-    .showcase-panel.active {
-      display: grid;
-      grid-template-columns: 1.2fr 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 2rem;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+    /* Left Column: Story & Mechanics */
+    .mechanics-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
     }
 
-    .story-card, .interactive-card {
+    .phase-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.8rem;
-      backdrop-filter: blur(8px);
+      border-radius: 8px;
+      padding: 1.5rem;
+      transition: border-color 0.3s;
     }
-
-    .story-card h2 {
-      font-size: 1.4rem;
-      margin-bottom: 1rem;
+    .phase-card:hover { border-color: var(--accent); }
+    .phase-card h2 {
+      font-size: 1.2rem;
+      margin-bottom: 0.8rem;
       color: #fff;
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
-    .story-card p {
+    .phase-card p {
       color: var(--text-muted);
-      line-height: 1.7;
-      margin-bottom: 1.2rem;
       font-size: 0.95rem;
-    }
-
-    .features-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0.8rem;
-      margin-top: 1rem;
-    }
-    .features-list li {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.8rem;
-      font-size: 0.9rem;
-      background: rgba(255, 255, 255, 0.03);
-      padding: 0.8rem;
-      border-radius: 6px;
-      border-left: 3px solid var(--accent);
-    }
-
-    /* Interactive Simulator */
-    .sim-header {
-      font-size: 1.1rem;
-      font-weight: 700;
       margin-bottom: 1rem;
+    }
+    .feature-list {
+      list-style: none;
+    }
+    .feature-list li {
+      font-size: 0.9rem;
+      padding: 0.5rem;
+      background: rgba(255,255,255,0.03);
+      margin-bottom: 0.4rem;
+      border-left: 3px solid var(--accent);
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* Right Column: Terminal Demo */
+    .terminal-section {
+      position: sticky;
+      top: 100px;
+      height: fit-content;
+    }
+
+    .terminal-container {
+      background: var(--term-bg);
+      border: 1px solid #334;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    
+    .term-header {
+      background: #1a1c24;
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+      color: #667;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 0.8rem;
+      border-bottom: 1px solid #334;
     }
 
-    .sim-status {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.8rem;
-      margin-bottom: 1.2rem;
-    }
-    .stat-box {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 0.8rem;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .stat-label { font-size: 0.75rem; color: var(--text-muted); }
-    .stat-val { font-size: 1.1rem; font-weight: 700; margin-top: 0.2rem; }
-
-    .sim-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 0.8rem;
-    }
-    .sim-btn {
-      background: linear-gradient(135deg, rgba(80, 160, 255, 0.2), rgba(80, 160, 255, 0.05));
-      border: 1px solid var(--accent);
-      color: #fff;
-      padding: 0.8rem 1.2rem;
-      border-radius: 6px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .sim-btn:hover {
-      background: linear-gradient(135deg, var(--accent), var(--purple));
-      box-shadow: 0 0 15px var(--accent-glow);
-      transform: translateY(-1px);
-    }
-
-    .console-log {
-      margin-top: 1.2rem;
-      background: #06080e;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 6px;
+    /* ASCII Map Render */
+    .term-map {
       padding: 1rem;
       font-family: 'Consolas', 'Courier New', monospace;
-      font-size: 0.85rem;
-      min-height: 120px;
-      max-height: 160px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
+      font-size: 14px;
+      line-height: 1.1;
+      white-space: pre;
+      color: #665;
+      background: #08080c;
     }
-    .log-line { line-height: 1.4; }
-    .log-sys { color: var(--accent); }
-    .log-success { color: var(--success); }
-    .log-danger { color: var(--danger); }
-    .log-gold { color: var(--gold); }
+    .tile-wall { color: #504030; }
+    .tile-floor { color: #303040; }
+    .tile-player { color: #50ff80; font-weight: bold; }
+    .tile-enemy { color: #ff5050; font-weight: bold; }
+    .tile-item { color: #ffd700; font-weight: bold; }
+    .tile-husk { color: #666666; }
+    
+    .term-hud {
+      padding: 0.5rem 1rem;
+      background: #11141c;
+      border-bottom: 1px solid #223;
+      font-family: 'Consolas', monospace;
+      font-size: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+    }
 
-    /* Footer Controls */
-    .gif-preview-card {
+    /* Action Buttons */
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      padding: 1rem;
+      background: #0c0e15;
+    }
+    .action-btn {
+      background: #1a1e2a;
+      border: 1px solid var(--accent);
+      color: #fff;
+      padding: 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    .action-btn:hover {
+      background: var(--accent);
+      color: #000;
+    }
+
+    /* Log Panel */
+    .term-log {
+      padding: 1rem;
+      font-family: 'Consolas', monospace;
+      font-size: 0.85rem;
+      height: 150px;
+      overflow-y: auto;
+      border-top: 1px solid #334;
+    }
+    .log-line { margin-bottom: 0.3rem; }
+    .c-sys { color: #8899aa; }
+    .c-atk { color: #ff8888; }
+    .c-succ { color: #88ff88; }
+    .c-warn { color: #ff55ff; }
+
+    /* GIF Section */
+    .gif-section {
+      grid-column: 1 / -1;
       margin-top: 2rem;
       background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 8px;
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.5rem;
       text-align: center;
     }
-    .gif-preview-card img {
+    .gif-section img {
       max-width: 100%;
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      border-radius: 4px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
     }
   </style>
 </head>
@@ -275,350 +216,145 @@
 
   <header>
     <div class="brand">
-      <span class="brand-badge">WORLD A</span>
-      <h1>🌌 スキル喰い (Skill Eater) - Master Interactive Showcase</h1>
+      <span class="badge">WORLD A</span>
+      <h1>🌌 スキル喰い (Skill Eater) - Gameplay Mechanics Demo</h1>
     </div>
     <div style="font-size: 0.85rem; color: var(--text-muted);">
-      5大フェーズ・完全統合ゲームループ
+      ローグライク・コアシステム実機動作モデル
     </div>
   </header>
 
   <main>
-    <!-- Phase Navigation -->
-    <nav class="phase-nav">
-      <button class="phase-btn active" onclick="switchPhase(0)">
-        <div class="p-num">Phase 0</div>
-        <div class="p-title">転落と覚醒</div>
-      </button>
-      <button class="phase-btn" onclick="switchPhase(1)">
-        <div class="p-num">Phase 1</div>
-        <div class="p-title">禁忌の《喰らい》</div>
-      </button>
-      <button class="phase-btn" onclick="switchPhase(2)">
-        <div class="p-num">Phase 2</div>
-        <div class="p-title">キメラ合成と拠点復興</div>
-      </button>
-      <button class="phase-btn" onclick="switchPhase(3)">
-        <div class="p-num">Phase 3</div>
-        <div class="p-title">神格化と因果律ボス</div>
-      </button>
-      <button class="phase-btn" onclick="switchPhase(4)">
-        <div class="p-num">Phase 4-5</div>
-        <div class="p-title">概念結晶と次元跳躍</div>
-      </button>
-    </nav>
-
-    <!-- Phase 0 Panel -->
-    <div class="showcase-panel active" id="panel-0">
-      <div class="story-card">
-        <h2>⚡ Phase 0: 転落と覚醒 (Betrayal & Awakening)</h2>
-        <p>
-          巨大企業都市バベルタワーの若きエリート監査官は、上層部の不正を嗅ぎつけたことで罠に嵌められ、権限を剥奪されて深度700mの廃棄スラム街へ投棄された。
-        </p>
-        <p>
-          瀕死の主人公が暗闇で見出したのは、最底辺の廃棄スキル《基礎解析》と、自己の魂を魔導炉と化す禁忌の強奪コード《喰らい（Devour）》だった。
-        </p>
-        <ul class="features-list">
-          <li><strong>最底辺スキル《基礎解析(X)》:</strong> 敵のステータス・弱点・所持スキル・捕食成功率を可視化。</li>
-          <li><strong>追捕犬からのステルス脱出:</strong> 瓦礫の死角を利用し、監査部隊の包囲網を突破。</li>
-          <li><strong>金庫ハックミニゲーム:</strong> 監査コードを流用し、廃工場の電子ロックを解除。</li>
+    <!-- Left Column: Mechanics Explanations -->
+    <div class="mechanics-section">
+      <div class="phase-card">
+        <h2>⚡ 探索と解析 (Exploration & Scan)</h2>
+        <p>廃棄層700mのプロシージャルダンジョンを探索。「解析(X)」スキルで視界内の敵のステータスや弱点を暴く。</p>
+        <ul class="feature-list">
+          <li>ターン制グリッド移動とASCII/タイルベースの描画</li>
+          <li>敵の頭上アイコンで「次ターンの意図（突撃/詠唱等）」を可視化</li>
         </ul>
       </div>
 
-      <div class="interactive-card">
-        <div class="sim-header">
-          <span>🎮 深度解析シミュレータ</span>
-          <span style="font-size: 0.8rem; color: var(--accent);">Key: [X]</span>
-        </div>
-        <div class="sim-status">
-          <div class="stat-box">
-            <div class="stat-label">プレイヤー状態</div>
-            <div class="stat-val" style="color: var(--success);">元監査官 (Lv.1)</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">ターゲット</div>
-            <div class="stat-val" id="p0-target">追捕犬 (HP 80/80)</div>
-          </div>
-        </div>
-        <div class="sim-actions">
-          <button class="sim-btn" onclick="runSimP0()">
-            <span>《解析(X)》を実行</span>
-            <span>⚡ SCAN</span>
-          </button>
-        </div>
-        <div class="console-log" id="log-0">
-          <div class="log-line log-sys">[SYSTEM] バベルタワー監査権限を永久剥奪されました。</div>
-          <div class="log-line log-sys">[STATUS] 廃棄層深度700mへ投棄。生存確率: 3.2%</div>
-        </div>
+      <div class="phase-card">
+        <h2>🩸 喰らいと抜け殻 (Devour & Husk)</h2>
+        <p>敵のHPを削り、弱点を突いた状態で「喰らい(V)」を実行。スキルを強奪し、敵を意志なき『抜け殻』に変える。</p>
+        <ul class="feature-list">
+          <li>捕食成功で敵スキルを永続パッシブとして獲得</li>
+          <li>捕食の度に「毒性(Toxicity)」が蓄積。80%超過でペナルティ</li>
+        </ul>
+      </div>
+
+      <div class="phase-card">
+        <h2>🧪 キメラ合成炉 (Synthesis Forge)</h2>
+        <p>強奪したスキル群を魔導炉で掛け合わせ、認可外の複合スキルを錬成。拠点を開拓する。</p>
+        <ul class="feature-list">
+          <li>「初級火炎」×「思考加速」＝《業火の超思考》などの合成システム</li>
+          <li>スラムの拠点を拡張し、闇市場やペット訓練所を解放</li>
+        </ul>
+      </div>
+      
+      <div class="phase-card">
+        <h2>🌌 因果律崩壊と次元跳躍 (Ascension & Multiverse)</h2>
+        <p>因果を司るボスを討ち、スキルを概念結晶へと圧縮。次元ゲートを開いて次なる世界へ。</p>
+        <ul class="feature-list">
+          <li>星座盤（Ascension Board）による属性シナジーパッシブ</li>
+          <li>時空金庫を経由したマルチバース（Bの世界等）へのアイテム・スキル持ち越し</li>
+        </ul>
       </div>
     </div>
 
-    <!-- Phase 1 Panel -->
-    <div class="showcase-panel" id="panel-1">
-      <div class="story-card">
-        <h2>🩸 Phase 1: 禁忌の《喰らい》と抜け殻 (Devour & Husk)</h2>
-        <p>
-          弱らせた敵の核を直接貪り喰らうことで、スキルを永続強奪。スキルを奪われた敵は意志を失った『抜け殻（Husk）』へと退化する。
-        </p>
-        <p>
-          しかし捕食を重ねるごとに「スキル拒絶反応（Toxicity）」が蓄積。80%を超えると激しい拒絶毒性により体力が蝕まれる。
-        </p>
-        <ul class="features-list">
-          <li><strong>捕食アクション《喰らい(V)》:</strong> 敵のHP低下と解析度に応じて成功率が上昇。</li>
-          <li><strong>抜け殻（Husk）化:</strong> スキルを失った敵は戦闘力を喪失し、残骸として放置される。</li>
-          <li><strong>毒性侵食とセーフハウス休息:</strong> スラムの隠れ家で休息し、過負荷をデトックス。</li>
-        </ul>
-      </div>
+    <!-- Right Column: Interactive ASCII Terminal Simulator -->
+    <div class="terminal-section">
+      <div class="terminal-container">
+        <div class="term-header">
+          <span>naRou.exe - Subsystem Simulation</span>
+          <span>FPS: 60 | Turn: 142</span>
+        </div>
+        
+        <div class="term-hud" id="term-hud">
+          <span style="color: #50ff80;">◆ 主人公 Lv.10</span>
+          <span>HP <span style="color: #50ff80;">85/100</span></span>
+          <span>MP <span style="color: #50a0ff;">40/50</span></span>
+          <span>毒性 <span id="tox-val" style="color: #ff55ff;">15%</span></span>
+          <span style="color: #ffd700;">💰 1200</span>
+        </div>
 
-      <div class="interactive-card">
-        <div class="sim-header">
-          <span>🎮 スキル強奪シミュレータ</span>
-          <span style="font-size: 0.8rem; color: var(--danger);">Key: [V]</span>
+        <div class="term-map" id="term-map">
+<span class="tile-wall">#######</span><span class="tile-floor">.....</span><span class="tile-wall">####</span>
+<span class="tile-wall">#</span><span class="tile-floor">.....</span><span class="tile-wall">#</span><span class="tile-floor">.....</span><span class="tile-wall">#</span><span class="tile-floor">..</span>
+<span class="tile-wall">#</span><span class="tile-floor">.</span><span class="tile-item">$</span><span class="tile-floor">...</span><span class="tile-wall">+</span><span class="tile-floor">.....</span><span class="tile-wall">+</span><span class="tile-floor">..</span>
+<span class="tile-wall">#</span><span class="tile-floor">.....</span><span class="tile-wall">#</span><span class="tile-floor">.....</span><span class="tile-wall">#</span><span class="tile-floor">..</span>
+<span class="tile-wall">###+###</span><span class="tile-floor">.....</span><span class="tile-wall">###</span>
+<span class="tile-wall">#</span><span class="tile-floor">..</span><span id="map-player" class="tile-player">@</span><span class="tile-floor">..</span><span class="tile-wall">#</span><span class="tile-floor">..</span><span id="map-enemy" class="tile-enemy">B</span><span class="tile-floor">..</span><span class="tile-wall">#</span>
+<span class="tile-wall">#</span><span class="tile-floor">.....</span><span class="tile-wall">#</span><span class="tile-floor">.....</span><span class="tile-wall">#</span>
+<span class="tile-wall">#######</span><span class="tile-wall">#######</span>
         </div>
-        <div class="sim-status">
-          <div class="stat-box">
-            <div class="stat-label">現在の毒性 (Toxicity)</div>
-            <div class="stat-val" id="p1-tox" style="color: var(--danger);">25%</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">敵HP状態</div>
-            <div class="stat-val" id="p1-hp" style="color: var(--gold);">瀕死 (15/120)</div>
-          </div>
-        </div>
-        <div class="sim-actions">
-          <button class="sim-btn" onclick="runSimP1()">
-            <span>《喰らい(V)》を発動！</span>
-            <span>🩸 DEVOUR</span>
-          </button>
-        </div>
-        <div class="console-log" id="log-1">
-          <div class="log-line log-sys">[SCAN] ミダス重装兵を検出。保有: 《鋼鉄の皮膚》</div>
-          <div class="log-line log-gold">★ 喰らい成功率: 85%（HP低下ボーナス適用中）</div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Phase 2 Panel -->
-    <div class="showcase-panel" id="panel-2">
-      <div class="story-card">
-        <h2>🧪 Phase 2: キメラ合成炉と拠点復興 (Chimera Synthesis & Base)</h2>
-        <p>
-          奪ったスキルを魔導合成炉で融合し、認可外のキメラスキルを錬成。不要なジャンクと余剰スキルをスラム解放戦線に投資して地下街を発展させる。
-        </p>
-        <ul class="features-list">
-          <li><strong>キメラ魔導合成《Shift+T》:</strong> 2つのスキルを掛け合わせ、新たな複合特性を創出。</li>
-          <li><strong>ペット自動派遣:</strong> 改造魔獣ハスクハウンドを廃品回収・ダンジョン探索へ派遣。</li>
-          <li><strong>環境パズル突破:</strong> 合成した属性スキル（Fire / Ice等）で封鎖隔壁を解除。</li>
-        </ul>
-      </div>
+        <div class="action-grid">
+          <button class="action-btn" onclick="actScan()">[X] 深度解析</button>
+          <button class="action-btn" onclick="actDevour()" style="border-color: var(--danger);">[V] 喰らい</button>
+          <button class="action-btn" onclick="actSynth()" style="border-color: var(--purple);">[Shift+T] 合成炉</button>
+          <button class="action-btn" onclick="actWarp()" style="border-color: var(--gold);">次元跳躍</button>
+        </div>
 
-      <div class="interactive-card">
-        <div class="sim-header">
-          <span>🎮 キメラ合成炉シミュレータ</span>
-          <span style="font-size: 0.8rem; color: var(--purple);">Key: [Shift+T]</span>
-        </div>
-        <div class="sim-status">
-          <div class="stat-box">
-            <div class="stat-label">所持アルド</div>
-            <div class="stat-val" id="p2-gold" style="color: var(--gold);">4,500 ALDO</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">拠点ランク</div>
-            <div class="stat-val" id="p2-base" style="color: var(--accent);">Lv.2 ネオン地下街</div>
-          </div>
-        </div>
-        <div class="sim-actions">
-          <button class="sim-btn" onclick="runSimP2()">
-            <span>《初級火炎》×《思考加速》を合成</span>
-            <span>🧪 SYNTHESIZE</span>
-          </button>
-        </div>
-        <div class="console-log" id="log-2">
-          <div class="log-line log-sys">[CHIMERA FORGE] 合成炉が稼働準備完了。</div>
-          <div class="log-line log-sys">[BASE] ペット『ハスク・ハウンド』が探索中...</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Phase 3 Panel -->
-    <div class="showcase-panel" id="panel-3">
-      <div class="story-card">
-        <h2>🌌 Phase 3: 神格化と因果律ボス (Ascension & Final Battle)</h2>
-        <p>
-          マスタースキルを星座グリッド（Ascension Board）に装着し、属性隣接リンクによる爆発的なシナジーを発揮。
-        </p>
-        <p>
-          地下闘技場の死闘、ミダス商会幹部の指名手配狩りを経て、世界の理を支配する第0因果律執行神『クロノス・ミダス』と決戦へ。
-        </p>
-        <ul class="features-list">
-          <li><strong>神格化星座盤:</strong> 星座ノードにコアを装着し、全体攻撃力・移動速度を大幅強化。</li>
-          <li><strong>地下闘技場（Arena）:</strong> 制約付きチャレンジとDPS測定シミュレータ。</li>
-          <li><strong>因果律崩壊バトル:</strong> ボスの法則改変攻撃を《概念喰らい》でカウンター。</li>
-        </ul>
-      </div>
-
-      <div class="interactive-card">
-        <div class="sim-header">
-          <span>🎮 因果律決戦シミュレータ</span>
-          <span style="font-size: 0.8rem; color: var(--gold);">BOSS BATTLE</span>
-        </div>
-        <div class="sim-status">
-          <div class="stat-box">
-            <div class="stat-label">星座リンク共鳴</div>
-            <div class="stat-val" style="color: var(--purple);">Void-Flame (x2.5)</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">クロノス・ミダス HP</div>
-            <div class="stat-val" id="p3-boss-hp" style="color: var(--danger);">50,000 / 50,000</div>
-          </div>
-        </div>
-        <div class="sim-actions">
-          <button class="sim-btn" onclick="runSimP3()">
-            <span>《概念喰らい》で因果律を攻撃！</span>
-            <span>⚔️ EXECUTE</span>
-          </button>
-        </div>
-        <div class="console-log" id="log-3">
-          <div class="log-line log-danger">【BOSS ENCOUNTER】第0因果律執行神『クロノス・ミダス』が出現！</div>
-          <div class="log-line log-sys">[BOARD] 星座共鳴により全攻撃力 +150% が適用中！</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Phase 4-5 Panel -->
-    <div class="showcase-panel" id="panel-4">
-      <div class="story-card">
-        <h2>🚪 Phase 4-5: 概念結晶と次元跳躍 (Concept & Multiverse)</h2>
-        <p>
-          Aの世界の頂点を極めた主人公は、同系統スキル3つを1つの「概念結晶（Concept Crystal）」へと超圧縮。
-        </p>
-        <p>
-          時空金庫（Temporal Vault）に結晶を封印し、マルチバース次元ゲートを開放。永続アーティファクト『concept_eater_mark』を携えて次なる世界（Bの世界：錬金術の深淵など）へと旅立つ。
-        </p>
-        <ul class="features-list">
-          <li><strong>概念結晶化（Concept Crystallization）:</strong> 持ち込み枠を圧縮し、超常パッシブ化。</li>
-          <li><strong>時空金庫（Temporal Vault）:</strong> 世界間を越境してスキル・遺産を持ち越す保管庫。</li>
-          <li><strong>マルチバース次元ゲート:</strong> 9つの異世界を自由に行き来する大航海へ。</li>
-        </ul>
-      </div>
-
-      <div class="interactive-card">
-        <div class="sim-header">
-          <span>🎮 次元ゲート開放シミュレータ</span>
-          <span style="font-size: 0.8rem; color: var(--success);">MULTIVERSE</span>
-        </div>
-        <div class="sim-status">
-          <div class="stat-box">
-            <div class="stat-label">時空金庫格納数</div>
-            <div class="stat-val" id="p4-vault" style="color: var(--gold);">3 / 3 結晶</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">次元ゲート同期率</div>
-            <div class="stat-val" id="p4-gate" style="color: var(--success);">100% (READY)</div>
-          </div>
-        </div>
-        <div class="sim-actions">
-          <button class="sim-btn" onclick="runSimP4()">
-            <span>次元ゲートを開放して越境！</span>
-            <span>🌌 WARP GATE</span>
-          </button>
-        </div>
-        <div class="console-log" id="log-4">
-          <div class="log-line log-gold">【概念結晶化完了】《概念結晶：大罪捕食》が生成されました。</div>
-          <div class="log-line log-sys">[MULTIVERSE] 次なる世界への境界線が溶解しています。</div>
+        <div class="term-log" id="term-log">
+          <div class="log-line c-sys">❯ 廃棄層 深度700m に到着した。</div>
+          <div class="log-line c-sys">❯ 周囲に敵影を感知... 慎重に進もう。</div>
         </div>
       </div>
     </div>
 
     <!-- GIF Demonstration Section -->
-    <div class="gif-preview-card">
-      <h3 style="margin-bottom: 0.8rem; color: #fff;">🎬 実機レンダリング シネマティックGIF</h3>
-      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.2rem;">
-        ゲームエンジン内部の実際の描画パイプライン（HUD・ミニマップ・メッセージログ）と完全に同期して生成されたデモアニメーションです。
+    <div class="gif-section">
+      <h2 style="margin-bottom: 1rem; color: #fff;">🎬 実機プレイ映像 (In-Game Footage)</h2>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+        実際のゲームエンジン（Map Renderer, UI Renderer, Combat System）上で動作するAの世界（スキル喰い）のプレイ画面です。
       </p>
-      <img src="../assets/demo_skill_eater_story.gif" alt="World A Skill Eater Complete Story GIF">
+      <img src="../assets/demo_skill_eater_story.gif" alt="World A Skill Eater Gameplay GIF">
     </div>
   </main>
 
   <script>
-    // Audio synthesizer for interactive clicks
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playBeep(freq, type = 'sine', duration = 0.15) {
-      try {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
-      } catch(e) {}
+    const logEl = document.getElementById('term-log');
+    
+    function log(msg, cls="c-sys") {
+      const d = document.createElement('div');
+      d.className = `log-line ${cls}`;
+      d.textContent = `❯ ${msg}`;
+      logEl.appendChild(d);
+      logEl.scrollTop = logEl.scrollHeight;
     }
 
-    function switchPhase(idx) {
-      playBeep(440, 'triangle', 0.1);
-      document.querySelectorAll('.phase-btn').forEach((b, i) => {
-        b.classList.toggle('active', i === idx);
-      });
-      document.querySelectorAll('.showcase-panel').forEach((p, i) => {
-        p.classList.toggle('active', i === idx);
-      });
+    function actScan() {
+      log('【キー X】《深度解析》を発動！', 'c-sys');
+      setTimeout(() => log('ミダス重装兵 を検出。HP: 15/120', 'c-sys'), 200);
+      setTimeout(() => log('弱点: 【Ice / Magic】 捕食成功率: 85%', 'c-atk'), 400);
+      setTimeout(() => log('保有スキル: 《鋼鉄の皮膚》[Rare]', 'c-succ'), 600);
     }
 
-    function appendLog(logId, text, type = 'sys') {
-      const box = document.getElementById(logId);
-      const div = document.createElement('div');
-      div.className = `log-line log-${type}`;
-      div.textContent = `❯ ${text}`;
-      box.appendChild(div);
-      box.scrollTop = box.scrollHeight;
+    function actDevour() {
+      log('【キー V】《喰らい(Devour)》を発動！！', 'c-atk');
+      setTimeout(() => {
+        log('【捕食成功！】《鋼鉄の皮膚》[Rare] を強奪した！', 'c-succ');
+        document.getElementById('map-enemy').className = 'tile-husk';
+        document.getElementById('map-enemy').textContent = 'H';
+        document.getElementById('tox-val').textContent = '28%';
+      }, 500);
+      setTimeout(() => log('敵はスキルを失い『抜け殻（Husk）』へと退化した...', 'c-sys'), 800);
+      setTimeout(() => log('【毒性上昇】スキル拒絶反応: 15% → 28%', 'c-warn'), 1100);
     }
 
-    // Phase 0 Sim
-    function runSimP0() {
-      playBeep(600, 'sine', 0.12);
-      appendLog('log-0', '《解析(X)》発動！ 追捕犬の弱点【Ice/Electric】を検出！', 'sys');
-      appendLog('log-0', 'スキル《電撃牙》[Common] を特定！（捕食成功率: 78%）', 'gold');
+    function actSynth() {
+      log('【Shift+T】《キメラ合成炉》を起動。', 'c-sys');
+      setTimeout(() => log('素材: 《初級火炎》× 《思考加速》を投入...', 'c-sys'), 300);
+      setTimeout(() => log('【合成成功！】《変異融合：業火の超思考》[Rare] が誕生！', 'c-succ'), 800);
     }
 
-    // Phase 1 Sim
-    function runSimP1() {
-      playBeep(220, 'sawtooth', 0.25);
-      appendLog('log-1', '【捕食成功！】《鋼鉄の皮膚》を強奪！ 敵は『抜け殻（Husk）』と化した！', 'success');
-      appendLog('log-1', '【毒性上昇】拒絶反応が 25% ➔ 35% に蓄積。', 'danger');
-      document.getElementById('p1-tox').textContent = '35%';
-      document.getElementById('p1-hp').textContent = '無力化 (0/120) [Husk]';
-    }
-
-    // Phase 2 Sim
-    function runSimP2() {
-      playBeep(520, 'sine', 0.1);
-      setTimeout(() => playBeep(780, 'sine', 0.2), 120);
-      appendLog('log-2', '【魔導キメラ合成成功！】《変異融合：業火の超思考》[Rare] を錬成！', 'gold');
-      appendLog('log-2', '【拠点拡張】スラム地下闇市場が Lv.3 要塞へアップグレード！', 'success');
-      document.getElementById('p2-base').textContent = 'Lv.3 解放戦線要塞';
-      document.getElementById('p2-gold').textContent = '6,200 ALDO';
-    }
-
-    // Phase 3 Sim
-    function runSimP3() {
-      playBeep(330, 'square', 0.15);
-      setTimeout(() => playBeep(880, 'triangle', 0.3), 150);
-      appendLog('log-3', '【超威力撃滅】Void-Flame共鳴により 48,800 の因果崩壊ダメージ！', 'gold');
-      appendLog('log-3', '【因果律崩壊】クロノス・ミダスを完全撃破！ Aの世界が解放された！', 'success');
-      document.getElementById('p3-boss-hp').textContent = '0 / 50,000 [DEFEATED]';
-    }
-
-    // Phase 4-5 Sim
-    function runSimP4() {
-      playBeep(440, 'sine', 0.1);
-      setTimeout(() => playBeep(660, 'sine', 0.1), 100);
-      setTimeout(() => playBeep(880, 'sine', 0.4), 200);
-      appendLog('log-4', '【次元ゲート開放】時空の歪みを突破し、マルチバースへ跳躍！', 'gold');
-      appendLog('log-4', '【永続の証】『concept_eater_mark』を所持して次世界へ到着しました！', 'success');
+    function actWarp() {
+      log('【次元ゲート】マルチバース越境シーケンス開始...', 'c-sys');
+      setTimeout(() => log('時空金庫から 概念結晶 3つを抽出。', 'c-atk'), 500);
+      setTimeout(() => log('永続の証『concept_eater_mark』を携え、次なる世界へ...', 'c-succ'), 1000);
     }
   </script>
 </body>
