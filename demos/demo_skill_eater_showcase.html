@@ -280,16 +280,7 @@
           <span style="color: #ffd700;">💰 1200</span>
         </div>
 
-        <div class="term-map" id="term-map">
-<span class="tile-wall">#######</span><span class="tile-floor">.....</span><span class="tile-wall">####</span>
-<span class="tile-wall">#</span><span class="tile-floor">.....</span><span class="tile-wall">#</span><span class="tile-floor">.....</span><span class="tile-wall">#</span><span class="tile-floor">..</span>
-<span class="tile-wall">#</span><span class="tile-floor">.</span><span class="tile-item">$</span><span class="tile-floor">...</span><span class="tile-wall">+</span><span class="tile-floor">.....</span><span class="tile-wall">+</span><span class="tile-floor">..</span>
-<span class="tile-wall">#</span><span class="tile-floor">.....</span><span class="tile-wall">#</span><span class="tile-floor">.....</span><span class="tile-wall">#</span><span class="tile-floor">..</span>
-<span class="tile-wall">###+###</span><span class="tile-floor">.....</span><span class="tile-wall">###</span>
-<span class="tile-wall">#</span><span class="tile-floor">..</span><span id="map-player" class="tile-player">@</span><span class="tile-floor">..</span><span class="tile-wall">#</span><span class="tile-floor">..</span><span id="map-enemy" class="tile-enemy">B</span><span class="tile-floor">..</span><span class="tile-wall">#</span>
-<span class="tile-wall">#</span><span class="tile-floor">.....</span><span class="tile-wall">#</span><span class="tile-floor">.....</span><span class="tile-wall">#</span>
-<span class="tile-wall">#######</span><span class="tile-wall">#######</span>
-        </div>
+        <canvas id="game-canvas" width="480" height="288" style="background: #08080c; border-bottom: 1px solid #334;"></canvas>
 
         <div class="action-grid">
           <button class="action-btn" onclick="actScan()">[X] 深度解析</button>
@@ -317,7 +308,6 @@
 
   <script>
     const logEl = document.getElementById('term-log');
-    
     function log(msg, cls="c-sys") {
       const d = document.createElement('div');
       d.className = `log-line ${cls}`;
@@ -326,33 +316,144 @@
       logEl.scrollTop = logEl.scrollHeight;
     }
 
+    // --- Audio Assets ---
+    const sfxScan = new Audio('../assets/audio/metalClick.ogg');
+    const sfxDevour = new Audio('../assets/audio/knifeSlice.ogg');
+    const sfxSynth = new Audio('../assets/audio/metalPot1.ogg');
+    const sfxWarp = new Audio('../assets/audio/doorOpen_1.ogg');
+    const playSound = (audio) => { audio.currentTime = 0; audio.play().catch(e=>console.log(e)); };
+
+    // --- Image Assets ---
+    const atlas = new Image();
+    atlas.src = '../assets/tiles/tiny_rogue_atlas_16x16.png';
+    const emoteAlert = new Image();
+    emoteAlert.src = '../assets/emote/pixel/style1/emote_alert.png';
+    const emoteAnger = new Image();
+    emoteAnger.src = '../assets/emote/pixel/style1/emote_anger.png';
+    const emoteExclam = new Image();
+    emoteExclam.src = '../assets/emote/pixel/style1/emote_exclamations.png';
+
+    // --- Canvas Renderer ---
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+
+    // Map definition
+    const mapData = [
+      "#######.....####",
+      "#.....#.....#..#",
+      "#.C...+.....+..#",
+      "#.....#.....#..#",
+      "###+###.....####",
+      "#..@..#..B..#..#",
+      "#.....#.....#..#",
+      "#######.....####"
+    ];
+    let showScan = false;
+    let enemyState = 'B'; // 'B' = Boss/Enemy, 'H' = Husk
+    let activeEmote = null; // null, 'alert', 'anger', 'exclam'
+
+    function drawTile(sx, sy, dx, dy) {
+      ctx.drawImage(atlas, sx, sy, 16, 16, dx*32, dy*32, 32, 32);
+    }
+
+    function renderMap() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (!atlas.complete) {
+        requestAnimationFrame(renderMap);
+        return;
+      }
+      for (let y = 0; y < mapData.length; y++) {
+        for (let x = 0; x < mapData[y].length; x++) {
+          const ch = mapData[y][x];
+          // Base floor
+          drawTile(0, 0, x, y); // TR_FLOOR_01
+          
+          if (ch === '#') drawTile(204, 0, x, y); // TR_WALL_01
+          else if (ch === '+') drawTile(102, 17, x, y); // Door/Decor
+          else if (ch === 'C') drawTile(306, 17, x, y); // Item/Gold
+          else if (ch === '@') drawTile(0, 99, x, y); // Player
+          else if (ch === 'B') {
+            if (enemyState === 'B') {
+              drawTile(0, 34, x, y); // Enemy
+              if (showScan) {
+                ctx.strokeStyle = '#50a0ff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x*32, y*32, 32, 32);
+              }
+              if (activeEmote === 'alert') ctx.drawImage(emoteAlert, x*32, y*32-24, 24, 24);
+              if (activeEmote === 'anger') ctx.drawImage(emoteAnger, x*32, y*32-24, 24, 24);
+            } else if (enemyState === 'H') {
+              ctx.globalAlpha = 0.5;
+              drawTile(0, 34, x, y); // Husk (dimmed)
+              ctx.globalAlpha = 1.0;
+            }
+          }
+          if (ch === '@' && activeEmote === 'exclam') {
+            ctx.drawImage(emoteExclam, x*32, y*32-24, 24, 24);
+          }
+        }
+      }
+    }
+    
+    atlas.onload = renderMap;
+    emoteAlert.onload = emoteAnger.onload = emoteExclam.onload = renderMap;
+
+    // --- Actions ---
     function actScan() {
+      playSound(sfxScan);
       log('【キー X】《深度解析》を発動！', 'c-sys');
+      showScan = true;
+      activeEmote = 'alert';
+      renderMap();
       setTimeout(() => log('ミダス重装兵 を検出。HP: 15/120', 'c-sys'), 200);
       setTimeout(() => log('弱点: 【Ice / Magic】 捕食成功率: 85%', 'c-atk'), 400);
       setTimeout(() => log('保有スキル: 《鋼鉄の皮膚》[Rare]', 'c-succ'), 600);
+      setTimeout(() => { activeEmote = null; renderMap(); }, 1500);
     }
 
     function actDevour() {
+      if (enemyState !== 'B') return;
+      playSound(sfxDevour);
       log('【キー V】《喰らい(Devour)》を発動！！', 'c-atk');
+      activeEmote = 'anger';
+      renderMap();
+      
+      // Simulate blood effect
+      ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
       setTimeout(() => {
         log('【捕食成功！】《鋼鉄の皮膚》[Rare] を強奪した！', 'c-succ');
-        document.getElementById('map-enemy').className = 'tile-husk';
-        document.getElementById('map-enemy').textContent = 'H';
+        enemyState = 'H';
+        showScan = false;
+        activeEmote = null;
         document.getElementById('tox-val').textContent = '28%';
+        renderMap();
       }, 500);
       setTimeout(() => log('敵はスキルを失い『抜け殻（Husk）』へと退化した...', 'c-sys'), 800);
       setTimeout(() => log('【毒性上昇】スキル拒絶反応: 15% → 28%', 'c-warn'), 1100);
     }
 
     function actSynth() {
+      playSound(sfxSynth);
       log('【Shift+T】《キメラ合成炉》を起動。', 'c-sys');
+      activeEmote = 'exclam';
+      renderMap();
       setTimeout(() => log('素材: 《初級火炎》× 《思考加速》を投入...', 'c-sys'), 300);
       setTimeout(() => log('【合成成功！】《変異融合：業火の超思考》[Rare] が誕生！', 'c-succ'), 800);
+      setTimeout(() => { activeEmote = null; renderMap(); }, 1500);
     }
 
     function actWarp() {
+      playSound(sfxWarp);
       log('【次元ゲート】マルチバース越境シーケンス開始...', 'c-sys');
+      
+      // Flash effect
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      setTimeout(renderMap, 100);
+      
       setTimeout(() => log('時空金庫から 概念結晶 3つを抽出。', 'c-atk'), 500);
       setTimeout(() => log('永続の証『concept_eater_mark』を携え、次なる世界へ...', 'c-succ'), 1000);
     }
