@@ -185,6 +185,13 @@ class GameplayLoop:
             tx, ty
         ):
             self.engine.player.x, self.engine.player.y = tx, ty
+
+            try:
+                from event_bus import event_bus, EVENT_ON_MOVE
+                event_bus.publish(EVENT_ON_MOVE, {"entity": self.engine.player, "x": tx, "y": ty})
+            except ImportError:
+                pass
+
             if (tx, ty) == self.engine.altar_pos:
                 from constants import GodInfo
 

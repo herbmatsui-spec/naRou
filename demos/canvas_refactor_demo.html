@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Elona Canvas Refactor Demo</title>
+  <style>
+    body { background: #0a0a10; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    canvas { background: #08080c; border: 1px solid #334; }
+  </style>
+</head>
+<body>
+  <canvas id="game-canvas" width="512" height="256"></canvas>
+  <script type="module">
+    import { TileRenderer2D } from "../src/render/elona_canvas_core.js";
+
+    const canvas = document.getElementById('game-canvas');
+    const renderer = new TileRenderer2D(canvas, { tileSize: 16, renderScale: 2 });
+    const atlasPath = "../assets/tiles/tiny_rogue_atlas_16x16.png";
+    const jsonPath = "../assets/tiles/tiny_rogue_atlas_16x16.json";
+
+    const mapData = [
+      "#######.....####",
+      "#.....#.....#..#",
+      "#.C...+.....+..#",
+      "#.....#.....#..#",
+      "###+###.....####",
+      "#..@..#..B..#..#",
+      "#.....#.....#..#",
+      "#######.....####"
+    ];
+    const charMap = {
+      '#': 'TR_WALL_01',
+      '.': 'TR_FLOOR_01',
+      '@': 'TR_PLAYER_01',
+      'B': 'TR_MONSTER_01',
+      'C': 'TR_ITEM_01',
+      '+': 'TR_DECOR_01'
+    };
+
+    async function main() {
+      await renderer.load(atlasPath, jsonPath);
+      renderMap();
+    }
+    function renderMap() {
+      renderer.clear();
+      for (let y = 0; y < mapData.length; y++) {
+        const line = mapData[y];
+        for (let x = 0; x < line.length; x++) {
+          const ch = line[x];
+          const tileId = charMap[ch] || 'TR_FLOOR_01';
+          renderer.drawTile(tileId, x, y);
+        }
+      }
+    }
+    main();
+  </script>
+</body>
+</html>

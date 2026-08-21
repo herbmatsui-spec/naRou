@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>DecalSystem2D Demo</title>
+  <style>
+    body { background:#0a0a10; display:flex; justify-content:center; align-items:center; height:100vh; }
+    canvas { background:#08080c; border:1px solid #334; }
+  </style>
+</head>
+<body>
+  <canvas id="decal-canvas" width="512" height="256"></canvas>
+  <script type="module">
+    import { DecalSystem2D } from "../src/render/DecalSystem2D.js";
+    const canvas = document.getElementById('decal-canvas');
+    const decals = new DecalSystem2D(canvas);
+    function render() {
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      decals.render();
+      requestAnimationFrame(render);
+    }
+    render();
+    // Click to add a random decal type
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const types = ['blood', 'footprint'];
+      const type = types[Math.floor(Math.random()*types.length)];
+      decals.stamp(x, y, type);
+    });
+  </script>
+</body>
+</html>

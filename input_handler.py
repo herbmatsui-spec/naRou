@@ -138,6 +138,12 @@ class InputHandler:
         reg.register("play", KeyBinding(KS.H, HelpAction()))
         reg.register("play", KeyBinding(KS.F1, HelpAction()))
         reg.register("play", KeyBinding(KS.SLASH, HelpAction()))
+        
+        from input_actions import WaitAction, ActionDevour, ActionScan
+        reg.register("play", KeyBinding(KS.PERIOD, WaitAction(), description="待機"))
+        reg.register("play", KeyBinding(KS.D, ActionDevour(), SHIFT, description="喰らう"))
+        reg.register("play", KeyBinding(KS.S, ActionScan(), SHIFT, description="解析"))
+
         reg.register(
             "play",
             KeyBinding(KS.I, InventoryAction("player"), description="インベントリ"),

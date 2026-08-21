@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Elona Canvas Engine Full Demo</title>
+  <style>
+    body { background:#0a0a10; display:flex; justify-content:center; align-items:center; height:100vh; }
+    canvas { background:#08080c; border:1px solid #334; }
+  </style>
+</head>
+<body>
+  <canvas id="full-canvas" width="640" height="320"></canvas>
+  <script type="module">
+    import { CanvasEngine } from "../src/render/CanvasEngine.js";
+    const canvas = document.getElementById('full-canvas');
+    const engine = new CanvasEngine(canvas);
+    // Load tile atlas and metadata (paths relative to this HTML file)
+    const atlasPath = "../assets/tiles/tiny_rogue_atlas_16x16.png";
+    const jsonPath = "../assets/tiles/tiny_rogue_atlas_16x16.json";
+    await engine.loadTileAssets(atlasPath, jsonPath);
+    // Simple map – same layout as earlier demos
+    const mapData = [
+      "#######.....####",
+      "#.....#.....#..#",
+      "#.C...+.....+..#",
+      "#.....#.....#..#",
+      "###+###.....####",
+      "#..@..#..B..#..#",
+      "#.....#.....#..#",
+      "#######.....####"
+    ];
+    const charMap = {
+      '#': 'TR_WALL_01',
+      '.': 'TR_FLOOR_01',
+      '@': 'TR_PLAYER_01',
+      'B': 'TR_MONSTER_01',
+      'C': 'TR_ITEM_01',
+      '+': 'TR_DECOR_01'
+    };
+    // Draw the base map once – the engine's render loop will re‑draw it each frame.
+    engine.drawMap(mapData, charMap);
+
+    // Interaction – on click add effects from all subsystems.
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      // Particle explosion (dust)
+      engine.particleSystem.emit({ type: 'dust', x, y, count: 8 });
+      // Fluid metaball
+      engine.fluidRenderer.addParticle(x, y, 25 + Math.random() * 15);
+      // Light source
+      engine.lightingSystem.addLight(x, y, 70, 'rgba(255,220,100,0.6)');
+      // Blood decal
+      engine.decalSystem.stamp(x, y, 'blood');
+    });
+
+    // Start the main loop
+    engine.start();
+  </script>
+</body>
+</html>

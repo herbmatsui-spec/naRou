@@ -1,104 +1,45 @@
-{% extends "templates/base.html" %}
-{% block title %}パーティクルシステム デモ{% endblock %}
-{% block content %}
-<div id="container">
-    <div class="controls">
-      <button onclick="emitStep()">歩行（ほこり）</button>
-      <button onclick="emitHit()">ヒット（火花）</button>
-      <button onclick="emitMagic()">魔法（マジック）</button>
-      <button onclick="emitHeal()">回復（ヒール）</button>
-      <button onclick="emitDamage()">ダメージ</button>
-      <button onclick="emitLevelUp()">レベルアップ</button>
-      <button onclick="clearParticles()">クリア</button>
-      <div class="info">
-        パーティクル数: <span id="particleCount">0</span><br>
-        FPS: <span id="fps">0</span>
-      </div>
-    </div>
-  </div>
-
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ParticleSystem2D Demo</title>
+  <style>
+    body { background:#0a0a10; display:flex; justify-content:center; align-items:center; height:100vh; }
+    canvas { background:#08080c; border:1px solid #334; }
+  </style>
+</head>
+<body>
+  <canvas id="particle-canvas" width="512" height="256"></canvas>
   <script type="module">
-    import { ParticleSystem } from './demos/lib/ParticleSystem.js';
-    
-    // PixiJSアプリケーションの初期化
-    const app = new PIXI.Application({
-      width: 960,
-      height: 576,
-      backgroundColor: 0x0a0b10,
-      antialias: true
-    });
-    
-    document.getElementById('container').appendChild(app.view);
-    
-    // パーティクルシステムを初期化
-    const particleSystem = new ParticleSystem(app, app.stage);
-    
-    // マウス位置
-    let mouseX = 480;
-    let mouseY = 288;
-    
-    app.view.addEventListener('mousemove', (e) => {
-      const rect = app.view.getBoundingClientRect();
-      mouseX = e.clientX - rect.left;
-      mouseY = e.clientY - rect.top;
-    });
-    
-    app.view.addEventListener('click', (e) => {
-      const rect = app.view.getBoundingClientRect();
+    import { ParticleSystem2D } from "../src/render/ParticleSystem2D.js";
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    const ps = new ParticleSystem2D(ctx);
+
+    // Animation loop
+    let last = performance.now();
+    function loop(now) {
+      const dt = (now - last) / 1000; // seconds
+      last = now;
+      // update & clear
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ps.update(dt);
+      ps.render();
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    // Emit particles on click
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      
-      // クリック位置にランダムなエフェクト
-      const effects = ['step', 'hit', 'magic_cast', 'heal', 'damage'];
-      const randomEffect = effects[Math.floor(Math.random() * effects.length)];
-      particleSystem.emitEffect(randomEffect, x, y, 10);
-    });
-    
-    // ゲームループ
-    app.ticker.add((delta) => {
-      particleSystem.update(delta / 60);
-      
-      // 情報を更新
-      document.getElementById('particleCount').textContent = particleSystem.getActiveCount();
-      document.getElementById('fps').textContent = Math.round(app.ticker.FPS);
-    });
-    
-    // エフェクト発火関数
-    window.emitStep = () => {
-      particleSystem.emitEffect('step', mouseX, mouseY, 5);
-    };
-    
-    window.emitHit = () => {
-      particleSystem.emitEffect('hit', mouseX, mouseY, 10);
-    };
-    
-    window.emitMagic = () => {
-      particleSystem.emitEffect('magic_cast', mouseX, mouseY, 15);
-    };
-    
-    window.emitHeal = () => {
-      particleSystem.emitEffect('heal', mouseX, mouseY, 12);
-    };
-    
-    window.emitDamage = () => {
-      particleSystem.emitEffect('damage', mouseX, mouseY, 8);
-    };
-    
-    window.emitLevelUp = () => {
-      particleSystem.emitEffect('level_up', mouseX, mouseY, 30);
-    };
-    
-    window.clearParticles = () => {
-      particleSystem.clear();
-    };
-    
-    // 自動デモ
-    setInterval(() => {
-      const x = Math.random() * 960;
-      const y = Math.random() * 576;
-      const effects = ['step', 'hit', 'magic_cast'];
+      // Random effect for demonstration
+      const effects = ['dust', 'spark', 'magic', 'heal', 'damage'];
       const effect = effects[Math.floor(Math.random() * effects.length)];
-      particleSystem.emitEffect(effect, x, y, 5);
-    }, 500);
+      ps.emit({ type: effect, x, y, count: 10 });
+    });
   </script>
-{% endblock %}
+</body>
+</html>

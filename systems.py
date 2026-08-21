@@ -199,6 +199,14 @@ class CombatSystem:
         if is_crit:
             roll_dmg = int(roll_dmg * 1.5) + dice_s
 
+        try:
+            from event_bus import event_bus, EVENT_BEFORE_DAMAGE
+            evt_data = {"attacker": attacker, "defender": defender, "damage": roll_dmg, "element": element, "is_crit": is_crit}
+            event_bus.publish(EVENT_BEFORE_DAMAGE, evt_data)
+            roll_dmg = evt_data["damage"]
+        except ImportError:
+            pass
+
         # 属性耐性適用
         res = getattr(defender, "resistances", ResistanceSet())
         res_val = res.get(element) if hasattr(res, "get") else 0
@@ -269,13 +277,15 @@ class CombatSystem:
 
     @staticmethod
     def process_status_effects(entity: Entity) -> list[str]:
-        """状態異常のTick処理 (ステップ16, 45)"""
+        """状態異常のTick処理 (ステップ16, 45, Phase 4 Steps 27-31)"""
         if not hasattr(entity, "status_effects"):
             entity.status_effects = []
         logs = []
         remaining = []
         for eff in entity.status_effects:
-            eff.remaining_ticks -= 10
+            if not getattr(eff, "is_infinite", False):
+                eff.remaining_ticks -= 10
+
             if eff.name == STATUS_POISON:
                 dmg = max(1, eff.power)
                 entity.hp -= dmg
@@ -286,6 +296,21 @@ class CombatSystem:
                 entity.hp -= dmg
                 if random.random() < 0.15:
                     logs.append(f"{entity.name}の傷口から血が流れ出す！(-{dmg} HP)")
+            elif eff.name == "Husk":
+                # 行動不能 (Step 28)
+                entity.energy = min(entity.energy, 0)
+            elif eff.name == "Toxicity":
+                # 割合ダメージ (Step 29)
+                dmg = max(1, int(entity.max_hp * (0.01 * eff.power)))
+                entity.hp -= dmg
+                if random.random() < 0.1:
+                    logs.append(f"{entity.name}は拒絶反応に苦しむ！(-{dmg} HP)")
+            elif eff.name == "Regen":
+                # リジェネ (Step 30)
+                heal = max(1, eff.power)
+                entity.hp = min(entity.hp + heal, getattr(entity, "max_hp", entity.hp))
+                if random.random() < 0.1:
+                    logs.append(f"{entity.name}の傷が再生していく。(+{heal} HP)")
             elif eff.name == STATUS_PARALYSIS:
                 entity.energy = min(entity.energy, 0)
 

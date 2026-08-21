@@ -634,3 +634,39 @@ class QuitAction:
 
         sys.exit()
         return True
+
+class WaitAction:
+    """待機アクション (Step 20)"""
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play"
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        if hasattr(engine, "player_act"):
+            engine.player_act(0, 0)
+        if hasattr(engine, "advance_world"):
+            engine.advance_world()
+        return True
+
+class ActionDevour:
+    """喰らい（Devour）アクション (Step 21)"""
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play"
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.log("【Devour】対象を喰らう準備をした！", (255, 100, 100))
+        return True
+
+class ActionScan:
+    """解析（Scan）アクション (Step 22)"""
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play"
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.log("【Scan】対象の構造解析を開始！", (100, 255, 100))
+        return True
