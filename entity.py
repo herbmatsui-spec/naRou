@@ -10,7 +10,7 @@ import random
 from dataclasses import field
 from typing import Any, TypeVar
 
-from constants import DEFAULT_GOD_ID
+from constants import AI_ROLE_KITER, DEFAULT_GOD_ID, KITER_PREFERRED_RANGE
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +77,9 @@ class Entity:
         self.next_intent: dict | None = None
         # 敵AIロール・陣形 (提案4)
         self.ai_role: str = self._default_ai_role(name)
-        self.preferred_range: int = 1
+        self.preferred_range: int = (
+            KITER_PREFERRED_RANGE if self.ai_role == AI_ROLE_KITER else 1
+        )
 
         # === ECS コンポーネントコンテナ ===
         self.components: dict[type, Any] = {}

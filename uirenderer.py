@@ -55,6 +55,24 @@ class UIRenderer:
             if 0 <= vx < VIEW_WIDTH and 0 <= vy < VIEW_HEIGHT:
                 console.print(x=vx, y=vy, string="🎯", fg=(255, 255, 0))
 
+                # 提案4/2: カーソル下の敵の AIロールと次回行動(意図)を表示
+                cx, cy = context.look_cursor.x, context.look_cursor.y
+                ent = None
+                for e in context.entities:
+                    if e.x == cx and e.y == cy:
+                        ent = e
+                        break
+                if ent and getattr(ent, "faction", None) == "monster":
+                    role = getattr(ent, "ai_role", "?")
+                    intent = getattr(ent, "next_intent", None)
+                    label = intent["label"] if intent else "-"
+                    info = f"{ent.name} [AI:{role} 意図:{label}]"
+                    iy = vy - 1
+                    if iy >= 0:
+                        console.print(
+                            x=vx, y=iy, string=info[:VIEW_WIDTH], fg=(255, 210, 120)
+                        )
+
         # 8.5 マップ凡例ガイド
         lx, ly = SCREEN_WIDTH - 21, 13
         console.draw_rect(x=lx, y=ly, width=20, height=8, ch=0, bg=(12, 16, 24))

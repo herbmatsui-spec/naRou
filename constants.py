@@ -70,6 +70,7 @@ FLEE_HP_RATIO = 0.30          # このHP比率未満で逃走を検討
 FORMATION_SPREAD_GAP = 1      # 味方と重ならないための最低間隔
 FLANK_SIDE_OFFSET = 1         # 挟撃時の側面オフセット
 PINCER_MIN_ALLIES = 2         # 連携(挟撃)発動に必要な視界内味方数
+HARD_KITER_RANGE_BONUS = 1    # 難易度hard時の kiter 間合いボーナス
 
 
 # 属性Enum

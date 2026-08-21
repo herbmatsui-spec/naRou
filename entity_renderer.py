@@ -9,9 +9,59 @@ import math
 import tcod
 
 from constants import (
+    INTENT_ATTACK,
+    INTENT_CAST,
+    INTENT_FLEE,
+    INTENT_GUARD,
+    INTENT_HEAL,
+    INTENT_MOVE,
     VIEW_HEIGHT,
     VIEW_WIDTH,
 )
+
+# 意図アイコンの色分け (提案2)
+_INTENT_COLORS = {
+    INTENT_ATTACK: (255, 80, 80),
+    INTENT_CAST: (200, 100, 255),
+    INTENT_HEAL: (100, 255, 150),
+    INTENT_FLEE: (120, 200, 255),
+    INTENT_MOVE: (180, 180, 180),
+    INTENT_GUARD: (120, 255, 255),
+}
+
+
+def render_entity_intent(console, ent, vx: int, vy: int) -> None:
+    """敵の次回行動（意図）を頭上に描画 (提案2)。"""
+    intent = getattr(ent, "next_intent", None)
+    if not intent:
+        return
+    if getattr(ent, "is_player", False) or getattr(ent, "is_pet", False):
+        return
+
+    # 頭上1マス（エモートの ! は頭上に出るため、意図はその上=頭上2マスに配置）
+    iy = vy - 2
+    if iy < 0:
+        iy = vy - 1
+        if iy < 0:
+            return
+
+    glyph = intent.get("glyph", "·")
+    color = _INTENT_COLORS.get(intent.get("type"), (180, 180, 180))
+
+    # アイコン描画
+    try:
+        console.print(x=vx, y=iy, string=glyph, fg=color)
+    except Exception:  # noqa: BLE001
+        pass
+
+    # ラベル描画（アイコンの右隣）
+    label = intent.get("label", "")
+    if label and 0 <= vx + 1 < VIEW_WIDTH:
+        try:
+            console.print(x=vx + 1, y=iy, string=label, fg=color)
+        except Exception:  # noqa: BLE001
+            pass
+
 
 # Import new entity rendering system
 from core.entity_renderer import EntityRenderer as CoreEntityRenderer
@@ -153,6 +203,9 @@ class EntityRenderer:
 
                         # ティント適用して描画
                         console.draw_semigraphics(sub_image, vx, draw_vy)
+
+                        # 提案2: 敵の意図を頭上に描画
+                        render_entity_intent(console, ent, vx, vy)
                     else:
                         # フォールバック: 文字描画
                         char_to_draw = ent.char
@@ -168,3 +221,6 @@ class EntityRenderer:
                         else:
                             ent_col = lit_col
                         console.print(x=vx, y=vy, string=char_to_draw, fg=ent_col)
+
+                        # 提案2: 敵の意図を頭上に描画
+                        render_entity_intent(console, ent, vx, vy)
