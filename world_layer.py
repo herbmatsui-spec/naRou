@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import os
 from dataclasses import dataclass, field
@@ -44,9 +45,7 @@ class WorldLayer:
                     themes = yaml.safe_load(f)
 
                 # 新しい垂直ワールド構造からテーマを取得: vertical_world.zone.biome.depth_range.dimension
-                vertical_world = themes.get("dungeon_themes", {}).get(
-                    "vertical_world", {}
-                )
+                vertical_world = themes.get("dungeon_themes", {}).get("vertical_world", {})
                 zone_data = vertical_world.get(self.zone, {})
                 biome_data = zone_data.get(self.biome, {})
 
@@ -140,9 +139,7 @@ class WorldLayer:
 
     def get_resources(self) -> dict[str, list[str]]:
         """資源・アイテムテーブルを取得"""
-        return self.theme_data.get(
-            "resources", {"common": [], "uncommon": [], "rare": []}
-        )
+        return self.theme_data.get("resources", {"common": [], "uncommon": [], "rare": []})
 
     def get_gimmicks(self) -> list[str]:
         """特別なギミック・イベントを取得"""
@@ -158,9 +155,7 @@ class WorldLayer:
         if not self.game_map or not self.game_map.rooms:
             # デフォルト: マップ中央
             return (
-                (self.game_map.width // 2, self.game_map.height // 2)
-                if self.game_map
-                else (10, 10)
+                (self.game_map.width // 2, self.game_map.height // 2) if self.game_map else (10, 10)
             )
 
         # 最初の部屋の中心を入口とする

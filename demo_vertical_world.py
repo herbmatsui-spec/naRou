@@ -3,6 +3,7 @@
 Vertical World System デモスクリプト
 基本的な機能を示すシンプルな例
 """
+
 from __future__ import annotations
 
 from world_layer import WorldLayer
@@ -16,9 +17,7 @@ def demo_basic_functionality():
     # 1. WorldLayerの作成とテスト
     print("1. WorldLayerの作成")
     layer = WorldLayer("underground", "forest", 25, "material")
-    print(
-        f"   作成されたレイヤー: {layer.zone} {layer.biome} 深度{layer.depth} {layer.dimension}"
-    )
+    print(f"   作成されたレイヤー: {layer.zone} {layer.biome} 深度{layer.depth} {layer.dimension}")
     print(f"   テーマID: {layer.theme_data.get('theme_id', 'N/A')}")
     print(f"   レイヤー名: {layer.theme_data.get('name', 'N/A')}")
     print(f"   難易度修正子: {layer.theme_data.get('difficulty_modifier', 'N/A')}")
@@ -65,9 +64,7 @@ def demo_basic_functionality():
 
     # 5. 隣接レイヤーの取得
     print("5. 隣接レイヤーの取得")
-    adjacent_layers = world_manager.get_adjacent_layers(
-        "surface", "plains", 5, "material"
-    )
+    adjacent_layers = world_manager.get_adjacent_layers("surface", "plains", 5, "material")
     print(f"   隣接レイヤー数: {len(adjacent_layers)}")
     for i, adj_layer in enumerate(adjacent_layers[:3]):  # 最初の3つだけ表示
         print(

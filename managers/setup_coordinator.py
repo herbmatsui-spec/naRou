@@ -1,4 +1,5 @@
 """setup_coordinator: initializes Engine subsystems (extracted from game.py)."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -24,12 +25,8 @@ def setup_systems(engine: "Engine") -> None:
     engine.fusion_registry.load()
 
     # Data & AI Systems
-    engine.data_manager = engine.systems_coordinator.register_system(
-        "data_manager", DataManager()
-    )
-    engine.ai_system = engine.systems_coordinator.register_system(
-        "ai_system", AdvancedAISystem()
-    )
+    engine.data_manager = engine.systems_coordinator.register_system("data_manager", DataManager())
+    engine.ai_system = engine.systems_coordinator.register_system("ai_system", AdvancedAISystem())
 
     # UX & FX Systems
     engine.tutorial_manager = TutorialManager("data/tutorial_guides.yaml")

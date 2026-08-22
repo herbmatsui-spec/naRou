@@ -55,9 +55,7 @@ class ParticleBuffer:
         self.life = np.zeros((max_particles, 4), dtype=np.float32)  # x=current, y=max
         self.color = np.zeros((max_particles, 4), dtype=np.float32)
         self.size = np.zeros((max_particles, 4), dtype=np.float32)  # x=start, y=end
-        self.rotation = np.zeros(
-            (max_particles, 4), dtype=np.float32
-        )  # x=start, y=speed
+        self.rotation = np.zeros((max_particles, 4), dtype=np.float32)  # x=start, y=speed
         self.flags = np.zeros(max_particles, dtype=np.uint32)
         self.material_id = np.zeros(max_particles, dtype=np.uint32)
         self.emitter_id = np.zeros(max_particles, dtype=np.uint32)
@@ -98,9 +96,7 @@ class ParticleBuffer:
             return
 
         # Sort alive by life (oldest first)
-        alive_life = [
-            (i, self.life[i, 0] / self.life[i, 1]) for i in self.alive_indices
-        ]
+        alive_life = [(i, self.life[i, 0] / self.life[i, 1]) for i in self.alive_indices]
         alive_life.sort(key=lambda x: x[1], reverse=True)  # Oldest first
 
         recycle_count = min(count, len(alive_life))
@@ -201,9 +197,7 @@ class CurlNoise:
         y1 = self._lerp(x1, x2, v)
 
         x1 = self._lerp(grad(aab, xf, yf, zf - 1), grad(bab, xf - 1, yf, zf - 1), u)
-        x2 = self._lerp(
-            grad(abb, xf, yf - 1, zf - 1), grad(bbb, xf - 1, yf - 1, zf - 1), u
-        )
+        x2 = self._lerp(grad(abb, xf, yf - 1, zf - 1), grad(bbb, xf - 1, yf - 1, zf - 1), u)
         y2 = self._lerp(x1, x2, v)
 
         return self._lerp(y1, y2, w) * 2.0
@@ -214,9 +208,7 @@ class CurlNoise:
     def _lerp(self, a: float, b: float, t: float) -> float:
         return a + t * (b - a)
 
-    def curl_noise_3d(
-        self, x: float, y: float, z: float, eps: float = 0.01
-    ) -> np.ndarray:
+    def curl_noise_3d(self, x: float, y: float, z: float, eps: float = 0.01) -> np.ndarray:
         """Compute curl of 3D noise (divergence-free velocity)."""
         # Curl = ∇ × N = (∂Nz/∂y - ∂Ny/∂z, ∂Nx/∂z - ∂Nz/∂x, ∂Ny/∂x - ∂Nx/∂y)
         n_x = self.noise3d(x, y, z)
@@ -245,18 +237,14 @@ class CurlNoise:
 class SDFCollision:
     """Signed Distance Field collision for particles."""
 
-    def __init__(
-        self, grid_size: int = 128, world_bounds: tuple = (-50, 50, -50, 50, -10, 50)
-    ):
+    def __init__(self, grid_size: int = 128, world_bounds: tuple = (-50, 50, -50, 50, -10, 50)):
         self.grid_size = grid_size
         self.world_bounds = world_bounds  # (min_x, max_x, min_y, max_y, min_z, max_z)
         self.sdf = None
         self.cell_size = 0.0
         self.heightmap_shape = None
 
-    def build_from_heightmap(
-        self, heightmap: np.ndarray, wall_height: float = 10.0
-    ) -> None:
+    def build_from_heightmap(self, heightmap: np.ndarray, wall_height: float = 10.0) -> None:
         """Build SDF from 2D heightmap (walls extruded to wall_height)."""
         h, w = heightmap.shape
         self.grid_size = max(h, w, 32)
@@ -267,9 +255,7 @@ class SDFCollision:
         # Scale X/Y to match heightmap aspect
         self.world_bounds = (min_x, max_x, min_y, max_y, min_z, max_z)
 
-        self.sdf = np.zeros(
-            (self.grid_size, self.grid_size, self.grid_size), dtype=np.float32
-        )
+        self.sdf = np.zeros((self.grid_size, self.grid_size, self.grid_size), dtype=np.float32)
 
         self.cell_size = (max_x - min_x) / self.grid_size
 
@@ -282,12 +268,8 @@ class SDFCollision:
                     world_y = min_y + (y + 0.5) * self.cell_size
 
                     # Sample heightmap - map world coords to heightmap
-                    hm_x = int(
-                        np.clip((world_x - min_x) / (max_x - min_x) * (w - 1), 0, w - 1)
-                    )
-                    hm_y = int(
-                        np.clip((world_y - min_y) / (max_y - min_y) * (h - 1), 0, h - 1)
-                    )
+                    hm_x = int(np.clip((world_x - min_x) / (max_x - min_x) * (w - 1), 0, w - 1))
+                    hm_y = int(np.clip((world_y - min_y) / (max_y - min_y) * (h - 1), 0, h - 1))
                     height = heightmap[hm_y, hm_x]
 
                     if world_z < height:
@@ -295,9 +277,7 @@ class SDFCollision:
                         self.sdf[z, y, x] = height - world_z
                     elif world_z < height + wall_height:
                         # Inside wall volume
-                        self.sdf[z, y, x] = min(
-                            world_z - height, height + wall_height - world_z
-                        )
+                        self.sdf[z, y, x] = min(world_z - height, height + wall_height - world_z)
                     else:
                         # Outside
                         self.sdf[z, y, x] = world_z - (height + wall_height)
@@ -418,13 +398,9 @@ class Emitter:
     ):
         self.type = emitter_type
         self.rate = rate  # Particles per second
-        self.position = (
-            position if position is not None else np.zeros(3, dtype=np.float32)
-        )
+        self.position = position if position is not None else np.zeros(3, dtype=np.float32)
         self.direction = (
-            direction
-            if direction is not None
-            else np.array([0, 1, 0], dtype=np.float32)
+            direction if direction is not None else np.array([0, 1, 0], dtype=np.float32)
         )
         self.params = params if params is not None else {}
         self.accumulator = 0.0
@@ -491,9 +467,7 @@ class Emitter:
         elif self.type == Emitter.Type.RING:
             angle = np.random.random() * 2 * np.pi
             radius = self.params.get("radius", 1.0)
-            pos += (
-                np.array([np.cos(angle), 0, np.sin(angle)], dtype=np.float32) * radius
-            )
+            pos += np.array([np.cos(angle), 0, np.sin(angle)], dtype=np.float32) * radius
         elif self.type == Emitter.Type.SPHERE:
             # Uniform sphere
             u = np.random.random()
@@ -517,9 +491,7 @@ class Emitter:
         buffer.velocity[idx] = vel
         buffer.life[idx] = np.array([0.0, base_life, 0.0, 0.0], dtype=np.float32)
         buffer.color[idx] = base_color
-        buffer.size[idx] = np.array(
-            [base_size, base_size, base_size, 0.0], dtype=np.float32
-        )
+        buffer.size[idx] = np.array([base_size, base_size, base_size, 0.0], dtype=np.float32)
         buffer.rotation[idx] = np.array(
             [0.0, self.params.get("rot_speed", 0.0), 0.0, 0.0], dtype=np.float32
         )
@@ -596,8 +568,7 @@ def simulate_particles_cpu(
 
         # Size interpolation
         buffer.size[idx, 2] = (
-            buffer.size[idx, 0]
-            + (buffer.size[idx, 1] - buffer.size[idx, 0]) * life_ratio
+            buffer.size[idx, 0] + (buffer.size[idx, 1] - buffer.size[idx, 0]) * life_ratio
         )
 
         # Color interpolation (fade out)

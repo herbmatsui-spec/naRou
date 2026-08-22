@@ -1,4 +1,5 @@
 """Unit tests for the EventBus in core_framework."""
+
 from __future__ import annotations
 
 from core_framework import EventBus

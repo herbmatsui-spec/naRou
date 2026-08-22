@@ -22,9 +22,7 @@ class DialogueManager:
     DEFAULT_NPC_DIALOGUE = "「……（こちらを警戒している）」"
 
     @classmethod
-    def get_dialogue(
-        cls, speaker: Any, player: Any, engine: Any | None = None
-    ) -> tuple[str, str]:
+    def get_dialogue(cls, speaker: Any, player: Any, engine: Any | None = None) -> tuple[str, str]:
         """NPCまたはペットとプレイヤーの間の対話テキストを生成"""
         speaker_name = getattr(speaker, "name", "誰か")
 
@@ -61,9 +59,7 @@ class DialogueManager:
             return speaker_name, random.choice(NPCS_CATALOG["gwen"].dialogues)
 
         # 関係性システムによる動的判定（もしあれば）
-        if hasattr(engine, "relationship_manager") and hasattr(
-            player, "character_relationships"
-        ):
+        if hasattr(engine, "relationship_manager") and hasattr(player, "character_relationships"):
             rel_dict = getattr(player, "character_relationships", {})
             if speaker_name in rel_dict:
                 trust = rel_dict[speaker_name].get("trust", 0)

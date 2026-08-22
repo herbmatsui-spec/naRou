@@ -6,6 +6,7 @@ Steps 37-45: 属性耐性, 詠唱失敗率, AoEパターン, Faction/Aggro, 出�
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import random
 from dataclasses import dataclass
@@ -15,6 +16,7 @@ from constants import Element
 
 if TYPE_CHECKING:
     from entity import Entity
+    from item_system import Item
 
 # 状態異常
 STATUS_POISON = "毒"
@@ -106,12 +108,7 @@ class CombatSystem:
     @staticmethod
     def aoe_nova(cx: int, cy: int) -> list[tuple[int, int]]:
         """周囲全方位（8マス）"""
-        return [
-            (cx + dx, cy + dy)
-            for dx in (-1, 0, 1)
-            for dy in (-1, 0, 1)
-            if (dx, dy) != (0, 0)
-        ]
+        return [(cx + dx, cy + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1) if (dx, dy) != (0, 0)]
 
     @staticmethod
     def publish_damage_event(
@@ -200,8 +197,15 @@ class CombatSystem:
             roll_dmg = int(roll_dmg * 1.5) + dice_s
 
         try:
-            from event_bus import event_bus, EVENT_BEFORE_DAMAGE
-            evt_data = {"attacker": attacker, "defender": defender, "damage": roll_dmg, "element": element, "is_crit": is_crit}
+            from event_bus import EVENT_BEFORE_DAMAGE, event_bus
+
+            evt_data = {
+                "attacker": attacker,
+                "defender": defender,
+                "damage": roll_dmg,
+                "element": element,
+                "is_crit": is_crit,
+            }
             event_bus.publish(EVENT_BEFORE_DAMAGE, evt_data)
             roll_dmg = evt_data["damage"]
         except ImportError:
@@ -213,8 +217,7 @@ class CombatSystem:
         final_dmg = CombatSystem.calc_element_damage(roll_dmg, element, res_val)
         final_dmg = max(
             1,
-            final_dmg
-            - random.randint(0, max(1, int(defender.attributes.endurance / 4))),
+            final_dmg - random.randint(0, max(1, int(defender.attributes.endurance / 4))),
         )
 
         # 転生スケーリング適用 (Steps 53, 54)
@@ -396,9 +399,7 @@ class CombatSystem:
             return None
 
     @staticmethod
-    def execute_exclusive_skill(
-        caster: Entity, skill_id: str, target: Entity
-    ) -> tuple[int, str]:
+    def execute_exclusive_skill(caster: Entity, skill_id: str, target: Entity) -> tuple[int, str]:
         """エクスクルーシブスキル実行 (Step 63)"""
         data = CombatSystem.get_exclusive_skill_data(skill_id)
         if not data:

@@ -70,9 +70,7 @@ def recursive_shadowcast(
     return visible
 
 
-def _cast_light(
-    visible, is_blocked, ox, oy, radius, row, start_slope, end_slope, xx, xy, yx, yy
-):
+def _cast_light(visible, is_blocked, ox, oy, radius, row, start_slope, end_slope, xx, xy, yx, yy):
     if start_slope < end_slope:
         return
 

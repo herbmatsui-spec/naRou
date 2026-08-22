@@ -34,7 +34,7 @@
 
     <script type="module">
         import { WebGLRenderer, loadSceneData, SceneGridData } from '/src/render/Renderer.ts';
-        
+
         // Scene definitions (from generate_24_scenes.py)
         const SCENES: SceneGridData[] = [
             {
@@ -126,7 +126,7 @@
                 webglCanvas.style.width = '100%';
                 webglCanvas.style.height = '400px';
                 canvas.replaceWith(webglCanvas);
-                
+
                 // Create scene buttons
                 SCENES.forEach((scene, index) => {
                     const btn = document.createElement('button');
@@ -135,10 +135,10 @@
                     btn.onclick = () => loadScene(index);
                     controls.appendChild(btn);
                 });
-                
+
                 // Load first scene
                 await loadScene(0);
-                
+
                 // Start animation loop
                 animate();
             } catch (error) {
@@ -156,18 +156,18 @@
         async function loadScene(index: number) {
             currentSceneIndex = index;
             const scene = SCENES[index];
-            
+
             // Update UI
             document.getElementById('scene-title')!.textContent = scene.title;
             document.getElementById('scene-desc')!.textContent = scene.desc;
             document.getElementById('scene-icon')!.textContent = scene.icon;
             document.getElementById('scene-log')!.textContent = `📜 ${scene.log}`;
-            
+
             // Update active button
             controls.querySelectorAll('.btn').forEach((btn, i) => {
                 btn.classList.toggle('active', i === index);
             });
-            
+
             // Render scene
             renderer.renderScene(scene);
         }
@@ -175,27 +175,27 @@
         function animate() {
             const now = performance.now();
             frameCount++;
-            
+
             if (now - lastTime >= 1000) {
                 fps = Math.round(frameCount * 1000 / (now - lastTime));
                 frameCount = 0;
                 lastTime = now;
-                
+
                 // Update stats
                 const gl = renderer.getRenderer().getContext() as WebGL2RenderingContext;
                 const info = renderer.getRenderer().info;
-                
+
                 fpsEl.textContent = fps.toString();
                 drawCallsEl.textContent = info.render.calls.toString();
                 trianglesEl.textContent = info.render.triangles.toString();
-                
+
                 // GPU memory (if available)
                 if ('memory' in performance) {
                     const mem = (performance as any).memory;
                     gpuMemoryEl.textContent = `${(mem.usedJSHeapSize / 1024 / 1024).toFixed(1)} MB`;
                 }
             }
-            
+
             renderer.animate();
         }
 

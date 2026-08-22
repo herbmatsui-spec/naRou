@@ -6,6 +6,7 @@ Steps 2, 4, 7, 9, 20, 21, 24, 25 (Bresenham & A* Pathfinding)
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import heapq
 import math
@@ -152,10 +153,7 @@ class EventBus:
             self._subscribers[event_type].append(callback)
 
     def unsubscribe(self, event_type: str, callback: Callable[[Any], None]) -> bool:
-        if (
-            event_type in self._subscribers
-            and callback in self._subscribers[event_type]
-        ):
+        if event_type in self._subscribers and callback in self._subscribers[event_type]:
             self._subscribers[event_type].remove(callback)
             return True
         return False

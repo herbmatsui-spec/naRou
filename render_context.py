@@ -4,9 +4,14 @@ Render Context Module - Holds all data needed for rendering
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from entity import Entity
 from fx_manager import FXManager
 from item_system import Item
+
+if TYPE_CHECKING:
+    from crafting_system import ResourceNode
 from localization_manager import LocalizationManager
 from map_engine import GameMap
 from message_log import MessageLog
@@ -46,6 +51,11 @@ class RenderContext:
         pet_inventory: list[Item],
         altar_pos: tuple[int, int],
         localization_manager: LocalizationManager = None,
+        world_a_data: dict = None,
+        toxicity_manager: object = None,
+        skill_eater_combat_system: object = None,
+        color_vision_mode: str = "none",
+        last_scan_result: object = None,
     ):
         self.game_map = game_map
         self.player = player
@@ -73,3 +83,8 @@ class RenderContext:
         self.pet_inventory = pet_inventory
         self.altar_pos = altar_pos
         self.localization_manager = localization_manager
+        self.world_a_data = world_a_data or {}
+        self.toxicity_manager = toxicity_manager
+        self.skill_eater_combat_system = skill_eater_combat_system
+        self.color_vision_mode = color_vision_mode
+        self.last_scan_result = last_scan_result

@@ -1,8 +1,8 @@
 # Post-Mortem: Tiny Rogue Graphics Pack Integration
 
-**Date**: 2026-08-20  
-**Author**: Kilo  
-**Project**: Elona Roguelike Clone - Tiny Rogue Asset Pack Integration  
+**Date**: 2026-08-20
+**Author**: Kilo
+**Project**: Elona Roguelike Clone - Tiny Rogue Asset Pack Integration
 **Duration**: ~4 hours (Phases 1-5)
 
 ---

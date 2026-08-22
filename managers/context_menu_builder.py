@@ -2,6 +2,7 @@
 
 Extracted from Engine.open_context_menu (game.py).
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -23,14 +24,10 @@ class ContextMenuBuilder:
         # 1. 足元のアイテム
         ground_items = engine.entity_manager.get_items_at(px, py)
         for itm in ground_items:
-            actions.append(
-                ContextAction(f"拾う: {itm.display_name}", "pickup", "pickup_item", itm)
-            )
+            actions.append(ContextAction(f"拾う: {itm.display_name}", "pickup", "pickup_item", itm))
             if itm.category == CAT_FOOD:
                 actions.append(
-                    ContextAction(
-                        f"食べる: {itm.display_name}", "eat", "eat_ground", itm
-                    )
+                    ContextAction(f"食べる: {itm.display_name}", "eat", "eat_ground", itm)
                 )
 
         # 2. 隣接するNPC
@@ -39,21 +36,15 @@ class ContextMenuBuilder:
             ent = engine.get_entity_at(nx, ny)
             if ent and ent not in (engine.player, engine.pet):
                 actions.append(
-                    ContextAction(
-                        f"話す / 調べる: {ent.name}", "talk", "talk_target", ent
-                    )
+                    ContextAction(f"話す / 調べる: {ent.name}", "talk", "talk_target", ent)
                 )
             elif ent == engine.pet:
-                actions.append(
-                    ContextAction("シエルの荷物を見る", "pet_inv", "open_pet_inv", ent)
-                )
+                actions.append(ContextAction("シエルの荷物を見る", "pet_inv", "open_pet_inv", ent))
 
         # 3. 祭壇
         if (px, py) == engine.altar_pos:
             actions.append(ContextAction("神に祈る", "pray", "pray", None))
-            actions.append(
-                ContextAction("祭壇に供物を捧げる", "offer", "offer_altar", None)
-            )
+            actions.append(ContextAction("祭壇に供物を捧げる", "offer", "offer_altar", None))
 
         # 4. 採取ポイント
         for node in engine.entity_manager.resource_nodes:

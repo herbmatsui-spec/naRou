@@ -3,6 +3,7 @@
 Localization Manager for naRou
 Handles multi-language text loading, caching, and retrieval with fallback support.
 """
+
 from __future__ import annotations
 
 import logging
@@ -91,9 +92,7 @@ class LocalizationManager:
             except Exception as e:
                 self.logger.error(f"Failed to load {lang_file}: {e}")
 
-    def _flatten_dict(
-        self, d: dict, parent_key: str = "", sep: str = "."
-    ) -> dict[str, str]:
+    def _flatten_dict(self, d: dict, parent_key: str = "", sep: str = ".") -> dict[str, str]:
         """Flatten a nested dictionary with dot-separated keys."""
         items = {}
         for k, v in d.items():
@@ -300,9 +299,7 @@ class LocalizationManager:
                     f"{lang_code}: missing {len(missing)} keys vs {self.default_language}"
                 )
             if extra:
-                issues.append(
-                    f"{lang_code}: {len(extra)} extra keys vs {self.default_language}"
-                )
+                issues.append(f"{lang_code}: {len(extra)} extra keys vs {self.default_language}")
 
         return {
             "valid": len(issues) == 0,
@@ -433,7 +430,9 @@ def get_text(key: str, language: str | None = None) -> str:
     return get_localization_manager().get_text(key, language)
 
 
-def localize(key: str, language: str | None = None, manager: LocalizationManager | None = None) -> str:
+def localize(
+    key: str, language: str | None = None, manager: LocalizationManager | None = None
+) -> str:
     """Return localized text for *key* using LocalizationManager.
 
     Single source of truth for localization across the codebase. Callers

@@ -17,6 +17,7 @@ Examples:
     python tools/atlas_packer.py my_tiles assets/tiles/my_atlas \\
         --tile-size 32 --max-size 1024
 """
+
 from __future__ import annotations
 
 import argparse
@@ -47,9 +48,7 @@ def load_manifest(manifest_path: Path) -> list[tuple[int, str, str, str]]:
     return rows
 
 
-def scan_directory(
-    tiles_dir: Path, pattern: str = "*.png"
-) -> list[tuple[int, str, str, str]]:
+def scan_directory(tiles_dir: Path, pattern: str = "*.png") -> list[tuple[int, str, str, str]]:
     """Scan directory for PNG files, generate manifest from filenames."""
     files = sorted(tiles_dir.glob(pattern))
     rows = []
@@ -136,9 +135,7 @@ def pack_atlas(
                             img = img.resize((tile_size, tile_size), Image.NEAREST)
                         dir_images.append(img)
                     else:
-                        dir_images.append(
-                            Image.new("RGBA", (tile_size, tile_size), (0, 0, 0, 0))
-                        )
+                        dir_images.append(Image.new("RGBA", (tile_size, tile_size), (0, 0, 0, 0)))
 
                 # Check row space
                 if x + tile_size + padding > max_atlas_size:
@@ -251,13 +248,9 @@ def generate_tileset_def(
         }
 
         if cat in ("floor", "wall"):
-            defn.update(
-                {"variants": 12, "autotile": True, "directions": 1, "states": ["idle"]}
-            )
+            defn.update({"variants": 12, "autotile": True, "directions": 1, "states": ["idle"]})
         elif cat == "wall_variant":
-            defn.update(
-                {"variants": 1, "autotile": False, "directions": 1, "states": ["idle"]}
-            )
+            defn.update({"variants": 1, "autotile": False, "directions": 1, "states": ["idle"]})
         elif cat == "decoration":
             defn.update(
                 {
@@ -318,9 +311,7 @@ def generate_tileset_def(
                 }
             )
         else:
-            defn.update(
-                {"variants": 1, "animated": False, "directions": 1, "states": ["idle"]}
-            )
+            defn.update({"variants": 1, "animated": False, "directions": 1, "states": ["idle"]})
 
         tiles[tile_id] = defn
 
@@ -330,9 +321,7 @@ def generate_tileset_def(
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Universal Atlas Packer for tile-based games"
-    )
+    parser = argparse.ArgumentParser(description="Universal Atlas Packer for tile-based games")
     parser.add_argument("input_dir", type=Path, help="Directory containing tile PNGs")
     parser.add_argument(
         "output_prefix",
@@ -353,9 +342,7 @@ def main():
         default=2048,
         help="Maximum atlas dimension (default: 2048)",
     )
-    parser.add_argument(
-        "--padding", type=int, default=1, help="Padding between tiles (default: 1)"
-    )
+    parser.add_argument("--padding", type=int, default=1, help="Padding between tiles (default: 1)")
     parser.add_argument(
         "--scale-name",
         type=str,
@@ -367,12 +354,8 @@ def main():
         default=["monster", "monster_variant", "player_npc"],
         help="Categories with 4-directional frames",
     )
-    parser.add_argument(
-        "--generate-def", action="store_true", help="Generate tileset_def.json"
-    )
-    parser.add_argument(
-        "--def-output", type=Path, help="Output path for tileset_def.json"
-    )
+    parser.add_argument("--generate-def", action="store_true", help="Generate tileset_def.json")
+    parser.add_argument("--def-output", type=Path, help="Output path for tileset_def.json")
 
     args = parser.parse_args()
 
@@ -423,9 +406,7 @@ def main():
     # Generate tileset_def.json if requested
     if args.generate_def:
         scale_name = args.scale_name or f"custom_{args.tile_size}"
-        def_output = args.def_output or args.output_prefix.with_name(
-            f"tileset_{scale_name}.json"
-        )
+        def_output = args.def_output or args.output_prefix.with_name(f"tileset_{scale_name}.json")
         print(f"Generating tileset_def.json to {def_output}")
         generate_tileset_def(meta, args.tile_size, scale_name, def_output)
 

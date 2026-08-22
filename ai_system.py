@@ -147,9 +147,7 @@ class MeleeAttackAction(BehaviorNode):
 
         if target.hp <= 0:
             if target == engine.player:
-                engine.log(
-                    f"【死亡】{actor.name} に倒された……", (255, 30, 30), level="ERROR"
-                )
+                engine.log(f"【死亡】{actor.name} に倒された……", (255, 30, 30), level="ERROR")
             elif target == engine.pet:
                 engine.log(f"{target.name} は力尽きて倒れた！", (255, 100, 100))
             else:
@@ -172,11 +170,15 @@ class MeleeAttackAction(BehaviorNode):
             (-1, 1),
         ]:
             ent = engine.get_entity_at(actor.x + dx, actor.y + dy)
-            if ent and ent.hp > 0 and (
-                actor.faction == "monster"
-                and (ent.is_player or getattr(ent, "is_pet", False))
-                or getattr(actor, "is_pet", False)
-                and ent.faction == "monster"
+            if (
+                ent
+                and ent.hp > 0
+                and (
+                    actor.faction == "monster"
+                    and (ent.is_player or getattr(ent, "is_pet", False))
+                    or getattr(actor, "is_pet", False)
+                    and ent.faction == "monster"
+                )
             ):
                 return ent
         return None
@@ -192,9 +194,7 @@ class CastSpellAction(BehaviorNode):
             return False
 
         dist = Point(actor.x, actor.y).chebyshev_distance(Point(target.x, target.y))
-        if 2 <= dist <= 5 and engine.has_los(
-            Point(actor.x, actor.y), Point(target.x, target.y)
-        ):
+        if 2 <= dist <= 5 and engine.has_los(Point(actor.x, actor.y), Point(target.x, target.y)):
             if random.random() < 0.40:
                 dmg = random.randint(8, 16)
                 target.hp -= dmg
@@ -206,9 +206,7 @@ class CastSpellAction(BehaviorNode):
                     from ui_fx_systems import FloatingText
 
                     engine.floating_texts.append(
-                        FloatingText(
-                            f"-{dmg}", target.x, target.y - 0.2, (200, 100, 255)
-                        )
+                        FloatingText(f"-{dmg}", target.x, target.y - 0.2, (200, 100, 255))
                     )
                 actor.energy -= ENERGY_THRESHOLD
                 return True
@@ -310,8 +308,14 @@ class WanderAction(BehaviorNode):
 # ==================== 提案4: 陣形・連携タクティクス用ヘルパ ====================
 
 DIRS8 = [
-    (0, 1), (0, -1), (1, 0), (-1, 0),
-    (1, 1), (-1, -1), (1, -1), (-1, 1),
+    (0, 1),
+    (0, -1),
+    (1, 0),
+    (-1, 0),
+    (1, 1),
+    (-1, -1),
+    (1, -1),
+    (-1, 1),
 ]
 
 
@@ -387,10 +391,7 @@ class SpreadAction(BehaviorNode):
         neighbors = _free_neighbors(engine, actor)
         if not neighbors:
             return False
-        crowded = any(
-            _is_monster_at(engine, actor.x + dx, actor.y + dy, actor)
-            for dx, dy in DIRS8
-        )
+        crowded = any(_is_monster_at(engine, actor.x + dx, actor.y + dy, actor) for dx, dy in DIRS8)
         if not crowded:
             return False
         best = min(neighbors, key=lambda t: _ally_density(engine, t[0], t[1], actor))
@@ -422,9 +423,7 @@ class KiteAction(BehaviorNode):
             neighbors = _free_neighbors(engine, actor)
             if not neighbors:
                 return False
-            nx, ny = max(
-                neighbors, key=lambda t: _cheb(t[0], t[1], player.x, player.y)
-            )
+            nx, ny = max(neighbors, key=lambda t: _cheb(t[0], t[1], player.x, player.y))
             actor.x, actor.y = nx, ny
             actor.energy -= ENERGY_THRESHOLD
             return True
@@ -433,15 +432,10 @@ class KiteAction(BehaviorNode):
             neighbors = _free_neighbors(engine, actor)
             if not neighbors:
                 return False
-            cand = [
-                t for t in neighbors
-                if _cheb(t[0], t[1], player.x, player.y) >= pref - 1
-            ]
+            cand = [t for t in neighbors if _cheb(t[0], t[1], player.x, player.y) >= pref - 1]
             if not cand:
                 cand = neighbors
-            nx, ny = min(
-                cand, key=lambda t: _cheb(t[0], t[1], player.x, player.y)
-            )
+            nx, ny = min(cand, key=lambda t: _cheb(t[0], t[1], player.x, player.y))
             actor.x, actor.y = nx, ny
             actor.energy -= ENERGY_THRESHOLD
             return True
@@ -513,9 +507,7 @@ class AdvancedAISystem(BaseSystem):
                 [CastSpellAction(), MeleeAttackAction(), ChaseAction(), WanderAction()]
             ),
             # 提案4: 陣形AIロール用ツリー
-            "kiter": SelectorNode(
-                [KiteAction(), CastSpellAction(), ChaseAction(), WanderAction()]
-            ),
+            "kiter": SelectorNode([KiteAction(), CastSpellAction(), ChaseAction(), WanderAction()]),
             "flanker": SelectorNode(
                 [FlankAction(), MeleeAttackAction(), ChaseAction(), WanderAction()]
             ),
@@ -523,7 +515,6 @@ class AdvancedAISystem(BaseSystem):
 
     def _allies_in_sight(self, actor: Entity, engine: Engine) -> int:
         """視界内の味方モンスター数を数える (提案4: 連携判定)"""
-        from core_framework import Point
 
         count = 0
         for e in getattr(engine, "entities", []):
@@ -540,12 +531,7 @@ class AdvancedAISystem(BaseSystem):
             self.process_pet_ai(actor, engine)
             return
 
-        from constants import (
-            AI_ROLE_BRUTE,
-            AI_ROLE_FLANKER,
-            AI_ROLE_KITER,
-            PINCER_MIN_ALLIES,
-        )
+        from constants import AI_ROLE_BRUTE, AI_ROLE_FLANKER, AI_ROLE_KITER, PINCER_MIN_ALLIES
 
         ai_type = getattr(actor, "ai_type", "aggressive")
         role = getattr(actor, "ai_role", AI_ROLE_BRUTE)
@@ -578,9 +564,7 @@ class AdvancedAISystem(BaseSystem):
             if dist > 2:
                 tree = SelectorNode([PetFollowAction(), MeleeAttackAction()])
             else:
-                tree = SelectorNode(
-                    [MeleeAttackAction(), ChaseAction(), PetFollowAction()]
-                )
+                tree = SelectorNode([MeleeAttackAction(), ChaseAction(), PetFollowAction()])
         elif tactic == TACTIC_AGGRESSIVE:
             tree = SelectorNode([MeleeAttackAction(), ChaseAction(), PetFollowAction()])
         else:  # TACTIC_BALANCED

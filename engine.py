@@ -32,6 +32,7 @@ class GameLocalizer:
         success = self._manager.set_language(language)
         if not success:
             from exceptions import ResourceLoadError
+
             raise ResourceLoadError(f"Failed to set localization language to '{language}'")
         return success
 

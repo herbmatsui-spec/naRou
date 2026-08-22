@@ -58,9 +58,7 @@ class EnemyCone:
 
     def update_pulse(self, time: float) -> None:
         """パルス係数更新"""
-        self.pulse = 0.12 + 0.06 * (
-            0.5 + 0.5 * __import__("math").sin(time * 4.0 + self.x * 24.0)
-        )
+        self.pulse = 0.12 + 0.06 * (0.5 + 0.5 * __import__("math").sin(time * 4.0 + self.x * 24.0))
 
 
 @dataclass
@@ -213,11 +211,7 @@ class TerminalLightingSystem:
             for y in range(h):
                 color_row = []
                 for x in range(w):
-                    if (
-                        y < len(color_grid)
-                        and x < len(color_grid[y])
-                        and color_grid[y][x]
-                    ):
+                    if y < len(color_grid) and x < len(color_grid[y]) and color_grid[y][x]:
                         color_row.append(color_grid[y][x])
                     else:
                         color_row.append(default_color)
@@ -309,9 +303,7 @@ class TerminalLightingSystem:
 
                 console.tiles_rgb["bg"][vx, vy] = (r, g, b)
 
-    def draw_light_sources(
-        self, console: Any, cam_x: int, cam_y: int, time: float
-    ) -> None:
+    def draw_light_sources(self, console: Any, cam_x: int, cam_y: int, time: float) -> None:
         """光源ハロー描画 (加算ブレンド擬似)
 
         同心円を段階的に明るく描画して加算ブレンドを模倣
@@ -358,9 +350,7 @@ class TerminalLightingSystem:
                             min(255, int(bg[2]) + cb),
                         )
 
-    def draw_enemy_cones(
-        self, console: Any, cam_x: int, cam_y: int, time: float
-    ) -> None:
+    def draw_enemy_cones(self, console: Any, cam_x: int, cam_y: int, time: float) -> None:
         """敵視界コーン描画 (加算ブレンド擬似)
 
         扇形をパルスしながら描画
@@ -411,9 +401,7 @@ class TerminalLightingSystem:
     ) -> None:
         """ライティング完全パス実行 (推奨呼び出し順序)"""
         # 1. ベースライティング (乗算ブレンド)
-        self.apply_lighting_to_tiles(
-            console, cam_x, cam_y, view_w, view_h, visible, explored
-        )
+        self.apply_lighting_to_tiles(console, cam_x, cam_y, view_w, view_h, visible, explored)
         # 2. 光源ハロー加算
         self.draw_light_sources(console, cam_x, cam_y, time)
         # 3. 敵視界コーン加算
@@ -609,10 +597,7 @@ class SimpleSSAO:
     def _generate_noise(self, w: int, h: int) -> list[list[tuple[float, float]]]:
         """回転ノイズテクスチャ生成"""
 
-        return [
-            [(uniform(-1, 1), uniform(-1, 1)) for _ in range(w)]
-            for _ in range(h)
-        ]
+        return [[(uniform(-1, 1), uniform(-1, 1)) for _ in range(w)] for _ in range(h)]
 
     def compute(self, normal_buffer: np.ndarray) -> np.ndarray:
         """
@@ -624,6 +609,7 @@ class SimpleSSAO:
             (H, W) float32 AO 値 (0..1, 1=遮蔽なし)
         """
         from scipy import ndimage
+
         H, W = normal_buffer.shape[:2]
         ao = np.ones((H, W), dtype=np.float32)
 
@@ -637,11 +623,7 @@ class SimpleSSAO:
         nz = normal_buffer[..., 2]
 
         grad_x = ndimage.sobel(nx) + ndimage.sobel(ny) + ndimage.sobel(nz)
-        grad_y = (
-            ndimage.sobel(nx, axis=1)
-            + ndimage.sobel(ny, axis=1)
-            + ndimage.sobel(nz, axis=1)
-        )
+        grad_y = ndimage.sobel(nx, axis=1) + ndimage.sobel(ny, axis=1) + ndimage.sobel(nz, axis=1)
         edge = np.sqrt(grad_x**2 + grad_y**2)
 
         # エッジ付近を暗くする
@@ -657,9 +639,7 @@ class SimpleSSAO:
                 continue
 
             # ロールして比較
-            shifted = np.roll(
-                np.roll(normal_buffer, offset_y, axis=0), offset_x, axis=1
-            )
+            shifted = np.roll(np.roll(normal_buffer, offset_y, axis=0), offset_x, axis=1)
             dot = np.sum(normal_buffer * shifted, axis=2)
             # 法線が大きく異なる = 遮蔽
             ao = np.minimum(ao, np.clip(1.0 - dot * 0.5, 0.5, 1.0))
@@ -678,8 +658,6 @@ class SimpleSSAO:
         return lightmap * ao  # type: ignore[no-any-return]
 
 
-
-
 # シングルトンインスタンス（遅延初期化）
 _ssao_instance = None
 
@@ -687,11 +665,7 @@ _ssao_instance = None
 def get_ssao(width: int = 80, height: int = 50) -> SimpleSSAO:
     """SSAO インスタンス取得（リサイズ対応）"""
     global _ssao_instance
-    if (
-        _ssao_instance is None
-        or _ssao_instance.width != width
-        or _ssao_instance.height != height
-    ):
+    if _ssao_instance is None or _ssao_instance.width != width or _ssao_instance.height != height:
         _ssao_instance = SimpleSSAO(width, height)
     return _ssao_instance
 

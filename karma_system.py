@@ -1,9 +1,11 @@
 """
 カーマシステム
 """
+
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import os
 from dataclasses import dataclass
@@ -93,15 +95,11 @@ class KarmaManager:
     def __init__(self, registry: KarmaRegistry | None = None):
         self.registry = registry or REGISTRY
 
-    def update_karma(
-        self, player: Any, action: str, amount: int = 1
-    ) -> tuple[int, int]:
+    def update_karma(self, player: Any, action: str, amount: int = 1) -> tuple[int, int]:
         """カーマを更新"""
         karma_data = self.registry.get("default")
         if not karma_data:
-            return getattr(player, "karma_law_chaos", 0), getattr(
-                player, "karma_good_evil", 0
-            )
+            return getattr(player, "karma_law_chaos", 0), getattr(player, "karma_good_evil", 0)
 
         action_data = karma_data.actions.get(action, {"law_chaos": 0, "good_evil": 0})
         law_chaos_change = action_data.get("law_chaos", 0) * amount
@@ -111,12 +109,8 @@ class KarmaManager:
         player.karma_good_evil += good_evil_change
 
         # 範囲制限
-        law_chaos_range = karma_data.alignment_ranges.get("law_chaos", {}).get(
-            "range", [-100, 100]
-        )
-        good_evil_range = karma_data.alignment_ranges.get("good_evil", {}).get(
-            "range", [-100, 100]
-        )
+        law_chaos_range = karma_data.alignment_ranges.get("law_chaos", {}).get("range", [-100, 100])
+        good_evil_range = karma_data.alignment_ranges.get("good_evil", {}).get("range", [-100, 100])
 
         player.karma_law_chaos = max(
             law_chaos_range[0], min(law_chaos_range[1], player.karma_law_chaos)

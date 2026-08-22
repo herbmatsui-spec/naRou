@@ -75,9 +75,7 @@ class FXManager:
             # Play death animation - spawn death frame then fade
             self.spawn_death_animation(x, y, monster_type)
 
-    def spawn_death_animation(
-        self, x: float, y: float, monster_type: str = "generic"
-    ) -> None:
+    def spawn_death_animation(self, x: float, y: float, monster_type: str = "generic") -> None:
         """Spawn death animation using TR_MONSTER_* death frame then fade."""
         if not is_enabled("ENABLE_TINY_ROGUE_GFX"):
             return
@@ -155,9 +153,7 @@ class FXManager:
                 life=60,
             )
 
-    def add_floating_text(
-        self, text: str, x: float, y: float, color: tuple[int, int, int]
-    ) -> None:
+    def add_floating_text(self, text: str, x: float, y: float, color: tuple[int, int, int]) -> None:
         self.floating_texts.append(FloatingText(text, x, y, color))
 
     def spawn_explosion(self, x: float, y: float, count: int = 3) -> None:
@@ -180,9 +176,7 @@ class FXManager:
         duration: int = 3,
         direction: tuple[float, float] = (0.0, 0.0),
     ) -> None:
-        self.screen_shake.trigger(
-            intensity=intensity, duration=duration, direction=direction
-        )
+        self.screen_shake.trigger(intensity=intensity, duration=duration, direction=direction)
 
     def trigger_hit_stop(self, duration: int = 4) -> None:
         """攻撃命中時の瞬間停止をトリガー"""
@@ -264,9 +258,7 @@ class FXManager:
                 )
             )
 
-    def spawn_material_particles(
-        self, x: float, y: float, material: str, count: int = 5
-    ) -> None:
+    def spawn_material_particles(self, x: float, y: float, material: str, count: int = 5) -> None:
         """材質に基づいた偏執的なパーティクル散布 (Proposal 2)"""
         # 材質別定義: (文字リスト, 色リスト, 速度範囲, 生存期間)
         mat_map = {
@@ -551,9 +543,7 @@ class FXManager:
 
     def spawn_shockwave_effect(self, x: float, y: float, count: int = 16) -> None:
         """Spawn shockwave effect using TR_EFFECT_12 (shockwave) in a circle."""
-        self.spawn_tile_effect(
-            x, y, "shockwave", count, color=(255, 255, 200), life=6, vx=0, vy=0
-        )
+        self.spawn_tile_effect(x, y, "shockwave", count, color=(255, 255, 200), life=6, vx=0, vy=0)
 
     def spawn_water_splash(self, x: float, y: float, count: int = 4) -> None:
         """Spawn water splash using TR_EFFECT_02/03/04 (water frames)."""

@@ -48,9 +48,7 @@ class WorldMapManager:
         self.layer_load_count = 0
         self.layer_unload_count = 0
 
-    def get_or_create_layer(
-        self, zone: str, biome: str, depth: int, dimension: str
-    ) -> WorldLayer:
+    def get_or_create_layer(self, zone: str, biome: str, depth: int, dimension: str) -> WorldLayer:
         """指定された層を取得または作成"""
         layer_key = (zone, biome, depth, dimension)
 
@@ -60,9 +58,7 @@ class WorldMapManager:
 
         return self.layer_templates[layer_key]
 
-    def load_layer(
-        self, zone: str, biome: str, depth: int, dimension: str
-    ) -> GameMap | None:
+    def load_layer(self, zone: str, biome: str, depth: int, dimension: str) -> GameMap | None:
         """層をロードしてGameMapを返す。メモリ制限がある場合は古い層をアンロード"""
         layer_key = (zone, biome, depth, dimension)
 
@@ -111,10 +107,7 @@ class WorldMapManager:
         for entry in self.layer_priority_queue:
             if (
                 entry.layer_key in self.loaded_layers
-                and abs(
-                    entry.last_accessed
-                    - self.loaded_layers[entry.layer_key].last_accessed
-                )
+                and abs(entry.last_accessed - self.loaded_layers[entry.layer_key].last_accessed)
                 < 1.0
             ):
                 valid_entries.append(entry)
@@ -163,9 +156,7 @@ class WorldMapManager:
         # 同じ深度でのゾーン境界移動（例: 地下50階 <-> 異界0階のポータル）
         zone_transitions = self._get_zone_transitions(zone, depth)
         for target_zone, target_depth in zone_transitions:
-            layer = self.get_or_create_layer(
-                target_zone, biome, target_depth, dimension
-            )
+            layer = self.get_or_create_layer(target_zone, biome, target_depth, dimension)
             adjacent.append(layer)
 
         # 同じ深度・ゾーンでの次元移動（ポータル・儀式）
@@ -176,9 +167,7 @@ class WorldMapManager:
 
         return adjacent
 
-    def _get_zone_transitions(
-        self, current_zone: str, current_depth: int
-    ) -> list[tuple[str, int]]:
+    def _get_zone_transitions(self, current_zone: str, current_depth: int) -> list[tuple[str, int]]:
         """ゾーン間の移動可能な境界を取得"""
         transitions = []
 
@@ -201,6 +190,49 @@ class WorldMapManager:
             transitions.append(("otherworld", current_depth))
 
         return transitions
+
+    def get_adjacent_layers_with_secrets(
+        self,
+        zone: str,
+        biome: str,
+        depth: int,
+        dimension: str,
+        player_unlocked_secrets: set[str] | None = None,
+    ) -> list[WorldLayer]:
+        """秘密通路を含む隣接層を取得 (Step 42)"""
+        adjacent = self.get_adjacent_layers(zone, biome, depth, dimension)
+
+        # 秘密通路による層間移動を追加
+        if player_unlocked_secrets:
+            try:
+                from secret_area_system import SECRET_REGISTRY
+
+                SECRET_REGISTRY.load_from_yaml()
+
+                current_layer_key = f"{zone}:{biome}:{depth}:{dimension}"
+                areas = SECRET_REGISTRY.get_areas_in_layer(current_layer_key)
+
+                for area in areas:
+                    if area.id not in player_unlocked_secrets:
+                        continue
+                    if area.secret_type not in ("secret_floor", "vent"):
+                        continue
+
+                    connections = SECRET_REGISTRY.get_connections_from(area.id)
+                    for conn in connections:
+                        if conn.connection_type not in ("tunnel", "floor", "vent"):
+                            continue
+                        target_area = SECRET_REGISTRY.get_secret_area(conn.to_area)
+                        if target_area:
+                            target_layer = self.get_or_create_layer(
+                                *target_area.layer_key.split(":")
+                            )
+                            if target_layer not in adjacent:
+                                adjacent.append(target_layer)
+            except Exception:
+                pass
+
+        return adjacent
 
     def _get_dimension_transitions(self, current_dimension: str) -> list[str]:
         """次元間の移動可能な遷移を取得"""

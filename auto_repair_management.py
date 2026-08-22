@@ -94,16 +94,12 @@ class AutoRepairManager:
         # Check dependencies
         result = self._run_cmd("pip check")
         if result.returncode != 0:
-            issues.append(
-                {"type": "dependencies", "message": result.stdout or result.stderr}
-            )
+            issues.append({"type": "dependencies", "message": result.stdout or result.stderr})
 
         # Check code formatting
         result = self._run_cmd("black --check .")
         if result.returncode != 0:
-            issues.append(
-                {"type": "code_format", "message": "Code formatting issues detected"}
-            )
+            issues.append({"type": "code_format", "message": "Code formatting issues detected"})
 
         result = self._run_cmd("ruff check .")
         if result.returncode != 0:
@@ -115,9 +111,7 @@ class AutoRepairManager:
             issues.append(
                 {
                     "type": "tests",
-                    "message": result.stdout[-500:]
-                    if result.stdout
-                    else "Tests failed",
+                    "message": result.stdout[-500:] if result.stdout else "Tests failed",
                 }
             )
 
@@ -179,9 +173,7 @@ class AutoRepairManager:
                     "type": issue_type,
                     "success": success,
                     "timestamp": datetime.now().isoformat(),
-                    "attempt": len(
-                        [r for r in self.history["repairs"] if r["type"] == issue_type]
-                    )
+                    "attempt": len([r for r in self.history["repairs"] if r["type"] == issue_type])
                     + 1,
                 }
             )
@@ -227,9 +219,7 @@ class AutoRepairManager:
                 if issues:
                     print(f"Found {len(issues)} issues, attempting repair...")
                     self.repair_all()
-                    self.send_notification(
-                        f"Auto-repair executed: {len(issues)} issues fixed"
-                    )
+                    self.send_notification(f"Auto-repair executed: {len(issues)} issues fixed")
                 else:
                     print("System healthy")
 
@@ -244,9 +234,7 @@ class AutoRepairManager:
 
 def main():
     parser = argparse.ArgumentParser(description="Auto-Repair Management")
-    parser.add_argument(
-        "--dir", default="auto_repair_management", help="Repair directory"
-    )
+    parser.add_argument("--dir", default="auto_repair_management", help="Repair directory")
     parser.add_argument("--check", action="store_true", help="Check health")
     parser.add_argument("--repair", help="Repair specific issue type")
     parser.add_argument("--repair-all", action="store_true", help="Repair all issues")

@@ -56,9 +56,7 @@ class WorldEventData:
     titles: list[dict[str, Any]] = field(default_factory=list)
     community_goal: dict[str, Any] = field(default_factory=dict)
     announcement_period: int = 0  # イベント開始前何ターンから予告するか
-    start_turn: int | None = (
-        None  # イベント開始ターン（Noneの場合はスケジュールしない）
-    )
+    start_turn: int | None = None  # イベント開始ターン（Noneの場合はスケジュールしない）
     end_turn: int | None = None  # イベント終了ターン
 
 
@@ -157,9 +155,7 @@ class WorldEventManager:
                     return edata
         return None
 
-    def trigger_event(
-        self, player: Entity, event_id: str, engine: Any | None = None
-    ) -> bool:
+    def trigger_event(self, player: Entity, event_id: str, engine: Any | None = None) -> bool:
         """イベントを発生 (Step 71)"""
         edata = self.registry.get(event_id)
         if not edata or not player:
@@ -195,9 +191,7 @@ class WorldEventManager:
         if event_data:
             points = RANKING_MANAGER.calculate_points(event_data, action_type, amount)
             if points > 0:
-                RANKING_MANAGER.add_points(
-                    event_id, getattr(player, "id", str(id(player))), points
-                )
+                RANKING_MANAGER.add_points(event_id, getattr(player, "id", str(id(player))), points)
                 COMMUNITY_GOAL_MANAGER.add_progress(event_id, "total_points", points)
 
     def check_and_grant_event_titles(
@@ -258,19 +252,14 @@ class WorldEventManager:
                 title=f"{event_data.name} 限定クエスト",
                 description=f"{event_data.name} 開催期間中の特別依頼",
                 conditions=[
-                    ScheduleCondition(
-                        season=season, duration_days=duration_turns // 24
-                    ),
+                    ScheduleCondition(season=season, duration_days=duration_turns // 24),
                 ],
                 logic=LogicOperator.AND,
                 rewards=event_data.rewards or {"gold": 1000, "fame": 50},
             )
 
         # 月齢系 (蝕・満月等)
-        if any(
-            kw in name_lower
-            for kw in ["蝕", "eclipse", "月食", "日食", "満月", "full_moon"]
-        ):
+        if any(kw in name_lower for kw in ["蝕", "eclipse", "月食", "日食", "満月", "full_moon"]):
             moon_phase = "full"
             if "新月" in event_data.name or "new_moon" in name_lower:
                 moon_phase = "new"
@@ -287,8 +276,7 @@ class WorldEventManager:
                     ScheduleCondition(moon_phase=moon_phase, duration_days=3),
                 ],
                 logic=LogicOperator.AND,
-                rewards=event_data.rewards
-                or {"artifact": "moon_fragment", "piety": 30},
+                rewards=event_data.rewards or {"artifact": "moon_fragment", "piety": 30},
             )
 
         # 流星群・天体系
@@ -298,9 +286,7 @@ class WorldEventManager:
                 title=f"{event_data.name} 採集",
                 description=f"{event_data.name} の夜に落ちる星屑を拾う",
                 conditions=[
-                    ScheduleCondition(
-                        time_windows=[TimeWindow("20:00", "04:00")], duration_days=2
-                    ),
+                    ScheduleCondition(time_windows=[TimeWindow("20:00", "04:00")], duration_days=2),
                 ],
                 logic=LogicOperator.AND,
                 rewards=event_data.rewards or {"items": {"star_dust": 5}, "exp": 500},

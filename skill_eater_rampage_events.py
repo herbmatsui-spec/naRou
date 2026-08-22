@@ -3,13 +3,15 @@ Skill Eater Phase 2: Skill Rampage Events System (Steps 40-46)
 極端に強力なスキル合成の失敗時、スキルが暴走して実体化・逃亡し、フィールドでミニボスとして徘徊するカオスイベントを管理。
 """
 
-from typing import Dict, Any, List, Optional
 import random
+from typing import Any, Dict, List
+
 
 class SkillRampageManager:
     """
     スキル暴走（カオス・ネメシス）マネージャー
     """
+
     def __init__(self):
         self.active_rampages: Dict[str, Dict[str, Any]] = {}
 
@@ -25,7 +27,7 @@ class SkillRampageManager:
         skill_name: str,
         skill_tier: int,
         player_crafting_buff: float = 1.0,
-        force_rampage: bool = False
+        force_rampage: bool = False,
     ) -> Dict[str, Any]:
         """Step 42: 合成実行と暴走発生時のミニボススポーン予約"""
         chance = self.calculate_rampage_chance(skill_tier, player_crafting_buff)
@@ -36,9 +38,9 @@ class SkillRampageManager:
                 "success": True,
                 "rampage": False,
                 "created_skill": skill_name,
-                "message": f"Synthesis successful! Created [{skill_name}]."
+                "message": f"Synthesis successful! Created [{skill_name}].",
             }
-        
+
         # 暴走発生
         boss_id = f"rampage_{skill_name.lower().replace(' ', '_')}_{random.randint(100, 999)}"
         rampage_boss = {
@@ -50,7 +52,7 @@ class SkillRampageManager:
             "special_action": f"Uncontrolled Burst: {skill_name}",
             "location": "Slum Lower Depths",
             "time_limit_turns": 10,
-            "is_defeated": False
+            "is_defeated": False,
         }
         self.active_rampages[boss_id] = rampage_boss
 
@@ -58,7 +60,7 @@ class SkillRampageManager:
             "success": False,
             "rampage": True,
             "message": f"CRITICAL HAZARD: Skill [{skill_name}] went out of control and materialized!",
-            "spawned_boss": rampage_boss
+            "spawned_boss": rampage_boss,
         }
 
     def wander_and_tick(self) -> List[Dict[str, Any]]:
@@ -75,13 +77,13 @@ class SkillRampageManager:
         """Step 45: ミニボス討伐時の安定化レアスキル獲得"""
         if boss_id not in self.active_rampages:
             return {"success": False, "message": "Rampage boss not found or already expired."}
-        
+
         boss = self.active_rampages.pop(boss_id)
         stabilized_skill = f"Stabilized {boss['origin_skill']} (Pure Edition)"
-        
+
         return {
             "success": True,
             "message": f"Defeated {boss['name']}! The chaotic energy condensed into a perfect form.",
             "reward_skill": stabilized_skill,
-            "stat_bonus": "100% Stability Guarantee"
+            "stat_bonus": "100% Stability Guarantee",
         }

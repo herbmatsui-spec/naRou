@@ -11,13 +11,13 @@ export class TextureAtlas {
         if (!(baseTexture instanceof PIXI.Texture)) {
             throw new Error('baseTexture must be a PIXI.Texture object');
         }
-        
+
         this.baseTexture = baseTexture;
         this.normalBaseTexture = null;
         this.metadata = metadata;
         this.textures = new Map();
         this.normalTextures = new Map();
-        
+
         // メタデータから個々のテクスチャを作成
         if (metadata && metadata.glyphs) {
             for (const [char, frame] of Object.entries(metadata.glyphs)) {
@@ -32,7 +32,7 @@ export class TextureAtlas {
             }
         }
     }
-    
+
     /**
      * Step 10: ノーマルマップテクスチャをロード
      * @param {PIXI.Texture} normalBaseTexture
@@ -60,7 +60,7 @@ export class TextureAtlas {
     getNormalTexture(char) {
         return this.normalTextures.get(char) || null;
     }
-    
+
     /**
      * 指定された文字のテクスチャを取得
      * @param {string} char - 文字
@@ -69,7 +69,7 @@ export class TextureAtlas {
     getTexture(char) {
         return this.textures.get(char) || null;
     }
-    
+
     /**
      * すべてのテクスチャを取得（イテレータ）
      * @returns {Iterator<[string, PIXI.Texture]>}
@@ -77,7 +77,7 @@ export class TextureAtlas {
     *[Symbol.iterator]() {
         yield* this.textures.entries();
     }
-    
+
     /**
      * テクスチャアトラスを破棄し、リソースを解放
      */
@@ -87,7 +87,7 @@ export class TextureAtlas {
         }
         this.textures.clear();
     }
-    
+
     /**
      * テクスチャアトラスの情報を取得
      * @returns {Object} テクスチャアトラスの情報

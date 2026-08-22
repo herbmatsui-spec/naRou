@@ -1,7 +1,6 @@
 """Unit tests for geometry and pathfinding in core_framework."""
-from __future__ import annotations
 
-import pytest
+from __future__ import annotations
 
 from core_framework import AStar, Point, bresenham_line
 

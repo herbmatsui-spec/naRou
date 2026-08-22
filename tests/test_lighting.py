@@ -10,13 +10,7 @@ from pathlib import Path
 
 import numpy as np
 
-from core.gbuffer import (
-    GBuffer,
-    pack_material,
-    pack_normal_xy,
-    unpack_material,
-    unpack_normal_xy,
-)
+from core.gbuffer import GBuffer, pack_material, pack_normal_xy, unpack_material, unpack_normal_xy
 from core.lighting import LightVolume, MaterialSystem, ShadowAtlas, TileCulling
 
 

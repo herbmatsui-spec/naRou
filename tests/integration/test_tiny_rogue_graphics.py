@@ -2,6 +2,7 @@
 Integration tests for Tiny Rogue Graphics Pack.
 Tests spawn→render→animate→despawn cycle for all new tile types.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -73,9 +74,7 @@ class TestTinyRogueTileAtlas:
 
         atlas = TileAtlas()
         for direction in range(4):
-            uv = atlas.get_uv(
-                "TR_PLAYER_01", direction=direction, scale="tiny_rogue_16"
-            )
+            uv = atlas.get_uv("TR_PLAYER_01", direction=direction, scale="tiny_rogue_16")
             assert uv.w == 16
             assert uv.h == 16
 
@@ -119,9 +118,7 @@ class TestTinyRogueTileRegistry:
         from map_engine import TILE_REGISTRY
 
         for frame in range(4):
-            uv = TILE_REGISTRY.get_animation_frame(
-                "TR_MONSTER_01", frame, scale="tiny_rogue_16"
-            )
+            uv = TILE_REGISTRY.get_animation_frame("TR_MONSTER_01", frame, scale="tiny_rogue_16")
             assert uv[2] == 16
             assert uv[3] == 16
 
@@ -152,9 +149,7 @@ class TestTinyRogueEntityRendering:
         for mtype, expected_tile in expected.items():
             e = MonsterPreset.create(mtype, 0, 0)
             tile_id = EntityRenderer._get_tile_id(e)
-            assert tile_id == expected_tile, (
-                f"{mtype}: expected {expected_tile}, got {tile_id}"
-            )
+            assert tile_id == expected_tile, f"{mtype}: expected {expected_tile}, got {tile_id}"
 
     def test_player_and_pet_unchanged(self):
         from entity import Entity
@@ -206,9 +201,7 @@ class TestTinyRogueDungeonGeneration:
 
         # Check that floor tiles have variants assigned
         floor_variants = [
-            v
-            for pos, v in gm.tile_variants.items()
-            if gm.tiles[pos[0]][pos[1]] == "TILE_FLOOR"
+            v for pos, v in gm.tile_variants.items() if gm.tiles[pos[0]][pos[1]] == "TILE_FLOOR"
         ]
         assert len(floor_variants) > 0
         assert all(0 <= v <= 11 for v in floor_variants)
@@ -237,9 +230,7 @@ class TestTinyRogueFXSystem:
         CombatSystem.publish_damage_event(bus, 10, 5, 5, is_crit=True, is_kill=False)
 
         # Should have blood particles
-        blood_particles = [
-            p for p in fx.particles if getattr(p, "tile_id", None) == "TR_DECOR_10"
-        ]
+        blood_particles = [p for p in fx.particles if getattr(p, "tile_id", None) == "TR_DECOR_10"]
         assert len(blood_particles) > 0
 
     def test_blood_pool_on_kill(self):
@@ -252,9 +243,7 @@ class TestTinyRogueFXSystem:
 
         CombatSystem.publish_kill_event(bus, 5, 5)
 
-        blood_particles = [
-            p for p in fx.particles if getattr(p, "tile_id", None) == "TR_DECOR_10"
-        ]
+        blood_particles = [p for p in fx.particles if getattr(p, "tile_id", None) == "TR_DECOR_10"]
         assert len(blood_particles) > 0
 
     def test_loot_sparkle(self):
@@ -310,9 +299,7 @@ class TestTinyRogueFXSystem:
         for effect_name, method_name in effect_types:
             fx.particles.clear()
             getattr(fx, method_name)(10, 10)
-            particles_with_tile = [
-                p for p in fx.particles if getattr(p, "tile_id", None)
-            ]
+            particles_with_tile = [p for p in fx.particles if getattr(p, "tile_id", None)]
             assert len(particles_with_tile) > 0, f"No particles for {effect_name}"
 
 
@@ -361,6 +348,7 @@ class TestTinyRogueVisualRegression:
         """Verify atlas image has expected dimensions."""
         import os
         import sys
+
         # Remove stubs from path to get real PIL
         stubs_path = os.path.join(os.path.dirname(__file__), "..", "..", "stubs")
         stubs_path = os.path.abspath(stubs_path)

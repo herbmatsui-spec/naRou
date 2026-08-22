@@ -3,6 +3,7 @@
 Demo script showcasing all Tiny Rogue Graphics Pack features.
 Run with: python demo_tiny_rogue_graphics.py
 """
+
 from __future__ import annotations
 
 import os
@@ -15,14 +16,7 @@ import random
 import tcod
 import tcod.event
 
-from constants import (
-    MAP_HEIGHT,
-    MAP_WIDTH,
-    SCREEN_HEIGHT,
-    SCREEN_WIDTH,
-    VIEW_HEIGHT,
-    VIEW_WIDTH,
-)
+from constants import MAP_HEIGHT, MAP_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, VIEW_HEIGHT, VIEW_WIDTH
 from core_framework import EventBus
 from entity import Attributes, Entity
 from feature_flags import is_enabled, set_flag
@@ -184,9 +178,7 @@ class DemoEngine:
         # Spawn weather particles occasionally
         if self.frame_count % 30 == 0:
             cam_x = max(0, min(MAP_WIDTH - VIEW_WIDTH, self.player.x - VIEW_WIDTH // 2))
-            cam_y = max(
-                0, min(MAP_HEIGHT - VIEW_HEIGHT, self.player.y - VIEW_HEIGHT // 2)
-            )
+            cam_y = max(0, min(MAP_HEIGHT - VIEW_HEIGHT, self.player.y - VIEW_HEIGHT // 2))
             from ui_fx_systems import WeatherAtmosphereLayer
 
             WeatherAtmosphereLayer.spawn_weather_particles(
@@ -238,12 +230,8 @@ def main():
             ctx.frame_count = engine.frame_count
 
             # Camera
-            cam_x = max(
-                0, min(MAP_WIDTH - VIEW_WIDTH, engine.player.x - VIEW_WIDTH // 2)
-            )
-            cam_y = max(
-                0, min(MAP_HEIGHT - VIEW_HEIGHT, engine.player.y - VIEW_HEIGHT // 2)
-            )
+            cam_x = max(0, min(MAP_WIDTH - VIEW_WIDTH, engine.player.x - VIEW_WIDTH // 2))
+            cam_y = max(0, min(MAP_HEIGHT - VIEW_HEIGHT, engine.player.y - VIEW_HEIGHT // 2))
 
             # Light sources
             light_sources = DynamicLighting.get_light_sources_for_engine(ctx)
@@ -336,45 +324,25 @@ def main():
                         engine.current_weather = weathers[(idx + 1) % len(weathers)]
                         print(f"Weather: {engine.current_weather}")
                     elif event.sym == tcod.event.KeySym.KEY_1:
-                        engine.fx_manager.spawn_magic_cast(
-                            engine.player.x, engine.player.y
-                        )
+                        engine.fx_manager.spawn_magic_cast(engine.player.x, engine.player.y)
                     elif event.sym == tcod.event.KeySym.KEY_2:
-                        engine.fx_manager.spawn_fire_effect(
-                            engine.player.x, engine.player.y
-                        )
+                        engine.fx_manager.spawn_fire_effect(engine.player.x, engine.player.y)
                     elif event.sym == tcod.event.KeySym.KEY_3:
-                        engine.fx_manager.spawn_ice_effect(
-                            engine.player.x, engine.player.y
-                        )
+                        engine.fx_manager.spawn_ice_effect(engine.player.x, engine.player.y)
                     elif event.sym == tcod.event.KeySym.KEY_4:
-                        engine.fx_manager.spawn_lightning_effect(
-                            engine.player.x, engine.player.y
-                        )
+                        engine.fx_manager.spawn_lightning_effect(engine.player.x, engine.player.y)
                     elif event.sym == tcod.event.KeySym.KEY_5:
-                        engine.fx_manager.spawn_poison_effect(
-                            engine.player.x, engine.player.y
-                        )
+                        engine.fx_manager.spawn_poison_effect(engine.player.x, engine.player.y)
                     elif event.sym == tcod.event.KeySym.KEY_6:
-                        engine.fx_manager.spawn_heal_effect(
-                            engine.player.x, engine.player.y
-                        )
+                        engine.fx_manager.spawn_heal_effect(engine.player.x, engine.player.y)
                     elif event.sym == tcod.event.KeySym.KEY_7:
-                        engine.fx_manager.spawn_teleport_effect(
-                            engine.player.x, engine.player.y
-                        )
+                        engine.fx_manager.spawn_teleport_effect(engine.player.x, engine.player.y)
                     elif event.sym == tcod.event.KeySym.KEY_8:
-                        engine.fx_manager.spawn_explosion_effect(
-                            engine.player.x, engine.player.y
-                        )
+                        engine.fx_manager.spawn_explosion_effect(engine.player.x, engine.player.y)
                     elif event.sym == tcod.event.KeySym.KEY_9:
-                        engine.fx_manager.spawn_sparkle_effect(
-                            engine.player.x, engine.player.y
-                        )
+                        engine.fx_manager.spawn_sparkle_effect(engine.player.x, engine.player.y)
                     elif event.sym == tcod.event.KeySym.KEY_0:
-                        engine.fx_manager.spawn_smoke_effect(
-                            engine.player.x, engine.player.y
-                        )
+                        engine.fx_manager.spawn_smoke_effect(engine.player.x, engine.player.y)
                     elif event.sym in (tcod.event.KeySym.UP, tcod.event.KeySym.K_w):
                         engine.player.y -= 1
                         engine.fx_manager.spawn_footstep_particles(

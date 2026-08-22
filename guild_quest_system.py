@@ -7,6 +7,7 @@ Steps 31-39
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -34,9 +35,7 @@ class GuildQuestRegistry:
     """ギルドクエストレジストリ (シングルトン) (Steps 33, 34)"""
 
     _instance: GuildQuestRegistry | None = None
-    _quests: dict[
-        str, dict[str, list[GuildQuestData]]
-    ] = {}  # guild_id -> {quest_type -> [quests]}
+    _quests: dict[str, dict[str, list[GuildQuestData]]] = {}  # guild_id -> {quest_type -> [quests]}
     _loaded: bool = False
 
     def __new__(cls):
@@ -123,9 +122,7 @@ class GuildQuestManager:
             return []
         return self.registry.get(gid, quest_type)
 
-    def update_quest_progress(
-        self, player: Entity, quest_id: str, amount: int = 1
-    ) -> bool:
+    def update_quest_progress(self, player: Entity, quest_id: str, amount: int = 1) -> bool:
         """ギルドクエスト進捗を加算 (Step 37)"""
         if not hasattr(player, "guild_quest_progress"):
             player.guild_quest_progress = {}
@@ -141,9 +138,7 @@ class GuildQuestManager:
             return False
         return player.guild_quest_progress.get(quest_id, 0) >= 100
 
-    def complete_quest(
-        self, player: Entity, quest_id: str
-    ) -> tuple[bool, str, dict[str, Any]]:
+    def complete_quest(self, player: Entity, quest_id: str) -> tuple[bool, str, dict[str, Any]]:
         """ギルドクエスト完了と報酬付与 (Step 39)"""
         if not self.can_complete_quest(player, quest_id):
             return False, "クエスト条件を達成していません。", {}

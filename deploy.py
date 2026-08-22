@@ -113,12 +113,8 @@ def deploy(environment: str = "production", target: str = "itch") -> bool:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Deploy naRou")
     parser.add_argument("--env", default="production", help="Target environment")
-    parser.add_argument(
-        "--target", default="itch", choices=["itch", "steam"], help="Deploy target"
-    )
-    parser.add_argument(
-        "--rollback", action="store_true", help="Rollback to previous build"
-    )
+    parser.add_argument("--target", default="itch", choices=["itch", "steam"], help="Deploy target")
+    parser.add_argument("--rollback", action="store_true", help="Rollback to previous build")
     args = parser.parse_args()
 
     if args.rollback:

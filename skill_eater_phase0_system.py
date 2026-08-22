@@ -6,13 +6,14 @@ Handles the Phase 0 (Landing/Recognition) flow, implementing the 72-step design.
 from __future__ import annotations
 
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional
 
 from meta_awareness_system import MetaAwarenessSystem
 
 
 class Phase0State(Enum):
     """States within Phase 0."""
+
     INIT = auto()
     VR_TRAINING = auto()
     APTITUDE_TEST = auto()
@@ -52,12 +53,14 @@ class AptitudeScannerUI:
         """Generates visual glitch frames displaying corrupted past world memories."""
         glitch_frames = []
         for key in inherited_keys:
-            glitch_frames.append({
-                "type": "CORRUPTED_SIGNAL",
-                "raw_code": f"UNKNOWN_ARTIFACT_HEX_0x{hash(key) & 0xFFFF:04X}",
-                "glitched_label": f"ERR: {key[:8]}...[OUT_OF_BOUNDS]",
-                "duration_ms": 250,
-            })
+            glitch_frames.append(
+                {
+                    "type": "CORRUPTED_SIGNAL",
+                    "raw_code": f"UNKNOWN_ARTIFACT_HEX_0x{hash(key) & 0xFFFF:04X}",
+                    "glitched_label": f"ERR: {key[:8]}...[OUT_OF_BOUNDS]",
+                    "duration_ms": 250,
+                }
+            )
         return glitch_frames
 
 
@@ -205,8 +208,16 @@ class EscapeMap:
         self.player_pos: tuple[int, int] = (0, 2)
         self.exit_pos: tuple[int, int] = (9, 2)
         self.husks: list[Dict[str, Any]] = [
-            {"pos": (1, 1), "label": "スキルを抜かれ虚ろな目で座り込む元社員", "status": "DRAINED_HUSK"},
-            {"pos": (7, 3), "label": "『オレの…鑑定スキルを返せ…』と呻く男", "status": "DRAINED_HUSK"},
+            {
+                "pos": (1, 1),
+                "label": "スキルを抜かれ虚ろな目で座り込む元社員",
+                "status": "DRAINED_HUSK",
+            },
+            {
+                "pos": (7, 3),
+                "label": "『オレの…鑑定スキルを返せ…』と呻く男",
+                "status": "DRAINED_HUSK",
+            },
         ]
         self.guards: list[Dict[str, Any]] = [
             {"id": "G1", "pos": (3, 2), "patrol": [(3, 1), (3, 2), (3, 3)], "vision_range": 1},
@@ -228,10 +239,23 @@ class EscapeMap:
                 danger_cells.update(c["coverage"])
         return {
             "danger_zones": list(danger_cells),
-            "safe_path_hint": [(0, 2), (1, 2), (2, 2), (2, 0), (3, 0), (4, 0), (7, 0), (7, 2), (8, 2), (9, 2)],
+            "safe_path_hint": [
+                (0, 2),
+                (1, 2),
+                (2, 2),
+                (2, 0),
+                (3, 0),
+                (4, 0),
+                (7, 0),
+                (7, 2),
+                (8, 2),
+                (9, 2),
+            ],
         }
 
-    def step_player(self, next_pos: tuple[int, int], analysis_active: bool = True) -> Dict[str, Any]:
+    def step_player(
+        self, next_pos: tuple[int, int], analysis_active: bool = True
+    ) -> Dict[str, Any]:
         """Moves player and checks if detected by security."""
         self.player_pos = next_pos
         overlays = self.reveal_stealth_overlays(analysis_active)
@@ -301,7 +325,12 @@ class Phase0Manager:
     def award_meta_choice(self, reason: str, points: int = 100) -> Dict[str, Any]:
         """Awards meta-awareness hidden score points for choosing optimal meta routes."""
         self.meta_score += points
-        return {"action": "AWARD_META_SCORE", "points": points, "total_score": self.meta_score, "reason": reason}
+        return {
+            "action": "AWARD_META_SCORE",
+            "points": points,
+            "total_score": self.meta_score,
+            "reason": reason,
+        }
 
     def start_vr_training(self) -> None:
         self.current_state = Phase0State.VR_TRAINING
@@ -359,7 +388,9 @@ class Phase0Manager:
     def execute_firing_transition(self) -> Dict[str, Any]:
         """Transitions state from APTITUDE_TEST to FIRING."""
         self.current_state = Phase0State.FIRING
-        self.award_meta_choice("Successfully concealed power and triggered dismissal event", points=150)
+        self.award_meta_choice(
+            "Successfully concealed power and triggered dismissal event", points=150
+        )
         dialogue = self.get_evaluator_dialogue("WORTHLESS_SLAVE_CLASS")
         return {
             "success": True,
@@ -420,7 +451,9 @@ class Phase0Manager:
 
     def get_world_template_recognition_message(self) -> str:
         """System prompt message announcing successful recognition of World A template."""
-        return "【世界法則の解析完了】対象テンプレート：スキル資本主義／攻略指針：下剋上・スキル強奪"
+        return (
+            "【世界法則の解析完了】対象テンプレート：スキル資本主義／攻略指針：下剋上・スキル強奪"
+        )
 
     def export_save_state(self) -> Dict[str, Any]:
         """Exports Phase 0 progression and UI hack state for persistence."""
@@ -439,7 +472,9 @@ class Phase0Manager:
         self.is_timer_running = True
         return {"action": "TIMER_STARTED", "remaining_seconds": self.countdown_seconds}
 
-    def submit_hacking_attempt(self, entered_code: str, difficulty: str = "LEVEL_1_EASY") -> Dict[str, Any]:
+    def submit_hacking_attempt(
+        self, entered_code: str, difficulty: str = "LEVEL_1_EASY"
+    ) -> Dict[str, Any]:
         """Processes hacking attempt and awards stolen assets on success."""
         reward_info = HACKING_REWARD_TABLE.get(difficulty, HACKING_REWARD_TABLE["LEVEL_1_EASY"])
         if entered_code == "7734":
@@ -449,7 +484,11 @@ class Phase0Manager:
                 "reward": reward_info,
                 "message": f"ハッキング成功！【{reward_info['name']}】を横領しました。",
             }
-        return {"success": False, "reward": None, "message": "アクセス拒否：警備システムに通報されました！"}
+        return {
+            "success": False,
+            "reward": None,
+            "message": "アクセス拒否：警備システムに通報されました！",
+        }
 
     def trigger_security_alert(self) -> Dict[str, Any]:
         """Triggers office security alarm when hacking fails or timer expires."""
@@ -490,7 +529,11 @@ class Phase0Manager:
                 "next_state": self.current_state.name,
                 "message": "非常口の突破に成功！しかし、裏路地に待ち伏せの気配が……",
             }
-        return {"escaped": False, "next_state": self.current_state.name, "message": "脱出経路を捜索中"}
+        return {
+            "escaped": False,
+            "next_state": self.current_state.name,
+            "message": "脱出経路を捜索中",
+        }
 
     def trigger_boss_encounter(self) -> Dict[str, Any]:
         """Triggers encounter cutscene with Middle Manager at the back alley."""
@@ -592,7 +635,9 @@ class Phase0Manager:
             "message": f"フェーズ0完了ボーナス：+{total_exp} EXP 獲得！",
         }
 
-    def update_world_state_phase(self, world_state: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def update_world_state_phase(
+        self, world_state: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Updates main WorldState from Phase 0 (Recognition) to Phase 1 (Foundation)."""
         state = world_state or {}
         state["world_id"] = "skill_eater"
@@ -605,7 +650,11 @@ class Phase0Manager:
         """Provides slum ambient environmental audio settings."""
         return {
             "action": "START_AMBIENT_LOOP",
-            "ambient_tracks": ["amb_slum_rain.ogg", "amb_distant_siren.ogg", "amb_slum_chatter.ogg"],
+            "ambient_tracks": [
+                "amb_slum_rain.ogg",
+                "amb_distant_siren.ogg",
+                "amb_slum_chatter.ogg",
+            ],
             "volume": 0.7,
         }
 
@@ -626,7 +675,9 @@ class Phase0Manager:
             "reward_exp": 300,
         }
 
-    def complete_phase0_workflow(self, save_dict: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def complete_phase0_workflow(
+        self, save_dict: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Finalizes Phase 0, updates save dictionary, and prepares Phase 1 state."""
         self.current_state = Phase0State.COMPLETED
         if save_dict is not None:

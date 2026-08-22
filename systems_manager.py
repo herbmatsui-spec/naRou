@@ -41,9 +41,7 @@ class SystemManager:
     @overload
     def get(self, name: str, system_type: None = None, default: Any = None) -> Any: ...
 
-    def get(
-        self, name: str, system_type: type[SystemT] | None = None, default: Any = None
-    ) -> Any:
+    def get(self, name: str, system_type: type[SystemT] | None = None, default: Any = None) -> Any:
         """登録されたシステムを取得する。
 
         Args:

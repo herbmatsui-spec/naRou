@@ -159,9 +159,7 @@ class ProceduralQuestComponent:
     completed_count: int = 0
     generated_total_count: int = 0
     board_seed: int = 0
-    active_chains: dict[str, list[str]] = field(
-        default_factory=dict
-    )  # 連鎖状態 (Step 23)
+    active_chains: dict[str, list[str]] = field(default_factory=dict)  # 連鎖状態 (Step 23)
 
 
 @dataclass
@@ -194,15 +192,11 @@ class ArchaeologyComponent:
     decoded_fragments: list[str] = field(default_factory=list)  # 解読済み断片 id
     owned_keys: list[str] = field(default_factory=list)  # 所持デコーダー鍵 id
     reached_truths: list[str] = field(default_factory=list)  # 到達済み真理ノード id
-    leaned_endings: dict[str, str] = field(
-        default_factory=dict
-    )  # truth_id -> 寄り先 ending_id
+    leaned_endings: dict[str, str] = field(default_factory=dict)  # truth_id -> 寄り先 ending_id
     interpretation_notes: dict[str, str] = field(
         default_factory=dict
     )  # truth_id -> プレイヤー解釈文
-    decoder_hints_seen: list[str] = field(
-        default_factory=list
-    )  # 蓄積された解読ヒント（気づき）
+    decoder_hints_seen: list[str] = field(default_factory=list)  # 蓄積された解読ヒント（気づき）
     decipherment_gauge: int = 0  # 解読ゲージ（破片収集で上昇）
 
 

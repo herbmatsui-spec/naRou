@@ -88,9 +88,7 @@ class BranchingScenarioGenerator:
         self._scenario_templates: dict[str, Any] = self._load_scenario_templates()
 
         # 分岐の重複を防ぐための履歴
-        self._recently_generated: list[
-            tuple[ScenarioTriggerType, tuple[str, ...], str]
-        ] = []
+        self._recently_generated: list[tuple[ScenarioTriggerType, tuple[str, ...], str]] = []
 
     def _load_scenario_templates(self) -> dict[str, Any]:
         """シナリオテンプレートのロード（簡易実装）"""
@@ -284,9 +282,7 @@ class BranchingScenarioGenerator:
 
         return unique_scenarios
 
-    def _deduplicate_scenarios(
-        self, scenarios: list[GeneratedScenario]
-    ) -> list[GeneratedScenario]:
+    def _deduplicate_scenarios(self, scenarios: list[GeneratedScenario]) -> list[GeneratedScenario]:
         """重複を排除したシナリオリストを返す"""
         seen_keys = set()
         unique = []
@@ -313,9 +309,7 @@ class BranchingScenarioGenerator:
                     if "relationship_type" not in conditions:
                         continue
 
-                    template_rel_type = RelationshipType(
-                        conditions["relationship_type"]
-                    )
+                    template_rel_type = RelationshipType(conditions["relationship_type"])
                     if template_rel_type != rel_type:
                         continue
 
@@ -378,10 +372,7 @@ class BranchingScenarioGenerator:
         # ロマンス関係が複数ある場合（三角関係）
         romance_targets = []
         for target_id, rel_dict in relationships.items():
-            if (
-                RelationshipType.ROMANCE in rel_dict
-                and rel_dict[RelationshipType.ROMANCE] > 40
-            ):
+            if RelationshipType.ROMANCE in rel_dict and rel_dict[RelationshipType.ROMANCE] > 40:
                 romance_targets.append((target_id, rel_dict[RelationshipType.ROMANCE]))
 
         # 2人以上のロマンス対象がいる場合
@@ -390,21 +381,15 @@ class BranchingScenarioGenerator:
             # さらに、二人の間に関係があるかチェック
             for target_a, target_b in itertools.combinations(target_ids, 2):
                 # 二人の間にも関係がある場合は三角関係の可能性
-                edge = self.graph.get_edge(
-                    target_a, target_b, RelationshipType.FAVORABILITY
-                )
+                edge = self.graph.get_edge(target_a, target_b, RelationshipType.FAVORABILITY)
                 if edge and edge.level > 0:
-                    triangular_scenario = self._create_triangular_scenario(
-                        player_id, target_ids
-                    )
+                    triangular_scenario = self._create_triangular_scenario(player_id, target_ids)
                     if triangular_scenario:
                         scenarios.append(triangular_scenario)
 
         return scenarios
 
-    def _check_faction_tension_scenarios(
-        self, player_id: str
-    ) -> list[GeneratedScenario]:
+    def _check_faction_tension_scenarios(self, player_id: str) -> list[GeneratedScenario]:
         """派閥緊張シナリオをチェック"""
         scenarios = []
 
@@ -436,9 +421,7 @@ class BranchingScenarioGenerator:
                 # 敵対派閥のメンバーとの関係をチェック
                 tension_level = 0
                 for member_id in members:
-                    edge = self.graph.get_edge(
-                        player_id, member_id, RelationshipType.FAVORABILITY
-                    )
+                    edge = self.graph.get_edge(player_id, member_id, RelationshipType.FAVORABILITY)
                     if edge:
                         tension_level += abs(edge.level)
 
@@ -739,9 +722,7 @@ class BranchingScenarioGenerator:
                                 InteractionType.QUEST_COOPERATION,  # 適当なインタラクションタイプ
                                 delta[target_id],
                             )
-                            applied_results[f"{target_id}_{rel_type.value}"] = delta[
-                                target_id
-                            ]
+                            applied_results[f"{target_id}_{rel_type.value}"] = delta[target_id]
                     else:
                         # 一律の差分
                         self.rm.modify_relationship(

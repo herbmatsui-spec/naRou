@@ -3,47 +3,47 @@
   "version": "1.0.0",
   "name": "naRou Design Tokens",
   "description": "Design tokens for consistent visual language across platforms",
-  
+
   "color": {
     "semantic": {
       "danger": "#dc2626",
       "warning": "#d97706",
       "success": "#16a34a",
       "info": "#2563eb",
-      
+
       "mana": "#3b82f6",
       "stamina": "#ef4444",
       "health": "#10b981",
       "gold": "#f59e0b",
       "experience": "#6366f1",
-      
+
       "legendary": "#d4af37",
       "epic": "#a855f7",
       "rare": "#3b82f6",
       "uncommon": "#10b981",
       "common": "#6b7280",
-      
+
       "text": {
         "primary": "#1f2937",
         "secondary": "#6b7280",
         "muted": "#9ca3af",
         "inverse": "#ffffff"
       },
-      
+
       "background": {
         "primary": "#ffffff",
         "secondary": "#f9fafb",
         "muted": "#f3f4f6",
         "dark": "#111827"
       },
-      
+
       "border": {
         "light": "#e5e7eb",
         "medium": "#d1d5db",
         "dark": "#9ca3af"
       }
     },
-    
+
     "system": {
       "shadow": "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
       "focus": "0 0 0 3px rgba(66, 153, 225, 0.5)"
@@ -59,7 +59,7 @@
       "accent": "#d4af37"
     }
   },
-  
+
   "spacing": {
     "xs": "4px",
     "sm": "8px",
@@ -69,7 +69,7 @@
     "xxl": "24px",
     "xxxl": "32px"
   },
-  
+
   "radius": {
     "none": "0px",
     "sm": "4px",
@@ -77,7 +77,7 @@
     "lg": "12px",
     "full": "9999px"
   },
-  
+
   "typography": {
     "fontFamily": {
       "primary": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
@@ -109,14 +109,14 @@
       "lg": "1.75"
     }
   },
-  
+
   "shadow": {
     "sm": "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
     "md": "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
     "lg": "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
     "xl": "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
   },
-  
+
   "zIndex": {
     "base": 0,
     "dropdown": 1000,
@@ -127,7 +127,7 @@
     "popover": 1060,
     "tooltip": 1070
   },
-  
+
   "animation": {
     "duration": {
       "fast": "150ms",

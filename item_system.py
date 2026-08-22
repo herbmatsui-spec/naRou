@@ -187,8 +187,7 @@ class Item:
         mat_name = mat.get("name", "")
         prefix = (
             f"{mat_name}の"
-            if mat_name
-            and self.category in (CAT_WEAPON, CAT_SHIELD, CAT_ARMOR, CAT_HELM)
+            if mat_name and self.category in (CAT_WEAPON, CAT_SHIELD, CAT_ARMOR, CAT_HELM)
             else ""
         )
         curse_tag = "【呪】" if self.cursed else ""
@@ -515,9 +514,7 @@ def create_sample_item(name: str, x: int = 0, y: int = 0) -> Item:
     return presets.get(name, presets["longsword"])
 
 
-def calculate_reincarnation_drop_rate(
-    base_rate: float, player_reinc_count: int
-) -> float:
+def calculate_reincarnation_drop_rate(base_rate: float, player_reinc_count: int) -> float:
     """転生ドロップスケーリング適用 (Steps 55, 56)"""
     # TODO: Reincarnation drop scaling
     bonus_mult = min(3.0, 1.0 + player_reinc_count * 0.10)

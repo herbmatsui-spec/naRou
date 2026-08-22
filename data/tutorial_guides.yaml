@@ -35,3 +35,51 @@ tutorial_guides:
     message: ようこそイルヴァの世界へ！まずは周囲を探索し、右下の階段 [>] からダンジョンを降りてみましょう。
     title: 冒険の始まり
     trigger_condition: game_start
+  world_clock_intro:
+    action_required: wait
+    id: world_clock_intro
+    message: この世界には「夜明け(0-6時)」「昼(6-18時)」「夕暮れ(18-22時)」「夜(22-24時)」の4つの時間帯があります。時間帯によって出現するNPC、施設の効率、探索のリスクが変化します。時計塔の鐘で時を知り、賢く行動しましょう。
+    title: 世界時計と時間帯
+    trigger_condition: first_time_check
+  world_clock_actions:
+    action_required: explore
+    id: world_clock_actions
+    message: 行動には時間がかかります。探索2h、クラフト3h、睡眠6h(全快)、待機1hです。夜は研究室が1.5倍、昼は工房が1.3倍効率アップ。医療ベイは24時間営業です。
+    title: 行動と時間消費
+    trigger_condition: first_action
+  world_clock_npcs:
+    action_required: talk
+    id: world_clock_npcs
+    message: ブローカーは夜のみ裏路地に、検査官は昼に襲撃、闘技場は夕暮れから夜に開催、行商人は時間帯で場所が変わります。今出ているNPCは画面上部の時計横で確認できます。
+    title: NPCスケジュール
+    trigger_condition: first_npc_check
+  skill_eater_enter:
+    action_required: scan_enemy
+    id: skill_eater_enter
+    message: ここはAの世界『スキル喰い』。敵のスキルを《解析(X)》→《喰らい(V)》で強奪し、《合成(Shift+T)》で錬成する。毒性が80%超えると拒絶反応で戦力半減。セーフハウスで休息しよう。
+    title: 禁忌の世界へようこそ
+    trigger_condition: switch_world_skill_eater
+  skill_eater_first_scan:
+    action_required: scan_enemy
+    id: skill_eater_first_scan
+    message: 敵に隣接して [X] を押すと、弱点・所持スキル・捕食成功率が表示される。HP50%以下で成功率アップ。まずは解析から始めよう。
+    title: 深度解析の使い方
+    trigger_condition: first_scan
+  skill_eater_first_devour:
+    action_required: devour_enemy
+    id: skill_eater_first_devour
+    message: 弱体化した敵に隣接して [V] で捕食。成功でスキル習得、敵は『抜け殻（Husk）』化。失敗で毒性蓄積+HPダメージ。毒性は [c] で確認。
+    title: 喰らいの実践
+    trigger_condition: first_devour_attempt
+  skill_eater_toxicity_warning:
+    action_required: rest_safehouse
+    id: skill_eater_toxicity_warning
+    message: 毒性40%到達。これ以上蓄積すると運動速度・攻撃力が半減する。スラムのセーフハウス（マップ上の🏠）で [Space] 長押し休息してデトックスしよう。
+    title: 生体拒絶反応の警告
+    trigger_condition: toxicity_above_40
+  skill_eater_first_synthesis:
+    action_required: synthesize_skill
+    id: skill_eater_first_synthesis
+    message: スキル2つ以上所持で [Shift+T] 解放。タグ組み合わせで未知のキメラスキルが生まれる（例：火炎×思考加速＝業火の超思考）。失敗リスクあり。
+    title: キメラ合成炉の解放
+    trigger_condition: first_synthesis_open

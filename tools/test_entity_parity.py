@@ -33,9 +33,7 @@ def test_entity_uv_parity():
             continue
 
         print(f"\n{tile_id}:")
-        print(
-            f"  directions: {td.directions}, states: {td.states}, frames: {td.frames}"
-        )
+        print(f"  directions: {td.directions}, states: {td.states}, frames: {td.frames}")
 
         # Test all direction/state/frame combinations at scale 32 (terminal default)
         for direction in range(td.directions):
@@ -73,9 +71,7 @@ def test_entity_uv_parity():
                         frame=0,
                         scale="32",
                     )
-                    atlas.get_uv(
-                        tile_id, direction=direction, state=state, frame=0, scale="32"
-                    )
+                    atlas.get_uv(tile_id, direction=direction, state=state, frame=0, scale="32")
                     # Each direction should be offset by base height
                     # At scale 32, PLAYER base height is 32 (from metadata)
                     # Note: The actual metadata has 32px vertical spacing at scale 32
@@ -168,15 +164,11 @@ def test_entity_animstate():
     print(f"  Initial: state={anim.state}, frame={anim.frame}")
 
     # Update with walk state
-    renderer.update_entity(
-        eid, 10, 10, direction=0, state="walk", is_attacking=False, dt=1 / 60
-    )
+    renderer.update_entity(eid, 10, 10, direction=0, state="walk", is_attacking=False, dt=1 / 60)
     print(f"  After walk update: state={anim.state}, frame={anim.frame}")
 
     # Test attack trigger
-    renderer.update_entity(
-        eid, 10, 10, direction=0, state="attack", is_attacking=True, dt=1 / 60
-    )
+    renderer.update_entity(eid, 10, 10, direction=0, state="attack", is_attacking=True, dt=1 / 60)
     print(
         f"  After attack trigger: state={anim.state}, frame={anim.frame}, attack_timer={anim.attack_timer:.2f}"
     )

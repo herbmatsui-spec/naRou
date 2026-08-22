@@ -6,6 +6,7 @@ Step 11: Betrayal and conflict mechanics
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import random
 import time
@@ -153,17 +154,13 @@ class BetrayalConflictSystem:
         betrayal_impact = {}
 
         # 裏切り関係のレベルを大幅に下げる
-        self.rm.modify_relationship(
-            betrayer_id, victim_id, InteractionType.BETRAYAL, impact
-        )
+        self.rm.modify_relationship(betrayer_id, victim_id, InteractionType.BETRAYAL, impact)
         betrayal_impact["betrayal_level"] = self.rm.get_relationship_level(
             betrayer_id, victim_id, RelationshipType.BETRAYAL
         )
 
         # 好感度も低下
-        self.rm.modify_relationship(
-            betrayer_id, victim_id, InteractionType.BETRAYAL, impact // 2
-        )
+        self.rm.modify_relationship(betrayer_id, victim_id, InteractionType.BETRAYAL, impact // 2)
         betrayal_impact["favorability"] = self.rm.get_relationship_level(
             betrayer_id, victim_id, RelationshipType.FAVORABILITY
         )
@@ -190,14 +187,10 @@ class BetrayalConflictSystem:
         self._stats["total_betrayals"] += 1
 
         # 対立状態を更新
-        self._update_conflict_state(
-            betrayer_id, victim_id, ConflictState.HOSTILE, "betrayal"
-        )
+        self._update_conflict_state(betrayer_id, victim_id, ConflictState.HOSTILE, "betrayal")
 
         # 復讐の可能性をチェック
-        revenge_triggered = self._check_revenge_trigger(
-            victim_id, betrayer_id, severity
-        )
+        revenge_triggered = self._check_revenge_trigger(victim_id, betrayer_id, severity)
 
         # イベント発行
         self._emit_event("betrayal_committed", record)
@@ -210,15 +203,12 @@ class BetrayalConflictSystem:
             "conflict_state": self.get_conflict_state(betrayer_id, victim_id),
         }
 
-    def _check_revenge_trigger(
-        self, victim_id: str, betrayer_id: str, severity: int
-    ) -> bool:
+    def _check_revenge_trigger(self, victim_id: str, betrayer_id: str, severity: int) -> bool:
         """復讐トリガーをチェック"""
         # 深刻な裏切りで、クールダウン中でない場合
         current_time = time.time()
         if victim_id in self.revenge_cooldowns and (
-            current_time - self.revenge_cooldowns[victim_id]
-            < self._config["revenge_cooldown"]
+            current_time - self.revenge_cooldowns[victim_id] < self._config["revenge_cooldown"]
         ):
             return False
 
@@ -257,17 +247,13 @@ class BetrayalConflictSystem:
         impact = -intensity * 3
 
         # 相互の関係をさらに悪化
-        self.rm.modify_relationship(
-            avenger_id, target_id, InteractionType.COMBAT_ENEMY, impact
-        )
+        self.rm.modify_relationship(avenger_id, target_id, InteractionType.COMBAT_ENEMY, impact)
         self.rm.modify_relationship(
             target_id, avenger_id, InteractionType.COMBAT_ENEMY, impact // 2
         )
 
         # 対立状態をエスカレート
-        self._update_conflict_state(
-            avenger_id, target_id, ConflictState.OPEN_CONFLICT, "revenge"
-        )
+        self._update_conflict_state(avenger_id, target_id, ConflictState.OPEN_CONFLICT, "revenge")
 
         # 復讐キューから削除
         self.revenge_queue.remove(revenge_entry)
@@ -323,11 +309,7 @@ class BetrayalConflictSystem:
         attempt_penalty = conflict.reconciliation_attempts * 0.05
 
         success_chance = (
-            base_chance
-            + mediator_bonus
-            + sincerity_bonus
-            - intensity_penalty
-            - attempt_penalty
+            base_chance + mediator_bonus + sincerity_bonus - intensity_penalty - attempt_penalty
         )
         success_chance = max(0.05, min(0.95, success_chance))
 
@@ -371,9 +353,7 @@ class BetrayalConflictSystem:
         else:
             # 和解失敗：関係はさらに悪化する可能性
             if random.random() < 0.3:
-                self.rm.modify_relationship(
-                    party_a, party_b, InteractionType.ARGUMENT, -10
-                )
+                self.rm.modify_relationship(party_a, party_b, InteractionType.ARGUMENT, -10)
                 self._update_conflict_state(
                     party_a, party_b, ConflictState.HOSTILE, "failed_reconciliation"
                 )
@@ -463,9 +443,7 @@ class BetrayalConflictSystem:
         """特定のキャラクターに対する裏切り記録を取得"""
         return self.betrayal_by_victim.get(victim_id, [])
 
-    def calculate_trust_recovery(
-        self, party_a: str, party_b: str, days_passed: float = 1.0
-    ) -> int:
+    def calculate_trust_recovery(self, party_a: str, party_b: str, days_passed: float = 1.0) -> int:
         """信頼の回復を計算・適用"""
         record = self.get_conflict_record(party_a, party_b)
         if not record:
@@ -518,14 +496,10 @@ class BetrayalConflictSystem:
             if other_id in [source_id, target_id]:
                 continue
 
-            edge = self.graph.get_edge(
-                other_id, target_id, RelationshipType.FAVORABILITY
-            )
+            edge = self.graph.get_edge(other_id, target_id, RelationshipType.FAVORABILITY)
             if edge:
                 edge.add_modifier(
-                    self.rm._create_modifier(
-                        InteractionType.BETRAYAL, -impact * spread_effect
-                    )
+                    self.rm._create_modifier(InteractionType.BETRAYAL, -impact * spread_effect)
                 )
                 affected.append(other_id)
 
@@ -535,9 +509,7 @@ class BetrayalConflictSystem:
             "impact_per_person": -impact * spread_effect,
         }
 
-    def _calculate_rumor_spread(
-        self, source_id: str, target_id: str, rumor_type: str
-    ) -> float:
+    def _calculate_rumor_spread(self, source_id: str, target_id: str, rumor_type: str) -> float:
         """噂の拡散効果を計算"""
         # 基本係数
         multiplier = 1.0
@@ -560,9 +532,7 @@ class BetrayalConflictSystem:
 
         return multiplier
 
-    def register_event_handler(
-        self, event_type: str, handler: Callable[..., Any]
-    ) -> None:
+    def register_event_handler(self, event_type: str, handler: Callable[..., Any]) -> None:
         """イベントハンドラーを登録"""
         self._event_handlers[event_type].append(handler)
 
@@ -654,9 +624,7 @@ class BetrayalConflictSystem:
                 escalation_history=r_data.get("escalation_history", []),
                 reconciliation_attempts=r_data.get("reconciliation_attempts", 0),
             )
-            self.conflict_records[tuple(sorted([record.party_a, record.party_b]))] = (
-                record
-            )
+            self.conflict_records[tuple(sorted([record.party_a, record.party_b]))] = record
 
         self.revenge_queue = data.get("revenge_queue", [])
         self._stats = data.get("stats", self._stats)

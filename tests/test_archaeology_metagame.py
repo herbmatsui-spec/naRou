@@ -3,6 +3,7 @@
 memory_fragments.yaml と story_endings.yaml を truth_codex 経由で連携し、
 「発掘→収集→解読→真理到達→解釈によるエンディング分岐」のループを検証する。
 """
+
 from __future__ import annotations
 
 import os
@@ -50,9 +51,7 @@ def test_archaeology_metagame_full_36_steps():
     # Step 6: memory_fragments 拡張（glyph_script / 新規3断片）
     frags = mf["memory_fragments"]
     for fid in ("goblin_child_screams", "ancient_hero_memory"):
-        assert "glyph_script" in frags[fid] and "truth_link" in frags[fid], (
-            "Step 6 Failed"
-        )
+        assert "glyph_script" in frags[fid] and "truth_link" in frags[fid], "Step 6 Failed"
     for fid in ("sunken_civ_tablet", "star_chart_shard", "traitor_kings_will"):
         assert fid in frags, "Step 6 Failed: 新規断片不足"
     print("[OK] Step 6 (memory_fragments 拡張: glyph_script + 新規3断片)")
@@ -61,15 +60,11 @@ def test_archaeology_metagame_full_36_steps():
     sites = yaml.safe_load(open("data/archaeology_sites.yaml", encoding="utf-8"))[
         "archaeology_sites"
     ]
-    assert set(sites.keys()) == {"goblin_ruins", "hero_sanctum", "abyssal_dig"}, (
-        "Step 7 Failed"
-    )
+    assert set(sites.keys()) == {"goblin_ruins", "hero_sanctum", "abyssal_dig"}, "Step 7 Failed"
     print("[OK] Step 7 (archaeology_sites.yaml: 3遺跡)")
 
     # Step 8: decoder_keys.yaml
-    keys = yaml.safe_load(open("data/decoder_keys.yaml", encoding="utf-8"))[
-        "decoder_keys"
-    ]
+    keys = yaml.safe_load(open("data/decoder_keys.yaml", encoding="utf-8"))["decoder_keys"]
     assert set(keys.keys()) == {
         "goblin_rune_key",
         "heroic_glyph_key",
@@ -78,9 +73,7 @@ def test_archaeology_metagame_full_36_steps():
     print("[OK] Step 8 (decoder_keys.yaml: 3鍵)")
 
     # Step 9: truth_codex.yaml
-    truths = yaml.safe_load(open("data/truth_codex.yaml", encoding="utf-8"))[
-        "truth_codex"
-    ]
+    truths = yaml.safe_load(open("data/truth_codex.yaml", encoding="utf-8"))["truth_codex"]
     assert set(truths.keys()) == {
         "truth_of_coexistence",
         "truth_of_inheritance",
@@ -107,9 +100,7 @@ def test_archaeology_metagame_full_36_steps():
 
     e = entity.Entity(x=0, y=0)
     assert isinstance(e.archaeology, ArchaeologyComponent), "Step 11 Failed"
-    assert isinstance(e.get_component(ArchaeologyComponent), ArchaeologyComponent), (
-        "Step 11 Failed"
-    )
+    assert isinstance(e.get_component(ArchaeologyComponent), ArchaeologyComponent), "Step 11 Failed"
     print("[OK] Step 11 (Entity.archaeology 委譲)")
 
     # Step 12: セーブ（pickle）ラウンドトリップで考古学状態を保持
@@ -120,16 +111,12 @@ def test_archaeology_metagame_full_36_steps():
     mgr.decode_fragment(e, "goblin_child_screams")
     blob = pickle.dumps(e)
     e2 = pickle.loads(blob)
-    assert "goblin_child_screams" in e2.archaeology.collected_fragments, (
-        "Step 12 Failed"
-    )
+    assert "goblin_child_screams" in e2.archaeology.collected_fragments, "Step 12 Failed"
     assert "goblin_child_screams" in e2.archaeology.decoded_fragments, "Step 12 Failed"
     print("[OK] Step 12 (セーブ/ロードで考古学状態を保持)")
 
     # Step 13: YAML 読み込み（registry）
-    assert mgr.registry.get_fragment("goblin_child_screams") is not None, (
-        "Step 13 Failed"
-    )
+    assert mgr.registry.get_fragment("goblin_child_screams") is not None, "Step 13 Failed"
     assert mgr.registry.get_site("goblin_ruins") is not None, "Step 13 Failed"
     print("[OK] Step 13 (ArchaeologyRegistry による4 YAML ロード)")
 
@@ -156,9 +143,7 @@ def test_archaeology_metagame_full_36_steps():
     # Step 17: 収集（重複排除）
     e3 = entity.Entity(x=0, y=0)
     assert mgr.collect_fragment(e3, "goblin_child_screams") is True
-    assert mgr.collect_fragment(e3, "goblin_child_screams") is False, (
-        "Step 17 Failed: 重複排除"
-    )
+    assert mgr.collect_fragment(e3, "goblin_child_screams") is False, "Step 17 Failed: 重複排除"
     print("[OK] Step 17 (collect_fragment 重複排除)")
 
     # Step 18: デコーダー鍵
@@ -169,14 +154,14 @@ def test_archaeology_metagame_full_36_steps():
     # Step 19: 解読（鍵必須）
     e5 = entity.Entity(x=0, y=0)
     mgr.collect_fragment(e5, "traitor_kings_will")  # 鍵なし
-    assert mgr.decode_fragment(e5, "traitor_kings_will") is False, (
-        "Step 19 Failed: 鍵なしで解読される"
-    )
+    assert (
+        mgr.decode_fragment(e5, "traitor_kings_will") is False
+    ), "Step 19 Failed: 鍵なしで解読される"
     # 鍵入手時に未解読断片が自動解読される（改善③ recheck_decoding）
     mgr.acquire_key(e5, "goblin_rune_key")
-    assert "traitor_kings_will" in e5.archaeology.decoded_fragments, (
-        "Step 19 Failed: 鍵ありで自動解読失敗"
-    )
+    assert (
+        "traitor_kings_will" in e5.archaeology.decoded_fragments
+    ), "Step 19 Failed: 鍵ありで自動解読失敗"
     print("[OK] Step 19 (decode_fragment 鍵必須 + 鍵入手で自動解読)")
 
     # Step 20: 部分真理の蓄積（1件解読のみでは到達しない）
@@ -184,9 +169,7 @@ def test_archaeology_metagame_full_36_steps():
     mgr.acquire_key(e4, "goblin_rune_key")
     mgr.collect_fragment(e4, "goblin_child_screams")
     mgr.decode_fragment(e4, "goblin_child_screams")
-    assert "truth_of_coexistence" not in mgr.check_truth_progress(e4), (
-        "Step 20 Failed: 部分で到達"
-    )
+    assert "truth_of_coexistence" not in mgr.check_truth_progress(e4), "Step 20 Failed: 部分で到達"
     print("[OK] Step 20 (部分真理は未到達)")
 
     # Step 21: 真理到達（全要求断片解読）
@@ -202,17 +185,14 @@ def test_archaeology_metagame_full_36_steps():
 
     # Step 23: 解釈による分岐記録 + story_endings 接続フラグ
     assert (
-        mgr.interpret_truth(
-            e4, "truth_of_coexistence", "goblin_peace_bringer", "共存こそ答え"
-        )
+        mgr.interpret_truth(e4, "truth_of_coexistence", "goblin_peace_bringer", "共存こそ答え")
         is True
     )
     assert (
         e4.archaeology.leaned_endings["truth_of_coexistence"] == "goblin_peace_bringer"
     ), "Step 23 Failed"
     assert (
-        e4.story_flags.get("ending_goblin_peace_bringer_unlocked_by_archaeology")
-        is True
+        e4.story_flags.get("ending_goblin_peace_bringer_unlocked_by_archaeology") is True
     ), "Step 23 Failed"
     # 無効な候補は却下
     assert (
@@ -225,12 +205,8 @@ def test_archaeology_metagame_full_36_steps():
 
     # ---------- フェーズD: 統合 (Steps 25-30) ----------
     # Step 25: 登録（game.py で archaeology_manager として登録済み。本テストは軽量のため間接検証）
-    assert hasattr(ArchaeologyManager, "excavate") or True, (
-        "Step 25"
-    )  # 登録は game.py で確認
-    print(
-        "[OK] Step 25 (game.py 登録: systems_mgr.register('archaeology_manager', ...))"
-    )
+    assert hasattr(ArchaeologyManager, "excavate") or True, "Step 25"  # 登録は game.py で確認
+    print("[OK] Step 25 (game.py 登録: systems_mgr.register('archaeology_manager', ...))")
 
     # Step 26: 入力フック用ヘルパ（深度→サイト）
     assert mgr.registry.find_site_for_depth(3) == "goblin_ruins", "Step 26 Failed"
@@ -240,8 +216,7 @@ def test_archaeology_metagame_full_36_steps():
 
     # Step 27: 遺跡マーカ（ジャーナルで site 名を提示）
     assert (
-        mgr.registry.get_site(mgr.registry.find_site_for_depth(20)).get("name")
-        == "深淵の発掘坑"
+        mgr.registry.get_site(mgr.registry.find_site_for_depth(20)).get("name") == "深淵の発掘坑"
     ), "Step 27 Failed"
     print("[OK] Step 27 (遺跡マーカ: サイト名提示)")
 
@@ -272,9 +247,7 @@ def test_archaeology_metagame_full_36_steps():
 
     # Step 32: 解釈台帳出力
     ledger = mgr.export_ledger(e4)
-    assert isinstance(ledger, dict) and "interpretation_notes" in ledger, (
-        "Step 32 Failed"
-    )
+    assert isinstance(ledger, dict) and "interpretation_notes" in ledger, "Step 32 Failed"
     print("[OK] Step 32 (export_ledger 解釈台帳)")
 
     # Step 33: 共有サマリー出力
@@ -291,9 +264,7 @@ def test_archaeology_metagame_full_36_steps():
     print("[OK] Step 35 (pytest 実行は CI/手動で確認)")
 
     # Step 36: 実装サマリー文書
-    assert os.path.exists("DETAILED_IMPLEMENTATION_PLAN_archaeology.md"), (
-        "Step 36 Failed"
-    )
+    assert os.path.exists("DETAILED_IMPLEMENTATION_PLAN_archaeology.md"), "Step 36 Failed"
     print("[OK] Step 36 (詳細実装計画書の存在)")
 
     # ================= 検証に基づく3改善の追加検証 =================
@@ -304,29 +275,22 @@ def test_archaeology_metagame_full_36_steps():
         mgr.acquire_key(e6, "goblin_rune_key")
         mgr.decode_fragment(e6, f)
     mgr.check_truth_progress(e6)
-    assert "truth_of_coexistence" in e6.archaeology.reached_truths, (
-        "改善① Failed: 真理到達"
-    )
+    assert "truth_of_coexistence" in e6.archaeology.reached_truths, "改善① Failed: 真理到達"
     # interpret_truth が trigger_ending を呼び unlock_conditions を満たす
-    mgr.interpret_truth(
-        e6, "truth_of_coexistence", "goblin_peace_bringer", "共存こそ答え"
-    )
+    mgr.interpret_truth(e6, "truth_of_coexistence", "goblin_peace_bringer", "共存こそ答え")
     assert (
-        e6.story_flags.get("ending_goblin_peace_bringer_unlocked_by_archaeology")
-        is True
+        e6.story_flags.get("ending_goblin_peace_bringer_unlocked_by_archaeology") is True
     ), "改善① Failed: 接続フラグ"
-    assert e6.story_flags.get("spared_cubs_resolved") is True, (
-        "改善① Failed: unlock_conditions 未満たし"
-    )
-    assert int(e6.ending_progress.get("goblin_peace_bringer", 0)) >= 1, (
-        "改善① Failed: ending_progress 未更新"
-    )
-    assert mgr.is_ending_reachable(e6, "goblin_peace_bringer") is True, (
-        "改善① Failed: is_ending_reachable"
-    )
-    print(
-        "[OK] 改善① (trigger_ending が unlock_conditions を満たし ending_progress 更新)"
-    )
+    assert (
+        e6.story_flags.get("spared_cubs_resolved") is True
+    ), "改善① Failed: unlock_conditions 未満たし"
+    assert (
+        int(e6.ending_progress.get("goblin_peace_bringer", 0)) >= 1
+    ), "改善① Failed: ending_progress 未更新"
+    assert (
+        mgr.is_ending_reachable(e6, "goblin_peace_bringer") is True
+    ), "改善① Failed: is_ending_reachable"
+    print("[OK] 改善① (trigger_ending が unlock_conditions を満たし ending_progress 更新)")
 
     # 改善②: 解釈選択UI（ジャーナル互換 + グループ化ロジック）
     from journal_ui import JournalUI
@@ -344,29 +308,19 @@ def test_archaeology_metagame_full_36_steps():
     # 改善③: 遅延解読 + ヒント蓄積 + 発掘バリエーション
     e7 = entity.Entity(x=0, y=0)
     mgr.collect_fragment(e7, "traitor_kings_will")  # 鍵なし
-    assert mgr.decode_fragment(e7, "traitor_kings_will") is False, (
-        "改善③ Failed: 鍵なし"
-    )
+    assert mgr.decode_fragment(e7, "traitor_kings_will") is False, "改善③ Failed: 鍵なし"
     assert len(e7.archaeology.decoder_hints_seen) >= 1, "改善③ Failed: ヒント蓄積"
     mgr.acquire_key(e7, "goblin_rune_key")  # 後から鍵 → 自動解読
-    assert "traitor_kings_will" in e7.archaeology.decoded_fragments, (
-        "改善③ Failed: 遅延解読"
-    )
+    assert "traitor_kings_will" in e7.archaeology.decoded_fragments, "改善③ Failed: 遅延解読"
     # 発掘バリエーション: 一致深度で複数候補からランダム
     import random
 
     rng = random.Random(1)
     picks = {mgr.registry.pick_site_for_excavation(3, rng) for _ in range(5)}
     assert picks.issubset({"goblin_ruins"}), "改善③ Failed: pick_site 範囲"
-    assert mgr.registry.find_site_for_depth(3) == "goblin_ruins", (
-        "改善③ Failed: find_site 決定論"
-    )
-    assert "手がかり" in mgr.export_share_summary(e7), (
-        "改善③ Failed: share_summary にヒント"
-    )
-    print(
-        "[OK] 改善③ (recheck_decoding + decoder_hints_seen + pick_site_for_excavation)"
-    )
+    assert mgr.registry.find_site_for_depth(3) == "goblin_ruins", "改善③ Failed: find_site 決定論"
+    assert "手がかり" in mgr.export_share_summary(e7), "改善③ Failed: share_summary にヒント"
+    print("[OK] 改善③ (recheck_decoding + decoder_hints_seen + pick_site_for_excavation)")
 
     print("=== 全36ステップ＋3改善 検証完了 ===")
 

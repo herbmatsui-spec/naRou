@@ -81,11 +81,7 @@ def compute_intent(entity: Any, engine: Any) -> dict | None:
         return _make(INTENT_HEAL, None)
 
     # 4) 遠隔系かつ射程内かつ視認 -> 詠唱
-    if (
-        _is_ranged(entity)
-        and _CAST_RANGE_MIN <= dist <= _CAST_RANGE_MAX
-        and has_los
-    ):
+    if _is_ranged(entity) and _CAST_RANGE_MIN <= dist <= _CAST_RANGE_MAX and has_los:
         return _make(INTENT_CAST, (px, py))
 
     # 5) それ以外 -> 接近（追跡）

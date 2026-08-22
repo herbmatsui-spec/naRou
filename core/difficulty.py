@@ -38,9 +38,7 @@ class DifficultyManager:
             preset = get_config(f"game.difficulty_presets.{difficulty}")
             if isinstance(preset, dict):
                 return {
-                    "player_damage_taken": float(
-                        preset.get("player_damage_taken", 1.0)
-                    ),
+                    "player_damage_taken": float(preset.get("player_damage_taken", 1.0)),
                     "enemy_hp": float(preset.get("enemy_hp", 1.0)),
                     "player_regen": float(preset.get("player_regen", 1.0)),
                 }

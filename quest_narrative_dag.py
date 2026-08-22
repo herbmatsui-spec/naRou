@@ -6,6 +6,7 @@ Quest Narrative DAG Module (偏執的クエストシステム / 設計書 Phase 
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 from dataclasses import dataclass, field
 from enum import Enum, auto
@@ -77,7 +78,11 @@ class NarrativeEdge:
                 node = parse_condition(self.condition_dsl)
                 return evaluate(node, context)
             except Exception as e:
-                logger.warning("Failed to evaluate narrative transition condition '%s': %s", self.condition_dsl, e)
+                logger.warning(
+                    "Failed to evaluate narrative transition condition '%s': %s",
+                    self.condition_dsl,
+                    e,
+                )
                 return False
         return True
 
@@ -179,9 +184,7 @@ class NarrativeDAG:
         if not self._start_node_id:
             errors.append(f"DAG {self.dag_id}: 開始ノードが定義されていません")
         elif self._start_node_id not in self._nodes:
-            errors.append(
-                f"DAG {self.dag_id}: 開始ノード {self._start_node_id} が存在しません"
-            )
+            errors.append(f"DAG {self.dag_id}: 開始ノード {self._start_node_id} が存在しません")
 
         # 終了ノード存在チェック
         if not self._end_node_ids:
@@ -234,9 +237,7 @@ class NarrativeDAG:
 
         for nid in self._nodes:
             if nid not in reachable:
-                errors.append(
-                    f"DAG {self.dag_id}: ノード {nid} が開始ノードから到達不能です"
-                )
+                errors.append(f"DAG {self.dag_id}: ノード {nid} が開始ノードから到達不能です")
 
         return errors
 

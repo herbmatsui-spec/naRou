@@ -1,6 +1,6 @@
 /**
  * UIPerformanceOptimizer
- * Provides utilities to minimize DOM thrashing and optimize 
+ * Provides utilities to minimize DOM thrashing and optimize
  * the rendering of the UI Design System.
  */
 class UIPerformanceOptimizer {
@@ -27,7 +27,7 @@ class UIPerformanceOptimizer {
     }
 
     /**
-     * Debounce function to prevent excessive UI updates during 
+     * Debounce function to prevent excessive UI updates during
      * window resizing or rapid state changes.
      */
     static debounce(fn, delay = 100) {
@@ -49,9 +49,9 @@ if (window.InventoryGrid) {
             className: 'inventory-grid',
             id: props.id || 'inventory-grid'
         }, []);
-        
+
         container.style.setProperty('--grid-cols', props.columns || 5);
-        
+
         const slotComponent = new ItemSlot();
         const slots = items.map(item => slotComponent.render({
             icon: item.icon,
@@ -62,7 +62,7 @@ if (window.InventoryGrid) {
 
         container.appendChild(UIPerformanceOptimizer.createFragment(slots));
         this._injectStyles();
-        
+
         return container;
     };
 }

@@ -42,9 +42,7 @@ class MonitoringManager:
     def _setup_prometheus(self):
         """Start Prometheus exporter on port 8000 and define gauges."""
         start_http_server(8000)
-        self._check_gauge = Gauge(
-            "naRou_check_success", "Health check success", ["check"]
-        )
+        self._check_gauge = Gauge("naRou_check_success", "Health check success", ["check"])
 
         self.monitor_dir.mkdir(exist_ok=True)
         self.checks = {}
@@ -138,9 +136,7 @@ class MonitoringManager:
                 import subprocess
 
                 cmd = shlex.split(target)
-                result = subprocess.run(
-                    cmd, capture_output=True, timeout=30
-                )
+                result = subprocess.run(cmd, capture_output=True, timeout=30)
                 success = result.returncode == 0
                 return (
                     success,
@@ -242,9 +238,7 @@ class MonitoringManager:
             # Log to file
             log_file = self.monitor_dir / "alerts.log"
             with open(log_file, "a") as f:
-                f.write(
-                    f"{datetime.now().isoformat()} - {alert_name}: {result['message']}\n"
-                )
+                f.write(f"{datetime.now().isoformat()} - {alert_name}: {result['message']}\n")
 
     def start_monitoring(self, interval=60):
         """Start continuous monitoring."""
@@ -259,7 +253,10 @@ class MonitoringManager:
                 # Log results
                 log_file = self.monitor_dir / "checks.log"
                 with open(log_file, "a") as f:
-                    f.writelines(f"{result['timestamp']} - {name}: {'OK' if result['success'] else 'FAIL'} - {result['message']}\n" for name, result in results.items())
+                    f.writelines(
+                        f"{result['timestamp']} - {name}: {'OK' if result['success'] else 'FAIL'} - {result['message']}\n"
+                        for name, result in results.items()
+                    )
 
                 time.sleep(interval)
 
@@ -283,9 +280,7 @@ class MonitoringManager:
 
 def main():
     parser = argparse.ArgumentParser(description="Monitoring Management")
-    parser.add_argument(
-        "--dir", default="monitoring_management", help="Monitoring directory"
-    )
+    parser.add_argument("--dir", default="monitoring_management", help="Monitoring directory")
     parser.add_argument(
         "--add-check",
         nargs=4,
@@ -327,9 +322,7 @@ def main():
     elif args.run_all:
         results = mgr.run_all_checks()
         for name, result in results.items():
-            print(
-                f"{name}: {'PASS' if result['success'] else 'FAIL'} - {result['message']}"
-            )
+            print(f"{name}: {'PASS' if result['success'] else 'FAIL'} - {result['message']}")
     elif args.monitor:
         thread = mgr.start_monitoring(args.interval)
         try:
@@ -338,9 +331,7 @@ def main():
             mgr.stop_monitoring()
     elif args.list_checks:
         for name, check in mgr.list_checks().items():
-            print(
-                f"{name}: {check['type']} -> {check['target']} (every {check['interval']}s)"
-            )
+            print(f"{name}: {check['type']} -> {check['target']} (every {check['interval']}s)")
     elif args.list_alerts:
         for name, alert in mgr.list_alerts().items():
             print(f"{name}: {alert['condition']} -> {alert['action']}")

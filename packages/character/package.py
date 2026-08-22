@@ -56,10 +56,7 @@ class CharacterPackage(IPackage):
         from skill_awakening_system import SkillAwakeningManager, SkillAwakeningRegistry
         from skill_evolution_system import SkillEvolutionManager, SkillEvolutionRegistry
         from skill_fusion_system import FusionManager, FusionRegistry
-        from skill_inheritance_system import (
-            SkillInheritanceManager,
-            SkillInheritanceRegistry,
-        )
+        from skill_inheritance_system import SkillInheritanceManager, SkillInheritanceRegistry
         from skill_resonance_system import SkillResonanceManager, SkillResonanceRegistry
         from skill_specialization_system import (
             SkillSpecializationManager,
@@ -82,27 +79,19 @@ class CharacterPackage(IPackage):
 
         evolution_reg = SkillEvolutionRegistry()
         evolution_reg.load()
-        kernel.register_system(
-            "skill_evolution_manager", SkillEvolutionManager(evolution_reg)
-        )
+        kernel.register_system("skill_evolution_manager", SkillEvolutionManager(evolution_reg))
 
         awakening_reg = SkillAwakeningRegistry()
         awakening_reg.load()
-        kernel.register_system(
-            "skill_awakening_manager", SkillAwakeningManager(awakening_reg)
-        )
+        kernel.register_system("skill_awakening_manager", SkillAwakeningManager(awakening_reg))
 
         transfer_reg = SkillTransferRegistry()
         transfer_reg.load()
-        kernel.register_system(
-            "skill_transfer_manager", SkillTransferManager(transfer_reg)
-        )
+        kernel.register_system("skill_transfer_manager", SkillTransferManager(transfer_reg))
 
         resonance_reg = SkillResonanceRegistry()
         resonance_reg.load()
-        kernel.register_system(
-            "skill_resonance_manager", SkillResonanceManager(resonance_reg)
-        )
+        kernel.register_system("skill_resonance_manager", SkillResonanceManager(resonance_reg))
 
         inheritance_reg = SkillInheritanceRegistry()
         inheritance_reg.load()

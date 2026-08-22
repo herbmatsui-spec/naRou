@@ -73,9 +73,7 @@ class ScalingManager:
 
     def get_current_replicas(self):
         """Get current replica count."""
-        return self.state.get(
-            "current_replicas", self.config["horizontal"]["min_replicas"]
-        )
+        return self.state.get("current_replicas", self.config["horizontal"]["min_replicas"])
 
     def scale_horizontal(self, replicas, reason="manual"):
         """Scale horizontally to target replicas."""
@@ -125,14 +123,10 @@ class ScalingManager:
         print("Scaling vertically...")
 
         current_cpu = cpu_limit or self.config["vertical"].get("max_cpu", "4000m")
-        current_memory = memory_limit or self.config["vertical"].get(
-            "max_memory", "8Gi"
-        )
+        current_memory = memory_limit or self.config["vertical"].get("max_memory", "8Gi")
 
         # Simulate vertical scaling
-        success = self._execute_scale(
-            "vertical", {"cpu": current_cpu, "memory": current_memory}
-        )
+        success = self._execute_scale("vertical", {"cpu": current_cpu, "memory": current_memory})
 
         if success:
             if cpu_limit:
@@ -170,16 +164,12 @@ class ScalingManager:
         now = datetime.now()
         if self.state["last_scale_up"]:
             last_up = datetime.fromisoformat(self.state["last_scale_up"])
-            if (now - last_up).total_seconds() < self.config["horizontal"][
-                "scale_up_cooldown"
-            ]:
+            if (now - last_up).total_seconds() < self.config["horizontal"]["scale_up_cooldown"]:
                 return False
 
         if self.state["last_scale_down"]:
             last_down = datetime.fromisoformat(self.state["last_scale_down"])
-            if (now - last_down).total_seconds() < self.config["horizontal"][
-                "scale_down_cooldown"
-            ]:
+            if (now - last_down).total_seconds() < self.config["horizontal"]["scale_down_cooldown"]:
                 return False
 
         # Scale up logic
@@ -265,9 +255,7 @@ def main():
     parser = argparse.ArgumentParser(description="Scaling Management")
     parser.add_argument("--dir", default="scaling_management", help="Scaling directory")
     parser.add_argument("--horizontal", type=int, help="Scale horizontally to replicas")
-    parser.add_argument(
-        "--vertical", nargs=2, metavar=("CPU", "MEMORY"), help="Scale vertically"
-    )
+    parser.add_argument("--vertical", nargs=2, metavar=("CPU", "MEMORY"), help="Scale vertically")
     parser.add_argument("--auto", action="store_true", help="Run auto-scaler")
     parser.add_argument(
         "--db", nargs=2, metavar=("REPLICAS", "MAX_CONN"), help="Configure DB scaling"

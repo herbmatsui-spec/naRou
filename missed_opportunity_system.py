@@ -29,9 +29,7 @@ class MissedOpportunitySystem:
 
     def __init__(self):
         self._missed_opportunities: list[MissedOpportunity] = []
-        self._opportunity_templates: dict[
-            str, dict[str, Any]
-        ] = {}  # 機会のテンプレート
+        self._opportunity_templates: dict[str, dict[str, Any]] = {}  # 機会のテンプレート
 
     def record_missed_opportunity(
         self,
@@ -55,9 +53,7 @@ class MissedOpportunitySystem:
         )
         self._missed_opportunities.append(opportunity)
 
-    def get_missed_opportunities(
-        self, quest_id: str | None = None
-    ) -> list[MissedOpportunity]:
+    def get_missed_opportunities(self, quest_id: str | None = None) -> list[MissedOpportunity]:
         """指定したクエストIDに関連する機会喪失を取得（指定がない場合は全て）"""
         if quest_id is None:
             return self._missed_opportunities

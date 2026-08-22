@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import argparse
 import os
@@ -16,6 +17,7 @@ def run_command(cmd, cwd=None):
     """Run a command and return success status."""
     if isinstance(cmd, str):
         import shlex
+
         cmd = shlex.split(cmd)
     print(f"Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
@@ -78,17 +80,73 @@ def debug_game():
     return True
 
 
+def debug_time():
+    """Debug world clock system."""
+    print("Debugging world clock...")
+    try:
+        from time_system import TimeConfig, TimePhase, WorldClock, get_world_clock
+
+        # Test TimePhase
+        print("  TimePhase tests:")
+        for phase in TimePhase:
+            print(f"    {phase.name}: {phase.display_name} ({phase.start_hour}-{phase.end_hour})")
+
+        # Test from_hour
+        test_hours = [0, 5, 6, 12, 17, 18, 21, 22, 23]
+        for h in test_hours:
+            phase = TimePhase.from_hour(h)
+            print(f"    Hour {h:2d} -> {phase.display_name}")
+
+        # Test WorldClock
+        print("  WorldClock tests:")
+        config = TimeConfig(start_hour=8, start_minute=0)
+        clock = WorldClock(config)
+        print(f"    Initial: {clock.to_string()}")
+        print(f"    Phase: {clock.current_phase.display_name}")
+
+        # Advance time
+        clock.advance(2)
+        print(f"    +2h: {clock.to_string()}")
+        print(f"    Phase: {clock.current_phase.display_name}")
+
+        clock.advance(10)
+        print(f"    +10h: {clock.to_string()}")
+        print(f"    Phase: {clock.current_phase.display_name}")
+
+        # Test ticks
+        clock.advance_ticks(100)
+        print(f"    +100 ticks: {clock.to_string()}")
+
+        # Test save/load
+        data = clock.to_dict()
+        clock2 = WorldClock.from_dict(data)
+        print(f"    Reloaded: {clock2.to_string()}")
+
+        # Test global access
+        global_clock = get_world_clock()
+        print(f"    Global: {global_clock.to_string()}")
+
+        print("  All tests passed!")
+        return True
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        traceback.print_exc()
+        logger.exception("Unhandled exception")
+        return False
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Debug naRou")
     parser.add_argument("--imports", action="store_true", help="Debug imports")
     parser.add_argument("--paths", action="store_true", help="Debug paths")
     parser.add_argument("--env", action="store_true", help="Debug environment")
     parser.add_argument("--game", action="store_true", help="Debug game startup")
+    parser.add_argument("--time", action="store_true", help="Debug world clock system")
     parser.add_argument("--all", action="store_true", help="Run all debug checks")
     args = parser.parse_args()
 
-    if args.all or not any([args.imports, args.paths, args.env, args.game]):
-        args.imports = args.paths = args.env = args.game = True
+    if args.all or not any([args.imports, args.paths, args.env, args.game, args.time]):
+        args.imports = args.paths = args.env = args.game = args.time = True
 
     if args.paths:
         debug_paths()
@@ -104,6 +162,10 @@ if __name__ == "__main__":
 
     if args.game:
         debug_game()
+        print()
+
+    if args.time:
+        debug_time()
         print()
 
     print("Debug completed.")

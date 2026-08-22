@@ -17,6 +17,7 @@ Each tile may declare:
 The generator draws real pixel-art tiles procedurally so the pipeline never
 emits flat placeholder images.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -48,9 +49,7 @@ def _darken(rgb: tuple[int, int, int], amount: int) -> tuple[int, int, int]:
     return tuple(max(0, c - amount) for c in rgb)
 
 
-def _mix(
-    a: tuple[int, int, int], b: tuple[int, int, int], t: float
-) -> tuple[int, int, int]:
+def _mix(a: tuple[int, int, int], b: tuple[int, int, int], t: float) -> tuple[int, int, int]:
     return tuple(int(a[i] * (1 - t) + b[i] * t) for i in range(3))
 
 
@@ -175,9 +174,7 @@ def _item_potion(size: int, rng: random.Random) -> Image.Image:
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
     c = size // 2
-    d.rectangle(
-        [c - size // 10, size // 6, c + size // 10, size // 3], fill=(180, 180, 190)
-    )
+    d.rectangle([c - size // 10, size // 6, c + size // 10, size // 3], fill=(180, 180, 190))
     d.ellipse(
         [c - size // 4, size // 3, c + size // 4, size - size // 6],
         fill=(80, 200, 120),
@@ -236,9 +233,7 @@ def _item_armor(size: int, rng: random.Random) -> Image.Image:
 # ---------------------------------------------------------------------------
 
 
-def _entity(
-    size: int, rng: random.Random, kind: str, frame: int, direction: int
-) -> Image.Image:
+def _entity(size: int, rng: random.Random, kind: str, frame: int, direction: int) -> Image.Image:
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
     cx = size // 2
@@ -273,9 +268,7 @@ def _entity(
     body_w = size // 3
     body_h = size // 3
     body_y = head_y + hr - bob
-    d.rectangle(
-        [cx - body_w // 2, body_y, cx + body_w // 2, body_y + body_h], fill=cloth
-    )
+    d.rectangle([cx - body_w // 2, body_y, cx + body_w // 2, body_y + body_h], fill=cloth)
     leg_h = size // 3
     leg_top = body_y + body_h
     swing = (frame % 2) * max(1, size // 16)
@@ -403,9 +396,7 @@ def _make_tile(
     if "ARMOR" in upper:
         return _item_armor(size, rng)
     if "TORCH" in upper or "BLOOD" in upper or "DECOR_BLOOD" in upper:
-        return (
-            _blood(size, rng, frame) if ("BLOOD" in upper) else _torch(size, rng, frame)
-        )
+        return _blood(size, rng, frame) if ("BLOOD" in upper) else _torch(size, rng, frame)
     if "MAGIC" in upper or "EFFECT" in upper:
         return _magic(size, rng, frame)
     # fallback: generic colored tile
@@ -422,9 +413,7 @@ def generate_tileset(
 
     tile_defs = definition.get("tiles", {})
     if not isinstance(tile_defs, dict):
-        raise ValueError(
-            "Tileset definition 'tiles' must be an object keyed by tile name"
-        )
+        raise ValueError("Tileset definition 'tiles' must be an object keyed by tile name")
 
     padding = int(definition.get("padding", 1))
     max_atlas = int(definition.get("max_atlas_size", 2048))
@@ -523,9 +512,7 @@ def generate_tileset(
     return output
 
 
-def generate_tile_variants(
-    base: Image.Image, size: int, count: int = 4
-) -> list[Image.Image]:
+def generate_tile_variants(base: Image.Image, size: int, count: int = 4) -> list[Image.Image]:
     """Generate `count` visually distinct variants of a single tile.
 
     Used for auto-tiling variety so repeated floor/wall tiles do not look identical.
@@ -584,9 +571,7 @@ def generate_autotile_set(
     return {"png": png_path, "json": json_path, "tile_count": len(cells)}
 
 
-def scale_tileset_atlas(
-    png_path: str, new_size: int, out_path: str | None = None
-) -> str:
+def scale_tileset_atlas(png_path: str, new_size: int, out_path: str | None = None) -> str:
     """Scale an existing atlas PNG to `new_size` (nearest-neighbour) and save it."""
     img = Image.open(png_path).convert("RGBA")
     scaled = img.resize((new_size, new_size), Image.NEAREST)
@@ -669,9 +654,7 @@ def validate_tileset_json(json_path: str) -> tuple[bool, list[str]]:
     return (len(issues) == 0), issues
 
 
-def validate_tileset(
-    def_path: str, output_dir: str, tile_size: int = 32
-) -> tuple[bool, list[str]]:
+def validate_tileset(def_path: str, output_dir: str, tile_size: int = 32) -> tuple[bool, list[str]]:
     """Generate (if needed) then validate a tileset end-to-end."""
     base = os.path.join(output_dir, f"tileset_{tile_size}x{tile_size}.json")
     if not os.path.exists(base):
@@ -679,9 +662,7 @@ def validate_tileset(
     return validate_tileset_json(base)
 
 
-def test_tileset(
-    def_path: str, output_dir: str, tile_size: int = 32
-) -> tuple[bool, list[str]]:
+def test_tileset(def_path: str, output_dir: str, tile_size: int = 32) -> tuple[bool, list[str]]:
     """Smoke-test a generated tileset: regenerate, validate, and check PNG/JSON match."""
     issues: list[str] = []
     generate_tileset(def_path, output_dir, tile_size)
@@ -735,9 +716,7 @@ def document_tileset(
     return out
 
 
-def log_tileset_event(
-    message: str, log_path: str | None = None, level: str = "INFO"
-) -> str:
+def log_tileset_event(message: str, log_path: str | None = None, level: str = "INFO") -> str:
     """Append a timestamped log entry for a tileset operation."""
     log_path = log_path or os.path.join("assets", "logs", "tileset_build.log")
     os.makedirs(os.path.dirname(os.path.abspath(log_path)), exist_ok=True)
@@ -753,9 +732,7 @@ def main():
         "--def", dest="def_path", required=True, help="Path to tileset definition JSON"
     )
     parser.add_argument("--output", default="assets/tiles", help="Output directory")
-    parser.add_argument(
-        "--size", type=int, default=32, help="Tile size (16, 32, 64, ...)"
-    )
+    parser.add_argument("--size", type=int, default=32, help="Tile size (16, 32, 64, ...)")
     parser.add_argument(
         "--source",
         default=None,

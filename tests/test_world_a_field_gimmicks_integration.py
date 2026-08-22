@@ -1,9 +1,11 @@
 """
 Unit test for World A Field Gimmicks & Base Expansion (Steps 49-60)
 """
+
 from __future__ import annotations
 
 import unittest
+
 from game import Engine
 from renderer import NullRenderer
 
@@ -16,14 +18,12 @@ class TestWorldAFieldGimmicksIntegration(unittest.TestCase):
     def test_toxicity_accumulation_on_advance_world(self):
         self.engine.game_state_data.world_a_data["toxicity"] = 10
         self.engine.advance_world()
-        self.assertGreaterEqual(
-            self.engine.game_state_data.world_a_data["toxicity"], 11
-        )
+        self.assertGreaterEqual(self.engine.game_state_data.world_a_data["toxicity"], 11)
 
     def test_pet_dispatch_and_return(self):
         self.engine.execute_pet_dispatch("スラム街の廃品回収", duration_turns=2, reward_gold=300)
         self.assertEqual(len(self.engine.game_state_data.world_a_data["pet_dispatches"]), 1)
-        
+
         # Advance 2 turns
         self.engine.advance_world()
         self.engine.advance_world()

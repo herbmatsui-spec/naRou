@@ -4,18 +4,18 @@ Step 1〜62で実装した全9システムの結合テスト。
 """
 
 import unittest
+
 from skill_eater_ascension_board import AscensionBoard
-from skill_eater_combat_deck import CombatDeckSystem
 from skill_eater_bank_dungeon import BankDungeonManager
-from skill_eater_master_bosses import MasterBossManager
+from skill_eater_combat_deck import CombatDeckSystem
 from skill_eater_concept_trials import ConceptTrialsManager
-from skill_eater_world_hack import WorldLawOverrideManager
-from skill_eater_slum_finale import SlumFinaleManager
 from skill_eater_final_boss import FinalBossCausalityManager
+from skill_eater_master_bosses import MasterBossManager
+from skill_eater_slum_finale import SlumFinaleManager
+from skill_eater_world_hack import WorldLawOverrideManager
 
 
 class TestSkillEaterPhase3(unittest.TestCase):
-
     def test_01_ascension_board(self):
         """Step 1-6: 神格化ボード・星座シナジーのテスト"""
         board = AscensionBoard()
@@ -32,7 +32,7 @@ class TestSkillEaterPhase3(unittest.TestCase):
     def test_02_combat_deck_system(self):
         """Step 7-16: リアルタイム構築戦・即席合成・疲労リロードのテスト"""
         deck = CombatDeckSystem(initial_skills=["Slash", "Fireball", "Guard", "Poison"])
-        
+
         # ターン開始
         turn_info = deck.start_turn(draw_count=4)
         self.assertEqual(len(turn_info["hand"]), 4)
@@ -43,14 +43,16 @@ class TestSkillEaterPhase3(unittest.TestCase):
         self.assertIn("Instant Fusion: [Slash + Fireball]", syn_res["hand"])
 
         # 合成スキルで攻撃
-        atk_res = deck.execute_skill_attack("Instant Fusion: [Slash + Fireball]", base_power=100, mana_cost=1)
+        atk_res = deck.execute_skill_attack(
+            "Instant Fusion: [Slash + Fireball]", base_power=100, mana_cost=1
+        )
         self.assertTrue(atk_res["success"])
-        self.assertEqual(atk_res["damage_dealt"], 250) # 2.5倍
+        self.assertEqual(atk_res["damage_dealt"], 250)  # 2.5倍
 
     def test_03_bank_dungeon_and_erosion(self):
         """Step 17-22: 多層要塞ダンジョン・ハザード侵食テスト"""
         dungeon = BankDungeonManager()
-        
+
         # 探索進行
         step1 = dungeon.advance_exploration_step()
         self.assertEqual(step1["hazard_level"], 15)
@@ -71,11 +73,15 @@ class TestSkillEaterPhase3(unittest.TestCase):
         boss_mgr = MasterBossManager()
 
         # 通常攻撃はバリアで大幅カット
-        norm_atk = boss_mgr.attack_master_boss("investment_boss", damage=1000, used_skill_name="Normal Slash")
-        self.assertEqual(norm_atk["remaining_hp"], 7800) # 1000 * 0.2 = 200 dmg
+        norm_atk = boss_mgr.attack_master_boss(
+            "investment_boss", damage=1000, used_skill_name="Normal Slash"
+        )
+        self.assertEqual(norm_atk["remaining_hp"], 7800)  # 1000 * 0.2 = 200 dmg
 
         # 専用弱点（Fire + Ice 合成）でバリア破壊 & 3倍ダメージ
-        weak_atk = boss_mgr.attack_master_boss("investment_boss", damage=3000, used_skill_name="Instant Fusion: [Fire + Ice]")
+        weak_atk = boss_mgr.attack_master_boss(
+            "investment_boss", damage=3000, used_skill_name="Instant Fusion: [Fire + Ice]"
+        )
         self.assertTrue(weak_atk["weakness_hit"])
         self.assertTrue(weak_atk["boss_defeated"])
         self.assertIn("Concept Key of 投資信託部門", boss_mgr.collected_concept_keys)
@@ -115,7 +121,7 @@ class TestSkillEaterPhase3(unittest.TestCase):
         # 致死ダメージ適用テスト
         res = world_hack.calculate_modified_damage(raw_damage=50000, is_fatal=True, current_hp=100)
         self.assertEqual(res["effective_damage"], 50000)
-        self.assertEqual(res["remaining_hp"], 1) # 食いしばりハックでHP1残存
+        self.assertEqual(res["remaining_hp"], 1)  # 食いしばりハックでHP1残存
         self.assertTrue(res["survived_fatal_by_hack"])
 
     def test_07_slum_finale(self):
@@ -144,7 +150,9 @@ class TestSkillEaterPhase3(unittest.TestCase):
         self.assertTrue(atk_cancel["action_cancelled"])
 
         # 第二形態：論理矛盾行動でボスをフリーズさせる
-        paradox_res = final_boss.attack_don_midas("Paradox Heal-Attack", damage=0, is_paradox_combo=True)
+        paradox_res = final_boss.attack_don_midas(
+            "Paradox Heal-Attack", damage=0, is_paradox_combo=True
+        )
         self.assertTrue(paradox_res["boss_frozen"])
 
         # フリーズ中に強制抽出コマンドでトドメ

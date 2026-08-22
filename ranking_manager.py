@@ -17,13 +17,9 @@ class RankingManager:
         """指定されたイベントとプレイヤーにポイントを加算する"""
         if event_id not in self.rankings:
             self.rankings[event_id] = {}
-        self.rankings[event_id][player_id] = (
-            self.rankings[event_id].get(player_id, 0) + points
-        )
+        self.rankings[event_id][player_id] = self.rankings[event_id].get(player_id, 0) + points
 
-    def calculate_points(
-        self, event_data: Any, action_type: str, amount: int = 1
-    ) -> int:
+    def calculate_points(self, event_data: Any, action_type: str, amount: int = 1) -> int:
         """
         イベントデータとアクションタイプからポイントを計算する。
         :param event_data: WorldEventDataオブジェクト

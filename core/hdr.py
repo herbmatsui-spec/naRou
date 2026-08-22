@@ -49,9 +49,7 @@ class HDRTarget:
     def swap_buffers(self) -> None:
         self.read_buffer = 1 - self.read_buffer
 
-    def clear(
-        self, color: tuple[float, float] = (0.0, 0.0), depth: float = 1.0
-    ) -> None:
+    def clear(self, color: tuple[float, float] = (0.0, 0.0), depth: float = 1.0) -> None:
         write_tex = self.get_write_texture()
         write_tex[:, :] = color
         depth_tex = self.get_depth_texture()
@@ -159,9 +157,7 @@ class HDRCompositor:
 
         return current
 
-    def _upsample_bilinear(
-        self, src: np.ndarray, target_h: int, target_w: int
-    ) -> np.ndarray:
+    def _upsample_bilinear(self, src: np.ndarray, target_h: int, target_w: int) -> np.ndarray:
         """Bilinear upsample."""
         src_h, src_w = src.shape[:2]
         result: np.ndarray = np.zeros((target_h, target_w, 2), dtype=np.float16)

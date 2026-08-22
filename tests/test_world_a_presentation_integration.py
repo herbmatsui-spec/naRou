@@ -1,12 +1,14 @@
 """
 Unit test for World A Presentation & Synthesis Integration (Steps 37-48)
 """
+
 from __future__ import annotations
 
 import unittest
+
 from game import Engine
-from renderer import NullRenderer
 from input_actions import ActionSynthesisMenu
+from renderer import NullRenderer
 
 
 class TestWorldAPresentationIntegration(unittest.TestCase):

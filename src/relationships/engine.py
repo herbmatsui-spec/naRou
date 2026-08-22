@@ -43,9 +43,7 @@ class RelationshipManager:
         self._is_initialized: bool = False
 
         # イベントコールバック
-        self._change_listeners: list[
-            Callable[[str, str, RelationshipType, int], None]
-        ] = []
+        self._change_listeners: list[Callable[[str, str, RelationshipType, int], None]] = []
         self._threshold_listeners: dict[
             tuple[str, str, RelationshipType, RelationshipLevel], list[Callable]
         ] = defaultdict(list)
@@ -100,9 +98,7 @@ class RelationshipManager:
             "decay_check_interval": 3600,
         }
 
-    def _parse_template(
-        self, template_id: str, data: dict[str, Any]
-    ) -> RelationshipTemplate:
+    def _parse_template(self, template_id: str, data: dict[str, Any]) -> RelationshipTemplate:
         """YAMLデータからRelationshipTemplateオブジェクトを作成"""
         # 単一のrelationship_typeか配列かを処理
         rel_type_input = data.get(
@@ -124,9 +120,7 @@ class RelationshipManager:
         decay_rates = data.get("decay_rates", {})
 
         # メインタイプの値を取得（なければデフォルト）
-        initial_level = initial_levels.get(
-            main_rel_type.value, data.get("initial_level", 0)
-        )
+        initial_level = initial_levels.get(main_rel_type.value, data.get("initial_level", 0))
         decay_rate = decay_rates.get(main_rel_type.value, data.get("decay_rate", 0.01))
 
         # interaction_effectsをパース
@@ -182,16 +176,12 @@ class RelationshipManager:
 
             # ディレクトリが存在しない場合は作成
             os.makedirs(
-                os.path.dirname(self.data_path)
-                if os.path.dirname(self.data_path)
-                else ".",
+                os.path.dirname(self.data_path) if os.path.dirname(self.data_path) else ".",
                 exist_ok=True,
             )
 
             with open(self.data_path, "w", encoding="utf-8") as f:
-                yaml.dump(
-                    data, f, default_flow_style=False, allow_unicode=True, indent=2
-                )
+                yaml.dump(data, f, default_flow_style=False, allow_unicode=True, indent=2)
 
             self._last_save_time = time.time()
             return True
@@ -248,9 +238,7 @@ class RelationshipManager:
             )
 
         # テンプレートから関係を作成（多層対応）
-        relationship_types = getattr(
-            template, "relationship_types", [template.relationship_type]
-        )
+        relationship_types = getattr(template, "relationship_types", [template.relationship_type])
         initial_levels = getattr(
             template,
             "initial_levels",
@@ -264,9 +252,7 @@ class RelationshipManager:
 
         success = True
         for rel_type in relationship_types:
-            rel_type_enum = (
-                RelationshipType(rel_type) if isinstance(rel_type, str) else rel_type
-            )
+            rel_type_enum = RelationshipType(rel_type) if isinstance(rel_type, str) else rel_type
             initial_level = initial_levels.get(rel_type, template.initial_level)
             decay_rate = decay_rates.get(rel_type, template.decay_rate)
 
@@ -367,9 +353,7 @@ class RelationshipManager:
         edge = self.graph.get_edge(source_id, target_id, relationship_type)
         return edge.get_level_category() if edge else RelationshipLevel.NEUTRAL
 
-    def get_all_relationships(
-        self, character_id: str
-    ) -> dict[str, dict[RelationshipType, int]]:
+    def get_all_relationships(self, character_id: str) -> dict[str, dict[RelationshipType, int]]:
         """キャラクターのすべての関係を取得"""
         relationships = {}
         for target_id, edge in self.graph.get_related_nodes(character_id):
@@ -486,13 +470,9 @@ class RelationshipManager:
 
                     for rel_type in relationship_types:
                         rel_type_enum = (
-                            RelationshipType(rel_type)
-                            if isinstance(rel_type, str)
-                            else rel_type
+                            RelationshipType(rel_type) if isinstance(rel_type, str) else rel_type
                         )
-                        initial_level = initial_levels.get(
-                            rel_type, template.initial_level
-                        )
+                        initial_level = initial_levels.get(rel_type, template.initial_level)
                         callback(source_id, target_id, rel_type_enum, initial_level)
             except Exception as e:
                 print(f"Error in relationship created listener: {e}")

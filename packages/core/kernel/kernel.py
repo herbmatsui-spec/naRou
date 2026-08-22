@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from .package import IPackage
 
 
 @dataclass
@@ -50,16 +53,12 @@ class Kernel:
         # 依存チェック
         for dep in meta.dependencies or []:
             if dep not in self._packages:
-                raise RuntimeError(
-                    f"Missing dependency: {dep} (required by {meta.name})"
-                )
+                raise RuntimeError(f"Missing dependency: {dep} (required by {meta.name})")
 
         # 必須システムチェック
         for req in meta.requires or []:
             if not self.has_system(req):
-                raise RuntimeError(
-                    f"Required system not available: {req} (for {meta.name})"
-                )
+                raise RuntimeError(f"Required system not available: {req} (for {meta.name})")
 
         package.on_load(self)
         package.setup(self)

@@ -2,6 +2,7 @@
 プロシージャル・クエスト生成システム ゲームプレイ統合テスト
 実際のゲームイベント（撃破/採取/探索）から生成クエストが進捗・達成されることを検証。
 """
+
 from __future__ import annotations
 
 import os
@@ -50,9 +51,9 @@ def test_procedural_quest_gameplay_hooks():
     mgr.update_progress(p, "kill", "ゴブリン", 1)
     mgr.update_progress(p, "kill", "ゴブリン", 1)
     mgr.update_progress(p, "kill", "ゴブリン", 1)  # 3回で自動達成
-    assert p.gold > gold_before and p.procedural_quest.completed_count >= 1, (
-        "Fuzzy kill matching failed"
-    )
+    assert (
+        p.gold > gold_before and p.procedural_quest.completed_count >= 1
+    ), "Fuzzy kill matching failed"
     print("[OK] 曖昧照合: target='goblin' に 実体名='ゴブリン' の撃破で進捗・達成")
 
     # 2) Engine フック: _progress_generated_quests 経由で報酬が付与される

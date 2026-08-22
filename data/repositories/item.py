@@ -43,14 +43,8 @@ class ItemRepository(CachedRepository[ItemDefinition, str]):
             result.extend(self.get_by_category(cat))
         return result
 
-    def query_by_price_range(
-        self, min_value: int, max_value: int
-    ) -> list[ItemDefinition]:
-        return [
-            item
-            for item in self._data.values()
-            if min_value <= item.base_value <= max_value
-        ]
+    def query_by_price_range(self, min_value: int, max_value: int) -> list[ItemDefinition]:
+        return [item for item in self._data.values() if min_value <= item.base_value <= max_value]
 
     def invalidate_cache(self):
         super().invalidate_cache()

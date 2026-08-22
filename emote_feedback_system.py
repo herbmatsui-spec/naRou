@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import math
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 # ==========================================
@@ -142,7 +142,9 @@ class CombatFeedbackManager:
     def __init__(self):
         self.feedbacks: list[FloatingFeedback] = []
 
-    def add_hit_feedback(self, x: float, y: float, damage: int, is_crit: bool = False) -> FloatingFeedback:
+    def add_hit_feedback(
+        self, x: float, y: float, damage: int, is_crit: bool = False
+    ) -> FloatingFeedback:
         """Step 45, 46, 47, 48: Create damage feedback (standard or critical with icon)."""
         if is_crit:
             # Step 48: Critical feedback with star/anger icon, red color, larger pop

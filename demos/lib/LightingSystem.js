@@ -68,7 +68,7 @@ export class LightingSystem {
                 vec4 baseColor = texture2D(uSampler, vTextureCoord);
                 vec2 rayDir = normalize(uLightPos - vTextureCoord);
                 float dist = length(uLightPos - vTextureCoord);
-                
+
                 float lightAccum = 0.0;
                 const int STEPS = 12;
                 for (int i = 0; i < STEPS; i++) {

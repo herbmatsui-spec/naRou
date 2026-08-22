@@ -112,9 +112,7 @@ class SkillEvolutionManager:
 
         return next_stage
 
-    def evolve_skill(
-        self, player: Entity, chain_id: str, engine: Any | None = None
-    ) -> bool:
+    def evolve_skill(self, player: Entity, chain_id: str, engine: Any | None = None) -> bool:
         """スキルを進化させる (Step 42)"""
         next_stage = self.check_evolution(player, chain_id)
         if not next_stage:

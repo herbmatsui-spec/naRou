@@ -34,9 +34,7 @@ class RelationshipGraph:
         self.edges: dict[tuple[str, str, RelationshipType], RelationshipEdge] = {}
 
         # 高速アクセス用インデックス
-        self.node_edges: dict[str, set[tuple[str, str, RelationshipType]]] = (
-            defaultdict(set)
-        )
+        self.node_edges: dict[str, set[tuple[str, str, RelationshipType]]] = defaultdict(set)
         self.type_edges: dict[RelationshipType, set[tuple[str, str]]] = defaultdict(set)
 
         # グラフ統計情報
@@ -91,9 +89,7 @@ class RelationshipGraph:
             self.edges[key] = edge
             self.node_edges[edge.source_id].add(key)
             self.node_edges[edge.target_id].add(key)  # 双方向アクセスのため
-            self.type_edges[edge.relationship_type].add(
-                (edge.source_id, edge.target_id)
-            )
+            self.type_edges[edge.relationship_type].add((edge.source_id, edge.target_id))
 
             self.stats["edge_count"] = len(self.edges)
 
@@ -129,9 +125,7 @@ class RelationshipGraph:
         """特定の関係タイプのエッジを取得"""
         return self.edges.get((source_id, target_id, relationship_type))
 
-    def get_edges_between(
-        self, source_id: str, target_id: str
-    ) -> list[RelationshipEdge]:
+    def get_edges_between(self, source_id: str, target_id: str) -> list[RelationshipEdge]:
         """二つのノード間のすべての関係タイプのエッジを取得"""
         edges = []
         for (src, tgt, rel_type), edge in self.edges.items():
@@ -147,9 +141,7 @@ class RelationshipGraph:
                 edges.append(self.edges[key])
         return edges
 
-    def get_edges_by_type(
-        self, relationship_type: RelationshipType
-    ) -> list[RelationshipEdge]:
+    def get_edges_by_type(self, relationship_type: RelationshipType) -> list[RelationshipEdge]:
         """特定の関係タイプのすべてのエッジを取得"""
         edges = []
         for source_id, target_id in self.type_edges.get(relationship_type, set()):
@@ -162,9 +154,7 @@ class RelationshipGraph:
         """ノードが存在するかチェック"""
         return character_id in self.nodes
 
-    def has_edge(
-        self, source_id: str, target_id: str, relationship_type: RelationshipType
-    ) -> bool:
+    def has_edge(self, source_id: str, target_id: str, relationship_type: RelationshipType) -> bool:
         """エッジが存在するかチェック"""
         return (source_id, target_id, relationship_type) in self.edges
 
@@ -177,14 +167,9 @@ class RelationshipGraph:
             if key in self.edges:
                 edge = self.edges[key]
                 # 自分自身以外のノードを取得
-                other_id = (
-                    edge.target_id if edge.source_id == character_id else edge.source_id
-                )
+                other_id = edge.target_id if edge.source_id == character_id else edge.source_id
                 # 関係タイプでフィルタリング（指定されている場合）
-                if (
-                    relationship_type is None
-                    or edge.relationship_type == relationship_type
-                ):
+                if relationship_type is None or edge.relationship_type == relationship_type:
                     related.append((other_id, edge))
         return related
 
@@ -271,9 +256,7 @@ class RelationshipGraph:
                 continue
 
             # 隣接ノードを探索
-            for neighbor_id, edge in self.get_related_nodes(
-                current_id, relationship_type
-            ):
+            for neighbor_id, edge in self.get_related_nodes(current_id, relationship_type):
                 if neighbor_id == target_id:
                     return path + [neighbor_id]
 
@@ -334,9 +317,7 @@ class RelationshipGraph:
 
         # 平均関係強度
         if self.edges:
-            avg_strength = sum(abs(edge.level) for edge in self.edges.values()) / len(
-                self.edges
-            )
+            avg_strength = sum(abs(edge.level) for edge in self.edges.values()) / len(self.edges)
         else:
             avg_strength = 0.0
 
@@ -451,9 +432,7 @@ class RelationshipGraph:
 
         # 統計情報を復元
         graph.stats.update(
-            data.get(
-                "stats", {"node_count": 0, "edge_count": 0, "last_updated": time.time()}
-            )
+            data.get("stats", {"node_count": 0, "edge_count": 0, "last_updated": time.time()})
         )
 
         return graph

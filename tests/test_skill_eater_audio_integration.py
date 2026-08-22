@@ -2,6 +2,7 @@
 test_skill_eater_audio_integration.py
 提案1〜9（全72ステップ）のオーディオ演出・音響統合テストスイート
 """
+
 from __future__ import annotations
 
 import unittest
@@ -18,13 +19,7 @@ from skill_eater_meta_quest_system import (
 )
 from skill_eater_servant_system import SkillEaterServantSystem
 from skill_eater_synthesis_system import SkillEaterSynthesisSystem
-from skill_eater_system import (
-    CharacterState,
-    SkillDef,
-    SkillEaterRegistry,
-    SkillTier,
-    SkillType,
-)
+from skill_eater_system import CharacterState, SkillDef, SkillEaterRegistry, SkillTier, SkillType
 
 
 class TestSkillEaterAudioIntegration(unittest.TestCase):
@@ -124,9 +119,7 @@ class TestSkillEaterAudioIntegration(unittest.TestCase):
         self.assertIn("metalLatch.ogg", scan_res.played_sounds)
 
         # 2. 喰らい発動＆成功 (Step 17, 18: clothBelt, handleSmallLeather2)
-        dev_res = self.combat.execute_devour(
-            predator, prey, "com_magic_001", force_success=True
-        )
+        dev_res = self.combat.execute_devour(predator, prey, "com_magic_001", force_success=True)
         self.assertTrue(dev_res.success)
         self.assertIn("clothBelt.ogg", dev_res.played_sounds)
         self.assertIn("handleSmallLeather2.ogg", dev_res.played_sounds)
@@ -154,9 +147,7 @@ class TestSkillEaterAudioIntegration(unittest.TestCase):
         self.registry._skills["wind_01"] = wind_skill
         prey_wind.add_skill("wind_01")
 
-        dev_res2 = self.combat.execute_devour(
-            predator, prey_wind, "wind_01", force_success=True
-        )
+        dev_res2 = self.combat.execute_devour(predator, prey_wind, "wind_01", force_success=True)
         self.assertIn("metalPot1.ogg", dev_res2.played_sounds)
 
     # 🧪 提案4: 合成錬金SEテスト (Steps 25〜32)
@@ -323,9 +314,7 @@ class TestSkillEaterAudioIntegration(unittest.TestCase):
 
         # 2. 法則書き換え (bookFlip3, metalPot3, doorClose_4)
         self.rules.root_access_granted = True
-        self.rules.override_rule(
-            "damage_multiplier", 2.0, cost_type="MAX_HP", player=hacker
-        )
+        self.rules.override_rule("damage_multiplier", 2.0, cost_type="MAX_HP", player=hacker)
         sounds = self.audio.get_and_clear_played_sounds()
         self.assertIn("bookFlip3.ogg", sounds)
         self.assertIn("doorClose_4.ogg", sounds)

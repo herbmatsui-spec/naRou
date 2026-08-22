@@ -21,19 +21,10 @@ from .decay_memory import (
     MemoryType,
     RelationshipDecaySystem,
 )
-from .dialogue import (
-    DialogueContext,
-    DialogueGenerationSystem,
-    DialogueMood,
-    GeneratedDialogue,
-)
+from .dialogue import DialogueContext, DialogueGenerationSystem, DialogueMood, GeneratedDialogue
 from .dynamics import CumulativeEffect, DelayedEffect, DynamicRelationshipSystem
 from .engine import RelationshipManager
-from .event_integration import (
-    EventToInteractionMapper,
-    GameEventType,
-    RelationshipEventHandler,
-)
+from .event_integration import EventToInteractionMapper, GameEventType, RelationshipEventHandler
 from .faction import FactionNode, FactionRelation, FactionRelationshipSystem
 from .graph import RelationshipGraph
 from .mentorship import MentorshipMechanics, MentorshipStage, MentorshipState
@@ -47,17 +38,8 @@ from .models import (
     RelationshipTemplate,
     RelationshipType,
 )
-from .persistence import (
-    ComprehensiveRelationshipSaveSystem,
-    RelationshipPersistence,
-    SaveFormat,
-)
-from .personality import (
-    CharacterArchetype,
-    PersonalityProfile,
-    PersonalitySystem,
-    PersonalityTrait,
-)
+from .persistence import ComprehensiveRelationshipSaveSystem, RelationshipPersistence, SaveFormat
+from .personality import CharacterArchetype, PersonalityProfile, PersonalitySystem, PersonalityTrait
 from .quest_integration import QuestRelationshipIntegration
 from .romance import RomanceEventType, RomanceMechanics, RomanceStage, RomanceState
 from .visualization import RelationshipVisualizer, VisualizationFormat
@@ -155,9 +137,7 @@ class RelationshipSimulationEngine:
         self.personality = PersonalitySystem(self.manager)
         self.dialogue = DialogueGenerationSystem(self.manager, self.personality)
         self.visualizer = RelationshipVisualizer(self.manager)
-        self.quest_integration = QuestRelationshipIntegration(
-            self.manager, self.branching
-        )
+        self.quest_integration = QuestRelationshipIntegration(self.manager, self.branching)
         self.world_integration = WorldStateRelationshipIntegration(self.manager)
 
         # 包括的セーブシステム
@@ -192,9 +172,7 @@ class RelationshipSimulationEngine:
 
             try:
                 arch = CharacterArchetype(archetype)
-                self.personality.assign_personality(
-                    character_id, personality_traits, arch
-                )
+                self.personality.assign_personality(character_id, personality_traits, arch)
             except ValueError:
                 pass
 

@@ -5,8 +5,8 @@ Handles skill overload accumulation, debuff state management, and safehouse rest
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Any, Dict, List
 
 
 @dataclass
@@ -42,7 +42,7 @@ class SkillToxicityManager:
         if self.state.current_toxicity >= self.state.debuff_threshold:
             self.state.is_overloaded = True
             self.state.movement_speed_penalty = 0.5  # 50% slower, stealth detection range doubles
-            self.state.atk_multiplier = 0.5          # 50% damage reduction
+            self.state.atk_multiplier = 0.5  # 50% damage reduction
         else:
             self.state.is_overloaded = False
             self.state.movement_speed_penalty = 0.0
@@ -50,7 +50,9 @@ class SkillToxicityManager:
 
     def add_toxicity(self, amount: int, action_name: str = "") -> Dict[str, Any]:
         """Adds toxicity from skill synthesis, extraction, or overload use."""
-        self.state.current_toxicity = min(self.state.max_toxicity, self.state.current_toxicity + amount)
+        self.state.current_toxicity = min(
+            self.state.max_toxicity, self.state.current_toxicity + amount
+        )
         self.evaluate_debuffs()
         return {
             "current_toxicity": self.state.current_toxicity,

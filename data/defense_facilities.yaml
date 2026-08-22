@@ -1,0 +1,179 @@
+# Defense Facilities Configuration
+# Skill Eater Base Defense System
+
+facilities:
+  - id: auto_turret
+    name: 自動砲台
+    facility_type: AutoTurret
+    tier_required: 1
+    build_cost_aldo: 5000
+    build_cost_junk: 200
+    upgrade_cost_aldo: 5000
+    upgrade_cost_junk: 200
+    base_hp: 300
+    base_damage: 50
+    base_range: 5
+    base_cooldown: 2
+    effect_description: 範囲内の敵を自動攻撃する（最速の敵を優先）
+    special_ability: "Lv3+: 貫通ショット（敵防御力50%無視）"
+
+  - id: barrier_generator
+    name: バリア発生装置
+    facility_type: BarrierGenerator
+    tier_required: 2
+    build_cost_aldo: 8000
+    build_cost_junk: 300
+    upgrade_cost_aldo: 8000
+    upgrade_cost_junk: 300
+    base_hp: 500
+    base_damage: 0
+    base_range: 0
+    base_cooldown: 10
+    effect_description: 全防衛施設にシールドを付与（レベル×100）
+    special_ability: "Lv3+: 受けたダメージの25%を攻撃者に反射"
+
+  - id: sensor_array
+    name: センサーアレイ
+    facility_type: SensorArray
+    tier_required: 2
+    build_cost_aldo: 6000
+    build_cost_junk: 250
+    upgrade_cost_aldo: 6000
+    upgrade_cost_junk: 250
+    base_hp: 200
+    base_damage: 0
+    base_range: 10
+    base_cooldown: 1
+    effect_description: 敵の接近を探知し、敵の命中率を低下（レベル×10%）
+    special_ability: "Lv3+: 次ターンの敵標的を予測表示"
+
+  - id: decoy_terminal
+    name: デコイ端末
+    facility_type: DecoyTerminal
+    tier_required: 3
+    build_cost_aldo: 10000
+    build_cost_junk: 400
+    upgrade_cost_aldo: 10000
+    upgrade_cost_junk: 400
+    base_hp: 300
+    base_damage: 0
+    base_range: 0
+    base_cooldown: 15
+    effect_description: 敵の注意を引くデコイを展開（レベル×300 HP）
+    special_ability: "Lv3+: 破壊時に範囲爆発（半径2、ダメージ100）"
+
+# Raid Configuration
+raid:
+  warning_duration: 30
+  breach_duration: 120
+  aftermath_duration: 10
+  max_waves: 3
+
+  heat_trigger_threshold: 80
+  turn_trigger_threshold: 50
+
+  base_enemy_count: 3
+  enemy_per_heat_level: 0.05
+
+  enemy_types:
+    - id: MidasSecurity
+      name: ミダス警備兵
+      base_hp: 80
+      base_atk: 20
+      base_defense: 5
+      base_speed: 10
+      weight_low_heat: 40
+      weight_med_heat: 20
+      weight_high_heat: 10
+
+    - id: MidasElite
+      name: ミダス精鋭
+      base_hp: 150
+      base_atk: 35
+      base_defense: 10
+      base_speed: 8
+      weight_low_heat: 30
+      weight_med_heat: 30
+      weight_high_heat: 20
+
+    - id: MidasMech
+      name: ミダス機甲兵
+      base_hp: 300
+      base_atk: 50
+      base_defense: 15
+      base_speed: 5
+      weight_low_heat: 20
+      weight_med_heat: 30
+      weight_high_heat: 40
+
+    - id: MidasHacker
+      name: ミダスハッカー
+      base_hp: 100
+      base_atk: 25
+      base_defense: 5
+      base_speed: 15
+      weight_low_heat: 10
+      weight_med_heat: 20
+      weight_high_heat: 30
+
+# Rewards & Penalties
+rewards:
+  victory:
+    aldo_per_wave: 500
+    junk_per_wave: 100
+    reputation_gain: 10
+    heat_reduction: 30
+
+  defeat:
+    storage_loss_rate: 0.5
+    facility_level_down: 1
+    heat_reduction: 10
+
+  facility_destroyed_junk_loot: 50  # per level
+
+# Subordinate Configuration
+subordinates:
+  injury_chance_per_destroyed: 0.2
+  injury_damage_rate: 0.2
+  incapacitated_turns: 5
+  heal_rate_aftermath: 0.1
+
+# Synergy Bonuses
+synergy:
+  turret_sensor_accuracy_bonus: 0.2
+  barrier_decoy_shield_bonus: 1.0
+  all_four_base_hp_bonus: 0.1
+
+# Repair
+repair:
+  junk_per_hp: 2
+  auto_repair_priority:
+    - barrier_generator
+    - auto_turret
+    - sensor_array
+    - decoy_terminal
+  auto_repair_per_turn: 1
+
+# Audio/Visual
+audio:
+  alarm_klaxon: alarm_klaxon.ogg
+  turret_fire: turret_fire.ogg
+  barrier_hum: barrier_hum.ogg
+  explosion_debris: explosion_debris.ogg
+  fanfare: fanfare.ogg
+  metal_latch: metalLatch.ogg
+  metal_click: metalClick.ogg
+  metal_pot1: metalPot1.ogg
+  chop: chop.ogg
+  door_close_1: doorClose_1.ogg
+  door_open_2: doorOpen_2.ogg
+  handle_coins: handleCoins.ogg
+  handle_coins2: handleCoins2.ogg
+
+emotes:
+  shield: emote_shield.png
+  wrench: emote_wrench.png
+  alert: emote_alert.png
+  cross: emote_cross.png
+  stars: emote_stars.png
+  exclamations: emote_exclamations.png

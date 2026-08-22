@@ -49,6 +49,7 @@ def load_design_tokens(variant: str = "none") -> dict[str, Any]:
 def get_active_tokens() -> dict[str, Any]:
     """config の accessibility.color_vision を見てトークンを返す。"""
     from config import get_config
+
     variant = get_config("accessibility.color_vision") or "none"
     return load_design_tokens(variant)
 

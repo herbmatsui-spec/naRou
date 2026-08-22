@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 if not logger.handlers:
     handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter('[ASSET] %(levelname)s: %(message)s'))
+    handler.setFormatter(logging.Formatter("[ASSET] %(levelname)s: %(message)s"))
     logger.addHandler(handler)
 
 
@@ -39,16 +39,25 @@ class AssetManager:
             return
         if config and "assets" in config:
             assets = config["assets"]
-            self._load_tiny_rogue_tiles(assets.get("tiny_rogue_tiles", "assets/tiles/tiny_rogue/tiles"))
-            self._load_tiny_rogue_atlas_meta(assets.get("tiny_rogue_atlas_meta", "assets/tiles/tiny_rogue_atlas_16x16.json"))
-            self._load_audio_sfx(assets.get("audio_sfx", "assets/audio"), assets.get("audio_manifest", "assets/audio/manifest.csv"))
+            self._load_tiny_rogue_tiles(
+                assets.get("tiny_rogue_tiles", "assets/tiles/tiny_rogue/tiles")
+            )
+            self._load_tiny_rogue_atlas_meta(
+                assets.get("tiny_rogue_atlas_meta", "assets/tiles/tiny_rogue_atlas_16x16.json")
+            )
+            self._load_audio_sfx(
+                assets.get("audio_sfx", "assets/audio"),
+                assets.get("audio_manifest", "assets/audio/manifest.csv"),
+            )
             self._load_emote_sprites(
                 assets.get("emote_pixel", "assets/emote/pixel"),
                 assets.get("emote_tilesheets", "assets/emote/tilesheets"),
-                assets.get("emote_spritesheets", "assets/emote/spritesheets")
+                assets.get("emote_spritesheets", "assets/emote/spritesheets"),
             )
-            logger.info(f"AssetManager initialized: {len(self._tiny_rogue_tiles)} tiles, "
-                       f"{len(self._audio_sfx)} audio, {len(self._emote_sprites)} emote sprites")
+            logger.info(
+                f"AssetManager initialized: {len(self._tiny_rogue_tiles)} tiles, "
+                f"{len(self._audio_sfx)} audio, {len(self._emote_sprites)} emote sprites"
+            )
         else:
             logger.warning("No assets config provided, AssetManager not fully initialized")
         self._initialized = True
@@ -95,7 +104,9 @@ class AssetManager:
         else:
             logger.warning(f"Audio manifest not found: {manifest_path}")
 
-    def _load_emote_sprites(self, pixel_dir: str, tilesheets_dir: str, spritesheets_dir: str) -> None:
+    def _load_emote_sprites(
+        self, pixel_dir: str, tilesheets_dir: str, spritesheets_dir: str
+    ) -> None:
         """Load emote sprites from pixel, tilesheets, and spritesheets directories."""
         for base_dir in [pixel_dir, tilesheets_dir, spritesheets_dir]:
             path = Path(base_dir)
@@ -175,13 +186,25 @@ class AssetManager:
             return info
         return None
 
-    def get_tile_atlas_info_or_fallback(self, tile_id: str, fallback_id: str = "TR_FLOOR_01") -> dict:
+    def get_tile_atlas_info_or_fallback(
+        self, tile_id: str, fallback_id: str = "TR_FLOOR_01"
+    ) -> dict:
         """Get atlas coordinate info with fallback to a default tile."""
         info = self.get_tile_atlas_info(tile_id)
         if info is None:
             logger.warning(f"Using fallback tile '{fallback_id}' for missing '{tile_id}'")
             info = self.get_tile_atlas_info(fallback_id)
-        return info or {"x": 0, "y": 0, "width": 16, "height": 16, "animated": False, "frames": 1, "fps": 1, "directions": 1, "variants": 1}
+        return info or {
+            "x": 0,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "animated": False,
+            "frames": 1,
+            "fps": 1,
+            "directions": 1,
+            "variants": 1,
+        }
 
     def list_tiny_rogue_tiles(self) -> list[str]:
         """List all available tiny rogue tile names."""
@@ -208,7 +231,9 @@ class AssetManager:
         logger.warning(f"Audio manifest entry not found for suggested_id: {suggested_id}")
         return None
 
-    def get_audio_sfx_or_fallback(self, suggested_id: str, fallback_id: str = "se_footstep_00") -> str | None:
+    def get_audio_sfx_or_fallback(
+        self, suggested_id: str, fallback_id: str = "se_footstep_00"
+    ) -> str | None:
         """Get audio SFX by suggested_id with fallback."""
         path = self.get_audio_sfx_by_id(suggested_id)
         if path is None:
@@ -232,7 +257,9 @@ class AssetManager:
             logger.warning(f"Emote sprite not found: {emote_name}")
         return path
 
-    def get_emote_sprite_or_fallback(self, emote_name: str, fallback_name: str = "style1/emote_anger") -> str | None:
+    def get_emote_sprite_or_fallback(
+        self, emote_name: str, fallback_name: str = "style1/emote_anger"
+    ) -> str | None:
         """Get emote sprite path with fallback."""
         path = self.get_emote_sprite_path(emote_name)
         if path is None:

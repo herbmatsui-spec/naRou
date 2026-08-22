@@ -94,9 +94,7 @@ class MockWebGLRenderer(RendererBase):
     def get_texture_size(self, texture_id: int) -> tuple[int, int]:
         return (0, 0)
 
-    def clear(
-        self, color: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)
-    ) -> None:
+    def clear(self, color: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)) -> None:
         c = np.array([int(c * 255) for c in color], dtype=np.uint8)
         self.framebuffer.fill(0)
         self.framebuffer[:, :, :3] = c[:3]
@@ -120,9 +118,7 @@ class MockWebGLRenderer(RendererBase):
         return self.framebuffer.copy()
 
 
-def render_scene_tcod(
-    renderer: TCODRenderer, atlas: MSDFAtlas, seed: int
-) -> np.ndarray:
+def render_scene_tcod(renderer: TCODRenderer, atlas: MSDFAtlas, seed: int) -> np.ndarray:
     """Render a test scene using TCOD renderer and capture as numpy array."""
 
     renderer.begin_frame()
@@ -150,15 +146,11 @@ def render_scene_tcod(
 
     # Draw text
     renderer.draw_text(
-        TextDrawCall(
-            text="Hello naRou", x=2, y=10, font_size=16, color=(1.0, 1.0, 1.0, 1.0)
-        )
+        TextDrawCall(text="Hello naRou", x=2, y=10, font_size=16, color=(1.0, 1.0, 1.0, 1.0))
     )
 
     renderer.draw_text(
-        TextDrawCall(
-            text="日本語テスト", x=2, y=12, font_size=16, color=(0.8, 0.9, 1.0, 1.0)
-        )
+        TextDrawCall(text="日本語テスト", x=2, y=12, font_size=16, color=(0.8, 0.9, 1.0, 1.0))
     )
 
     renderer.end_frame()
@@ -173,9 +165,7 @@ def render_scene_tcod(
     return result
 
 
-def render_scene_mock(
-    renderer: MockWebGLRenderer, atlas: MSDFAtlas, seed: int
-) -> np.ndarray:
+def render_scene_mock(renderer: MockWebGLRenderer, atlas: MSDFAtlas, seed: int) -> np.ndarray:
     """Render the same test scene using mock WebGL renderer."""
     renderer.begin_frame()
     renderer.set_msdf_atlas(atlas)
@@ -202,15 +192,11 @@ def render_scene_mock(
 
     # Draw text
     renderer.draw_text(
-        TextDrawCall(
-            text="Hello naRou", x=2, y=10, font_size=16, color=(1.0, 1.0, 1.0, 1.0)
-        )
+        TextDrawCall(text="Hello naRou", x=2, y=10, font_size=16, color=(1.0, 1.0, 1.0, 1.0))
     )
 
     renderer.draw_text(
-        TextDrawCall(
-            text="日本語テスト", x=2, y=12, font_size=16, color=(0.8, 0.9, 1.0, 1.0)
-        )
+        TextDrawCall(text="日本語テスト", x=2, y=12, font_size=16, color=(0.8, 0.9, 1.0, 1.0))
     )
 
     renderer.end_frame()
@@ -247,12 +233,12 @@ def test_renderer_parity():
     ]
     font_path = next((p for p in font_candidates if Path(p).exists()), None)
     if font_path:
-        atlas.generate_atlas(
-            font_path, "Hello naRou日本語テストABCDEFGHIJKLMNOPQRSTUVWXYZ", 16, 2
-        )
+        atlas.generate_atlas(font_path, "Hello naRou日本語テストABCDEFGHIJKLMNOPQRSTUVWXYZ", 16, 2)
     else:
         # Fallback if no TTF found in standard paths
         try:
+            from PIL import ImageFont
+
             ImageFont.load_default()
             atlas.font_size = 16
         except Exception:
@@ -276,12 +262,8 @@ def test_renderer_parity():
     tcod_renderer.begin_frame()
     mock_renderer.begin_frame()
     for i in range(5):
-        tcod_renderer.draw_tile(
-            TileDrawCall(0, i * 4, 2, 3, 3, 0, 0, 1, 1, (1.0, 0.5, 0.2, 1.0))
-        )
-        mock_renderer.draw_tile(
-            TileDrawCall(0, i * 4, 2, 3, 3, 0, 0, 1, 1, (1.0, 0.5, 0.2, 1.0))
-        )
+        tcod_renderer.draw_tile(TileDrawCall(0, i * 4, 2, 3, 3, 0, 0, 1, 1, (1.0, 0.5, 0.2, 1.0)))
+        mock_renderer.draw_tile(TileDrawCall(0, i * 4, 2, 3, 3, 0, 0, 1, 1, (1.0, 0.5, 0.2, 1.0)))
     tcod_renderer.end_frame()
     mock_renderer.end_frame()
     print("Test 2 PASS: draw_tile")
@@ -292,19 +274,11 @@ def test_renderer_parity():
     tcod_renderer.set_msdf_atlas(atlas)
     mock_renderer.set_msdf_atlas(atlas)
 
-    tcod_renderer.draw_text(
-        TextDrawCall("Hello naRou", 2, 10, 16, (1.0, 1.0, 1.0, 1.0))
-    )
-    mock_renderer.draw_text(
-        TextDrawCall("Hello naRou", 2, 10, 16, (1.0, 1.0, 1.0, 1.0))
-    )
+    tcod_renderer.draw_text(TextDrawCall("Hello naRou", 2, 10, 16, (1.0, 1.0, 1.0, 1.0)))
+    mock_renderer.draw_text(TextDrawCall("Hello naRou", 2, 10, 16, (1.0, 1.0, 1.0, 1.0)))
 
-    tcod_renderer.draw_text(
-        TextDrawCall("日本語テスト", 2, 12, 16, (0.8, 0.9, 1.0, 1.0))
-    )
-    mock_renderer.draw_text(
-        TextDrawCall("日本語テスト", 2, 12, 16, (0.8, 0.9, 1.0, 1.0))
-    )
+    tcod_renderer.draw_text(TextDrawCall("日本語テスト", 2, 12, 16, (0.8, 0.9, 1.0, 1.0)))
+    mock_renderer.draw_text(TextDrawCall("日本語テスト", 2, 12, 16, (0.8, 0.9, 1.0, 1.0)))
 
     tcod_renderer.end_frame()
     mock_renderer.end_frame()

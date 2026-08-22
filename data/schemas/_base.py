@@ -145,7 +145,6 @@ class DataClassBase:
     """Base for generated frozen dataclasses (slots=True for performance)"""
 
 
-
 @dataclass(frozen=True, slots=True)
 class EffectData(DataClassBase):
     """Common effect structure used across skills, items, etc."""

@@ -99,9 +99,7 @@ class CodeGenerator:
                 jsonschema.Draft7Validator.check_schema(schema)
                 print(f"[validate] OK: {schema_file.relative_to(self.schemas_dir)}")
             except Exception as e:
-                print(
-                    f"[validate] ERROR: {schema_file.relative_to(self.schemas_dir)} - {e}"
-                )
+                print(f"[validate] ERROR: {schema_file.relative_to(self.schemas_dir)} - {e}")
                 errors += 1
         return errors
 
@@ -161,9 +159,7 @@ class CodeGenerator:
                             try:
                                 jsonschema.validate(value, schema)
                             except jsonschema.ValidationError as e2:
-                                print(
-                                    f"[validate] ERROR: {data_file.name}[{key}] - {e2.message}"
-                                )
+                                print(f"[validate] ERROR: {data_file.name}[{key}] - {e2.message}")
                                 errors += 1
                     else:
                         # ドキュメントスキーマ: エラーを出力
@@ -270,12 +266,7 @@ class CodeGenerator:
     def _type_to_import(self, ann: Any) -> str:
         """型アノテーションから必要なインポートを推測"""
         ann_str = str(ann)
-        if (
-            "Optional" in ann_str
-            or "Union" in ann_str
-            or "List" in ann_str
-            or "Dict" in ann_str
-        ):
+        if "Optional" in ann_str or "Union" in ann_str or "List" in ann_str or "Dict" in ann_str:
             return "from typing import Optional, Union, List, Dict"
         if "Literal" in ann_str:
             return "from typing import Literal"
@@ -302,7 +293,9 @@ class CodeGenerator:
             # 既存クラスを置換
             import re
 
-            pattern = rf"@dataclass\(frozen=True, slots=True\)\nclass {class_name}\(.*?\):\n(?:    .*\n)*"
+            pattern = (
+                rf"@dataclass\(frozen=True, slots=True\)\nclass {class_name}\(.*?\):\n(?:    .*\n)*"
+            )
             existing = re.sub(pattern, dc_code + "\n", existing, flags=re.DOTALL)
         else:
             existing += "\n\n" + dc_code
@@ -312,12 +305,8 @@ class CodeGenerator:
 
 def main():
     parser = argparse.ArgumentParser(description="naRou Data Schema Code Generator")
-    parser.add_argument(
-        "--schemas-dir", default="data/schemas", help="JSON Schema directory"
-    )
-    parser.add_argument(
-        "--output-dir", default="data/generated", help="Pydantic output directory"
-    )
+    parser.add_argument("--schemas-dir", default="data/schemas", help="JSON Schema directory")
+    parser.add_argument("--output-dir", default="data/generated", help="Pydantic output directory")
     parser.add_argument(
         "--dataclasses-dir",
         default="data/generated_dc",
@@ -326,9 +315,7 @@ def main():
     parser.add_argument(
         "--dry-run", action="store_true", help="Show what would be done without writing"
     )
-    parser.add_argument(
-        "--validate-only", action="store_true", help="Only validate schemas"
-    )
+    parser.add_argument("--validate-only", action="store_true", help="Only validate schemas")
     parser.add_argument(
         "--validate-data",
         action="store_true",
@@ -339,9 +326,7 @@ def main():
         action="store_true",
         help="Generate frozen dataclasses from Pydantic models",
     )
-    parser.add_argument(
-        "--data-dir", default="data", help="Data directory for validation"
-    )
+    parser.add_argument("--data-dir", default="data", help="Data directory for validation")
 
     args = parser.parse_args()
 

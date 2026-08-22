@@ -6,6 +6,7 @@ Reputation Gate System Module (偏執的クエストシステム / 設計書 Pha
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -51,9 +52,7 @@ class ReputationThreshold:
     params: dict[str, Any] = field(default_factory=dict)  # アクション固有パラメータ
     description: str = ""  # 説明（UI表示用）
     one_time: bool = True  # 一度だけ発火
-    comparison: str = (
-        "auto"  # "gte" (以上), "lte" (以下), "auto" (threshold>=0ならgte, <0ならlte)
-    )
+    comparison: str = "auto"  # "gte" (以上), "lte" (以下), "auto" (threshold>=0ならgte, <0ならlte)
 
     def _get_comparison(self) -> str:
         if self.comparison != "auto":
@@ -95,7 +94,7 @@ class ReputationGate:
         self._npc_gates: dict[str, NPCReputationGate] = {}
         self._faction_gates: dict[str, FactionReputationGate] = {}
         self._custom_actions: dict[str, Callable] = {}
-        self._fired_gates: Set[str] = set()  # 発火済みゲートID（one_time用）
+        self._fired_gates: set[str] = set()  # 発火済みゲートID（one_time用）
 
     def register_npc_gate(
         self,
@@ -153,9 +152,7 @@ class ReputationGate:
                 base += faction_data.influence - 50
         return base + rep
 
-    def evaluate_npc_gates(
-        self, player: Entity, npc_id: str
-    ) -> list[ReputationThreshold]:
+    def evaluate_npc_gates(self, player: Entity, npc_id: str) -> list[ReputationThreshold]:
         """NPC ゲート評価・未発火閾値を返す（発火は別メソッド）"""
         gate = self._npc_gates.get(npc_id)
         if not gate:
@@ -163,9 +160,7 @@ class ReputationGate:
         rep = self.get_npc_reputation(player, npc_id)
         return self._check_thresholds(gate, rep, f"npc:{npc_id}")
 
-    def evaluate_faction_gates(
-        self, player: Entity, faction_id: str
-    ) -> list[ReputationThreshold]:
+    def evaluate_faction_gates(self, player: Entity, faction_id: str) -> list[ReputationThreshold]:
         """派閥ゲート評価"""
         gate = self._faction_gates.get(faction_id)
         if not gate:
@@ -182,9 +177,7 @@ class ReputationGate:
         """閾値チェック（未発火のみ）"""
         results = []
         for thresh in gate.thresholds:
-            gate_id = (
-                f"{gate_key}:{thresh.threshold}:{thresh.action.name}:{thresh.target_id}"
-            )
+            gate_id = f"{gate_key}:{thresh.threshold}:{thresh.action.name}:{thresh.target_id}"
             if gate_id in self._fired_gates:
                 continue
             # 閾値判定
@@ -192,9 +185,7 @@ class ReputationGate:
                 results.append(thresh)
         return results
 
-    def fire_gate(
-        self, threshold: ReputationThreshold, gate_key: str, player: Entity
-    ) -> bool:
+    def fire_gate(self, threshold: ReputationThreshold, gate_key: str, player: Entity) -> bool:
         """ゲートアクション実行"""
         gate_id = f"{gate_key}:{threshold.threshold}:{threshold.action.name}:{threshold.target_id}"
         if gate_id in self._fired_gates:
@@ -238,9 +229,7 @@ class ReputationGate:
     def _unlock_quest(self, quest_id: str, player: Entity, params: dict) -> bool:
         mqs = getattr(self.engine, "main_quest_system", None)
         if mqs and quest_id in mqs.quests:
-            mqs.quests[quest_id].status = mqs.quests[
-                quest_id
-            ].status.__class__.AVAILABLE
+            mqs.quests[quest_id].status = mqs.quests[quest_id].status.__class__.AVAILABLE
             return True
         return False
 
@@ -299,16 +288,12 @@ class ReputationGate:
         for npc_id in self._npc_gates:
             for thresh in self.evaluate_npc_gates(player, npc_id):
                 if self.fire_gate(thresh, f"npc:{npc_id}", player):
-                    fired.append(
-                        f"npc:{npc_id}:{thresh.action.name}:{thresh.target_id}"
-                    )
+                    fired.append(f"npc:{npc_id}:{thresh.action.name}:{thresh.target_id}")
         # 派閥ゲート
         for fac_id in self._faction_gates:
             for thresh in self.evaluate_faction_gates(player, fac_id):
                 if self.fire_gate(thresh, f"faction:{fac_id}", player):
-                    fired.append(
-                        f"faction:{fac_id}:{thresh.action.name}:{thresh.target_id}"
-                    )
+                    fired.append(f"faction:{fac_id}:{thresh.action.name}:{thresh.target_id}")
         return fired
 
 

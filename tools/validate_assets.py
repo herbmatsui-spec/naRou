@@ -3,6 +3,7 @@
 Asset validation script for validating processed assets.
 Checks integrity, format compliance, and quality of all asset types.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -42,9 +43,7 @@ def validate_tileset(tile_path: str, config: dict) -> tuple[bool, list[str]]:
                     issues.append(f"Missing required field in metadata: {field}")
 
             # Validate tile size against the configured set of allowed sizes.
-            allowed_sizes = config["tileset"].get(
-                "sizes", [config["tileset"]["default_size"]]
-            )
+            allowed_sizes = config["tileset"].get("sizes", [config["tileset"]["default_size"]])
             if "tile_size" in metadata and metadata["tile_size"] not in allowed_sizes:
                 issues.append(
                     f"Tile size {metadata['tile_size']} not in allowed sizes {allowed_sizes}"
@@ -243,9 +242,7 @@ def validate_directory(
             file_path = os.path.join(root, file)
 
             # Check extension
-            if allowed_exts and not any(
-                file.lower().endswith(ext) for ext in allowed_exts
-            ):
+            if allowed_exts and not any(file.lower().endswith(ext) for ext in allowed_exts):
                 continue
 
             stats["total_files"] += 1
@@ -351,9 +348,7 @@ def main():
         default=["all"],
         help="Asset types to validate",
     )
-    parser.add_argument(
-        "--output", default=None, help="Output file for validation report (JSON)"
-    )
+    parser.add_argument("--output", default=None, help="Output file for validation report (JSON)")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
 
     args = parser.parse_args()
@@ -405,9 +400,7 @@ def main():
                 stats = {}  # Manifest validation doesn't produce file stats
             elif asset_type == "tilesets":
                 # Atlas PNG/JSON files live directly under assets_dir.
-                valid, issues, stats = validate_directory(
-                    assets_dir, config, "tilesets"
-                )
+                valid, issues, stats = validate_directory(assets_dir, config, "tilesets")
                 cov_valid, cov_issues = validate_tileset_coverage(assets_dir, config)
                 if not cov_valid:
                     valid = False

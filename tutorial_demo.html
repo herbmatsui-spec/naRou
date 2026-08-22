@@ -20,7 +20,7 @@
             overflow: hidden;
             background-image: radial-gradient(circle at top right, #1a1525, #0b0d17);
         }
-        
+
         .game-container {
             width: 1000px;
             height: 600px;
@@ -68,7 +68,7 @@
             font-size: 14px;
             color: #d2d2d2;
         }
-        
+
         .log-area {
             flex-grow: 1;
             display: flex;
@@ -131,19 +131,19 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        
+
         .inv-item.selected {
             background: rgba(255,255,180,0.2);
             color: #ffffb4;
             border-left: 3px solid #ffffb4;
         }
-        
+
         .inv-item .equip-tag {
             color: #82ff82;
             font-size: 12px;
             display: none;
         }
-        
+
         .inv-item.equipped .equip-tag {
             display: inline;
         }
@@ -161,7 +161,7 @@
             box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
             z-index: 20;
         }
-        
+
         .tutorial-title {
             color: #38bdf8;
             font-size: 18px;
@@ -288,13 +288,13 @@
                     document.getElementById('invTitle').innerText = "妹分 シエルの所持品 [ 全て ]";
                     document.getElementById('invFooter').innerText = "重量:2.5/30.0s (左右:タブ e:使 d:置 x:装備 g:渡)";
                     document.getElementById('invFooter').style.color = "#ffb4c8";
-                    
+
                     // Show item again in pet inventory, not equipped yet
                     const sword = document.getElementById('itemSword');
                     sword.style.display = 'flex';
                     sword.classList.remove('equipped');
                     document.getElementById('itemPotion').style.display = 'none'; // Pet doesn't have potion
-                    
+
                     addLog("シエルのインベントリを確認する。", "#ff99cc");
                 }
             },

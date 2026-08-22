@@ -3,6 +3,7 @@
 Footprint Performance Test
 フットプリントパフォーマンステスト
 """
+
 from __future__ import annotations
 
 import sys

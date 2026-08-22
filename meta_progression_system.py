@@ -9,6 +9,7 @@ Provides:
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import os
 import random
@@ -20,6 +21,7 @@ import yaml
 from archaeology_system import ArchaeologyRegistry
 from components import (
     AchievementComponent,
+    ArchaeologyComponent,
     ReincarnationComponent,
     StorytellerComponent,
     TitleComponent,
@@ -271,9 +273,7 @@ class MetaProgressionManager:
             self.registry.load()
         self._awarded_truth_piece_categories: set[str] = set()
 
-    def check_and_award_truth_piece_sets(
-        self, player: Any, engine: Any | None = None
-    ) -> None:
+    def check_and_award_truth_piece_sets(self, player: Any, engine: Any | None = None) -> None:
         """カテゴリごとの断片セットが完了したら真実の一片を付与"""
         arch_reg = ArchaeologyRegistry()
         # すべての断片を取得し、カテゴリごとにグループ化
@@ -311,9 +311,7 @@ class MetaProgressionManager:
                             (255, 215, 0),
                         )
 
-    def roll_cycle_modifiers(
-        self, count: int = 2, seed: int | None = None
-    ) -> list[dict[str, Any]]:
+    def roll_cycle_modifiers(self, count: int = 2, seed: int | None = None) -> list[dict[str, Any]]:
         """転生時に付与するランダムな周回特異点を抽選"""
         if seed is not None:
             rng = random.Random(seed)
@@ -353,9 +351,7 @@ class MetaProgressionManager:
 
         # メッセージ通知
         if engine and hasattr(engine, "log"):
-            engine.log(
-                f"★【記憶の残照】『{fragment.name}』を心に刻んだ！", (255, 215, 0)
-            )
+            engine.log(f"★【記憶の残照】『{fragment.name}』を心に刻んだ！", (255, 215, 0))
 
         # メタゴール判定
         self.check_meta_goals(player, engine)
@@ -388,9 +384,7 @@ class MetaProgressionManager:
                 achieved = reinc_comp.reincarnation_count >= target
             elif metric == "unique_fragment_categories":
                 categories = {
-                    f.get("category")
-                    for f in reinc_comp.collected_fragments
-                    if isinstance(f, dict)
+                    f.get("category") for f in reinc_comp.collected_fragments if isinstance(f, dict)
                 }
                 achieved = len(categories) >= target
 

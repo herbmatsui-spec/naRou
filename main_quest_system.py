@@ -176,9 +176,7 @@ class MainQuestSystem:
             data = yaml.safe_load(f) or {}
             q_list = data.get("main_quests", [])
             for q_data in q_list:
-                objectives = [
-                    QuestObjective(**obj) for obj in q_data.get("objectives", [])
-                ]
+                objectives = [QuestObjective(**obj) for obj in q_data.get("objectives", [])]
                 quest = MainQuest(
                     quest_id=q_data["quest_id"],
                     title=q_data["title"],
@@ -251,9 +249,7 @@ class MainQuestSystem:
             if obj.auto_evaluate and obj.condition_tree:
                 # イベントタイプが条件に関連しているかチェック（簡易版）
                 if obj.evaluate(context):
-                    logs.append(
-                        f"【クエスト進行】{quest.title}: {obj.description} (達成！)"
-                    )
+                    logs.append(f"【クエスト進行】{quest.title}: {obj.description} (達成！)")
             # 従来の更新ロジック（後方互換性）
             elif obj.target_type == event_type:
                 if obj.update(target_id, amount):
@@ -286,9 +282,7 @@ class MainQuestSystem:
                 # プレイヤーに通知するためのログはupdate_progress側で処理されるか、EventBusで飛ばす
                 break
 
-    def _complete_quest(
-        self, player: Entity, quest: MainQuest, engine: Engine | None
-    ) -> None:
+    def _complete_quest(self, player: Entity, quest: MainQuest, engine: Engine | None) -> None:
         """クエスト完了処理と報酬付与"""
         quest.status = QuestStatus.COMPLETED
 
@@ -313,9 +307,7 @@ class MainQuestSystem:
                     pass
 
         # 次のクエストを準備
-        self.active_quest_id = (
-            None  # 次の更新タイミングで _try_activate_next_quest が呼ばれる
-        )
+        self.active_quest_id = None  # 次の更新タイミングで _try_activate_next_quest が呼ばれる
         if quest.next_quest_id and quest.next_quest_id in self.quests:
             self.quests[quest.next_quest_id].status = QuestStatus.AVAILABLE
 
@@ -323,9 +315,7 @@ class MainQuestSystem:
         if quest.narrative_dag_id and engine:
             self._start_quest_narrative(quest.narrative_dag_id, player, engine)
 
-    def _start_quest_narrative(
-        self, dag_id: str, player: Entity, engine: Engine
-    ) -> list[str]:
+    def _start_quest_narrative(self, dag_id: str, player: Entity, engine: Engine) -> list[str]:
         """クエスト関連ナラティブを開始"""
         try:
             from narrative_executor import NARRATIVE_EXECUTOR

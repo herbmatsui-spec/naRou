@@ -55,9 +55,7 @@ class MemoryEntry:
     ) -> float:
         """現在の記憶強度（0.0-1.0）を返す。重要度で減衰調整。"""
         elapsed = self.age(current_time)
-        effective_decay = self.decay_rate or (
-            base_decay / max(1, self.importance.value)
-        )
+        effective_decay = self.decay_rate or (base_decay / max(1, self.importance.value))
         return max(0.0, 1.0 - elapsed * effective_decay)
 
 
@@ -117,7 +115,7 @@ class NPCMemoryManager:
         actor_id: str,
         action: str,
         target_id: str | None = None,
-        location: Tuple[int, int] | None = None,
+        location: tuple[int, int] | None = None,
         importance: MemoryImportance = MemoryImportance.NOTABLE,
     ) -> MemoryEntry:
         """目撃情報を記録"""
@@ -200,14 +198,10 @@ class NPCMemoryManager:
 
     def get_quest_memory(self, quest_id: str) -> MemoryEntry | None:
         """特定クエストの最新記憶を取得"""
-        matches = self.query(
-            memory_type=MemoryType.QUEST_RESULT, tags=[quest_id], limit=1
-        )
+        matches = self.query(memory_type=MemoryType.QUEST_RESULT, tags=[quest_id], limit=1)
         return matches[0] if matches else None
 
-    def get_witness_of(
-        self, actor_id: str, action: str | None = None
-    ) -> list[MemoryEntry]:
+    def get_witness_of(self, actor_id: str, action: str | None = None) -> list[MemoryEntry]:
         """特定アクターの目撃記憶を取得"""
         tags = ["witness", actor_id]
         if action:
@@ -224,9 +218,7 @@ class NPCMemoryManager:
         """減衰処理と弱い記憶の削除。削除数を返す。"""
         original = len(self._memories)
         self._memories = [
-            m
-            for m in self._memories
-            if m.current_strength(current_time) >= min_strength
+            m for m in self._memories if m.current_strength(current_time) >= min_strength
         ]
         return original - len(self._memories)
 
@@ -238,9 +230,7 @@ class NPCMemoryManager:
         return {
             "total": len(self._memories),
             "by_type": by_type,
-            "avg_strength": sum(
-                m.current_strength(current_time) for m in self._memories
-            )
+            "avg_strength": sum(m.current_strength(current_time) for m in self._memories)
             / max(1, len(self._memories)),
         }
 
@@ -264,9 +254,7 @@ class GlobalMemoryRegistry:
     def all_managers(self) -> dict[str, NPCMemoryManager]:
         return dict(self._managers)
 
-    def global_decay(
-        self, current_time: float | None = None, min_strength: float = 0.01
-    ) -> int:
+    def global_decay(self, current_time: float | None = None, min_strength: float = 0.01) -> int:
         """全NPCの記憶減衰を一括実行"""
         total = 0
         for mgr in self._managers.values():

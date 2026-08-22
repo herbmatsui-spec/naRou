@@ -284,9 +284,7 @@ class ComprehensiveRelationshipSaveSystem:
             return {
                 "success": True,
                 "filename": filename,
-                "size_bytes": os.path.getsize(filename)
-                if os.path.exists(filename)
-                else 0,
+                "size_bytes": os.path.getsize(filename) if os.path.exists(filename) else 0,
                 "subsystems_saved": list(save_data["subsystems"].keys()),
             }
         except Exception as e:
@@ -427,9 +425,7 @@ class ComprehensiveRelationshipSaveSystem:
                 tuple(sorted([r_data["faction_a"], r_data["faction_b"]]))
             ] = relation
 
-    def create_incremental_save(
-        self, filename: str, last_save_time: float
-    ) -> dict[str, Any]:
+    def create_incremental_save(self, filename: str, last_save_time: float) -> dict[str, Any]:
         """増分セーブ（最後のセーブ以降の変更のみ）"""
         # 簡易実装：全データを保存するが、メタデータで最終セーブ時刻を記録
         result = self.save_comprehensive(filename)

@@ -100,7 +100,7 @@ guild_rewards:
         - type: "title"
           value: "guild_member"
         - type: "stat_bonus"
-          value: 
+          value:
             strength: 2
             agility: 2
       officer:
@@ -280,7 +280,7 @@ guild_war_conditions:
     - type: "territory_control"
       target: ["derphy"]  # 特定ダンジョンを完全支配
     - type: "quest_completion"
-      target: 
+      target:
         guild_quest: "defend_stronghold"
         count: 10
   alliance_benefits:
@@ -410,7 +410,7 @@ faction_events:
         - type: "unique_item"
           value: "shadow_documents"
         - type: "faction_reputation_bonus"
-          value: 
+          value:
             shadow_hand: +50
             kingdom_garde: -30
 ```

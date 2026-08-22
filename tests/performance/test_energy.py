@@ -3,6 +3,7 @@
 Energy Consumption Performance Test
 エネルギー消費量パフォーマンステスト
 """
+
 from __future__ import annotations
 
 import sys

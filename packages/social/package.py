@@ -47,33 +47,23 @@ class SocialPackage(IPackage):
 
         guild_quest_reg = GuildQuestRegistry()
         guild_quest_reg.load()
-        kernel.register_system(
-            "guild_quest_manager", GuildQuestManager(guild_quest_reg)
-        )
+        kernel.register_system("guild_quest_manager", GuildQuestManager(guild_quest_reg))
 
         faction_war_reg = FactionWarRegistry()
         faction_war_reg.load()
-        kernel.register_system(
-            "faction_war_manager", FactionWarManager(faction_war_reg)
-        )
+        kernel.register_system("faction_war_manager", FactionWarManager(faction_war_reg))
 
         guild_skill_reg = GuildSkillRegistry()
         guild_skill_reg.load()
-        kernel.register_system(
-            "guild_skill_manager", GuildSkillManager(guild_skill_reg)
-        )
+        kernel.register_system("guild_skill_manager", GuildSkillManager(guild_skill_reg))
 
         pet_contract_reg = PetContractRegistry()
         pet_contract_reg.load()
-        kernel.register_system(
-            "pet_contract_manager", PetContractManager(pet_contract_reg)
-        )
+        kernel.register_system("pet_contract_manager", PetContractManager(pet_contract_reg))
 
         pet_evolution_reg = PetEvolutionRegistry()
         pet_evolution_reg.load()
-        kernel.register_system(
-            "pet_evolution_manager", PetEvolutionManager(pet_evolution_reg)
-        )
+        kernel.register_system("pet_evolution_manager", PetEvolutionManager(pet_evolution_reg))
 
         pet_fusion_reg = PetFusionRegistry()
         pet_fusion_reg.load()
@@ -81,9 +71,7 @@ class SocialPackage(IPackage):
 
         relationship_reg = RelationshipRegistry()
         relationship_reg.load()
-        kernel.register_system(
-            "relationship_manager", RelationshipManager(relationship_reg)
-        )
+        kernel.register_system("relationship_manager", RelationshipManager(relationship_reg))
 
         quest_gen_reg = QuestGenerationRegistry()
         quest_gen_reg.load()

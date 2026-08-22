@@ -4,12 +4,14 @@ Skill Eater Phase 2: Anti-Meta Boss Battle System (Steps 62-67)
 弱点スキルの看破、フェーズ移行、Phase 3へのフラグ管理を行う。
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict
+
 
 class AntiMetaBossBattleManager:
     """
     対メタ能力者ボス戦マネージャー
     """
+
     def __init__(self):
         self.boss_name = "監査官オプティマス (Auditor Optimus)"
         self.max_hp = 10000
@@ -18,9 +20,9 @@ class AntiMetaBossBattleManager:
         self.is_defeated = False
         self.meta_barriers: Dict[str, bool] = {
             "high_dps_nullification": True,  # 500以上の単発ダメージを1にする
-            "future_prediction": False
+            "future_prediction": False,
         }
-        self.required_counter_skill = "Glitched Junk Shot" # 意図的な低Tierジャンク攻撃が弱点
+        self.required_counter_skill = "Glitched Junk Shot"  # 意図的な低Tierジャンク攻撃が弱点
 
     def process_player_attack(self, raw_damage: int, used_skill: str) -> Dict[str, Any]:
         """Step 63, 64, 65, 66: パッシブ妨害、防御ロジック、弱点看破、フェーズ移行"""
@@ -63,7 +65,7 @@ class AntiMetaBossBattleManager:
             "current_hp": self.current_hp,
             "max_hp": self.max_hp,
             "barrier_triggered": barrier_triggered,
-            "message": message
+            "message": message,
         }
 
     def conclude_boss_battle(self) -> Dict[str, Any]:
@@ -73,5 +75,5 @@ class AntiMetaBossBattleManager:
             "phase2_completed": True,
             "unlocked_phase": 3,
             "message": "Auditor Optimus fell! The route to Midas World Skill Bank Core is now exposed (Phase 3 Unlocked).",
-            "dropped_mastery_core": "Concept Key: Meta Bypass Core"
+            "dropped_mastery_core": "Concept Key: Meta Bypass Core",
         }

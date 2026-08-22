@@ -112,15 +112,11 @@ if __name__ == "__main__":
     parser.add_argument("--cache", action="store_true", help="Scale cache")
     parser.add_argument("--status", action="store_true", help="Get scaling status")
     parser.add_argument("--replicas", type=int, default=3, help="Number of replicas")
-    parser.add_argument(
-        "--min-replicas", type=int, default=2, help="Min replicas for auto-scaling"
-    )
+    parser.add_argument("--min-replicas", type=int, default=2, help="Min replicas for auto-scaling")
     parser.add_argument(
         "--max-replicas", type=int, default=10, help="Max replicas for auto-scaling"
     )
-    parser.add_argument(
-        "--target-cpu", type=int, default=70, help="Target CPU for auto-scaling"
-    )
+    parser.add_argument("--target-cpu", type=int, default=70, help="Target CPU for auto-scaling")
     args = parser.parse_args()
 
     if args.horizontal:

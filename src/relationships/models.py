@@ -122,9 +122,7 @@ class RelationshipEdge:
         if hours_passed < 1:  # 1時間未満は減衰適用しない
             return 0
 
-        decay_amount = int(
-            self.level * self.decay_rate * hours_passed / 24
-        )  # 日単位で調整
+        decay_amount = int(self.level * self.decay_rate * hours_passed / 24)  # 日単位で調整
         if decay_amount != 0:
             old_level = self.level
             self.level = max(-100, min(100, self.level - decay_amount))
@@ -147,9 +145,7 @@ class RelationshipNode:
         """パーソナリティ特性を追加（0.0〜1.0の範囲）"""
         self.personality_traits[trait] = max(0.0, min(1.0, value))
 
-    def set_faction_affiliation(
-        self, faction_id: str, affiliation: FactionAffiliation
-    ) -> None:
+    def set_faction_affiliation(self, faction_id: str, affiliation: FactionAffiliation) -> None:
         """派閥所属を設定"""
         self.faction_affiliations[faction_id] = affiliation
 

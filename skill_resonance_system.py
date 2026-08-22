@@ -100,9 +100,7 @@ class SkillResonanceManager:
 
         return active
 
-    def apply_resonance_effects(
-        self, player: Entity, engine: Any | None = None
-    ) -> dict[str, Any]:
+    def apply_resonance_effects(self, player: Entity, engine: Any | None = None) -> dict[str, Any]:
         """共鳴効果を適用 (Step 63)"""
         active_sets = self.check_resonance(player)
         merged_effects = {}

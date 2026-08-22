@@ -3,6 +3,7 @@
 Skill Fusion System for naRou
 Manages skill fusion mechanics allowing combination of skills into new abilities.
 """
+
 from __future__ import annotations
 
 import logging
@@ -76,9 +77,7 @@ class FusionRegistry:
             effects = []
             for eff_data in fusion_data.get("bonus_effects", []):
                 effects.append(
-                    FusionEffect(
-                        type=eff_data.get("type", ""), value=eff_data.get("value", 0)
-                    )
+                    FusionEffect(type=eff_data.get("type", ""), value=eff_data.get("value", 0))
                 )
 
             fusion = FusionData(
@@ -107,9 +106,7 @@ class FusionRegistry:
 class FusionManager:
     """Manages skill fusion checking and application for players."""
 
-    def __init__(
-        self, registry: FusionRegistry, skill_registry=None, job_registry=None
-    ):
+    def __init__(self, registry: FusionRegistry, skill_registry=None, job_registry=None):
         self.registry = registry
         self.skill_registry = skill_registry
         self.job_registry = job_registry

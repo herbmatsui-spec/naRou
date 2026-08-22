@@ -2,6 +2,7 @@
 
 Extracted from Engine._on_kill and Engine.advance_world (game.py).
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -10,7 +11,6 @@ from core_framework import Point
 
 if TYPE_CHECKING:
     from entity import Entity
-
     from game import Engine
 
 
@@ -22,9 +22,7 @@ class PetBondManager:
         from constants import COMBAT_BOND_GAIN
 
         if engine.pet and engine.pet.hp > 0 and hasattr(engine.pet, "pet_ai"):
-            p_dist = Point(engine.pet.x, engine.pet.y).chebyshev_distance(
-                Point(entity.x, entity.y)
-            )
+            p_dist = Point(engine.pet.x, engine.pet.y).chebyshev_distance(Point(entity.x, entity.y))
             if p_dist <= 3:
                 engine.pet.pet_ai.increase_bond(COMBAT_BOND_GAIN, "combat_together")
 

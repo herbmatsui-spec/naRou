@@ -6,6 +6,7 @@ World Event Hooks Module (偏執的クエストシステム / 設計書 Phase 9 
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 from collections.abc import Callable
 
@@ -73,9 +74,7 @@ class EventMonitor:
 EVENT_MONITOR = EventMonitor()
 
 
-def monitor_world_event(
-    event_type: WorldEventType, handler: Callable[[WorldEvent], None]
-) -> None:
+def monitor_world_event(event_type: WorldEventType, handler: Callable[[WorldEvent], None]) -> None:
     """ワールドイベントのハンドラーを登録するヘルパー関数"""
     EVENT_MONITOR.register_handler(event_type, handler)
 

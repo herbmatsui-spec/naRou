@@ -5,6 +5,7 @@
 - ヘッドレス環境 (DISPLAY 未設定) ではテキストモードを強制
 - それ以外は通常起動（SDL が使えればグラフィカルモード、使えなければ Web サーバー待機）
 """
+
 from __future__ import annotations
 
 import os
@@ -25,6 +26,7 @@ def main() -> None:
         subprocess.run([sys.executable, "main.py"], check=False)
     except KeyboardInterrupt:
         print("\n[run.py] 中断されました")
+
 
 if __name__ == "__main__":
     main()

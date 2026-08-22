@@ -109,10 +109,7 @@ class ReincarnationChallengeManager:
                 is_ok = False
             if player.level < req_lvl and req_lvl > 0:
                 is_ok = False
-            if (
-                req_kill_max is not None
-                and sum(player.kill_counts.values()) > req_kill_max
-            ):
+            if req_kill_max is not None and sum(player.kill_counts.values()) > req_kill_max:
                 is_ok = False
 
             if is_ok:
@@ -147,6 +144,4 @@ class ReincarnationChallengeManager:
             from sound_manager import SoundManager
 
             SoundManager.play_se("level_up")
-            engine.log(
-                f"★チャレンジ達成！ 【{cdata.name}】の報酬を獲得！", (255, 215, 0)
-            )
+            engine.log(f"★チャレンジ達成！ 【{cdata.name}】の報酬を獲得！", (255, 215, 0))

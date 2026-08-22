@@ -70,9 +70,7 @@ class MemoryFragment:
             or self.memory_type == MemoryType.POSITIVE_EVENT
         ):
             # 古いほど強くなる（一定の期間まで）
-            nostalgia_factor = min(
-                1.5, 1.0 + (elapsed / (365 * 86400)) * 0.3
-            )  # 1年で最大1.5倍
+            nostalgia_factor = min(1.5, 1.0 + (elapsed / (365 * 86400)) * 0.3)  # 1年で最大1.5倍
             return min(1.0, self.emotional_intensity * decay * nostalgia_factor)
 
         # トラウマは薄れにくい
@@ -336,15 +334,11 @@ class MemorySystem:
 
         # 感情強度でソート（強い順）
         current_time = time.time()
-        memories.sort(
-            key=lambda m: m.get_effective_intensity(current_time), reverse=True
-        )
+        memories.sort(key=lambda m: m.get_effective_intensity(current_time), reverse=True)
 
         return memories[:limit]
 
-    def apply_memory_influence(
-        self, character_id: str, other_id: str
-    ) -> dict[str, int]:
+    def apply_memory_influence(self, character_id: str, other_id: str) -> dict[str, int]:
         """記憶の影響を関係に適用"""
         character_memories = self.get_memories_for_character(character_id, limit=20)
 
@@ -382,9 +376,7 @@ class MemorySystem:
             if amount == 0:
                 continue
             RelationshipType(rel_type_str)
-            self.rm.modify_relationship(
-                character_id, other_id, InteractionType.TALK, amount
-            )
+            self.rm.modify_relationship(character_id, other_id, InteractionType.TALK, amount)
 
         return dict(influence)
 
@@ -443,9 +435,9 @@ class MemorySystem:
                     "description": m.description,
                     "timestamp": m.timestamp,
                     "emotional_intensity": m.emotional_intensity,
-                    "associated_relationship": m.associated_relationship.value
-                    if m.associated_relationship
-                    else None,
+                    "associated_relationship": (
+                        m.associated_relationship.value if m.associated_relationship else None
+                    ),
                     "decay_rate": m.decay_rate,
                     "last_recalled": m.last_recalled,
                     "recall_count": m.recall_count,
@@ -474,11 +466,11 @@ class MemorySystem:
                 description=m_data["description"],
                 timestamp=m_data["timestamp"],
                 emotional_intensity=m_data.get("emotional_intensity", 0.5),
-                associated_relationship=RelationshipType(
-                    m_data["associated_relationship"]
-                )
-                if m_data.get("associated_relationship")
-                else None,
+                associated_relationship=(
+                    RelationshipType(m_data["associated_relationship"])
+                    if m_data.get("associated_relationship")
+                    else None
+                ),
                 decay_rate=m_data.get("decay_rate", 0.0001),
                 last_recalled=m_data.get("last_recalled", m_data["timestamp"]),
                 recall_count=m_data.get("recall_count", 0),
@@ -564,9 +556,7 @@ class RelationshipDecaySystem:
 
         return dict(total_changes)
 
-    def _calculate_decay_change(
-        self, edge: Any, time_elapsed: float, current_time: float
-    ) -> int:
+    def _calculate_decay_change(self, edge: Any, time_elapsed: float, current_time: float) -> int:
         """個別エッジの減衰量を計算"""
         # 日単位の経過時間
         days_elapsed = time_elapsed / 86400
@@ -577,14 +567,10 @@ class RelationshipDecaySystem:
         # 関係の符号による調整
         if edge.level > 0:
             # ポジティブな関係は減衰しにくい
-            effective_rate = (
-                base_decay_rate * self._config["positive_relationship_bias"]
-            )
+            effective_rate = base_decay_rate * self._config["positive_relationship_bias"]
         elif edge.level < 0:
             # ネガティブな関係は持続（減衰しにくい）
-            effective_rate = (
-                base_decay_rate * self._config["negative_relationship_persistence"]
-            )
+            effective_rate = base_decay_rate * self._config["negative_relationship_persistence"]
         else:
             effective_rate = base_decay_rate
 
@@ -599,9 +585,7 @@ class RelationshipDecaySystem:
 
         # 記憶による減衰軽減
         if self.memory_system:
-            memories = self.memory_system.get_memories_for_character(
-                edge.source_id, limit=5
-            )
+            memories = self.memory_system.get_memories_for_character(edge.source_id, limit=5)
             reinforcement = sum(
                 m.get_effective_intensity(current_time)
                 for m in memories
@@ -610,11 +594,7 @@ class RelationshipDecaySystem:
             if reinforcement > 0:
                 decay_amount = int(
                     decay_amount
-                    * (
-                        1
-                        - self._config["memory_reinforcement_rate"]
-                        * min(1.0, reinforcement)
-                    )
+                    * (1 - self._config["memory_reinforcement_rate"] * min(1.0, reinforcement))
                 )
 
         return -decay_amount  # 減衰は負の方向

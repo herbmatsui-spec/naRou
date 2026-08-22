@@ -2,6 +2,7 @@
 test_skill_eater_presentation_integration.py
 提案1〜9（全72ステップ）のEmote & Audio演出統合テストスイート
 """
+
 from __future__ import annotations
 
 import unittest
@@ -16,16 +17,10 @@ from skill_eater_meta_quest_system import (
     SkillEaterQuestSystem,
     SkillEaterReincarnationSystem,
 )
-from skill_eater_presentation_system import (
-    EMOTE_DIR,
-    SkillEaterPresentationSystem,
-)
+from skill_eater_presentation_system import EMOTE_DIR, SkillEaterPresentationSystem
 from skill_eater_servant_system import SkillEaterServantSystem
 from skill_eater_synthesis_system import SkillEaterSynthesisSystem
-from skill_eater_system import (
-    CharacterState,
-    SkillEaterRegistry,
-)
+from skill_eater_system import CharacterState, SkillEaterRegistry
 
 
 class TestSkillEaterPresentationIntegration(unittest.TestCase):
@@ -43,26 +38,16 @@ class TestSkillEaterPresentationIntegration(unittest.TestCase):
         self.presentation.get_and_clear_events()
         self.audio.get_and_clear_played_sounds()
 
-        self.combat = SkillEaterCombatSystem(
-            self.registry, self.audio, self.presentation
-        )
-        self.synthesis = SkillEaterSynthesisSystem(
-            self.registry, self.audio, self.presentation
-        )
-        self.servant = SkillEaterServantSystem(
-            self.registry, self.audio, self.presentation
-        )
-        self.economy = SkillEaterEconomySystem(
-            self.registry, self.audio, self.presentation
-        )
+        self.combat = SkillEaterCombatSystem(self.registry, self.audio, self.presentation)
+        self.synthesis = SkillEaterSynthesisSystem(self.registry, self.audio, self.presentation)
+        self.servant = SkillEaterServantSystem(self.registry, self.audio, self.presentation)
+        self.economy = SkillEaterEconomySystem(self.registry, self.audio, self.presentation)
         self.exploration = SkillEaterExplorationSystem(self.audio, self.presentation)
         self.rules = GlobalRuleEngine.get_instance()
         self.rules.reset_rules()
         self.rules.audio = self.audio
         self.rules.presentation = self.presentation
-        self.quests = SkillEaterQuestSystem(
-            self.registry, self.audio, self.presentation
-        )
+        self.quests = SkillEaterQuestSystem(self.registry, self.audio, self.presentation)
         self.reincarnation = SkillEaterReincarnationSystem(
             self.registry, self.audio, self.presentation
         )
@@ -151,9 +136,7 @@ class TestSkillEaterPresentationIntegration(unittest.TestCase):
         self.assertIn("emote_idea.png", emotes)
 
         # 2. 喰らい成功 (alert, star)
-        dev_res = self.combat.execute_devour(
-            predator, prey, "com_magic_001", force_success=True
-        )
+        dev_res = self.combat.execute_devour(predator, prey, "com_magic_001", force_success=True)
         self.assertTrue(dev_res.success)
         dev_emotes = [evt.emote_file for evt in dev_res.presentation_events]
         self.assertIn("emote_alert.png", dev_emotes)
@@ -243,9 +226,7 @@ class TestSkillEaterPresentationIntegration(unittest.TestCase):
         self.assertEqual(chest_res.presentation_events[0].emote_file, "emote_star.png")
 
         escape_res = self.exploration.escape_combat()
-        self.assertEqual(
-            escape_res.presentation_events[0].emote_file, "emote_drops.png"
-        )
+        self.assertEqual(escape_res.presentation_events[0].emote_file, "emote_drops.png")
 
     # 💻 提案8: メタシステムと法則書き換え演出 (Steps 57〜64)
     def test_meta_presentation_events(self):
@@ -262,9 +243,7 @@ class TestSkillEaterPresentationIntegration(unittest.TestCase):
             speed=10,
         )
         self.rules.root_access_granted = True
-        self.rules.override_rule(
-            "damage_multiplier", 2.0, cost_type="MAX_HP", player=hacker
-        )
+        self.rules.override_rule("damage_multiplier", 2.0, cost_type="MAX_HP", player=hacker)
 
         events = self.presentation.get_and_clear_events()
         emotes = [e.emote_file for e in events]
@@ -274,9 +253,7 @@ class TestSkillEaterPresentationIntegration(unittest.TestCase):
     # 🎧 提案9: ON/OFF切り替えテスト (Steps 65〜72)
     def test_presentation_toggle(self):
         self.presentation.set_enabled(False)
-        self.presentation.add_event(
-            emote_file="emote_star.png", audio_file="knifeSlice.ogg"
-        )
+        self.presentation.add_event(emote_file="emote_star.png", audio_file="knifeSlice.ogg")
         events = self.presentation.get_and_clear_events()
         self.assertEqual(len(events), 0)
         self.presentation.set_enabled(True)

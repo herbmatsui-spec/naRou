@@ -50,11 +50,7 @@ class Rumor:
         # 基本信憑性
         cred = self.base_credibility
         # 発信元との関係性で補正
-        rel_mgr = (
-            engine.relationship_manager
-            if hasattr(engine, "relationship_manager")
-            else None
-        )
+        rel_mgr = engine.relationship_manager if hasattr(engine, "relationship_manager") else None
         if rel_mgr:
             rel_level = rel_mgr.get_relationship_level(listener, self.origin_npc_id)
             # 関係レベル: 0=他人, 1=知り合い, 2=友人, 3=親友
@@ -116,7 +112,9 @@ class RumorEngine:
         tags: set[str] | None = None,
     ) -> Rumor:
         """新しい噂を生成・登録"""
-        rumor_id = f"{rumor_type.name.lower()}_{origin_npc.name}_{int(time.time() * 1000) % 1000000}"
+        rumor_id = (
+            f"{rumor_type.name.lower()}_{origin_npc.name}_{int(time.time() * 1000) % 1000000}"
+        )
         rumor = Rumor(
             rumor_id=rumor_id,
             rumor_type=rumor_type,
@@ -130,10 +128,7 @@ class RumorEngine:
         rumor.known_by.add(origin_npc.name)
         self._rumors[rumor_id] = rumor
         # 発信元の記憶にも記録
-        from npc_memory_system import (
-            GLOBAL_MEMORY_REGISTRY,
-            MemoryImportance,
-        )
+        from npc_memory_system import GLOBAL_MEMORY_REGISTRY, MemoryImportance
 
         mgr = GLOBAL_MEMORY_REGISTRY.get(origin_npc)
         mgr.record_reputation_event(
@@ -229,9 +224,7 @@ class RumorEngine:
                         continue
 
                     # 伝播確率計算
-                    prob = self._calculate_spread_probability(
-                        rumor, knower_id, listener_id, dist
-                    )
+                    prob = self._calculate_spread_probability(rumor, knower_id, listener_id, dist)
                     if prob <= self.config.min_credibility_to_spread:
                         continue
 
@@ -243,10 +236,7 @@ class RumorEngine:
                         # 受信者の記憶に記録
                         listener = self._find_entity(listener_id)
                         if listener:
-                            from npc_memory_system import (
-                                GLOBAL_MEMORY_REGISTRY,
-                                MemoryImportance,
-                            )
+                            from npc_memory_system import GLOBAL_MEMORY_REGISTRY, MemoryImportance
 
                             mgr = GLOBAL_MEMORY_REGISTRY.get(listener)
                             mgr.record_reputation_event(
@@ -312,11 +302,7 @@ class RumorEngine:
             results = [r for r in results if r.rumor_type == rumor_type]
         if min_credibility > 0:
             npc = self._find_entity(npc_id)
-            results = [
-                r
-                for r in results
-                if r.credibility_for(npc, self.engine) >= min_credibility
-            ]
+            results = [r for r in results if r.credibility_for(npc, self.engine) >= min_credibility]
         return results
 
     def inject_rumor_for_quest(

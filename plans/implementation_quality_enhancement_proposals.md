@@ -188,21 +188,21 @@ class TitleMigrationManager:
         2: migrate_v1_to_v2,  # v1 → v2
         3: migrate_v2_to_v3,  # v2 → v3
     }
-    
+
     @classmethod
     def migrate_to_latest(cls, data: dict) -> dict:
         current_version = data.get("schema_version", 1)
         target_version = max(cls._migrations.keys()) if cls._migrations else 1
-        
+
         if current_version >= target_version:
             return data
-        
+
         migrated_data = data.copy()
         for version in range(current_version + 1, target_version + 1):
             if version in cls._migrations:
                 cls._migrations[version](migrated_data)
                 migrated_data["schema_version"] = version
-                
+
         return migrated_data
 ```
 

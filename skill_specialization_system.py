@@ -104,8 +104,6 @@ class SkillSpecializationManager:
             from sound_manager import SoundManager
 
             SoundManager.play_se("level_up")
-            engine.log(
-                f"★専門化完了！ 【{path_id}】を【{branch_id}】へ特化！", (255, 215, 0)
-            )
+            engine.log(f"★専門化完了！ 【{path_id}】を【{branch_id}】へ特化！", (255, 215, 0))
 
         return True

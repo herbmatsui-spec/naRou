@@ -13,6 +13,7 @@ PIL で再現し、4 大スキル喰い演出をアニメーションさせる�
   assets/demo_meta_reincarnation.gif
   assets/demo_husk_servant.gif
 """
+
 from __future__ import annotations
 
 import copy
@@ -165,7 +166,7 @@ class GameConsole:
                     self.ch[yy][x + w - 1] = "│"
                     self.fg[yy][x + w - 1] = fg
         corners = [(x, y), (x + w - 1, y), (x, y + h - 1), (x + w - 1, y + h - 1)]
-        for (cx, cy) in corners:
+        for cx, cy in corners:
             if 0 <= cx < self.w and 0 <= cy < self.h:
                 self.ch[cy][cx] = "┼" if False else "+"
                 self.fg[cy][cx] = fg
@@ -207,7 +208,7 @@ def compute_lighting(wx, wy, base, light_sources, player_pos, torch_r=12):
     # プレイヤー松明
     d = math.hypot(wx - player_pos[0], wy - player_pos[1])
     intensity = max(0.0, 1.0 - d / torch_r)
-    for (lx, ly, lr, lcol) in light_sources:
+    for lx, ly, lr, lcol in light_sources:
         dd = math.hypot(wx - lx, wy - ly)
         intensity = max(intensity, max(0.0, 1.0 - dd / lr) * 0.9)
     intensity = min(1.0, intensity)
@@ -233,12 +234,20 @@ def make_room_map(altar=None, stairs=None):
             tiles[y][x] = "."
     # 内壁の柱 / 壁柱
     pillars = [
-        (12, 8), (12, 14), (12, 22), (12, 29),
-        (28, 10), (28, 18), (28, 27),
-        (44, 8), (44, 22), (44, 30),
-        (60, 12), (60, 26),
+        (12, 8),
+        (12, 14),
+        (12, 22),
+        (12, 29),
+        (28, 10),
+        (28, 18),
+        (28, 27),
+        (44, 8),
+        (44, 22),
+        (44, 30),
+        (60, 12),
+        (60, 26),
     ]
-    for (px, py) in pillars:
+    for px, py in pillars:
         if 1 <= px < VIEW_W - 1 and 1 <= py < VIEW_H - 1:
             tiles[py][px] = "#"
     # 少し壁を追加して有機的に
@@ -269,7 +278,7 @@ def draw_scan_box(cons, vx, vy, progress):
     x0 = vx - bw // 2
     y0 = vy - bh // 2
     cons.draw_frame(x0, y0, bw, bh, fg=SCAN_COL)
-    cons.print(x0, y0 - 1, f"SCAN {int(progress*100)}%", fg=SCAN_COL)
+    cons.print(x0, y0 - 1, f"SCAN {int(progress * 100)}%", fg=SCAN_COL)
     # 走査線
     line_y = y0 + 1 + int(progress * (bh - 2))
     for xx in range(x0 + 1, x0 + bw - 1):
@@ -332,20 +341,28 @@ def render_scene(scene, return_console: bool = False):
             exp = explored[wy][vx] if explored else True
             t = tiles[wy][vx]
             if vis:
-                if (altar_pos and (wx, wy) == altar_pos):
-                    col, _ = compute_lighting(wx, wy, ALTAR, light_sources, p["pos"], scene.get("torch", 12))
+                if altar_pos and (wx, wy) == altar_pos:
+                    col, _ = compute_lighting(
+                        wx, wy, ALTAR, light_sources, p["pos"], scene.get("torch", 12)
+                    )
                     cons.print(vx, vy, "_", fg=col)
                 elif t == "#":
-                    col, _ = compute_lighting(wx, wy, WALL_LIT, light_sources, p["pos"], scene.get("torch", 12))
+                    col, _ = compute_lighting(
+                        wx, wy, WALL_LIT, light_sources, p["pos"], scene.get("torch", 12)
+                    )
                     cons.print(vx, vy, "#", fg=col)
                 elif t == ">":
-                    col, _ = compute_lighting(wx, wy, (100, 200, 255), light_sources, p["pos"], scene.get("torch", 12))
+                    col, _ = compute_lighting(
+                        wx, wy, (100, 200, 255), light_sources, p["pos"], scene.get("torch", 12)
+                    )
                     cons.print(vx, vy, ">", fg=col)
                 else:
-                    col, _ = compute_lighting(wx, wy, FLOOR_LIT, light_sources, p["pos"], scene.get("torch", 12))
+                    col, _ = compute_lighting(
+                        wx, wy, FLOOR_LIT, light_sources, p["pos"], scene.get("torch", 12)
+                    )
                     cons.print(vx, vy, ".", fg=col)
             elif exp:
-                if (altar_pos and (wx, wy) == altar_pos):
+                if altar_pos and (wx, wy) == altar_pos:
                     cons.print(vx, vy, "_", fg=(80, 70, 30))
                 elif t == "#":
                     cons.print(vx, vy, "#", fg=WALL_DARK)
@@ -367,15 +384,22 @@ def render_scene(scene, return_console: bool = False):
         vx, vy = ix - cam_x, iy - cam_y
         if 0 <= vx < VIEW_W and 0 <= vy < VIEW_H and (visible is None or visible[iy][ix]):
             base = it["color"]
-            col, intensity = compute_lighting(ix, iy, base, light_sources, p["pos"], scene.get("torch", 12))
+            col, intensity = compute_lighting(
+                ix, iy, base, light_sources, p["pos"], scene.get("torch", 12)
+            )
             if intensity < 0.25:
                 col = (60, 65, 80)
             cons.print(vx, vy, it["ch"], fg=col)
 
     # 4. プレイヤー (本物のゲームでは entities に含まれる)
     player_ent = {
-        "x": p["x"], "y": p["y"], "ch": "@", "color": TEXT_WHITE,
-        "is_player": True, "hp": 1, "anim": 0,
+        "x": p["x"],
+        "y": p["y"],
+        "ch": "@",
+        "color": TEXT_WHITE,
+        "is_player": True,
+        "hp": 1,
+        "anim": 0,
     }
     all_entities = [player_ent] + list(scene.get("entities", []))
 
@@ -383,9 +407,16 @@ def render_scene(scene, return_console: bool = False):
     for e in all_entities:
         ex, ey = e["x"], e["y"]
         vx, vy = ex - cam_x, ey - cam_y
-        if 0 <= vx < VIEW_W and 0 <= vy < VIEW_H and (visible is None or visible[ey][ex]) and e.get("hp", 1) > 0:
+        if (
+            0 <= vx < VIEW_W
+            and 0 <= vy < VIEW_H
+            and (visible is None or visible[ey][ex])
+            and e.get("hp", 1) > 0
+        ):
             base = e["color"]
-            col, intensity = compute_lighting(ex, ey, base, light_sources, p["pos"], scene.get("torch", 12))
+            col, intensity = compute_lighting(
+                ex, ey, base, light_sources, p["pos"], scene.get("torch", 12)
+            )
             if not e.get("is_player", False) and not e.get("is_pet", False) and intensity < 0.3:
                 col = (70, 70, 90)
             bob = int(math.sin(e.get("anim", 0) + ex) * 0.6)
@@ -420,13 +451,29 @@ def render_scene(scene, return_console: bool = False):
     cons.print(66, UI_Y + 1, "★", fg=GOLD_COL)
     cons.print(68, UI_Y + 1, f"Lv.{p['level']} {p['gold']}G", fg=GOLD_COL)
 
-    pet_hp_bar = gauge(pet.get("hp", 0), pet.get("max_hp", 1), length=6) if pet.get("hp", 0) > 0 else "DEAD"
-    pet_str = f"HP:[{pet_hp_bar}] {pet.get('hp',0)}/{pet.get('max_hp',0)}" if pet.get("hp", 0) > 0 else "死亡"
+    pet_hp_bar = (
+        gauge(pet.get("hp", 0), pet.get("max_hp", 1), length=6) if pet.get("hp", 0) > 0 else "DEAD"
+    )
+    pet_str = (
+        f"HP:[{pet_hp_bar}] {pet.get('hp', 0)}/{pet.get('max_hp', 0)}"
+        if pet.get("hp", 0) > 0
+        else "死亡"
+    )
     cons.print(2, UI_Y + 2, f"【仲間】シエル {pet_str}", fg=PET_COL)
-    cons.print(34, UI_Y + 2, f"信仰:{p.get('god','ジュア')}({p.get('piety',80)})", fg=(200, 150, 255))
-    cons.print(54, UI_Y + 2, f"{scene.get('time','Day1 08:00')} B{scene.get('dlevel',1)}F", fg=(170, 170, 170))
+    cons.print(
+        34, UI_Y + 2, f"信仰:{p.get('god', 'ジュア')}({p.get('piety', 80)})", fg=(200, 150, 255)
+    )
+    cons.print(
+        54,
+        UI_Y + 2,
+        f"{scene.get('time', 'Day1 08:00')} B{scene.get('dlevel', 1)}F",
+        fg=(170, 170, 170),
+    )
 
-    tip = scene.get("tooltip", "🎮 [矢印]:移動 [Space]:便利行動 [l]:調査 [i]:荷物 [c]:能力 [Shift+T]:称号 [?]:ヘルプ")
+    tip = scene.get(
+        "tooltip",
+        "🎮 [矢印]:移動 [Space]:便利行動 [l]:調査 [i]:荷物 [c]:能力 [Shift+T]:称号 [?]:ヘルプ",
+    )
     cons.print(2, UI_Y + 3, tip[:78], fg=(140, 180, 220))
 
     # 8. 凡例ボックス
@@ -445,7 +492,9 @@ def render_scene(scene, return_console: bool = False):
         nw = min(60, len(sanitize(notif["message"])) + len(sanitize(notif["title"])) + 8)
         nbx = max(2, (SCREEN_W - nw) // 2)
         nby = 2
-        cons.draw_frame(nbx, nby, nw, 3, title=f" {notif['title']} ", fg=notif["color"], bg=(20, 25, 40))
+        cons.draw_frame(
+            nbx, nby, nw, 3, title=f" {notif['title']} ", fg=notif["color"], bg=(20, 25, 40)
+        )
         cons.print(nbx + 2, nby + 1, notif["message"][: nw - 4], fg=(255, 255, 255))
 
     # 10. シネマティックログ
@@ -480,11 +529,18 @@ def base_scene(dlevel=1):
         "time": "Day1 08:00",
         "player": {
             "name": "名無しの冒険者",
-            "x": 40, "y": 19, "pos": (40, 19),
-            "hp": 120, "max_hp": 120,
-            "mp": 60, "max_mp": 60,
-            "level": 12, "gold": 8200,
-            "piety": 80, "god": "ジュア", "hunger": "満腹",
+            "x": 40,
+            "y": 19,
+            "pos": (40, 19),
+            "hp": 120,
+            "max_hp": 120,
+            "mp": 60,
+            "max_mp": 60,
+            "level": 12,
+            "gold": 8200,
+            "piety": 80,
+            "god": "ジュア",
+            "hunger": "満腹",
         },
         "pet": {"hp": 95, "max_hp": 95},
         "entities": [],
@@ -503,7 +559,16 @@ def base_scene(dlevel=1):
 # ===========================================================================
 def scene_combat_devour():
     s = base_scene(3)
-    enemy = {"x": 50, "y": 19, "ch": "D", "color": ENEMY_COL, "is_player": False, "hp": 320, "anim": 0, "name": "★深淵のドラゴン"}
+    enemy = {
+        "x": 50,
+        "y": 19,
+        "ch": "D",
+        "color": ENEMY_COL,
+        "is_player": False,
+        "hp": 320,
+        "anim": 0,
+        "name": "★深淵のドラゴン",
+    }
     s["entities"] = [enemy]
     s["player"]["x"] = 38
     s["player"]["pos"] = (38, 19)
@@ -526,8 +591,14 @@ def scene_combat_devour():
         prog = i / 18.0
         # スキャンボックスは直接コンソール描画が必要なので overlay 経由では不可 -> render内で処理するため専用フラグ
         s2["_scan"] = (50, 19, prog)
-        s2["floating_texts"] = [{"x": 50, "y": 15, "text": f"SCAN {int(prog*100)}%", "color": SCAN_COL}]
-        s2["log"][1] = {"text": f"深度解析: 核残量 {int(100-prog*30)}% / 弱点=火", "color": SCAN_COL, "tag": " "}
+        s2["floating_texts"] = [
+            {"x": 50, "y": 15, "text": f"SCAN {int(prog * 100)}%", "color": SCAN_COL}
+        ]
+        s2["log"][1] = {
+            "text": f"深度解析: 核残量 {int(100 - prog * 30)}% / 弱点=火",
+            "color": SCAN_COL,
+            "tag": " ",
+        }
         frames.append(build_with_scan(s2))
     # Phase 2: 攻撃 + シナジー爆発 (18F)
     for i in range(18):
@@ -539,7 +610,9 @@ def scene_combat_devour():
         s2["player"]["pos"] = (s2["player"]["x"], 19)
         s2["_synergy"] = (50, 19, p)
         if i >= 4:
-            s2["floating_texts"] = [{"x": 50, "y": 16 - int((i - 4) / 3), "text": "-280 CRIT!", "color": CRIT_COL}]
+            s2["floating_texts"] = [
+                {"x": 50, "y": 16 - int((i - 4) / 3), "text": "-280 CRIT!", "color": CRIT_COL}
+            ]
         s2["log"] = [
             {"text": "属性連鎖 [火x風] 熱爆発を発動！", "color": (255, 150, 40), "tag": " "},
             {"text": "★深淵のドラゴン に 280 のクリティカル！", "color": CRIT_COL, "tag": "★"},
@@ -554,7 +627,11 @@ def scene_combat_devour():
         s2["entities"] = [dict(enemy, hp=0, anim=0)]
         s2["_devour"] = (50, 19, 38, 19, p)
         s2["player"]["name"] = "名無しの冒険者"
-        s2["notification"] = {"title": "DEVOUR", "message": "スキル核を吸収中… Inferno Breath", "color": DEVOUR_COL}
+        s2["notification"] = {
+            "title": "DEVOUR",
+            "message": "スキル核を吸収中… Inferno Breath",
+            "color": DEVOUR_COL,
+        }
         s2["log"] = [
             {"text": "《喰らい》発動: 敵のスキルを核ごと吸収。", "color": DEVOUR_COL, "tag": " "},
             {"text": "永続ステータス: 攻撃+18 / 火耐性+10", "color": (255, 200, 255), "tag": " "},
@@ -569,7 +646,11 @@ def scene_combat_devour():
         s2["items"].append({"x": 50, "y": 19, "ch": "★", "color": GOLD_COL, "category": "skill"})
         s2["player"]["hp"] = 138
         s2["player"]["max_hp"] = 138
-        s2["notification"] = {"title": "ACQUIRED", "message": "Inferno Breath Lv.1 を獲得！", "color": SUCCESS_COL}
+        s2["notification"] = {
+            "title": "ACQUIRED",
+            "message": "Inferno Breath Lv.1 を獲得！",
+            "color": SUCCESS_COL,
+        }
         if i < 4:
             s2["_flash"] = DEVOUR_COL
         s2["log"] = [
@@ -590,8 +671,9 @@ def build_with_scan(s2):
     bx = sx * CELL_W
     by = sy * CELL_H
     bw, bh = 9 * CELL_W, 7 * CELL_H
-    draw.rectangle([bx - bw // 2, by - bh // 2, bx + bw // 2, by + bh // 2],
-                   outline=SCAN_COL, width=1)
+    draw.rectangle(
+        [bx - bw // 2, by - bh // 2, bx + bw // 2, by + bh // 2], outline=SCAN_COL, width=1
+    )
     ly = by - bh // 2 + int(prog * bh)
     draw.line([(bx - bw // 2, ly), (bx + bw // 2, ly)], fill=SCAN_COL, width=2)
     return img
@@ -607,8 +689,10 @@ def build_with_synergy(s2):
     if r > 0:
         a = max(0, int(200 * (1 - p)))
         draw.ellipse([px - r, py - r, px + r, py + r], outline=(255, 120, 0), width=4)
-        draw.ellipse([px - int(r * 0.6), py - int(r * 0.6), px + int(r * 0.6), py + int(r * 0.6)],
-                     fill=(255, 60, 0, a))
+        draw.ellipse(
+            [px - int(r * 0.6), py - int(r * 0.6), px + int(r * 0.6), py + int(r * 0.6)],
+            fill=(255, 60, 0, a),
+        )
     return img
 
 
@@ -667,14 +751,26 @@ def scene_synthesis_economy():
         p = i / 18.0
         s2 = copy.deepcopy(s)
         s2["_alchemy"] = (40, 19, p, 1.0)
-        s2["notification"] = {"title": "TRANSMUTE", "message": "元素を融合中…", "color": (100, 200, 255)}
-        s2["log"][1] = {"text": f"魔法陣回転 {int(p*100)}% - 共振上昇", "color": (150, 180, 255), "tag": " "}
+        s2["notification"] = {
+            "title": "TRANSMUTE",
+            "message": "元素を融合中…",
+            "color": (100, 200, 255),
+        }
+        s2["log"][1] = {
+            "text": f"魔法陣回転 {int(p * 100)}% - 共振上昇",
+            "color": (150, 180, 255),
+            "tag": " ",
+        }
         frames.append(build_with_alchemy(s2))
     # Phase 3: 完成バナー (14F)
     for i in range(14):
         s2 = copy.deepcopy(s)
         s2["_alchemy_done"] = (40, 19)
-        s2["notification"] = {"title": "CHIMERA", "message": "Inferno Storm Slash 誕生！", "color": SUCCESS_COL}
+        s2["notification"] = {
+            "title": "CHIMERA",
+            "message": "Inferno Storm Slash 誕生！",
+            "color": SUCCESS_COL,
+        }
         s2["items"] = [{"x": 40, "y": 19, "ch": "★", "color": GOLD_COL, "category": "skill"}]
         s2["log"] = [
             {"text": "★キメラ合成成功: Inferno Storm Slash", "color": SUCCESS_COL, "tag": "★"},
@@ -689,10 +785,14 @@ def scene_synthesis_economy():
         s2 = copy.deepcopy(s)
         s2["_market"] = (40, 19, p)
         s2["player"]["gold"] = 8200 + int(p * 3600)
-        s2["notification"] = {"title": "MARKET", "message": f"違法スキル売却 +{int(p*3600)}G", "color": (100, 255, 120)}
+        s2["notification"] = {
+            "title": "MARKET",
+            "message": f"違法スキル売却 +{int(p * 3600)}G",
+            "color": (100, 255, 120),
+        }
         s2["log"] = [
             {"text": "☠ UNDERGROUND MARKET: 密売成立", "color": (255, 120, 150), "tag": " "},
-            {"text": f"Contraband SOLD: +{int(p*3600)} G", "color": (255, 235, 80), "tag": " "},
+            {"text": f"Contraband SOLD: +{int(p * 3600)} G", "color": (255, 235, 80), "tag": " "},
             {"text": "監査レベルが上昇中…", "color": (255, 120, 120), "tag": " "},
             {"text": "早期撤退を推奨。", "color": MUTED, "tag": " "},
         ]
@@ -701,7 +801,11 @@ def scene_synthesis_economy():
     for i in range(16):
         s2 = copy.deepcopy(s)
         s2["_raid"] = i / 16.0
-        s2["notification"] = {"title": "RAID", "message": "INQUISITION RAID DETECTED!", "color": WARN_COL}
+        s2["notification"] = {
+            "title": "RAID",
+            "message": "INQUISITION RAID DETECTED!",
+            "color": WARN_COL,
+        }
         s2["log"] = [
             {"text": "⚠ 異端審問官レイド発動！", "color": WARN_COL, "tag": "!"},
             {"text": "Audit Level Critical: 没収寸前", "color": (255, 200, 200), "tag": "!"},
@@ -723,6 +827,7 @@ def build_with_alchemy(s2):
         # 魔法陣 (回転)
         if prog > 0:
             import math as _m
+
             for k in range(6):
                 a = prog * 6.28 + k * (_m.pi / 3)
                 ex = px + int(_m.cos(a) * 36)
@@ -730,11 +835,15 @@ def build_with_alchemy(s2):
                 draw.line([(px, py), (ex, ey)], fill=(120, 180, 255), width=1)
             draw.ellipse([px - 40, py - 40, px + 40, py + 40], outline=(150, 100, 255), width=1)
         # 炉
-        draw.rectangle([px - 14, py - 12, px + 14, py + 14], fill=(40, 25, 55), outline=(220, 120, 255))
+        draw.rectangle(
+            [px - 14, py - 12, px + 14, py + 14], fill=(40, 25, 55), outline=(220, 120, 255)
+        )
     if s2.get("_alchemy_done"):
         px = cx0 = s2["_alchemy_done"][0] * CELL_W + CELL_W // 2
         py = s2["_alchemy_done"][1] * CELL_H + CELL_H // 2
-        draw.rectangle([px - 14, py - 12, px + 14, py + 14], fill=(60, 30, 80), outline=(255, 215, 0), width=2)
+        draw.rectangle(
+            [px - 14, py - 12, px + 14, py + 14], fill=(60, 30, 80), outline=(255, 215, 0), width=2
+        )
     return img
 
 
@@ -745,7 +854,9 @@ def build_with_market(s2):
     px = cx * CELL_W + CELL_W // 2
     py = cy * CELL_H + CELL_H // 2
     # コイン散乱
-    for idx, (ox, oy) in enumerate([(-40, -30), (40, -36), (-60, 10), (60, 6), (0, -54), (-24, 34), (30, 40)]):
+    for idx, (ox, oy) in enumerate(
+        [(-40, -30), (40, -36), (-60, 10), (60, 6), (0, -54), (-24, 34), (30, 40)]
+    ):
         pp = min(1.0, p * 1.4 + idx * 0.04)
         fx = px + int(ox * pp)
         fy = py + int(oy * pp - _sin(pp * math.pi) * 24)
@@ -791,11 +902,19 @@ def scene_meta_reincarnation():
     for i in range(16):
         s2 = copy.deepcopy(s)
         s2["_override"] = True
-        s2["notification"] = {"title": "ROOT OVERRIDE", "message": "GLOBAL DMG x2.5 / MAXHP -25%", "color": (0, 255, 200)}
+        s2["notification"] = {
+            "title": "ROOT OVERRIDE",
+            "message": "GLOBAL DMG x2.5 / MAXHP -25%",
+            "color": (0, 255, 200),
+        }
         s2["log"] = [
             {"text": "★SYSTEM LAW OVERRIDE APPLIED", "color": (0, 255, 200), "tag": "★"},
             {"text": "GLOBAL DAMAGE MULTIPLIER: 1.0x -> 2.5x", "color": (0, 255, 160), "tag": " "},
-            {"text": "COST: MAX HP -25% (Sanity Erosion +25%)", "color": (255, 100, 100), "tag": " "},
+            {
+                "text": "COST: MAX HP -25% (Sanity Erosion +25%)",
+                "color": (255, 100, 100),
+                "tag": " ",
+            },
             {"text": "世界の物理定数が書き換わった。", "color": (200, 160, 255), "tag": " "},
         ]
         frames.append(build_with_override(s2))
@@ -808,7 +927,11 @@ def scene_meta_reincarnation():
         cur_max = int(120 - p * 30)
         s2["player"]["max_hp"] = cur_max
         s2["player"]["hp"] = min(s2["player"]["hp"], cur_max)
-        s2["notification"] = {"title": "CORRUPTED", "message": f"Sanity Erosion +{int(p*25)}%", "color": (255, 90, 90)}
+        s2["notification"] = {
+            "title": "CORRUPTED",
+            "message": f"Sanity Erosion +{int(p * 25)}%",
+            "color": (255, 90, 90),
+        }
         frames.append(build_with_override(s2))
     # Phase 4: 世界崩壊 (16F)
     for i in range(16):
@@ -860,8 +983,18 @@ def build_with_override(s2):
     draw.rectangle([wx, wy, wx + ww, wy + 3 * CELL_H], fill=(0, 100, 120))
     f = get_font(14)
     draw.text((wx + 10, wy + 8), "[!] SYSTEM LAW OVERRIDE APPLIED", font=f, fill=(255, 255, 255))
-    draw.text((wx + 14, wy + 4 * CELL_H), "GLOBAL DAMAGE MULTIPLIER: 1.0x -> 2.5x", font=f, fill=(0, 255, 200))
-    draw.text((wx + 14, wy + 6 * CELL_H), "COST: MAX HP -25% (Sanity Erosion)", font=f, fill=(255, 100, 100))
+    draw.text(
+        (wx + 14, wy + 4 * CELL_H),
+        "GLOBAL DAMAGE MULTIPLIER: 1.0x -> 2.5x",
+        font=f,
+        fill=(0, 255, 200),
+    )
+    draw.text(
+        (wx + 14, wy + 6 * CELL_H),
+        "COST: MAX HP -25% (Sanity Erosion)",
+        font=f,
+        fill=(255, 100, 100),
+    )
     # 閃き
     draw.text((wx + ww - 30, wy + 8), "✦", font=f, fill=(255, 230, 100))
     # グリッチ
@@ -880,7 +1013,9 @@ def build_with_collapse(s2):
     r = int(math.hypot(cx, cy) * 1.2 * p)
     if r > 0:
         draw = ImageDraw.Draw(img)
-        draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(5, 5, 10), outline=(120, 50, 200), width=3)
+        draw.ellipse(
+            [cx - r, cy - r, cx + r, cy + r], fill=(5, 5, 10), outline=(120, 50, 200), width=3
+        )
         draw.text((cx - 20, cy - 10), "✧", font=get_font(28), fill=(200, 150, 255))
     return img
 
@@ -910,8 +1045,18 @@ def build_with_reborn(s2):
             img = Image.blend(img, overlay, a / 255.0)
             # 新生バナーを上書き
             draw = ImageDraw.Draw(img)
-            draw.rectangle([18 * CELL_W, 6 * CELL_H, 62 * CELL_W, 9 * CELL_H], fill=(20, 40, 30), outline=(0, 255, 180), width=2)
-            draw.text((20 * CELL_W, 7 * CELL_H), "NEW INCARNATION INITIATED", font=get_font(14), fill=(100, 255, 200))
+            draw.rectangle(
+                [18 * CELL_W, 6 * CELL_H, 62 * CELL_W, 9 * CELL_H],
+                fill=(20, 40, 30),
+                outline=(0, 255, 180),
+                width=2,
+            )
+            draw.text(
+                (20 * CELL_W, 7 * CELL_H),
+                "NEW INCARNATION INITIATED",
+                font=get_font(14),
+                fill=(100, 255, 200),
+            )
     return img
 
 
@@ -922,7 +1067,16 @@ def scene_husk_servant():
     s = base_scene(4)
     s["player"]["x"] = 36
     s["player"]["pos"] = (36, 19)
-    husk = {"x": 50, "y": 19, "ch": "h", "color": (120, 120, 140), "is_player": False, "hp": 1, "anim": 0, "name": "Husk"}
+    husk = {
+        "x": 50,
+        "y": 19,
+        "ch": "h",
+        "color": (120, 120, 140),
+        "is_player": False,
+        "hp": 1,
+        "anim": 0,
+        "name": "Husk",
+    }
     s["entities"] = [husk]
     s["log"] = [
         {"text": "スキルを抜かれた抜け殻(Husk)を発見。", "color": (200, 200, 220), "tag": " "},
@@ -942,7 +1096,11 @@ def scene_husk_servant():
         p = i / 18.0
         s2 = copy.deepcopy(s)
         s2["_implant"] = (36, 19, 50, 19, p)
-        s2["notification"] = {"title": "IMPLANT", "message": "Skill Circuit 移植中…", "color": (0, 255, 200)}
+        s2["notification"] = {
+            "title": "IMPLANT",
+            "message": "Skill Circuit 移植中…",
+            "color": (0, 255, 200),
+        }
         frames.append(build_with_implant(s2))
     # Phase 3: 覚醒 (14F)
     for i in range(14):
@@ -950,8 +1108,16 @@ def scene_husk_servant():
         s2["entities"] = [dict(husk, ch="H", color=(255, 120, 120), anim=i * 0.2)]
         s2["_awake"] = (50, 19)
         s2["_lifespan"] = 3
-        s2["notification"] = {"title": "SERVANT", "message": "Turret Servant Online", "color": (255, 100, 100)}
-        s2["log"][0] = {"text": "★Husk 覚醒: 忠誠の赤眼が灯る。", "color": (255, 120, 120), "tag": "★"}
+        s2["notification"] = {
+            "title": "SERVANT",
+            "message": "Turret Servant Online",
+            "color": (255, 100, 100),
+        }
+        s2["log"][0] = {
+            "text": "★Husk 覚醒: 忠誠の赤眼が灯る。",
+            "color": (255, 120, 120),
+            "tag": "★",
+        }
         frames.append(build_with_awake(s2))
     # Phase 4: 自律射撃 (18F)
     for i in range(18):
@@ -966,7 +1132,11 @@ def scene_husk_servant():
         s2["entities"] = [dict(husk, ch="H", color=(255, 120, 120))]
         s2["_overload"] = True
         s2["_lifespan"] = 0
-        s2["notification"] = {"title": "OVERLOAD", "message": "Lifespan Critical!", "color": (255, 90, 90)}
+        s2["notification"] = {
+            "title": "OVERLOAD",
+            "message": "Lifespan Critical!",
+            "color": (255, 90, 90),
+        }
         frames.append(build_with_overload(s2))
     # Phase 6: 自壊 (16F)
     for i in range(16):
@@ -1010,7 +1180,12 @@ def build_with_awake(s2):
     draw.ellipse([px + 6, py - 14, px + 14, py - 6], fill=(255, 30, 30))
     draw.text((px - 10, py - 40), "♥", font=get_font(18), fill=(255, 120, 180))
     if s2.get("_lifespan") is not None:
-        draw.text((px - 30, py - 56), f"LIFESPAN:{s2['_lifespan']}T", font=get_font(11), fill=(100, 200, 255))
+        draw.text(
+            (px - 30, py - 56),
+            f"LIFESPAN:{s2['_lifespan']}T",
+            font=get_font(11),
+            fill=(100, 200, 255),
+        )
     return img
 
 
@@ -1022,11 +1197,15 @@ def build_with_fire(s2):
     y0 = sy * CELL_H + CELL_H // 2
     x1 = int(x0 + (tx * CELL_W + CELL_W // 2 - x0) * p)
     y1 = int(y0 + (ty * CELL_H + CELL_H // 2 - y0) * p)
-    draw.ellipse([x1 - 6, y1 - 6, x1 + 6, y1 + 6], fill=(255, 120, 50), outline=(255, 255, 200), width=2)
+    draw.ellipse(
+        [x1 - 6, y1 - 6, x1 + 6, y1 + 6], fill=(255, 120, 50), outline=(255, 255, 200), width=2
+    )
     px = sx * CELL_W + CELL_W // 2
     py = sy * CELL_H + CELL_H // 2
     draw.text((px - 30, py - 20), " anger", font=get_font(16), fill=(255, 120, 120))
-    draw.text((px - 30, py - 56), f"LIFESPAN:{s2['_lifespan']}T", font=get_font(11), fill=(50, 180, 220))
+    draw.text(
+        (px - 30, py - 56), f"LIFESPAN:{s2['_lifespan']}T", font=get_font(11), fill=(50, 180, 220)
+    )
     return img
 
 
@@ -1035,12 +1214,18 @@ def build_with_overload(s2):
     if s2.get("_overload"):
         # シェイク
         import random as _r
+
         ox = _r.randint(-4, 4)
         oy = _r.randint(-3, 3)
         img = ImageChops.offset(img, ox, oy)
     draw = ImageDraw.Draw(img)
     if s2.get("_lifespan") is not None:
-        draw.text((40 * CELL_W, 14 * CELL_H), f"LIFESPAN:{s2['_lifespan']}T", font=get_font(11), fill=(255, 90, 90))
+        draw.text(
+            (40 * CELL_W, 14 * CELL_H),
+            f"LIFESPAN:{s2['_lifespan']}T",
+            font=get_font(11),
+            fill=(255, 90, 90),
+        )
         draw.text((40 * CELL_W, 16 * CELL_H), "! ALERT", font=get_font(16), fill=(255, 90, 90))
     return img
 
@@ -1090,7 +1275,7 @@ def save_gif(frames, path: Path, fps=15):
         optimize=False,
         disposal=2,
     )
-    print(f"Saved {path} ({len(frames)} frames, ~{len(frames)/fps:.1f}s)")
+    print(f"Saved {path} ({len(frames)} frames, ~{len(frames) / fps:.1f}s)")
 
 
 def main():

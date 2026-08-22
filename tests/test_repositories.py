@@ -4,6 +4,7 @@ Repository-layer test suite for Elona Masterpiece Edition (v2.0).
 Validates that every generated repository correctly indexes and queries the
 schema-validated game data exposed through DataManager.
 """
+
 from __future__ import annotations
 
 import os

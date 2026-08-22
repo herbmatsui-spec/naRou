@@ -44,11 +44,11 @@ const pixiApp = new PIXI.Application({  // 同じcanvasにWebGLコンテキス�
 // web_game_client.html:1068-1146 - 解決されていないマージコンフリクト
 <<<<<<< ours
           }
-          
+
           // 攻撃中は強制的にattack状態維持
 =======
           }
-          
+
           // 攻撃中は強制的にattack状態維持
 >>>>>>> theirs
 ```
@@ -237,7 +237,7 @@ const SoundEngine = {
     ctx: null,
     enabled: false,
     bgmInterval: null,  // setIntervalでコード進行管理 ← タイミング不正確
-    
+
     playSE(type) { ... },  // 毎回OscillatorNode生成・破棄（GC圧迫）
     startDynamicBGM() { ... }  // 和音をsetIntervalで鳴らすだけ（音楽理論無視）
 };
@@ -397,14 +397,14 @@ def test_renderer_parity():
 // 2. スプライトプール実装
 class SpritePool {
     private pools: Map<string, PIXI.Sprite[]> = new Map();
-    
+
     acquire(key: string, factory: () => PIXI.Sprite): PIXI.Sprite {
         const pool = this.pools.get(key) || [];
         const sprite = pool.pop() || factory();
         sprite.visible = true;
         return sprite;
     }
-    
+
     release(key: string, sprite: PIXI.Sprite): void {
         sprite.visible = false;
         (this.pools.get(key) || []).push(sprite);
@@ -415,7 +415,7 @@ class SpritePool {
 class EntityManager {
     private entities = new Map<string, Entity>();
     private byPosition = new Map<string, Set<string>>(); // "x,y" -> entityIds
-    
+
     getAt(x: number, y: number): Entity[] { ... } // O(1)
     moveEntity(id: string, newX: number, newY: number): void { ... } // O(1)
 }
@@ -436,10 +436,10 @@ interface GameStateModel {
 // ViewModel: 表示用変換・コマンド公開
 class GameViewModel {
     constructor(private model: GameStateModel) {}
-    
+
     get hpBarWidth(): number { return this.model.player.hp / this.model.player.maxHp * 100; }
     get inventoryItems(): InventoryItemVM[] { ... }
-    
+
     executeAction(action: ActionCommand): Promise<void> { ... }
 }
 

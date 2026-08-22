@@ -2,6 +2,7 @@
 
 Extracted from Engine.advance_world (game.py).
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -17,9 +18,7 @@ class WorldNewsManager:
         from constants import WORLD_NEWS_INTERVAL
 
         # 世界のニュース・噂の動的生成 (Step 8.1)
-        if engine.turns % WORLD_NEWS_INTERVAL == 0 and hasattr(
-            engine, "world_state_manager"
-        ):
+        if engine.turns % WORLD_NEWS_INTERVAL == 0 and hasattr(engine, "world_state_manager"):
             engine.world_state_manager.generate_world_news(engine)
 
         # === 称号システム: 定期チェック（10ターンごと） ===
@@ -46,10 +45,7 @@ class WorldNewsManager:
                 )
 
         # === スキルツリー定期チェック (Step 27) ===
-        from constants import (
-            SKILL_POINTS_NOTIFICATION_THRESHOLD,
-            SKILL_TREE_CHECK_INTERVAL,
-        )
+        from constants import SKILL_POINTS_NOTIFICATION_THRESHOLD, SKILL_TREE_CHECK_INTERVAL
 
         if (
             engine.turns % SKILL_TREE_CHECK_INTERVAL == 0
@@ -70,6 +66,4 @@ class WorldNewsManager:
             and engine.player
             and hasattr(engine.player, "guild_quest_progress")
         ):
-            engine.log(
-                "【ギルド】日次ギルド依頼が更新・リセットされました。", (180, 220, 255)
-            )
+            engine.log("【ギルド】日次ギルド依頼が更新・リセットされました。", (180, 220, 255))

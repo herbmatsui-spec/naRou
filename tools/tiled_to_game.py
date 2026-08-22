@@ -3,6 +3,7 @@
 Tiled Map Editor Converter
 Converts .tmx files from Tiled Map Editor to game JSON format.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -71,9 +72,7 @@ def convert_tmx_to_json(
     print(f"Converted {tmx_path} -> {output_path}")
 
 
-def parse_layer(
-    layer_elem: ET.Element, map_width: int, map_height: int
-) -> dict[str, Any] | None:
+def parse_layer(layer_elem: ET.Element, map_width: int, map_height: int) -> dict[str, Any] | None:
     """Parse a tile layer from TMX element."""
     name = layer_elem.attrib.get("name", "layer")
     width = int(layer_elem.attrib.get("width", map_width))
@@ -208,9 +207,7 @@ def parse_properties(properties_elem: ET.Element | None) -> dict[str, Any]:
                 except (ValueError, TypeError):
                     value = 0.0
             elif prop_type == "bool":
-                value = (
-                    value.lower() == "true" if isinstance(value, str) else bool(value)
-                )
+                value = value.lower() == "true" if isinstance(value, str) else bool(value)
             # For string type, keep as is (default)
 
             if name is not None:
@@ -220,9 +217,7 @@ def parse_properties(properties_elem: ET.Element | None) -> dict[str, Any]:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Convert Tiled .tmx files to game JSON format"
-    )
+    parser = argparse.ArgumentParser(description="Convert Tiled .tmx files to game JSON format")
     parser.add_argument("input", type=Path, help="Input .tmx file or directory")
     parser.add_argument("output", type=Path, help="Output JSON file or directory")
     parser.add_argument(
@@ -231,9 +226,7 @@ def main():
         default=Path("assets/tiles/tileset_def.json"),
         help="Path to tileset definition JSON",
     )
-    parser.add_argument(
-        "--recursive", action="store_true", help="Process directories recursively"
-    )
+    parser.add_argument("--recursive", action="store_true", help="Process directories recursively")
 
     args = parser.parse_args()
 

@@ -283,7 +283,7 @@ def simulate_tritanopia(rgb): ...
   :root { /* デフォルトはダーク */ }
 }
 @media (prefers-color-scheme: light) {
-  :root { 
+  :root {
     --color-bg: var(--color-primary-50);
     --color-surface: var(--color-primary-100);
     --color-text: var(--color-primary-900);

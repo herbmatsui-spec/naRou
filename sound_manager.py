@@ -190,9 +190,7 @@ class SoundManager:
         loaded = preload_all_audio("assets/audio/manifest.csv")
         if loaded > 0:
             cls._audio_initialized = True
-            print(
-                f"Audio pack initialized: {loaded} sounds loaded (backend: {backend.backend})"
-            )
+            print(f"Audio pack initialized: {loaded} sounds loaded (backend: {backend.backend})")
 
     @classmethod
     def _load_se_mappings(cls):
@@ -204,9 +202,7 @@ class SoundManager:
                 se_map = config.get("se", {})
                 for se_type, filename in se_map.items():
                     # Convert filename to suggested_id (e.g., metalClick.ogg -> se_metal_click)
-                    suggested_id = (
-                        "se_" + filename.replace(".ogg", "").replace(".", "_").lower()
-                    )
+                    suggested_id = "se_" + filename.replace(".ogg", "").replace(".", "_").lower()
                     cls._se_cache[se_type] = suggested_id
 
                 # Load terrain footstep mapping
@@ -296,9 +292,7 @@ class SoundManager:
         cls.play_se_ogg(se_type, volume)
 
     @classmethod
-    def play_bgm_ogg(
-        cls, theme: str = "dungeon", fade_in: float = 1.0, loop: bool = True
-    ):
+    def play_bgm_ogg(cls, theme: str = "dungeon", fade_in: float = 1.0, loop: bool = True):
         """Play BGM using OGG file with crossfade."""
         if not cls._enabled:
             return

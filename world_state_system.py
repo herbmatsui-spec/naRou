@@ -45,9 +45,7 @@ class WorldStateTemplate:
     player_legacy: dict[str, Any] = field(default_factory=dict)
     # Vertical World Extension: プレイヤーの層情報
     player_layer_history: list[dict[str, Any]] = field(default_factory=list)
-    visited_layers: set[str] = field(
-        default_factory=set
-    )  # ゾーン:バイオーム:深度:次元形式
+    visited_layers: set[str] = field(default_factory=set)  # ゾーン:バイオーム:深度:次元形式
     layer_discoveries: dict[str, Any] = field(default_factory=dict)
 
 
@@ -129,9 +127,7 @@ class WorldStateManager:
                 # EventBusを通じてフェーズ変更を通知
                 from core_framework import EventBus
 
-                EventBus.publish(
-                    "WORLD_PHASE_CHANGED", {"old": old_phase, "new": phase}
-                )
+                EventBus.publish("WORLD_PHASE_CHANGED", {"old": old_phase, "new": phase})
 
     def get_variable(self, player: Entity, var_name: str, default: Any = None) -> Any:
         """ワールド変数を取得 (Step 52)"""
@@ -183,9 +179,7 @@ class WorldStateManager:
                 engine.log(n, (140, 200, 255), level="INFO")
         return chosen
 
-    def get_action_echo(
-        self, player: Entity, faction_id: str = "adventurer_guild"
-    ) -> str | None:
+    def get_action_echo(self, player: Entity, faction_id: str = "adventurer_guild") -> str | None:
         """プレイヤー行動の反響（エコー）ダイアログ (Step 8.2)"""
         if not player:
             return None
@@ -196,14 +190,10 @@ class WorldStateManager:
             return "市民「おい…あいつが噂の危険人物じゃないか？ 近寄らないでおこう…」"
         return "市民「旅の冒険者さん、今日も安全に気をつけてね。」"
 
-    def update_location_state(
-        self, player: Entity, location: str, key: str, value: Any
-    ) -> None:
+    def update_location_state(self, player: Entity, location: str, key: str, value: Any) -> None:
         pass
 
-    def update_faction_relation(
-        self, player: Entity, relation_key: str, delta: int
-    ) -> None:
+    def update_faction_relation(self, player: Entity, relation_key: str, delta: int) -> None:
         pass
 
     # Vertical World Extension Methods
@@ -231,9 +221,7 @@ class WorldStateManager:
         tpl = self.registry.get_template()
         return tpl.visited_layers.copy()
 
-    def is_layer_visited(
-        self, zone: str, biome: str, depth: int, dimension: str
-    ) -> bool:
+    def is_layer_visited(self, zone: str, biome: str, depth: int, dimension: str) -> bool:
         """指定されたレイヤーが訪問済みかチェック"""
         layer_key = f"{zone}:{biome}:{depth}:{dimension}"
         return layer_key in self.get_visited_layers()

@@ -5,15 +5,18 @@ import os
 from typing import Any
 
 import yaml
+
 try:
     from cryptography.fernet import Fernet
+
     HAS_CRYPTOGRAPHY = True
 except ImportError:
     Fernet = None  # type: ignore
     HAS_CRYPTOGRAPHY = False
 
-from dotenv import load_dotenv
 from pydantic import BaseModel, ValidationError
+
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -146,9 +149,7 @@ class ConfigManager:
     def set_telemetry_enabled(self, value: bool) -> None:
         """Update telemetry opt-in state and persist to settings."""
         self.telemetry_enabled = bool(value)
-        self.config.setdefault("settings", {})["telemetry_enabled"] = (
-            self.telemetry_enabled
-        )
+        self.config.setdefault("settings", {})["telemetry_enabled"] = self.telemetry_enabled
 
 
 # Pydantic validation model

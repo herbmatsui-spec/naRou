@@ -32,9 +32,7 @@ def test_attack_animation_sync():
 
     # Test 1: Server sends attack_timer=0.5 -> Client plays attack for 0.5s -> returns to idle
     print("\nTest 1: Full attack cycle (server attack_timer -> client animation)")
-    renderer.update_entity(
-        eid, 10, 10, direction=0, state="attack", is_attacking=True, dt=1 / 60
-    )
+    renderer.update_entity(eid, 10, 10, direction=0, state="attack", is_attacking=True, dt=1 / 60)
     print(
         f"  After attack trigger: state={anim.state}, attack_timer={anim.attack_timer:.2f}, loop={anim.loop}"
     )
@@ -57,20 +55,12 @@ def test_attack_animation_sync():
 
     # Test 2: Rapid attack triggers (should not stack)
     print("\nTest 2: Rapid attack triggers (no stacking)")
-    renderer.update_entity(
-        eid, 10, 10, direction=0, state="attack", is_attacking=True, dt=1 / 60
-    )
-    print(
-        f"  After attack trigger: state={anim.state}, attack_timer={anim.attack_timer:.2f}"
-    )
+    renderer.update_entity(eid, 10, 10, direction=0, state="attack", is_attacking=True, dt=1 / 60)
+    print(f"  After attack trigger: state={anim.state}, attack_timer={anim.attack_timer:.2f}")
 
     # Immediately trigger again (simulating double-click)
-    renderer.update_entity(
-        eid, 10, 10, direction=0, state="attack", is_attacking=True, dt=1 / 60
-    )
-    print(
-        f"  After immediate re-trigger: state={anim.state}, attack_timer={anim.attack_timer:.2f}"
-    )
+    renderer.update_entity(eid, 10, 10, direction=0, state="attack", is_attacking=True, dt=1 / 60)
+    print(f"  After immediate re-trigger: state={anim.state}, attack_timer={anim.attack_timer:.2f}")
 
     # Should reset to 0.5, not add
     if abs(anim.attack_timer - 0.5) < 0.01:
@@ -81,12 +71,8 @@ def test_attack_animation_sync():
 
     # Test 3: Attack interrupted by movement
     print("\nTest 3: Attack interrupted by movement (state change)")
-    renderer.update_entity(
-        eid, 10, 10, direction=0, state="attack", is_attacking=True, dt=1 / 60
-    )
-    print(
-        f"  After attack trigger: state={anim.state}, attack_timer={anim.attack_timer:.2f}"
-    )
+    renderer.update_entity(eid, 10, 10, direction=0, state="attack", is_attacking=True, dt=1 / 60)
+    print(f"  After attack trigger: state={anim.state}, attack_timer={anim.attack_timer:.2f}")
 
     # Server sends walk state (movement) before attack completes
     # While attack_timer > 0, state should remain "attack" regardless of new_state
@@ -95,15 +81,11 @@ def test_attack_animation_sync():
             eid, 10, 10, direction=0, state="walk", is_attacking=False, dt=1 / 60
         )
 
-    print(
-        f"  After 0.17s walk: state={anim.state}, attack_timer={anim.attack_timer:.4f}"
-    )
+    print(f"  After 0.17s walk: state={anim.state}, attack_timer={anim.attack_timer:.4f}")
 
     # Attack timer should still be counting down but state remains "attack"
     if anim.state == "attack" and anim.attack_timer > 0:
-        print(
-            "  PASS: Attack state maintained while timer > 0, timer continues counting down"
-        )
+        print("  PASS: Attack state maintained while timer > 0, timer continues counting down")
     else:
         print("  FAIL: Attack state should be maintained while timer > 0")
         all_passed = False
@@ -113,15 +95,11 @@ def test_attack_animation_sync():
     eid2 = renderer.register_entity("ENEMY_GOBLIN", 5, 5, state="idle")
     anim2 = renderer.entity_anims[eid2]
 
-    renderer.update_entity(
-        eid2, 5, 5, direction=0, state="attack", is_attacking=True, dt=1 / 60
-    )
+    renderer.update_entity(eid2, 5, 5, direction=0, state="attack", is_attacking=True, dt=1 / 60)
     print(f"  After attack trigger: state={anim2.state}")
 
     # Server sends dead state
-    renderer.update_entity(
-        eid2, 5, 5, direction=0, state="dead", is_attacking=False, dt=1 / 60
-    )
+    renderer.update_entity(eid2, 5, 5, direction=0, state="dead", is_attacking=False, dt=1 / 60)
     print(f"  After death: state={anim2.state}, loop={anim2.loop}")
 
     if anim2.state == "dead" and not anim2.loop:
@@ -136,15 +114,11 @@ def test_attack_animation_sync():
     anim3 = renderer.entity_anims[eid3]
 
     # Attack while facing right
-    renderer.update_entity(
-        eid3, 10, 10, direction=2, state="attack", is_attacking=True, dt=1 / 60
-    )
+    renderer.update_entity(eid3, 10, 10, direction=2, state="attack", is_attacking=True, dt=1 / 60)
     print(f"  Attack facing right: direction={anim3.direction}")
 
     # Attack while facing up
-    renderer.update_entity(
-        eid3, 10, 10, direction=3, state="attack", is_attacking=True, dt=1 / 60
-    )
+    renderer.update_entity(eid3, 10, 10, direction=3, state="attack", is_attacking=True, dt=1 / 60)
     print(f"  Attack facing up: direction={anim3.direction}")
 
     if anim3.direction == 3:

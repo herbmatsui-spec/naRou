@@ -3,6 +3,7 @@
 Interoperability Test
 相互運用性テスト
 """
+
 from __future__ import annotations
 
 import json
@@ -70,9 +71,7 @@ import sys
 result = {'status': 'ok', 'value': 42}
 print(json.dumps(result))
 """
-        result = subprocess.run(
-            [sys.executable, "-c", script], capture_output=True, text=True
-        )
+        result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
 
         self.assertEqual(result.returncode, 0)
         parsed = json.loads(result.stdout.strip())

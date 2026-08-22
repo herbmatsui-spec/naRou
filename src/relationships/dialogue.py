@@ -14,7 +14,7 @@ from typing import Any
 
 from .engine import RelationshipManager
 from .models import RelationshipType
-from .personality import CharacterArchetype, PersonalityTrait
+from .personality import CharacterArchetype, PersonalitySystem, PersonalityTrait
 
 
 class DialogueMood(Enum):
@@ -100,9 +100,7 @@ class DialogueGenerationSystem:
         self.character_speech_patterns: dict[str, dict[str, Any]] = {}
 
         # 対話履歴
-        self.dialogue_history: dict[tuple[str, str], list[GeneratedDialogue]] = (
-            defaultdict(list)
-        )
+        self.dialogue_history: dict[tuple[str, str], list[GeneratedDialogue]] = defaultdict(list)
 
         # 設定
         self._config = {
@@ -286,9 +284,7 @@ class DialogueGenerationSystem:
         )
 
         # 適切なテンプレートを選択
-        template = self._select_template(
-            context, relationship_type, relationship_level, speaker_id
-        )
+        template = self._select_template(context, relationship_type, relationship_level, speaker_id)
         if not template:
             return None
 
@@ -296,9 +292,7 @@ class DialogueGenerationSystem:
         if self.personality_system:
             speaker_profile = self.personality_system.get_profile(speaker_id)
             if speaker_profile:
-                speaker_profile.get_trait(
-                    PersonalityTrait.EXTRAVERSION
-                )
+                speaker_profile.get_trait(PersonalityTrait.EXTRAVERSION)
 
         # テキストを生成（テンプレートの変数を置換）
         template_text = random.choice(template.templates)
@@ -311,9 +305,7 @@ class DialogueGenerationSystem:
             text += f"（話題：{topic}）"
 
         # 感情的トーンを決定
-        emotional_tone = self._determine_emotional_tone(
-            template.mood, relationship_level
-        )
+        emotional_tone = self._determine_emotional_tone(template.mood, relationship_level)
 
         # フォローアップオプションを生成
         follow_ups = self._generate_follow_up_options(context, template.mood)
@@ -375,10 +367,7 @@ class DialogueGenerationSystem:
                     if self.personality_system
                     else None
                 )
-                if (
-                    not speaker_profile
-                    or speaker_profile.archetype != template.required_archetype
-                ):
+                if not speaker_profile or speaker_profile.archetype != template.required_archetype:
                     continue
 
             candidates.append(template)
@@ -397,17 +386,13 @@ class DialogueGenerationSystem:
 
         return random.choice(candidates)
 
-    def _fill_template(
-        self, template: str, speaker_node: Any, listener_node: Any
-    ) -> str:
+    def _fill_template(self, template: str, speaker_node: Any, listener_node: Any) -> str:
         """テンプレートの変数を置換"""
         return template.replace("{speaker_name}", speaker_node.name).replace(
             "{player_name}", listener_node.name
         )
 
-    def _determine_emotional_tone(
-        self, mood: DialogueMood, relationship_level: int
-    ) -> str:
+    def _determine_emotional_tone(self, mood: DialogueMood, relationship_level: int) -> str:
         """感情的トーンを決定"""
         if mood == DialogueMood.FRIENDLY:
             return "温かい" if relationship_level > 50 else "穏やか"
@@ -651,9 +636,7 @@ class DialogueGenerationSystem:
         else:
             return ""
 
-    def set_character_speech_pattern(
-        self, character_id: str, patterns: dict[str, Any]
-    ) -> None:
+    def set_character_speech_pattern(self, character_id: str, patterns: dict[str, Any]) -> None:
         """キャラクター特有の話し方パターンを設定"""
         self.character_speech_patterns[character_id] = patterns
 

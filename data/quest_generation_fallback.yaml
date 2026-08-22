@@ -1,0 +1,48 @@
+archetypes:
+  slay:
+    id: slay
+    name: "討伐"
+    objective_type: kill
+    title_template: "{setting}の討伐"
+    desc_template: ""
+    reward_weight: 1.0
+    base_complexity: 1
+difficulty_tiers:
+  normal:
+    id: normal
+    name: "中"
+    level_range: [15, 35]
+    enemy_multiplier: 2.6
+    objective_complexity: 1.6
+    recommended_power: 120
+reward_tables:
+  gold:
+    id: gold
+    name: "金"
+    gold_range: [250, 800]
+    exp_range: [120, 400]
+    item_pool: [gem]
+    bonus:
+      fame: 8
+stage_settings:
+  forest:
+    id: forest
+    name: "森"
+    flavor: "深い森"
+    enemy_pool: [wolf, goblin]
+    hazard: "毒"
+    depth_modifier: 1.0
+    environmental_modifier: 1.0
+npc_quest_themes:
+  villager:
+    npc_type: villager
+    quest_pool: [rescue]
+    relationship_gate: 1
+    flavor: "{npc}「お願い…」"
+request_board:
+  max_active: 8
+  type_weights:
+    slay: 3
+display_names: {}
+chain_config: {}
+pet_quest_templates: {}

@@ -7,6 +7,7 @@ story_choices.yaml / story_endings.yaml 連携（Step 16）。
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import os
 from dataclasses import dataclass, field
@@ -253,9 +254,7 @@ class NarrativeExecutor:
         # フラグ直接指定
         return condition in context.flags
 
-    def grant_ending_rewards(
-        self, ending_id: str, context: NarrativeContext
-    ) -> list[str]:
+    def grant_ending_rewards(self, ending_id: str, context: NarrativeContext) -> list[str]:
         """エンディング報酬付与"""
         ending = self._endings.get(ending_id)
         if not ending:
@@ -279,9 +278,7 @@ class NarrativeExecutor:
 
     def get_available_endings(self, context: NarrativeContext) -> list[StoryEnding]:
         """現在解放可能なエンディング一覧"""
-        return [
-            e for e in self._endings.values() if self.check_ending_unlock(e.id, context)
-        ]
+        return [e for e in self._endings.values() if self.check_ending_unlock(e.id, context)]
 
     def get_dag(self, dag_id: str) -> NarrativeDAG | None:
         return self._dags.get(dag_id)
@@ -317,9 +314,11 @@ class NarrativeExecutor:
             current_node_id=current_node_id,
             flags=context.flags,
             variables=context.variables,
-            history=[start_node.node_id, current_node_id]
-            if current_node_id != start_node.node_id
-            else [start_node.node_id],
+            history=(
+                [start_node.node_id, current_node_id]
+                if current_node_id != start_node.node_id
+                else [start_node.node_id]
+            ),
         )
 
         # プレイヤーIDで管理（簡易版：名前使用）
@@ -456,9 +455,7 @@ class NarrativeExecutor:
         if final_node.node_type == NarrativeNodeType.END:
             state.completed = True
             state.ending_id = final_node.node_id
-            logs.append(
-                f"★ ナラティブ「{dag.dag_id}」が完了しました: {final_node.title}"
-            )
+            logs.append(f"★ ナラティブ「{dag.dag_id}」が完了しました: {final_node.title}")
 
             # エンディング解放チェック・報酬付与
             if self.check_ending_unlock(final_node.node_id, context):
@@ -515,9 +512,7 @@ class NarrativeExecutor:
 
         return current_id
 
-    def _apply_node_effects(
-        self, node: NarrativeNode | None, context: NarrativeContext
-    ) -> None:
+    def _apply_node_effects(self, node: NarrativeNode | None, context: NarrativeContext) -> None:
         """ノードのフラグ・変数・報酬効果を適用"""
         if not node:
             return

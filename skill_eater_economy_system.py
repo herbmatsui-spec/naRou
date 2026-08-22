@@ -3,11 +3,13 @@ skill_eater_economy_system.py
 Aの世界（スキル喰い） Phase 5: 派閥影響力＆経済システム＆拠点買収
 提案5: 経済・闇市場・買収・建築のEmote & Audio演出 (Steps 33〜40)
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from skill_eater_audio_system import SkillEaterAudioSystem
+from skill_eater_facility_actions import FacilityActionRegistry, SkillEaterFacilitySystem
 from skill_eater_presentation_system import SkillEaterPresentationSystem
 from skill_eater_system import CharacterState, SkillEaterRegistry
 
@@ -19,6 +21,11 @@ class FactionState:
     reputation: int = 0  # -100 to 100
     influence_points: int = 1000
     is_hostile: bool = False
+    controlled_districts: list[str] = field(default_factory=list)
+    territory_income_per_turn: int = 0
+    morale: int = 50
+    is_at_war: bool = False
+    war_target: str | None = None
 
 
 @dataclass
@@ -29,10 +36,14 @@ class BaseFacility:
     max_level: int = 5
     upgrade_cost_aldo: int = 1000
     required_secret_skill: str | None = None
+    alternative_cost_aldo: int | None = None
     effect_description: str = ""
+    actions: list[str] = field(default_factory=list)
 
 
 class SkillEaterEconomySystem:
+    _instance: SkillEaterEconomySystem | None = None
+
     def __init__(
         self,
         registry: SkillEaterRegistry | None = None,
@@ -56,20 +67,73 @@ class SkillEaterEconomySystem:
             "resistance": FactionState(
                 id="resistance", name="スキル開放戦線", reputation=30, is_hostile=False
             ),
-            "bank": FactionState(
-                id="bank", name="世界スキル銀行", reputation=0, is_hostile=False
-            ),
+            "bank": FactionState(id="bank", name="世界スキル銀行", reputation=0, is_hostile=False),
             "broker": FactionState(
                 id="broker", name="闇市場ブローカー", reputation=10, is_hostile=False
             ),
         }
         self.base_facilities: dict[str, BaseFacility] = {
+            "workshop": BaseFacility(
+                id="workshop",
+                name="ワークショップ",
+                level=1,
+                upgrade_cost_aldo=1500,
+                required_secret_skill="rar_utility_005",
+                alternative_cost_aldo=7500,
+                effect_description="インプラント製作・装備修理・義体インストールが可能",
+                actions=["craft_implant", "repair_gear", "install_cybernetic"],
+            ),
+            "lab": BaseFacility(
+                id="lab",
+                name="研究室",
+                level=1,
+                upgrade_cost_aldo=2000,
+                required_secret_skill="com_magic_001",
+                alternative_cost_aldo=10000,
+                effect_description="スキル結晶解析・リバースエンジニアリング・対策開発が可能",
+                actions=[
+                    "analyze_skill_crystal",
+                    "reverse_engineer_tech",
+                    "develop_countermeasure",
+                ],
+            ),
+            "medbay": BaseFacility(
+                id="medbay",
+                name="医療ベイ",
+                level=1,
+                upgrade_cost_aldo=1800,
+                required_secret_skill=None,
+                alternative_cost_aldo=9000,
+                effect_description="毒性治療・従属者強化・記憶消去が可能",
+                actions=["treat_toxicity", "augment_servant", "memory_wipe"],
+            ),
+            "command": BaseFacility(
+                id="command",
+                name="指揮室",
+                level=1,
+                upgrade_cost_aldo=2500,
+                required_secret_skill="rar_combat_012",
+                alternative_cost_aldo=12500,
+                effect_description="部隊派遣・襲撃計画・休戦交渉が可能",
+                actions=["dispatch_squad", "plan_raid", "negotiate_truce"],
+            ),
+            "bar": BaseFacility(
+                id="bar",
+                name="バー/交易所",
+                level=1,
+                upgrade_cost_aldo=1200,
+                required_secret_skill=None,
+                alternative_cost_aldo=6000,
+                effect_description="情報収集・傭兵雇用・アルド洗浄が可能",
+                actions=["gather_intel", "hire_mercenary", "launder_aldo"],
+            ),
             "rehab_lab": BaseFacility(
                 id="rehab_lab",
                 name="従属者再教育ラボ",
                 level=1,
                 upgrade_cost_aldo=2000,
                 required_secret_skill="rar_utility_005",
+                alternative_cost_aldo=10000,
                 effect_description="従属者の最大スキル移植枠数を拡張する",
             ),
             "synthesis_furnace": BaseFacility(
@@ -77,6 +141,7 @@ class SkillEaterEconomySystem:
                 name="魔導合成炉",
                 level=1,
                 upgrade_cost_aldo=5000,
+                alternative_cost_aldo=25000,
                 effect_description="プロシージャル合成時の上位Tierボーナス確率UP",
             ),
             "hq_vault": BaseFacility(
@@ -84,9 +149,16 @@ class SkillEaterEconomySystem:
                 name="レジスタンス金庫室",
                 level=1,
                 upgrade_cost_aldo=3000,
+                alternative_cost_aldo=15000,
                 effect_description="ターン経過ごとの定期アルド収入を増加",
             ),
         }
+        self.facility_system = SkillEaterFacilitySystem(
+            registry=self.registry,
+            economy=self,
+            audio=self.audio,
+            presentation=self.presentation,
+        )
 
     def get_player_skill_net_worth(self, player: CharacterState) -> int:
         total = 0
@@ -124,9 +196,7 @@ class SkillEaterEconomySystem:
         player.remove_skill(skill_id)
         self.aldo_currency += value
 
-        self.factions["broker"].reputation = min(
-            100, self.factions["broker"].reputation + 2
-        )
+        self.factions["broker"].reputation = min(100, self.factions["broker"].reputation + 2)
 
         # Step 33: アルド獲得エモート
         self.presentation.add_event(
@@ -243,9 +313,7 @@ class SkillEaterEconomySystem:
 
         return f"【支店買収完了】{branch_name} を制圧！ {seized_aldo} アルドを押収し、戦線の勢力が拡大しました！"
 
-    def upgrade_facility(
-        self, player: CharacterState, facility_id: str
-    ) -> tuple[bool, str]:
+    def upgrade_facility(self, player: CharacterState, facility_id: str) -> tuple[bool, str]:
         """Step 36: 施設強化建築 (emote_stars + chop + metalPot1)"""
         facility = self.base_facilities.get(facility_id)
         if not facility:
@@ -254,7 +322,42 @@ class SkillEaterEconomySystem:
         if facility.level >= facility.max_level:
             return False, "既に最大レベルに達しています。"
 
-        if self.aldo_currency < facility.upgrade_cost_aldo:
+        has_req_skill = not facility.required_secret_skill or player.has_skill(
+            facility.required_secret_skill
+        )
+        alt_cost = facility.alternative_cost_aldo or 0
+        can_pay_alt = alt_cost > 0 and self.aldo_currency >= (facility.upgrade_cost_aldo + alt_cost)
+
+        if not has_req_skill and not can_pay_alt:
+            sec_def = (
+                self.registry.get_skill(facility.required_secret_skill)
+                if facility.required_secret_skill
+                else None
+            )
+            sec_name = (
+                sec_def.name if sec_def else (facility.required_secret_skill or "未知のスキル")
+            )
+            self.presentation.add_event(
+                emote_file="emote_cross.png",
+                audio_file="metalClick.ogg",
+                message="必要スキル/代替資金不足",
+            )
+            alt_msg = (
+                f" または追加闇ルート資金 {alt_cost} アルド（計 {facility.upgrade_cost_aldo + alt_cost} アルド）"
+                if alt_cost > 0
+                else ""
+            )
+            return (
+                False,
+                f"強化には企業秘密スキル《{sec_name}》の所持{alt_msg}が必要です。（現在資金: {self.aldo_currency} アルド）",
+            )
+
+        total_cost = facility.upgrade_cost_aldo
+        is_alt_route = False
+        if not has_req_skill and can_pay_alt:
+            total_cost += alt_cost
+            is_alt_route = True
+        elif self.aldo_currency < facility.upgrade_cost_aldo:
             self.presentation.add_event(
                 emote_file="emote_cross.png",
                 audio_file="metalClick.ogg",
@@ -265,19 +368,7 @@ class SkillEaterEconomySystem:
                 f"アルドが不足しています。（必要: {facility.upgrade_cost_aldo} アルド, 所持: {self.aldo_currency} アルド）",
             )
 
-        if facility.required_secret_skill and not player.has_skill(
-            facility.required_secret_skill
-        ):
-            sec_def = self.registry.get_skill(facility.required_secret_skill)
-            sec_name = sec_def.name if sec_def else facility.required_secret_skill
-            self.presentation.add_event(
-                emote_file="emote_cross.png",
-                audio_file="metalClick.ogg",
-                message="必要スキル不足",
-            )
-            return False, f"強化には企業秘密スキル《{sec_name}》の所持が必要です。"
-
-        self.aldo_currency -= facility.upgrade_cost_aldo
+        self.aldo_currency -= total_cost
         facility.level += 1
         facility.upgrade_cost_aldo = int(facility.upgrade_cost_aldo * 1.5)
 
@@ -288,7 +379,38 @@ class SkillEaterEconomySystem:
         )
         self.audio.play_sound("metalPot1.ogg")
 
+        # 新規アクション解放チェック
+        if hasattr(self, "facility_system") and self.facility_system:
+            action_registry = FacilityActionRegistry.get_instance()
+            all_actions = action_registry.get_actions_by_facility(facility.id)
+            for action in all_actions:
+                # ここでは簡易的にレベルアップごとに通知（実際のアンロック条件は別途実装可能）
+                pass
+
+        if is_alt_route:
+            return (
+                True,
+                f"【施設強化完了（闇ルート決済）】大金（{total_cost} アルド）を積み、{facility.name} が Lv.{facility.level} に昇格しました！",
+            )
         return (
             True,
             f"【施設強化完了】{facility.name} が Lv.{facility.level} に昇格しました！",
         )
+
+    def execute_facility_action(
+        self, facility_id: str, action_id: str, player: CharacterState, **kwargs
+    ):
+        """施設アクションを実行するファサードメソッド"""
+        if hasattr(self, "facility_system") and self.facility_system:
+            return self.facility_system.execute_action(facility_id, action_id, player, **kwargs)
+        return None
+
+    @classmethod
+    def get_instance(cls) -> SkillEaterEconomySystem:
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
+    @classmethod
+    def reset_instance(cls):
+        cls._instance = None

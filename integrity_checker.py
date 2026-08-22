@@ -111,9 +111,7 @@ class IntegrityChecker:
             if current_val is not None and current_val != baseline:
                 # Allow small deltas for stats that change naturally (hp, mp, hunger)
                 if key.endswith((".hp", ".mp", ".hunger", ".thirst", ".sleepiness")):
-                    if isinstance(current_val, (int, float)) and isinstance(
-                        baseline, (int, float)
-                    ):
+                    if isinstance(current_val, (int, float)) and isinstance(baseline, (int, float)):
                         if abs(current_val - baseline) <= max(5, baseline * 0.1):
                             continue
                 self._log_violation(
@@ -137,9 +135,7 @@ class IntegrityChecker:
         crit_rate = result.get("crit_rate", 0)
         attacks = result.get("attacks", 0)
         if attacks > 50 and crit_rate == 1.0:
-            self._log_violation(
-                "crit_anomaly", f"100% crit rate over {attacks} attacks"
-            )
+            self._log_violation("crit_anomaly", f"100% crit rate over {attacks} attacks")
             return True
         return False
 

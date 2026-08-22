@@ -30,9 +30,7 @@ class MSDFAtlas:
         self.font_size: int = 0
         self.chars: str = ""
 
-    def generate_atlas(
-        self, font_path: str, chars: str, size: int, padding: int = 2
-    ) -> None:
+    def generate_atlas(self, font_path: str, chars: str, size: int, padding: int = 2) -> None:
         self.font_size = size
         self.chars = chars
         self.padding = padding
@@ -53,9 +51,7 @@ class MSDFAtlas:
 
                 img = Image.new("L", (w + padding * 2, h + padding * 2), 0)
                 draw = ImageDraw.Draw(img)
-                draw.text(
-                    (padding - bbox[0], padding - bbox[1]), ch, font=pil_font, fill=255
-                )
+                draw.text((padding - bbox[0], padding - bbox[1]), ch, font=pil_font, fill=255)
 
                 sdf = self._compute_sdf(img)
                 pixels = np.stack([sdf] * 4, axis=-1).astype(np.float32) / 255.0

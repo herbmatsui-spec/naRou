@@ -3,6 +3,7 @@
 Asset statistics script for generating comprehensive statistics about assets.
 Analyzes asset collections, generates reports, and provides insights.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -53,9 +54,7 @@ def analyze_tileset_collection(tileset_dir: str, config: dict) -> dict:
                             metadata = json.load(f)
 
                         tile_count = metadata.get("tile_count", 0)
-                        total_size = os.path.getsize(json_path) + os.path.getsize(
-                            png_path
-                        )
+                        total_size = os.path.getsize(json_path) + os.path.getsize(png_path)
 
                         tileset_info = {
                             "name": os.path.splitext(file)[0],
@@ -80,9 +79,7 @@ def analyze_tileset_collection(tileset_dir: str, config: dict) -> dict:
                         )
 
                         # Track atlas size categories
-                        area = metadata.get("atlas_width", 0) * metadata.get(
-                            "atlas_height", 0
-                        )
+                        area = metadata.get("atlas_width", 0) * metadata.get("atlas_height", 0)
                         if area < 256 * 256:
                             size_cat = "small (<256px)"
                         elif area < 512 * 512:
@@ -100,16 +97,13 @@ def analyze_tileset_collection(tileset_dir: str, config: dict) -> dict:
                         all_tile_signatures.append(signature)
 
                     except Exception:
-
                         # TODO: handle exception properly
 
                         pass  # Skip invalid tilesets
 
     # Calculate averages
     if stats["total_tilesets"] > 0:
-        stats["average_tiles_per_tileset"] = (
-            stats["total_tiles"] / stats["total_tilesets"]
-        )
+        stats["average_tiles_per_tileset"] = stats["total_tiles"] / stats["total_tilesets"]
 
     # Find largest and smallest
     if tilesets:
@@ -164,9 +158,7 @@ def analyze_font_collection(font_dir: str, config: dict) -> dict:
                             metadata = json.load(f)
 
                         char_count = len(metadata.get("metrics", {}))
-                        total_size = os.path.getsize(json_path) + os.path.getsize(
-                            png_path
-                        )
+                        total_size = os.path.getsize(json_path) + os.path.getsize(png_path)
 
                         font_info = {
                             "name": os.path.splitext(file)[0],
@@ -195,16 +187,13 @@ def analyze_font_collection(font_dir: str, config: dict) -> dict:
                         all_chars.update(metrics.keys())
 
                     except Exception:
-
                         # TODO: handle exception properly
 
                         pass  # Skip invalid fonts
 
     # Calculate averages
     if stats["total_fonts"] > 0:
-        stats["average_chars_per_font"] = (
-            stats["total_characters"] / stats["total_fonts"]
-        )
+        stats["average_chars_per_font"] = stats["total_characters"] / stats["total_fonts"]
 
     # Character coverage (ASCII printable)
     ascii_printable = {chr(i) for i in range(32, 127)}
@@ -212,9 +201,7 @@ def analyze_font_collection(font_dir: str, config: dict) -> dict:
     stats["character_coverage"] = {
         "ascii_printable_total": len(ascii_printable),
         "covered": len(covered_chars),
-        "percentage": (len(covered_chars) / len(ascii_printable)) * 100
-        if ascii_printable
-        else 0,
+        "percentage": (len(covered_chars) / len(ascii_printable)) * 100 if ascii_printable else 0,
         "missing_chars": sorted(ascii_printable - covered_chars),
     }
 
@@ -283,9 +270,7 @@ def analyze_sound_collection(sound_dir: str, config: dict) -> dict:
 
                     # Track format distribution
                     fmt = sound_info["format"]
-                    stats["format_distribution"][fmt] = (
-                        stats["format_distribution"].get(fmt, 0) + 1
-                    )
+                    stats["format_distribution"][fmt] = stats["format_distribution"].get(fmt, 0) + 1
 
                     # Track duration categories
                     if duration < 10:
@@ -301,16 +286,13 @@ def analyze_sound_collection(sound_dir: str, config: dict) -> dict:
                     )
 
                 except Exception:
-
                     # TODO: handle exception properly
 
                     pass  # Skip invalid sound files
 
     # Calculate averages
     if stats["total_sounds"] > 0:
-        stats["average_duration"] = (
-            stats["total_duration_seconds"] / stats["total_sounds"]
-        )
+        stats["average_duration"] = stats["total_duration_seconds"] / stats["total_sounds"]
 
     # Find largest and smallest
     if sounds:
@@ -404,9 +386,7 @@ def analyze_model_collection(model_dir: str, config: dict) -> dict:
 
                     # Track format distribution
                     fmt = model_info["format"]
-                    stats["format_distribution"][fmt] = (
-                        stats["format_distribution"].get(fmt, 0) + 1
-                    )
+                    stats["format_distribution"][fmt] = stats["format_distribution"].get(fmt, 0) + 1
 
                     # Track vertex count distribution
                     if vertex_count < 100:
@@ -435,16 +415,13 @@ def analyze_model_collection(model_dir: str, config: dict) -> dict:
                     )
 
                 except Exception:
-
                     # TODO: handle exception properly
 
                     pass  # Skip invalid model files
 
     # Calculate averages
     if stats["total_models"] > 0:
-        stats["average_vertices_per_model"] = (
-            stats["total_vertices"] / stats["total_models"]
-        )
+        stats["average_vertices_per_model"] = stats["total_vertices"] / stats["total_models"]
         stats["average_faces_per_model"] = stats["total_faces"] / stats["total_models"]
 
     # Find largest and smallest
@@ -539,9 +516,7 @@ def print_stats_summary(stats: dict):
         if coll_name == "tilesets":
             print(f"    Tilesets: {coll_stats.get('total_tilesets', 0)}")
             print(f"    Total Tiles: {coll_stats.get('total_tiles', 0)}")
-            print(
-                f"    Size: {coll_stats.get('total_size_bytes', 0) / (1024 * 1024):.2f} MB"
-            )
+            print(f"    Size: {coll_stats.get('total_size_bytes', 0) / (1024 * 1024):.2f} MB")
             if coll_stats.get("largest_tileset"):
                 lt = coll_stats["largest_tileset"]
                 print(
@@ -550,33 +525,21 @@ def print_stats_summary(stats: dict):
         elif coll_name == "fonts":
             print(f"    Fonts: {coll_stats.get('total_fonts', 0)}")
             print(f"    Total Characters: {coll_stats.get('total_characters', 0)}")
-            print(
-                f"    Size: {coll_stats.get('total_size_bytes', 0) / (1024 * 1024):.2f} MB"
-            )
+            print(f"    Size: {coll_stats.get('total_size_bytes', 0) / (1024 * 1024):.2f} MB")
             coverage = coll_stats.get("character_coverage", {})
             if coverage:
                 print(f"    ASCII Coverage: {coverage.get('percentage', 0):.1f}%")
         elif coll_name == "sounds":
             print(f"    Sounds: {coll_stats.get('total_sounds', 0)}")
-            print(
-                f"    Total Duration: {coll_stats.get('total_duration_seconds', 0):.1f} seconds"
-            )
-            print(
-                f"    Size: {coll_stats.get('total_size_bytes', 0) / (1024 * 1024):.2f} MB"
-            )
+            print(f"    Total Duration: {coll_stats.get('total_duration_seconds', 0):.1f} seconds")
+            print(f"    Size: {coll_stats.get('total_size_bytes', 0) / (1024 * 1024):.2f} MB")
         elif coll_name == "models":
             print(f"    Models: {coll_stats.get('total_models', 0)}")
             print(f"    Total Vertices: {coll_stats.get('total_vertices', 0):,}")
             print(f"    Total Faces: {coll_stats.get('total_faces', 0):,}")
-            print(
-                f"    Size: {coll_stats.get('total_size_bytes', 0) / (1024 * 1024):.2f} MB"
-            )
-            print(
-                f"    Avg Vertices/Model: {coll_stats.get('average_vertices_per_model', 0):.1f}"
-            )
-            print(
-                f"    Avg Faces/Model: {coll_stats.get('average_faces_per_model', 0):.1f}"
-            )
+            print(f"    Size: {coll_stats.get('total_size_bytes', 0) / (1024 * 1024):.2f} MB")
+            print(f"    Avg Vertices/Model: {coll_stats.get('average_vertices_per_model', 0):.1f}")
+            print(f"    Avg Faces/Model: {coll_stats.get('average_faces_per_model', 0):.1f}")
 
 
 def main():
@@ -586,9 +549,7 @@ def main():
         default="tools/asset_pipeline_config.json",
         help="Path to configuration file",
     )
-    parser.add_argument(
-        "--output", default=None, help="Output file for statistics (JSON)"
-    )
+    parser.add_argument("--output", default=None, help="Output file for statistics (JSON)")
     parser.add_argument(
         "--collections",
         nargs="+",

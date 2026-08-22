@@ -6,6 +6,7 @@ where the affected semantic colors are replaced with simulation-friendly values.
 
 Run: python tools/generate_colorblind_palettes.py
 """
+
 from __future__ import annotations
 
 import copy

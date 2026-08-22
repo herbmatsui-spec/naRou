@@ -4,6 +4,7 @@ Provides a lightweight Engine factory that avoids the full package/Kernel
 initialization (which requires a rendering context). Tests that need a
 partially-initialized engine can use ``make_test_engine``.
 """
+
 from __future__ import annotations
 
 from typing import Any

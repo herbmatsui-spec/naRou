@@ -5,7 +5,7 @@ Handles the dramatic awakening of the true devour ability during a near-death mi
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 
@@ -46,8 +46,16 @@ class DevourAwakeningManager:
         """Generates the dramatic red screen glitch text frames showing soul restructuring."""
         return [
             {"frame": 1, "text": "CRITICAL_ERROR: 生体認証プロトコル破綻", "color": "RED"},
-            {"frame": 2, "text": "《解析》スキルの根源定義がオーバーフローを起こしています", "color": "RED_FLASH"},
-            {"frame": 3, "text": "世界法則の強制書き換え：【スキルを観る者】から【スキルを喰らう者】へ変異", "color": "WHITE_BLINDING"},
+            {
+                "frame": 2,
+                "text": "《解析》スキルの根源定義がオーバーフローを起こしています",
+                "color": "RED_FLASH",
+            },
+            {
+                "frame": 3,
+                "text": "世界法則の強制書き換え：【スキルを観る者】から【スキルを喰らう者】へ変異",
+                "color": "WHITE_BLINDING",
+            },
         ]
 
     def unlock_devour_command(self) -> Dict[str, Any]:
@@ -86,7 +94,9 @@ class DevourAwakeningManager:
             "subtitle": "〜スキル資本主義を崩壊させる捕食者が誕生した〜",
         }
 
-    def complete_phase1_transition(self, world_state: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def complete_phase1_transition(
+        self, world_state: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Transitions WorldState from Phase 1 to Phase 2 (Template Destruction)."""
         self.phase1_completed = True
         state = world_state or {}
@@ -101,7 +111,9 @@ class DevourAwakeningManager:
             "message": "フェーズ1【基盤構築】完了！フェーズ2【テンプレート破壊】へ移行します。",
         }
 
-    def export_phase1_save_state(self, save_dict: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def export_phase1_save_state(
+        self, save_dict: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Persists Phase 1 completion, unlocked devour power, and stolen skills into save data."""
         save = save_dict if save_dict is not None else {}
         save["phase1_completed"] = True

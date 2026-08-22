@@ -1,16 +1,15 @@
 """
 Unit test for World A Input & Actions (Steps 13-24)
 """
+
 from __future__ import annotations
 
 import unittest
-from unittest.mock import MagicMock
-import tcod.event
 
 from game import Engine
-from renderer import NullRenderer
 from input_actions import ActionDevour, ActionScan, ActionSynthesisMenu
 from input_handler import InputHandler
+from renderer import NullRenderer
 
 
 class TestWorldAInputIntegration(unittest.TestCase):

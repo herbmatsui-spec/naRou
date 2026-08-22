@@ -6,6 +6,7 @@ Step 16: Integration with main quest system
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 from collections import defaultdict
 from collections.abc import Callable
@@ -65,9 +66,7 @@ class QuestRelationshipIntegration:
     ):
         self.rm = relationship_manager
         self.graph = relationship_manager.graph
-        self.branching = branching_generator or BranchingScenarioGenerator(
-            relationship_manager
-        )
+        self.branching = branching_generator or BranchingScenarioGenerator(relationship_manager)
 
         # クエスト関係ゲート
         self.quest_gates: dict[str, QuestRelationshipGate] = {}
@@ -128,9 +127,7 @@ class QuestRelationshipIntegration:
         """クエストに関連するNPCを登録"""
         self.quest_npcs[quest_id].append(npc_id)
 
-    def check_quest_availability(
-        self, quest_id: str, player_id: str = "player"
-    ) -> dict[str, Any]:
+    def check_quest_availability(self, quest_id: str, player_id: str = "player") -> dict[str, Any]:
         """クエストの利用可能性を関係ベースでチェック"""
         gate = self.quest_gates.get(quest_id)
         if not gate:
@@ -143,13 +140,9 @@ class QuestRelationshipIntegration:
             target_id = req.get("target_id")
 
             if requirement_type == QuestRelationRequirement.MIN_LEVEL.value:
-                rel_type = RelationshipType(
-                    req.get("relationship_type", "favorability")
-                )
+                rel_type = RelationshipType(req.get("relationship_type", "favorability"))
                 min_level = req.get("level", 0)
-                actual_level = self.rm.get_relationship_level(
-                    player_id, target_id, rel_type
-                )
+                actual_level = self.rm.get_relationship_level(player_id, target_id, rel_type)
                 if actual_level < min_level:
                     unmet_requirements.append(
                         {
@@ -161,13 +154,9 @@ class QuestRelationshipIntegration:
                     )
 
             elif requirement_type == QuestRelationRequirement.MAX_LEVEL.value:
-                rel_type = RelationshipType(
-                    req.get("relationship_type", "favorability")
-                )
+                rel_type = RelationshipType(req.get("relationship_type", "favorability"))
                 max_level = req.get("level", 100)
-                actual_level = self.rm.get_relationship_level(
-                    player_id, target_id, rel_type
-                )
+                actual_level = self.rm.get_relationship_level(player_id, target_id, rel_type)
                 if actual_level > max_level:
                     unmet_requirements.append(
                         {
@@ -247,9 +236,7 @@ class QuestRelationshipIntegration:
             self.rm.modify_relationship(
                 player_id,
                 reward.target_character,
-                InteractionType.QUEST_COOPERATION
-                if success
-                else InteractionType.QUEST_CONFLICT,
+                InteractionType.QUEST_COOPERATION if success else InteractionType.QUEST_CONFLICT,
                 delta,
             )
             results[reward.target_character] = {
@@ -264,38 +251,28 @@ class QuestRelationshipIntegration:
             bonus_targets = gate.success_bonus.get("relationship_bonuses", [])
             for bonus in bonus_targets:
                 target = bonus.get("target_id")
-                rel_type = RelationshipType(
-                    bonus.get("relationship_type", "favorability")
-                )
+                rel_type = RelationshipType(bonus.get("relationship_type", "favorability"))
                 delta = bonus.get("delta", 0)
                 if target and delta != 0:
                     self.rm.modify_relationship(
                         player_id, target, InteractionType.QUEST_COOPERATION, delta
                     )
                     results[target] = results.get(target, {})
-                    results[target].update(
-                        {"bonus_delta": delta, "bonus_type": rel_type.value}
-                    )
+                    results[target].update({"bonus_delta": delta, "bonus_type": rel_type.value})
 
         # 失敗時の帰結
         if not success and gate and gate.failure_consequences:
-            fail_consequences = gate.failure_consequences.get(
-                "relationship_penalties", []
-            )
+            fail_consequences = gate.failure_consequences.get("relationship_penalties", [])
             for penalty in fail_consequences:
                 target = penalty.get("target_id")
-                rel_type = RelationshipType(
-                    penalty.get("relationship_type", "favorability")
-                )
+                rel_type = RelationshipType(penalty.get("relationship_type", "favorability"))
                 delta = penalty.get("delta", 0)
                 if target and delta != 0:
                     self.rm.modify_relationship(
                         player_id, target, InteractionType.QUEST_CONFLICT, delta
                     )
                     results[target] = results.get(target, {})
-                    results[target].update(
-                        {"penalty_delta": delta, "penalty_type": rel_type.value}
-                    )
+                    results[target].update({"penalty_delta": delta, "penalty_type": rel_type.value})
                     self._stats["relationship_failures"] += 1
 
         # クエストNPCへの影響（共闘の絆）
@@ -372,9 +349,7 @@ class QuestRelationshipIntegration:
         if hasattr(main_quest_system, "add_completion_callback"):
             main_quest_system.add_completion_callback(self._on_quest_completed)
 
-    def _on_quest_completed(
-        self, quest_id: str, player: Any, engine: Any = None
-    ) -> list[str]:
+    def _on_quest_completed(self, quest_id: str, player: Any, engine: Any = None) -> list[str]:
         """クエスト完了時のコールバック"""
         results = self.apply_quest_completion_effects(quest_id)
 
@@ -393,9 +368,7 @@ class QuestRelationshipIntegration:
                     f"【ペナルティ関係】{target}との{changes['penalty_type']}関係が{changes['penalty_delta']:+d}されました"
                 )
             if "quest_bond" in changes:
-                logs.append(
-                    f"【共闘の絆】{target}との絆が{changes['quest_bond']:+d}されました"
-                )
+                logs.append(f"【共闘の絆】{target}との絆が{changes['quest_bond']:+d}されました")
 
         # クエスト完了によるシナリオ生成チェック
         scenarios = self.branching.check_for_scenarios(getattr(player, "id", "player"))
@@ -404,9 +377,7 @@ class QuestRelationshipIntegration:
 
         return logs
 
-    def register_event_handler(
-        self, event_type: str, handler: Callable[..., Any]
-    ) -> None:
+    def register_event_handler(self, event_type: str, handler: Callable[..., Any]) -> None:
         """イベントハンドラーを登録"""
         self._event_handlers[event_type].append(handler)
 
@@ -424,9 +395,7 @@ class QuestRelationshipIntegration:
         return {
             **self._stats,
             "registered_gates": len(self.quest_gates),
-            "registered_rewards": sum(
-                len(rewards) for rewards in self.quest_rewards.values()
-            ),
+            "registered_rewards": sum(len(rewards) for rewards in self.quest_rewards.values()),
             "registered_npcs": sum(len(npcs) for npcs in self.quest_npcs.values()),
         }
 

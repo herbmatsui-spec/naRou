@@ -3,6 +3,7 @@ Verify visual token parity across platforms (Plan 1-B acceptance):
 the tcod palette (core/palette.py) and the generated web theme must derive from
 the same design_tokens.json values.
 """
+
 from __future__ import annotations
 
 import json
@@ -67,17 +68,15 @@ def test_palette_matches_design_tokens():
     for palette_key, dotted in PARITY_MAP.items():
         expected = _hex_to_rgb(_resolve(tokens, dotted))
         assert palette_key in COLORS, f"palette missing {palette_key}"
-        assert COLORS[palette_key] == expected, (
-            f"{palette_key}: palette={COLORS[palette_key]} token={expected}"
-        )
+        assert (
+            COLORS[palette_key] == expected
+        ), f"{palette_key}: palette={COLORS[palette_key]} token={expected}"
 
 
 def test_theme_css_derives_from_tokens():
     """theme.css must contain the design tokens and the theme variant hooks."""
     theme_path = os.path.join(ROOT, "web", "theme.css")
-    assert os.path.exists(theme_path), (
-        "web/theme.css missing (run tools/generate_theme.py)"
-    )
+    assert os.path.exists(theme_path), "web/theme.css missing (run tools/generate_theme.py)"
     css = open(theme_path).read()
     # A representative token and all variant hooks must be present.
     assert "--color-danger: #dc2626;" in css
@@ -91,19 +90,13 @@ def test_tileset_def_has_atlas():
     src = os.path.join(ROOT, "assets", "source", "tilesets")
     if not os.path.isdir(src):
         src = os.path.join(ROOT, "assets", "src", "tilesets")
-    def_files = (
-        [f for f in os.listdir(src) if f.endswith(".json")]
-        if os.path.isdir(src)
-        else []
-    )
+    def_files = [f for f in os.listdir(src) if f.endswith(".json")] if os.path.isdir(src) else []
     assert def_files, "no tileset definition found"
     for df in def_files:
         with open(os.path.join(src, df)) as f:
             definition = json.load(f)
         size = definition.get("tile_size", 16)
-        atlas_json = os.path.join(
-            ROOT, "assets", "tiles", f"tileset_{size}x{size}.json"
-        )
+        atlas_json = os.path.join(ROOT, "assets", "tiles", f"tileset_{size}x{size}.json")
         assert os.path.exists(atlas_json), f"missing atlas {atlas_json}"
         with open(atlas_json) as f:
             atlas = json.load(f)

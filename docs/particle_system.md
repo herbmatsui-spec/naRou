@@ -113,10 +113,10 @@ class SDFCollision:
     def build_from_heightmap(self, heightmap, wall_height=10.0):
         # Extrude 2D heightmap to 3D SDF
         # Negative = inside wall, Positive = outside
-    
+
     def query(self, pos) -> float:
         # Trilinear interpolation in 3D grid
-    
+
     def collide_particle(self, pos, vel, radius, restitution=0.3):
         # Push out along gradient, reflect velocity
 ```
@@ -139,8 +139,8 @@ class Emitter:
         SPHERE = 3     # Sphere volume
         BOX = 4        # Axis-aligned box
         MESH = 5       # Triangle mesh (future)
-    
-    def update(self, dt, buffer, base_vel, base_color, 
+
+    def update(self, dt, buffer, base_vel, base_color,
                base_size, base_life, material_id) -> int:
         # Returns count emitted
 ```

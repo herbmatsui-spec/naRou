@@ -6,7 +6,7 @@ Handles relentless high-level pursuer encounters, cone of sight, hiding spots, a
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 
 @dataclass
@@ -19,7 +19,9 @@ class MidasHoundPursuer:
     hp: int = 2500
     atk: int = 180
     pos: Tuple[int, int] = (5, 5)
-    patrol_points: List[Tuple[int, int]] = field(default_factory=lambda: [(5, 5), (5, 2), (2, 2), (2, 5)])
+    patrol_points: List[Tuple[int, int]] = field(
+        default_factory=lambda: [(5, 5), (5, 2), (2, 2), (2, 5)]
+    )
     patrol_index: int = 0
     vision_range: int = 2
     alert_level: str = "NORMAL"  # 'NORMAL', 'SUSPICIOUS', 'COMBAT'
@@ -47,7 +49,9 @@ class HoundSpawnManager:
             "message": "【警報】ミダス商会の《追跡魔導猟犬》がスラムに投入された！身を隠せ！",
         }
 
-    def update_hound_patrol_and_detect(self, player_pos: Tuple[int, int], is_running: bool = False) -> Dict[str, Any]:
+    def update_hound_patrol_and_detect(
+        self, player_pos: Tuple[int, int], is_running: bool = False
+    ) -> Dict[str, Any]:
         """Advances hound patrol and checks player detection (sight + audio hearing)."""
         if not self.is_spawned:
             return {"detected": False}
@@ -67,14 +71,28 @@ class HoundSpawnManager:
         # Hearing detection (if player is running near)
         if is_running and dist <= 3:
             self.hound.alert_level = "SUSPICIOUS"
-            return {"detected": True, "alert_level": "SUSPICIOUS", "reason": "足音を探知された！", "hound_pos": self.hound.pos}
+            return {
+                "detected": True,
+                "alert_level": "SUSPICIOUS",
+                "reason": "足音を探知された！",
+                "hound_pos": self.hound.pos,
+            }
 
         # Direct sight detection
         if dist <= self.hound.vision_range:
             self.hound.alert_level = "COMBAT"
-            return {"detected": True, "alert_level": "COMBAT", "reason": "魔導猟犬に捕捉された！", "hound_pos": self.hound.pos}
+            return {
+                "detected": True,
+                "alert_level": "COMBAT",
+                "reason": "魔導猟犬に捕捉された！",
+                "hound_pos": self.hound.pos,
+            }
 
-        return {"detected": False, "alert_level": self.hound.alert_level, "hound_pos": self.hound.pos}
+        return {
+            "detected": False,
+            "alert_level": self.hound.alert_level,
+            "hound_pos": self.hound.pos,
+        }
 
     def highlight_hound_routes(self) -> Dict[str, Any]:
         """Provides Analysis skill visual overlay of Hound patrol paths and danger cones."""

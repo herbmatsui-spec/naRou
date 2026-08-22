@@ -12,9 +12,7 @@ def test_acquire_creates_and_caches_resource():
     pool = WebGLResourcePool()
     shader_a = pool.acquire("shader", "basic", lambda: make_shader("basic"))
     shader_b = pool.acquire("shader", "basic", lambda: make_shader("basic"))
-    assert shader_a is shader_b, (
-        "Repeated acquire with same key must return cached object"
-    )
+    assert shader_a is shader_b, "Repeated acquire with same key must return cached object"
     assert shader_a["name"] == "basic"
 
 

@@ -137,9 +137,7 @@ class RelationshipManager:
         importance: MemoryImportance | None = None,
     ) -> tuple[int, int]:
         """関係性更新＋NPC 記憶記録（Phase 2 Step 5/6 連携）"""
-        trust, mood = self.update_relationship(
-            player, npc_id, action, delta_trust, delta_mood
-        )
+        trust, mood = self.update_relationship(player, npc_id, action, delta_trust, delta_mood)
 
         if _HAS_NPC_MEMORY:
             # プレイヤー側の NPC 記憶（クエストシステム連携用）

@@ -3,6 +3,7 @@
 Sustainability Test
 持続性テスト
 """
+
 from __future__ import annotations
 
 import sys

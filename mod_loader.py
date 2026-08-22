@@ -1,13 +1,15 @@
-import os
 import importlib.util
+import os
 import sys
 from pathlib import Path
+
 
 class ModLoader:
     """
     Phase 7: スクリプトMOD対応 API (Step 50-56)
     Dynamic script mod loading system.
     """
+
     def __init__(self, mods_dir: str = "mods"):
         self.mods_dir = Path(__file__).parent / mods_dir
         self.mods_dir.mkdir(parents=True, exist_ok=True)
@@ -38,14 +40,17 @@ class ModLoader:
     def register_item(self, item_id: str, data: dict):
         """Mods call this to add new items."""
         from data_manager import data_manager
+
         data_manager.items[item_id] = data
         print(f"Mod API: Registered item {item_id}")
 
     def register_event_listener(self, event_type: str, callback):
         """Mods call this to hook into game events."""
         from event_bus import event_bus
+
         event_bus.subscribe(event_type, callback)
         print(f"Mod API: Registered event hook for {event_type}")
+
 
 # Global instance
 mod_loader = ModLoader()

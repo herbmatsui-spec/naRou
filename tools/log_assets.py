@@ -3,6 +3,7 @@
 Log management script for the asset pipeline.
 Handles log rotation, analysis, archiving, and reporting.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -83,9 +84,7 @@ def rotate_logs(
                             stats["logs_compressed"] += 1
 
                             # Calculate space saved
-                            original_size = (
-                                os.path.getsize(compressed_file) * 3
-                            )  # Rough estimate
+                            original_size = os.path.getsize(compressed_file) * 3  # Rough estimate
                             compressed_size = os.path.getsize(compressed_file)
                             saved = original_size - compressed_size
                             stats["space_saved_bytes"] += max(0, saved)
@@ -103,9 +102,7 @@ def rotate_logs(
         rotated_logs = []
         for root, dirs, files in os.walk(log_dir):
             for file in files:
-                if ("." in file and file.split(".")[-1].isdigit()) or file.endswith(
-                    ".log.gz"
-                ):
+                if ("." in file and file.split(".")[-1].isdigit()) or file.endswith(".log.gz"):
                     rotated_logs.append(os.path.join(root, file))
 
         # Sort by modification time (oldest first)
@@ -117,9 +114,7 @@ def rotate_logs(
             try:
                 file_size = os.path.getsize(old_log)
                 if dry_run:
-                    print(
-                        f"[DRY RUN] Would remove old log: {old_log} ({file_size} bytes)"
-                    )
+                    print(f"[DRY RUN] Would remove old log: {old_log} ({file_size} bytes)")
                 else:
                     os.remove(old_log)
                     stats["logs_removed"] += 1
@@ -236,9 +231,7 @@ def analyze_logs(log_dir: str, hours: int = 24) -> dict:
         # Calculate rates
         if stats["total_lines"] > 0:
             stats["error_rate"] = (stats["error_count"] / stats["total_lines"]) * 100
-            stats["warning_rate"] = (
-                stats["warning_count"] / stats["total_lines"]
-            ) * 100
+            stats["warning_rate"] = (stats["warning_count"] / stats["total_lines"]) * 100
 
         # Convert timeline to list format
         for hour, counts in sorted(hourly_counts.items()):
@@ -272,9 +265,7 @@ def analyze_logs(log_dir: str, hours: int = 24) -> dict:
     return stats
 
 
-def archive_logs(
-    log_dir: str, archive_dir: str, days: int = 30, dry_run: bool = False
-) -> dict:
+def archive_logs(log_dir: str, archive_dir: str, days: int = 30, dry_run: bool = False) -> dict:
     """Archive old log files to long-term storage."""
     stats = {
         "logs_archived": 0,
@@ -399,12 +390,8 @@ def main():
         default="rotate",
         help="Action to perform",
     )
-    parser.add_argument(
-        "--log-dir", default=None, help="Log directory (overrides config)"
-    )
-    parser.add_argument(
-        "--archive-dir", default=None, help="Archive directory for archive action"
-    )
+    parser.add_argument("--log-dir", default=None, help="Log directory (overrides config)")
+    parser.add_argument("--archive-dir", default=None, help="Archive directory for archive action")
     parser.add_argument(
         "--max-size-mb",
         type=float,

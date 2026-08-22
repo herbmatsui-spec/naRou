@@ -1,0 +1,78 @@
+# NPC Schedules Configuration
+npc_schedules:
+  # ブローカー - 夜のみ出現
+  - npc_id: "broker"
+    name: "闇ブローカー"
+    active_phases: [NIGHT]
+    location: "back_alley"
+    conditions:
+      faction_reputation:
+        faction: "thieves_guild"
+        min: -50
+    raid_chance: 0.0
+
+  # 検査官 - 昼に襲撃
+  - npc_id: "inspector"
+    name: "検査官"
+    active_phases: [DAY]
+    location: "inspection_office"
+    raid_chance: 0.3
+
+  # 闘技場受付 - 夕暮れ〜夜
+  - npc_id: "arena_receptionist"
+    name: "闘技場受付嬢"
+    active_phases: [DUSK, NIGHT]
+    location: "arena"
+
+  # 鍛冶屋 - 昼のみ
+  - npc_id: "blacksmith"
+    name: "鍛冶屋"
+    active_phases: [DAY]
+    location: "forge"
+
+  # 魔道具商 - 夜明け〜昼
+  - npc_id: "magic_merchant"
+    name: "魔道具商人"
+    active_phases: [DAWN, DAY]
+    location: "magic_shop"
+
+  # 医者 - 24時間 (夜明け〜夜)
+  - npc_id: "doctor"
+    name: "医者"
+    active_phases: [DAWN, DAY, DUSK, NIGHT]
+    location: "clinic"
+
+  # 情報屋 - 夕暮れ〜夜
+  - npc_id: "informant"
+    name: "情報屋"
+    active_phases: [DUSK, NIGHT]
+    location: "tavern"
+    conditions:
+      player_level:
+        min: 5
+
+# 移動商人ルート
+merchant_routes:
+  - npc_id: "traveling_merchant"
+    name: "行商人"
+    stops:
+      - phase: DAWN
+        location: "vernis_gate"
+      - phase: DAY
+        location: "palmia_market"
+      - phase: DUSK
+        location: "vernis_square"
+      - phase: NIGHT
+        location: "port_kapul_docks"
+
+  - npc_id: "wandering_chef"
+    name: "放浪料理人"
+    stops:
+      - phase: DAWN
+        location: "farm_village"
+      - phase: DAY
+        location: "palmia_kitchen"
+      - phase: DUSK
+        location: "vernis_inn"
+      - phase: NIGHT
+        location: "hidden_cave"

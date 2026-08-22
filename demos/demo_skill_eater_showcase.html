@@ -118,7 +118,7 @@
       overflow: hidden;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
-    
+
     .term-header {
       background: #1a1c24;
       padding: 0.5rem 1rem;
@@ -145,7 +145,7 @@
     .tile-enemy { color: #ff5050; font-weight: bold; }
     .tile-item { color: #ffd700; font-weight: bold; }
     .tile-husk { color: #666666; }
-    
+
     .term-hud {
       padding: 0.5rem 1rem;
       background: #11141c;
@@ -253,7 +253,7 @@
           <li>スラムの拠点を拡張し、闇市場やペット訓練所を解放</li>
         </ul>
       </div>
-      
+
       <div class="phase-card">
         <h2>🌌 因果律崩壊と次元跳躍 (Ascension & Multiverse)</h2>
         <p>因果を司るボスを討ち、スキルを概念結晶へと圧縮。次元ゲートを開いて次なる世界へ。</p>
@@ -271,7 +271,7 @@
           <span>naRou.exe - Subsystem Simulation</span>
           <span>FPS: 60 | Turn: 142</span>
         </div>
-        
+
         <div class="term-hud" id="term-hud">
           <span style="color: #50ff80;">◆ 主人公 Lv.10</span>
           <span>HP <span style="color: #50ff80;">85/100</span></span>
@@ -368,7 +368,7 @@
           const ch = mapData[y][x];
           // Base floor
           drawTile(0, 0, x, y); // TR_FLOOR_01
-          
+
           if (ch === '#') drawTile(204, 0, x, y); // TR_WALL_01
           else if (ch === '+') drawTile(102, 17, x, y); // Door/Decor
           else if (ch === 'C') drawTile(306, 17, x, y); // Item/Gold
@@ -395,7 +395,7 @@
         }
       }
     }
-    
+
     atlas.onload = renderMap;
     emoteAlert.onload = emoteAnger.onload = emoteExclam.onload = renderMap;
 
@@ -418,11 +418,11 @@
       log('【キー V】《喰らい(Devour)》を発動！！', 'c-atk');
       activeEmote = 'anger';
       renderMap();
-      
+
       // Simulate blood effect
       ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
+
       setTimeout(() => {
         log('【捕食成功！】《鋼鉄の皮膚》[Rare] を強奪した！', 'c-succ');
         enemyState = 'H';
@@ -448,12 +448,12 @@
     function actWarp() {
       playSound(sfxWarp);
       log('【次元ゲート】マルチバース越境シーケンス開始...', 'c-sys');
-      
+
       // Flash effect
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       setTimeout(renderMap, 100);
-      
+
       setTimeout(() => log('時空金庫から 概念結晶 3つを抽出。', 'c-atk'), 500);
       setTimeout(() => log('永続の証『concept_eater_mark』を携え、次なる世界へ...', 'c-succ'), 1000);
     }

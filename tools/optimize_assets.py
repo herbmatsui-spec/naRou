@@ -3,6 +3,7 @@
 Asset optimization script for running optimization passes on processed assets.
 Applies various optimization techniques to reduce file sizes and improve performance.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -158,14 +159,9 @@ def optimize_sounds(sound_dir: str, output_dir: str, config: dict) -> dict:
 
     # Get quality settings from config
     music_bitrate = (
-        config.get("sound", {})
-        .get("quality", {})
-        .get("music", {})
-        .get("bitrate", "192k")
+        config.get("sound", {}).get("quality", {}).get("music", {}).get("bitrate", "192k")
     )
-    sfx_bitrate = (
-        config.get("sound", {}).get("quality", {}).get("sfx", {}).get("bitrate", "128k")
-    )
+    sfx_bitrate = config.get("sound", {}).get("quality", {}).get("sfx", {}).get("bitrate", "128k")
 
     extensions = [".ogg", ".mp3", ".wav", ".flac"]
 
@@ -329,24 +325,16 @@ def run_optimization_pass(config: dict, asset_types: list[str]) -> dict:
         print(f"Optimizing {asset_type}...")
 
         asset_dir = os.path.join(config["directories"]["output"], asset_type)
-        optimized_dir = os.path.join(
-            config["directories"]["output"], f"{asset_type}_optimized"
-        )
+        optimized_dir = os.path.join(config["directories"]["output"], f"{asset_type}_optimized")
 
         # Run optimization
         result = optimizers[asset_type](asset_dir, optimized_dir, config)
         results["results"][asset_type] = result
 
         # Update summary
-        results["summary"]["total_assets_processed"] += result.get(
-            "assets_processed", 0
-        )
-        results["summary"]["total_assets_optimized"] += result.get(
-            "assets_optimized", 0
-        )
-        results["summary"]["total_space_saved_bytes"] += result.get(
-            "space_saved_bytes", 0
-        )
+        results["summary"]["total_assets_processed"] += result.get("assets_processed", 0)
+        results["summary"]["total_assets_optimized"] += result.get("assets_optimized", 0)
+        results["summary"]["total_space_saved_bytes"] += result.get("space_saved_bytes", 0)
         results["summary"]["total_errors"] += len(result.get("errors", []))
 
         # Replace original with optimized version (in a real pipeline, you might want to keep both)
@@ -430,9 +418,7 @@ def print_optimization_summary(results: dict, verbose: bool = False):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Run optimization passes on processed assets"
-    )
+    parser = argparse.ArgumentParser(description="Run optimization passes on processed assets")
     parser.add_argument(
         "--config",
         default="tools/asset_pipeline_config.json",

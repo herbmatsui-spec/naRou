@@ -3,9 +3,11 @@ generate_rich_gifs.py
 Aの世界（スキル喰い）用の高品質なGIFアニメーション生成スクリプト
 Pillow (PIL) を確実に読み込み、フレームアニメーションを生成する基盤
 """
+
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import math
 import sys
@@ -240,9 +242,7 @@ class EffectManager:
             self.shake_intensity = 0.0
 
         if self.flash_alpha > 0.0:
-            self.flash_alpha = max(
-                0.0, self.flash_alpha - getattr(self, "flash_decay", 0.2)
-            )
+            self.flash_alpha = max(0.0, self.flash_alpha - getattr(self, "flash_decay", 0.2))
 
     def get_shake_offset(self):
         if self.shake_intensity <= 0.1:
@@ -254,9 +254,7 @@ class EffectManager:
     def apply_flash(self, canvas: Image.Image) -> Image.Image:
         if self.flash_alpha <= 0.01 or not self.flash_color:
             return canvas
-        overlay = Image.new(
-            "RGBA", canvas.size, (*self.flash_color, int(255 * self.flash_alpha))
-        )
+        overlay = Image.new("RGBA", canvas.size, (*self.flash_color, int(255 * self.flash_alpha)))
         return Image.alpha_composite(canvas, overlay)
 
 
@@ -331,9 +329,7 @@ def draw_health_bar(
     """HPバーおよびステータスバーの描画"""
     ratio = max(0.0, min(1.0, cur_hp / max_hp))
     # 背景
-    draw.rectangle(
-        [x, y, x + w, y + h], fill=(30, 30, 35, 200), outline=(80, 80, 90, 255), width=1
-    )
+    draw.rectangle([x, y, x + w, y + h], fill=(30, 30, 35, 200), outline=(80, 80, 90, 255), width=1)
     # バー本体
     if ratio > 0:
         bar_w = int((w - 2) * ratio)
@@ -362,24 +358,18 @@ def draw_hud(
     draw.text((16, 8), title, font=f_title, fill=(0, 230, 255, 255))
 
     # HPバー
-    draw_health_bar(
-        draw, 320, 10, 120, 16, hp, max_hp, fill_color=(230, 60, 60), label=""
-    )
+    draw_health_bar(draw, 320, 10, 120, 16, hp, max_hp, fill_color=(230, 60, 60), label="")
     f_stat = get_font(11)
     draw.text((295, 11), "HP", font=f_stat, fill=(255, 100, 100))
     draw.text((350, 12), f"{hp}/{max_hp}", font=f_stat, fill=(255, 255, 255))
 
     # MPバー
-    draw_health_bar(
-        draw, 490, 10, 120, 16, mp, max_mp, fill_color=(60, 140, 240), label=""
-    )
+    draw_health_bar(draw, 490, 10, 120, 16, mp, max_mp, fill_color=(60, 140, 240), label="")
     draw.text((465, 11), "MP", font=f_stat, fill=(100, 180, 255))
     draw.text((520, 12), f"{mp}/{max_mp}", font=f_stat, fill=(255, 255, 255))
 
 
-def draw_scan_effect(
-    canvas: Image.Image, target_x: int, target_y: int, progress: float
-):
+def draw_scan_effect(canvas: Image.Image, target_x: int, target_y: int, progress: float):
     """敵の深度解析（Scan）アニメーションエフェクト"""
     draw = ImageDraw.Draw(canvas)
 
@@ -389,9 +379,7 @@ def draw_scan_effect(
     by = target_y - box_h // 2
 
     # スキャン枠
-    draw.rectangle(
-        [bx, by, bx + box_w, by + box_h], outline=(0, 255, 200, 180), width=1
-    )
+    draw.rectangle([bx, by, bx + box_w, by + box_h], outline=(0, 255, 200, 180), width=1)
 
     # 上から下へ動くレーザー走査線
     scan_line_y = int(by + box_h * progress)
@@ -442,15 +430,11 @@ def draw_devour_particles(
         width=2,
     )
     # 中心コア
-    draw.ellipse(
-        [cur_x - 5, cur_y - 5, cur_x + 5, cur_y + 5], fill=(255, 255, 255, 255)
-    )
+    draw.ellipse([cur_x - 5, cur_y - 5, cur_x + 5, cur_y + 5], fill=(255, 255, 255, 255))
 
     # 主人公側の捕食エフェクト
     f = get_font(13)
-    draw.text(
-        (dst_x - 40, dst_y - 65), "DEVOURING...", font=f, fill=(220, 80, 255, 255)
-    )
+    draw.text((dst_x - 40, dst_y - 65), "DEVOURING...", font=f, fill=(220, 80, 255, 255))
 
 
 def draw_devour_burst(
@@ -462,9 +446,7 @@ def draw_devour_burst(
     # 周囲に散らばる星
     star_offsets = [(-35, -45), (35, -50), (-45, 10), (45, 15), (0, -65)]
     for ox, oy in star_offsets:
-        draw_emote(
-            canvas, "emote_star", hero_x + ox, hero_y + oy, size=20, anchor="center"
-        )
+        draw_emote(canvas, "emote_star", hero_x + ox, hero_y + oy, size=20, anchor="center")
 
     # 中央の大きなスター
     draw_emote(canvas, "emote_stars", hero_x, hero_y - 40, size=36, anchor="center")
@@ -480,9 +462,7 @@ def draw_devour_burst(
         width=2,
     )
     f = get_font(13)
-    draw.text(
-        (bx + 12, by + 8), f"ACQUIRED: {skill_name}", font=f, fill=(255, 220, 100, 255)
-    )
+    draw.text((bx + 12, by + 8), f"ACQUIRED: {skill_name}", font=f, fill=(255, 220, 100, 255))
 
 
 def draw_synergy_explosion(
@@ -515,9 +495,7 @@ def draw_synergy_explosion(
 
     # 爆発の中心に Emote
     if progress < 0.7:
-        draw_emote(
-            canvas, "emote_anger", target_x, target_y - 20, size=32, anchor="center"
-        )
+        draw_emote(canvas, "emote_anger", target_x, target_y - 20, size=32, anchor="center")
 
     # シナジー名ポップアップ
     f = get_font(13)
@@ -575,9 +553,7 @@ def generate_combat_devour_gif(output_path: Path):
     for i in range(30):
         c = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 255))
         draw_dungeon_background(c)
-        draw_hud(
-            c, hp=100, max_hp=100, mp=50, max_mp=50, title="Phase 1: Deep Scan & Combat"
-        )
+        draw_hud(c, hp=100, max_hp=100, mp=50, max_mp=50, title="Phase 1: Deep Scan & Combat")
 
         # 呼吸アニメーション (わずかにY座標が上下)
         hy = hero_y + int(math.sin(i * 0.2) * 3)
@@ -624,9 +600,7 @@ def generate_combat_devour_gif(output_path: Path):
         enemy_shake = int(math.sin(i * 1.5) * 6) if i < 15 else 0
         enemy_hp = max(10, int(120 - (i / 15.0) * 110))
 
-        draw_sprite(
-            c, "TR_MONSTER_01", enemy_x + enemy_shake, hero_y, scale=4, anchor="center"
-        )
+        draw_sprite(c, "TR_MONSTER_01", enemy_x + enemy_shake, hero_y, scale=4, anchor="center")
         draw_health_bar(
             ImageDraw.Draw(c),
             enemy_x - 40,
@@ -642,9 +616,7 @@ def generate_combat_devour_gif(output_path: Path):
         draw_synergy_explosion(c, enemy_x, hero_y, p, synergy_name="THERMAL EXPLOSION")
         # ダメージ数値
         if i >= 5:
-            draw_damage_number(
-                c, enemy_x + 10, hero_y - 30, 280, (i - 5) / 25.0, is_crit=True
-            )
+            draw_damage_number(c, enemy_x + 10, hero_y - 30, 280, (i - 5) / 25.0, is_crit=True)
 
         frames.append(c)
 
@@ -719,9 +691,7 @@ def draw_alchemy_station(
     draw = ImageDraw.Draw(canvas)
 
     # 中央の大釜 / 炉
-    draw_sprite(
-        canvas, "TR_CHEST_01", center_x, center_y + 10, scale=4, anchor="center"
-    )
+    draw_sprite(canvas, "TR_CHEST_01", center_x, center_y + 10, scale=4, anchor="center")
 
     # 素材スキルA（左側）
     slot_a_x = center_x - slot_offset_x
@@ -732,9 +702,7 @@ def draw_alchemy_station(
         width=2,
     )
     f = get_font(12)
-    draw.text(
-        (slot_a_x - 50, center_y - 8), skill_a_name, font=f, fill=(200, 240, 255, 255)
-    )
+    draw.text((slot_a_x - 50, center_y - 8), skill_a_name, font=f, fill=(200, 240, 255, 255))
 
     # 素材スキルB（右側）
     slot_b_x = center_x + slot_offset_x
@@ -744,9 +712,7 @@ def draw_alchemy_station(
         outline=(255, 100, 50, 255),
         width=2,
     )
-    draw.text(
-        (slot_b_x - 50, center_y - 8), skill_b_name, font=f, fill=(255, 220, 200, 255)
-    )
+    draw.text((slot_b_x - 50, center_y - 8), skill_b_name, font=f, fill=(255, 220, 200, 255))
 
 
 def draw_synthesis_merging(
@@ -774,9 +740,7 @@ def draw_synthesis_merging(
         width=2,
     )
     f = get_font(11)
-    draw.text(
-        (slot_a_x - 42, center_y - 7), skill_a_name, font=f, fill=(200, 240, 255, alpha)
-    )
+    draw.text((slot_a_x - 42, center_y - 7), skill_a_name, font=f, fill=(200, 240, 255, alpha))
 
     # スキルBスロット
     slot_b_x = center_x + cur_offset
@@ -786,19 +750,13 @@ def draw_synthesis_merging(
         outline=(255, 100, 50, alpha),
         width=2,
     )
-    draw.text(
-        (slot_b_x - 42, center_y - 7), skill_b_name, font=f, fill=(255, 220, 200, alpha)
-    )
+    draw.text((slot_b_x - 42, center_y - 7), skill_b_name, font=f, fill=(255, 220, 200, alpha))
 
     # 炉
-    draw_sprite(
-        canvas, "TR_CHEST_01", center_x, center_y + 10, scale=4, anchor="center"
-    )
+    draw_sprite(canvas, "TR_CHEST_01", center_x, center_y + 10, scale=4, anchor="center")
 
 
-def draw_alchemy_circle(
-    canvas: Image.Image, center_x: int, center_y: int, progress: float
-):
+def draw_alchemy_circle(canvas: Image.Image, center_x: int, center_y: int, progress: float):
     """合成時の回転魔法陣と輝きエフェクト"""
     draw = ImageDraw.Draw(canvas)
 
@@ -869,17 +827,11 @@ def draw_synthesis_success(
 
     # スターエフェクト
     draw_emote(canvas, "emote_stars", center_x, center_y - 95, size=40, anchor="center")
-    draw_emote(
-        canvas, "emote_star", center_x - 120, center_y - 60, size=24, anchor="center"
-    )
-    draw_emote(
-        canvas, "emote_star", center_x + 120, center_y - 60, size=24, anchor="center"
-    )
+    draw_emote(canvas, "emote_star", center_x - 120, center_y - 60, size=24, anchor="center")
+    draw_emote(canvas, "emote_star", center_x + 120, center_y - 60, size=24, anchor="center")
 
     # 炉
-    draw_sprite(
-        canvas, "TR_CHEST_01", center_x, center_y + 10, scale=4, anchor="center"
-    )
+    draw_sprite(canvas, "TR_CHEST_01", center_x, center_y + 10, scale=4, anchor="center")
 
 
 def draw_wipe_transition(canvas: Image.Image, progress: float):
@@ -903,9 +855,7 @@ def draw_black_market_scene(canvas: Image.Image):
     draw_sprite(canvas, "TR_CHEST_01", 320, 210, scale=3, anchor="center")
 
     # ネオン看板
-    draw.rectangle(
-        [220, 50, 420, 85], fill=(20, 15, 30, 240), outline=(255, 50, 120, 255), width=2
-    )
+    draw.rectangle([220, 50, 420, 85], fill=(20, 15, 30, 240), outline=(255, 50, 120, 255), width=2)
     f = get_font(13)
     draw.text((235, 60), "☠ UNDERGROUND MARKET ☠", font=f, fill=(255, 80, 150, 255))
 
@@ -992,9 +942,7 @@ def draw_inquisition_raid(canvas: Image.Image, progress: float):
 
     # 左右に警報アイコン
     draw_emote(canvas, "emote_alert", 100, HEIGHT // 2, size=36, anchor="center")
-    draw_emote(
-        canvas, "emote_alert", WIDTH - 100, HEIGHT // 2, size=36, anchor="center"
-    )
+    draw_emote(canvas, "emote_alert", WIDTH - 100, HEIGHT // 2, size=36, anchor="center")
 
 
 def generate_synthesis_economy_gif(output_path: Path):
@@ -1015,14 +963,10 @@ def generate_synthesis_economy_gif(output_path: Path):
     for i in range(30):
         c = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 255))
         draw_dungeon_background(c)
-        draw_hud(
-            c, hp=100, max_hp=100, mp=50, max_mp=50, title="Phase 2: Chimera Synthesis"
-        )
+        draw_hud(c, hp=100, max_hp=100, mp=50, max_mp=50, title="Phase 2: Chimera Synthesis")
         p = i / 30.0
         offset = int(lerp(180, 120, ease_out_quad(p)))
-        draw_alchemy_station(
-            c, cx, cy, "Flame Strike", "Gale Slash", slot_offset_x=offset
-        )
+        draw_alchemy_station(c, cx, cy, "Flame Strike", "Gale Slash", slot_offset_x=offset)
         frames.append(c)
 
     # パート2: 吸い込み＆魔法陣回転 (30F)
@@ -1046,9 +990,7 @@ def generate_synthesis_economy_gif(output_path: Path):
     for i in range(35):
         c = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 255))
         draw_dungeon_background(c)
-        draw_hud(
-            c, hp=100, max_hp=100, mp=50, max_mp=50, title="Phase 2: Fusion Complete!"
-        )
+        draw_hud(c, hp=100, max_hp=100, mp=50, max_mp=50, title="Phase 2: Fusion Complete!")
         if i < 4:
             flash = Image.new("RGBA", (WIDTH, HEIGHT), (255, 255, 200, 150))
             c = Image.alpha_composite(c, flash)
@@ -1082,9 +1024,7 @@ def generate_synthesis_economy_gif(output_path: Path):
     for i in range(30):
         c = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 255))
         draw_black_market_scene(c)
-        draw_hud(
-            c, hp=100, max_hp=100, mp=50, max_mp=50, title="Phase 2: RAID ALERT LEVEL 5"
-        )
+        draw_hud(c, hp=100, max_hp=100, mp=50, max_mp=50, title="Phase 2: RAID ALERT LEVEL 5")
         p = i / 30.0
         draw_inquisition_raid(c, p)
         frames.append(c)
@@ -1180,9 +1120,7 @@ def draw_laws_override_ui(
     draw.text((wx + 20, wy + 72), cost_text, font=f_main, fill=(255, 100, 100, 255))
 
     # 閃きアイコン
-    draw_emote(
-        canvas, "emote_idea", WIDTH // 2 + 180, wy + 10, size=32, anchor="center"
-    )
+    draw_emote(canvas, "emote_idea", WIDTH // 2 + 180, wy + 10, size=32, anchor="center")
 
 
 def draw_corruption_penalty(canvas: Image.Image, progress: float):
@@ -1300,9 +1238,7 @@ def draw_reborn_intro(canvas: Image.Image, progress: float):
     )
 
     # 新生ハートエフェクト
-    draw_emote(
-        canvas, "emote_heart", WIDTH // 2, HEIGHT // 2 - 35, size=32, anchor="center"
-    )
+    draw_emote(canvas, "emote_heart", WIDTH // 2, HEIGHT // 2 - 35, size=32, anchor="center")
 
     # 新生バナー
     draw = ImageDraw.Draw(canvas)
@@ -1387,9 +1323,7 @@ def generate_meta_reincarnation_gif(output_path: Path):
     save_gif(frames, output_path, fps=30)
 
 
-def draw_husk_sprite(
-    canvas: Image.Image, tile_key: str, x: int, y: int, scale: int = 4
-):
+def draw_husk_sprite(canvas: Image.Image, tile_key: str, x: int, y: int, scale: int = 4):
     """抜け殻（Husk）状態の暗く色あせた敵スプライト"""
     sprite = atlas.get_tile(tile_key, scale=scale).copy()
     # グレースケール化＆暗色化
@@ -1441,12 +1375,8 @@ def draw_servant_awakening(canvas: Image.Image, husk_x: int, husk_y: int):
 
     # 目が赤く光るグロー
     eye_lx, eye_rx, eye_y = husk_x - 12, husk_x + 12, husk_y - 12
-    draw.ellipse(
-        [eye_lx - 4, eye_y - 4, eye_lx + 4, eye_y + 4], fill=(255, 30, 30, 255)
-    )
-    draw.ellipse(
-        [eye_rx - 4, eye_y - 4, eye_rx + 4, eye_y + 4], fill=(255, 30, 30, 255)
-    )
+    draw.ellipse([eye_lx - 4, eye_y - 4, eye_lx + 4, eye_y + 4], fill=(255, 30, 30, 255))
+    draw.ellipse([eye_rx - 4, eye_y - 4, eye_rx + 4, eye_y + 4], fill=(255, 30, 30, 255))
 
     # 忠誠ハートアイコン
     draw_emote(canvas, "emote_heart", husk_x, husk_y - 45, size=28, anchor="center")
@@ -1487,9 +1417,7 @@ def draw_servant_attack(
 
     # 砲火マズルフラッシュ
     if progress < 0.3:
-        draw_emote(
-            canvas, "emote_anger", servant_x - 30, servant_y, size=24, anchor="center"
-        )
+        draw_emote(canvas, "emote_anger", servant_x - 30, servant_y, size=24, anchor="center")
 
 
 def draw_servant_lifespan(
@@ -1518,9 +1446,7 @@ def draw_servant_lifespan(
     )
 
 
-def draw_servant_overload(
-    canvas: Image.Image, servant_x: int, servant_y: int, frame_i: int
-):
+def draw_servant_overload(canvas: Image.Image, servant_x: int, servant_y: int, frame_i: int):
     """寿命限界による過負荷・小刻みなシェイク演出"""
     shake_x = servant_x + random.randint(-5, 5)
     shake_y = servant_y + random.randint(-4, 4)
@@ -1531,9 +1457,7 @@ def draw_servant_overload(
     draw_servant_lifespan(canvas, shake_x, shake_y, 0)
 
 
-def draw_servant_destruction(
-    canvas: Image.Image, servant_x: int, servant_y: int, progress: float
-):
+def draw_servant_destruction(canvas: Image.Image, servant_x: int, servant_y: int, progress: float):
     """自壊崩壊時のピクセル破片散乱とemote_faceSadの哀愁演出"""
     draw = ImageDraw.Draw(canvas)
 
@@ -1551,9 +1475,7 @@ def draw_servant_destruction(
         draw.rectangle([px - size, py - size, px + size, py + size], fill=color)
 
     # 哀愁のemote_faceSad
-    draw_emote(
-        canvas, "emote_faceSad", servant_x, servant_y - 20, size=32, anchor="center"
-    )
+    draw_emote(canvas, "emote_faceSad", servant_x, servant_y - 20, size=32, anchor="center")
 
     # ログ
     f = get_font(12)

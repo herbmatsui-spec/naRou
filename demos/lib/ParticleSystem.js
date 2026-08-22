@@ -12,12 +12,12 @@ export class ParticleSystem {
         this.container = container;
         this.particles = [];
         this.particlePools = new Map();
-        
+
         // 設定
         this.maxParticles = 500;
         this.defaultLifetime = 2.0;
         this.defaultGravity = 0.1;
-        
+
         // パーティクルタイプ定義
         this.particleTypes = {
             dust: {
@@ -57,7 +57,7 @@ export class ParticleSystem {
             }
         };
     }
-    
+
     /**
      * パーティクルを発生させる
      * @param {Object} config - パーティクル設定
@@ -75,35 +75,35 @@ export class ParticleSystem {
     emit(config) {
         const typeConfig = this.particleTypes[config.type] || this.particleTypes.dust;
         const count = config.count || 5;
-        
+
         for (let i = 0; i < count; i++) {
             // パーティクルプールから取得または新規作成
             let particle = this._getParticleFromPool(config.type);
-            
+
             if (!particle) {
                 particle = this._createParticle(config.type);
             }
-            
+
             // パーティクルを初期化
             this._initParticle(particle, {
                 ...typeConfig,
                 ...config
             });
-            
+
             // パーティクルをコンテナに追加
             this.container.addChild(particle.graphic);
-            
+
             // アクティブパーティクルリストに追加
             this.particles.push(particle);
         }
-        
+
         // パーティクル数制限を超えた場合は古いものを削除
         while (this.particles.length > this.maxParticles) {
             const oldParticle = this.particles.shift();
             this._destroyParticle(oldParticle);
         }
     }
-    
+
     /**
      * パーティクルを作成
      * @param {string} type - パーティクルタイプ
@@ -111,7 +111,7 @@ export class ParticleSystem {
      */
     _createParticle(type) {
         const graphic = new PIXI.Graphics();
-        
+
         return {
             type: type,
             graphic: graphic,
@@ -130,7 +130,7 @@ export class ParticleSystem {
             active: false
         };
     }
-    
+
     /**
      * パーティクルをプールから取得
      * @param {string} type - パーティクルタイプ
@@ -143,7 +143,7 @@ export class ParticleSystem {
         }
         return null;
     }
-    
+
     /**
      * パーティクルを初期化
      * @param {Object} particle - パーティクルオブジェクト
@@ -163,11 +163,11 @@ export class ParticleSystem {
         particle.rotationSpeed = (Math.random() - 0.5) * 0.2;
         particle.gravity = config.gravity !== undefined ? config.gravity : this.defaultGravity;
         particle.active = true;
-        
+
         // グラフィックを更新
         particle.graphic.clear();
         particle.graphic.beginFill(particle.color, particle.alpha);
-        
+
         // 形状に応じて描画
         const shape = config.shape || 'circle';
         if (shape === 'circle') {
@@ -181,7 +181,7 @@ export class ParticleSystem {
                 particle.size, particle.size
             ]);
         }
-        
+
         particle.graphic.endFill();
         particle.graphic.x = particle.x;
         particle.graphic.y = particle.y;
@@ -189,7 +189,7 @@ export class ParticleSystem {
         particle.graphic.alpha = particle.alpha;
         particle.graphic.visible = true;
     }
-    
+
     /**
      * パーティクルを破棄
      * @param {Object} particle - パーティクルオブジェクト
@@ -202,7 +202,7 @@ export class ParticleSystem {
             particle.graphic.destroy();
         }
     }
-    
+
     /**
      * パーティクルをプールに返却
      * @param {Object} particle - パーティクルオブジェクト
@@ -212,47 +212,47 @@ export class ParticleSystem {
         pool.push(particle);
         this.particlePools.set(particle.type, pool);
     }
-    
+
     /**
      * パーティクルシステムを更新
      * @param {number} deltaTime - 経過時間（秒）
      */
     update(deltaTime) {
         const toRemove = [];
-        
+
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const particle = this.particles[i];
-            
+
             if (!particle.active) {
                 toRemove.push(i);
                 continue;
             }
-            
+
             // 寿命を減らす
             particle.life -= deltaTime;
-            
+
             if (particle.life <= 0) {
                 // パーティクルを無効化
                 particle.active = false;
                 particle.graphic.visible = false;
-                
+
                 // プールに返却
                 this._returnParticleToPool(particle);
                 toRemove.push(i);
                 continue;
             }
-            
+
             // 物理演算
             particle.vy += particle.gravity * deltaTime;
             particle.x += particle.vx * deltaTime;
             particle.y += particle.vy * deltaTime;
             particle.rotation += particle.rotationSpeed * deltaTime;
-            
+
             // ライフタイムに応じてアルファとサイズを変化
             const lifeRatio = particle.life / particle.maxLife;
             particle.alpha = lifeRatio;
             particle.size *= (1.0 - deltaTime * 0.5); // 徐々に小さく
-            
+
             // グラフィックを更新
             particle.graphic.x = particle.x;
             particle.graphic.y = particle.y;
@@ -260,13 +260,13 @@ export class ParticleSystem {
             particle.graphic.rotation = particle.rotation;
             particle.graphic.scale.set(particle.size / (particle.size || 1));
         }
-        
+
         // 無効化されたパーティクルを削除
         for (const index of toRemove) {
             this.particles.splice(index, 1);
         }
     }
-    
+
     /**
      * プリセットエフェクトを発生
      * @param {string} effect - エフェクト名
@@ -283,7 +283,7 @@ export class ParticleSystem {
             'damage': { type: 'damage', count: count, speed: 0.8, lifetime: 0.5 },
             'level_up': { type: 'magic', count: 20, speed: 1.0, lifetime: 2.0 }
         };
-        
+
         const config = effects[effect] || effects['step'];
         this.emit({
             ...config,
@@ -291,7 +291,7 @@ export class ParticleSystem {
             y: y
         });
     }
-    
+
     /**
      * すべてのパーティクルをクリア
      */
@@ -299,9 +299,9 @@ export class ParticleSystem {
         for (const particle of this.particles) {
             this._destroyParticle(particle);
         }
-        
+
         this.particles = [];
-        
+
         // プールもクリア
         for (const pool of this.particlePools.values()) {
             for (const particle of pool) {
@@ -310,7 +310,7 @@ export class ParticleSystem {
         }
         this.particlePools.clear();
     }
-    
+
     /**
      * アクティブパーティクル数を取得
      * @returns {number} アクティブパーティクル数
@@ -318,13 +318,13 @@ export class ParticleSystem {
     getActiveCount() {
         return this.particles.filter(p => p.active).length;
     }
-    
+
     /**
      * リソースを破棄
      */
     destroy() {
         this.clear();
-        
+
         if (this.container) {
             this.container.removeChildren();
         }

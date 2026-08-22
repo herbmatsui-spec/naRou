@@ -2,6 +2,7 @@
 Generate a high quality animated GIF preview for naRou: Masterpiece Edition gameplay.
 Creates demo_gameplay.gif showing a rogue adventure loop in naRou: Masterpiece Edition.
 """
+
 from __future__ import annotations
 
 import math
@@ -96,9 +97,7 @@ for sc_idx, sc in enumerate(scenes):
         draw = ImageDraw.Draw(img)
 
         # Header Bar
-        draw.rectangle(
-            [(16, 12), (W - 16, 56)], fill=PANEL_BG, outline=PANEL_BORDER, width=1
-        )
+        draw.rectangle([(16, 12), (W - 16, 56)], fill=PANEL_BG, outline=PANEL_BORDER, width=1)
         draw.text((28, 22), "naRou: Masterpiece Edition", fill=GOLD)
         draw.text((260, 22), f"| {sc['floor']}", fill=TEXT_WHITE)
         draw.text((450, 22), "💰 12,500G   💎 45P   ⚖️ +20", fill=(200, 220, 255))
@@ -193,19 +192,13 @@ for sc_idx, sc in enumerate(scenes):
 
         # Pet Info
         draw.text((stat_x + 12, GRID_Y + 140), "相棒: 妹分シエル", fill=(255, 180, 210))
-        draw.text(
-            (stat_x + 12, GRID_Y + 160), "進化: 第2段階 [天馬の加護]", fill=TEXT_MUTED
-        )
+        draw.text((stat_x + 12, GRID_Y + 160), "進化: 第2段階 [天馬の加護]", fill=TEXT_MUTED)
 
         # Quick Actions info
         draw.text((stat_x + 12, GRID_Y + 200), "【操作キー】", fill=(180, 200, 230))
         draw.text((stat_x + 12, GRID_Y + 220), "矢印:移動  Space:行動", fill=TEXT_MUTED)
-        draw.text(
-            (stat_x + 12, GRID_Y + 238), "i:所持品   c:能力  j:職業", fill=TEXT_MUTED
-        )
-        draw.text(
-            (stat_x + 12, GRID_Y + 256), "Shift+S:ツリー  ?:ヘルプ", fill=TEXT_MUTED
-        )
+        draw.text((stat_x + 12, GRID_Y + 238), "i:所持品   c:能力  j:職業", fill=TEXT_MUTED)
+        draw.text((stat_x + 12, GRID_Y + 256), "Shift+S:ツリー  ?:ヘルプ", fill=TEXT_MUTED)
 
         # Bottom Log Box
         log_y = GRID_Y + map_h + 12

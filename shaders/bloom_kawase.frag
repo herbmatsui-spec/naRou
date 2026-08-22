@@ -21,17 +21,17 @@ const float offsets[5] = float[5](0.0, 1.384615, 3.230769, 5.076923, 7.0);
 vec3 sample_bloom(sampler2D tex, vec2 uv, float radius) {
     vec3 result = texture(tex, uv).rgb * weights[0];
     float total_weight = weights[0];
-    
+
     for (int i = 1; i < 5; i++) {
         float offset = offsets[i] * radius;
-        
+
         vec2 dir[4] = vec2[4](
             vec2(1.0, 0.0),
             vec2(-1.0, 0.0),
             vec2(0.0, 1.0),
             vec2(0.0, -1.0)
         );
-        
+
         for (int d = 0; d < 4; d++) {
             vec2 sample_uv = uv + dir[d] * offset * u_inv_resolution;
             if (sample_uv.x >= 0.0 && sample_uv.x <= 1.0 &&
@@ -41,14 +41,14 @@ vec3 sample_bloom(sampler2D tex, vec2 uv, float radius) {
             }
         }
     }
-    
+
     return result / total_weight;
 }
 
 void main() {
     vec4 tex_color = texture(u_texture, v_texcoord);
     vec3 hdr = tex_color.rgb;
-    
+
     if (u_pass == 0) {
         // Pass 0: Extract bright pixels
         float luminance = dot(hdr, vec3(0.2126, 0.7152, 0.0722));
@@ -62,7 +62,7 @@ void main() {
         vec2 texel = u_inv_resolution;
         vec3 sum = hdr;
         int count = 1;
-        
+
         for (int y = -1; y <= 1; y++) {
             for (int x = -1; x <= 1; x++) {
                 if (x == 0 && y == 0) continue;
@@ -75,7 +75,7 @@ void main() {
                 }
             }
         }
-        
+
         frag_color = vec4(sum / float(count), 1.0);
     } else if (u_pass == 2) {
         // Pass 2: Upsample + Kawase blur

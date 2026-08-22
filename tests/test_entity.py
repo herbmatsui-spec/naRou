@@ -1,4 +1,5 @@
 """Unit tests for the refactored Entity component model."""
+
 from __future__ import annotations
 
 from entity import Entity

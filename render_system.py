@@ -8,12 +8,7 @@ import math
 
 import tcod
 
-from constants import (
-    MAP_HEIGHT,
-    MAP_WIDTH,
-    VIEW_HEIGHT,
-    VIEW_WIDTH,
-)
+from constants import MAP_HEIGHT, MAP_WIDTH, VIEW_HEIGHT, VIEW_WIDTH
 from entity_renderer import EntityRenderer
 from item_renderer import ItemRenderer
 from item_system import CAT_ARMOR, CAT_FOOD, CAT_POTION, CAT_SHIELD, CAT_WEAPON, Item
@@ -36,9 +31,7 @@ class RenderSystem:
     def get_tabbed_items(context: RenderContext) -> list[Item]:
         """タブに応じてフィルタされたアイテムリスト"""
         target_inv = (
-            context.pet_inventory
-            if context.inventory_target == "pet"
-            else context.inventory
+            context.pet_inventory if context.inventory_target == "pet" else context.inventory
         )
         items = target_inv.items
         tab = context.inventory_tab
@@ -52,8 +45,7 @@ class RenderSystem:
             return [
                 i
                 for i in items
-                if i.category
-                not in (CAT_WEAPON, CAT_SHIELD, CAT_ARMOR, CAT_POTION, CAT_FOOD)
+                if i.category not in (CAT_WEAPON, CAT_SHIELD, CAT_ARMOR, CAT_POTION, CAT_FOOD)
             ]
         return items
 
@@ -145,9 +137,7 @@ class RenderSystem:
         )
 
         # 11. 全画面ポストプロセッシング・状態デグラデーション (Proposal 3, 7)
-        is_poisoned = any(
-            getattr(e, "name", "") == "毒" for e in getattr(p, "status_effects", [])
-        )
+        is_poisoned = any(getattr(e, "name", "") == "毒" for e in getattr(p, "status_effects", []))
         glitch_dur = context.fx_manager.glitch_duration
         tick = context.frame_count
         ScreenFilterManager.apply_post_processing(

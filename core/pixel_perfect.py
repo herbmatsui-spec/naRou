@@ -105,9 +105,7 @@ def snap_to_pixel_grid(value: float, grid_size: float = 1.0) -> float:
     return round(value / grid_size) * grid_size
 
 
-def lerp_subpixel(
-    start: PhysicalPosition, end: PhysicalPosition, t: float
-) -> PhysicalPosition:
+def lerp_subpixel(start: PhysicalPosition, end: PhysicalPosition, t: float) -> PhysicalPosition:
     """Linear interpolation between two physical positions with subpixel precision"""
     x = start.x + (end.x - start.x) * t
     y = start.y + (end.y - start.y) * t

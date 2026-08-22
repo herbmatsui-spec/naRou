@@ -1,6 +1,7 @@
 """Stub for Pillow (PIL) used in tests.
 Only provides minimal Image and ImageFont classes required by the test suite.
 """
+
 from __future__ import annotations
 
 

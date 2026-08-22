@@ -5,15 +5,14 @@ Phase 6 (クエスト＆改善案5: 複数解法メタ特効)
 Phase 7 (改善案6: コスト消費型法則書き換え) + 演出 (Steps 60, 61: emote_exclamations/stars + bookFlip3, metalPot3)
 Phase 8 (改善案7: 世界の初期値変動＆輪廻転生) + 演出 (Steps 62, 63: emote_cross/heart + doorClose_3, bookClose, doorOpen_2)
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any
 
 from skill_eater_audio_system import SkillEaterAudioSystem
-from skill_eater_presentation_system import (
-    SkillEaterPresentationSystem,
-)
+from skill_eater_presentation_system import SkillEaterPresentationSystem
 from skill_eater_system import CharacterState, SkillEaterRegistry, SkillTier
 
 # ----------------------------------------------------
@@ -168,9 +167,7 @@ class SkillEaterQuestSystem:
         self._init_quests()
 
     def _init_quests(self):
-        self.quests["q1_0"] = QuestDefinition(
-            "q1_0", "適性検査と解雇通知", 1, "スラム街へ逃亡する"
-        )
+        self.quests["q1_0"] = QuestDefinition("q1_0", "適性検査と解雇通知", 1, "スラム街へ逃亡する")
         self.quests["q1_1"] = QuestDefinition(
             "q1_1", "最底辺の生存戦略", 1, "ハンターから《初級剣術》を喰らう"
         )
@@ -186,14 +183,50 @@ class SkillEaterQuestSystem:
             3,
             "世界銀行頭取を打倒し《マスタースキル》を喰らう",
         )
+        # Steps 49〜52: Lv40専用義眼インプラントクエスト
+        self.quests["q_cyber_eye_lv40"] = QuestDefinition(
+            "q_cyber_eye_lv40",
+            "闇医者の実験体：サイバーパンク義眼の覚醒",
+            2,
+            "バンカーから光学演算チップを回収し義眼インプラント手術を受ける",
+        )
 
-    def check_boss_meta_counter(
-        self, player: CharacterState, boss_id: str
-    ) -> tuple[bool, str]:
+    def trigger_lv40_cyber_eye_event(
+        self, player: CharacterState, current_level: int = 40
+    ) -> tuple[bool, str, QuestDefinition | None]:
+        """Step 49, 50: Lv40到達時の闇医者からの緊急通信イベント"""
+        if current_level < 40 or player.has_cyberpunk_eye:
+            return False, "発生条件を満たしていません。", None
+
+        q = self.quests.get("q_cyber_eye_lv40")
+        self.presentation.add_event(
+            emote_file="emote_exclamations.png",
+            audio_file="metalLatch.ogg",
+            message="【緊急通信】闇医者「おい、面白い光学義眼のプロトタイプが手に入ったぜ……」",
+        )
+        return True, "【緊急通信受信】闇医者からの被検体募集イベントが発生しました！", q
+
+    def complete_cyber_eye_quest(self, player: CharacterState) -> tuple[bool, str]:
+        """Step 52: 義眼クエストクリアと能力解放"""
+        q = self.quests.get("q_cyber_eye_lv40")
+        if not q:
+            return False, "クエストが存在しません。"
+
+        q.is_completed = True
+        player.has_cyberpunk_eye = True
+        self.presentation.add_event(
+            emote_file="emote_stars.png",
+            audio_file="fanfare.ogg",
+            message="【義眼手術完了】サイバーパンク義眼が覚醒！ 視界がダイエジェティックARへ進化！",
+        )
+        return (
+            True,
+            "【手術完了】サイバーパンク義眼インプラントを装着！ 戦闘視界がダイエジェティックAR表示（オーラ/グリッチ直感視認）に切り替わりました！",
+        )
+
+    def check_boss_meta_counter(self, player: CharacterState, boss_id: str) -> tuple[bool, str]:
         if boss_id == "midas_ceo":
-            if player.has_skill("rar_gold_body") or player.has_skill(
-                "rar_infrared_vision"
-            ):
+            if player.has_skill("rar_gold_body") or player.has_skill("rar_infrared_vision"):
                 self.rule_engine.is_boss_instant_kill_enabled = False
                 self.presentation.add_event(
                     emote_file="emote_idea.png",

@@ -16,17 +16,17 @@ logger = logging.getLogger(__name__)
 
 from components import (
     AchievementComponent,
+    AffectionComponent,
     ArchaeologyComponent,
     Attributes,
     AttributesComponent,
     BaseStatsComponent,
-    AffectionComponent,
-    PetProfileComponent,
-    EmoteComponent,
-    PetAIComponent,
     EconomyComponent,
+    EmoteComponent,
     GuildFactionComponent,
     LevelComponent,
+    PetAIComponent,
+    PetProfileComponent,
     ProceduralQuestComponent,
     ReincarnationComponent,
     Skill,
@@ -40,10 +40,9 @@ from components import (
 PetAI = PetAIComponent
 
 # 後方互換: GodInfo を god_system から再エクスポート (Step 26)
-from god_system import GodInfo  # noqa: E402
-
 # プロパティ委譲ヘルパ (Step 41)
 from delegate_utils import delegate  # noqa: E402
+from god_system import GodInfo  # noqa: E402
 
 T = TypeVar("T")
 
@@ -77,9 +76,7 @@ class Entity:
         self.next_intent: dict | None = None
         # 敵AIロール・陣形 (提案4)
         self.ai_role: str = self._default_ai_role(name)
-        self.preferred_range: int = (
-            KITER_PREFERRED_RANGE if self.ai_role == AI_ROLE_KITER else 1
-        )
+        self.preferred_range: int = KITER_PREFERRED_RANGE if self.ai_role == AI_ROLE_KITER else 1
 
         # === ECS コンポーネントコンテナ ===
         self.components: dict[type, Any] = {}
@@ -647,9 +644,7 @@ class Entity:
 
     @property
     def unlocked_reincarnation_dungeons(self) -> list[str]:
-        return self.get_component(
-            ReincarnationComponent
-        ).unlocked_reincarnation_dungeons
+        return self.get_component(ReincarnationComponent).unlocked_reincarnation_dungeons
 
     @unlocked_reincarnation_dungeons.setter
     def unlocked_reincarnation_dungeons(self, val: list[str]):
@@ -730,8 +725,6 @@ class Entity:
     @total_skill_points_earned.setter
     def total_skill_points_earned(self, val: int):
         self.get_component(SkillTreeJobComponent).total_skill_points_earned = val
-
-    learned_passive_skills: list[str] = field(default_factory=list)
 
     @property
     def learned_passive_skills(self) -> list[str]:
@@ -1120,11 +1113,7 @@ class Entity:
 
     def _default_ai_role(self, name: str) -> str:
         """敵の名前から陣形AIロールを自動判定 (提案4)"""
-        from constants import (
-            AI_ROLE_BRUTE,
-            AI_ROLE_FLANKER,
-            AI_ROLE_KITER,
-        )
+        from constants import AI_ROLE_BRUTE, AI_ROLE_FLANKER, AI_ROLE_KITER
 
         n = name or ""
         if any(k in n for k in ("弓", "魔", "術", "caster", "Mage", "Archer")):
@@ -1167,21 +1156,13 @@ class Entity:
     def calculate_max_hp(self) -> int:
         god_bonus = 10 if self.god_id == "jure" else 0
         base = (
-            self.attributes.endurance * 2
-            + self.attributes.strength
-            + (self.level * 5)
-            + god_bonus
+            self.attributes.endurance * 2 + self.attributes.strength + (self.level * 5) + god_bonus
         )
         return max(10, base)
 
     def calculate_max_mp(self) -> int:
         god_bonus = 15 if self.god_id == "itzpalt" else 0
-        base = (
-            self.attributes.magic * 2
-            + self.attributes.will
-            + (self.level * 4)
-            + god_bonus
-        )
+        base = self.attributes.magic * 2 + self.attributes.will + (self.level * 4) + god_bonus
         return max(10, base)
 
     def calculate_max_stamina(self) -> int:
@@ -1261,9 +1242,7 @@ class Entity:
             self.recalculate_stats()
             self.hp = self.max_hp
             self.mp = self.max_mp
-            logs.append(
-                f"{self.name}はレベル {self.level} に上がった！ (HP/MP全快, +{sp_gain}SP)"
-            )
+            logs.append(f"{self.name}はレベル {self.level} に上がった！ (HP/MP全快, +{sp_gain}SP)")
         return logs
 
     def gain_skill_exp(self, skill_key: str, amount: int) -> list[str]:
@@ -1356,9 +1335,7 @@ class Entity:
                         else:
                             comp_dict[k] = v
                     except Exception:  # noqa: BLE001
-                        logger.debug(
-                            "Skip non-serializable component field %s.%s", comp_name, k
-                        )
+                        logger.debug("Skip non-serializable component field %s.%s", comp_name, k)
                 data["components"][comp_name] = comp_dict
 
         # スキルのシリアライズ

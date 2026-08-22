@@ -55,13 +55,9 @@ class BalanceTool:
         if hasattr(event_data, "community_goal") and event_data.community_goal:
             goal_type = event_data.community_goal.get("type")
             if goal_type == "total_points":
-                stats["goal_progress"] = COMMUNITY_GOAL_MANAGER.get_progress(
-                    event_id, goal_type
-                )
+                stats["goal_progress"] = COMMUNITY_GOAL_MANAGER.get_progress(event_id, goal_type)
                 stats["goal_target"] = event_data.community_goal.get("target", 0)
-                stats["goal_achieved"] = COMMUNITY_GOAL_MANAGER.is_goal_achieved(
-                    event_id
-                )
+                stats["goal_achieved"] = COMMUNITY_GOAL_MANAGER.is_goal_achieved(event_id)
 
         return stats
 
@@ -76,9 +72,7 @@ class BalanceTool:
 
         # 参加率に基づく調整
         if stats["participant_count"] < 5:
-            suggestions["trigger_chance"] = (
-                "increase"  # 参加者が少なければ発生確率を上げる
-            )
+            suggestions["trigger_chance"] = "increase"  # 参加者が少なければ発生確率を上げる
         elif stats["participant_count"] > 50:
             suggestions["trigger_chance"] = "decrease"
 
@@ -89,9 +83,7 @@ class BalanceTool:
                 suggestions["rewards"] = "increase"  # 評価が低ければ報酬を増やす
                 suggestions["difficulty"] = "decrease"
             elif avg_rating > 4.0:
-                suggestions["rewards"] = (
-                    "decrease"  # 評価が高ければ報酬を減らしてもよい
-                )
+                suggestions["rewards"] = "decrease"  # 評価が高ければ報酬を減らしてもよい
                 suggestions["difficulty"] = "increase"
 
         # ゴール達成率に基づく調整

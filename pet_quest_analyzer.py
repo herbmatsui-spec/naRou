@@ -21,9 +21,7 @@ class PetProfile:
         default_factory=list
     )  # 融合履歴（過去に融合した種族のリスト）
     loyalty: int = 0  # 忠誠度 (0-100)
-    affinity: Dict[str, int] = field(
-        default_factory=dict
-    )  # 属性親和度 (火, 水, 風, 土 등)
+    affinity: dict[str, int] = field(default_factory=dict)  # 属性親和度 (火, 水, 風, 土 등)
 
 
 class PetQuestAnalyzer:

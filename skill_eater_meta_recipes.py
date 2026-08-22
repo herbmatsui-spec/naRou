@@ -5,8 +5,8 @@ Handles junk item combinations, secret explosive recipes, and meta shortcuts.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Any, Dict, List
 
 
 @dataclass
@@ -40,6 +40,7 @@ class MetaRecipeCraftingEngine:
             "effect": "AOE_EXPLOSION_DEFENSE_PIERCE",
             "meta_bonus": 150,
         }
+
     def craft_with_meta_knowledge(self, item_ids: List[str]) -> Dict[str, Any]:
         """Synthesizes items using isekai chemistry knowledge."""
         key = frozenset(item_ids)
@@ -55,6 +56,7 @@ class MetaRecipeCraftingEngine:
                 "message": f"【メタ調合成功！】現代知識の応用で【{recipe['name']}】を生成！",
             }
         # Penalty / explosion on invalid mix
+
     def negotiate_with_meta_secrets(self, npc_id: str, choice_id: str) -> Dict[str, Any]:
         """Negotiates discounts with black market brokers using meta insider knowledge."""
         if choice_id == "CHOICE_EXPOSE_SLUM_EXPLOITATION":
@@ -63,6 +65,7 @@ class MetaRecipeCraftingEngine:
                 "discount_percent": 40,
                 "reaction": "『ヒッ…！な、なぜ新入りのあんたが上層部との裏帳簿ルートを知ってるんだ…！？安くする、安くするから黙っててくれ！』",
             }
+
     def get_meta_item_fx(self, item_id: str) -> Dict[str, Any]:
         """Provides dynamic sound and animation configurations for meta crafted items."""
         if item_id == "ITEM_C4_MAGIC_BOMB":
@@ -71,10 +74,26 @@ class MetaRecipeCraftingEngine:
                 "screen_shake": "SHAKE_EXTREME",
                 "particles": "FIERY_DEBRIS_SMOKE",
             }
+
     def get_slum_foraging_nodes(self) -> List[Dict[str, Any]]:
         """Provides resource foraging spawn points in Slum alleys."""
         return [
-            {"node_id": "NODE_SLIME_PIPE", "pos": (1, 3), "yield_item": "SLIME_MUCUS", "label": "魔導下水パイプの滲み"},
-            {"node_id": "NODE_RUBBLE_FLINT", "pos": (4, 1), "yield_item": "FLINT_STONE", "label": "崩れた魔導外壁の残骸"},
-            {"node_id": "NODE_CHEMICAL_DUMP", "pos": (8, 4), "yield_item": "SULFUR_POWDER", "label": "不法投棄された化学薬品樽"},
+            {
+                "node_id": "NODE_SLIME_PIPE",
+                "pos": (1, 3),
+                "yield_item": "SLIME_MUCUS",
+                "label": "魔導下水パイプの滲み",
+            },
+            {
+                "node_id": "NODE_RUBBLE_FLINT",
+                "pos": (4, 1),
+                "yield_item": "FLINT_STONE",
+                "label": "崩れた魔導外壁の残骸",
+            },
+            {
+                "node_id": "NODE_CHEMICAL_DUMP",
+                "pos": (8, 4),
+                "yield_item": "SULFUR_POWDER",
+                "label": "不法投棄された化学薬品樽",
+            },
         ]

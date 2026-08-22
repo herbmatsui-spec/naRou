@@ -128,11 +128,11 @@ world_template:
 class GateManager:
     def __init__(self, world_registry: WorldRegistry):
         self.registry = world_registry
-    
+
     def unlock_gate(self, world_id: str) -> bool:
         req = self.registry.get(world_id).gate_requirement
         return self.player.inventory.has(req.token_id, req.quantity)
-    
+
     def travel_to(self, world_id: str) -> TravelResult:
         # 1. 現在ワールド状態セーブ
         # 2. 対象ワールドアセット遅延ロード
@@ -214,5 +214,5 @@ def test_world_loading_scalability(world_count):
 5. **パフォーマンス基準策定** → 9世界フルロード時 2秒/500MB 以内を目標に CI 組み込み
 
 ---
-*作成日: 2026-08-20*  
+*作成日: 2026-08-20*
 *バージョン: 1.0 (初版)*

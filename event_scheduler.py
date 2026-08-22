@@ -129,9 +129,7 @@ class EventScheduler:
                 and event_data.end_turn is not None
             ):
                 # スケジュールされているイベント
-                in_quarter = (
-                    True  # スケジュールされている場合はクォーターに関係なく考慮
-                )
+                in_quarter = True  # スケジュールされている場合はクォーターに関係なく考慮
                 event_start = event_data.start_turn
             else:
                 # スケジュールターンが設定されていないが、quarterが一致する場合は四半期中ずっとアクティブとみなす

@@ -29,7 +29,7 @@
 ### ステップ4: バイオーム分類設計
 **8つのバイオームタイプ:**
 - 平原 (Plains)
-- 森林 (Forest) 
+- 森林 (Forest)
 - 山岳 (Mountains)
 - 沼地 (Swamp)
 - 砂漠 (Desert)
@@ -61,7 +61,7 @@ dungeon_themes:
   underground:
     # ... similar structure
   otherworld:
-    # ... similar structure  
+    # ... similar structure
   heaven:
     # ... similar structure
 ```
@@ -77,7 +77,7 @@ dungeon_themes:
 各テーマに以下を設定:
 - `common_enemies`: 一般的な出現モンスター
 - `uncommon_enemies`: 時々出現するモンスター
-- `rare_enemies`: 稀に出現するモンスター  
+- `rare_enemies`: 稀に出現するモンスター
 - `unique_boss`: その層固有のボス
 - `special_spawns`: 特殊条件での出現
 

@@ -7,10 +7,14 @@ Steps 52-58
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from entity import Entity
 
 import yaml
 
@@ -110,9 +114,7 @@ class FactionWarManager:
             GLOBAL_MEMORY_REGISTRY if _HAS_NPC_MEMORY else None
         )
 
-    def calculate_influence_change(
-        self, faction_id: str, game_state: Any = None
-    ) -> int:
+    def calculate_influence_change(self, faction_id: str, game_state: Any = None) -> int:
         """影響力の自然変動量を計算 (Step 57)"""
         faction = self.registry.get(faction_id)
         if not faction:

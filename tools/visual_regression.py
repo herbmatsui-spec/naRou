@@ -83,7 +83,9 @@ def generate_entity_reference_images():
                         arr = np.array(sub_image)
 
                         # Save as reference
-                        filename = f"{entity_type}_{state}_dir{dir_names[direction]}_frame{frame}.npy"
+                        filename = (
+                            f"{entity_type}_{state}_dir{dir_names[direction]}_frame{frame}.npy"
+                        )
                         filepath = output_dir / filename
                         np.save(filepath, arr)
                         print(f"  Saved: {filename}")
@@ -132,9 +134,7 @@ def compare_entity_rendering():
         frame = int(frame_str)
 
         # Render current
-        eid = entity_renderer.register_entity(
-            entity_type, 10, 10, direction=direction, state=state
-        )
+        eid = entity_renderer.register_entity(entity_type, 10, 10, direction=direction, state=state)
         anim = entity_renderer.entity_anims[eid]
         anim.frame = frame
         anim.direction = direction
@@ -151,9 +151,7 @@ def compare_entity_rendering():
                 mean_diff = np.mean(diff)
 
                 if max_diff > 1:
-                    print(
-                        f"  FAIL: {name} - max_diff={max_diff:.1f}, mean_diff={mean_diff:.4f}"
-                    )
+                    print(f"  FAIL: {name} - max_diff={max_diff:.1f}, mean_diff={mean_diff:.4f}")
                     all_passed = False
                 else:
                     print(f"  PASS: {name} - max_diff={max_diff:.1f}")
@@ -169,15 +167,9 @@ def compare_entity_rendering():
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Visual regression test for entity rendering"
-    )
-    parser.add_argument(
-        "--generate", action="store_true", help="Generate reference images"
-    )
-    parser.add_argument(
-        "--compare", action="store_true", help="Compare with references"
-    )
+    parser = argparse.ArgumentParser(description="Visual regression test for entity rendering")
+    parser.add_argument("--generate", action="store_true", help="Generate reference images")
+    parser.add_argument("--compare", action="store_true", help="Compare with references")
     args = parser.parse_args()
 
     if args.generate:

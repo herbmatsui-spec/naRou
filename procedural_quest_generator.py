@@ -15,11 +15,64 @@ import random
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+import yaml
 from typing_extensions import Self
 
 logger = logging.getLogger(__name__)
 
+
+# 敵名のローマ字↔カタカナ/日本語ゆれを吸収する軽量マップ（ゲーム内実体名との照合用）
+_ENEMY_NAME_MAP_CACHE = None
+
+
+def _get_enemy_name_map():
+    "Load and return enemy name aliases map with caching"
+    global _ENEMY_NAME_MAP_CACHE
+    if _ENEMY_NAME_MAP_CACHE is None:
+        try:
+            enemy_map_path = os.path.join(
+                os.path.dirname(__file__), "data", "enemy_name_aliases.yaml"
+            )
+            if os.path.exists(enemy_map_path):
+                with open(enemy_map_path, encoding="utf-8") as f:
+                    _ENEMY_NAME_MAP_CACHE = yaml.safe_load(f) or {}
+            else:
+                # Fallback to hardcoded map if file not found
+                _ENEMY_NAME_MAP_CACHE = {
+                    "goblin": ["ゴブリン", "goblin", "ゴブリ"],
+                    "slime": ["スライム", "ぷち", "slime"],
+                    "wolf": ["オオカミ", "ウルフ", "wolf"],
+                    "frost_wolf": ["フロストウルフ", "ice wolf", "frost_wolf"],
+                    "bat": ["コウモリ", "bat"],
+                    "cave_bear": ["ケイブベア", "cave_bear", "熊"],
+                    "bear": ["ベア", "bear", "熊"],
+                    "skeleton": ["スケルトン", "スケルトン"],
+                    "ghost": ["ゴースト", "ゴースト"],
+                    "golem": ["ゴーレム", "ゴーレム"],
+                    "fire_lizard": ["ファイアリザード", "ファイアリザード"],
+                    "magma_elemental": ["マグマエレメンタル", "マグマエレメンタル"],
+                    "ifrit": ["イフリート", "イフリート"],
+                    "yeti": ["イエティ", "イエティ"],
+                    "ice_sprite": ["アイススプライト", "アイススプライト"],
+                    "crocodile": ["クロコダイル", "ワニ", "クロコダイル"],
+                    "venom_toad": ["ベノムトード", "ベノムトード"],
+                    "abyssal_horror": ["アビサルホラー", "アビサルホラー"],
+                    "void_lord": ["ヴォイドロード", "ヴォイドロード"],
+                    "nightmare": ["ナイトメア", "ナイトメア"],
+                    "bandit": ["バンディット", "バンディット", "盗賊"],
+                    "stray_dog": ["野良犬", "野良犬"],
+                    "pickpocket": ["スリ", "スリ"],
+                    "dog": ["犬", "犬"],
+                }
+        except Exception as e:
+            logger.warning("Failed to load enemy name map: %s", e)
+            # Emergency fallback
+            _ENEMY_NAME_MAP_CACHE = {"goblin": ["ゴブリン", "goblin", "ゴブリ"]}
+    return _ENEMY_NAME_MAP_CACHE
+
+
 if TYPE_CHECKING:
+    from dungeon_quest_feedback import DungeonGenerationFeedback
     from entity import Entity
     from game import Engine
 
@@ -105,9 +158,7 @@ class QuestObjectiveSpec:
     target_id: str = ""
     required_count: int = 1
     current_count: int = 0
-    cascade_bonus: dict[str, int] = field(
-        default_factory=dict
-    )  # 連鎖累積報酬 (Step 14)
+    cascade_bonus: dict[str, int] = field(default_factory=dict)  # 連鎖累積報酬 (Step 14)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -190,9 +241,7 @@ class GeneratedQuest:
             npc_id=d.get("npc_id"),
             seed=d.get("seed", 0),
             recommended_level=d.get("recommended_level", 1),
-            objectives=[
-                QuestObjectiveSpec.from_dict(o) for o in d.get("objectives", [])
-            ],
+            objectives=[QuestObjectiveSpec.from_dict(o) for o in d.get("objectives", [])],
             reward=d.get("reward", {}),
             expires=d.get("expires", 0),
             chain_id=d.get("chain_id", ""),
@@ -232,6 +281,9 @@ class QuestGenerationRegistry:
     # Step 17: load()
     def load(self, file_path: str = "data/procedural_scenarios.yaml") -> None:
         """YAML(procedural_scenarios.yaml) から quest_generation を読み込む (Step 17)"""
+        from config_loader import ConfigLoader
+        
+        # Reset all data
         self._archetypes = {}
         self._difficulties = {}
         self._rewards = {}
@@ -241,33 +293,25 @@ class QuestGenerationRegistry:
         self._display_names = {}
         self._chain_config = {}
         self._pet_quest_templates = {}
-
-        if not os.path.exists(file_path):
-            self._load_fallback()
-            self._loaded = True
-            return
-
+        
+        # Use enhanced config loader with retry and fallback
+        loader = ConfigLoader(self)
         try:
-            import yaml
-
-            with open(file_path, encoding="utf-8") as f:
-                raw = yaml.safe_load(f) or {}
-            # ペットクエストテンプレートをロード
-            pet_quest_path = "data/pet_quests.yaml"
-            if os.path.exists(pet_quest_path):
-                try:
-                    with open(pet_quest_path, encoding="utf-8") as f:
-                        pet_data = yaml.safe_load(f) or {}
-                    self._pet_quest_templates = pet_data.get("pet_quest_templates", {})
-                except Exception as e:
-                    logger.warning("Failed to load pet quests from %s: %s", pet_quest_path, e)
-                    self._pet_quest_templates = {}
-            qg = raw.get("quest_generation", {})
-            self._build(qg)
+            result = loader.load_all(
+                main_path=file_path,
+                fallback_path="data/quest_generation_fallback.yaml",
+                pet_path="data/pet_quests.yaml"
+            )
+            self._build(result.get("quest_generation", {}))
+            self._pet_quest_templates = result.get("pet_quest_templates", {})
             self._loaded = True
         except Exception as e:
-            logger.exception("Failed to load quest generation data from %s: %s. Using fallback.", file_path, e)
-            self._load_fallback()
+            logger.exception(
+                "Failed to load all quest configs: %s. Using hardcoded fallback.", e
+            )
+            self._load_fallback_hardcoded()
+            self._pet_quest_templates = {}
+            self._loaded = True
 
     def _build(self, qg: dict[str, Any]) -> None:
         for aid, a in (qg.get("archetypes") or {}).items():
@@ -321,22 +365,16 @@ class QuestGenerationRegistry:
 
     def _load_fallback(self) -> None:
         self._archetypes = {
-            "slay": QuestArchetype(
-                "slay", "討伐", "kill", "{setting}の討伐", "", 1.0, 1
-            ),
+            "slay": QuestArchetype("slay", "討伐", "kill", "{setting}の討伐", "", 1.0, 1),
         }
         self._difficulties = {
             "normal": DifficultyTier("normal", "中", [15, 35], 2.6, 1.6, 120),
         }
         self._rewards = {
-            "gold": RewardTable(
-                "gold", "金", [250, 800], [120, 400], ["gem"], {"fame": 8}
-            ),
+            "gold": RewardTable("gold", "金", [250, 800], [120, 400], ["gem"], {"fame": 8}),
         }
         self._settings = {
-            "forest": StageSetting(
-                "forest", "森", "深い森", ["wolf", "goblin"], "毒", 1.0, 1.0
-            ),
+            "forest": StageSetting("forest", "森", "深い森", ["wolf", "goblin"], "毒", 1.0, 1.0),
         }
         self._npc_themes = {
             "villager": NPCQuestTheme("villager", ["rescue"], 1, "{npc}「お願い…」"),
@@ -450,14 +488,10 @@ class ProceduralQuestGenerator:
         enemy_disp = self.registry.get_display_name("enemy", enemy)
         item_disp = self.registry.get_display_name("item", item)
         boss_disp = self.registry.get_display_name("enemy", boss)
-        setting_disp = (
-            self.registry.get_display_name("stage", setting.id) or setting.name
-        )
+        setting_disp = self.registry.get_display_name("stage", setting.id) or setting.name
 
         # Step 22: 目的オブジェクト自動生成（難易度補正）
-        required_count = self._compute_required_count(
-            archetype, difficulty, setting, rng
-        )
+        required_count = self._compute_required_count(archetype, difficulty, setting, rng)
         objective = self._build_objective(
             archetype,
             enemy,
@@ -491,9 +525,7 @@ class ProceduralQuestGenerator:
             flavor=setting.flavor,
         )
 
-        recommended_level = int(
-            (difficulty.level_range[0] + difficulty.level_range[1]) / 2
-        )
+        recommended_level = int((difficulty.level_range[0] + difficulty.level_range[1]) / 2)
 
         return GeneratedQuest(
             quest_id=f"gen_{source_type}_{seed & 0xFFFFFFFF:x}_{archetype.id}_{difficulty.id}_{reward.id}_{setting.id}",
@@ -581,12 +613,10 @@ class ProceduralQuestGenerator:
         self, difficulty: DifficultyTier, reward: RewardTable, rng: random.Random
     ) -> dict[str, Any]:
         gold = int(
-            rng.randint(reward.gold_range[0], reward.gold_range[1])
-            * difficulty.enemy_multiplier
+            rng.randint(reward.gold_range[0], reward.gold_range[1]) * difficulty.enemy_multiplier
         )
         exp = int(
-            rng.randint(reward.exp_range[0], reward.exp_range[1])
-            * difficulty.objective_complexity
+            rng.randint(reward.exp_range[0], reward.exp_range[1]) * difficulty.objective_complexity
         )
         items = []
         if reward.item_pool and rng.random() < 0.85:
@@ -663,9 +693,7 @@ class ProceduralQuestGenerator:
         # NPC IDはなし
         npc_id = None
         # クエストを合成
-        return self._compose(
-            "pet_related", archetype, difficulty, reward, setting, seed, npc_id
-        )
+        return self._compose("pet_related", archetype, difficulty, reward, setting, seed, npc_id)
 
     # ---- 共通: 難易度帯の選択 ----
     def _pick_difficulty_for_level(
@@ -715,9 +743,7 @@ class ProceduralQuestGenerator:
         if archetype_id and archetype_id in self.registry.all_archetypes():
             arch = self.registry.get_archetype(archetype_id)
         else:
-            arch = self._weighted_choice(
-                list(self.registry.all_archetypes().items()), weights, rng
-            )
+            arch = self._weighted_choice(list(self.registry.all_archetypes().items()), weights, rng)
         if arch is None:
             arch = QuestArchetype()
 
@@ -806,9 +832,7 @@ class ProceduralQuestGenerator:
 
         setting = None
         if theme is not None:
-            setting = self.registry.get_setting(
-                theme.theme_id
-            ) or self.registry.get_setting("cave")
+            setting = self.registry.get_setting(theme.theme_id) or self.registry.get_setting("cave")
         if setting is None:
             setting = (
                 rng.choice(list(self.registry.all_settings().values()))
@@ -881,7 +905,11 @@ class ProceduralQuestGenerator:
                 spec_id, quest_id, player, objective_mapping
             )
         except Exception as e:
-            logger.warning("Failed to generate synced quest dungeon for spec %s: %s. Falling back to standard dungeon quest.", spec_id, e)
+            logger.warning(
+                "Failed to generate synced quest dungeon for spec %s: %s. Falling back to standard dungeon quest.",
+                spec_id,
+                e,
+            )
             return self.generate_dungeon_quest(player, seed)
 
         generated = result["generated"]
@@ -905,9 +933,7 @@ class ProceduralQuestGenerator:
             else generated.get("theme_id", "")
         )
         if theme_id:
-            setting = self.registry.get_setting(theme_id) or self.registry.get_setting(
-                "cave"
-            )
+            setting = self.registry.get_setting(theme_id) or self.registry.get_setting("cave")
         if setting is None:
             setting = (
                 rng.choice(list(self.registry.all_settings().values()))
@@ -1045,14 +1071,8 @@ class ProceduralQuestGenerator:
 
         # 難易度・報酬のエスカレーション (Step 17)
         diff_order = self.registry.difficulty_order()
-        d_idx = (
-            diff_order.index(parent.difficulty_id)
-            if parent.difficulty_id in diff_order
-            else 0
-        )
-        d_idx = min(
-            len(diff_order) - 1, d_idx + int(cfg.get("difficulty_escalation", 1))
-        )
+        d_idx = diff_order.index(parent.difficulty_id) if parent.difficulty_id in diff_order else 0
+        d_idx = min(len(diff_order) - 1, d_idx + int(cfg.get("difficulty_escalation", 1)))
         diff = self.registry.get_difficulty(diff_order[d_idx]) or DifficultyTier()
 
         r_order = list(self.registry.all_rewards().keys())
@@ -1077,16 +1097,11 @@ class ProceduralQuestGenerator:
         quest.reward["gold"] = int(quest.reward.get("gold", 0) * (gm**depth))
         quest.reward["exp"] = int(quest.reward.get("exp", 0) * (em**depth))
         bonus = quest.reward.get("bonus", {}) or {}
-        bonus["fame"] = (
-            bonus.get("fame", 0) + int(cfg.get("cascade_fame_per_depth", 2)) * depth
-        )
+        bonus["fame"] = bonus.get("fame", 0) + int(cfg.get("cascade_fame_per_depth", 2)) * depth
         bonus["relationship"] = (
-            bonus.get("relationship", 0)
-            + int(cfg.get("cascade_relationship_per_depth", 1)) * depth
+            bonus.get("relationship", 0) + int(cfg.get("cascade_relationship_per_depth", 1)) * depth
         )
-        bonus["meta"] = (
-            bonus.get("meta", 0) + int(cfg.get("cascade_meta_per_depth", 1)) * depth
-        )
+        bonus["meta"] = bonus.get("meta", 0) + int(cfg.get("cascade_meta_per_depth", 1)) * depth
         quest.reward["bonus"] = bonus
 
         # Step 22: 連鎖専用フレーバー
@@ -1110,9 +1125,7 @@ class ProceduralQuestGenerator:
         chosen = rng.choices(items, weights=w, k=1)[0]
         return chosen[1]
 
-    def _pick_reward_for_difficulty(
-        self, diff: DifficultyTier, rng: random.Random
-    ) -> RewardTable:
+    def _pick_reward_for_difficulty(self, diff: DifficultyTier, rng: random.Random) -> RewardTable:
         order = list(self.registry.all_rewards().values())
         if not order:
             return RewardTable()
@@ -1127,7 +1140,9 @@ class ProceduralQuestGenerator:
 
             return RelationshipManager(REL_REG).get_relationship_level(player, npc_id)
         except Exception as e:
-            logger.debug("RelationshipManager unavailable, falling back to character_relationships: %s", e)
+            logger.debug(
+                "RelationshipManager unavailable, falling back to character_relationships: %s", e
+            )
             rels = getattr(player, "character_relationships", {})
             return int((rels.get(npc_id, {}) or {}).get("trust", 0) // 30)
 
@@ -1137,32 +1152,6 @@ class ProceduralQuestGenerator:
 # ============================================================
 
 # 敵名のローマ字↔カタカナ/日本語ゆれを吸収する軽量マップ（ゲーム内実体名との照合用）
-_ENEMY_NAME_MAP = {
-    "goblin": ["ゴブリン", "goblin", "ゴブリ"],
-    "slime": ["スライム", "ぷち", "slime"],
-    "wolf": ["オオカミ", "ウルフ", "wolf"],
-    "frost_wolf": ["フロストウルフ", "ice wolf", "frost_wolf"],
-    "bat": ["コウモリ", "bat"],
-    "cave_bear": ["ケイブベア", "cave_bear", "熊"],
-    "bear": ["ベア", "bear", "熊"],
-    "skeleton": ["スケルトン", "skeleton"],
-    "ghost": ["ゴースト", "ghost"],
-    "golem": ["ゴーレム", "golem"],
-    "fire_lizard": ["ファイアリザード", "fire_lizard"],
-    "magma_elemental": ["マグマエレメンタル", "magma_elemental"],
-    "ifrit": ["イフリート", "ifrit"],
-    "yeti": ["イエティ", "yeti"],
-    "ice_sprite": ["アイススプライト", "ice_sprite"],
-    "crocodile": ["クロコダイル", "ワニ", "crocodile"],
-    "venom_toad": ["ベノムトード", "venom_toad"],
-    "abyssal_horror": ["アビサルホラー", "abyssal_horror"],
-    "void_lord": ["ヴォイドロード", "void_lord"],
-    "nightmare": ["ナイトメア", "nightmare"],
-    "bandit": ["バンディット", "bandit", "盗賊"],
-    "stray_dog": ["野良犬", "stray_dog"],
-    "pickpocket": ["スリ", "pickpocket"],
-    "dog": ["犬", "dog"],
-}
 
 
 def _norm_target(s: Any) -> str:
@@ -1179,7 +1168,7 @@ def _target_matches(quest_target: str, event_norm: str) -> bool:
         return True
     if q in event_norm or event_norm in q:
         return True
-    for key, variants in _ENEMY_NAME_MAP.items():
+    for key, variants in _get_enemy_name_map().items():
         norms = [v.lower().replace(" ", "_") for v in variants]
         q_in = q in norms
         e_in = event_norm in norms or key == event_norm
@@ -1198,17 +1187,13 @@ class ProceduralQuestManager:
         return player.procedural_quest
 
     # Step 26, 27: ボード管理
-    def ensure_board(
-        self, player: Entity, engine: Engine | None = None
-    ) -> list[GeneratedQuest]:
+    def ensure_board(self, player: Entity, engine: Engine | None = None) -> list[GeneratedQuest]:
         comp = self._comp(player)
         if not comp.active_board:
             self.refresh_board(player, engine)
         return [GeneratedQuest.from_dict(d) for d in comp.active_board]
 
-    def refresh_board(
-        self, player: Entity, engine: Engine | None = None
-    ) -> list[GeneratedQuest]:
+    def refresh_board(self, player: Entity, engine: Engine | None = None) -> list[GeneratedQuest]:
         """依頼ボードを再生成 (Step 26, 27)"""
         comp = self._comp(player)
         comp.board_seed = (comp.board_seed + 1) % (10**9)
@@ -1221,9 +1206,7 @@ class ProceduralQuestManager:
     def get_available_board(self, player: Entity) -> list[GeneratedQuest]:
         return self.ensure_board(player)
 
-    def get_npc_quests(
-        self, player: Entity, npc_id: str, npc_type: str
-    ) -> list[GeneratedQuest]:
+    def get_npc_quests(self, player: Entity, npc_id: str, npc_type: str) -> list[GeneratedQuest]:
         """NPCが提示可能な個別クエスト一覧 (Step 31)"""
         q = self.generator.generate_npc_quest(npc_id, npc_type, player)
         return [q] if q else []
@@ -1233,9 +1216,7 @@ class ProceduralQuestManager:
         for bd in comp.active_board:
             if bd.get("quest_id") == quest_id:
                 comp.accepted_quests.append(bd)
-                comp.active_board = [
-                    b for b in comp.active_board if b.get("quest_id") != quest_id
-                ]
+                comp.active_board = [b for b in comp.active_board if b.get("quest_id") != quest_id]
                 return True
         return False
 
@@ -1256,15 +1237,10 @@ class ProceduralQuestManager:
             quest = GeneratedQuest.from_dict(qd)
             changed = False
             for obj in quest.objectives:
-                if (
-                    obj.target_type == event_type
-                    and obj.current_count < obj.required_count
-                ) and (obj.target_id == target_id or _target_matches(
-                    obj.target_id, n_target
-                )):
-                    obj.current_count = min(
-                        obj.required_count, obj.current_count + amount
-                    )
+                if (obj.target_type == event_type and obj.current_count < obj.required_count) and (
+                    obj.target_id == target_id or _target_matches(obj.target_id, n_target)
+                ):
+                    obj.current_count = min(obj.required_count, obj.current_count + amount)
                     changed = True
             if changed:
                 qd.clear()
@@ -1315,9 +1291,7 @@ class ProceduralQuestManager:
         meta = int(bonus.get("meta", 0))
         if fame:
             try:
-                player.guild_contribution = (
-                    getattr(player, "guild_contribution", 0) + fame
-                )
+                player.guild_contribution = getattr(player, "guild_contribution", 0) + fame
             except Exception as e:
                 logger.warning("Failed to update guild_contribution: %s", e)
         if rel_bonus and quest.npc_id:
@@ -1342,15 +1316,11 @@ class ProceduralQuestManager:
         if meta:
             try:
                 player.meta_progression = getattr(player, "meta_progression", {})
-                player.meta_progression["points"] = (
-                    player.meta_progression.get("points", 0) + meta
-                )
+                player.meta_progression["points"] = player.meta_progression.get("points", 0) + meta
             except Exception as e:
                 logger.warning("Failed to update meta_progression points: %s", e)
 
-        comp.accepted_quests = [
-            q for q in comp.accepted_quests if q.get("quest_id") != quest_id
-        ]
+        comp.accepted_quests = [q for q in comp.accepted_quests if q.get("quest_id") != quest_id]
         comp.completed_quest_ids.append(quest_id)
         comp.completed_count += 1
         msg = f"生成クエスト【{quest.title}】達成！ 金貨+{gold}G, 経験+{exp} 獲得！"

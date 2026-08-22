@@ -75,7 +75,7 @@ jobs:
     equipment_restrictions: {}
     exclusive_skills: []
     unlock_conditions: {}
-  
+
   warrior:
     name: "戦士"
     tier: 1
@@ -98,7 +98,7 @@ jobs:
         shield: 20
       stats:
         strength: 15
-  
+
   swordmaster:
     name: "剣聖"
     tier: 2
@@ -123,7 +123,7 @@ jobs:
       stats:
         strength: 25
         dexterity: 20
-  
+
   mage:
     name: "魔法使い"
     tier: 1
@@ -146,7 +146,7 @@ jobs:
         mana_control: 20
       stats:
         intelligence: 15
-  
+
   archmage:
     name: "大賢者"
     tier: 2
@@ -202,7 +202,7 @@ exclusive_skills:
         duration: 2
         chance: 0.7
     inherit_chance: 0.3  # マスター時の継承確率
-  
+
   iaijutsu:
     name: "居合術"
     job: "swordmaster"
@@ -216,7 +216,7 @@ exclusive_skills:
       - type: "crit_guaranteed"
       - type: "ignore_defense"
     inherit_chance: 0.2
-  
+
   meteor:
     name: "メテオ"
     job: "archmage"
@@ -262,7 +262,7 @@ fusions:
     bonus_effects:
       - type: "elemental_damage"
         value: 20
-  
+
   holy_knight:
     name: "聖騎士"
     description: "信仰と剣技を融合、聖なる剣を振るう"
@@ -279,7 +279,7 @@ fusions:
         value: 50
       - type: "heal_on_kill"
         value: 10
-  
+
   shadow_assassin:
     name: "影の暗殺者"
     description: "隠密と短剣術を極め、闇に溶け込む"
@@ -324,7 +324,7 @@ awakenings:
       - type: "add_effect"
         effect: "burn_ground"
         duration: 5
-  
+
   slash:
     name: "斬撃覚醒：無双斬り"
     base_skill: "slash"
@@ -337,7 +337,7 @@ awakenings:
       - type: "add_effect"
         effect: "multi_hit"
         count: 3
-  
+
   heal:
     name: "ヒール覚醒：女神の祝福"
     base_skill: "heal"
@@ -380,7 +380,7 @@ passive_skills:
         value: 10
       - type: "knockback_resistance"
         value: 0.5
-  
+
   mana_efficiency:
     name: "魔力効率化"
     tree: "magic"
@@ -392,7 +392,7 @@ passive_skills:
         value: 0.2
       - type: "mp_regen_bonus"
         value: 2
-  
+
   lucky_find:
     name: "幸運な発見"
     tree: "luck"
@@ -406,7 +406,7 @@ passive_skills:
         value: 0.15
       - type: "trap_detection"
         value: 5
-  
+
   death_defiance:
     name: "死者の抗い"
     tree: "survival"
@@ -443,28 +443,28 @@ inheritance:
         type: "start_with_job"
         value: "previous_job"
       cost: 5  # 継承ポイント消費
-    
+
     - name: "スキル継承"
       condition: "skill_mastered"
       effect:
         type: "start_with_skill"
         value: "skill_id"
       cost: 3
-    
+
     - name: "覚醒スキル継承"
       condition: "skill_awakened"
       effect:
         type: "start_with_awakened_skill"
         value: "skill_id"
       cost: 10
-    
+
     - name: "ステータス継承"
       condition: "level_100"
       effect:
         type: "base_stat_bonus"
         value: 10
       cost: 20
-  
+
   inheritance_points:
     base: 10
     per_10_levels: 2
@@ -499,7 +499,7 @@ synergies:
       - type: "status"
         effect: "burn"
         duration: 3
-  
+
   holy_nova:
     name: "ホーリーノヴァ"
     skills: ["holy_slash", "heal"]
@@ -512,7 +512,7 @@ synergies:
         radius: 5
         formula: "str * 2"
         element: "holy"
-  
+
   shadow_clone:
     name: "影分身の術"
     skills: ["shadow_step", "dagger_throw"]

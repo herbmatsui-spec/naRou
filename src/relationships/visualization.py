@@ -47,9 +47,7 @@ class RelationshipVisualizer:
         self.rm = relationship_manager
         self.graph = relationship_manager.graph
 
-    def visualize_as_text(
-        self, character_id: str | None = None, detailed: bool = False
-    ) -> str:
+    def visualize_as_text(self, character_id: str | None = None, detailed: bool = False) -> str:
         """テキスト形式で可視化"""
         lines = []
         lines.append("=" * 60)
@@ -66,9 +64,7 @@ class RelationshipVisualizer:
 
             # パーソナリティ
             if node.personality_traits:
-                traits_str = ", ".join(
-                    f"{k}: {v:.2f}" for k, v in node.personality_traits.items()
-                )
+                traits_str = ", ".join(f"{k}: {v:.2f}" for k, v in node.personality_traits.items())
                 lines.append(f"  パーソナリティ: {traits_str}")
 
             # 派閥所属
@@ -266,14 +262,12 @@ class RelationshipVisualizer:
             relationships.append((other_id, edge.relationship_type, edge.level))
 
         # 正の関係（上位5）
-        positive = sorted(
-            [r for r in relationships if r[2] > 0], key=lambda x: x[2], reverse=True
-        )[:5]
-
-        # 負の関係（下位5）
-        negative = sorted([r for r in relationships if r[2] < 0], key=lambda x: x[2])[
+        positive = sorted([r for r in relationships if r[2] > 0], key=lambda x: x[2], reverse=True)[
             :5
         ]
+
+        # 負の関係（下位5）
+        negative = sorted([r for r in relationships if r[2] < 0], key=lambda x: x[2])[:5]
 
         # 最強の絆
         strongest = sorted(relationships, key=lambda x: abs(x[2]), reverse=True)[:5]
@@ -286,9 +280,7 @@ class RelationshipVisualizer:
             1 for r in relationships if r[1] == RelationshipType.ROMANCE and r[2] > 20
         )
         mentorship_count = sum(
-            1
-            for r in relationships
-            if r[1] == RelationshipType.MENTORSHIP and r[2] > 20
+            1 for r in relationships if r[1] == RelationshipType.MENTORSHIP and r[2] > 20
         )
 
         return RelationshipInsight(
@@ -345,9 +337,7 @@ class RelationshipVisualizer:
             "health_score": self._calculate_health_score(stats, len(isolated_nodes)),
         }
 
-    def _calculate_health_score(
-        self, stats: dict[str, Any], isolated_count: int
-    ) -> float:
+    def _calculate_health_score(self, stats: dict[str, Any], isolated_count: int) -> float:
         """健全性スコアを計算（0-100）"""
         if stats["node_count"] == 0:
             return 100.0
@@ -357,9 +347,7 @@ class RelationshipVisualizer:
         if density == 0:
             base_score = 50.0
         else:
-            base_score = min(
-                100.0, density * 1000
-            )  # 密度が高いほどスコア高（調整必要）
+            base_score = min(100.0, density * 1000)  # 密度が高いほどスコア高（調整必要）
 
         # 孤立ノードによるペナルティ
         isolation_penalty = (isolated_count / stats["node_count"]) * 50.0
@@ -410,9 +398,7 @@ class RelationshipVisualizer:
                 return f"エッジが見つかりません: {relationship_type.value}"
 
             lines.append(f"関係タイプ: {edge.relationship_type.value}")
-            lines.append(
-                f"レベル: {edge.level} (カテゴリ: {edge.get_level_category().name})"
-            )
+            lines.append(f"レベル: {edge.level} (カテゴリ: {edge.get_level_category().name})")
             lines.append(f"減衰率: {edge.decay_rate}")
             lines.append(f"相互関係: {edge.is_mutual}")
             lines.append(f"最終インタラクション: {edge.last_interaction}")
@@ -429,9 +415,7 @@ class RelationshipVisualizer:
 
             for edge in edges:
                 lines.append(f"\n関係タイプ: {edge.relationship_type.value}")
-                lines.append(
-                    f"  レベル: {edge.level} (カテゴリ: {edge.get_level_category().name})"
-                )
+                lines.append(f"  レベル: {edge.level} (カテゴリ: {edge.get_level_category().name})")
                 lines.append(f"  減衰率: {edge.decay_rate}")
                 lines.append(f"  修正子数: {len(edge.modifiers)}")
 
@@ -500,9 +484,7 @@ def debug_command_debug_relationship(
     return visualizer.debug_relationship(char_a, char_b, rel)
 
 
-def debug_command_report(
-    rm: RelationshipManager, character_id: str | None = None
-) -> str:
+def debug_command_report(rm: RelationshipManager, character_id: str | None = None) -> str:
     """デバッグコマンド：レポート作成"""
     visualizer = RelationshipVisualizer(rm)
     return visualizer.create_debug_report(character_id)

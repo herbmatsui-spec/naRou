@@ -233,37 +233,37 @@ def load_yaml_universal(filepath: Path):
 ```python
 class TitleManager:
     """キャラクターの称号状態を管理するクラス。
-    
+
     Attributes:
         registry (TitleRegistry): 称号定義のレジストリ
         _cache (Dict[str, bool]): 条件チェック結果のキャッシュ
-        
+
     Example:
         >>> manager = TitleManager()
         >>> manager.grant_title(player, "goblin_slayer")
         >>> "goblin_slayer" in player.titles
         True
     """
-    
+
     def __init__(self, registry: TitleRegistry):
         """TitleManagerを初期化。
-        
+
         Args:
             registry: 称号データを提供するレジストリインスタンス
         """
         self.registry = registry
         self._cache = {}
-    
+
     def grant_title(self, player: Entity, title_id: str) -> bool:
         """プレイヤーに称号を付与する。
-        
+
         Args:
             player: 称号を付与対象のキャラクター
             title_id: 付与する称号のID
-            
+
         Returns:
             bool: 付与に成功した場合True、すでに所持している場合False
-            
+
         Note:
             このメソッドは内部で _apply_title_effects() を呼び出し、
             ステータス変更を適用する。
@@ -371,11 +371,11 @@ accessibility_options:
 ```python
 def get_title_display_color(title_id: str, is_equipped: bool) -> Tuple[int, int, int]:
     """色覚多様性に配慮した表示色を返す。
-    
+
     色だけでなく、境界線の太さやアイコンの形状でも区別できるようにする。
     """
     base_color = TITLE_COLORS.get(title_id, (255, 255, 255))
-    
+
     if is_equipped:
         # equipped 状態では境界線を太くする（色以外での区別）
         return base_color, 3  # (color, border_width)

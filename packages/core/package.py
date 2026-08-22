@@ -29,12 +29,8 @@ class CorePackage(IPackage):
         from turn_manager import TimeSystem, TurnQueue
 
         kernel.register_system("event_bus", EventBus())
-        kernel.register_system(
-            "time_system", TimeSystem(event_bus=kernel.get_system("event_bus"))
-        )
-        kernel.register_system(
-            "turn_queue", TurnQueue(kernel.get_system("time_system"))
-        )
+        kernel.register_system("time_system", TimeSystem(event_bus=kernel.get_system("event_bus")))
+        kernel.register_system("turn_queue", TurnQueue(kernel.get_system("time_system")))
         kernel.register_system("entity_manager", EntityManager())
         kernel.register_system("renderer", get_renderer())
         kernel.register_system("message_log", MessageLog(max_history=200))

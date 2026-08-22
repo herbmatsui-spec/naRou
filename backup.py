@@ -18,6 +18,7 @@ def run_command(cmd, cwd=None):
     """Run a command and return success status."""
     if isinstance(cmd, str):
         import shlex
+
         cmd = shlex.split(cmd)
     print(f"Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, cwd=cwd)
@@ -82,6 +83,7 @@ def backup_code(backup_dir="backups"):
     os.makedirs(backup_path, exist_ok=True)
 
     import glob
+
     for pattern in items_to_backup:
         for item in glob.glob(pattern):
             if os.path.exists(item):
@@ -142,9 +144,7 @@ if __name__ == "__main__":
     parser.add_argument("--all", action="store_true", help="Backup everything")
     parser.add_argument("--list", action="store_true", help="List backups")
     parser.add_argument("--cleanup", action="store_true", help="Cleanup old backups")
-    parser.add_argument(
-        "--keep", type=int, default=10, help="Number of backups to keep"
-    )
+    parser.add_argument("--keep", type=int, default=10, help="Number of backups to keep")
     parser.add_argument("--dir", default="backups", help="Backup directory")
     args = parser.parse_args()
 

@@ -6,6 +6,7 @@ Step 5: Dynamic relationship change system
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import time
 from collections import defaultdict, deque
@@ -33,9 +34,7 @@ class DelayedEffect:
 
     def is_ready(self, current_time: float) -> bool:
         """遅延時間が経過したかチェック"""
-        return (
-            current_time >= (self.start_time + self.delay_time) and not self.is_applied
-        )
+        return current_time >= (self.start_time + self.delay_time) and not self.is_applied
 
     def apply(self) -> RelationshipModifier:
         """効果を適用し、修正子を返す"""
@@ -122,8 +121,8 @@ class DynamicRelationshipSystem:
         }
 
         # トレンド分析用のヒストリーバッファ
-        self._relationship_history: dict[tuple[str, str, RelationshipType], deque] = (
-            defaultdict(lambda: deque(maxlen=100))
+        self._relationship_history: dict[tuple[str, str, RelationshipType], deque] = defaultdict(
+            lambda: deque(maxlen=100)
         )  # 過去100エントリーを保持
 
     def apply_interaction_with_dynamics(
@@ -144,9 +143,7 @@ class DynamicRelationshipSystem:
         )
 
         # 2. 遅延効果をスケジュール
-        self._schedule_delayed_effects(
-            source_id, target_id, interaction_type, base_amount, context
-        )
+        self._schedule_delayed_effects(source_id, target_id, interaction_type, base_amount, context)
 
         # 3. 累積効果を更新
         cumulative_changes = self._update_cumulative_effects(
@@ -304,8 +301,8 @@ class DynamicRelationshipSystem:
                 modifier *= context_multiplier
             except Exception:
                 logger.exception("Unhandled exception")
-        # TODO: handle exception properly
-        # 修正子が失敗しても継続
+                # TODO: handle exception properly
+                # 修正子が失敗しても継続
                 continue
 
         return int(base_amount * modifier)
@@ -319,9 +316,7 @@ class DynamicRelationshipSystem:
     ) -> None:
         """関係レベルの変化をヒストリーバッファに記録"""
         key = (source_id, target_id, relationship_type)
-        self._relationship_history[key].append(
-            {"timestamp": time.time(), "level": level}
-        )
+        self._relationship_history[key].append({"timestamp": time.time(), "level": level})
 
     def _process_delayed_effects(self) -> None:
         """遅延効果のキューを処理"""
@@ -341,16 +336,12 @@ class DynamicRelationshipSystem:
         for effect in ready_effects:
             modifier = effect.apply()
             # 実際に関係を変更
-            edge = self.graph.get_edge(
-                effect.source_id, effect.target_id, effect.relationship_type
-            )
+            edge = self.graph.get_edge(effect.source_id, effect.target_id, effect.relationship_type)
             if edge:
                 edge.add_modifier(modifier)
                 # ここでリスナーへの通知なども行う（簡略化のため省略）
 
-    def add_context_modifier(
-        self, modifier_func: Callable[[dict[str, Any]], float]
-    ) -> None:
+    def add_context_modifier(self, modifier_func: Callable[[dict[str, Any]], float]) -> None:
         """コンテキスト修正子を追加"""
         self._context_modifiers.append(modifier_func)
 
@@ -369,11 +360,7 @@ class DynamicRelationshipSystem:
             return "insufficient_data"
 
         # 最近のwindow_sizeエントリーを取得
-        recent = (
-            list(history)[-window_size:]
-            if len(history) >= window_size
-            else list(history)
-        )
+        recent = list(history)[-window_size:] if len(history) >= window_size else list(history)
         if len(recent) < 2:
             return "insufficient_data"
 

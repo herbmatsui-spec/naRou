@@ -38,15 +38,11 @@ class JobRepository(CachedRepository[Job, str]):
             if cond.level and player_level < cond.level:
                 continue
             if cond.skills:
-                skill_ok = all(
-                    player_skills.get(s, 0) >= req for s, req in cond.skills.items()
-                )
+                skill_ok = all(player_skills.get(s, 0) >= req for s, req in cond.skills.items())
                 if not skill_ok:
                     continue
             if cond.stats:
-                stat_ok = all(
-                    player_stats.get(s, 0) >= req for s, req in cond.stats.items()
-                )
+                stat_ok = all(player_stats.get(s, 0) >= req for s, req in cond.stats.items())
                 if not stat_ok:
                     continue
             available.append(job)

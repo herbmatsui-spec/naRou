@@ -460,11 +460,11 @@ global_settings:
   max_single_change: 25       # 1回のインタラクションでの最大変化量
   min_relationship_level: -100 # 関係レベルの最小値
   max_relationship_level: 100  # 関係レベルの最大�ue
-  
+
   # 時間ベースの設定
   decay_check_interval: 3600   # 1時間ごとに減衰をチェック（秒）
   memory_fade_rate: 0.0001     # 記憶の自然な薄れ率（時間単位）
-  
+
   # しきい値設定
   relationship_thresholds:
     very_negative: -80
@@ -472,7 +472,7 @@ global_settings:
     neutral: 0
     positive: 40
     very_positive: 80
-    
+
   # イベント重み係数
   event_weights:
     personal_interaction: 1.0   # 個人的な会話等
@@ -482,7 +482,7 @@ global_settings:
     reconciliation: 2.0         # 和解
     shared_victory: 2.0         # 共同勝利
     shared_defeat: 1.5          # 共同敗北
-    
+
   # デフォルト値（テンプレートに指定がない場合）
   defaults:
     decay_rate: 0.01

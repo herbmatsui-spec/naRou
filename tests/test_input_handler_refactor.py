@@ -8,6 +8,7 @@ Verifies that:
   - Keys without a registry binding fall back to the legacy handler
   - The registry is scoped to the "play" state (modal states fall back to legacy)
 """
+
 from __future__ import annotations
 
 import tcod.event
@@ -89,7 +90,5 @@ def test_unmapped_key_falls_back_to_legacy_handler():
     InputHandler.register_default_actions()
     e = StubEngine()
     # Shift+A にはレジストリバインドがない → 従来ハンドラで実績画面へ
-    InputHandler.handle_event(
-        _key(tcod.event.KeySym.A, mod=tcod.event.Modifier.SHIFT), e
-    )
+    InputHandler.handle_event(_key(tcod.event.KeySym.A, mod=tcod.event.Modifier.SHIFT), e)
     assert e.game_state == "achievements"

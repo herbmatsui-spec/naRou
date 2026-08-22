@@ -12,6 +12,7 @@ Elona Roguelike - UI & Visual FX Systems (Phases 2 - 8)
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import math
 import random
@@ -81,9 +82,7 @@ class LookCursor:
 class ContextAction:
     """コンテキストメニュー項目 (Phase 4)"""
 
-    def __init__(
-        self, label: str, action_key: str, handler_name: str, payload: Any = None
-    ):
+    def __init__(self, label: str, action_key: str, handler_name: str, payload: Any = None):
         self.label = label
         self.action_key = action_key
         self.handler_name = handler_name
@@ -144,17 +143,11 @@ class MiniMapRenderer:
                 if 0 <= orig_x < game_map.width and 0 <= orig_y < game_map.height:
                     if game_map.explored[orig_x][orig_y]:
                         if game_map.is_walkable(orig_x, orig_y):
-                            console.print(
-                                start_x + 1 + mx, start_y + 1 + my, "·", fg=(70, 75, 90)
-                            )
+                            console.print(start_x + 1 + mx, start_y + 1 + my, "·", fg=(70, 75, 90))
                         else:
-                            console.print(
-                                start_x + 1 + mx, start_y + 1 + my, "#", fg=(40, 45, 55)
-                            )
+                            console.print(start_x + 1 + mx, start_y + 1 + my, "#", fg=(40, 45, 55))
                     else:
-                        console.print(
-                            start_x + 1 + mx, start_y + 1 + my, " ", bg=(8, 10, 15)
-                        )
+                        console.print(start_x + 1 + mx, start_y + 1 + my, " ", bg=(8, 10, 15))
 
         # 敵モンスター (赤)
         for e in entities:
@@ -163,26 +156,20 @@ class MiniMapRenderer:
                     emx = int(e.x / scale_x)
                     emy = int(e.y / scale_y)
                     if 0 <= emx < cls.WIDTH and 0 <= emy < cls.HEIGHT:
-                        console.print(
-                            start_x + 1 + emx, start_y + 1 + emy, "x", fg=(255, 80, 80)
-                        )
+                        console.print(start_x + 1 + emx, start_y + 1 + emy, "x", fg=(255, 80, 80))
 
         # ペット (ピンク)
         if pet and pet.hp > 0:
             pmx = int(pet.x / scale_x)
             pmy = int(pet.y / scale_y)
             if 0 <= pmx < cls.WIDTH and 0 <= pmy < cls.HEIGHT:
-                console.print(
-                    start_x + 1 + pmx, start_y + 1 + pmy, "p", fg=COLOR_PET_PINK
-                )
+                console.print(start_x + 1 + pmx, start_y + 1 + pmy, "p", fg=COLOR_PET_PINK)
 
         # プレイヤー (緑)
         pl_mx = int(player.x / scale_x)
         pl_my = int(player.y / scale_y)
         if 0 <= pl_mx < cls.WIDTH and 0 <= pl_my < cls.HEIGHT:
-            console.print(
-                start_x + 1 + pl_mx, start_y + 1 + pl_my, "@", fg=(100, 255, 120)
-            )
+            console.print(start_x + 1 + pl_mx, start_y + 1 + pl_my, "@", fg=(100, 255, 120))
 
 
 @dataclass
@@ -213,9 +200,7 @@ class DynamicLighting:
         return max(0.15, min(1.0, intensity))
 
     @staticmethod
-    def blend_color(
-        base_color: tuple[int, int, int], factor: float
-    ) -> tuple[int, int, int]:
+    def blend_color(base_color: tuple[int, int, int], factor: float) -> tuple[int, int, int]:
         return (
             int(base_color[0] * factor),
             int(base_color[1] * factor),
@@ -319,8 +304,8 @@ class DynamicLighting:
                     }
                 )
             # Reflective surfaces
-            elif (
-                tile_id.startswith(("TR_ITEM_04", "TR_ITEM_05", "TR_ITEM_07", "TR_ITEM_08"))
+            elif tile_id.startswith(
+                ("TR_ITEM_04", "TR_ITEM_05", "TR_ITEM_07", "TR_ITEM_08")
             ):  # Weapons
                 props.update(
                     {
@@ -470,12 +455,18 @@ class GaugeBar:
         length: int = 10,
         fill_char: str = "■",
         empty_char: str = "□",
+        force_numeric: bool = False,
     ) -> str:
         if maximum <= 0:
-            return empty_char * length
-        ratio = max(0.0, min(1.0, current / maximum))
-        filled_count = int(ratio * length)
-        return (fill_char * filled_count) + (empty_char * (length - filled_count))
+            bar = empty_char * length
+        else:
+            ratio = max(0.0, min(1.0, current / maximum))
+            filled_count = int(ratio * length)
+            bar = (fill_char * filled_count) + (empty_char * (length - filled_count))
+        if force_numeric:
+            pct = int((current / max(1, maximum)) * 100)
+            return f"[{bar}] {current}/{maximum} ({pct}%)"
+        return f"[{bar}] {current}/{maximum}"
 
 
 @dataclass
@@ -529,15 +520,10 @@ class TutorialManager:
             logger.exception("Unhandled exception")
             print(f"[TutorialManager] Failed to load {self.file_path}: {e}")
 
-    def check_triggers(
-        self, trigger_condition: str, completed_set: set
-    ) -> TutorialGuide | None:
+    def check_triggers(self, trigger_condition: str, completed_set: set) -> TutorialGuide | None:
         """発動条件に一致し、未完了のチュートリアルを検索"""
         for guide in self.guides.values():
-            if (
-                guide.trigger_condition == trigger_condition
-                and guide.id not in completed_set
-            ):
+            if guide.trigger_condition == trigger_condition and guide.id not in completed_set:
                 return guide
         return None
 
@@ -729,9 +715,7 @@ class SkillTreeUI:
             if i + offset < width:
                 console.print(x + i + offset, y + (height // 2), "━", fg=(0, 150, 255))
                 if (i + offset) % 8 == 0:
-                    console.print(
-                        x + i + offset, y + (height // 2), "◆", fg=(100, 200, 255)
-                    )
+                    console.print(x + i + offset, y + (height // 2), "◆", fg=(100, 200, 255))
 
 
 class JobUI:
@@ -742,9 +726,7 @@ class JobUI:
         return f"現在の職業: 【{job_name}】 (Job Lv.{level}  EXP: {exp})"
 
 
-def play_pet_fusion_fx(
-    engine: Any, pet1_name: str, pet2_name: str, result_name: str
-) -> None:
+def play_pet_fusion_fx(engine: Any, pet1_name: str, pet2_name: str, result_name: str) -> None:
     """ペット融合エフェクト・パーティクル・ログ演出 (Steps 71, 72)"""
     if not hasattr(engine, "player"):
         return
@@ -786,9 +768,7 @@ class PetUI:
     """ペット情報・絆表示ヘルパー"""
 
     @staticmethod
-    def format_bond_summary(
-        pet_name: str, contract_name: str, bond: int, max_bond: int
-    ) -> str:
+    def format_bond_summary(pet_name: str, contract_name: str, bond: int, max_bond: int) -> str:
         return f"【{pet_name}】 契約: {contract_name}  絆度: {bond}/{max_bond}"
 
 
@@ -821,9 +801,9 @@ class WeatherAtmosphereLayer:
                 my = cam_y + vy
 
                 # 多重サイン波による滑らかな霧・陽炎の濃度マップ
-                noise_val = math.sin(mx * 0.15 + t) * math.cos(
-                    my * 0.2 - t * 0.8
-                ) + math.sin((mx + my) * 0.1 + t * 0.5)
+                noise_val = math.sin(mx * 0.15 + t) * math.cos(my * 0.2 - t * 0.8) + math.sin(
+                    (mx + my) * 0.1 + t * 0.5
+                )
                 # 0.0 ~ 1.0 に正規化
                 intensity = (noise_val + 2.0) / 4.0
 
@@ -1045,9 +1025,7 @@ class ScreenFilterManager:
             for y in range(h):
                 for x in range(w):
                     cur_fg = console.fg[x, y]
-                    gray = int(
-                        0.299 * cur_fg[0] + 0.587 * cur_fg[1] + 0.114 * cur_fg[2]
-                    )
+                    gray = int(0.299 * cur_fg[0] + 0.587 * cur_fg[1] + 0.114 * cur_fg[2])
                     # 彩度を50%落とす
                     console.fg[x, y] = (
                         int(cur_fg[0] * 0.4 + gray * 0.6),
@@ -1110,9 +1088,7 @@ class ItemInspectorUI:
         )
 
         # アスキーアート拡大図の描画
-        art_lines = cls.ITEM_ART.get(
-            getattr(item, "category", ""), cls.ITEM_ART["default"]
-        )
+        art_lines = cls.ITEM_ART.get(getattr(item, "category", ""), cls.ITEM_ART["default"])
         for idx, line in enumerate(art_lines):
             console.print(
                 x=x + 3,
@@ -1225,9 +1201,7 @@ class EmotionalUI:
                 fg_col = (255, 0, q)
 
         console.draw_rect(x=draw_x, y=draw_y, width=width, height=height, ch=0, bg=bg)
-        console.draw_frame(
-            x=draw_x, y=draw_y, width=width, height=height, title=title, fg=fg_col
-        )
+        console.draw_frame(x=draw_x, y=draw_y, width=width, height=height, title=title, fg=fg_col)
         return draw_x, draw_y
 
 
@@ -1247,11 +1221,7 @@ class CinematicLogVisualizer:
         """ログの振動・重要度発光・文字別パルスを伴う映画的描画"""
         recent = msg_log.get_recent(count) if hasattr(msg_log, "get_recent") else []
         for i, lmsg in enumerate(recent):
-            tag = (
-                "[!]"
-                if lmsg.level == "WARNING"
-                else ("★" if lmsg.level == "SUCCESS" else " ")
-            )
+            tag = "[!]" if lmsg.level == "WARNING" else ("★" if lmsg.level == "SUCCESS" else " ")
             text = f"{tag} {lmsg.text}"[:74]
             base_col = lmsg.color
 
@@ -1291,9 +1261,7 @@ def format_skill_tree_display(registry: SkillTreeRegistry) -> str:
     for tree in registry.all().values():
         lines.append(f"{tree.icon} {tree.name}")
         for tier in tree.tiers:
-            learned_marker = (
-                "[ ]"  # placeholder; actual learned status would need player data
-            )
+            learned_marker = "[ ]"  # placeholder; actual learned status would need player data
             lines.append(f"  {learned_marker} {tier.name} (コスト: {tier.cost})")
             for effect in tier.effects:
                 if effect.type == "damage_bonus":
@@ -1312,9 +1280,7 @@ def format_job_display(registry: JobRegistry, player) -> str:
     """ジョブデータを簡単なテキスト形式で返す"""
     lines = []
     lines.append("=== 職業システム ===")
-    lines.append(
-        f"現在の職業: {player.job} (Job Lv.{player.job_level}  EXP: {player.job_exp})"
-    )
+    lines.append(f"現在の職業: {player.job} (Job Lv.{player.job_level}  EXP: {player.job_exp})")
     lines.append("")
 
     # 現在の職業のステータス補正

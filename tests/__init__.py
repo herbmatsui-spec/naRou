@@ -8,6 +8,8 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 stubs_dir = os.path.join(ROOT, "stubs")
+
+
 # Only fall back to stubs for packages that are not actually installed, so a
 # real installation (e.g. PIL) always takes precedence over the stub version.
 def _need_stub(modname: str) -> bool:

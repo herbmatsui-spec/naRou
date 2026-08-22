@@ -1,6 +1,7 @@
 """
 総合テストスクリプト: 輪廻転生・ニューゲーム+システム全72ステップの完全検証
 """
+
 from __future__ import annotations
 
 import os
@@ -22,35 +23,27 @@ def test_all_72_steps_reincarnation_system():
     # Step 1: data/reincarnation.yaml 基本構造作成
     with open("data/reincarnation.yaml", encoding="utf-8") as f:
         reinc_raw = yaml.safe_load(f)
-    assert reinc_raw and "reincarnation" in reinc_raw, (
-        "Step 1 Failed: reincarnation key missing"
-    )
+    assert reinc_raw and "reincarnation" in reinc_raw, "Step 1 Failed: reincarnation key missing"
     print("[OK] Step 1 (data/reincarnation.yaml 基本構造)")
 
     # Step 2: data/reincarnation.yaml 基本転生要件追加
     base_req = reinc_raw.get("reincarnation", {}).get("base_requirements", {})
     assert base_req.get("min_level") == 50, "Step 2 Failed: min_level mismatch"
-    assert base_req.get("stat_bonus_per_reincarnation") == 5, (
-        "Step 2 Failed: stat_bonus mismatch"
-    )
+    assert base_req.get("stat_bonus_per_reincarnation") == 5, "Step 2 Failed: stat_bonus mismatch"
     print("[OK] Step 2 (基本転生要件 min_level/stat_bonus)")
 
     # Step 3: data/reincarnation_inheritance.yaml 基本構造作成
     with open("data/reincarnation_inheritance.yaml", encoding="utf-8") as f:
         inh_raw = yaml.safe_load(f)
-    assert inh_raw and "inheritance" in inh_raw, (
-        "Step 3 Failed: inheritance key missing"
-    )
+    assert inh_raw and "inheritance" in inh_raw, "Step 3 Failed: inheritance key missing"
     print("[OK] Step 3 (data/reincarnation_inheritance.yaml 基本構造)")
 
     # Step 4: data/reincarnation_inheritance.yaml 基本継承ルール追加
     inh_data = inh_raw.get("inheritance", {})
-    assert "titles" in inh_data.get("always_keep", []), (
-        "Step 4 Failed: always_keep titles missing"
-    )
-    assert inh_data.get("selective_keep", {}).get("points_per_reincarnation") == 100, (
-        "Step 4 Failed: points mismatch"
-    )
+    assert "titles" in inh_data.get("always_keep", []), "Step 4 Failed: always_keep titles missing"
+    assert (
+        inh_data.get("selective_keep", {}).get("points_per_reincarnation") == 100
+    ), "Step 4 Failed: points mismatch"
     print("[OK] Step 4 (基本継承ルール always_keep & selective_keep)")
 
     # Step 5: data/karma.yaml 基本構造作成
@@ -61,12 +54,11 @@ def test_all_72_steps_reincarnation_system():
 
     # Step 6: data/karma.yaml カーマ軸と行動追加
     k_align = karma_raw.get("karma", {}).get("alignment", {})
-    assert k_align.get("law_chaos", {}).get("range") == [-100, 100], (
-        "Step 6 Failed: law_chaos range"
-    )
-    assert k_align.get("good_evil", {}).get("neutral") == 0, (
-        "Step 6 Failed: good_evil neutral"
-    )
+    assert k_align.get("law_chaos", {}).get("range") == [
+        -100,
+        100,
+    ], "Step 6 Failed: law_chaos range"
+    assert k_align.get("good_evil", {}).get("neutral") == 0, "Step 6 Failed: good_evil neutral"
     print("[OK] Step 6 (2軸カーマ alignment & actions)")
 
     # Step 7: data/reincarnation_dungeons.yaml 基本構造作成
@@ -77,12 +69,10 @@ def test_all_72_steps_reincarnation_system():
 
     # Step 8: data/reincarnation_dungeons.yaml 初心者ダンジョン追加
     d_first = dung_raw.get("dungeons", {}).get("first_life_trial")
-    assert d_first is not None and d_first.get("name") == "最初の試練", (
-        "Step 8 Failed: name mismatch"
-    )
-    assert d_first.get("min_reincarnation") == 1, (
-        "Step 8 Failed: min_reincarnation mismatch"
-    )
+    assert (
+        d_first is not None and d_first.get("name") == "最初の試練"
+    ), "Step 8 Failed: name mismatch"
+    assert d_first.get("min_reincarnation") == 1, "Step 8 Failed: min_reincarnation mismatch"
     print("[OK] Step 8 (初心者ダンジョン 最初の試練)")
 
     # Step 9: data/reincarnation_scaling.yaml 基本構造作成
@@ -99,26 +89,19 @@ def test_all_72_steps_reincarnation_system():
 
     # Steps 11-20: Entity 転生関連フィールド (ReincarnationComponent へ委譲)
     from entity import Entity
-    from components import ReincarnationComponent
 
     comp_code = open("components.py", encoding="utf-8").read()
-    assert "class ReincarnationComponent" in comp_code, (
-        "Step 11 Failed: ReincarnationComponent missing"
-    )
+    assert (
+        "class ReincarnationComponent" in comp_code
+    ), "Step 11 Failed: ReincarnationComponent missing"
 
     e = Entity()
     assert hasattr(e, "reincarnation_count") and isinstance(
         e.reincarnation_count, int
     ), "Step 12 Failed"
-    assert hasattr(e, "karma_law_chaos") and isinstance(e.karma_law_chaos, int), (
-        "Step 13 Failed"
-    )
-    assert hasattr(e, "karma_good_evil") and isinstance(e.karma_good_evil, int), (
-        "Step 14 Failed"
-    )
-    assert hasattr(e, "legacy_skills") and isinstance(e.legacy_skills, list), (
-        "Step 15 Failed"
-    )
+    assert hasattr(e, "karma_law_chaos") and isinstance(e.karma_law_chaos, int), "Step 13 Failed"
+    assert hasattr(e, "karma_good_evil") and isinstance(e.karma_good_evil, int), "Step 14 Failed"
+    assert hasattr(e, "legacy_skills") and isinstance(e.legacy_skills, list), "Step 15 Failed"
     assert hasattr(e, "unlocked_reincarnation_dungeons") and isinstance(
         e.unlocked_reincarnation_dungeons, list
     ), "Step 16 Failed"
@@ -136,11 +119,7 @@ def test_all_72_steps_reincarnation_system():
 
     # Steps 21-27: reincarnation_system.py
     from reincarnation_system import REGISTRY as REINC_REG
-    from reincarnation_system import (
-        ReincarnationData,
-        ReincarnationManager,
-        ReincarnationRegistry,
-    )
+    from reincarnation_system import ReincarnationData, ReincarnationManager, ReincarnationRegistry
 
     assert ReincarnationData is not None, "Step 22 Failed"
     r1 = ReincarnationRegistry()
@@ -153,9 +132,7 @@ def test_all_72_steps_reincarnation_system():
     e.level = 50
     assert rmgr.can_reincarnate(e), "Step 26 Failed: can_reincarnate"
     ok = rmgr.reincarnate(e)
-    assert ok and e.reincarnation_count == 1 and e.level == 1, (
-        "Step 27 Failed: reincarnate logic"
-    )
+    assert ok and e.reincarnation_count == 1 and e.level == 1, "Step 27 Failed: reincarnate logic"
     print("[OK] Steps 21-27 (reincarnation_system.py Data/Registry/Manager)")
 
     # Steps 28-30: game.py Engine 転生マネージャー参照 & オプション判定
@@ -170,11 +147,7 @@ def test_all_72_steps_reincarnation_system():
 
     # Steps 31-35: inheritance_system.py
     from inheritance_system import REGISTRY as INH_REG
-    from inheritance_system import (
-        InheritanceData,
-        InheritanceManager,
-        InheritanceRegistry,
-    )
+    from inheritance_system import InheritanceData, InheritanceManager, InheritanceRegistry
 
     assert InheritanceData is not None, "Step 32 Failed"
     i1 = InheritanceRegistry()
@@ -219,9 +192,7 @@ def test_all_72_steps_reincarnation_system():
     RD_REG.load()
     assert len(RD_REG.all()) >= 1, "Step 46 Failed: registry load"
     rdmgr = ReincarnationDungeonManager(RD_REG)
-    assert rdmgr.is_dungeon_unlocked(1, "first_life_trial"), (
-        "Step 48 Failed: is_dungeon_unlocked"
-    )
+    assert rdmgr.is_dungeon_unlocked(1, "first_life_trial"), "Step 48 Failed: is_dungeon_unlocked"
     av_dungs = rdmgr.get_available_dungeons(1)
     assert len(av_dungs) >= 1, "Step 49 Failed: get_available_dungeons"
     print("[OK] Steps 43-49 (reincarnation_dungeon_system.py Data/Registry/Manager)")
@@ -257,11 +228,7 @@ def test_all_72_steps_reincarnation_system():
 
     # Steps 59-65: legacy_skill_system.py
     from legacy_skill_system import REGISTRY as LS_REG
-    from legacy_skill_system import (
-        LegacySkillData,
-        LegacySkillManager,
-        LegacySkillRegistry,
-    )
+    from legacy_skill_system import LegacySkillData, LegacySkillManager, LegacySkillRegistry
 
     assert LegacySkillData is not None, "Step 60 Failed"
     ls1 = LegacySkillRegistry()
@@ -272,9 +239,9 @@ def test_all_72_steps_reincarnation_system():
     lsmgr = LegacySkillManager(LS_REG)
     eng.player.reincarnation_count = 1
     unlocked_l = lsmgr.check_unlocks(eng.player)
-    assert "soul_memory" in unlocked_l or "soul_memory" in eng.player.legacy_skills, (
-        "Step 65 Failed"
-    )
+    assert (
+        "soul_memory" in unlocked_l or "soul_memory" in eng.player.legacy_skills
+    ), "Step 65 Failed"
     boosted = lsmgr.apply_legacy_effects(eng.player, "skill_exp_boost", 100.0)
     assert boosted >= 115.0, "Step 64 Failed"
     print("[OK] Steps 59-65 (legacy_skill_system.py Data/Registry/Manager)")
@@ -304,9 +271,7 @@ def test_all_72_steps_reincarnation_system():
     from save_system import SaveSystem
 
     save_code = open("save_system.py", encoding="utf-8").read()
-    assert "karma_law_chaos" in save_code and "legacy_skills" in save_code, (
-        "Step 72 Failed"
-    )
+    assert "karma_law_chaos" in save_code and "legacy_skills" in save_code, "Step 72 Failed"
     eng.player.reincarnation_count = 3
     eng.player.karma_law_chaos = 50
     save_res = SaveSystem.save(eng)
@@ -319,9 +284,7 @@ def test_all_72_steps_reincarnation_system():
     ), "Step 72 Load failed"
     print("[OK] Step 72 (save_system.py 転生データ完全永続化 & 後方互換性)")
 
-    print(
-        "\nALL 72 STEPS OF REINCARNATION & NEW GAME+ SYSTEM VERIFIED 100% SUCCESSFULLY!"
-    )
+    print("\nALL 72 STEPS OF REINCARNATION & NEW GAME+ SYSTEM VERIFIED 100% SUCCESSFULLY!")
 
 
 if __name__ == "__main__":

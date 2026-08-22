@@ -3,6 +3,7 @@
 Asset deployment script for deploying processed assets to target environments.
 Supports various deployment targets including local directories, FTP, and packaging.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -56,9 +57,7 @@ def create_archive(source_dir: str, archive_path: str, format: str = "zip") -> b
         elif format == "tar":
             shutil.make_archive(archive_path.replace(".tar", ""), "tar", source_dir)
         elif format == "tar.gz":
-            shutil.make_archive(
-                archive_path.replace(".tar.gz", ""), "gztar", source_dir
-            )
+            shutil.make_archive(archive_path.replace(".tar.gz", ""), "gztar", source_dir)
         else:
             print(f"Unsupported archive format: {format}")
             return False
@@ -173,9 +172,7 @@ def deploy_to_ftp(
         return False
 
 
-def create_deployment_manifest(
-    source_dir: str, manifest_path: str, config: dict
-) -> bool:
+def create_deployment_manifest(source_dir: str, manifest_path: str, config: dict) -> bool:
     """Create a deployment manifest file."""
     try:
         print(f"Creating deployment manifest: {manifest_path}")
@@ -265,9 +262,7 @@ def main():
     parser.add_argument("--password", help="SFTP/FTP password")
     parser.add_argument("--key-file", help="SSH key file for SFTP")
     parser.add_argument("--remote-path", help="Remote path for SFTP/FTP")
-    parser.add_argument(
-        "--create-manifest", action="store_true", help="Create deployment manifest"
-    )
+    parser.add_argument("--create-manifest", action="store_true", help="Create deployment manifest")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
 
     args = parser.parse_args()
@@ -354,9 +349,7 @@ def main():
             "deployment_manifest.json",
         )
         if args.method == "archive":
-            manifest_path = args.target.replace(
-                f".{args.archive_format}", "_manifest.json"
-            )
+            manifest_path = args.target.replace(f".{args.archive_format}", "_manifest.json")
         elif args.method == "local":
             manifest_path = os.path.join(args.target, "deployment_manifest.json")
 

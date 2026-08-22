@@ -165,8 +165,8 @@ update_emotes(delta_time)
 
 # List available emotes
 EMOTE_SYSTEM.get_available_emotes()
-# -> ['anger', 'exclamation', 'question', 'idea', 'heart', 'heart_broken', 
-#     'sleep', 'laugh', 'sad', 'happy', 'angry_face', 'alert', 'music', 
+# -> ['anger', 'exclamation', 'question', 'idea', 'heart', 'heart_broken',
+#     'sleep', 'laugh', 'sad', 'happy', 'angry_face', 'alert', 'music',
 #     'star', 'dots', 'sweat', 'swirl', 'cash']
 ```
 

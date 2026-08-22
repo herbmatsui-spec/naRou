@@ -1,7 +1,6 @@
 """Unit tests for ConfigManager."""
-from __future__ import annotations
 
-import pytest
+from __future__ import annotations
 
 from config_manager import ConfigManager, get_config_manager
 

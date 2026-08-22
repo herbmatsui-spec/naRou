@@ -3,6 +3,7 @@
 Gemini Asset Generator for naRou
 Handles batch generation of game assets using Google's Gemini AI.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -47,9 +48,7 @@ class GeminiAssetGenerator:
             self.model = genai.GenerativeModel("gemini-pro-vision")
             logger.info("Gemini Asset Generator initialized with API key")
         elif GEMINI_AVAILABLE:
-            logger.warning(
-                "Gemini API key not found. Set GEMINI_API_KEY environment variable."
-            )
+            logger.warning("Gemini API key not found. Set GEMINI_API_KEY environment variable.")
         else:
             logger.warning("Google Generative AI library not available")
 
@@ -83,9 +82,7 @@ class GeminiAssetGenerator:
             Path to generated asset if successful, None otherwise
         """
         if not GEMINI_AVAILABLE or not self.api_key:
-            logger.error(
-                "Cannot generate asset: Gemini API not available or no API key"
-            )
+            logger.error("Cannot generate asset: Gemini API not available or no API key")
             return None
 
         if category not in self.prompt_templates.get("categories", {}):
@@ -150,9 +147,7 @@ class GeminiAssetGenerator:
         generated_assets = []
 
         for i, params in enumerate(param_combinations):
-            logger.info(
-                f"Generating combination {i + 1}/{len(param_combinations)}: {params}"
-            )
+            logger.info(f"Generating combination {i + 1}/{len(param_combinations)}: {params}")
 
             for variant in range(variants_per_combo):
                 asset_path = self.generate_asset(category, params, variant_id=variant)
@@ -242,9 +237,7 @@ def main():
             f"with {args.variants} variants each ({len(param_combinations) * args.variants} total assets)"
         )
 
-        generated = generator.batch_generate(
-            args.category, param_combinations, args.variants
-        )
+        generated = generator.batch_generate(args.category, param_combinations, args.variants)
         logger.info(f"Generated {len(generated)} assets")
 
     else:
@@ -289,9 +282,7 @@ def main():
 
         generated = []
         for i in range(args.count):
-            asset_path = generator.generate_asset(
-                args.category, prompt_params, variant_id=i
-            )
+            asset_path = generator.generate_asset(args.category, prompt_params, variant_id=i)
             if asset_path:
                 generated.append(asset_path)
 

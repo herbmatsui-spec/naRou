@@ -57,7 +57,7 @@ inheritance_rules:
           target: "gift_item_stockpile"
           efficiency: 0.6
           note: "好感度アイテム量産でフラグ強制進行"
-    
+
     # W4 → 全世界共通（スキル喰いは万能）
     - from: "skill_eater"
       to: "*"
@@ -66,7 +66,7 @@ inheritance_rules:
           target: "inherited_skills[]"
           efficiency: 0.3
           note: "喰ったスキルの30%を次世界初期スキルとして付与"
-  
+
   hard_cap:
     max_inherited_skills: 5
     max_resource_carryover: 10000  # 共通通貨換算
@@ -146,7 +146,7 @@ recipe_dsl:
   syntax: "python_subset"
   builtins: ["mix", "heat", "distill", "crystallize", "enchant"]
   optimization_targets: ["yield", "purity", "potency", "stability", "cost"]
-  
+
 cheat_skills:
   - id: "modern_chemistry_knowledge"
     effect: "全レシピの最適解を初期状態で知っている"
@@ -179,11 +179,11 @@ scenario_script:
       trigger: "prince_affection < -50 AND evidence_collected == true"
       result: "bad_end_exile"
       override_cost: "affection +100 OR evidence_destroyed"
-    
+
     - id: "secret_route_duke"
       trigger: "duke_affection > 80 AND knowledge[dark_magic] == true"
       result: "true_end_duke"
-      
+
   hidden_flags:  # 《原典閲覧》Lv2で解放
     - "king_illness_cure_possible"
     - "heroine_is_reincarnator"
@@ -251,7 +251,7 @@ devour_mechanics:
   analysis:
     reveal: ["skill_tree_full", "weakness", "synergy", "evolution_path"]
     cost_mp: 10
-  
+
   devour:
     base_success: 0.6
     modifiers:
@@ -265,7 +265,7 @@ devour_mechanics:
     on_fail:
       - "skill_backlash(random_debuff)"
       - "alert_nearby_enemies()"
-  
+
   synthesis:
     cost_mp: 100
     recipes:
@@ -303,7 +303,7 @@ policies:
       diplomacy["human_supremacists"]: -20
     unlock_condition: "demihuman_population > 100"
     meta_hint: "W6のモンスター娘を移住させれば即座にボーナス最大化"
-  
+
   - id: "magitech_industrial_zone"
     name: "魔導工業特区"
     effects:
@@ -313,7 +313,7 @@ policies:
       finance: +15%/turn
       unlock_condition: "magic_research_level > 5"
     meta_hint: "W1の最適化レシピ導入で初期研究レベル短縮可"
-  
+
   - id: "adventurer_free_city"
     name: "冒険者自由都市宣言"
     effects:
@@ -360,7 +360,7 @@ monster_girls:
         condition: "level>50 AND corruption>70 AND item:chaos_crystal"
         stat_multiplier: 2.5
         new_skills: ["reality_warp", "skill_copy", "void_digest"]
-  
+
   - id: "goblin_girl"
     base_stats: { hp: 80, mp: 30, atk: 60, def: 40, spd: 50, int: 40 }
     evolutions:
@@ -374,7 +374,7 @@ monster_girls:
 contract_system:
   max_contracts: "INFINITE"  # 主人公のみ
   loyalty_decay: 0.5/turn  # 放置で低下
-  loyalty_gain: 
+  loyalty_gain:
     - "battle_victory: +2"
     - "gift_favorite_item: +10"
     - "conversation: +1"
@@ -405,7 +405,7 @@ loop_mechanics:
     - "skills: 10% (loop_count * 0.1%)"
     - "items: 5% (rarity_based)"
     - "flags: cleared_flags persist"
-  
+
   divergence_points:  # 全分岐点の真偽値表
     - id: "save_village_a"
       choices: ["save", "abandon", "delay"]
@@ -414,12 +414,12 @@ loop_mechanics:
         abandon: { flags: ["village_a_destroyed"], cost: "time+0", reward: "dark_power" }
         delay: { flags: ["village_a_half_destroyed"], cost: "time+1", reward: "info" }
       true_end_requirement: "save"  # 真エンドには必須
-    
+
     - id: "confront_traitor"
       choices: ["public_execution", "secret_kill", "forgive", "recruit"]
       outcomes: ...
       true_end_requirement: "recruit"  # 仲間にするのが真エンド分岐
-  
+
   true_end_condition:
     required_flags: ["village_a_survived", "traitor_recruited", "ancient_artifact_found", "all_allies_alive"]
     forbidden_flags: ["dark_power_used", "innocent_killed", "time_ran_out"]
@@ -447,7 +447,7 @@ game_system:
   physics_engine: "havok_modified"
   skill_formula: "damage = (atk * skill_mod) * (1 + crit_rate) * element_mult - def"
   drop_table: "weighted_random(seed=world_seed + player_id + timestamp)"
-  
+
   patch_schedule:
     - version: "1.0.0"
       date: "day_1"
@@ -458,7 +458,7 @@ game_system:
     - version: "2.0.0"
       date: "day_90"
       changes: ["expansion_release", "level_cap_100→120", "new_class"]
-  
+
   admin_commands:  # GM権限（隠し条件で取得可）
     - "spawn_entity"
     - "modify_player_stats"
@@ -494,7 +494,7 @@ npc_archetypes:
 magic_os:
   kernel: "akashic_record"  # アカシックレコード＝カーネル
   shell: "smartphone_terminal"  # プレイヤーのスマホ
-  
+
   libraries:
     - name: "modern_physics"
       source: "W1_isekai_pharmacy"
@@ -520,7 +520,7 @@ magic_os:
     - name: "system_admin"
       source: "W8_npc_vrmmo"
       functions: ["root_access", "patch_deployment", "ban_entity", "rewrite_physics"]
-  
+
   final_permission:
     root_access: true
     commands:
@@ -682,6 +682,6 @@ meta_progress:
 5. **テンプレート用語辞書作成** → `localization_manager` 連携・多言語対応準備
 
 ---
-*作成日: 2026-08-20*  
-*バージョン: 1.0 (初版)*  
+*作成日: 2026-08-20*
+*バージョン: 1.0 (初版)*
 *対象: naRou プロジェクト・マルチテンプレート世界線統合版*

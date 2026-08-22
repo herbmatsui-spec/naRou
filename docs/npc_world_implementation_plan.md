@@ -86,7 +86,7 @@
 - ファイル: `data/npc_locations.yaml`（新規）。`market:[x,y]`,`tavern:[x,y]`,`home:[x,y]` を定義。
 - 確認: safe_load可。
 
-### Step 15 — `npc_manager.place_in_town(map)` 
+### Step 15 — `npc_manager.place_in_town(map)`
 - `npc_manager.py` にメソッド追加。各actorを `current_location` に応じた座標に配置（townマップ上のEntityを生成して返す）。
 - 確認: market のNPCが market座標にいるテスト。
 

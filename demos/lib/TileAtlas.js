@@ -14,11 +14,11 @@ export class TileAtlas {
         this.metadatas = metadatas;        // scale -> metadata
         this.defs = defs;                  // tile_id -> TileDef
         this.defaultScale = "16";
-        
+
         // Sprite caches
         this.staticSpriteCache = new Map();      // key -> PIXI.Sprite
         this.animatedSpriteCache = new Map();    // key -> PIXI.AnimatedSprite
-        
+
         // 4-bit autotile mapping: bit0=up, bit1=right, bit2=down, bit3=left
         this.AUTOTILE_MAP = {
             0b0000: 0, 0b0001: 1, 0b0010: 2, 0b0100: 4, 0b1000: 8,
@@ -40,7 +40,7 @@ export class TileAtlas {
         const defs = defData.tiles || {};
 
         // 2. Load metadata for each scale in parallel
-        const metaPromises = scales.map(s => 
+        const metaPromises = scales.map(s =>
             fetch(`assets/tiles/tileset_${s}x${s}.json`).then(r => r.json())
         );
         const metas = await Promise.all(metaPromises);

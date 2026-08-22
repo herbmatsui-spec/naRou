@@ -5,7 +5,13 @@ Emergency Quest Injector Module (偏執的クエストシステム / 設計書 P
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from procedural_quest_generator import ProceduralQuestGenerator
+
+if TYPE_CHECKING:
+    from procedural_quest_generator import GeneratedQuest
+    from world_event_system import WorldEvent
 from world_event_hooks import monitor_world_event
 from world_event_system import WorldEventType
 
@@ -18,7 +24,7 @@ class EmergencyQuestInjector:
 
         self.quest_generator = quest_generator or PROCEDURAL_QUEST_GENERATOR
         self._active = False
-        self._emergency_quests: List[GeneratedQuest] = []
+        self._emergency_quests: list[GeneratedQuest] = []
         self._register_handlers()
 
     def _register_handlers(self) -> None:
@@ -67,17 +73,13 @@ class EmergencyQuestInjector:
         """更新：イベントが終了したら緊急クエストをクリア"""
         from world_event_system import WORLD_EVENT_SYSTEM
 
-        any_active = any(
-            event.is_active for event in WORLD_EVENT_SYSTEM.active_events.values()
-        )
+        any_active = any(event.is_active for event in WORLD_EVENT_SYSTEM.active_events.values())
         if not any_active and self._active:
             # イベントが終了したら緊急クエストをクリア
             self._emergency_quests.clear()
             self._active = False
 
-    def inject_emergency_quests(
-        self, board_quests: List[GeneratedQuest]
-    ) -> List[GeneratedQuest]:
+    def inject_emergency_quests(self, board_quests: list[GeneratedQuest]) -> list[GeneratedQuest]:
         """依頼ボードのクエストリストに緊急クエストを注入"""
         if not self._active:
             return board_quests
@@ -98,7 +100,7 @@ class EmergencyQuestInjector:
 EMERGENCY_QUEST_INJECTOR = EmergencyQuestInjector()
 
 
-def inject_emergency_quests(board_quests: List[GeneratedQuest]) -> List[GeneratedQuest]:
+def inject_emergency_quests(board_quests: list[GeneratedQuest]) -> list[GeneratedQuest]:
     """依頼ボードのクエストリストに緊急クエストを注入するヘルパー関数"""
     return EMERGENCY_QUEST_INJECTOR.inject_emergency_quests(board_quests)
 

@@ -39,12 +39,12 @@ export class FluidRenderer {
 
             void main(void) {
                 vec4 col = texture2D(uSampler, vTextureCoord);
-                
+
                 // アルファ値が閾値を超えた領域を有機的に結合
                 if (col.a > 0.45) {
                     // 滑らかなエッジ（アンチエイリアス）
                     float edge = smoothstep(0.45, 0.55, col.a);
-                    
+
                     // 赤（血）主体のカラーリングとハイライト
                     vec3 bloodColor = vec3(0.65, 0.05, 0.08);
                     vec3 poisonColor = vec3(0.1, 0.75, 0.2);
@@ -234,12 +234,12 @@ export class FluidRenderer {
 
             void main(void) {
                 vec4 col = texture2D(uSampler, vTextureCoord);
-                
+
                 // アルファ値が閾値を超えた領域を有機的に結合
                 if (col.a > 0.45) {
                     // 滑らかなエッジ（アンチエイリアス）
                     float edge = smoothstep(0.45, 0.55, col.a);
-                    
+
                     // 赤（血）主体のカラーリングとハイライト
                     vec3 bloodColor = vec3(0.65, 0.05, 0.08);
                     vec3 poisonColor = vec3(0.1, 0.75, 0.2);

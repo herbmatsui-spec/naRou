@@ -86,9 +86,7 @@ class AudioBackend:
             logger.exception("ロード失敗")
             return False
 
-    def play_sound(
-        self, sound_id: str, volume: float = 1.0, blocking: bool = False
-    ) -> bool:
+    def play_sound(self, sound_id: str, volume: float = 1.0, blocking: bool = False) -> bool:
         """Play a loaded sound."""
         if not self.is_available or not is_enabled("ENABLE_AUDIO_PACK"):
             return False
@@ -106,9 +104,7 @@ class AudioBackend:
                     play_obj = sound.play()
                     self._play_objects.append(play_obj)
                     # Clean up finished play objects
-                    self._play_objects = [
-                        p for p in self._play_objects if p.is_playing()
-                    ]
+                    self._play_objects = [p for p in self._play_objects if p.is_playing()]
             return True
         except Exception:
             logger.exception("ロード失敗")
@@ -138,9 +134,7 @@ class AudioBackend:
                 if self._backend == "pygame":
                     pygame.mixer.music.load(str(path))
                     pygame.mixer.music.set_volume(volume * self._volume)
-                    pygame.mixer.music.play(
-                        -1 if loop else 0, fade_ms=int(fade_in * 1000)
-                    )
+                    pygame.mixer.music.play(-1 if loop else 0, fade_ms=int(fade_in * 1000))
                     self._current_bgm_path = str(path)
                     self._bgm_volume = volume
                 elif self._backend == "simpleaudio":

@@ -2,9 +2,11 @@
 World A (Skill Eater) Package for Elona / naRou Roguelike Kernel
 Steps 3, 4, 5, 6: WorldAPackage definition and system registration
 """
+
 from __future__ import annotations
 
 from pathlib import Path
+
 from packages.core.kernel.kernel import Kernel
 from packages.core.kernel.package import IPackage, PackageMetadata
 
@@ -39,24 +41,24 @@ class WorldAPackage(IPackage):
         )
 
     def setup(self, kernel: Kernel) -> None:
-        from skill_eater_system import SkillEaterRegistry
-        from skill_eater_audio_system import SkillEaterAudioSystem
-        from skill_eater_presentation_system import SkillEaterPresentationSystem
-        from skill_eater_combat_system import SkillEaterCombatSystem
-        from skill_eater_synthesis_system import SkillEaterSynthesisSystem
-        from skill_eater_economy_system import SkillEaterEconomySystem
-        from skill_eater_servant_system import SkillEaterServantSystem
-        from skill_eater_meta_quest_system import SkillEaterQuestSystem
-        from skill_eater_exploration_system import SkillEaterExplorationSystem
-        from skill_eater_toxicity_system import SkillToxicityManager
-        from skill_eater_base_expansion import SlumBaseExpansionManager
-        from skill_eater_pet_dispatch import PetDispatchManager
-        from skill_eater_underground_arena import UndergroundArenaManager
-        from skill_eater_bounty_system import MidasBountyManager
         from skill_eater_ascension_board import AscensionBoard
+        from skill_eater_audio_system import SkillEaterAudioSystem
+        from skill_eater_base_expansion import SlumBaseExpansionManager
+        from skill_eater_bounty_system import MidasBountyManager
+        from skill_eater_combat_system import SkillEaterCombatSystem
         from skill_eater_concept_crystal import ConceptCrystallizer
-        from skill_eater_temporal_vault import TemporalVaultManager
+        from skill_eater_economy_system import SkillEaterEconomySystem
         from skill_eater_epilogue import EpilogueAndTransitionManager
+        from skill_eater_exploration_system import SkillEaterExplorationSystem
+        from skill_eater_meta_quest_system import SkillEaterQuestSystem
+        from skill_eater_pet_dispatch import PetDispatchManager
+        from skill_eater_presentation_system import SkillEaterPresentationSystem
+        from skill_eater_servant_system import SkillEaterServantSystem
+        from skill_eater_synthesis_system import SkillEaterSynthesisSystem
+        from skill_eater_system import SkillEaterRegistry
+        from skill_eater_temporal_vault import TemporalVaultManager
+        from skill_eater_toxicity_system import SkillToxicityManager
+        from skill_eater_underground_arena import UndergroundArenaManager
 
         # Initialize and load registry
         registry = SkillEaterRegistry.get_instance()
@@ -104,14 +106,10 @@ class WorldAPackage(IPackage):
         )
         kernel.register_system("skill_eater_servant_system", servant_sys)
 
-        meta_sys = SkillEaterQuestSystem(
-            registry=registry, audio=audio_sys, presentation=pres_sys
-        )
+        meta_sys = SkillEaterQuestSystem(registry=registry, audio=audio_sys, presentation=pres_sys)
         kernel.register_system("skill_eater_meta_quest_system", meta_sys)
 
-        explore_sys = SkillEaterExplorationSystem(
-            audio=audio_sys, presentation=pres_sys
-        )
+        explore_sys = SkillEaterExplorationSystem(audio=audio_sys, presentation=pres_sys)
         kernel.register_system("skill_eater_exploration_system", explore_sys)
 
         # Phase 2-5 Advanced Subsystems

@@ -3,6 +3,7 @@
 Asset monitoring script for monitoring asset pipeline performance, health, and metrics.
 Tracks build times, asset counts, resource usage, and trends.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -71,12 +72,8 @@ def get_pipeline_metrics(config: dict) -> dict:
 
             asset_info["file_count"] = len(file_sizes)
             asset_info["total_size_bytes"] = sum(file_sizes) if file_sizes else 0
-            asset_info["avg_file_size"] = (
-                sum(file_sizes) / len(file_sizes) if file_sizes else 0
-            )
-            asset_info["largest_file"] = (
-                largest_file if largest_file["size"] > 0 else None
-            )
+            asset_info["avg_file_size"] = sum(file_sizes) / len(file_sizes) if file_sizes else 0
+            asset_info["largest_file"] = largest_file if largest_file["size"] > 0 else None
             asset_info["smallest_file"] = (
                 smallest_file if smallest_file["size"] != float("inf") else None
             )
@@ -140,9 +137,7 @@ def get_performance_metrics(config: dict) -> dict:
                         # Extract build time
                         import re
 
-                        time_match = re.search(
-                            r"Total duration: (\d+\.?\d*) seconds", content
-                        )
+                        time_match = re.search(r"Total duration: (\d+\.?\d*) seconds", content)
                         if time_match:
                             build_times.append(float(time_match.group(1)))
                 except Exception:
@@ -150,9 +145,7 @@ def get_performance_metrics(config: dict) -> dict:
                     pass  # Skip unreadable logs
 
             if build_times:
-                perf_metrics["last_build_time"] = (
-                    build_times[0] if build_times else None
-                )
+                perf_metrics["last_build_time"] = build_times[0] if build_times else None
                 perf_metrics["average_build_time"] = sum(build_times) / len(build_times)
 
             if total_count > 0:
@@ -316,9 +309,7 @@ def print_metrics_summary(metrics: dict):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Monitor asset pipeline health and performance"
-    )
+    parser = argparse.ArgumentParser(description="Monitor asset pipeline health and performance")
     parser.add_argument(
         "--config",
         default="tools/asset_pipeline_config.json",

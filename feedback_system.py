@@ -6,6 +6,7 @@ Handles collecting and storing feedback after world events.
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import json
 import os
@@ -18,9 +19,7 @@ class FeedbackSystem:
         self.storage_dir = storage_dir
         os.makedirs(self.storage_dir, exist_ok=True)
 
-    def submit_feedback(
-        self, event_id: str, player_id: str, feedback: dict[str, Any]
-    ) -> bool:
+    def submit_feedback(self, event_id: str, player_id: str, feedback: dict[str, Any]) -> bool:
         """
         フィードバックを送信し、保存する。
         :param event_id: イベントID
@@ -57,9 +56,7 @@ class FeedbackSystem:
         for filename in os.listdir(self.storage_dir):
             if filename.startswith(event_id + "_") and filename.endswith(".json"):
                 try:
-                    with open(
-                        os.path.join(self.storage_dir, filename), encoding="utf-8"
-                    ) as f:
+                    with open(os.path.join(self.storage_dir, filename), encoding="utf-8") as f:
                         data = json.load(f)
                         feedbacks.append(data)
                 except Exception as e:

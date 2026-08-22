@@ -53,7 +53,7 @@ fn noise3d(p: vec3<f32>) -> f32 {
     let ip = vec3<i32>(floor(p)) & 255;
     let fp = fract(p);
     let f = fade(fp);
-    
+
     let aaa = perm[perm[perm[u32(ip.x)] + u32(ip.y)] + u32(ip.z)];
     let aba = perm[perm[perm[u32(ip.x)] + u32(ip.y)] + u32(ip.z) + 1u];
     let aab = perm[perm[perm[u32(ip.x)] + u32(ip.y) + 1u] + u32(ip.z)];
@@ -62,15 +62,15 @@ fn noise3d(p: vec3<f32>) -> f32 {
     let bba = perm[perm[perm[u32(ip.x) + 1u] + u32(ip.y)] + u32(ip.z) + 1u];
     let bab = perm[perm[perm[u32(ip.x) + 1u] + u32(ip.y) + 1u] + u32(ip.z)];
     let bbb = perm[perm[perm[u32(ip.x) + 1u] + u32(ip.y) + 1u] + u32(ip.z) + 1u];
-    
+
     let x1 = mix(f32(grad(aaa, fp.x, fp.y, fp.z)), f32(grad(baa, fp.x - 1.0, fp.y, fp.z)), f.x);
     let x2 = mix(f32(grad(aba, fp.x, fp.y - 1.0, fp.z)), f32(grad(bba, fp.x - 1.0, fp.y - 1.0, fp.z)), f.x);
     let y1 = mix(x1, x2, f.y);
-    
+
     let x1b = mix(f32(grad(aab, fp.x, fp.y, fp.z - 1.0)), f32(grad(bab, fp.x - 1.0, fp.y, fp.z - 1.0)), f.x);
     let x2b = mix(f32(grad(abb, fp.x, fp.y - 1.0, fp.z - 1.0)), f32(grad(bbb, fp.x - 1.0, fp.y - 1.0, fp.z - 1.0)), f.x);
     let y2 = mix(x1b, x2b, f.y);
-    
+
     return mix(y1, y2, f.z) * 2.0;
 }
 
@@ -78,19 +78,19 @@ fn curl_noise(p: vec3<f32>, eps: f32) -> vec3<f32> {
     let n_x = noise3d(p);
     let n_y = noise3d(p + vec3<f32>(1000.0, 0.0, 0.0));
     let n_z = noise3d(p + vec3<f32>(2000.0, 0.0, 0.0));
-    
+
     let n_x_eps_y = noise3d(p + vec3<f32>(0.0, eps, 0.0));
     let n_y_eps_y = noise3d(p + vec3<f32>(1000.0, eps, 0.0));
     let n_z_eps_y = noise3d(p + vec3<f32>(2000.0, eps, 0.0));
-    
+
     let n_x_eps_z = noise3d(p + vec3<f32>(0.0, 0.0, eps));
     let n_y_eps_z = noise3d(p + vec3<f32>(1000.0, 0.0, eps));
     let n_z_eps_z = noise3d(p + vec3<f32>(2000.0, 0.0, eps));
-    
+
     let n_x_eps_x = noise3d(p + vec3<f32>(eps, 0.0, 0.0));
     let n_y_eps_x = noise3d(p + vec3<f32>(1000.0 + eps, 0.0, 0.0));
     let n_z_eps_x = noise3d(p + vec3<f32>(2000.0 + eps, 0.0, 0.0));
-    
+
     return vec3<f32>(
         (n_z_eps_y - n_z) / eps - (n_y_eps_z - n_y) / eps,
         (n_x_eps_z - n_x) / eps - (n_z_eps_x - n_z) / eps,
@@ -100,23 +100,23 @@ fn curl_noise(p: vec3<f32>, eps: f32) -> vec3<f32> {
 
 fn sdf_query(pos: vec3<f32>) -> f32 {
     if (sdf_dims.x == 0u) { return 1e6; }
-    
+
     let local = (pos - sdf_bounds_min) / cell_size;
     if (any(local < vec3<f32>(0.0)) || any(local > vec3<f32>(sdf_dims) - 1.0)) {
         return 1e6;
     }
-    
+
     let idx = vec3<u32>(floor(local));
     let frac = fract(local);
-    
+
     if (any(idx >= sdf_dims - 1u)) { return 1e6; }
-    
+
     let i = idx;
     let f = frac;
-    
+
     let stride_yz = sdf_dims.y * sdf_dims.x;
     let stride_z = sdf_dims.x;
-    
+
     let c000 = sdf_grid[i.z * stride_yz + i.y * stride_z + i.x];
     let c100 = sdf_grid[i.z * stride_yz + i.y * stride_z + i.x + 1u];
     let c010 = sdf_grid[i.z * stride_yz + (i.y + 1u) * stride_z + i.x];
@@ -125,15 +125,15 @@ fn sdf_query(pos: vec3<f32>) -> f32 {
     let c101 = sdf_grid[(i.z + 1u) * stride_yz + i.y * stride_z + i.x + 1u];
     let c011 = sdf_grid[(i.z + 1u) * stride_yz + (i.y + 1u) * stride_z + i.x];
     let c111 = sdf_grid[(i.z + 1u) * stride_yz + (i.y + 1u) * stride_z + i.x + 1u];
-    
+
     let c00 = mix(c000, c100, f.x);
     let c01 = mix(c010, c110, f.x);
     let c10 = mix(c001, c101, f.x);
     let c11 = mix(c011, c111, f.x);
-    
+
     let c0 = mix(c00, c01, f.y);
     let c1 = mix(c10, c11, f.y);
-    
+
     return mix(c0, c1, f.z);
 }
 
@@ -150,9 +150,9 @@ fn sdf_gradient(pos: vec3<f32>, eps: f32) -> vec3<f32> {
 fn main(@builtin(global_invocation_id) idx: vec3<u32>) {
     let i = idx.x;
     if (i >= uniforms.max_particles) { return; }
-    
+
     if ((particles[i].flags & 1u) == 0u) { return; }
-    
+
     // Update life
     particles[i].life.x += uniforms.dt;
     if (particles[i].life.x >= particles[i].life.y) {
@@ -164,37 +164,37 @@ fn main(@builtin(global_invocation_id) idx: vec3<u32>) {
         particles[i].flags = 0u;
         return;
     }
-    
+
     let life_ratio = particles[i].life.x / particles[i].life.y;
     var vel = particles[i].velocity;
-    
+
     // Gravity
     vel += uniforms.gravity * uniforms.dt;
-    
+
     // Wind
     vel += uniforms.wind * uniforms.dt;
-    
+
     // Curl noise
     if ((uniforms.flags_curl_noise & 1u) != 0u) {
         let noise_vel = curl_noise(particles[i].position + uniforms.time, 0.01);
         vel += noise_vel * uniforms.dt * 5.0;
     }
-    
+
     // Position update
     var new_pos = particles[i].position + vel * uniforms.dt;
-    
+
     // SDF Collision
     if ((uniforms.flags_sdf_collision & 1u) != 0u) {
         let dist = sdf_query(new_pos);
         let radius = particles[i].size.z;
-        
+
         if (dist < radius) {
             let grad = sdf_gradient(new_pos, 0.01);
             let grad_len = length(grad);
             if (grad_len > 1e-6) {
                 let n = normalize(grad);
                 new_pos += n * (radius - dist);
-                
+
                 let v_dot_n = dot(vel, n);
                 if (v_dot_n < 0.0) {
                     vel -= n * (1.0 + 0.3) * v_dot_n;
@@ -202,22 +202,22 @@ fn main(@builtin(global_invocation_id) idx: vec3<u32>) {
             }
         }
     }
-    
+
     // Ribbon/Trail
     if ((uniforms.flags_ribbon & 1u) != 0u && (particles[i].flags & 2u) != 0u) {
         particles[i].prev_position = particles[i].position;
         particles[i].ribbon_length += length(new_pos - particles[i].position);
     }
-    
+
     // Rotation
     particles[i].rotation.z += particles[i].rotation.y * uniforms.dt;
-    
+
     // Size interpolation
     particles[i].size.z = mix(particles[i].size.x, particles[i].size.y, life_ratio);
-    
+
     // Alpha fade
     particles[i].color.w *= (1.0 - life_ratio);
-    
+
     // Commit
     particles[i].position = new_pos;
     particles[i].velocity = vel;

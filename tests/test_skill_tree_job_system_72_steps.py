@@ -22,9 +22,7 @@ def test_all_72_steps():
     assert st_data and "skill_trees" in st_data, "Step 1 Failed"
     assert "sword" in st_data["skill_trees"], "Step 2 Failed"
     sword_tiers = st_data["skill_trees"]["sword"]["tiers"]
-    assert len(sword_tiers) >= 1 and sword_tiers[0]["id"] == "basic_sword", (
-        "Step 3 Failed"
-    )
+    assert len(sword_tiers) >= 1 and sword_tiers[0]["id"] == "basic_sword", "Step 3 Failed"
     assert any(t["id"] == "sword_mastery" for t in sword_tiers), "Step 4 Failed"
     assert any(t["id"] == "sword_essence" for t in sword_tiers), "Step 5 Failed"
     assert "magic" in st_data["skill_trees"], "Step 6 Failed"
@@ -44,9 +42,7 @@ def test_all_72_steps():
     assert hasattr(p, "skill_tree_progress") and isinstance(
         p.skill_tree_progress, dict
     ), "Step 9 Failed"
-    assert hasattr(p, "skill_points") and hasattr(p, "total_skill_points_earned"), (
-        "Step 10 Failed"
-    )
+    assert hasattr(p, "skill_points") and hasattr(p, "total_skill_points_earned"), "Step 10 Failed"
     print("[OK] Steps 9-10 (entity.py skill tree fields)")
 
     # Step 11 - 22: skill_tree_system.py
@@ -83,9 +79,7 @@ def test_all_72_steps():
     p2 = Entity(0, 0, "@")
     initial_sp = p2.skill_points
     p2.gain_exp(1000)
-    assert p2.skill_points > initial_sp and p2.total_skill_points_earned > 0, (
-        "Step 24 Failed"
-    )
+    assert p2.skill_points > initial_sp and p2.total_skill_points_earned > 0, "Step 24 Failed"
     print("[OK] Steps 23-24 (entity.py gain_exp SP)")
 
     # Step 25 - 30: game.py & UI integration
@@ -101,16 +95,12 @@ def test_all_72_steps():
         job_data = yaml.safe_load(f)
     assert job_data and "jobs" in job_data, "Step 31 Failed"
     assert "novice" in job_data["jobs"], "Step 32 Failed"
-    assert job_data["jobs"]["warrior"]["stat_modifiers"]["strength"] == 10, (
-        "Step 33 Failed"
-    )
-    assert job_data["jobs"]["swordmaster"]["unlock_conditions"]["job"] == "warrior", (
-        "Step 34 Failed"
-    )
+    assert job_data["jobs"]["warrior"]["stat_modifiers"]["strength"] == 10, "Step 33 Failed"
+    assert (
+        job_data["jobs"]["swordmaster"]["unlock_conditions"]["job"] == "warrior"
+    ), "Step 34 Failed"
     assert job_data["jobs"]["mage"]["stat_modifiers"]["magic"] == 12, "Step 35 Failed"
-    assert job_data["jobs"]["archmage"]["unlock_conditions"]["job"] == "mage", (
-        "Step 36 Failed"
-    )
+    assert job_data["jobs"]["archmage"]["unlock_conditions"]["job"] == "mage", "Step 36 Failed"
     print("[OK] Steps 31-36 (data/jobs.yaml)")
 
     # Step 37: entity.py job fields
@@ -155,21 +145,15 @@ def test_all_72_steps():
     with open("data/exclusive_skills.yaml", encoding="utf-8") as f:
         excl_data = yaml.safe_load(f)
     assert excl_data and "exclusive_skills" in excl_data, "Step 55 Failed"
-    assert excl_data["exclusive_skills"]["shield_bash"]["job"] == "warrior", (
-        "Step 56 Failed"
-    )
-    assert excl_data["exclusive_skills"]["iaijutsu"]["job"] == "swordmaster", (
-        "Step 57 Failed"
-    )
-    assert excl_data["exclusive_skills"]["meteor"]["job"] == "archmage", (
-        "Step 58 Failed"
-    )
+    assert excl_data["exclusive_skills"]["shield_bash"]["job"] == "warrior", "Step 56 Failed"
+    assert excl_data["exclusive_skills"]["iaijutsu"]["job"] == "swordmaster", "Step 57 Failed"
+    assert excl_data["exclusive_skills"]["meteor"]["job"] == "archmage", "Step 58 Failed"
     print("[OK] Steps 55-58 (data/exclusive_skills.yaml)")
 
     # Step 59 - 61: skill_tree_system exclusive manager & entity exclusive fields
-    assert hasattr(p, "mastered_exclusive_skills") and hasattr(p, "inherited_skills"), (
-        "Step 61 Failed"
-    )
+    assert hasattr(p, "mastered_exclusive_skills") and hasattr(
+        p, "inherited_skills"
+    ), "Step 61 Failed"
     assert stm.check_exclusive_learnable(
         p3, excl_data["exclusive_skills"]["shield_bash"]
     ), "Step 59-60 Failed"
@@ -192,21 +176,15 @@ def test_all_72_steps():
         fus_data = yaml.safe_load(f)
     assert fus_data and "fusions" in fus_data, "Step 64 Failed"
     assert "spellblade" in fus_data["fusions"], "Step 65 Failed"
-    assert fus_data["fusions"]["holy_knight"]["required_job"] == "warrior", (
-        "Step 66 Failed"
-    )
-    assert fus_data["fusions"]["shadow_assassin"]["required_job"] == "rogue", (
-        "Step 67 Failed"
-    )
+    assert fus_data["fusions"]["holy_knight"]["required_job"] == "warrior", "Step 66 Failed"
+    assert fus_data["fusions"]["shadow_assassin"]["required_job"] == "rogue", "Step 67 Failed"
     print("[OK] Steps 64-67 (data/skill_fusion.yaml)")
 
     # Step 68 - 72: skill_fusion_system.py
     from skill_fusion_system import FusionData, FusionEffect, FusionRegistry
 
     fe = FusionEffect("elemental_damage", 20)  # Step 69
-    FusionData(
-        "test_f", "Test Fusion", "Desc", ["req1"], None, None, ["res1"], [fe]
-    )  # Step 70
+    FusionData("test_f", "Test Fusion", "Desc", ["req1"], None, None, ["res1"], [fe])  # Step 70
     fr1 = FusionRegistry()
     fr2 = FusionRegistry()
     assert fr1 is fr2, "Step 71 Failed"

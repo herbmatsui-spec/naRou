@@ -6,10 +6,7 @@ from __future__ import annotations
 
 import pytest
 
-from narrative_executor import (
-    NarrativeExecutor,
-    NarrativeState,
-)
+from narrative_executor import NarrativeExecutor, NarrativeState
 from quest_narrative_dag import (
     NarrativeContext,
     NarrativeDAG,
@@ -94,12 +91,8 @@ def test_narrative_dag_build_and_validate():
 
     # エッジ追加
     e1 = NarrativeEdge("e1", "start", "choice", NarrativeEdgeType.AUTO)
-    e2 = NarrativeEdge(
-        "e2", "choice", "end1", NarrativeEdgeType.CHOICE, choice_text="道A"
-    )
-    e3 = NarrativeEdge(
-        "e3", "choice", "end2", NarrativeEdgeType.CHOICE, choice_text="道B"
-    )
+    e2 = NarrativeEdge("e2", "choice", "end1", NarrativeEdgeType.CHOICE, choice_text="道A")
+    e3 = NarrativeEdge("e3", "choice", "end2", NarrativeEdgeType.CHOICE, choice_text="道B")
 
     start.add_edge(e1)
     choice.add_edge(e2)

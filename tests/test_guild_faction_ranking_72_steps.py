@@ -1,6 +1,7 @@
 """
 総合テストスクリプト: ギルド・派閥・ランキングシステム全72ステップの検証
 """
+
 from __future__ import annotations
 
 import os
@@ -40,9 +41,9 @@ def test_all_72_steps_guild_faction():
     assert "kingdom_garde" in f_data["factions"], "Step 8 Failed"
     kg = f_data["factions"]["kingdom_garde"]
     assert "vernis" in kg.get("territories", []), "Step 9 Failed"
-    assert len(f_data["factions"]) >= 3 and "church_of_lumiest" in f_data["factions"], (
-        "Step 10 Failed"
-    )
+    assert (
+        len(f_data["factions"]) >= 3 and "church_of_lumiest" in f_data["factions"]
+    ), "Step 10 Failed"
     print("[OK] Steps 7-10 (data/factions.yaml)")
 
     # Step 11 - 14: entity.py fields
@@ -50,9 +51,7 @@ def test_all_72_steps_guild_faction():
 
     p = Entity(0, 0, "@")
     assert hasattr(p, "guild_id") and hasattr(p, "guild_rank"), "Step 12 Failed"
-    assert hasattr(p, "guild_contribution") and hasattr(p, "guild_role"), (
-        "Step 12 Failed"
-    )
+    assert hasattr(p, "guild_contribution") and hasattr(p, "guild_role"), "Step 12 Failed"
     assert (
         hasattr(p, "faction_reputation")
         and hasattr(p, "completed_faction_events")
@@ -64,9 +63,7 @@ def test_all_72_steps_guild_faction():
     # Step 15 - 24: guild_system.py & Game.py
     from guild_system import GuildData, GuildManager, GuildRegistry
 
-    GuildData(
-        "t_g", "Test Guild", "🏰", "Desc", "town", ["f1"], [], {}, 10
-    )  # Step 16
+    GuildData("t_g", "Test Guild", "🏰", "Desc", "town", ["f1"], [], {}, 10)  # Step 16
     gr1 = GuildRegistry()
     gr2 = GuildRegistry()
     assert gr1 is gr2, "Step 17 Failed"
@@ -75,9 +72,7 @@ def test_all_72_steps_guild_faction():
     gm = GuildManager(gr1)  # Step 19
     assert gm.can_join_guild(p, "adventurers_guild"), "Step 20 Failed"
     assert gm.join_guild(p, "adventurers_guild"), "Step 21 Failed"
-    assert p.guild_id == "adventurers_guild" and p.guild_rank == "novice", (
-        "Step 21 Failed"
-    )
+    assert p.guild_id == "adventurers_guild" and p.guild_rank == "novice", "Step 21 Failed"
     info = gm.get_guild_info(p)
     assert info is not None and info.id == "adventurers_guild", "Step 23 Failed"
     assert gm.leave_guild(p), "Step 22 Failed"
@@ -90,12 +85,8 @@ def test_all_72_steps_guild_faction():
     assert gq_data and "guild_quests" in gq_data, "Step 25 Failed"
     assert "adventurers_guild" in gq_data["guild_quests"], "Step 26 Failed"
     adv_q = gq_data["guild_quests"]["adventurers_guild"]
-    assert any(q.get("id") == "slay_goblins" for q in adv_q.get("daily", [])), (
-        "Step 26-27 Failed"
-    )
-    assert any(q.get("id") == "explore_dungeon" for q in adv_q.get("weekly", [])), (
-        "Step 28 Failed"
-    )
+    assert any(q.get("id") == "slay_goblins" for q in adv_q.get("daily", [])), "Step 26-27 Failed"
+    assert any(q.get("id") == "explore_dungeon" for q in adv_q.get("weekly", [])), "Step 28 Failed"
     assert len(gq_data["guild_quests"]) >= 3, "Step 29 Failed"
     print("[OK] Steps 25-30 (data/guild_quests.yaml & progress fields)")
 
@@ -128,9 +119,7 @@ def test_all_72_steps_guild_faction():
     assert new_r in ("member", "veteran"), "Step 47 Failed"
     old_str = p.attributes.strength
     gm.apply_rank_rewards(p, "veteran")
-    assert p.guild_rank == "veteran" and p.attributes.strength >= old_str + 2, (
-        "Step 48 Failed"
-    )
+    assert p.guild_rank == "veteran" and p.attributes.strength >= old_str + 2, "Step 48 Failed"
     print("[OK] Steps 42-48 (guild_rewards.yaml & rank up/rewards)")
 
     # Step 49 - 58: data/faction_war.yaml & faction_war_system.py
@@ -141,9 +130,7 @@ def test_all_72_steps_guild_faction():
     assert len(fw_data["faction_war_conditions"]) >= 3, "Step 51 Failed"
     from faction_war_system import FactionWarData, FactionWarManager, FactionWarRegistry
 
-    FactionWarData(
-        "t_f", "Test", [0, 0, 0], ["t1"], ["a1"], ["r1"], 50
-    )  # Step 53
+    FactionWarData("t_f", "Test", [0, 0, 0], ["t1"], ["a1"], ["r1"], 50)  # Step 53
     fwr1 = FactionWarRegistry()
     fwr2 = FactionWarRegistry()
     assert fwr1 is fwr2, "Step 54 Failed"
@@ -185,9 +172,7 @@ def test_all_72_steps_guild_faction():
     assert gsm.is_skill_active(p, "guild_lore"), "Step 72 Failed"
     print("[OK] Steps 64-72 (guild_skills.yaml & guild_skill_system.py)")
 
-    print(
-        "\nALL 72 STEPS OF GUILD & FACTION RANKING SYSTEM VERIFIED 100% SUCCESSFULLY!"
-    )
+    print("\nALL 72 STEPS OF GUILD & FACTION RANKING SYSTEM VERIFIED 100% SUCCESSFULLY!")
 
 
 if __name__ == "__main__":

@@ -2,13 +2,13 @@
 
 Extracted from Engine._on_kill and Engine.advance_world (game.py).
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from entity import Entity
-
     from game import Engine
 
 

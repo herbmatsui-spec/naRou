@@ -3,6 +3,7 @@
 Detects when a sequence of recently-used skills matches a defined synergy
 combo and returns the resulting effects.
 """
+
 from __future__ import annotations
 
 import logging

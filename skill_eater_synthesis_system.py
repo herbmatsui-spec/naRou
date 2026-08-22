@@ -3,23 +3,15 @@ skill_eater_synthesis_system.py
 Aの世界（スキル喰い） Phase 3: 《合成》システム＆ダイナミックスキルツリー
 提案4: 合成錬金のEmote & Audio演出 (Steps 25〜32)
 """
+
 from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
 
 from skill_eater_audio_system import SkillEaterAudioSystem
-from skill_eater_presentation_system import (
-    PresentationEvent,
-    SkillEaterPresentationSystem,
-)
-from skill_eater_system import (
-    CharacterState,
-    SkillDef,
-    SkillEaterRegistry,
-    SkillTier,
-    SkillType,
-)
+from skill_eater_presentation_system import PresentationEvent, SkillEaterPresentationSystem
+from skill_eater_system import CharacterState, SkillDef, SkillEaterRegistry, SkillTier, SkillType
 
 
 @dataclass
@@ -66,9 +58,7 @@ class SkillEaterSynthesisSystem:
 
     def _init_default_recipes(self):
         """基本の静的レシピ登録"""
-        self.register_static_recipe(
-            "com_magic_001", "com_labor_002", "rar_infrared_vision"
-        )
+        self.register_static_recipe("com_magic_001", "com_labor_002", "rar_infrared_vision")
         self.register_static_recipe("rar_combat_012", "uni_midas_001", "rar_gold_body")
 
     def register_static_recipe(self, id_a: str, id_b: str, result_id: str):
@@ -206,9 +196,7 @@ class SkillEaterSynthesisSystem:
             SkillTier.UNIQUE,
             SkillTier.CONCEPT,
         ]
-        tier_idx = max(
-            tier_hierarchy.index(skill_a.tier), tier_hierarchy.index(skill_b.tier)
-        )
+        tier_idx = max(tier_hierarchy.index(skill_a.tier), tier_hierarchy.index(skill_b.tier))
         new_tier = tier_hierarchy[tier_idx]
 
         combined_effects = skill_a.effects + skill_b.effects
@@ -217,9 +205,11 @@ class SkillEaterSynthesisSystem:
             id=new_id,
             name=new_name,
             tier=new_tier,
-            type=SkillType.ACTIVE
-            if (skill_a.type == SkillType.ACTIVE or skill_b.type == SkillType.ACTIVE)
-            else SkillType.PASSIVE,
+            type=(
+                SkillType.ACTIVE
+                if (skill_a.type == SkillType.ACTIVE or skill_b.type == SkillType.ACTIVE)
+                else SkillType.PASSIVE
+            ),
             mp_cost=skill_a.mp_cost + skill_b.mp_cost,
             cooldown=max(skill_a.cooldown, skill_b.cooldown),
             market_value=skill_a.market_value + skill_b.market_value,

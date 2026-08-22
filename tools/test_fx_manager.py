@@ -26,11 +26,7 @@ fx.spawn_shockwave_effect(10, 10)
 
 print("Particles spawned:", len(fx.particles))
 for p in fx.particles[:5]:
-    print(
-        "  tile_id: {}, char: {}, color: {}".format(
-            getattr(p, "tile_id", None), p.char, p.color
-        )
-    )
+    print("  tile_id: {}, char: {}, color: {}".format(getattr(p, "tile_id", None), p.char, p.color))
 
 # Test with feature flag disabled
 set_flag("ENABLE_TINY_ROGUE_GFX", False)

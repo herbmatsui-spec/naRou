@@ -5,6 +5,7 @@ Map Renderer Module - Handles map tile rendering with pixel art and fallback
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import tcod
 
@@ -23,9 +24,7 @@ from constants import (
 from feature_flags import is_enabled
 from map_engine import TILE_REGISTRY
 from render_context import RenderContext
-from ui_fx_systems import (
-    DynamicLighting,
-)
+from ui_fx_systems import DynamicLighting
 
 
 class ParallaxBackground:
@@ -43,9 +42,7 @@ class ParallaxBackground:
         try:
             # Load tilemap_packed.png as parallax layers
             # The tilemap is 192x176, we can slice it into horizontal bands
-            tilemap = tcod.image.Image.load(
-                "assets/tiles/tiny_rogue/tilemap_packed.png"
-            )
+            tilemap = tcod.image.Image.load("assets/tiles/tiny_rogue/tilemap_packed.png")
             tw, th = tilemap.width, tilemap.height
 
             # Create 4 layers by slicing the tilemap vertically
@@ -58,7 +55,9 @@ class ParallaxBackground:
 
             cls._initialized = True
         except Exception as e:
-            logger.warning("Failed to load tiny_rogue tilemap, using procedural gradient layers: %s", e)
+            logger.warning(
+                "Failed to load tiny_rogue tilemap, using procedural gradient layers: %s", e
+            )
             # Fallback: create simple gradient layers
             cls._layer_images = []
             for i in range(4):
@@ -95,9 +94,7 @@ class ParallaxBackground:
             for tx in range(-1, VIEW_WIDTH // tile_w + 2):
                 draw_x = tx * tile_w - offset_x
                 if -tile_w <= draw_x < SCREEN_WIDTH:
-                    layer_img.blit(
-                        console, draw_x, offset_y, 0, 0, tile_w, layer_img.height
-                    )
+                    layer_img.blit(console, draw_x, offset_y, 0, 0, tile_w, layer_img.height)
 
 
 class MapRenderer:
@@ -141,12 +138,8 @@ class MapRenderer:
 
         # カメラオフセット計算 (プレイヤー追従) - 呼び出し側から提供されない場合は内部で計算
         if cam_x is None or cam_y is None:
-            cam_x = max(
-                0, min(MAP_WIDTH - VIEW_WIDTH, context.player.x - VIEW_WIDTH // 2)
-            )
-            cam_y = max(
-                0, min(MAP_HEIGHT - VIEW_HEIGHT, context.player.y - VIEW_HEIGHT // 2)
-            )
+            cam_x = max(0, min(MAP_WIDTH - VIEW_WIDTH, context.player.x - VIEW_WIDTH // 2))
+            cam_y = max(0, min(MAP_HEIGHT - VIEW_HEIGHT, context.player.y - VIEW_HEIGHT // 2))
 
         # 動的ライティング用光源取得 - 呼び出し側から提供されない場合は内部で計算
         if light_sources is None:
@@ -162,18 +155,12 @@ class MapRenderer:
                 map_y = cam_y + vy
                 if 0 <= map_x < MAP_WIDTH and 0 <= map_y < MAP_HEIGHT:
                     if context.game_map.visible[map_x][map_y]:
-                        if (
-                            use_pixel_art
-                            and atlas_16 is not None
-                            and atlas_32 is not None
-                        ):
+                        if use_pixel_art and atlas_16 is not None and atlas_32 is not None:
                             # Pixel art rendering using atlas
                             tile_id = context.game_map.tiles[map_x][map_y]
 
                             # Get variant for autotiling/animation
-                            variant = context.game_map.tile_variants.get(
-                                (map_x, map_y), 0
-                            )
+                            variant = context.game_map.tile_variants.get((map_x, map_y), 0)
 
                             # Get animation frame if applicable
                             frame = 0
@@ -193,9 +180,7 @@ class MapRenderer:
                                 )
                             else:
                                 # Static tile
-                                ux, uy, uw, uh = TILE_REGISTRY.get_uv(
-                                    tile_id, variant, scale
-                                )
+                                ux, uy, uw, uh = TILE_REGISTRY.get_uv(tile_id, variant, scale)
 
                             # Blit from atlas
                             atlas_source = atlas_16 if scale == "16" else atlas_32
@@ -211,18 +196,14 @@ class MapRenderer:
 
                             # ピクセルアート描画時も照明色を算出してから照明オーバーレイを適用
                             _t = context.game_map.tiles[map_x][map_y]
-                            _base = (
-                                COLOR_WALL_LIT if _t == "TILE_WALL" else COLOR_FLOOR_LIT
-                            )
+                            _base = COLOR_WALL_LIT if _t == "TILE_WALL" else COLOR_FLOOR_LIT
                             lit_col, _ = DynamicLighting.calculate_tile_lighting(
                                 map_x, map_y, _base, light_sources
                             )
 
                             # Apply lighting as a simple brightness adjustment
                             # Calculate average brightness of light color
-                            brightness = (lit_col[0] + lit_col[1] + lit_col[2]) / (
-                                3 * 255.0
-                            )
+                            brightness = (lit_col[0] + lit_col[1] + lit_col[2]) / (3 * 255.0)
 
                             # Ambient occlusion for walls: darken corners/edges
                             if tile_id in (
@@ -273,24 +254,15 @@ class MapRenderer:
                                 blend_factor = min(1.0, brightness * 0.5)
                                 r = min(
                                     255,
-                                    int(
-                                        255 * blend_factor
-                                        + lit_col[0] * (1 - blend_factor)
-                                    ),
+                                    int(255 * blend_factor + lit_col[0] * (1 - blend_factor)),
                                 )
                                 g = min(
                                     255,
-                                    int(
-                                        255 * blend_factor
-                                        + lit_col[1] * (1 - blend_factor)
-                                    ),
+                                    int(255 * blend_factor + lit_col[1] * (1 - blend_factor)),
                                 )
                                 b = min(
                                     255,
-                                    int(
-                                        255 * blend_factor
-                                        + lit_col[2] * (1 - blend_factor)
-                                    ),
+                                    int(255 * blend_factor + lit_col[2] * (1 - blend_factor)),
                                 )
                                 console.draw_rect(
                                     vx * tile_size,
@@ -312,11 +284,7 @@ class MapRenderer:
                                 console.print(x=vx, y=vy, string="_", fg=lit_col)
                             else:
                                 t = context.game_map.tiles[map_x][map_y]
-                                base_col = (
-                                    COLOR_WALL_LIT
-                                    if t == "TILE_WALL"
-                                    else COLOR_FLOOR_LIT
-                                )
+                                base_col = COLOR_WALL_LIT if t == "TILE_WALL" else COLOR_FLOOR_LIT
 
                                 # Proposal 6: 世代・時間経過による環境変化 (焼け跡・苔むした壁)
                                 # 座標のハッシュに基づく時間経過の自然表現
@@ -333,25 +301,17 @@ class MapRenderer:
                                 )
                                 console.print(x=vx, y=vy, string=t, fg=lit_col)
                     elif context.game_map.explored[map_x][map_y]:
-                        if (
-                            use_pixel_art
-                            and atlas_16 is not None
-                            and atlas_32 is not None
-                        ):
+                        if use_pixel_art and atlas_16 is not None and atlas_32 is not None:
                             # Pixel art rendering for explored tiles
                             tile_id = context.game_map.tiles[map_x][map_y]
-                            variant = context.game_map.tile_variants.get(
-                                (map_x, map_y), 0
-                            )
+                            variant = context.game_map.tile_variants.get((map_x, map_y), 0)
 
                             # Determine scale
                             scale = "16"
                             tile_size = 16 if scale == "16" else 32
 
                             # Get UV coordinates from atlas
-                            ux, uy, uw, uh = TILE_REGISTRY.get_uv(
-                                tile_id, variant, scale
-                            )
+                            ux, uy, uw, uh = TILE_REGISTRY.get_uv(tile_id, variant, scale)
 
                             # Blit explored tile from atlas
                             atlas_source = atlas_16 if scale == "16" else atlas_32
@@ -385,7 +345,5 @@ class MapRenderer:
                                     x=vx,
                                     y=vy,
                                     string=t,
-                                    fg=COLOR_WALL_DARK
-                                    if t == "TILE_WALL"
-                                    else COLOR_FLOOR_DARK,
+                                    fg=COLOR_WALL_DARK if t == "TILE_WALL" else COLOR_FLOOR_DARK,
                                 )

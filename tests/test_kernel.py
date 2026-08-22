@@ -1,4 +1,5 @@
 """Unit tests for the Kernel package/dependency system."""
+
 from __future__ import annotations
 
 import pytest

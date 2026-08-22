@@ -3,6 +3,7 @@
 Main build script for the asset pipeline.
 Orchestrates the processing of all asset types through the pipeline.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -70,9 +71,7 @@ def process_tilesets(config: dict) -> bool:
     for tileset_def_dir in candidate_dirs:
         if os.path.isdir(tileset_def_dir):
             for f in sorted(os.listdir(tileset_def_dir)):
-                if f.endswith(".json") and f not in [
-                    os.path.basename(p) for p in def_files
-                ]:
+                if f.endswith(".json") and f not in [os.path.basename(p) for p in def_files]:
                     def_files.append(os.path.join(tileset_def_dir, f))
 
     if not def_files:
@@ -236,11 +235,7 @@ def package_assets(config: dict) -> bool:
         asset_dir = os.path.join(config["directories"]["output"], asset_type)
         if os.path.exists(asset_dir):
             count = len(
-                [
-                    f
-                    for f in os.listdir(asset_dir)
-                    if os.path.isfile(os.path.join(asset_dir, f))
-                ]
+                [f for f in os.listdir(asset_dir) if os.path.isfile(os.path.join(asset_dir, f))]
             )
             manifest["asset_counts"][asset_type] = count
         else:
@@ -304,9 +299,7 @@ def main():
         default=["all"],
         help="Steps to run",
     )
-    parser.add_argument(
-        "--skip-validation", action="store_true", help="Skip input validation"
-    )
+    parser.add_argument("--skip-validation", action="store_true", help="Skip input validation")
     parser.add_argument(
         "--dry-run",
         action="store_true",

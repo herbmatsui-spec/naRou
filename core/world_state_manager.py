@@ -7,11 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from constants import (
-    MAP_HEIGHT,
-    MAP_WIDTH,
-    GameState,
-)
+from constants import MAP_HEIGHT, MAP_WIDTH, GameState
 from entity import Entity
 from game_state import GameStateData
 from item_system import Inventory
@@ -65,9 +61,7 @@ class GameStateInitializer:
 
         # マップ初期化
         state_data.dungeon_level = 1
-        state_data.game_map = GameMap(
-            MAP_WIDTH, MAP_HEIGHT, floor_level=state_data.dungeon_level
-        )
+        state_data.game_map = GameMap(MAP_WIDTH, MAP_HEIGHT, floor_level=state_data.dungeon_level)
         state_data.game_map.generate_dungeon()
         state_data.player.x, state_data.player.y = state_data.game_map.start_pos
         state_data.pet.x = state_data.player.x + 1

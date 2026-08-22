@@ -144,6 +144,7 @@ class TestEmoteSystem(unittest.TestCase):
         self.assertTrue(EMOTE_SYSTEM.is_playing("entity1"))
 
         from emote_system import stop_emote
+
         stop_emote("entity1")
         self.assertFalse(EMOTE_SYSTEM.is_playing("entity1"))
 

@@ -80,9 +80,7 @@ def get_fragment_drop_table(table_id: str) -> FragmentDropTable | None:
     return _FRAGMENT_DROP_TABLES.get(table_id)
 
 
-def drop_fragments_for_quest(
-    quest_id: str, player_flags: list[str] | None = None
-) -> list[str]:
+def drop_fragments_for_quest(quest_id: str, player_flags: list[str] | None = None) -> list[str]:
     """クエストIDに基づいて断片をドロップ"""
     table = get_fragment_drop_table(quest_id)
     if table:

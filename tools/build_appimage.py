@@ -27,9 +27,7 @@ def run(cmd: list[str]) -> bool:
 
 def build_appimage(appdir: Path) -> bool:
     if not shutil.which("appimagetool"):
-        print(
-            "[appimage] appimagetool not found; skipping (install linuxdeploy/appimagetool)"
-        )
+        print("[appimage] appimagetool not found; skipping (install linuxdeploy/appimagetool)")
         return False
     # Ensure AppRun + .desktop + icon exist (minimal placeholders).
     apprun = appdir / "AppRun"

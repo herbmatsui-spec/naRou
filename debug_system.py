@@ -33,9 +33,7 @@ class WishParser:
     SKILL_KEYWORDS = ["skill", "スキル", "経験"]
 
     @classmethod
-    def parse(
-        cls, text: str, player: Entity, inventory: Inventory, survival: Any
-    ) -> str:
+    def parse(cls, text: str, player: Entity, inventory: Inventory, survival: Any) -> str:
         from item_system import create_sample_item
 
         text_lower = text.strip().lower()

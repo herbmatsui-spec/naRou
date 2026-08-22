@@ -78,8 +78,7 @@ class MovementAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -95,8 +94,7 @@ class OpenContextMenuAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -111,8 +109,7 @@ class LookModeAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -121,9 +118,7 @@ class LookModeAction:
         engine.game_state = "look"
         engine.look_cursor.x = engine.player.x
         engine.look_cursor.y = engine.player.y
-        engine.log(
-            "【調査モード】矢印キーで対象を選択 (Esc/Enter:閉じる)", (255, 255, 120)
-        )
+        engine.log("【調査モード】矢印キーで対象を選択 (Esc/Enter:閉じる)", (255, 255, 120))
         return True
 
 
@@ -132,8 +127,7 @@ class PickupAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -157,8 +151,7 @@ class HelpAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -177,8 +170,7 @@ class InventoryAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -195,8 +187,7 @@ class StatusAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -211,8 +202,7 @@ class JournalAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -227,8 +217,7 @@ class SkillTreeAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -243,8 +232,7 @@ class JobAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -263,8 +251,7 @@ class GuildAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -279,8 +266,7 @@ class CastFireballAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -295,8 +281,7 @@ class MineWallAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -322,8 +307,7 @@ class PrayAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -338,8 +322,7 @@ class OfferAltarAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -354,8 +337,7 @@ class TalkAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -370,8 +352,7 @@ class HarvestAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -386,8 +367,7 @@ class WishRodAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -402,8 +382,7 @@ class DescendStairsAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -456,8 +435,7 @@ class WaitAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
@@ -473,16 +451,15 @@ class SleepAction:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
             return False
         logs = engine.survival.sleep(engine.player)
-        for l in logs:
-            engine.log(l, (150, 150, 255))
+        for log_msg in logs:
+            engine.log(log_msg, (150, 150, 255))
         # 睡眠は複数ターン経過させる (例: 8時間 = 数百ターン相当)
         for _ in range(20):
             engine.advance_world()
@@ -494,20 +471,15 @@ class ActionScan:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
             return False
 
-        current_world = getattr(
-            getattr(engine, "game_state_data", None), "current_world", "main"
-        )
-        if current_world != "skill_eater" and not getattr(
-            engine, "devour_debug_enabled", False
-        ):
+        current_world = getattr(getattr(engine, "game_state_data", None), "current_world", "main")
+        if current_world != "skill_eater" and not getattr(engine, "devour_debug_enabled", False):
             engine.log(
                 "《解析》はAの世界（スキル喰い）でのみ使用可能です。",
                 (180, 180, 180),
@@ -526,6 +498,7 @@ class ActionScan:
         if combat_sys:
             # Find nearest monster
             from core_framework import Point
+
             nearest = None
             min_dist = 999.0
             player_pos = Point(engine.player.x, engine.player.y)
@@ -539,17 +512,38 @@ class ActionScan:
 
             if nearest:
                 from skill_eater_system import CharacterState
+
                 analyzer = CharacterState(
-                    id="player", name=engine.player.name, hp=engine.player.hp, max_hp=engine.player.max_hp,
-                    mp=engine.player.mp, max_mp=engine.player.max_mp, atk=10, defense=5, intelligence=10, speed=100,
-                    analysis_level=getattr(engine.player, "analysis_level", 1)
+                    id="player",
+                    name=engine.player.name,
+                    hp=engine.player.hp,
+                    max_hp=engine.player.max_hp,
+                    mp=engine.player.mp,
+                    max_mp=engine.player.max_mp,
+                    atk=10,
+                    defense=5,
+                    intelligence=10,
+                    speed=100,
+                    analysis_level=getattr(engine.player, "analysis_level", 1),
                 )
                 target_state = CharacterState(
-                    id=str(getattr(nearest, "id", "enemy")), name=nearest.name, hp=nearest.hp, max_hp=nearest.max_hp,
-                    mp=10, max_mp=10, atk=5, defense=2, intelligence=5, speed=80
+                    id=str(getattr(nearest, "id", "enemy")),
+                    name=nearest.name,
+                    hp=nearest.hp,
+                    max_hp=nearest.max_hp,
+                    mp=10,
+                    max_mp=10,
+                    atk=5,
+                    defense=2,
+                    intelligence=5,
+                    speed=80,
                 )
                 res = combat_sys.analyze_target(analyzer, target_state)
-                engine.log(f"【解析結果】対象: {res.target_name} (捕食成功率: {int(res.devour_success_rate * 100)}%)", (100, 255, 200))
+                success_rate_pct = int(res.devour_success_rate * 100)
+                engine.log(
+                    f"【解析結果】対象: {res.target_name} (捕食成功率: {success_rate_pct}%)",
+                    (100, 255, 200),
+                )
                 for sk in res.revealed_skills:
                     engine.log(f" - スキル: [{sk.tier}] {sk.name}", (255, 215, 0))
             else:
@@ -562,20 +556,15 @@ class ActionDevour:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
             return False
 
-        current_world = getattr(
-            getattr(engine, "game_state_data", None), "current_world", "main"
-        )
-        if current_world != "skill_eater" and not getattr(
-            engine, "devour_debug_enabled", False
-        ):
+        current_world = getattr(getattr(engine, "game_state_data", None), "current_world", "main")
+        if current_world != "skill_eater" and not getattr(engine, "devour_debug_enabled", False):
             engine.log(
                 "《喰らい》はAの世界（スキル喰い）でのみ使用可能です。",
                 (180, 180, 180),
@@ -594,20 +583,15 @@ class ActionSynthesisMenu:
 
     def can_execute(self, engine: Any) -> bool:
         return engine.game_state == "play" or (
-            hasattr(engine, "current_state")
-            and engine.current_state == GameState.EXPLORING
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
         )
 
     def execute(self, engine: Any, event: Any) -> bool:
         if not self.can_execute(engine):
             return False
 
-        current_world = getattr(
-            getattr(engine, "game_state_data", None), "current_world", "main"
-        )
-        if current_world != "skill_eater" and not getattr(
-            engine, "devour_debug_enabled", False
-        ):
+        current_world = getattr(getattr(engine, "game_state_data", None), "current_world", "main")
+        if current_world != "skill_eater" and not getattr(engine, "devour_debug_enabled", False):
             engine.log(
                 "《スキル合成》はAの世界（スキル喰い）でのみ使用可能です。",
                 (180, 180, 180),
@@ -618,6 +602,75 @@ class ActionSynthesisMenu:
             return engine.execute_synthesis()
 
         engine.log("【キメラ合成炉】スキル合成メニューを展開します。", (200, 150, 255))
+        return True
+
+
+class ActionSearch:
+    """秘密検索アクション (SkillEaterSecretAccess Step 19)"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+
+        current_world = getattr(getattr(engine, "game_state_data", None), "current_world", "main")
+        if current_world != "skill_eater" and not getattr(engine, "devour_debug_enabled", False):
+            engine.log(
+                "《秘密検索》はAの世界（スキル喰い）でのみ使用可能です。",
+                (180, 180, 180),
+            )
+            return True
+
+        try:
+            from secret_area_system import SECRET_REGISTRY, check_secret_detection
+
+            SECRET_REGISTRY.load_from_yaml()
+            current_layer = getattr(engine.game_map, "world_layer", None)
+            if current_layer:
+                layer_key = (
+                    f"{current_layer.zone}:{current_layer.biome}:"
+                    f"{current_layer.depth}:{current_layer.dimension}"
+                )
+                skill_bonus = 0
+                for skill_id in ["detection_mastery", "trap_finder", "secret_sense"]:
+                    if engine.player.has_skill(skill_id):
+                        slot = engine.player.skills.get(skill_id)
+                        if slot:
+                            skill_bonus += slot.level * 5
+
+                discovered = check_secret_detection(engine.player, engine.game_map, layer_key)
+                if discovered:
+                    for area in discovered:
+                        engine.log(
+                            f"【発見】隠しエリア『{area.name}』を発見！ ({area.get_hint_text()})",
+                            (100, 255, 150),
+                            level="INFO",
+                        )
+                        from event_bus import event_bus
+
+                        event_bus.publish(
+                            "secret_detected",
+                            {
+                                "area_id": area.id,
+                                "position": area.position,
+                                "secret_type": area.secret_type,
+                                "skill_bonus": skill_bonus,
+                            },
+                        )
+                    engine.log("周囲を念入りに探索した。", (150, 255, 150))
+                else:
+                    engine.log("特に異常は見つからなかった。", (180, 180, 180))
+                    engine.player.failed_search_count += 1
+                    if engine.player.failed_search_count >= 3:
+                        engine.log("探索に失敗し続けている…疲労が溜まっている。", (255, 150, 150))
+            else:
+                engine.log("現在の層では秘密検索できません。", (180, 180, 180))
+        except Exception as e:
+            engine.log(f"検索エラー: {e}", (255, 100, 100))
         return True
 
 
@@ -633,40 +686,4 @@ class QuitAction:
         import sys
 
         sys.exit()
-        return True
-
-class WaitAction:
-    """待機アクション (Step 20)"""
-    def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play"
-
-    def execute(self, engine: Any, event: Any) -> bool:
-        if not self.can_execute(engine):
-            return False
-        if hasattr(engine, "player_act"):
-            engine.player_act(0, 0)
-        if hasattr(engine, "advance_world"):
-            engine.advance_world()
-        return True
-
-class ActionDevour:
-    """喰らい（Devour）アクション (Step 21)"""
-    def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play"
-
-    def execute(self, engine: Any, event: Any) -> bool:
-        if not self.can_execute(engine):
-            return False
-        engine.log("【Devour】対象を喰らう準備をした！", (255, 100, 100))
-        return True
-
-class ActionScan:
-    """解析（Scan）アクション (Step 22)"""
-    def can_execute(self, engine: Any) -> bool:
-        return engine.game_state == "play"
-
-    def execute(self, engine: Any, event: Any) -> bool:
-        if not self.can_execute(engine):
-            return False
-        engine.log("【Scan】対象の構造解析を開始！", (100, 255, 100))
         return True

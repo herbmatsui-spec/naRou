@@ -7,6 +7,7 @@ memory_fragments.yaml と story_endings.yaml を truth_codex 経由で連携し�
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import os
 import random
@@ -20,8 +21,8 @@ from core_framework import BaseSystem
 try:
     from components import ReincarnationComponent
 except Exception:
-        # TODO: handle exception properly
-        # 循環防止（通常は存在）
+    # TODO: handle exception properly
+    # 循環防止（通常は存在）
     ReincarnationComponent = None
 
     logger.exception("Unhandled exception")
@@ -47,22 +48,14 @@ class ArchaeologyRegistry:
     # ---------- ロード ----------
     def load(self, data_dir: str = DATA_DIR) -> None:
         self._fragments = (
-            self._load_section(data_dir, "memory_fragments.yaml", "memory_fragments")
-            or {}
+            self._load_section(data_dir, "memory_fragments.yaml", "memory_fragments") or {}
         )
-        self._endings = (
-            self._load_section(data_dir, "story_endings.yaml", "story_endings") or {}
-        )
+        self._endings = self._load_section(data_dir, "story_endings.yaml", "story_endings") or {}
         self._sites = (
-            self._load_section(data_dir, "archaeology_sites.yaml", "archaeology_sites")
-            or {}
+            self._load_section(data_dir, "archaeology_sites.yaml", "archaeology_sites") or {}
         )
-        self._keys = (
-            self._load_section(data_dir, "decoder_keys.yaml", "decoder_keys") or {}
-        )
-        self._truths = (
-            self._load_section(data_dir, "truth_codex.yaml", "truth_codex") or {}
-        )
+        self._keys = self._load_section(data_dir, "decoder_keys.yaml", "decoder_keys") or {}
+        self._truths = self._load_section(data_dir, "truth_codex.yaml", "truth_codex") or {}
         # cipher_type -> key_id マップ構築
         self._cipher_to_key = {}
         for kid, kval in self._keys.items():
@@ -70,9 +63,7 @@ class ArchaeologyRegistry:
             if ct:
                 self._cipher_to_key[ct] = kid
 
-    def _load_section(
-        self, data_dir: str, filename: str, section: str
-    ) -> dict[str, Any] | None:
+    def _load_section(self, data_dir: str, filename: str, section: str) -> dict[str, Any] | None:
         path = os.path.join(data_dir, filename)
         if not os.path.exists(path):
             return None
@@ -84,6 +75,7 @@ class ArchaeologyRegistry:
             return None
 
             logger.exception("Unhandled exception")
+
     # ---------- 取得 ----------
     def get_fragment(self, fid: str) -> dict[str, Any] | None:
         return self._fragments.get(fid)
@@ -116,13 +108,9 @@ class ArchaeologyRegistry:
         ]
         if not candidates:
             return None
-        return max(
-            candidates, key=lambda sid: int(self._sites[sid].get("min_depth", 1))
-        )
+        return max(candidates, key=lambda sid: int(self._sites[sid].get("min_depth", 1)))
 
-    def pick_site_for_excavation(
-        self, depth: int, rng: Any | None = None
-    ) -> str | None:
+    def pick_site_for_excavation(self, depth: int, rng: Any | None = None) -> str | None:
         """発掘用サイト選出（改善③: バリエーション）。
         深度で一致する複数サイトからランダムに1件選ぶ。該当なしは None。"""
         rng = rng or random
@@ -178,9 +166,7 @@ class ArchaeologyManager(BaseSystem):
         return list(pool.keys())[-1]
 
     # ---------- Step 17: 収集 ----------
-    def collect_fragment(
-        self, player: Any, fragment_id: str, engine: Any | None = None
-    ) -> bool:
+    def collect_fragment(self, player: Any, fragment_id: str, engine: Any | None = None) -> bool:
         """生断片を収集（重複排除）し、StorytellerComponent の memory_fragments とも連携"""
         comp = player.archaeology
         if fragment_id in comp.collected_fragments:
@@ -263,9 +249,7 @@ class ArchaeologyManager(BaseSystem):
             pass
 
     # ---------- Step 19: 解読 ----------
-    def decode_fragment(
-        self, player: Any, fragment_id: str, engine: Any | None = None
-    ) -> bool:
+    def decode_fragment(self, player: Any, fragment_id: str, engine: Any | None = None) -> bool:
         """対応する言語族の鍵を所有していれば解読。未所持ならヒントのみ提示。"""
         comp = player.archaeology
         if fragment_id in comp.decoded_fragments:
@@ -340,9 +324,7 @@ class ArchaeologyManager(BaseSystem):
         """到達済み真理に対して、そのエンディングへ寄った解釈が記録されているか"""
         return ending_id in self.get_available_endings(player)
 
-    def trigger_ending(
-        self, player: Any, ending_id: str, engine: Any | None = None
-    ) -> bool:
+    def trigger_ending(self, player: Any, ending_id: str, engine: Any | None = None) -> bool:
         """story_endings.yaml の unlock_conditions を実際に満たし、エンディング到達を発生させる（改善①）"""
         if not self.is_ending_reachable(player, ending_id):
             if engine and hasattr(engine, "log"):
@@ -374,9 +356,7 @@ class ArchaeologyManager(BaseSystem):
         self._play_se(engine, "victory")
         return True
 
-    def trigger_available_endings(
-        self, player: Any, engine: Any | None = None
-    ) -> list[str]:
+    def trigger_available_endings(self, player: Any, engine: Any | None = None) -> list[str]:
         """解釈済みエンディングを全て発生させる"""
         triggered = []
         for eid in self.get_available_endings(player):
@@ -403,9 +383,7 @@ class ArchaeologyManager(BaseSystem):
         candidates = t.get("candidate_endings", []) if t else []
         if ending_id not in candidates:
             if engine and hasattr(engine, "log"):
-                engine.log(
-                    "そのエンディングはこの真理の候補ではない。", (200, 120, 120)
-                )
+                engine.log("そのエンディングはこの真理の候補ではない。", (200, 120, 120))
             return False
         comp.leaned_endings[truth_id] = ending_id
         if note:

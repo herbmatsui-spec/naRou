@@ -1,0 +1,164 @@
+districts:
+  - id: "industrial_zone"
+    name: "工業区画"
+    controlling_faction: "midas"
+    stability: 60
+    resource_output: 200
+    defense_level: 3
+    hidden_dungeon_entrance: false
+    exclusive_shop_unlocked: false
+    turn_controlled: 15
+    sabotage_remaining: 0
+    adjacent_districts: ["slums", "corporate_district", "residential_zone"]
+
+  - id: "slums"
+    name: "スラム街"
+    controlling_faction: "resistance"
+    stability: 45
+    resource_output: 80
+    defense_level: 1
+    hidden_dungeon_entrance: true
+    exclusive_shop_unlocked: false
+    turn_controlled: 10
+    sabotage_remaining: 0
+    adjacent_districts: ["industrial_zone", "underground_market", "residential_zone"]
+
+  - id: "corporate_district"
+    name: "企業区画"
+    controlling_faction: "midas"
+    stability: 75
+    resource_output: 300
+    defense_level: 4
+    hidden_dungeon_entrance: false
+    exclusive_shop_unlocked: true
+    turn_controlled: 25
+    sabotage_remaining: 0
+    adjacent_districts: ["industrial_zone", "research_facility", "government_quarter"]
+
+  - id: "underground_market"
+    name: "地下市場"
+    controlling_faction: "broker"
+    stability: 55
+    resource_output: 150
+    defense_level: 2
+    hidden_dungeon_entrance: true
+    exclusive_shop_unlocked: true
+    turn_controlled: 20
+    sabotage_remaining: 0
+    adjacent_districts: ["slums", "black_port", "residential_zone"]
+
+  - id: "residential_zone"
+    name: "住宅区画"
+    controlling_faction: "neutral"
+    stability: 50
+    resource_output: 100
+    defense_level: 1
+    hidden_dungeon_entrance: false
+    exclusive_shop_unlocked: false
+    turn_controlled: 0
+    sabotage_remaining: 0
+    adjacent_districts: ["industrial_zone", "slums", "corporate_district", "underground_market", "park_district"]
+
+  - id: "research_facility"
+    name: "研究施設"
+    controlling_faction: "midas"
+    stability: 70
+    resource_output: 250
+    defense_level: 5
+    hidden_dungeon_entrance: true
+    exclusive_shop_unlocked: false
+    turn_controlled: 12
+    sabotage_remaining: 0
+    adjacent_districts: ["corporate_district", "government_quarter", "abandoned_lab"]
+
+  - id: "government_quarter"
+    name: "政府区画"
+    controlling_faction: "bank"
+    stability: 80
+    resource_output: 180
+    defense_level: 4
+    hidden_dungeon_entrance: false
+    exclusive_shop_unlocked: false
+    turn_controlled: 30
+    sabotage_remaining: 0
+    adjacent_districts: ["corporate_district", "research_facility", "park_district"]
+
+  - id: "park_district"
+    name: "公園区画"
+    controlling_faction: "neutral"
+    stability: 60
+    resource_output: 50
+    defense_level: 1
+    hidden_dungeon_entrance: false
+    exclusive_shop_unlocked: false
+    turn_controlled: 0
+    sabotage_remaining: 0
+    adjacent_districts: ["residential_zone", "government_quarter", "temple_grounds"]
+
+  - id: "black_port"
+    name: "闇港湾"
+    controlling_faction: "broker"
+    stability: 40
+    resource_output: 220
+    defense_level: 2
+    hidden_dungeon_entrance: true
+    exclusive_shop_unlocked: true
+    turn_controlled: 18
+    sabotage_remaining: 0
+    adjacent_districts: ["underground_market", "abandoned_lab", "smuggler_cove"]
+
+  - id: "abandoned_lab"
+    name: "廃棄研究所"
+    controlling_faction: "neutral"
+    stability: 30
+    resource_output: 60
+    defense_level: 1
+    hidden_dungeon_entrance: true
+    exclusive_shop_unlocked: false
+    turn_controlled: 0
+    sabotage_remaining: 0
+    adjacent_districts: ["research_facility", "black_port", "smuggler_cove"]
+
+  - id: "smuggler_cove"
+    name: "密輸入江"
+    controlling_faction: "resistance"
+    stability: 35
+    resource_output: 120
+    defense_level: 2
+    hidden_dungeon_entrance: true
+    exclusive_shop_unlocked: false
+    turn_controlled: 8
+    sabotage_remaining: 0
+    adjacent_districts: ["black_port", "abandoned_lab", "temple_grounds"]
+
+  - id: "temple_grounds"
+    name: "寺院敷地"
+    controlling_faction: "neutral"
+    stability: 65
+    resource_output: 70
+    defense_level: 2
+    hidden_dungeon_entrance: true
+    exclusive_shop_unlocked: false
+    turn_controlled: 0
+    sabotage_remaining: 0
+    adjacent_districts: ["park_district", "smuggler_cove", "ancient_ruins"]
+
+  - id: "ancient_ruins"
+    name: "古代遺跡"
+    controlling_faction: "neutral"
+    stability: 25
+    resource_output: 40
+    defense_level: 1
+    hidden_dungeon_entrance: true
+    exclusive_shop_unlocked: false
+    turn_controlled: 0
+    sabotage_remaining: 0
+    adjacent_districts: ["temple_grounds"]
+
+faction_relations:
+  "midas|resistance": -80
+  "midas|broker": -30
+  "midas|bank": -10
+  "resistance|broker": 20
+  "resistance|bank": 10
+  "broker|bank": 0

@@ -2,6 +2,7 @@
 プロシージャル・クエスト生成システム 強化版 総合テスト (全36ステップ)
 ①表示名の日本語ローカライズ ②連鎖クエスト（報酬カスケード） ③既存UI統合 を検証。
 """
+
 from __future__ import annotations
 
 import os
@@ -35,12 +36,10 @@ def test_all_36_steps_procedural_quest_enhancement():
     # ---------------------------------------------------------
     dn = qg["display_names"]
     # Step 5-8: display_names カテゴリ
-    assert "enemy" in dn and "item" in dn and "stage" in dn and "difficulty" in dn, (
-        "Step 5-8 Failed"
-    )
-    assert "magma_elemental" in dn["enemy"] and "heal_herb" in dn["item"], (
-        "Step 6-7 Failed"
-    )
+    assert (
+        "enemy" in dn and "item" in dn and "stage" in dn and "difficulty" in dn
+    ), "Step 5-8 Failed"
+    assert "magma_elemental" in dn["enemy"] and "heal_herb" in dn["item"], "Step 6-7 Failed"
     print("[OK] Steps 5-8 (display_names: enemy/item/stage/difficulty 定義)")
 
     from procedural_quest_generator import (
@@ -56,9 +55,9 @@ def test_all_36_steps_procedural_quest_enhancement():
     assert (
         REGISTRY.get_display_name("enemy", "magma_elemental") == "マグマエレメンタル"
     ), "Step 10 Failed"
-    assert REGISTRY.get_display_name("enemy", "unknown_x") == "unknown_x", (
-        "Step 10 Failed: fallback"
-    )
+    assert (
+        REGISTRY.get_display_name("enemy", "unknown_x") == "unknown_x"
+    ), "Step 10 Failed: fallback"
     print("[OK] Steps 9-10 (Registry 読み込み / get_display_name + フォールバック)")
 
     # Step 11-12: _compose が日本語表示名を使う（英語ID非含有）
@@ -73,12 +72,8 @@ def test_all_36_steps_procedural_quest_enhancement():
             leaks += 1
     assert leaks == 0, f"Step 12 Failed: 英語ID漏れ {leaks}件"
     sample = gen.generate_board_quest(p, seed=42)
-    stage_names = {
-        REGISTRY.get_display_name("stage", s) for s in REGISTRY.all_settings()
-    }
-    assert any(sn in sample.title for sn in stage_names), (
-        "Step 11 Failed: stage not localized"
-    )
+    stage_names = {REGISTRY.get_display_name("stage", s) for s in REGISTRY.all_settings()}
+    assert any(sn in sample.title for sn in stage_names), "Step 11 Failed: stage not localized"
     print("[OK] Steps 11-12 (生成テキストの日本語化 / 英語ID非含有 300サンプル)")
 
     # ---------------------------------------------------------
@@ -99,9 +94,7 @@ def test_all_36_steps_procedural_quest_enhancement():
     assert q0.to_dict()["chain_id"] == "c1", "Step 13 Failed"
     obj = QuestObjectiveSpec(cascade_bonus={"fame": 3})
     assert obj.to_dict()["cascade_bonus"]["fame"] == 3, "Step 14 Failed"
-    print(
-        "[OK] Steps 13-14 (GeneratedQuest.chain情報 / QuestObjectiveSpec.cascade_bonus)"
-    )
+    print("[OK] Steps 13-14 (GeneratedQuest.chain情報 / QuestObjectiveSpec.cascade_bonus)")
 
     # Step 15-16: chain_config
     assert REGISTRY.chain_config().get("max_depth") == 5, "Step 15-16 Failed"
@@ -110,9 +103,7 @@ def test_all_36_steps_procedural_quest_enhancement():
     # Step 17-18: generate_followup + 報酬カスケード
     follow = gen.generate_followup(q0, p, seed=7)
     assert follow is not None and follow.depth == 1, "Step 17 Failed"
-    assert follow.parent_id == q0.quest_id and follow.chain_id == q0.quest_id, (
-        "Step 17 Failed"
-    )
+    assert follow.parent_id == q0.quest_id and follow.chain_id == q0.quest_id, "Step 17 Failed"
     assert follow.reward["gold"] > 0, "Step 18 Failed"
     print("[OK] Steps 17-18 (generate_followup / 報酬カスケード合成)")
 
@@ -136,9 +127,7 @@ def test_all_36_steps_procedural_quest_enhancement():
         setting_id="abyss",
         depth=5,
     )
-    assert gen.generate_followup(deep, p2, seed=1) is None, (
-        "Step 21 Failed: depth limit"
-    )
+    assert gen.generate_followup(deep, p2, seed=1) is None, "Step 21 Failed: depth limit"
     print("[OK] Step 21 (連鎖深度上限 max_depth で打ち切り)")
 
     # Step 22: 連鎖専用フレーバー
@@ -190,17 +179,15 @@ def test_all_36_steps_procedural_quest_enhancement():
         if f is None:
             break
         q = f
-    assert all(golds[i + 1] > golds[i] for i in range(len(golds) - 1)), (
-        "Step 25 Failed: cascade growth"
-    )
+    assert all(
+        golds[i + 1] > golds[i] for i in range(len(golds) - 1)
+    ), "Step 25 Failed: cascade growth"
     print(f"[OK] Step 25 (連鎖ループ完了 / 報酬指数増加 {golds})")
 
     # Step 26: 連鎖の決定論
     a = gen.generate_followup(q0, p, seed=7)
     b = gen.generate_followup(q0, p, seed=7)
-    assert a.quest_id == b.quest_id and a.title == b.title, (
-        "Step 26 Failed: determinism"
-    )
+    assert a.quest_id == b.quest_id and a.title == b.title, "Step 26 Failed: determinism"
     print("[OK] Step 26 (同一 chain+seed で同一フォローアップ / 決定論)")
 
     # ---------------------------------------------------------
@@ -248,21 +235,13 @@ def test_all_36_steps_procedural_quest_enhancement():
     console = MockConsole()
     ui.render(console, eng)
     texts = [c[2] for c in console.calls]
-    assert any(acc.title in t for t in texts), (
-        "Step 29-30 Failed: accepted quest not drawn"
-    )
-    assert any("○" in t or "✓" in t for t in texts), (
-        "Step 30 Failed: checklist not drawn"
-    )
+    assert any(acc.title in t for t in texts), "Step 29-30 Failed: accepted quest not drawn"
+    assert any("○" in t or "✓" in t for t in texts), "Step 30 Failed: checklist not drawn"
     print("[OK] Steps 29-30 (受諾中クエスト描画 / 目的チェックリスト描画)")
 
     # Step 31-32: 完了記録描画
-    assert any("完了した生成クエスト" in t for t in texts), (
-        "Step 31-32 Failed: completed section"
-    )
-    assert any("gen_done_1" in t for t in texts), (
-        "Step 32 Failed: completed id not drawn"
-    )
+    assert any("完了した生成クエスト" in t for t in texts), "Step 31-32 Failed: completed section"
+    assert any("gen_done_1" in t for t in texts), "Step 32 Failed: completed id not drawn"
     print("[OK] Steps 31-32 (完了通知ログ / 完了済み生成クエスト記録描画)")
 
     # Step 33: キー操作

@@ -18,10 +18,10 @@ class UIComponent {
      */
     createElement(tag, props = {}, children = []) {
         const element = document.createElement(tag);
-        
+
         if (props.className) element.className = props.className;
         if (props.id) element.id = props.id;
-        
+
         Object.entries(props).forEach(([key, value]) => {
             if (key !== 'className' && key !== 'id') {
                 element.setAttribute(key, value);

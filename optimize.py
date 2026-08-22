@@ -67,7 +67,16 @@ def optimize_build():
 
     # Clean build artifacts
     import shutil
-    for pattern in ["dist", "build", "*.egg-info", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"]:
+
+    for pattern in [
+        "dist",
+        "build",
+        "*.egg-info",
+        "__pycache__",
+        ".pytest_cache",
+        ".mypy_cache",
+        ".ruff_cache",
+    ]:
         for path in __import__("glob").glob(pattern, recursive=True):
             if os.path.isdir(path):
                 shutil.rmtree(path, ignore_errors=True)

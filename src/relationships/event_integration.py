@@ -6,6 +6,7 @@ Step 6: Event-driven relationship updates
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import time
 from collections import defaultdict
@@ -166,9 +167,7 @@ class RelationshipEventHandler:
         self._register_event_handlers()
 
         # カスタムマッピング（特殊ケース用）
-        self._custom_event_handlers: dict[GameEventType, list[Callable]] = defaultdict(
-            list
-        )
+        self._custom_event_handlers: dict[GameEventType, list[Callable]] = defaultdict(list)
 
         # イベント統計
         self._event_stats: dict[GameEventType, int] = defaultdict(int)
@@ -369,9 +368,7 @@ class RelationshipEventHandler:
             context.update(
                 {
                     "event_subtype": event_data.get("event_subtype", "gathering"),
-                    "family_member_type": event_data.get(
-                        "family_member_type", "relative"
-                    ),
+                    "family_member_type": event_data.get("family_member_type", "relative"),
                     "generation_distance": event_data.get("generation_distance", 1),
                 }
             )

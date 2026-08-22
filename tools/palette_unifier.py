@@ -3,6 +3,7 @@
 Palette Unifier for naRou
 Unifies asset palettes to match the game's master palette from design_tokens.json.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -208,9 +209,7 @@ class PaletteUnifier:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Unify asset palettes to master palette"
-    )
+    parser = argparse.ArgumentParser(description="Unify asset palettes to master palette")
     parser.add_argument("input_path", type=str, help="Input file or directory path")
     parser.add_argument(
         "--output",
@@ -273,9 +272,7 @@ def main():
                 dest_path = output_dir / rel_path
                 dest_path.parent.mkdir(parents=True, exist_ok=True)
 
-                success = unifier.unify_image_palette(
-                    file_path, dest_path, args.max_colors
-                )
+                success = unifier.unify_image_palette(file_path, dest_path, args.max_colors)
                 if success:
                     succeeded += 1
                 else:

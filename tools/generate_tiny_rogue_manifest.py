@@ -2,6 +2,7 @@
 """
 Generate tiny_rogue_manifest.csv from the tile PNGs.
 """
+
 from __future__ import annotations
 
 import csv

@@ -7,6 +7,7 @@ Steps 59-64
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import random
 from dataclasses import dataclass, field
@@ -136,22 +137,10 @@ class PetFusionManager:
                 match_reverse = p1_type == req_pets[1] and p2_type == req_pets[0]
 
                 if match_direct or match_reverse:
-                    req_b1 = (
-                        recipe.required_bond[0] if len(recipe.required_bond) > 0 else 0
-                    )
-                    req_b2 = (
-                        recipe.required_bond[1] if len(recipe.required_bond) > 1 else 0
-                    )
-                    req_l1 = (
-                        recipe.required_level[0]
-                        if len(recipe.required_level) > 0
-                        else 1
-                    )
-                    req_l2 = (
-                        recipe.required_level[1]
-                        if len(recipe.required_level) > 1
-                        else 1
-                    )
+                    req_b1 = recipe.required_bond[0] if len(recipe.required_bond) > 0 else 0
+                    req_b2 = recipe.required_bond[1] if len(recipe.required_bond) > 1 else 0
+                    req_l1 = recipe.required_level[0] if len(recipe.required_level) > 0 else 1
+                    req_l2 = recipe.required_level[1] if len(recipe.required_level) > 1 else 1
 
                     if (
                         match_direct
@@ -254,9 +243,7 @@ class PetFusionManager:
             "reward": {"gold": 200, "exp": 500, "item": "fusion_core"},
         }
 
-    def apply_quest_completion_reward(
-        self, pet: Entity, quest_reward: dict[str, Any]
-    ) -> None:
+    def apply_quest_completion_reward(self, pet: Entity, quest_reward: dict[str, Any]) -> None:
         """クエスト完了報酬をペットに適用"""
         if pet is None:
             return

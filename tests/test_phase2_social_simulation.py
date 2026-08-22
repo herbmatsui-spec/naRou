@@ -22,11 +22,7 @@ from reputation_gate_system import (
     ReputationThreshold,
     create_thresholds_from_yaml,
 )
-from rumor_propagation_system import (
-    RumorEngine,
-    RumorPropagationConfig,
-    RumorType,
-)
+from rumor_propagation_system import RumorEngine, RumorPropagationConfig, RumorType
 
 
 # The global memory registry is a process-wide singleton. Several tests populate
@@ -36,6 +32,7 @@ from rumor_propagation_system import (
 def _clear_memory_registry():
     yield
     GLOBAL_MEMORY_REGISTRY._managers.clear()
+
 
 # ---------------------------------------------------------------------------
 # Step 5: NPC Memory System
@@ -257,9 +254,7 @@ def test_rumor_propagation_step():
     rumor_engine.register_npc(listener, (5, 5))  # 距離 5
 
     # 高信憑性噂作成
-    rumor_engine.create_rumor(
-        RumorType.QUEST_SUCCESS, {}, origin, (0, 0), base_credibility=1.0
-    )
+    rumor_engine.create_rumor(RumorType.QUEST_SUCCESS, {}, origin, (0, 0), base_credibility=1.0)
 
     # 関係レベル高めに設定
     engine.relationship_manager.get_relationship_level.return_value = 2
@@ -305,15 +300,9 @@ def test_rumor_faction_modifier():
     FW_REG._loaded = False
 
     fw_mgr = FactionWarManager()
-    fw_mgr.registry._factions["f1"] = FactionWarData(
-        id="f1", name="F1", allied_factions=["f2"]
-    )
-    fw_mgr.registry._factions["f2"] = FactionWarData(
-        id="f2", name="F2", allied_factions=["f1"]
-    )
-    fw_mgr.registry._factions["f3"] = FactionWarData(
-        id="f3", name="F3", rival_factions=["f1"]
-    )
+    fw_mgr.registry._factions["f1"] = FactionWarData(id="f1", name="F1", allied_factions=["f2"])
+    fw_mgr.registry._factions["f2"] = FactionWarData(id="f2", name="F2", allied_factions=["f1"])
+    fw_mgr.registry._factions["f3"] = FactionWarData(id="f3", name="F3", rival_factions=["f1"])
 
     assert fw_mgr.get_rumor_spread_modifier("f1", "f2") == 0.2  # 同盟
     assert fw_mgr.get_rumor_spread_modifier("f1", "f3") == -0.3  # 敵対
@@ -365,9 +354,7 @@ def test_create_thresholds_from_yaml():
 def test_reputation_gate_npc():
     """NPC ゲート評価"""
     engine = create_mock_engine()
-    engine.relationship_manager.get_relationship_level.return_value = (
-        2  # 友人 (trust ~50)
-    )
+    engine.relationship_manager.get_relationship_level.return_value = 2  # 友人 (trust ~50)
 
     gate_sys = ReputationGate(engine)
     gate_sys.register_npc_gate(
@@ -404,18 +391,14 @@ def test_reputation_gate_faction():
         "kingdom_garde",
         [
             ReputationThreshold(50, GateAction.UNLOCK_SHOP, "royal_shop"),
-            ReputationThreshold(
-                80, GateAction.GRANT_BUFF, "royal_favor", params={"duration": 600}
-            ),
+            ReputationThreshold(80, GateAction.GRANT_BUFF, "royal_favor", params={"duration": 600}),
         ],
     )
 
     # influence=65 - 50 = 15 + player_rep=30 = 45  ... あれ、80には届かない
     # base = influence - 50 = 15, + player_rep 30 = 45
     # 閾値50は未達。修正: base_reputation を使う
-    gate_sys._faction_gates[
-        "kingdom_garde"
-    ].base_reputation = 40  # これで 15 + 30 + 40 = 85
+    gate_sys._faction_gates["kingdom_garde"].base_reputation = 40  # これで 15 + 30 + 40 = 85
     ready = gate_sys.evaluate_faction_gates(player, "kingdom_garde")
     assert len(ready) == 2
 
@@ -468,9 +451,7 @@ def test_reputation_gate_custom_action():
     gate_sys.register_npc_gate(
         "npc1",
         [
-            ReputationThreshold(
-                0, GateAction.CUSTOM, "my_custom", params={"value": 42}
-            ),
+            ReputationThreshold(0, GateAction.CUSTOM, "my_custom", params={"value": 42}),
         ],
     )
 
@@ -492,9 +473,7 @@ def test_memory_rumor_reputation_integration():
     npc = Mock()
     npc.name = "witness"
     mgr = GLOBAL_MEMORY_REGISTRY.get(npc)
-    mgr.record_witness(
-        "player", "steal", "merchant_chest", (5, 5), MemoryImportance.SIGNIFICANT
-    )
+    mgr.record_witness("player", "steal", "merchant_chest", (5, 5), MemoryImportance.SIGNIFICANT)
 
     # 噂生成
     engine = create_mock_engine()

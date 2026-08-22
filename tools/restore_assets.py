@@ -3,6 +3,7 @@
 Asset restoration script for restoring assets from backups.
 Supports restoring from full backups, incremental backups, and specific points in time.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -344,9 +345,7 @@ def main():
 
     if args.files:
         # Restore specific files
-        result = restore_specific_files(
-            backup_source, args.restore_target, args.files, config
-        )
+        result = restore_specific_files(backup_source, args.restore_target, args.files, config)
     else:
         # Restore entire backup
         result = restore_from_backup(backup_source, args.restore_target, config)

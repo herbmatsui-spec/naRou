@@ -3,6 +3,7 @@
 Network Performance Test
 ネットワークパフォーマンステスト
 """
+
 from __future__ import annotations
 
 import socket
@@ -36,7 +37,7 @@ class TestNetworkPerformance(unittest.TestCase):
             sock.settimeout(1)
             try:
                 sock.connect(("127.0.0.1", 80))
-            except:
+            except Exception:
                 pass
             finally:
                 sock.close()
@@ -46,7 +47,7 @@ class TestNetworkPerformance(unittest.TestCase):
             duration = self.monitor.measure_response_time(ping_localhost)
             self.assertIsInstance(duration, float)
             self.assertGreaterEqual(duration, 0)
-        except:
+        except Exception:
             self.skipTest("Localhost port 80 not available")
 
     def test_network_baseline(self):

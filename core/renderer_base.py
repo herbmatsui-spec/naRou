@@ -124,9 +124,7 @@ class RendererBase(ABC):
         pass
 
     @abstractmethod
-    def clear(
-        self, color: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)
-    ) -> None:
+    def clear(self, color: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)) -> None:
         pass
 
     @abstractmethod

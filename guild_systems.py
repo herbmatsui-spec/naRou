@@ -3,6 +3,7 @@
 Consolidated managers for the guild/faction ranking proposal. Each manager
 loads its YAML data and exposes the core logic described in the proposal.
 """
+
 from __future__ import annotations
 
 import logging
@@ -90,12 +91,8 @@ class GuildWarManager:
 
     def load(self, path: str = "data/guild_wars.yaml") -> None:
         data = _load_yaml(path)
-        self._conditions = data.get("guild_war_conditions", {}).get(
-            "victory_conditions", []
-        )
-        self._alliance_benefits = data.get("guild_war_conditions", {}).get(
-            "alliance_benefits", []
-        )
+        self._conditions = data.get("guild_war_conditions", {}).get("victory_conditions", [])
+        self._alliance_benefits = data.get("guild_war_conditions", {}).get("alliance_benefits", [])
         logger.info(f"Loaded {len(self._conditions)} war victory conditions")
 
     def is_victory(self, state: GuildWarState) -> bool:
@@ -162,14 +159,12 @@ class RankingTitleManager:
                         for eff in e.get("effects", []):
                             if eff.get("type") == "stat_bonus":
                                 for k, v in (eff.get("value") or {}).items():
-                                    out["stat_bonus"][k] = out["stat_bonus"].get(
-                                        k, 0
-                                    ) + int(v)
+                                    out["stat_bonus"][k] = out["stat_bonus"].get(k, 0) + int(v)
                             else:
                                 key = eff.get("type")
-                                out["bonuses"][key] = out["bonuses"].get(
-                                    key, 0
-                                ) + float(eff.get("value", 0))
+                                out["bonuses"][key] = out["bonuses"].get(key, 0) + float(
+                                    eff.get("value", 0)
+                                )
         return out
 
 
@@ -197,15 +192,11 @@ class FactionEventManager:
                 out.append(ev)
         return out
 
-    def complete_event(
-        self, player, faction: str, event_id: str, choice_id: str
-    ) -> dict:
+    def complete_event(self, player, faction: str, event_id: str, choice_id: str) -> dict:
         for ev in self._events.get(faction, []):
             if ev.get("id") != event_id:
                 continue
-            choice = next(
-                (c for c in ev.get("choices", []) if c.get("id") == choice_id), None
-            )
+            choice = next((c for c in ev.get("choices", []) if c.get("id") == choice_id), None)
             if choice is None:
                 return {}
             # record completion
@@ -214,9 +205,7 @@ class FactionEventManager:
             # apply reputation consequences
             cons = choice.get("consequences", {})
             for f, delta in cons.get("faction_reputation", {}).items():
-                player.faction_reputation[f] = player.faction_reputation.get(
-                    f, 0
-                ) + int(delta)
+                player.faction_reputation[f] = player.faction_reputation.get(f, 0) + int(delta)
             rewards = cons.get("rewards", [])
             return {"rewards": rewards, "consequences": cons}
         return {}

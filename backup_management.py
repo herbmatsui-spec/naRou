@@ -180,9 +180,7 @@ class BackupManager:
         cutoff = datetime.now() - timedelta(days=retention_days)
 
         # Sort by date
-        backups = sorted(
-            self.index["backups"], key=lambda b: b["created_at"], reverse=True
-        )
+        backups = sorted(self.index["backups"], key=lambda b: b["created_at"], reverse=True)
 
         # Keep by count
         to_delete = backups[retention_count:]
@@ -239,9 +237,7 @@ def main():
         "--create", nargs=3, metavar=("NAME", "TYPE", "SOURCES"), help="Create backup"
     )
     parser.add_argument("--list", action="store_true", help="List backups")
-    parser.add_argument(
-        "--restore", nargs=2, metavar=("NAME", "TARGET"), help="Restore backup"
-    )
+    parser.add_argument("--restore", nargs=2, metavar=("NAME", "TARGET"), help="Restore backup")
     parser.add_argument("--delete", help="Delete backup")
     parser.add_argument("--cleanup", action="store_true", help="Cleanup old backups")
     parser.add_argument("--verify", help="Verify backup")

@@ -6,6 +6,7 @@ design-token alias classes defined in `assets/css/demo.css`.
 
 Run: python tools/replace_classes.py
 """
+
 from __future__ import annotations
 
 import json
@@ -45,9 +46,7 @@ def main() -> int:
             total_replaced += n
             print(f"Updated {fn} ({n} class attrs)")
 
-    print(
-        f"Done. {changed_files} files changed, {total_replaced} class attributes rewritten."
-    )
+    print(f"Done. {changed_files} files changed, {total_replaced} class attributes rewritten.")
     return 0
 
 

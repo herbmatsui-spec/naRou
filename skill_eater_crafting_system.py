@@ -105,7 +105,8 @@ class PatchworkCraftingEngine:
             "power": skill.power,
             "remaining_durability": skill.current_durability,
             "is_shattered": is_shattered,
-            "message": f"【{skill.name}】を発動！（残り耐久: {skill.current_durability}）" + ("\n⚠️ スキル構造が崩壊・消滅した！" if is_shattered else ""),
+            "message": f"【{skill.name}】を発動！（残り耐久: {skill.current_durability}）"
+            + ("\n⚠️ スキル構造が崩壊・消滅した！" if is_shattered else ""),
         }
 
     def generate_crafting_toast(self, skill: PatchworkSkill) -> Dict[str, Any]:

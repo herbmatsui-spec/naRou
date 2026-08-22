@@ -25,13 +25,7 @@ from typing import TYPE_CHECKING, Any
 
 import yaml
 
-from constants import (
-    QUALITY_BAD,
-    QUALITY_GOD,
-    QUALITY_GOOD,
-    QUALITY_MIRACLE,
-    QUALITY_NORMAL,
-)
+from constants import QUALITY_BAD, QUALITY_GOD, QUALITY_GOOD, QUALITY_MIRACLE, QUALITY_NORMAL
 from core_framework import BaseSystem
 from data.generated.character.gods import God
 from data.generated.character.jobs import Job
@@ -67,11 +61,7 @@ from data.repositories import (
     TitleRepository,
 )
 from entity import Attributes, Entity
-from item_system import (
-    MATERIALS,
-    Item,
-    create_sample_item,
-)
+from item_system import MATERIALS, Item, create_sample_item
 from systems import MonsterPreset
 
 if TYPE_CHECKING:
@@ -136,9 +126,7 @@ class DataManager(BaseSystem):
         # スキルツリー (ラッパー key: skill_trees)
         skill_trees_raw = self._load_yaml("skill_trees.yaml") or {}
         st_data = (
-            skill_trees_raw.get("skill_trees", {})
-            if isinstance(skill_trees_raw, dict)
-            else {}
+            skill_trees_raw.get("skill_trees", {}) if isinstance(skill_trees_raw, dict) else {}
         )
         self.skill_trees = SkillTreeRepository(
             {
@@ -161,11 +149,7 @@ class DataManager(BaseSystem):
         fu_data = fusion_raw.get("fusions", {}) if isinstance(fusion_raw, dict) else {}
         self.skill_fusions = SkillFusionRepository(
             {
-                k: (
-                    SkillFusion.model_validate(v)
-                    if not isinstance(v, SkillFusion)
-                    else v
-                )
+                k: (SkillFusion.model_validate(v) if not isinstance(v, SkillFusion) else v)
                 for k, v in fu_data.items()
             }
         )
@@ -176,9 +160,7 @@ class DataManager(BaseSystem):
 
         # 派閥 (ラッパー key: factions)
         factions_raw = self._load_yaml("factions.yaml") or {}
-        fac_data = (
-            factions_raw.get("factions", {}) if isinstance(factions_raw, dict) else {}
-        )
+        fac_data = factions_raw.get("factions", {}) if isinstance(factions_raw, dict) else {}
         self.factions = FactionRepository(
             {
                 k: (Faction.model_validate(v) if not isinstance(v, Faction) else v)
@@ -191,11 +173,7 @@ class DataManager(BaseSystem):
         ach_data = ach_raw.get("achievements", {}) if isinstance(ach_raw, dict) else {}
         self.achievements = AchievementRepository(
             {
-                k: (
-                    Achievement.model_validate(v)
-                    if not isinstance(v, Achievement)
-                    else v
-                )
+                k: (Achievement.model_validate(v) if not isinstance(v, Achievement) else v)
                 for k, v in ach_data.items()
             }
         )
@@ -231,9 +209,7 @@ class DataManager(BaseSystem):
 
         # ダンジョンテーマ (ラッパー key: dungeon_themes)
         # dungeon_themes.yaml はスキーマと構造が異なるため tolerant ロード
-        self.dungeon_themes = DungeonThemeRepository(
-            self._build_dungeon_themes_tolerant()
-        )
+        self.dungeon_themes = DungeonThemeRepository(self._build_dungeon_themes_tolerant())
 
         # ギルド (ラッパー key: guilds)
         guilds_raw = self._load_yaml("guilds.yaml") or {}
@@ -388,9 +364,7 @@ class DataManager(BaseSystem):
         )
         return item
 
-    def get_random_item_for_floor(
-        self, floor_level: int, x: int = 0, y: int = 0
-    ) -> Item:
+    def get_random_item_for_floor(self, floor_level: int, x: int = 0, y: int = 0) -> Item:
         """フロア深度に応じたアイテムの動的ランダム生成"""
         if not self.items._data:
             return create_sample_item("potion_heal", x, y)
@@ -422,9 +396,7 @@ class DataManager(BaseSystem):
             else None
         )
         cursed = (quality == QUALITY_BAD) or (random.random() < 0.05)
-        return self.create_item(
-            item_id, x, y, material=mat, quality=quality, cursed=cursed
-        )
+        return self.create_item(item_id, x, y, material=mat, quality=quality, cursed=cursed)
 
     # ==================== MONSTER GENERATION ====================
 
@@ -477,9 +449,7 @@ class DataManager(BaseSystem):
         mob.status_effects = []
         return mob
 
-    def get_random_monster_for_floor(
-        self, floor_level: int, x: int = 0, y: int = 0
-    ) -> Entity:
+    def get_random_monster_for_floor(self, floor_level: int, x: int = 0, y: int = 0) -> Entity:
         """フロア深度に応じたモンスターの動的ランダム生成"""
         if not self.monsters._data:
             return MonsterPreset.create("slime", x, y)

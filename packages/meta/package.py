@@ -29,10 +29,7 @@ class MetaPackage(IPackage):
         from inheritance_system import InheritanceManager, InheritanceRegistry
         from karma_system import KarmaManager, KarmaRegistry
         from legacy_skill_system import LegacySkillManager, LegacySkillRegistry
-        from meta_progression_system import (
-            MetaProgressionManager,
-            MetaProgressionRegistry,
-        )
+        from meta_progression_system import MetaProgressionManager, MetaProgressionRegistry
         from reincarnation_challenge_system import (
             ReincarnationChallengeManager,
             ReincarnationChallengeRegistry,
@@ -73,15 +70,11 @@ class MetaPackage(IPackage):
 
         challenge_reg = ReincarnationChallengeRegistry()
         challenge_reg.load()
-        kernel.register_system(
-            "challenge_manager", ReincarnationChallengeManager(challenge_reg)
-        )
+        kernel.register_system("challenge_manager", ReincarnationChallengeManager(challenge_reg))
 
         meta_reg = MetaProgressionRegistry()
         meta_reg.load()
-        kernel.register_system(
-            "meta_progression_manager", MetaProgressionManager(meta_reg)
-        )
+        kernel.register_system("meta_progression_manager", MetaProgressionManager(meta_reg))
 
         kernel.register_system("title_manager", TitleManager)
 

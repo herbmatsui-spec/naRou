@@ -3,6 +3,7 @@
 Availability Test
 可用性テスト
 """
+
 from __future__ import annotations
 
 import sys

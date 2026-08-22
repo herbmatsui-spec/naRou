@@ -6,6 +6,7 @@ Step 10: Master-disciple relationship mechanics
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import time
 from collections import defaultdict
@@ -149,9 +150,7 @@ class MentorshipMechanics:
                 80,
                 ["advanced_magic"],
             ),
-            "healing_art": SkillKnowledge(
-                "healing_art", "治癒術", SkillTransferType.BASIC, 15, 20
-            ),
+            "healing_art": SkillKnowledge("healing_art", "治癒術", SkillTransferType.BASIC, 15, 20),
             "resurrection": SkillKnowledge(
                 "resurrection",
                 "復活の術",
@@ -160,21 +159,13 @@ class MentorshipMechanics:
                 95,
                 ["healing_art"],
             ),
-            "alchemy": SkillKnowledge(
-                "alchemy", "錬金術", SkillTransferType.ADVANCED, 40, 50
-            ),
-            "crafting": SkillKnowledge(
-                "crafting", "鍛冶術", SkillTransferType.BASIC, 20, 25
-            ),
-            "stealth": SkillKnowledge(
-                "stealth", "隠密術", SkillTransferType.BASIC, 15, 30
-            ),
+            "alchemy": SkillKnowledge("alchemy", "錬金術", SkillTransferType.ADVANCED, 40, 50),
+            "crafting": SkillKnowledge("crafting", "鍛冶術", SkillTransferType.BASIC, 20, 25),
+            "stealth": SkillKnowledge("stealth", "隠密術", SkillTransferType.BASIC, 15, 30),
             "leadership": SkillKnowledge(
                 "leadership", "統率学", SkillTransferType.ADVANCED, 45, 45
             ),
-            "diplomacy": SkillKnowledge(
-                "diplomacy", "外交術", SkillTransferType.ADVANCED, 40, 40
-            ),
+            "diplomacy": SkillKnowledge("diplomacy", "外交術", SkillTransferType.ADVANCED, 40, 40),
         }
 
     def _load_mentorship_config(self) -> dict[str, Any]:
@@ -238,9 +229,7 @@ class MentorshipMechanics:
 
         return state
 
-    def update_mentorship_stage(
-        self, master_id: str, disciple_id: str
-    ) -> MentorshipStage | None:
+    def update_mentorship_stage(self, master_id: str, disciple_id: str) -> MentorshipStage | None:
         """師弟ステージを更新"""
         key = (master_id, disciple_id)
         state = self.mentorship_states.get(key)
@@ -279,9 +268,7 @@ class MentorshipMechanics:
 
         return new_stage
 
-    def teach_skill(
-        self, master_id: str, disciple_id: str, skill_id: str
-    ) -> dict[str, Any]:
+    def teach_skill(self, master_id: str, disciple_id: str, skill_id: str) -> dict[str, Any]:
         """スキルを教える"""
         # 師弟関係を確認
         state = self.establish_mentorship(master_id, disciple_id)
@@ -319,9 +306,7 @@ class MentorshipMechanics:
             state.last_lesson = time.time()
 
         # 関係を強化
-        self.rm.modify_relationship(
-            master_id, disciple_id, InteractionType.KNOWLEDGE_SHARE, 15
-        )
+        self.rm.modify_relationship(master_id, disciple_id, InteractionType.KNOWLEDGE_SHARE, 15)
         state.mentorship_level = self.rm.get_relationship_level(
             master_id, disciple_id, RelationshipType.MENTORSHIP
         )
@@ -369,9 +354,7 @@ class MentorshipMechanics:
             state.loyalty = min(100, state.loyalty + 5)
 
             # 関係を強化
-            self.rm.modify_relationship(
-                master_id, disciple_id, InteractionType.KNOWLEDGE_SHARE, 10
-            )
+            self.rm.modify_relationship(master_id, disciple_id, InteractionType.KNOWLEDGE_SHARE, 10)
 
             return {"success": True, "skill": skill.name, "mastery": "learned"}
         else:
@@ -437,9 +420,7 @@ class MentorshipMechanics:
         state.loyalty = min(100, state.loyalty + sacrifice_level // 2)
 
         # 関係を強化
-        self.rm.modify_relationship(
-            master_id, disciple_id, InteractionType.RESCUE, sacrifice_level
-        )
+        self.rm.modify_relationship(master_id, disciple_id, InteractionType.RESCUE, sacrifice_level)
         state.mentorship_level = self.rm.get_relationship_level(
             master_id, disciple_id, RelationshipType.MENTORSHIP
         )
@@ -475,9 +456,7 @@ class MentorshipMechanics:
         state.stage = MentorshipStage.JOURNEYMAN
 
         # 相互の関係を強化（友人としても）
-        self.rm.modify_relationship(
-            master_id, disciple_id, InteractionType.EMOTIONAL_SUPPORT, 20
-        )
+        self.rm.modify_relationship(master_id, disciple_id, InteractionType.EMOTIONAL_SUPPORT, 20)
 
         # イベント発行
         self._emit_mentorship_event("disciple_surpassed", state)
@@ -488,9 +467,7 @@ class MentorshipMechanics:
             "skills_learned": len(state.skills_learned),
         }
 
-    def get_available_skills(
-        self, master_id: str, disciple_id: str
-    ) -> list[dict[str, Any]]:
+    def get_available_skills(self, master_id: str, disciple_id: str) -> list[dict[str, Any]]:
         """弟子が学べる利用可能なスキルを取得"""
         state = self.mentorship_states.get((master_id, disciple_id))
         if not state:
@@ -503,9 +480,7 @@ class MentorshipMechanics:
                 continue
 
             # 前提条件をチェック
-            prereq_met = all(
-                prereq in state.skills_learned for prereq in skill.prerequisites
-            )
+            prereq_met = all(prereq in state.skills_learned for prereq in skill.prerequisites)
             if not prereq_met:
                 continue
 
@@ -542,9 +517,7 @@ class MentorshipMechanics:
                 logger.exception("Unhandled exception")
                 print(f"Error in mentorship event handler: {e}")
 
-    def get_mentorship_state(
-        self, master_id: str, disciple_id: str
-    ) -> MentorshipState | None:
+    def get_mentorship_state(self, master_id: str, disciple_id: str) -> MentorshipState | None:
         """師弟状態を取得"""
         return self.mentorship_states.get((master_id, disciple_id))
 

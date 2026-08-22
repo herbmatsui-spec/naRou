@@ -3,6 +3,7 @@
 垂直ワールドシステム 統合テスト
 すべてのコンポーネントが連携して動作することを確認
 """
+
 from __future__ import annotations
 
 from world_map_manager import WorldMapManager
@@ -80,12 +81,8 @@ def test_integration():
     print("4. 隣接レイヤー計算のテスト")
     # 特定のレイヤーの隣接レイヤーを計算
     test_zone, test_biome, test_depth, test_dim = "surface", "plains", 5, "material"
-    adjacent = world_manager.get_adjacent_layers(
-        test_zone, test_biome, test_depth, test_dim
-    )
-    print(
-        f"   {test_zone}:{test_biome}:{test_depth}:{test_dim} の隣接レイヤー数: {len(adjacent)}"
-    )
+    adjacent = world_manager.get_adjacent_layers(test_zone, test_biome, test_depth, test_dim)
+    print(f"   {test_zone}:{test_biome}:{test_depth}:{test_dim} の隣接レイヤー数: {len(adjacent)}")
 
     # 期待される隣接タイプをチェック
     adj_types = set()
@@ -121,9 +118,7 @@ def test_integration():
     print("   ワールドステート:")
     print(f"     ヒストリエントリ数: {len(state_tpl.player_layer_history)}")
     print(f"     訪問済みレイヤー数: {len(state_tpl.visited_layers)}")
-    print(
-        f"     発見記録数: {sum(len(v) for v in state_tpl.layer_discoveries.values())}"
-    )
+    print(f"     発見記録数: {sum(len(v) for v in state_tpl.layer_discoveries.values())}")
     print()
 
     print("6. マップ生成機能のテスト")

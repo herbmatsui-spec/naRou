@@ -2,6 +2,7 @@
 test_skill_eater_phase2.py
 Phase 2: バトルエンジン＆《喰らい》システムの検証テスト
 """
+
 from __future__ import annotations
 
 import unittest
@@ -90,9 +91,7 @@ class TestSkillEaterPhase2(unittest.TestCase):
         self.assertTrue(prey.has_skill("com_combat_001"))
 
         # 強制成功で喰らいを実行
-        res = self.combat.execute_devour(
-            predator, prey, "com_combat_001", force_success=True
-        )
+        res = self.combat.execute_devour(predator, prey, "com_combat_001", force_success=True)
 
         self.assertTrue(res.success)
         self.assertEqual(res.stolen_skill_id, "com_combat_001")
@@ -133,9 +132,7 @@ class TestSkillEaterPhase2(unittest.TestCase):
         init_prey_atk = prey.atk
 
         # 強制失敗で喰らいを実行
-        res = self.combat.execute_devour(
-            predator, prey, "uni_midas_001", force_success=False
-        )
+        res = self.combat.execute_devour(predator, prey, "uni_midas_001", force_success=False)
 
         self.assertFalse(res.success)
         self.assertLess(predator.hp, init_hp)  # バックラッシュダメージ

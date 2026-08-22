@@ -6,11 +6,7 @@ from packages.core.kernel.package import IPackage, PackageMetadata
 
 # Module-level functions for pickling support
 def _create_starter_items(kernel: Kernel) -> list:
-    from item_system import (
-        QUALITY_NORMAL,
-        Item,
-        create_sample_item,
-    )
+    from item_system import QUALITY_NORMAL, Item, create_sample_item
 
     starter_sword = create_sample_item("longsword")
     starter_sword.name = "使い古しの長剣"
@@ -33,9 +29,7 @@ def _create_starter_items(kernel: Kernel) -> list:
         base_weight=1.5,
         base_value=800,
     )
-    wish_rod = Item(
-        "★願いの杖", "rod", "🪄", (100, 255, 255), base_weight=0.8, base_value=3000
-    )
+    wish_rod = Item("★願いの杖", "rod", "🪄", (100, 255, 255), base_weight=0.8, base_value=3000)
     return [starter_sword, shield, potion, bread, spellbook, instrument, wish_rod]
 
 
@@ -56,9 +50,10 @@ def _spawn_dungeon(kernel: Kernel, engine) -> None:
 
     game_map = engine.game_map
     entity_manager = kernel.get_system("entity_manager")
-    data_manager = (
-        kernel.get_system("data_manager") if kernel.has_system("data_manager") else None
-    )
+    data_manager = kernel.get_system("data_manager") if kernel.has_system("data_manager") else None
+
+    # Determine dungeon level for key item scaling
+    dungeon_level = getattr(engine, "dungeon_level", 1)
 
     for room in game_map.rooms[1:]:
         if random.random() < SPAWN_SNAIL_CHANCE:
@@ -82,9 +77,7 @@ def _spawn_dungeon(kernel: Kernel, engine) -> None:
                 random.randint(room.y1 + 1, room.y2 - 1),
             )
             if data_manager:
-                mob = data_manager.get_random_monster_for_floor(
-                    engine.dungeon_level, mx, my
-                )
+                mob = data_manager.get_random_monster_for_floor(engine.dungeon_level, mx, my)
             else:
                 from systems import MonsterPreset
 
@@ -99,9 +92,7 @@ def _spawn_dungeon(kernel: Kernel, engine) -> None:
                 random.randint(room.y1 + 1, room.y2 - 1),
             )
             if data_manager:
-                itm = data_manager.get_random_item_for_floor(
-                    engine.dungeon_level, ix, iy
-                )
+                itm = data_manager.get_random_item_for_floor(engine.dungeon_level, ix, iy)
             else:
                 itm = create_sample_item(
                     random.choice(
@@ -117,6 +108,52 @@ def _spawn_dungeon(kernel: Kernel, engine) -> None:
                     iy,
                 )
             entity_manager.add_item(itm)
+
+        # SkillEaterSecretAccess - キーアイテムドロップ (Step 26)
+        # 深度に応じたキーカードレベルを決定
+        keycard_level = min(5, max(1, (dungeon_level // 5) + 1))
+        key_drop_chance = 0.02 + (dungeon_level * 0.005)  # 基本2% + 深度ボーナス
+        if random.random() < key_drop_chance:
+            kx, ky = (
+                random.randint(room.x1 + 1, room.x2 - 1),
+                random.randint(room.y1 + 1, room.y2 - 1),
+            )
+            # キーアイテムをエンティティとして配置
+            from secret_area_system import SECRET_REGISTRY
+
+            SECRET_REGISTRY.load_from_yaml()
+
+            # 利用可能なキーから選択
+            available_keys = []
+            for key in SECRET_REGISTRY.get_all_key_items():
+                if key.key_type == "keycard" and key.level <= keycard_level:
+                    available_keys.append(key.id)
+                elif key.key_type == "biometric" and key.level <= (keycard_level // 2 + 1):
+                    available_keys.append(key.id)
+                elif key.key_type == "decryption" and key.level <= (keycard_level // 2 + 1):
+                    available_keys.append(key.id)
+
+            if available_keys:
+                key_id = random.choice(available_keys)
+                key_def = SECRET_REGISTRY.get_key_item(key_id)
+                if key_def:
+                    from item_system import Item
+
+                    key_item = Item(
+                        key_def.name,
+                        "tool",
+                        "🗝️",
+                        (255, 215, 0),
+                        base_weight=0.1,
+                        base_value=key_def.market_value,
+                    )
+                    key_item.x, key_item.y = kx, ky
+                    key_item.key_data = {
+                        "key_id": key_id,
+                        "key_type": key_def.key_type,
+                        "level": key_def.level,
+                    }
+                    entity_manager.add_item(key_item)
 
         if random.random() < SPAWN_RESOURCE_NODE_CHANCE:
             rx, ry = (
@@ -145,9 +182,7 @@ class GameplayLoop:
         if target and target not in (self.engine.player, self.engine.pet):
             if "グウェン" in target.name:
                 self.engine.survival.karma -= 15
-                self.engine.log(
-                    "【悪行】グウェンを攻撃した！ (Karma -15)", (255, 80, 80)
-                )
+                self.engine.log("【悪行】グウェンを攻撃した！ (Karma -15)", (255, 80, 80))
             weapon = self.engine.inventory.equipment.get("main_hand")
             dmg, is_crit, msg = CombatSystem.calculate_melee_attack(
                 self.engine.player, target, weapon
@@ -174,20 +209,17 @@ class GameplayLoop:
             for l in self.engine.player.gain_skill_exp("long_sword", 18):
                 self.engine.log(l, (150, 255, 150))
             if target.hp <= 0:
-                CombatSystem.publish_kill_event(
-                    self.engine.event_bus, target.x, target.y
-                )
+                CombatSystem.publish_kill_event(self.engine.event_bus, target.x, target.y)
                 self.engine._on_kill(target)
             self.engine.player.energy -= ENERGY_THRESHOLD
             return True
 
-        elif self.engine.game_map.is_walkable(tx, ty) and not self.engine.get_entity_at(
-            tx, ty
-        ):
+        elif self.engine.game_map.is_walkable(tx, ty) and not self.engine.get_entity_at(tx, ty):
             self.engine.player.x, self.engine.player.y = tx, ty
 
             try:
-                from event_bus import event_bus, EVENT_ON_MOVE
+                from event_bus import EVENT_ON_MOVE, event_bus
+
                 event_bus.publish(EVENT_ON_MOVE, {"entity": self.engine.player, "x": tx, "y": ty})
             except ImportError:
                 pass
@@ -220,6 +252,30 @@ class GameplayLoop:
                     (255, 80, 80),
                     level="WARNING",
                 )
+
+            # アイテム拾得チェック（キーアイテム含む）
+            for item in list(self.engine.entity_manager.items_on_ground):
+                if item.x == self.engine.player.x and item.y == self.engine.player.y:
+                    # キーアイテム特別処理
+                    if hasattr(item, "key_data") and item.key_data:
+                        key_id = item.key_data.get("key_id")
+                        if key_id:
+                            self.engine.player.add_key(key_id, 1)
+                            self.engine.log(f"キーアイテム『{item.name}』を入手！", (255, 215, 0))
+                            from sound_manager import SoundManager
+
+                            SoundManager.play_se("get_item")
+                            self.engine.entity_manager.items_on_ground.remove(item)
+                            continue
+
+                    # 通常アイテム拾得
+                    ok, msg = self.engine.inventory.add_item(item)
+                    self.engine.log(msg, (255, 255, 200))
+                    SoundManager.play_se("get_item")
+                    if ok:
+                        self.engine.entity_manager.items_on_ground.remove(item)
+                    break
+
             self.engine.player.energy -= ENERGY_THRESHOLD
             return True
         return False
@@ -289,7 +345,10 @@ class GameplayLoop:
                 pass  # Quest scheduling handled elsewhere
 
         # World A (Skill Eater) Turn Tick (Steps 49-56)
-        if getattr(getattr(self.engine, "game_state_data", None), "current_world", "main") == "skill_eater":
+        if (
+            getattr(getattr(self.engine, "game_state_data", None), "current_world", "main")
+            == "skill_eater"
+        ):
             w_data = self.engine.game_state_data.world_a_data
             toxicity = w_data.get("toxicity", 0) + 1
             w_data["toxicity"] = min(100, toxicity)
@@ -312,6 +371,27 @@ class GameplayLoop:
                         f"【ペット帰還】派遣任務『{disp['mission_name']}』が完了し、報酬 {reward_gold} アルドを獲得！",
                         (255, 215, 0),
                     )
+
+            # SkillEaterSecretAccess - 自動秘密検知 (Step 18)
+            try:
+                from secret_area_system import SECRET_REGISTRY, check_secret_detection
+
+                SECRET_REGISTRY.load_from_yaml()
+                current_layer = getattr(self.engine.game_map, "world_layer", None)
+                if current_layer:
+                    layer_key = f"{current_layer.zone}:{current_layer.biome}:{current_layer.depth}:{current_layer.dimension}"
+                    discovered = check_secret_detection(
+                        self.engine.player, self.engine.game_map, layer_key
+                    )
+                    for area in discovered:
+                        self.engine.log(
+                            f"【発見】隠しエリア『{area.name}』を発見！ ({area.get_hint_text()})",
+                            (100, 255, 150),
+                            level="INFO",
+                        )
+                        # 検知成功イベント発行・音響・エモートは secret_area_system 側で処理
+            except Exception:
+                pass
 
 
 class GameplayPackage(IPackage):

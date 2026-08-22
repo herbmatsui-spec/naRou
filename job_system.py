@@ -3,6 +3,7 @@
 Job System for naRou
 Manages jobs, job changes, stat modifiers, and unlock conditions.
 """
+
 from __future__ import annotations
 
 import logging

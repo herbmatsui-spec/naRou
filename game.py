@@ -21,19 +21,17 @@ except ImportError:
         sys.path.insert(0, str(_stubs))
 
 import random
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from packages.core.kernel.kernel import Kernel
 
 import tcod
 import tcod.event
 
-from advanced_systems import (
-    ResourceNode,
-    SaveSystem,
-    WishParser,
-)
+from advanced_systems import ResourceNode, SaveSystem, WishParser
 from config_manager import get_config_manager
 from constants import (
-    STARTING_GOD_ID,
     COLOR_GOLD_YELLOW,
     COLOR_PET_PINK,
     ENERGY_THRESHOLD,
@@ -43,6 +41,7 @@ from constants import (
     PET_RETREAT_HP_RATIO,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
+    STARTING_GOD_ID,
     TILE_FLOOR,
     TILE_STAIRS_DOWN,
     TILE_WALL,
@@ -54,10 +53,7 @@ from constants import (
 from core_framework import AStar, Point, bresenham_line
 from dialogue_system import DialogueManager
 from entity import Entity
-from item_system import (
-    Inventory,
-    Item,
-)
+from item_system import Inventory, Item
 from localization_manager import LocalizationManager
 from logging_config import configure_logging
 from map_engine import GameMap
@@ -74,11 +70,7 @@ from systems import (
     StatusEffect,
     SurvivalSystem,
 )
-from ui_fx_systems import (
-    FloatingText,
-    Particle,
-    ScreenShake,
-)
+from ui_fx_systems import FloatingText, Particle, ScreenShake
 
 configure_logging()
 
@@ -177,8 +169,11 @@ class Engine:
     def _initialize_player_and_pet(self) -> None:
         """プレイヤーとペットの初期化処理"""
         from exceptions import DataParseError
+
         if not self.game_state_data.player or not self.game_state_data.pet:
-            raise DataParseError("Player or Pet entity is missing from game_state_data during initialization")
+            raise DataParseError(
+                "Player or Pet entity is missing from game_state_data during initialization"
+            )
 
         # --- プレイヤー (設定駆動) ---
         self.game_state_data.player.god_id = STARTING_GOD_ID
@@ -190,9 +185,7 @@ class Engine:
         self.game_state_data.player.resistances.fire = 10
         self.game_state_data.player.faction = "player"
         self.game_state_data.player.aggro = AggroList()
-        self.meta_progression_manager.recalculate_and_apply_bonuses(
-            self.game_state_data.player
-        )
+        self.meta_progression_manager.recalculate_and_apply_bonuses(self.game_state_data.player)
 
         # --- ペット (設定駆動) ---
         self.game_state_data.pet.status_effects = []
@@ -202,6 +195,7 @@ class Engine:
     def _setup_initial_inventory(self) -> None:
         """初期インベントリアイテムの設定 (GameplayPackage 経由)"""
         from exceptions import ResourceLoadError
+
         starter_items = self.starter_items_factory(self.kernel)
         if not starter_items:
             raise ResourceLoadError("Failed to generate starter items from factory")
@@ -396,6 +390,20 @@ class Engine:
         """旧互換用ゲーム状態文字列"""
         return self.game_state_data.game_state
 
+    @property
+    def territory_state(self) -> Any:
+        """テリトリーシステムの状態"""
+        from skill_eater_territory_system import TerritoryState
+
+        return TerritoryState.get_instance()
+
+    @territory_state.setter
+    def territory_state(self, value: Any) -> None:
+        """テリトリーシステムの状態を設定（デシリアライズ用）"""
+        from skill_eater_territory_system import TerritoryState
+
+        TerritoryState._instance = value
+
     @game_state.setter
     def game_state(self, value: str) -> None:
         """旧互換用ゲーム状態文字列を設定"""
@@ -520,6 +528,15 @@ class Engine:
     def arch_interpret_ending_idx(self, value: int) -> None:
         """考古学解釈エンディングインデックスを設定"""
         self.game_state_data.arch_interpret_ending_idx = value
+
+    @property
+    def last_scan_result(self):
+        """直近の解析結果（捕食成功率表示用）"""
+        return getattr(self, "_last_scan_result", None)
+
+    @last_scan_result.setter
+    def last_scan_result(self, value):
+        self._last_scan_result = value
 
     # --- Kernel システムアクセス用プロパティ (Feature Package Architecture) ---
     @property
@@ -761,51 +778,99 @@ class Engine:
     # World A (Skill Eater) package systems
     @property
     def skill_eater_combat_system(self):
-        return self.kernel.get_system("skill_eater_combat_system") if self.kernel.has_system("skill_eater_combat_system") else None
+        return (
+            self.kernel.get_system("skill_eater_combat_system")
+            if self.kernel.has_system("skill_eater_combat_system")
+            else None
+        )
 
     @property
     def skill_eater_registry(self):
-        return self.kernel.get_system("skill_eater_registry") if self.kernel.has_system("skill_eater_registry") else None
+        return (
+            self.kernel.get_system("skill_eater_registry")
+            if self.kernel.has_system("skill_eater_registry")
+            else None
+        )
 
     @property
     def skill_eater_synthesis_system(self):
-        return self.kernel.get_system("skill_eater_synthesis_system") if self.kernel.has_system("skill_eater_synthesis_system") else None
+        return (
+            self.kernel.get_system("skill_eater_synthesis_system")
+            if self.kernel.has_system("skill_eater_synthesis_system")
+            else None
+        )
 
     @property
     def skill_eater_toxicity_manager(self):
-        return self.kernel.get_system("skill_eater_toxicity_manager") if self.kernel.has_system("skill_eater_toxicity_manager") else None
+        return (
+            self.kernel.get_system("skill_eater_toxicity_manager")
+            if self.kernel.has_system("skill_eater_toxicity_manager")
+            else None
+        )
 
     @property
     def slum_base_expansion_manager(self):
-        return self.kernel.get_system("slum_base_expansion_manager") if self.kernel.has_system("slum_base_expansion_manager") else None
+        return (
+            self.kernel.get_system("slum_base_expansion_manager")
+            if self.kernel.has_system("slum_base_expansion_manager")
+            else None
+        )
 
     @property
     def skill_eater_pet_dispatch_manager(self):
-        return self.kernel.get_system("skill_eater_pet_dispatch_manager") if self.kernel.has_system("skill_eater_pet_dispatch_manager") else None
+        return (
+            self.kernel.get_system("skill_eater_pet_dispatch_manager")
+            if self.kernel.has_system("skill_eater_pet_dispatch_manager")
+            else None
+        )
 
     @property
     def skill_eater_underground_arena(self):
-        return self.kernel.get_system("skill_eater_underground_arena") if self.kernel.has_system("skill_eater_underground_arena") else None
+        return (
+            self.kernel.get_system("skill_eater_underground_arena")
+            if self.kernel.has_system("skill_eater_underground_arena")
+            else None
+        )
 
     @property
     def skill_eater_bounty_system(self):
-        return self.kernel.get_system("skill_eater_bounty_system") if self.kernel.has_system("skill_eater_bounty_system") else None
+        return (
+            self.kernel.get_system("skill_eater_bounty_system")
+            if self.kernel.has_system("skill_eater_bounty_system")
+            else None
+        )
 
     @property
     def skill_eater_ascension_board(self):
-        return self.kernel.get_system("skill_eater_ascension_board") if self.kernel.has_system("skill_eater_ascension_board") else None
+        return (
+            self.kernel.get_system("skill_eater_ascension_board")
+            if self.kernel.has_system("skill_eater_ascension_board")
+            else None
+        )
 
     @property
     def skill_eater_concept_crystal(self):
-        return self.kernel.get_system("skill_eater_concept_crystal") if self.kernel.has_system("skill_eater_concept_crystal") else None
+        return (
+            self.kernel.get_system("skill_eater_concept_crystal")
+            if self.kernel.has_system("skill_eater_concept_crystal")
+            else None
+        )
 
     @property
     def skill_eater_temporal_vault(self):
-        return self.kernel.get_system("skill_eater_temporal_vault") if self.kernel.has_system("skill_eater_temporal_vault") else None
+        return (
+            self.kernel.get_system("skill_eater_temporal_vault")
+            if self.kernel.has_system("skill_eater_temporal_vault")
+            else None
+        )
 
     @property
     def skill_eater_epilogue_manager(self):
-        return self.kernel.get_system("skill_eater_epilogue_manager") if self.kernel.has_system("skill_eater_epilogue_manager") else None
+        return (
+            self.kernel.get_system("skill_eater_epilogue_manager")
+            if self.kernel.has_system("skill_eater_epilogue_manager")
+            else None
+        )
 
     def execute_scan(self) -> bool:
         """周囲の対象をスキャン・解析する (Step 14, 20, 38, 39)"""
@@ -828,18 +893,38 @@ class Engine:
             return True
 
         from skill_eater_system import CharacterState
+
         analyzer = CharacterState(
-            id="player", name=self.player.name, hp=self.player.hp, max_hp=self.player.max_hp,
-            mp=self.player.mp, max_mp=self.player.max_mp, atk=15, defense=10, intelligence=15, speed=100,
-            analysis_level=getattr(self.player, "analysis_level", 1)
+            id="player",
+            name=self.player.name,
+            hp=self.player.hp,
+            max_hp=self.player.max_hp,
+            mp=self.player.mp,
+            max_mp=self.player.max_mp,
+            atk=15,
+            defense=10,
+            intelligence=15,
+            speed=100,
+            analysis_level=getattr(self.player, "analysis_level", 1),
         )
         target_state = CharacterState(
-            id=str(getattr(nearest, "id", "enemy")), name=nearest.name, hp=nearest.hp, max_hp=nearest.max_hp,
-            mp=10, max_mp=10, atk=getattr(nearest, "atk", 10), defense=getattr(nearest, "defense", 5),
-            intelligence=5, speed=getattr(nearest, "speed", 80)
+            id=str(getattr(nearest, "id", "enemy")),
+            name=nearest.name,
+            hp=nearest.hp,
+            max_hp=nearest.max_hp,
+            mp=10,
+            max_mp=10,
+            atk=getattr(nearest, "atk", 10),
+            defense=getattr(nearest, "defense", 5),
+            intelligence=5,
+            speed=getattr(nearest, "speed", 80),
         )
         res = combat_sys.analyze_target(analyzer, target_state)
-        self.log(f"【深度解析】{res.target_name} (HP: {int(res.target_hp_ratio*100)}% / 喰らい成功率: {int(res.devour_success_rate * 100)}%)", (100, 255, 200))
+        self.last_scan_result = res
+        self.log(
+            f"【深度解析】{res.target_name} (HP: {int(res.target_hp_ratio * 100)}% / 喰らい成功率: {int(res.devour_success_rate * 100)}%)",
+            (100, 255, 200),
+        )
         for sk in res.revealed_skills:
             self.log(f" - [{sk.tier}] {sk.name} (タグ: {', '.join(sk.tags)})", (255, 215, 0))
         return True
@@ -860,19 +945,37 @@ class Engine:
                     break
 
         if not target:
-            self.log("隣接する捕食対象がいません。（敵に隣接して発動してください）", (200, 200, 200))
+            self.log(
+                "隣接する捕食対象がいません。（敵に隣接して発動してください）", (200, 200, 200)
+            )
             return True
 
         from skill_eater_system import CharacterState, SkillEaterRegistry
+
         analyzer = CharacterState(
-            id="player", name=self.player.name, hp=self.player.hp, max_hp=self.player.max_hp,
-            mp=self.player.mp, max_mp=self.player.max_mp, atk=15, defense=10, intelligence=15, speed=100,
-            analysis_level=getattr(self.player, "analysis_level", 1)
+            id="player",
+            name=self.player.name,
+            hp=self.player.hp,
+            max_hp=self.player.max_hp,
+            mp=self.player.mp,
+            max_mp=self.player.max_mp,
+            atk=15,
+            defense=10,
+            intelligence=15,
+            speed=100,
+            analysis_level=getattr(self.player, "analysis_level", 1),
         )
         target_state = CharacterState(
-            id=str(getattr(target, "id", "enemy")), name=target.name, hp=target.hp, max_hp=target.max_hp,
-            mp=10, max_mp=10, atk=getattr(target, "atk", 10), defense=getattr(target, "defense", 5),
-            intelligence=5, speed=getattr(target, "speed", 80)
+            id=str(getattr(target, "id", "enemy")),
+            name=target.name,
+            hp=target.hp,
+            max_hp=target.max_hp,
+            mp=10,
+            max_mp=10,
+            atk=getattr(target, "atk", 10),
+            defense=getattr(target, "defense", 5),
+            intelligence=5,
+            speed=getattr(target, "speed", 80),
         )
         if not target_state.skills:
             target_state.add_skill("com_combat_001")
@@ -880,7 +983,9 @@ class Engine:
         rate = combat_sys.calculate_devour_rate(analyzer, target_state)
         roll = random.random()
         if roll <= rate:
-            stolen_slot = target_state.remove_skill("com_combat_001") or (next(iter(target_state.skills.values()), None) if target_state.skills else None)
+            stolen_slot = target_state.remove_skill("com_combat_001") or (
+                next(iter(target_state.skills.values()), None) if target_state.skills else None
+            )
             stolen_id = stolen_slot.skill_id if stolen_slot else "com_combat_001"
             reg = SkillEaterRegistry.get_instance()
             sk_def = reg.get_skill(stolen_id)
@@ -890,18 +995,25 @@ class Engine:
                 self.game_state_data.world_a_data["skills"] = []
             self.game_state_data.world_a_data["skills"].append(stolen_id)
 
-            self.log(f"【捕食成功！】{target.name} から 《{sk_name}》 を喰らい尽くした！", (255, 100, 255))
+            self.log(
+                f"【捕食成功！】{target.name} から 《{sk_name}》 を喰らい尽くした！",
+                (255, 100, 255),
+            )
             if hasattr(self, "sound_manager") and self.sound_manager:
                 self.sound_manager.play_se("eat")
 
             target.hp = max(1, target.hp - 15)
             if target_state.is_husk or len(target_state.skills) == 0:
                 target.is_husk = True
-                self.log(f"{target.name} はスキルを奪われ、抜け殻（Husk）と化した！", (180, 180, 180))
+                self.log(
+                    f"{target.name} はスキルを奪われ、抜け殻（Husk）と化した！", (180, 180, 180)
+                )
         else:
             backlash = random.randint(3, 8)
             self.player.hp = max(1, self.player.hp - backlash)
-            self.log(f"【捕食失敗】拒絶反応！ 胃袋から激痛が走る！（-{backlash} HP）", (255, 80, 80))
+            self.log(
+                f"【捕食失敗】拒絶反応！ 胃袋から激痛が走る！（-{backlash} HP）", (255, 80, 80)
+            )
             if hasattr(self, "screen_shake") and self.screen_shake:
                 self.screen_shake.trigger(intensity=1.5, duration=4)
 
@@ -921,16 +1033,28 @@ class Engine:
 
         skills = self.game_state_data.world_a_data["skills"]
         if len(skills) < 2:
-            self.log(f"【キメラ合成炉】合成には少なくとも2つのスキルが必要です。（現在所持: {len(skills)}個）", (200, 200, 200))
+            self.log(
+                f"【キメラ合成炉】合成には少なくとも2つのスキルが必要です。（現在所持: {len(skills)}個）",
+                (200, 200, 200),
+            )
             return True
 
         id_a = skill_a or skills[0]
         id_b = skill_b or skills[1]
 
         from skill_eater_system import CharacterState
+
         char_state = CharacterState(
-            id="player", name=self.player.name, hp=self.player.hp, max_hp=self.player.max_hp,
-            mp=self.player.mp, max_mp=self.player.max_mp, atk=15, defense=10, intelligence=15, speed=100,
+            id="player",
+            name=self.player.name,
+            hp=self.player.hp,
+            max_hp=self.player.max_hp,
+            mp=self.player.mp,
+            max_mp=self.player.max_mp,
+            atk=15,
+            defense=10,
+            intelligence=15,
+            speed=100,
         )
         for s in skills:
             char_state.add_skill(s)
@@ -942,24 +1066,34 @@ class Engine:
             if id_b in skills:
                 skills.remove(id_b)
             skills.append(res.result_skill.id)
-            self.log(f"【合成成功！】《{res.result_skill.name}》[{res.result_skill.tier.value}] が誕生した！", (255, 215, 0))
+            self.log(
+                f"【合成成功！】《{res.result_skill.name}》[{res.result_skill.tier.value}] が誕生した！",
+                (255, 215, 0),
+            )
             if hasattr(self, "sound_manager") and self.sound_manager:
                 self.sound_manager.play_se("cast")
         else:
             self.log("【合成失敗】魔力が反発し、合成に失敗した...", (255, 100, 100))
         return True
 
-    def execute_pet_dispatch(self, mission_name: str, duration_turns: int = 10, reward_gold: int = 500) -> bool:
+    def execute_pet_dispatch(
+        self, mission_name: str, duration_turns: int = 10, reward_gold: int = 500
+    ) -> bool:
         """ペットをスラム街の探索・調達任務に派遣する (Step 54-56)"""
         if "pet_dispatches" not in self.game_state_data.world_a_data:
             self.game_state_data.world_a_data["pet_dispatches"] = []
 
-        self.game_state_data.world_a_data["pet_dispatches"].append({
-            "mission_name": mission_name,
-            "remaining_turns": duration_turns,
-            "reward_gold": reward_gold,
-        })
-        self.log(f"【ペット派遣】『{mission_name}』へ派遣を開始しました（所要: {duration_turns}ターン）。", (100, 255, 200))
+        self.game_state_data.world_a_data["pet_dispatches"].append(
+            {
+                "mission_name": mission_name,
+                "remaining_turns": duration_turns,
+                "reward_gold": reward_gold,
+            }
+        )
+        self.log(
+            f"【ペット派遣】『{mission_name}』へ派遣を開始しました（所要: {duration_turns}ターン）。",
+            (100, 255, 200),
+        )
         return True
 
     def execute_base_upgrade(self, facility_id: str, cost_aldo: int = 1000) -> bool:
@@ -970,26 +1104,40 @@ class Engine:
         facs = self.game_state_data.world_a_data["facilities"]
         current_lv = facs.get(facility_id, 1)
         facs[facility_id] = current_lv + 1
-        self.log(f"【拠点改修完了】施設『{facility_id}』が Lv.{facs[facility_id]} にアップグレードされました！", (255, 215, 0))
+        self.log(
+            f"【拠点改修完了】施設『{facility_id}』が Lv.{facs[facility_id]} にアップグレードされました！",
+            (255, 215, 0),
+        )
         return True
 
     def execute_solve_puzzle(self, puzzle_type: str, used_skill_tag: str) -> bool:
         """環境パズルを所持スキルで解除する (Step 57-59)"""
-        match = (puzzle_type == "ice_barrier" and "Fire" in used_skill_tag) or \
-                (puzzle_type == "dark_gate" and "Light" in used_skill_tag) or \
-                (puzzle_type == "iron_lock" and "Labor" in used_skill_tag)
+        match = (
+            (puzzle_type == "ice_barrier" and "Fire" in used_skill_tag)
+            or (puzzle_type == "dark_gate" and "Light" in used_skill_tag)
+            or (puzzle_type == "iron_lock" and "Labor" in used_skill_tag)
+        )
         if match:
-            self.log(f"【ギミック解除！】スキル特性[{used_skill_tag}]により『{puzzle_type}』の封鎖を突破した！", (100, 255, 100))
+            self.log(
+                f"【ギミック解除！】スキル特性[{used_skill_tag}]により『{puzzle_type}』の封鎖を突破した！",
+                (100, 255, 100),
+            )
             return True
         else:
-            self.log(f"【解除失敗】『{puzzle_type}』に対して[{used_skill_tag}]は効果が薄いようだ...", (255, 100, 100))
+            self.log(
+                f"【解除失敗】『{puzzle_type}』に対して[{used_skill_tag}]は効果が薄いようだ...",
+                (255, 100, 100),
+            )
             return False
 
     def switch_world(self, world_id: str) -> bool:
         """ワールド間遷移（Aの世界 / 本編ワールドの切り替え） (Step 61-62)"""
         self.game_state_data.current_world = world_id
         if world_id == "skill_eater":
-            self.log("【次元遷移】Aの世界（スキル喰い）へ転移しました！ 《解析(X)》と《喰らい(V)》が解放されます。", (150, 255, 150))
+            self.log(
+                "【次元遷移】Aの世界（スキル喰い）へ転移しました！ 《解析(X)》と《喰らい(V)》が解放されます。",
+                (150, 255, 150),
+            )
             if hasattr(self, "sound_manager") and self.sound_manager:
                 self.sound_manager.play_se("warp")
         else:
@@ -998,7 +1146,10 @@ class Engine:
 
     def execute_epilogue_world_transition(self) -> bool:
         """Aの世界エピローグ＆次元ゲート開放 (Step 69-70)"""
-        self.log("【次元ゲート開放】Aの世界の境界線が溶解し、概念の残滓がプレイヤーに宿る！", (255, 215, 0))
+        self.log(
+            "【次元ゲート開放】Aの世界の境界線が溶解し、概念の残滓がプレイヤーに宿る！",
+            (255, 215, 0),
+        )
         if "meta_artifacts" not in self.game_state_data.world_a_data:
             self.game_state_data.world_a_data["meta_artifacts"] = []
         self.game_state_data.world_a_data["meta_artifacts"].append("concept_eater_mark")
@@ -1106,6 +1257,7 @@ class Engine:
         except Exception as e:
             logger.exception("Failed to spawn dungeon entities: %s", e)
             from exceptions import ResourceLoadError
+
             raise ResourceLoadError(f"Dungeon spawn failure: {e}") from e
 
     def has_los(self, p1: Point, p2: Point) -> bool:
@@ -1120,9 +1272,7 @@ class Engine:
         """全生存エンティティの座標セット (O(1)衝突判定用)"""
         return self.entity_manager.get_blocked_positions()
 
-    def is_tile_free(
-        self, x: int, y: int, blocked: set[tuple[int, int]] | None = None
-    ) -> bool:
+    def is_tile_free(self, x: int, y: int, blocked: set[tuple[int, int]] | None = None) -> bool:
         if not self.game_map.is_walkable(x, y):
             return False
         if blocked is not None:
@@ -1140,9 +1290,7 @@ class Engine:
     def _on_kill(self, entity: Entity) -> None:
         # メインクエストの進行を更新
         if hasattr(self, "main_quest_system"):
-            logs = self.main_quest_system.update_progress(
-                self.player, "kill", entity.name, 1, self
-            )
+            logs = self.main_quest_system.update_progress(self.player, "kill", entity.name, 1, self)
             for log in logs:
                 self.message_log.add(log, level="SUCCESS")
         # プロシージャル・クエスト（依頼ボード/ダンジョン/NPC）の討伐進捗を通知
@@ -1169,6 +1317,60 @@ class Engine:
         from managers.combat_manager import CombatManager
 
         CombatManager().handle_kill_rewards(self, entity)
+
+        # SkillEaterSecretAccess - モンスターからのキーアイテムドロップ (Step 26)
+        try:
+            from secret_area_system import SECRET_REGISTRY
+
+            SECRET_REGISTRY.load_from_yaml()
+
+            # モンスターレア度に基づくドロップ判定
+            drop_chance = 0.05  # 基本5%
+            # ボスモンスターなら確率アップ
+            if getattr(entity, "is_boss", False) or getattr(entity, "unique_boss", False):
+                drop_chance = 0.3  # 30%
+            elif "unique" in entity.name.lower() or "ボス" in entity.name:
+                drop_chance = 0.2
+
+            if random.random() < drop_chance:
+                # ダンジョン深度に応じたキーレベル決定
+                dungeon_level = getattr(self, "dungeon_level", 1)
+                keycard_level = min(5, max(1, (dungeon_level // 5) + 1))
+
+                # 利用可能なキーから選択
+                available_keys = []
+                for key in SECRET_REGISTRY.get_all_key_items():
+                    if key.key_type == "keycard" and key.level <= keycard_level:
+                        available_keys.append(key.id)
+                    elif key.key_type == "biometric" and key.level <= (keycard_level // 2 + 1):
+                        available_keys.append(key.id)
+                    elif key.key_type == "decryption" and key.level <= (keycard_level // 2 + 1):
+                        available_keys.append(key.id)
+
+                if available_keys:
+                    key_id = random.choice(available_keys)
+                    key_def = SECRET_REGISTRY.get_key_item(key_id)
+                    if key_def:
+                        from item_system import Item
+
+                        key_item = Item(
+                            key_def.name,
+                            "tool",
+                            "🗝️",
+                            (255, 215, 0),
+                            base_weight=0.1,
+                            base_value=key_def.market_value,
+                        )
+                        key_item.x, key_item.y = entity.x, entity.y
+                        key_item.key_data = {
+                            "key_id": key_id,
+                            "key_type": key_def.key_type,
+                            "level": key_def.level,
+                        }
+                        self.items_on_ground.append(key_item)
+                        self.log(f"{entity.name}が『{key_def.name}』を落とした！", (255, 215, 0))
+        except Exception:
+            pass
 
         # === 称号システム: キルカウント記録 ===
         if self.player and hasattr(self.player, "kill_counts"):
@@ -1252,9 +1454,7 @@ class Engine:
             )
             self.meta_progression_manager.add_memory_fragment(self.player, frag, self)
 
-    def _progress_generated_quests(
-        self, event_type: str, target_id: str, amount: int = 1
-    ) -> None:
+    def _progress_generated_quests(self, event_type: str, target_id: str, amount: int = 1) -> None:
         """プロシージャル生成クエストの進捗をゲームイベントから通知 (Steps 34, 36)"""
         mgr = getattr(self, "procedural_quest_manager", None)
         if mgr is None or self.player is None:
@@ -1289,9 +1489,7 @@ class Engine:
 
         # 動的サウンドスケープ: 危機状態のBGM判定 (Step 7.3)
         if hasattr(self, "player") and self.player:
-            SoundManager.bgm_manager.check_crisis_trigger(
-                self.player.hp, self.player.max_hp
-            )
+            SoundManager.bgm_manager.check_crisis_trigger(self.player.hp, self.player.max_hp)
 
         # オートセーブ: 50ターンごと (ステップ71) — PersistenceManager に委譲
         from managers.persistence_manager import PersistenceManager
@@ -1302,7 +1500,6 @@ class Engine:
         from managers.world_news_manager import WorldNewsManager
 
         WorldNewsManager().advance(self)
-
 
         # === 派閥影響力定期変動 (FactionManager に委譲) ===
         from managers.faction_manager import FactionManager
@@ -1339,14 +1536,8 @@ class Engine:
             nearest = None
             min_dist = 99
             for e in self.entity_manager.get_living_entities():
-                if (
-                    e not in (self.player, self.pet)
-                    and "グウェン" not in e.name
-                    and e.hp > 0
-                ):
-                    d = Point(self.pet.x, self.pet.y).chebyshev_distance(
-                        Point(e.x, e.y)
-                    )
+                if e not in (self.player, self.pet) and "グウェン" not in e.name and e.hp > 0:
+                    d = Point(self.pet.x, self.pet.y).chebyshev_distance(Point(e.x, e.y))
                     if d < min_dist and self.has_los(
                         Point(self.pet.x, self.pet.y), Point(e.x, e.y)
                     ):
@@ -1377,12 +1568,8 @@ class Engine:
                         COLOR_PET_PINK,
                     )
                     if nearest.hp <= 0:
-                        CombatSystem.publish_kill_event(
-                            self.event_bus, nearest.x, nearest.y
-                        )
-                        self.log(
-                            f"【シエル】が{nearest.name}を倒した！", (255, 200, 220)
-                        )
+                        CombatSystem.publish_kill_event(self.event_bus, nearest.x, nearest.y)
+                        self.log(f"【シエル】が{nearest.name}を倒した！", (255, 200, 220))
                         for l in self.pet.gain_exp(40):
                             self.log(l, COLOR_PET_PINK)
                         self.entity_manager.remove_entity(nearest)
@@ -1484,9 +1671,7 @@ class Engine:
             t = self.get_entity_at(self.player.x + dx, self.player.y + dy)
             if t and t != self.player:
                 # DialogueManagerによる対話テキスト生成 (リファクタリング適用)
-                self.active_dialogue = DialogueManager.get_dialogue(
-                    t, self.player, self
-                )
+                self.active_dialogue = DialogueManager.get_dialogue(t, self.player, self)
 
                 # キャラクター関係性更新 (Step 72)
                 if hasattr(self, "relationship_manager"):
@@ -1530,9 +1715,7 @@ class Engine:
             self.player.hp -= backlash
             SoundManager.play_se("hit")
             self.floating_texts.append(
-                FloatingText(
-                    f"-{backlash}", self.player.x, self.player.y - 0.2, (255, 80, 80)
-                )
+                FloatingText(f"-{backlash}", self.player.x, self.player.y - 0.2, (255, 80, 80))
             )
             self.log(
                 f"魔法の詠唱に失敗！ 魔力が暴走し {backlash} ダメージを受けた！",
@@ -1579,10 +1762,7 @@ class Engine:
     def mine_wall(self) -> None:
         for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
             nx, ny = self.player.x + dx, self.player.y + dy
-            if (
-                self.game_map.is_in_bounds(nx, ny)
-                and self.game_map.tiles[nx][ny] == TILE_WALL
-            ):
+            if self.game_map.is_in_bounds(nx, ny) and self.game_map.tiles[nx][ny] == TILE_WALL:
                 self.game_map.tiles[nx][ny] = TILE_FLOOR
                 self.player.gain_skill_exp("mining", 25)
                 roll = random.random()
@@ -1654,9 +1834,7 @@ class Engine:
         """ジャーナル内で解釈プロンプトを開始（[e]）"""
         groups = self._arch_interpret_groups()
         if not groups:
-            self.log(
-                "まだ真理に到達していないので、解釈を記録できない。", (200, 160, 120)
-            )
+            self.log("まだ真理に到達していないので、解釈を記録できない。", (200, 160, 120))
             return
         self.arch_interpret_active = True
         self.arch_interpret_groups_cache = groups
@@ -1671,9 +1849,7 @@ class Engine:
         if not getattr(self, "arch_interpret_active", False):
             return
         n = len(self.arch_interpret_groups_cache)
-        self.arch_interpret_truth_idx = (self.arch_interpret_truth_idx + delta) % max(
-            n, 1
-        )
+        self.arch_interpret_truth_idx = (self.arch_interpret_truth_idx + delta) % max(n, 1)
         self.arch_interpret_ending_idx = 0
 
     def interpret_move(self, delta: int) -> None:
@@ -1681,9 +1857,7 @@ class Engine:
             return
         g = self.arch_interpret_groups_cache[self.arch_interpret_truth_idx]
         n = len(g["endings"])
-        self.arch_interpret_ending_idx = (self.arch_interpret_ending_idx + delta) % max(
-            n, 1
-        )
+        self.arch_interpret_ending_idx = (self.arch_interpret_ending_idx + delta) % max(n, 1)
 
     def confirm_interpret(self) -> None:
         if not getattr(self, "arch_interpret_active", False):
@@ -1706,9 +1880,7 @@ class Engine:
         total_tips = 0
         for e in self.entity_manager.get_living_entities():
             if e not in (self.player, self.pet) and e.hp > 0:
-                success_rate = min(
-                    95, max(10, lv * 8 + self.player.attributes.charisma)
-                )
+                success_rate = min(95, max(10, lv * 8 + self.player.attributes.charisma))
                 if random.randint(1, 100) <= success_rate:
                     tip = random.randint(5, 10 + lv * 3)
                     total_tips += tip
@@ -1740,9 +1912,7 @@ class Engine:
             if any(kw in itm.name for kw in ["肉", "鉱石", "パン", "ハーブ"]):
                 self.inventory.remove_item(itm, count=1)
                 self.player.piety += 30
-                self.log(
-                    f"{itm.name} を捧げた！ 信仰度: {self.player.piety}", (255, 215, 0)
-                )
+                self.log(f"{itm.name} を捧げた！ 信仰度: {self.player.piety}", (255, 215, 0))
                 self.player.energy -= ENERGY_THRESHOLD
                 self.advance_world()
                 return
@@ -1771,9 +1941,7 @@ class Engine:
         )
         if evos:
             target_evo = evos[0]
-            ok = self.pet_evolution_manager.apply_evolution(
-                self.pet.pet_ai, target_evo, self.pet
-            )
+            ok = self.pet_evolution_manager.apply_evolution(self.pet.pet_ai, target_evo, self.pet)
             if ok:
                 self.log(
                     f"★進化の秘石が輝き、【{self.pet.name}】へと劇的進化した！",
@@ -1805,9 +1973,7 @@ class Engine:
             play_pet_fusion_fx(self, p1_name, p2_name, fused.name)
 
     def confirm_wish(self) -> None:
-        result = WishParser.parse(
-            self.wish_input, self.player, self.inventory, self.survival
-        )
+        result = WishParser.parse(self.wish_input, self.player, self.inventory, self.survival)
         self.log(f"★願い「{self.wish_input}」: {result}", (100, 255, 255))
         self.game_state = "play"
         self.wish_input = ""
@@ -1815,22 +1981,15 @@ class Engine:
     def descend_stairs(self) -> None:
         if self.game_map.tiles[self.player.x][self.player.y] == TILE_STAIRS_DOWN:
             # 転生ダンジョン入場制限チェック (Step 52)
-            if (
-                hasattr(self, "reincarnation_dungeon_manager")
-                and self.dungeon_level >= 10
-            ):
+            if hasattr(self, "reincarnation_dungeon_manager") and self.dungeon_level >= 10:
                 # 階層が深い場合などの制限チェックフック
                 pass
 
             self.dungeon_level += 1
-            self.log(
-                f"★ダンジョン地下{self.dungeon_level}階へ降り立った！", (255, 200, 100)
-            )
+            self.log(f"★ダンジョン地下{self.dungeon_level}階へ降り立った！", (255, 200, 100))
             # プロシージャル・クエスト: 探索(深度到達)進捗を通知
             self._progress_generated_quests("explore", "depth", 1)
-            self.game_map = GameMap(
-                MAP_WIDTH, MAP_HEIGHT, floor_level=self.dungeon_level
-            )
+            self.game_map = GameMap(MAP_WIDTH, MAP_HEIGHT, floor_level=self.dungeon_level)
             self.game_map.generate_dungeon()
             self.player.x, self.player.y = self.game_map.start_pos
             self.pet.x = self.player.x + 1
@@ -1993,9 +2152,7 @@ class Engine:
         # Camera
         cam_x = max(
             0,
-            min(
-                MAP_WIDTH - VIEW_WIDTH, self.game_state_data.player.x - VIEW_WIDTH // 2
-            ),
+            min(MAP_WIDTH - VIEW_WIDTH, self.game_state_data.player.x - VIEW_WIDTH // 2),
         )
         cam_y = max(
             0,
@@ -2052,18 +2209,14 @@ class Engine:
         if hasattr(self, "game_map") and hasattr(self.game_map, "torches"):
             for tx, ty in self.game_map.torches:
                 light_sources.append(
-                    LightSource(
-                        x=tx, y=ty, radius=7.5, intensity=0.8, color=(255, 180, 100)
-                    )
+                    LightSource(x=tx, y=ty, radius=7.5, intensity=0.8, color=(255, 180, 100))
                 )
         # Altar
         if hasattr(self.game_state_data, "altar_pos"):
             ax, ay = self.game_state_data.altar_pos
             if 0 <= ax < MAP_WIDTH and 0 <= ay < MAP_HEIGHT:
                 light_sources.append(
-                    LightSource(
-                        x=ax, y=ay, radius=4.0, intensity=0.8, color=(100, 200, 255)
-                    )
+                    LightSource(x=ax, y=ay, radius=4.0, intensity=0.8, color=(100, 200, 255))
                 )
 
         # Enemy cones
@@ -2169,6 +2322,12 @@ class Engine:
             inventory_cursor=self.inventory_cursor,
             pet_inventory=self.game_state_data.pet_inventory,
             altar_pos=self.game_state_data.altar_pos,
+            localization_manager=self.localization_manager,
+            world_a_data=self.game_state_data.world_a_data,
+            toxicity_manager=self.skill_eater_toxicity_manager,
+            skill_eater_combat_system=self.skill_eater_combat_system,
+            color_vision_mode=self.config_mgr.get("accessibility.color_vision") or "none",
+            last_scan_result=getattr(self, "last_scan_result", None),
         )
         RenderSystem.render_all(console, render_context)
 
@@ -2190,12 +2349,7 @@ class Engine:
 
     def render_to_text(self, tr: Any) -> None:
         """Step 12-16: TextRenderer へマップ/エンティティ/HUD/ログを描画。"""
-        from constants import (
-            MAP_HEIGHT,
-            MAP_WIDTH,
-            VIEW_HEIGHT,
-            VIEW_WIDTH,
-        )
+        from constants import MAP_HEIGHT, MAP_WIDTH, VIEW_HEIGHT, VIEW_WIDTH
 
         tr.clear()
 
@@ -2231,9 +2385,7 @@ class Engine:
                     ch = getattr(ent, "char", "p") or "p"
                     col = getattr(ent, "color", (255, 180, 210)) or (255, 180, 210)
                 else:
-                    ch = getattr(ent, "char", None) or (
-                        ent.name[:1] if ent.name else "m"
-                    )
+                    ch = getattr(ent, "char", None) or (ent.name[:1] if ent.name else "m")
                     col = getattr(ent, "color", (220, 80, 80)) or (220, 80, 80)
                 tr.draw_tile(sx, sy, str(ch)[0], col)
 
@@ -2274,7 +2426,9 @@ class Engine:
         while True:
             self.render_to_text(tr)
             if show_guide:
-                tr.draw_text(0, height - 1, "w/a/s/d:移動  .:待機  ?:ガイド  q:終了", (150, 200, 255))
+                tr.draw_text(
+                    0, height - 1, "w/a/s/d:移動  .:待機  ?:ガイド  q:終了", (150, 200, 255)
+                )
                 tr.present()
             action = get_text_action()
             if "quit" in action:
@@ -2326,6 +2480,12 @@ def get_tabbed_items(engine: Engine) -> list[Item]:
         inventory_cursor=engine.inventory_cursor,
         pet_inventory=engine.game_state_data.pet_inventory,
         altar_pos=engine.game_state_data.altar_pos,
+        localization_manager=engine.localization_manager,
+        world_a_data=engine.game_state_data.world_a_data,
+        toxicity_manager=engine.skill_eater_toxicity_manager,
+        skill_eater_combat_system=engine.skill_eater_combat_system,
+        color_vision_mode=engine.config_mgr.get("accessibility.color_vision") or "none",
+        last_scan_result=getattr(engine, "last_scan_result", None),
     )
     return RenderSystem.get_tabbed_items(render_context)
 
@@ -2374,6 +2534,11 @@ def render_all(console: tcod.console.Console, engine: Engine) -> None:
         pet_inventory=engine.game_state_data.pet_inventory,
         altar_pos=engine.game_state_data.altar_pos,
         localization_manager=engine.localization_manager,
+        world_a_data=engine.game_state_data.world_a_data,
+        toxicity_manager=engine.skill_eater_toxicity_manager,
+        skill_eater_combat_system=engine.skill_eater_combat_system,
+        color_vision_mode=engine.config_mgr.get("accessibility.color_vision") or "none",
+        last_scan_result=getattr(engine, "last_scan_result", None),
     )
     RenderSystem.render_all(console, render_context)
 

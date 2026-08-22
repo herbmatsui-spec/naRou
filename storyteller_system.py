@@ -138,10 +138,7 @@ class StorytellerManager:
         """発生可能なシナリオを判定 (Step 40)"""
         available = []
         for sid, scen in self.registry.all_scenarios().items():
-            if (
-                sid not in player.completed_storylines
-                and sid not in player.available_storylines
-            ):
+            if sid not in player.completed_storylines and sid not in player.available_storylines:
                 available.append(scen)
                 player.available_storylines.append(sid)
         return available
@@ -166,9 +163,7 @@ class StorytellerManager:
 
         return True
 
-    def process_choice(
-        self, player: Entity, choice_id: str, engine: Any | None = None
-    ) -> bool:
+    def process_choice(self, player: Entity, choice_id: str, engine: Any | None = None) -> bool:
         """選択肢の決定を処理 (Step 40)"""
         if choice_id not in player.story_choices_made:
             player.story_choices_made.append(choice_id)

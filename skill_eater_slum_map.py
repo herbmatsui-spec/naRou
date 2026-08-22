@@ -5,8 +5,8 @@ Handles exploration, Husk memory extraction, and hidden safe unlocks.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Any, Dict, List, Tuple
 
 
 @dataclass
@@ -61,7 +61,11 @@ class SlumMapManager:
         for husk in self.husks:
             if husk.npc_id == npc_id:
                 if husk.is_extracted:
-                    return {"success": False, "error": "ALREADY_EXTRACTED", "message": "魂の残滓は完全に枯渇している。"}
+                    return {
+                        "success": False,
+                        "error": "ALREADY_EXTRACTED",
+                        "message": "魂の残滓は完全に枯渇している。",
+                    }
                 return {
                     "success": True,
                     "npc_id": husk.npc_id,

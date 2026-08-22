@@ -2,6 +2,7 @@
 
 Extracted from Engine._on_kill (game.py).
 """
+
 from __future__ import annotations
 
 import random
@@ -9,7 +10,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from entity import Entity
-
     from game import Engine
 
 
@@ -24,6 +24,4 @@ class SkillRewardManager:
             sp_bonus = random.randint(SKILL_DROP_MIN, SKILL_DROP_MAX)
             engine.player.skill_points += sp_bonus
             engine.player.total_skill_points_earned += sp_bonus
-            engine.log(
-                f"★討伐の閃き！ {sp_bonus} スキルポイントを獲得！", (150, 255, 200)
-            )
+            engine.log(f"★討伐の閃き！ {sp_bonus} スキルポイントを獲得！", (150, 255, 200))

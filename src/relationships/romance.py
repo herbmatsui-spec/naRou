@@ -6,13 +6,14 @@ Step 9: Romance relationship mechanics
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import random
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, Callable
 
 from .engine import RelationshipManager
 from .models import InteractionType, RelationshipType
@@ -84,9 +85,7 @@ class RomanceMechanics:
         self._romance_config = self._load_romance_config()
 
         # イベントハンドラー
-        self._event_handlers: dict[RomanceEventType, list[Callable[..., Any]]] = (
-            defaultdict(list)
-        )
+        self._event_handlers: dict[RomanceEventType, list[Callable[..., Any]]] = defaultdict(list)
 
         # 統計
         self._romance_stats = {
@@ -153,12 +152,8 @@ class RomanceMechanics:
             return self.romance_states[couple_key]
 
         # 現在の関係レベルを取得
-        romance_level = self.rm.get_relationship_level(
-            char_a, char_b, RelationshipType.ROMANCE
-        )
-        favorability = self.rm.get_relationship_level(
-            char_a, char_b, RelationshipType.FAVORABILITY
-        )
+        romance_level = self.rm.get_relationship_level(char_a, char_b, RelationshipType.ROMANCE)
+        favorability = self.rm.get_relationship_level(char_a, char_b, RelationshipType.FAVORABILITY)
 
         # 初期ステージを決定
         if romance_level >= self._romance_config["dating_threshold"]:
@@ -181,9 +176,11 @@ class RomanceMechanics:
             stage=initial_stage,
             romance_level=romance_level,
             compatibility=compatibility,
-            relationship_start=time.time()
-            if initial_stage in [RomanceStage.DATING, RomanceStage.COMMITTED]
-            else None,
+            relationship_start=(
+                time.time()
+                if initial_stage in [RomanceStage.DATING, RomanceStage.COMMITTED]
+                else None
+            ),
         )
 
         self.romance_states[couple_key] = state
@@ -236,10 +233,7 @@ class RomanceMechanics:
             elif new_stage == RomanceStage.MARRIED:
                 self._emit_romance_event(RomanceEventType.WEDDING, state)
                 self._romance_stats["successful_marriages"] += 1
-            elif (
-                new_stage == RomanceStage.STRANGERS
-                and old_stage != RomanceStage.STRANGERS
-            ):
+            elif new_stage == RomanceStage.STRANGERS and old_stage != RomanceStage.STRANGERS:
                 self._emit_romance_event(RomanceEventType.BREAKUP, state)
                 self._romance_stats["breakups"] += 1
 
@@ -247,21 +241,12 @@ class RomanceMechanics:
 
     def can_confess(self, char_a: str, char_b: str) -> bool:
         """告白可能かチェック"""
-        romance_level = self.rm.get_relationship_level(
-            char_a, char_b, RelationshipType.ROMANCE
-        )
-        favorability = self.rm.get_relationship_level(
-            char_a, char_b, RelationshipType.FAVORABILITY
-        )
+        romance_level = self.rm.get_relationship_level(char_a, char_b, RelationshipType.ROMANCE)
+        favorability = self.rm.get_relationship_level(char_a, char_b, RelationshipType.FAVORABILITY)
 
-        return (
-            romance_level >= self._romance_config["confession_threshold"]
-            and favorability >= 30
-        )
+        return romance_level >= self._romance_config["confession_threshold"] and favorability >= 30
 
-    def confess(
-        self, char_a: str, char_b: str, confession_type: str = "sincere"
-    ) -> dict[str, Any]:
+    def confess(self, char_a: str, char_b: str, confession_type: str = "sincere") -> dict[str, Any]:
         """告白を実行"""
         if not self.can_confess(char_a, char_b):
             return {"success": False, "reason": "insufficient_romance_level"}
@@ -270,9 +255,7 @@ class RomanceMechanics:
         state = self.initiate_romance(char_a, char_b)
 
         # パーソナリティによる成功確率を計算
-        success_prob = self._calculate_confession_success(
-            char_a, char_b, confession_type
-        )
+        success_prob = self._calculate_confession_success(char_a, char_b, confession_type)
 
         # 成功の決定
         success = random.random() < success_prob
@@ -317,9 +300,7 @@ class RomanceMechanics:
         base_prob = 0.5
 
         # ロマンスレベルによる調整
-        romance_level = self.rm.get_relationship_level(
-            char_a, char_b, RelationshipType.ROMANCE
-        )
+        romance_level = self.rm.get_relationship_level(char_a, char_b, RelationshipType.ROMANCE)
         romance_factor = max(0, (romance_level - 50) / 100.0)  # 0.0-0.5
         base_prob += romance_factor
 
@@ -344,9 +325,7 @@ class RomanceMechanics:
 
         return max(0.05, min(0.95, base_prob))
 
-    def check_jealousy(
-        self, char_a: str, char_b: str, third_party: str
-    ) -> dict[str, Any]:
+    def check_jealousy(self, char_a: str, char_b: str, third_party: str) -> dict[str, Any]:
         """嫉妬をチェック（三角関係）"""
         # char_a と char_b がロマンス関係
         couple_key = tuple(sorted([char_a, char_b]))
@@ -379,9 +358,7 @@ class RomanceMechanics:
 
         return {"jealousy": False}
 
-    def _apply_jealousy_effects(
-        self, char_a: str, char_b: str, third_party: str
-    ) -> dict[str, int]:
+    def _apply_jealousy_effects(self, char_a: str, char_b: str, third_party: str) -> dict[str, int]:
         """嫉妬の効果を適用"""
         effects = {}
 
@@ -390,16 +367,12 @@ class RomanceMechanics:
         effects["trust_reduction"] = -5
 
         # char_b の third_party への敵意を増加
-        self.rm.modify_relationship(
-            char_b, third_party, InteractionType.COMBAT_ENEMY, -10
-        )
+        self.rm.modify_relationship(char_b, third_party, InteractionType.COMBAT_ENEMY, -10)
         effects["enmity_increase"] = -10
 
         return effects
 
-    def break_up(
-        self, char_a: str, char_b: str, reason: str = "drifted_apart"
-    ) -> dict[str, Any]:
+    def break_up(self, char_a: str, char_b: str, reason: str = "drifted_apart") -> dict[str, Any]:
         """別れを実行"""
         couple_key = tuple(sorted([char_a, char_b]))
         state = self.romance_states.get(couple_key)
@@ -439,9 +412,7 @@ class RomanceMechanics:
             return {"success": False, "reason": "no_history"}
 
         # 関係を改善
-        self.rm.modify_relationship(
-            char_a, char_b, InteractionType.EMOTIONAL_SUPPORT, 25
-        )
+        self.rm.modify_relationship(char_a, char_b, InteractionType.EMOTIONAL_SUPPORT, 25)
 
         state.romance_level = self.rm.get_relationship_level(
             char_a, char_b, RelationshipType.ROMANCE
@@ -533,9 +504,7 @@ class RomanceMechanics:
         """ロマンスイベントハンドラーを登録"""
         self._event_handlers[event_type].append(handler)
 
-    def _emit_romance_event(
-        self, event_type: RomanceEventType, state: RomanceState
-    ) -> None:
+    def _emit_romance_event(self, event_type: RomanceEventType, state: RomanceState) -> None:
         """ロマンスイベントを発行"""
         for handler in self._event_handlers.get(event_type, []):
             try:
@@ -549,9 +518,7 @@ class RomanceMechanics:
         couple_key = tuple(sorted([char_a, char_b]))
         return self.romance_states.get(couple_key)
 
-    def get_active_romances(
-        self, character_id: str | None = None
-    ) -> list[RomanceState]:
+    def get_active_romances(self, character_id: str | None = None) -> list[RomanceState]:
         """アクティブなロマンスを取得"""
         if character_id is None:
             return [
@@ -563,8 +530,7 @@ class RomanceMechanics:
         return [
             state
             for state in self.romance_states.values()
-            if character_id in state.couple_id
-            and state.stage not in [RomanceStage.STRANGERS]
+            if character_id in state.couple_id and state.stage not in [RomanceStage.STRANGERS]
         ]
 
     def get_romance_statistics(self) -> dict[str, Any]:

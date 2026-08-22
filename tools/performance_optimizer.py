@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Performance optimization tool for naRou project."""
+
 from __future__ import annotations
 
 import json
@@ -170,8 +171,7 @@ class PerformanceOptimizer:
         improvement = 0
         if before["memory_usage_mb"] > 0:
             improvement = (
-                (before["memory_usage_mb"] - after["memory_usage_mb"])
-                / before["memory_usage_mb"]
+                (before["memory_usage_mb"] - after["memory_usage_mb"]) / before["memory_usage_mb"]
             ) * 100
 
         result = OptimizationResult(
@@ -229,9 +229,7 @@ class PerformanceOptimizer:
         self.results.append(result)
         return result
 
-    def optimize_response_time(
-        self, func: Callable, *args, **kwargs
-    ) -> OptimizationResult:
+    def optimize_response_time(self, func: Callable, *args, **kwargs) -> OptimizationResult:
         """Optimize response time of a function."""
         before = self.profile_function(func, *args, **kwargs)
 
@@ -271,8 +269,7 @@ class PerformanceOptimizer:
         improvement = 0
         if before["peak_memory_mb"] > 0:
             improvement = (
-                (before["peak_memory_mb"] - after["peak_memory_mb"])
-                / before["peak_memory_mb"]
+                (before["peak_memory_mb"] - after["peak_memory_mb"]) / before["peak_memory_mb"]
             ) * 100
 
         result = OptimizationResult(
@@ -287,9 +284,7 @@ class PerformanceOptimizer:
         self.results.append(result)
         return result
 
-    def optimize_energy_consumption(
-        self, func: Callable, *args, **kwargs
-    ) -> OptimizationResult:
+    def optimize_energy_consumption(self, func: Callable, *args, **kwargs) -> OptimizationResult:
         """Optimize energy consumption of a function."""
         before = self.profile_function(func, *args, **kwargs)
 
@@ -343,9 +338,7 @@ class PerformanceOptimizer:
             "duration_seconds": actual_duration,
             "executions": executions,
             "errors": errors,
-            "execution_per_second": executions / actual_duration
-            if actual_duration > 0
-            else 0,
+            "execution_per_second": executions / actual_duration if actual_duration > 0 else 0,
             "error_rate_percent": (errors / executions * 100) if executions > 0 else 0,
             "latency_avg_ms": sum(latencies) / len(latencies) if latencies else 0,
             "latency_max_ms": max(latencies) if latencies else 0,
@@ -390,9 +383,7 @@ class PerformanceOptimizer:
             "error_rate_percent": (errors / executions * 100) if executions > 0 else 0,
             "latency_avg_ms": sum(latencies) / len(latencies) if latencies else 0,
             "latency_max_ms": max(latencies) if latencies else 0,
-            "latency_p95_ms": sorted(latencies)[int(len(latencies) * 0.95)]
-            if latencies
-            else 0,
+            "latency_p95_ms": sorted(latencies)[int(len(latencies) * 0.95)] if latencies else 0,
         }
 
     def run_spike_test(
@@ -427,10 +418,11 @@ class PerformanceOptimizer:
         t1.start()
         t1.join()
         results["normal_before"] = {
-            "avg": sum(t for t in before_times if t > 0)
-            / len([t for t in before_times if t > 0])
-            if before_times
-            else 0,
+            "avg": (
+                sum(t for t in before_times if t > 0) / len([t for t in before_times if t > 0])
+                if before_times
+                else 0
+            ),
             "max": max(before_times) if before_times else 0,
             "count": len(before_times),
         }
@@ -441,10 +433,11 @@ class PerformanceOptimizer:
         t2.start()
         t2.join()
         results["spike"] = {
-            "avg": sum(t for t in spike_times if t > 0)
-            / len([t for t in spike_times if t > 0])
-            if spike_times
-            else 0,
+            "avg": (
+                sum(t for t in spike_times if t > 0) / len([t for t in spike_times if t > 0])
+                if spike_times
+                else 0
+            ),
             "max": max(spike_times) if spike_times else 0,
             "count": len(spike_times),
         }
@@ -455,10 +448,11 @@ class PerformanceOptimizer:
         t3.start()
         t3.join()
         results["normal_after"] = {
-            "avg": sum(t for t in after_times if t > 0)
-            / len([t for t in after_times if t > 0])
-            if after_times
-            else 0,
+            "avg": (
+                sum(t for t in after_times if t > 0) / len([t for t in after_times if t > 0])
+                if after_times
+                else 0
+            ),
             "max": max(after_times) if after_times else 0,
             "count": len(after_times),
         }
@@ -499,16 +493,12 @@ class PerformanceOptimizer:
             avg_first = sum(first_quarter) / len(first_quarter) if first_quarter else 0
             avg_last = sum(last_quarter) / len(last_quarter) if last_quarter else 0
 
-            degradation = (
-                ((avg_last - avg_first) / avg_first * 100) if avg_first > 0 else 0
-            )
+            degradation = ((avg_last - avg_first) / avg_first * 100) if avg_first > 0 else 0
         else:
             degradation = 0
 
         # Check for memory leaks
-        memory_growth = (
-            memory_samples[-1] - memory_samples[0] if len(memory_samples) > 1 else 0
-        )
+        memory_growth = memory_samples[-1] - memory_samples[0] if len(memory_samples) > 1 else 0
 
         return {
             "duration_seconds": duration,
@@ -594,9 +584,7 @@ class PerformanceOptimizer:
         if last_failure is not None:
             total_downtime += time.perf_counter() - last_failure
 
-        uptime_percent = (
-            ((duration - total_downtime) / duration * 100) if duration > 0 else 0
-        )
+        uptime_percent = ((duration - total_downtime) / duration * 100) if duration > 0 else 0
 
         return {
             "duration_seconds": duration,
@@ -646,9 +634,7 @@ class PerformanceOptimizer:
 
             success_count = len([l for l in latencies if l > 0])
             avg_latency = (
-                sum(l for l in latencies if l > 0) / success_count
-                if success_count > 0
-                else 0
+                sum(l for l in latencies if l > 0) / success_count if success_count > 0 else 0
             )
 
             results[workers] = {
@@ -657,9 +643,9 @@ class PerformanceOptimizer:
                 "successful": success_count,
                 "failed": errors,
                 "latency_avg_ms": avg_latency,
-                "throughput": success_count / 5
-                if success_count > 0
-                else 0,  # Tasks per second per worker
+                "throughput": (
+                    success_count / 5 if success_count > 0 else 0
+                ),  # Tasks per second per worker
             }
 
         return results
@@ -693,9 +679,7 @@ class PerformanceOptimizer:
                 return sum(range(1000))
 
             result = self.profile_function(dummy)
-            compatibility["tests"]["profiler"] = (
-                "PASS" if "execution_time_ms" in result else "FAIL"
-            )
+            compatibility["tests"]["profiler"] = "PASS" if "execution_time_ms" in result else "FAIL"
         except Exception as e:
             compatibility["tests"]["profiler"] = f"FAIL: {e}"
 

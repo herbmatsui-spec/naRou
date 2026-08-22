@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import argparse
 import subprocess
@@ -18,6 +19,7 @@ def run_command(cmd, cwd=None):
     """Run a command and return success status."""
     if isinstance(cmd, str):
         import shlex
+
         cmd = shlex.split(cmd)
     print(f"Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
@@ -120,18 +122,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Failover naRou")
     parser.add_argument("--to-backup", action="store_true", help="Failover to backup")
     parser.add_argument("--to-primary", action="store_true", help="Failback to primary")
-    parser.add_argument(
-        "--monitor", action="store_true", help="Monitor and auto-failover"
-    )
-    parser.add_argument(
-        "--primary", default="http://localhost:8080", help="Primary endpoint"
-    )
-    parser.add_argument(
-        "--backup", default="http://backup:8080", help="Backup endpoint"
-    )
-    parser.add_argument(
-        "--interval", type=int, default=30, help="Monitoring interval (seconds)"
-    )
+    parser.add_argument("--monitor", action="store_true", help="Monitor and auto-failover")
+    parser.add_argument("--primary", default="http://localhost:8080", help="Primary endpoint")
+    parser.add_argument("--backup", default="http://backup:8080", help="Backup endpoint")
+    parser.add_argument("--interval", type=int, default=30, help="Monitoring interval (seconds)")
     args = parser.parse_args()
 
     if args.to_backup:

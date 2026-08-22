@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container">
         <h1>フォントテクスチャアトラス生成ツール</h1>
-        
+
         <div class="instructions">
             <h3>使用方法</h3>
             <ol>
@@ -13,36 +13,36 @@
                 <li>生成されたアトラスとメタデータを demos/assets/ フォルダーに保存</li>
             </ol>
         </div>
-        
+
         <div class="controls">
             <div class="control-group">
                 <label for="atlasSize">アトラスサイズ (ピクセル):</label>
                 <input type="number" id="atlasSize" value="512" min="64" step="64">
             </div>
-            
+
             <div class="control-group">
                 <label for="glyphSize">1グリフサイズ (ピクセル):</label>
                 <input type="number" id="glyphSize" value="24" min="8" step="4">
             </div>
-            
+
             <div class="control-group">
                 <label for="padding">グリフ間パディング (ピクセル):</label>
                 <input type="number" id="padding" value="2" min="0" step="1">
             </div>
         </div>
-        
+
         <div class="button-group">
             <button id="generateBtn">アトラスを生成</button>
             <button id="clearBtn">クリア</button>
             <button id="downloadImgBtn">画像をダウンロード</button>
             <button id="downloadJsonBtn">JSONをダウンロード</button>
         </div>
-        
+
         <div id="preview">
             <canvas id="atlasCanvas" width="512" height="512"></canvas>
             <div id="loading">生成中...</div>
         </div>
-        
+
         <div class="control-group">
             <label for="jsonOutput">JSONメタデータ:</label>
             <textarea id="jsonOutput" readonly>ここにJSONメタデータが表示されます</textarea>
@@ -98,40 +98,40 @@
             const atlasSize = parseInt(atlasSizeInput.value);
             const glyphSize = parseInt(glyphSizeInput.value);
             const padding = parseInt(paddingInput.value);
-            
+
             // キャンバスサイズを設定
             canvas.width = atlasSize;
             canvas.height = atlasSize;
-            
+
             // 背景を透明に設定
             ctx.clearRect(0, 0, atlasSize, atlasSize);
-            
+
             // グリフマップを初期化
             glyphMap = {};
-            
+
             // 計算: 1行に何個のグリフが配置できるか
             const glyphsPerRow = Math.floor((atlasSize + padding) / (glyphSize + padding));
             const rowsNeeded = Math.ceil(CHARACTERS.length / glyphsPerRow);
-            
+
             // サイズチェック
             if (rowsNeeded * (glyphSize + padding) - padding > atlasSize) {
                 alert('エラー: 指定されたサイズではすべてのグリフを収めることができません。\n' +
                       'アトラスサイズ、グリフサイズ、またはパディングを調整してください。');
                 return;
             }
-            
+
             loadingDiv.style.display = 'block';
-            
+
             // フォントの読み込みを待機
             loadFont().then(() => {
                 // 各グリフを描画
                 CHARACTERS.forEach((char, index) => {
                     const row = Math.floor(index / glyphsPerRow);
                     const col = index % glyphsPerRow;
-                    
+
                     const x = col * (glyphSize + padding) + padding;
                     const y = row * (glyphSize + padding) + padding;
-                    
+
                     // グリフの位置とサイズを記録
                     glyphMap[char] = {
                         x: x,
@@ -139,7 +139,7 @@
                         width: glyphSize,
                         height: glyphSize
                     };
-                    
+
                     // グリフを描画
                     ctx.fillStyle = '#ffffff';
                     ctx.font = `${glyphSize}px monospace`;
@@ -147,10 +147,10 @@
                     ctx.textBaseline = 'middle';
                     ctx.fillText(char, x + glyphSize / 2, y + glyphSize / 2);
                 });
-                
+
                 // キャンバスから画像データを取得
                 atlasImage = canvas.toDataURL('image/png');
-                
+
                 // プレビューを更新
                 const img = new Image();
                 img.onload = () => {
@@ -160,7 +160,7 @@
                     loadingDiv.style.display = 'none';
                 };
                 img.src = atlasImage;
-                
+
                 // JSONメタデータを生成
                 const metadata = {
                     format: "font_atlas",
@@ -169,14 +169,14 @@
                     padding: padding,
                     glyphs: glyphMap
                 };
-                
+
                 jsonOutput.value = JSON.stringify(metadata, null, 2);
             });
         }
-        
+
         // イベントリスナー
         generateBtn.addEventListener('click', generateAtlas);
-        
+
         clearBtn.addEventListener('click', () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             previewDiv.innerHTML = '<canvas id="atlasCanvas" width="512" height="512"></canvas>';
@@ -184,7 +184,7 @@
             atlasImage = null;
             glyphMap = {};
         });
-        
+
         downloadImgBtn.addEventListener('click', () => {
             if (atlasImage) {
                 const link = document.createElement('a');
@@ -195,7 +195,7 @@
                 alert('まず「アトラスを生成」ボタンをクリックしてアトラスを生成してください。');
             }
         });
-        
+
         downloadJsonBtn.addEventListener('click', () => {
             if (jsonOutput.value.trim() && jsonOutput.value !== 'ここにJSONメタデータが表示されます') {
                 const blob = new Blob([jsonOutput.value], { type: 'application/json' });
@@ -209,7 +209,7 @@
                 alert('まず「アトラスを生成」ボタンをクリックしてメタデータを生成してください。');
             }
         });
-        
+
         // Enterキーでの生成
         atlasSizeInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') generateAtlas();

@@ -27,15 +27,16 @@ def monitor_resources(duration=60, interval=5):
     end_time = time.time() + duration
     while time.time() < end_time:
         # CPU and memory
-        success, stdout, _ = run_command(
-            ["ps", "aux"]
-        )
+        success, stdout, _ = run_command(["ps", "aux"])
         if success and stdout:
             # Filter for python/naRou processes
-            filtered = [line for line in stdout.split('\n') 
-                       if ('python' in line.lower() or 'narou' in line.lower()) and 'grep' not in line]
+            filtered = [
+                line
+                for line in stdout.split("\n")
+                if ("python" in line.lower() or "narou" in line.lower()) and "grep" not in line
+            ]
             if filtered:
-                print(f"[{datetime.now().isoformat()}] Processes:\n" + '\n'.join(filtered))
+                print(f"[{datetime.now().isoformat()}] Processes:\n" + "\n".join(filtered))
 
         # Disk usage
         success, stdout, _ = run_command(["df", "-h", "."])
@@ -64,7 +65,7 @@ def monitor_tests():
     success, stdout, _ = run_command(["pytest", "--collect-only", "-q"])
     if success:
         # Count tests
-        test_count = len([l for l in stdout.split('\n') if l.strip() and not l.startswith('=')])
+        test_count = len([l for l in stdout.split("\n") if l.strip() and not l.startswith("=")])
         print(f"Total tests collected: {test_count}")
 
     # Run tests and show summary
@@ -86,19 +87,13 @@ def monitor_balance():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Monitor naRou")
-    parser.add_argument(
-        "--resources", action="store_true", help="Monitor system resources"
-    )
+    parser.add_argument("--resources", action="store_true", help="Monitor system resources")
     parser.add_argument("--logs", action="store_true", help="Monitor logs")
     parser.add_argument("--follow", action="store_true", help="Follow log file")
     parser.add_argument("--tests", action="store_true", help="Monitor test results")
     parser.add_argument("--balance", action="store_true", help="Monitor balance")
-    parser.add_argument(
-        "--duration", type=int, default=60, help="Monitoring duration (seconds)"
-    )
-    parser.add_argument(
-        "--interval", type=int, default=5, help="Monitoring interval (seconds)"
-    )
+    parser.add_argument("--duration", type=int, default=60, help="Monitoring duration (seconds)")
+    parser.add_argument("--interval", type=int, default=5, help="Monitoring interval (seconds)")
     args = parser.parse_args()
 
     if args.resources:

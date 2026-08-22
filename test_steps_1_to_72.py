@@ -6,28 +6,27 @@ Verifies:
 - Steps 49-72: Dynamic lighting, Squash/stretch, Screen shake, Particles & Footprints
 """
 
-import math
 from audio.dynamic_audio import (
+    ENVIRONMENT_SOUND_PATHS,
     FOOTSTEP_SOUND_PATHS,
     UI_SOUND_PATHS,
-    ENVIRONMENT_SOUND_PATHS,
-    play_footstep_sound,
-    play_ui_sound,
-    play_positional_sound,
     load_footstep_cache,
+    play_footstep_sound,
+    play_positional_sound,
+    play_ui_sound,
 )
 from emote_feedback_system import (
     EMOTE_PATHS,
+    CombatFeedbackManager,
     EmoteComponent,
     InteractableObject,
-    CombatFeedbackManager,
 )
 from visual_fx_system import (
-    LightSource,
-    LightingManager,
     CameraShakeManager,
-    SpriteDeformation,
     EnvironmentFXManager,
+    LightingManager,
+    LightSource,
+    SpriteDeformation,
 )
 
 
@@ -56,12 +55,16 @@ def test_steps_9_to_16_ui_audio():
 def test_steps_17_to_24_spatial_audio():
     assert "doorOpen" in ENVIRONMENT_SOUND_PATHS
     # Nearby sound
-    near = play_positional_sound("doorOpen", source_x=2.0, source_y=0.0, listener_x=0.0, listener_y=0.0, max_distance=10.0)
+    near = play_positional_sound(
+        "doorOpen", source_x=2.0, source_y=0.0, listener_x=0.0, listener_y=0.0, max_distance=10.0
+    )
     assert near["volume"] > 0.7
     assert near["pan"] > 0.0  # to the right
 
     # Far away sound
-    far = play_positional_sound("creak", source_x=50.0, source_y=50.0, listener_x=0.0, listener_y=0.0, max_distance=10.0)
+    far = play_positional_sound(
+        "creak", source_x=50.0, source_y=50.0, listener_x=0.0, listener_y=0.0, max_distance=10.0
+    )
     assert far["volume"] == 0.0
 
 

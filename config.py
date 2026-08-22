@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Configuration script for naRou project."""
+
 from __future__ import annotations
 
 import argparse
@@ -57,14 +58,10 @@ def list_config(config_path="config.yaml"):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Configure naRou")
-    parser.add_argument(
-        "--set", nargs=2, metavar=("KEY", "VALUE"), help="Set configuration value"
-    )
+    parser.add_argument("--set", nargs=2, metavar=("KEY", "VALUE"), help="Set configuration value")
     parser.add_argument("--get", metavar="KEY", help="Get configuration value")
     parser.add_argument("--list", action="store_true", help="List all configuration")
-    parser.add_argument(
-        "--config", default="config.yaml", help="Configuration file path"
-    )
+    parser.add_argument("--config", default="config.yaml", help="Configuration file path")
     args = parser.parse_args()
 
     if args.set:

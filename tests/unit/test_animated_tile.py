@@ -11,9 +11,7 @@ from core.animated_tile import AnimatedTile, get_animated_tile
 
 def test_animated_tile_creation():
     """Test AnimatedTile creation and basic properties."""
-    tile = AnimatedTile(
-        tile_ids=["TR_EFFECT_01", "TR_EFFECT_02", "TR_EFFECT_03"], fps=10
-    )
+    tile = AnimatedTile(tile_ids=["TR_EFFECT_01", "TR_EFFECT_02", "TR_EFFECT_03"], fps=10)
     assert tile.tile_ids == ["TR_EFFECT_01", "TR_EFFECT_02", "TR_EFFECT_03"]
     assert tile.fps == 10
     assert tile.loop is True

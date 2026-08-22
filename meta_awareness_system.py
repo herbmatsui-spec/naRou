@@ -3,7 +3,7 @@
 Handles Reader's Privilege (<原典閲覧>) and future prediction mechanics.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 
 class MetaAwarenessSystem:

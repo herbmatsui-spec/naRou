@@ -22,9 +22,7 @@ def test_web_server_smoke() -> None:
         # サーバー起動待ち（最大5秒）
         for _ in range(50):  # 0.1秒 x 50 = 5秒
             try:
-                with urllib.request.urlopen(
-                    "http://127.0.0.1:8080/health", timeout=1
-                ) as resp:
+                with urllib.request.urlopen("http://127.0.0.1:8080/health", timeout=1) as resp:
                     if resp.status == 200:
                         break
             except urllib.error.URLError:

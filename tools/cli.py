@@ -6,6 +6,7 @@ entry point with subcommands, e.g.:
     python tools/cli.py validate-assets
     python tools/cli.py gen-manifest
 """
+
 from __future__ import annotations
 
 import argparse

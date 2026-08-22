@@ -4,17 +4,15 @@ Aの世界（スキル喰い）の戦闘エンジン＆《喰らい（Devour）�
 提案2 & 3: 戦闘・喰らい・解析・ハックのEmote & Audio演出 (Steps 9〜24, 45〜47, 57〜59)
 Phase 1 Tactical Combat Manager (Phase1CombatManager)
 """
+
 from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 from skill_eater_audio_system import SkillEaterAudioSystem
-from skill_eater_presentation_system import (
-    PresentationEvent,
-    SkillEaterPresentationSystem,
-)
+from skill_eater_presentation_system import PresentationEvent, SkillEaterPresentationSystem
 from skill_eater_system import CharacterState, SkillEaterRegistry, SkillTier
 
 # 属性シナジー＆消化不良の定義
@@ -75,9 +73,7 @@ class BattleActionResult:
     status_applied: list[str] = field(default_factory=list)
     log_messages: list[str] = field(default_factory=list)
     played_sounds: list[str] = field(default_factory=list)
-    presentation_events: list[PresentationEvent] = field(
-        default_factory=list
-    )  # Step 9: 演出リスト
+    presentation_events: list[PresentationEvent] = field(default_factory=list)  # Step 9: 演出リスト
 
 
 class SkillEaterCombatSystem:
@@ -91,9 +87,7 @@ class SkillEaterCombatSystem:
         self.audio = audio or SkillEaterAudioSystem.get_instance()
         self.presentation = presentation or SkillEaterPresentationSystem.get_instance()
 
-    def calculate_devour_rate(
-        self, analyzer: CharacterState, target: CharacterState
-    ) -> float:
+    def calculate_devour_rate(self, analyzer: CharacterState, target: CharacterState) -> float:
         base_rate = 0.60
         analysis_bonus = analyzer.analysis_level * 0.05
         hp_loss_ratio = 1.0 - (target.hp / max(1, target.max_hp))
@@ -104,11 +98,9 @@ class SkillEaterCombatSystem:
         if "Paralyzed" in target.status_effects or "Sleep" in target.status_effects:
             total_rate += 0.20
 
-        return max(0.05, min(0.95, round(total_rate, 2)))
+        return max(0.05, min(1.0, round(total_rate, 2)))
 
-    def analyze_target(
-        self, analyzer: CharacterState, target: CharacterState
-    ) -> AnalysisResult:
+    def analyze_target(self, analyzer: CharacterState, target: CharacterState) -> AnalysisResult:
         """Step 17〜19: 解析実行時のEmote & Audio演出 (dots3/metalClick, idea/metalLatch, question)"""
         lv = analyzer.analysis_level
         revealed_skills: list[AnalyzedSkillInfo] = []
@@ -191,10 +183,14 @@ class SkillEaterCombatSystem:
             if last_elem and not synergy_hint:
                 for tag in skill_def.tags:
                     if (last_elem, tag) in SYNERGY_COMBOS:
-                        synergy_hint = f"★シナジー予測: 前回【{last_elem}】× 今回【{tag}】➔ 大爆発チャンス！"
+                        synergy_hint = (
+                            f"★シナジー予測: 前回【{last_elem}】× 今回【{tag}】➔ 大爆発チャンス！"
+                        )
                         break
                     elif (last_elem, tag) in INDIGESTION_COMBOS:
-                        synergy_hint = f"▲消化不良警告: 前回【{last_elem}】× 今回【{tag}】➔ 自傷リスク！"
+                        synergy_hint = (
+                            f"▲消化不良警告: 前回【{last_elem}】× 今回【{tag}】➔ 自傷リスク！"
+                        )
                         break
 
             revealed_skills.append(
@@ -230,6 +226,142 @@ class SkillEaterCombatSystem:
             played_sounds=sounds,
             presentation_events=events,
         )
+
+    # Steps 17〜21: 解析ハッキングコマンド＆暗号解除オブザーバー
+    def execute_analysis_hack(
+        self, analyzer: CharacterState, target: CharacterState
+    ) -> AnalysisResult:
+        """Step 17〜19: 敵の暗号化・偽装・解除条件をハッキングスキャン"""
+        lv = analyzer.analysis_level
+        revealed_skills: list[AnalyzedSkillInfo] = []
+        weaknesses: list[str] = []
+        sounds: list[str] = []
+        events: list[PresentationEvent] = []
+
+        evt_scan = self.presentation.add_event(
+            emote_file="emote_dots3.png",
+            audio_file="metalClick.ogg",
+            message="【解析ハック】対象のセキュリティ・アイスをスキャン中...",
+        )
+        sounds.append("metalClick.ogg")
+        events.append(evt_scan)
+
+        unlocked_count = 0
+        for skill_id, slot in list(target.skills.items()):
+            # Step 23: 偽装（ミミック）解除判定
+            if slot.is_disguised and (lv >= 3 or random.random() < 0.6):
+                slot.is_disguised = False
+                if slot.real_skill_id:
+                    real_def = self.registry.get_skill(slot.real_skill_id)
+                    real_name = real_def.name if real_def else slot.real_skill_id
+                    events.append(
+                        self.presentation.add_event(
+                            emote_file="emote_idea.png",
+                            message=f"【偽装看破！】隠された真のスキル《{real_name}》を暴いた！",
+                        )
+                    )
+
+            s_def = self.registry.get_skill(
+                slot.real_skill_id if not slot.is_disguised and slot.real_skill_id else skill_id
+            )
+            if not s_def:
+                continue
+
+            cond_hints = []
+            if slot.unlock_conditions:
+                for c in slot.unlock_conditions:
+                    c_type = c.get("type", "element")
+                    if c_type == "element":
+                        cond_hints.append(f"属性【{c.get('element')}】攻撃")
+                    elif c_type == "critical":
+                        cond_hints.append("クリティカル直撃")
+                    elif c_type == "status":
+                        cond_hints.append(f"状態異常【{c.get('status')}】")
+
+            hint_str = " / ".join(cond_hints) if cond_hints else "直接ハックまたは高威力攻撃"
+
+            revealed_skills.append(
+                AnalyzedSkillInfo(
+                    skill_id=s_def.id,
+                    name=s_def.name,
+                    tier=s_def.tier.value,
+                    type=s_def.type.value,
+                    tags=s_def.tags,
+                    market_value=s_def.market_value,
+                    is_weakness_revealed=True,
+                    flavor_text=f"[解除条件: {hint_str}] {s_def.flavor_text}",
+                    is_encrypted=slot.is_encrypted,
+                )
+            )
+
+        devour_rate = self.calculate_devour_rate(analyzer, target)
+        hp_ratio = round(target.hp / max(1, target.max_hp), 2)
+        log_msg = f"[HACK SCAN] 対象 '{target.name}' の暗号化解析完了。（解析Lv.{lv}, スキル数: {len(revealed_skills)}, 喰らい成功率: {int(devour_rate * 100)}%）"
+
+        return AnalysisResult(
+            target_id=target.id,
+            target_name=target.name,
+            target_hp_ratio=hp_ratio,
+            analysis_level=lv,
+            revealed_skills=revealed_skills,
+            weaknesses=(
+                ["暗号プロテクト検出"]
+                if any(s.is_encrypted for s in target.skills.values())
+                else ["プロテクトなし"]
+            ),
+            devour_success_rate=devour_rate,
+            hologram_visual_mode="EXPLOIT" if lv >= 5 else "DEEP",
+            system_log=log_msg,
+            played_sounds=sounds,
+            presentation_events=events,
+        )
+
+    def check_and_unlock_conditions(
+        self,
+        attacker: CharacterState,
+        defender: CharacterState,
+        action_element: str | None = None,
+        is_critical: bool = False,
+        status_applied: str | None = None,
+    ) -> list[str]:
+        """Step 20, 21: 戦闘中の攻撃属性やクリティカル等で条件を満たしたか判定し暗号を解除"""
+        unlocked_logs = []
+        for s_id, slot in defender.skills.items():
+            if not slot.is_encrypted:
+                continue
+
+            matched = False
+            for cond in slot.unlock_conditions:
+                c_type = cond.get("type")
+                if (
+                    c_type == "element"
+                    and action_element
+                    and cond.get("element", "").lower() == action_element.lower()
+                ):
+                    matched = True
+                elif c_type == "critical" and is_critical:
+                    matched = True
+                elif (
+                    c_type == "status"
+                    and status_applied
+                    and cond.get("status", "").lower() == status_applied.lower()
+                ):
+                    matched = True
+
+            if matched:
+                slot.is_encrypted = False
+                s_def = self.registry.get_skill(s_id)
+                s_name = s_def.name if s_def else s_id
+                unlocked_logs.append(
+                    f"【プロテクト解除！】{defender.name}の《{s_name}》の暗号化障壁が破壊された！"
+                )
+                self.presentation.add_event(
+                    emote_file="emote_idea.png",
+                    audio_file="metalLatch.ogg",
+                    message=f"《{s_name}》プロテクト解除！",
+                )
+
+        return unlocked_logs
 
     # Step 57〜59: ハッキング実行コマンド（Emote & Audio演出）
     def execute_hack(
@@ -299,6 +431,53 @@ class SkillEaterCombatSystem:
                 presentation_events=events,
             )
 
+    # Steps 7〜11: オーバークロック脳焼きダメージ＆UIグリッチ演出
+    def apply_overclock_damage(
+        self, character: CharacterState
+    ) -> tuple[int, list[str], list[PresentationEvent]]:
+        character.calculate_memory_usage()
+        if character.overclock_level <= 0:
+            return 0, [], []
+
+        damage_pct = min(character.overclock_level * 0.5, 50.0)
+        actual_damage = max(1, int(character.max_hp * (damage_pct / 100.0)))
+        character.hp = max(0, character.hp - actual_damage)
+
+        glitch_intensity = min(character.overclock_level / 100.0, 1.0)
+        logs = [
+            f"【脳焼き警告】メモリ超過（{character.overclock_level}%）により大脳皮質に負荷！ {actual_damage} の自傷ダメージ！"
+        ]
+
+        evt_glitch = self.presentation.add_event(
+            emote_file="emote_swirl.png",
+            audio_file="creak3.ogg",
+            message=f"【UIグリッチ】脳負荷過大 (超過率 {character.overclock_level}%)",
+        )
+        events = [evt_glitch]
+
+        if character.overclock_level >= 150:
+            fry_dmg, fry_msg, fry_evts = self.trigger_fatal_brain_fry(character)
+            logs.append(fry_msg)
+            events.extend(fry_evts)
+
+        return actual_damage, logs, events
+
+    def trigger_fatal_brain_fry(
+        self, character: CharacterState
+    ) -> tuple[int, str, list[PresentationEvent]]:
+        """Step 11: 150%以上で致命的脳過熱"""
+        character.hp = 0
+        evt_fatal = self.presentation.add_event(
+            emote_file="emote_cross.png",
+            audio_file="metalPot1.ogg",
+            message="【致命的脳過熱】脳内回路が完全に焼き切れ、意識を喪失した！",
+        )
+        return (
+            character.max_hp,
+            "【致命的過熱】メモリ許容量150%超過により脳回路が完全破壊されました！",
+            [evt_fatal],
+        )
+
     # Step 45: スキル任意破棄コマンド（Emote: emote_drop.png）
     def discard_skill(
         self, character: CharacterState, skill_id: str
@@ -311,6 +490,7 @@ class SkillEaterCombatSystem:
 
         character.remove_skill(skill_id)
         character.addiction_buildup = max(0, character.addiction_buildup - 20)
+        character.calculate_memory_usage()
 
         evt = self.presentation.add_event(
             emote_file="emote_drop.png",
@@ -358,9 +538,7 @@ class SkillEaterCombatSystem:
                 desc, dmg = INDIGESTION_COMBOS[pair]
                 indigestion_dmg = dmg
                 predator.hp = max(1, predator.hp - indigestion_dmg)
-                logs.append(
-                    f"{desc} （{predator.name}は {indigestion_dmg} の自傷ダメージ！）"
-                )
+                logs.append(f"{desc} （{predator.name}は {indigestion_dmg} の自傷ダメージ！）")
                 # Step 24: 消化不良
                 evt_indig = self.presentation.add_event(
                     emote_file="emote_swirl.png",
@@ -391,9 +569,7 @@ class SkillEaterCombatSystem:
             sounds.append(slice_se)
 
         defender.hp = max(0, defender.hp - raw_damage)
-        logs = [
-            f"{attacker.name}の通常攻撃！ {defender.name}に {raw_damage} のダメージ！"
-        ]
+        logs = [f"{attacker.name}の通常攻撃！ {defender.name}に {raw_damage} のダメージ！"]
 
         # Step 11: 被弾エモート
         evt_hit = self.presentation.add_event(
@@ -459,6 +635,69 @@ class SkillEaterCombatSystem:
 
         skill_def = self.registry.get_skill(target_skill_id)
         skill_name = skill_def.name if skill_def else target_skill_id
+        target_slot = prey.skills.get(target_skill_id)
+
+        # Step 22: 暗号化＆トラップチェック
+        is_encrypted = False
+        is_trap = False
+        trap_penalty = "Virus"
+        if target_slot is not None:
+            is_encrypted = target_slot.is_encrypted
+            is_trap = target_slot.is_trap
+            trap_penalty = target_slot.trap_penalty or (
+                skill_def.trap_penalty if skill_def else "Virus"
+            )
+        elif skill_def:
+            is_encrypted = skill_def.is_encrypted
+            is_trap = skill_def.is_trap
+            trap_penalty = skill_def.trap_penalty
+
+        if is_encrypted and not prey.encryption_broken:
+            if is_trap:
+                # トラップ発動！
+                trap_dmg = max(5, int(predator.max_hp * 0.25))
+                predator.hp = max(1, predator.hp - trap_dmg)
+                if trap_penalty not in predator.status_effects:
+                    predator.status_effects.append(trap_penalty)
+                evt_trap = self.presentation.add_event(
+                    emote_file="emote_cross.png",
+                    audio_file="metalPot1.ogg",
+                    message=f"【トラップ発動！】ウイルス感染＆{trap_dmg}ダメージ！",
+                )
+                sounds.append("metalPot1.ogg")
+                events.append(evt_trap)
+                return BattleActionResult(
+                    action_type="DEVOUR",
+                    actor_name=predator.name,
+                    target_name=prey.name,
+                    success=False,
+                    damage_dealt=0,
+                    log_messages=[
+                        f"【トラップスキル感知！】《{skill_name}》は悪意ある偽装トラップだった！ {predator.name}は {trap_dmg} ダメージを受け、[{trap_penalty}]に感染した！"
+                    ],
+                    played_sounds=sounds,
+                    presentation_events=events,
+                )
+            else:
+                # 暗号化による拒絶
+                evt_enc = self.presentation.add_event(
+                    emote_file="emote_question.png",
+                    audio_file="metalClick.ogg",
+                    message="プロテクトにより捕食拒絶！",
+                )
+                sounds.append("metalClick.ogg")
+                events.append(evt_enc)
+                return BattleActionResult(
+                    action_type="DEVOUR",
+                    actor_name=predator.name,
+                    target_name=prey.name,
+                    success=False,
+                    log_messages=[
+                        f"【暗号化プロテクト！】《{skill_name}》は暗号化されているため喰らえません！ 先にハッキングか弱点攻撃でプロテクトを解除してください！"
+                    ],
+                    played_sounds=sounds,
+                    presentation_events=events,
+                )
 
         # Step 44: メモリ空き容量チェック
         cost = skill_def.memory_usage if skill_def else 1
@@ -495,9 +734,7 @@ class SkillEaterCombatSystem:
             f"{predator.name}は禁忌の力《喰らい》を発動！ 対象スキル:《{skill_name}》（成功率: {int(rate * 100)}%）"
         )
 
-        is_success = (
-            force_success if force_success is not None else (random.random() <= rate)
-        )
+        is_success = force_success if force_success is not None else (random.random() <= rate)
 
         if is_success:
             prey.remove_skill(target_skill_id)
@@ -517,9 +754,7 @@ class SkillEaterCombatSystem:
             sounds.append("handleSmallLeather2.ogg")
             events.append(evt_ok)
 
-            logs.append(
-                f"【捕食成功！】{prey.name}から《{skill_name}》を完全に喰らい尽くした！"
-            )
+            logs.append(f"【捕食成功！】{prey.name}から《{skill_name}》を完全に喰らい尽くした！")
             logs.append(
                 f"{predator.name}は新たなスキル《{skill_name}》を獲得！（メモリ使用量: {predator.current_memory_usage}/{predator.max_memory_capacity}）"
             )
@@ -539,9 +774,7 @@ class SkillEaterCombatSystem:
             events.extend(combo_events)
 
             if prey.is_husk:
-                logs.append(
-                    f"※{prey.name}の全スキルが消滅し、『空っぽ（Husk）』となった。"
-                )
+                logs.append(f"※{prey.name}の全スキルが消滅し、『空っぽ（Husk）』となった。")
 
             return BattleActionResult(
                 action_type="DEVOUR",
@@ -557,7 +790,7 @@ class SkillEaterCombatSystem:
                 presentation_events=events,
             )
         else:
-            backlash_damage = max(5, int(predator.max_hp * 0.15))
+            backlash_damage = max(5, int(predator.hp * 0.15))
             predator.hp = max(1, predator.hp - backlash_damage)
             prey.status_effects.append("Enraged")
             prey.atk = int(prey.atk * 1.3)
@@ -593,24 +826,25 @@ class SkillEaterCombatSystem:
                 presentation_events=events,
             )
 
-    # Step 46, 47: 精神侵食警告と発狂（Emote: swirl / laugh）
-    def process_turn_end(
-        self, character: CharacterState
-    ) -> tuple[list[str], list[str], list[PresentationEvent]]:
+    # Step 46, 47 & Steps 7〜11: 精神侵食警告とオーバークロック脳焼き処理チェーン
+    def process_turn_end(self, character: CharacterState) -> dict[str, Any]:
         logs = []
         sounds = []
         events = []
+
+        # 1. オーバークロック脳焼きダメージ
+        dmg, oc_logs, oc_evts = self.apply_overclock_damage(character)
+        logs.extend(oc_logs)
+        events.extend(oc_evts)
+
+        # 2. 高位スキルの精神侵食度チェック
         for s_id in character.get_skill_ids():
             s_def = self.registry.get_skill(s_id)
             if s_def:
                 if s_def.tier == SkillTier.UNIQUE:
-                    character.addiction_buildup = min(
-                        100, character.addiction_buildup + 5
-                    )
+                    character.addiction_buildup = min(100, character.addiction_buildup + 5)
                 elif s_def.tier == SkillTier.CONCEPT:
-                    character.addiction_buildup = min(
-                        100, character.addiction_buildup + 10
-                    )
+                    character.addiction_buildup = min(100, character.addiction_buildup + 10)
 
         if character.addiction_buildup >= 100:
             if "Addicted" not in character.status_effects:
@@ -639,12 +873,21 @@ class SkillEaterCombatSystem:
                 f"※警告：{character.name}の精神侵食度が限界寸前（{character.addiction_buildup}/100）です。"
             )
 
-        return logs, sounds, events
+        return {
+            "overclock_level": character.overclock_level,
+            "overclock_damage": dmg,
+            "current_hp": character.hp,
+            "logs": logs,
+            "sounds": sounds,
+            "events": events,
+            "is_alive": character.hp > 0,
+        }
 
 
 # -------------------------------------------------------------
 # Phase 1 Environmental Combat System
 # -------------------------------------------------------------
+
 
 @dataclass
 class EnvironmentalObject:
@@ -688,15 +931,17 @@ class Phase1CombatManager:
         results = []
         for obj in self.environment_objects:
             if not obj.is_triggered:
-                results.append({
-                    "obj_id": obj.obj_id,
-                    "name": obj.name,
-                    "hazard_type": obj.hazard_type,
-                    "trigger_cost_mp": obj.trigger_cost_mp,
-                    "damage": obj.damage,
-                    "weak_spot": obj.weak_spot_description,
-                    "highlight_color": "CYAN_PULSE",
-                })
+                results.append(
+                    {
+                        "obj_id": obj.obj_id,
+                        "name": obj.name,
+                        "hazard_type": obj.hazard_type,
+                        "trigger_cost_mp": obj.trigger_cost_mp,
+                        "damage": obj.damage,
+                        "weak_spot": obj.weak_spot_description,
+                        "highlight_color": "CYAN_PULSE",
+                    }
+                )
         return results
 
     def analyze_enemy_weakness(self, enemy_id: str) -> Dict[str, Any]:
@@ -721,7 +966,12 @@ class Phase1CombatManager:
                 if not enemy.weakness_revealed:
                     # Weak normal damage
                     enemy.hp -= base_atk
-                    return {"success": True, "critical": False, "damage": base_atk, "enemy_hp": max(0, enemy.hp)}
+                    return {
+                        "success": True,
+                        "critical": False,
+                        "damage": base_atk,
+                        "enemy_hp": max(0, enemy.hp),
+                    }
                 dmg = int(base_atk * 3.0) + 20
                 enemy.hp -= dmg
                 enemy.is_stunned = True

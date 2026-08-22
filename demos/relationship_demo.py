@@ -24,7 +24,8 @@ def demo():
     temp_dir = tempfile.mkdtemp()
     data_file = os.path.join(temp_dir, "demo_relations.yaml")
     with open(data_file, "w", encoding="utf-8") as f:
-        f.write("""
+        f.write(
+            """
 relationship_templates:
   friends:
     id: "friends"
@@ -52,7 +53,8 @@ relationship_templates:
     relationship_type: "enmity"
     initial_level: -50
     decay_rate: 0.001
-""")
+"""
+        )
 
     # エンジン作成
     engine = create_engine(data_file)
@@ -79,9 +81,7 @@ relationship_templates:
 
     # ロマンス進行
     romance_state = engine.romance.initiate_romance("player", "elena")
-    print(
-        f"[5] ロマンス進行: ステージ = {romance_state.stage.value if romance_state else 'N/A'}"
-    )
+    print(f"[5] ロマンス進行: ステージ = {romance_state.stage.value if romance_state else 'N/A'}")
 
     # 師弟関係
     engine.mentorship.establish_mentorship("gareth", "player")
@@ -92,9 +92,7 @@ relationship_templates:
     betrayal_result = engine.betrayal.commit_betrayal(
         "mordred",
         "player",
-        __import__(
-            "src.relationships.betrayal", fromlist=["BetrayalType"]
-        ).BetrayalType.BACKSTAB,
+        __import__("src.relationships.betrayal", fromlist=["BetrayalType"]).BetrayalType.BACKSTAB,
         context={"evidence_available": True, "witnesses": ["elena"]},
     )
     print(
@@ -117,9 +115,7 @@ relationship_templates:
     print(f"[10] パーソナリティ互換性(プレイヤー×エレナ): {compat:.2f}")
 
     # メモリ作成
-    engine.memory.record_relationship_event(
-        "player", "elena", RelationshipType.ROMANCE, 25
-    )
+    engine.memory.record_relationship_event("player", "elena", RelationshipType.ROMANCE, 25)
     print("[11] 関係イベントから記憶を作成")
 
     # 可視化

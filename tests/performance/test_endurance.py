@@ -3,6 +3,7 @@
 Endurance Test
 耐久性テスト
 """
+
 from __future__ import annotations
 
 import sys
@@ -31,7 +32,7 @@ class TestEndurancePerformance(unittest.TestCase):
                 for i in range(50000):
                     total += i * i
                 success_count += 1
-            except:
+            except Exception:
                 error_count += 1
 
         for i in range(iterations):

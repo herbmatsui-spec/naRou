@@ -99,9 +99,7 @@ class ChoiceManager:
                 if engine and hasattr(engine, "survival"):
                     engine.survival.gold += val
             elif eff_type == "gain_karma":
-                player.karma_good_evil = max(
-                    -100, min(100, player.karma_good_evil + val)
-                )
+                player.karma_good_evil = max(-100, min(100, player.karma_good_evil + val))
             elif eff_type == "gain_exp":
                 player.gain_exp(val)
             elif eff_type == "gain_piety":

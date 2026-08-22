@@ -3,6 +3,7 @@
 Asset cleanup script for cleaning up temporary files, caches, and old builds.
 Helps maintain a clean asset pipeline workspace.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -70,9 +71,7 @@ def cleanup_directory(
                     try:
                         file_size = os.path.getsize(file_path)
                         if dry_run:
-                            print(
-                                f"[DRY RUN] Would delete: {file_path} ({file_size} bytes)"
-                            )
+                            print(f"[DRY RUN] Would delete: {file_path} ({file_size} bytes)")
                         else:
                             os.remove(file_path)
                             print(f"Deleted: {file_path} ({file_size} bytes)")
@@ -111,9 +110,7 @@ def cleanup_old_builds(config: dict, dry_run: bool = False) -> dict:
     """Clean up old build outputs, keeping only recent ones."""
     output_dir = config["directories"]["output"]
     # Keep builds from the last 7 days by default
-    max_age_hours = config.get("pipeline", {}).get(
-        "build_retention_hours", 168
-    )  # 7 days
+    max_age_hours = config.get("pipeline", {}).get("build_retention_hours", 168)  # 7 days
 
     print(f"Cleaning up old builds in: {output_dir} (keeping last {max_age_hours}h)")
     return cleanup_directory(output_dir, max_age_hours, ["*"], dry_run)
@@ -157,9 +154,7 @@ def cleanup_broken_symlinks(directory: str, dry_run: bool = False) -> dict:
                                     f"Error removing broken symlink {file_path}: {e}"
                                 )
     except Exception as e:
-        stats["errors"].append(
-            f"Error scanning for broken symlinks in {directory}: {e}"
-        )
+        stats["errors"].append(f"Error scanning for broken symlinks in {directory}: {e}")
 
     return stats
 
@@ -189,13 +184,9 @@ def cleanup_empty_directories(directory: str, dry_run: bool = False) -> dict:
                             print(f"Removed empty directory: {dir_path}")
                             stats["removed_dirs"] += 1
                 except Exception as e:
-                    stats["errors"].append(
-                        f"Error checking/removing directory {dir_path}: {e}"
-                    )
+                    stats["errors"].append(f"Error checking/removing directory {dir_path}: {e}")
     except Exception as e:
-        stats["errors"].append(
-            f"Error scanning for empty directories in {directory}: {e}"
-        )
+        stats["errors"].append(f"Error scanning for empty directories in {directory}: {e}")
 
     return stats
 
@@ -333,9 +324,7 @@ def main():
     print(f"  Errors encountered: {total_errors}")
 
     if args.dry_run:
-        print(
-            "\nThis was a dry run. To actually perform cleanup, run without --dry-run"
-        )
+        print("\nThis was a dry run. To actually perform cleanup, run without --dry-run")
 
     sys.exit(0)
 

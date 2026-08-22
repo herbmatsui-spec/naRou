@@ -55,9 +55,7 @@ def bump(part: str) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Bump naRou version")
-    parser.add_argument(
-        "part", choices=["major", "minor", "patch"], help="Version part"
-    )
+    parser.add_argument("part", choices=["major", "minor", "patch"], help="Version part")
     args = parser.parse_args()
     new_v = bump(args.part)
     print(f"version -> {new_v}")

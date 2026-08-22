@@ -15,11 +15,7 @@ from typing import TYPE_CHECKING, Any
 
 logger = logging.getLogger(__name__)
 
-from ui_event_panel import (
-    get_current_event_info,
-    get_event_ranking,
-    get_player_event_score,
-)
+from ui_event_panel import get_current_event_info, get_event_ranking, get_player_event_score
 from ui_ranking_panel import get_all_event_rankings
 
 # Dynamic-lighting foundation (Phase 2-A). Import is optional so the server still
@@ -67,9 +63,7 @@ def _is_rate_allowed(client_ip: str) -> bool:
 
     # 古いリクエストを削除
     _REQUEST_HISTORY[client_ip] = [
-        req_time
-        for req_time in _REQUEST_HISTORY[client_ip]
-        if now - req_time < _RATE_LIMIT_WINDOW
+        req_time for req_time in _REQUEST_HISTORY[client_ip] if now - req_time < _RATE_LIMIT_WINDOW
     ]
 
     # リクエスト数をチェック
@@ -111,9 +105,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             self.send_response(429)  # Too Many Requests
             self.send_header("Content-Type", "application/json")
             self.end_headers()
-            self.wfile.write(
-                json.dumps({"error": "Rate limit exceeded"}).encode("utf-8")
-            )
+            self.wfile.write(json.dumps({"error": "Rate limit exceeded"}).encode("utf-8"))
             return
 
         # Step 52: User-Agent からグラフィックス能力を推定して記録
@@ -129,9 +121,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
         if self.path == "/api/state":
             if _ENGINE_INSTANCE is None:
                 self._set_headers()
-                self.wfile.write(
-                    json.dumps({"error": "Engine not initialized"}).encode("utf-8")
-                )
+                self.wfile.write(json.dumps({"error": "Engine not initialized"}).encode("utf-8"))
                 return
 
             state = self._serialize_engine_state(_ENGINE_INSTANCE)
@@ -160,9 +150,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             player_id = params.get("player_id", "")
             score = get_player_event_score(event_id, player_id)
             self._set_headers("application/json; charset=utf-8")
-            self.wfile.write(
-                json.dumps({"score": score}, ensure_ascii=False).encode("utf-8")
-            )
+            self.wfile.write(json.dumps({"score": score}, ensure_ascii=False).encode("utf-8"))
         elif self.path == "/api/event/titles":
             query = self.path.split("?", 1)[1] if "?" in self.path else ""
             params = dict(qc.split("=") for qc in query.split("&") if qc)
@@ -176,9 +164,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
         elif self.path == "/api/event/all_rankings":
             all_rankings = get_all_event_rankings()
             self._set_headers("application/json; charset=utf-8")
-            self.wfile.write(
-                json.dumps(all_rankings, ensure_ascii=False).encode("utf-8")
-            )
+            self.wfile.write(json.dumps(all_rankings, ensure_ascii=False).encode("utf-8"))
             return
         elif self.path == "/api/webgl/info":
             self._set_headers("application/json; charset=utf-8")
@@ -187,7 +173,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             ctx = WebGLManager.instance().get_context()
             self.wfile.write(json.dumps({"webgl_context": str(ctx)}).encode("utf-8"))
             return
-        elif self.path.split('?', 1)[0] == "/api/tokens":
+        elif self.path.split("?", 1)[0] == "/api/tokens":
             # Step 30 / Step 42 / Step 43: デザイントークンとフォント倍率を返す
             # ?a11y=deutan のように強制上書きを許可 (Step 43)
             query = self.path.split("?", 1)[1] if "?" in self.path else ""
@@ -198,9 +184,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 from core.accessibility import get_active_tokens, load_design_tokens
 
                 tokens = (
-                    get_active_tokens()
-                    if not force_variant
-                    else load_design_tokens(force_variant)
+                    get_active_tokens() if not force_variant else load_design_tokens(force_variant)
                 )
             except Exception:
                 logger.exception("トークン取得失敗")
@@ -219,7 +203,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 ).encode("utf-8")
             )
             return
-        elif self.path.split('?', 1)[0] == "/api/tutorial":
+        elif self.path.split("?", 1)[0] == "/api/tutorial":
             # Step 39: チュートリアル手順を返す
             self._set_headers("application/json; charset=utf-8")
             try:
@@ -229,15 +213,9 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             except Exception:
                 logger.exception("チュートリアル読み込み失敗")
                 steps = []
-            self.wfile.write(
-                json.dumps({"steps": steps}, ensure_ascii=False).encode("utf-8")
-            )
+            self.wfile.write(json.dumps({"steps": steps}, ensure_ascii=False).encode("utf-8"))
             return
-        elif (
-            self.path == "/"
-            or self.path.endswith(".html")
-            or self.path == "/index.html"
-        ):
+        elif self.path == "/" or self.path.endswith(".html") or self.path == "/index.html":
             html_path = os.path.join(os.path.dirname(__file__), "web_game_client.html")
             if os.path.exists(html_path):
                 with open(html_path, "rb") as f:
@@ -276,11 +254,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             if _ENGINE_INSTANCE and action:
                 result_msg = self._handle_web_action(_ENGINE_INSTANCE, action, data)
 
-            state = (
-                self._serialize_engine_state(_ENGINE_INSTANCE)
-                if _ENGINE_INSTANCE
-                else {}
-            )
+            state = self._serialize_engine_state(_ENGINE_INSTANCE) if _ENGINE_INSTANCE else {}
             state["action_result"] = result_msg
 
             self._set_headers("application/json; charset=utf-8")
@@ -316,12 +290,14 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             try:
                 blocked = [
                     [
-                        not engine.game_map.is_transparent(cam_x + vx, cam_y + vy)
-                        if (
-                            0 <= cam_x + vx < engine.game_map.width
-                            and 0 <= cam_y + vy < engine.game_map.height
+                        (
+                            not engine.game_map.is_transparent(cam_x + vx, cam_y + vy)
+                            if (
+                                0 <= cam_x + vx < engine.game_map.width
+                                and 0 <= cam_y + vy < engine.game_map.height
+                            )
+                            else True
                         )
-                        else True
                         for vx in range(view_w)
                     ]
                     for vy in range(view_h)
@@ -388,9 +364,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                         else:
                             row.append(raw_tile)
                         if light_intensity is not None:
-                            intensity = max(
-                                0.12, round(float(light_intensity[vy][vx]), 2)
-                            )
+                            intensity = max(0.12, round(float(light_intensity[vy][vx]), 2))
                             r, g, b = light_rgb[vy][vx]
                             color_row.append(f"{r},{g},{b}")
                         else:
@@ -445,10 +419,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
 
                     # 状態判定
                     state = "idle"
-                    if (
-                        getattr(e, "attacking", False)
-                        or getattr(e, "attack_timer", 0) > 0
-                    ):
+                    if getattr(e, "attacking", False) or getattr(e, "attack_timer", 0) > 0:
                         state = "attack"
                     elif e.hp <= 0:
                         state = "dead"
@@ -479,9 +450,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                             "attack_timer": getattr(e, "attack_timer", 0),
                             "moving": getattr(e, "moving", False),
                             "faction": getattr(e, "faction", "neutral"),
-                            "status_effects": [
-                                st.name for st in getattr(e, "status_effects", [])
-                            ],
+                            "status_effects": [st.name for st in getattr(e, "status_effects", [])],
                         }
                     )
                     # Phase 2-A: 敵の視界コーン（プレイヤー方向を向く）
@@ -576,9 +545,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                     "char": itm.char,
                     "weight": itm.weight,
                     "count": itm.count,
-                    "equipped": any(
-                        slot.item is itm for slot in engine.pet_inventory.slots
-                    ),
+                    "equipped": any(slot.item is itm for slot in engine.pet_inventory.slots),
                 }
                 for itm in engine.pet_inventory.items
             ]
@@ -611,9 +578,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
         if popup_tutorial:
             p.pending_tutorial_popup = None
 
-        screen_shake = (
-            engine.screen_shake.is_active if hasattr(engine, "screen_shake") else False
-        )
+        screen_shake = engine.screen_shake.is_active if hasattr(engine, "screen_shake") else False
 
         # プレイヤー属性
         attrs = {
@@ -697,23 +662,23 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             "dungeon_level": engine.dungeon_level,
             "game_state": getattr(engine, "game_state", "play"),
             "tutorial_popup": popup_tutorial,
-            "floating_notification": {
-                "title": latest_notif.title,
-                "message": latest_notif.message,
-                "category": latest_notif.category,
-                "color": list(latest_notif.color),
-            }
-            if (
-                latest_notif := getattr(engine, "notification_manager", None)
-                and engine.notification_manager.get_latest()
-            )
-            else None,
+            "floating_notification": (
+                {
+                    "title": latest_notif.title,
+                    "message": latest_notif.message,
+                    "category": latest_notif.category,
+                    "color": list(latest_notif.color),
+                }
+                if (
+                    latest_notif := getattr(engine, "notification_manager", None)
+                    and engine.notification_manager.get_latest()
+                )
+                else None
+            ),
             "screen_shake": screen_shake,
         }
 
-    def _handle_web_action(
-        self, engine: Engine, action: str, data: dict[str, Any]
-    ) -> str:
+    def _handle_web_action(self, engine: Engine, action: str, data: dict[str, Any]) -> str:
         """Webからのキー入力・アクションディスパッチ"""
         dx, dy = 0, 0
         if action == "up":
@@ -738,9 +703,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             return "1ターン待機しました"
         elif action == "pickup":
             px, py = engine.player.x, engine.player.y
-            items = [
-                itm for itm in engine.items_on_ground if itm.x == px and itm.y == py
-            ]
+            items = [itm for itm in engine.items_on_ground if itm.x == px and itm.y == py]
             if items:
                 itm = items[0]
                 ok, msg = engine.inventory.add_item(itm)
@@ -801,9 +764,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             tactic = data.get("tactic", "balanced")
             if engine.pet:
                 engine.pet.tactic = tactic
-                engine.log(
-                    f"シエルへの戦術指示を【{tactic}】に変更しました。", (255, 180, 220)
-                )
+                engine.log(f"シエルへの戦術指示を【{tactic}】に変更しました。", (255, 180, 220))
                 return f"戦術指示: {tactic}"
 
         if dx != 0 or dy != 0:
@@ -879,7 +840,7 @@ if __name__ == "__main__":
         floating_texts = []
         particles = []
         game_map = None
-        message_log = type('MockLog', (), {'history': []})()
+        message_log = type("MockLog", (), {"history": []})()
         turns = 0
         dungeon_level = 1
 

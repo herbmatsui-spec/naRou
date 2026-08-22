@@ -8,6 +8,7 @@ Accurately renders:
 5. True Cinematic Log & Tooltip System
 6. In-game features: Exploration -> Combat -> God Prayer -> Inventory/Skill Tree -> NG+ Reincarnation
 """
+
 from __future__ import annotations
 
 import math
@@ -185,9 +186,7 @@ for sc_idx, sc in enumerate(scenes):
         draw = ImageDraw.Draw(img)
 
         # 1. Top HUD Header
-        draw.rectangle(
-            [(12, 10), (W - 12, 38)], fill=PANEL_BG, outline=PANEL_BORDER, width=1
-        )
+        draw.rectangle([(12, 10), (W - 12, 38)], fill=PANEL_BG, outline=PANEL_BORDER, width=1)
         draw.text((22, 16), "naRou: Masterpiece Edition v1.0.0", fill=COLOR_GOLD_YELLOW)
         draw.text((290, 16), f"| {sc['floor_name']}", fill=TEXT_WHITE)
         draw.text(
@@ -220,9 +219,7 @@ for sc_idx, sc in enumerate(scenes):
                 if dist > 10:
                     # Unexplored / dark
                     if is_wall:
-                        draw.rectangle(
-                            [(tx, ty), (tx + CELL_W, ty + CELL_H)], fill=(20, 22, 30)
-                        )
+                        draw.rectangle([(tx, ty), (tx + CELL_W, ty + CELL_H)], fill=(20, 22, 30))
                     else:
                         draw.text((tx + 6, ty + 2), ".", fill=(35, 40, 50))
                 else:
@@ -259,21 +256,15 @@ for sc_idx, sc in enumerate(scenes):
 
         # Draw Resource Nodes
         for n_sym, (nx, ny), n_col in sc["nodes"]:
-            draw.text(
-                (MAP_X + nx * CELL_W + 4, MAP_Y + 30 + ny * CELL_H), n_sym, fill=n_col
-            )
+            draw.text((MAP_X + nx * CELL_W + 4, MAP_Y + 30 + ny * CELL_H), n_sym, fill=n_col)
 
         # Draw Ground Items
         for i_sym, (ix, iy), i_col in sc["items"]:
-            draw.text(
-                (MAP_X + ix * CELL_W + 3, MAP_Y + 30 + iy * CELL_H), i_sym, fill=i_col
-            )
+            draw.text((MAP_X + ix * CELL_W + 3, MAP_Y + 30 + iy * CELL_H), i_sym, fill=i_col)
 
         # Draw Mobs / Entities
         for e_sym, e_name, (ex, ey), e_col in sc["entities"]:
-            draw.text(
-                (MAP_X + ex * CELL_W + 4, MAP_Y + 30 + ey * CELL_H), e_sym, fill=e_col
-            )
+            draw.text((MAP_X + ex * CELL_W + 4, MAP_Y + 30 + ey * CELL_H), e_sym, fill=e_col)
 
         # Draw Player & Pet
         px, py = sc["player_pos"]
@@ -315,15 +306,11 @@ for sc_idx, sc in enumerate(scenes):
             outline=PANEL_BORDER,
             width=1,
         )
-        draw.text(
-            (side_x + 8, MAP_Y + 34), "[ ミニマップ & 凡例 ]", fill=(100, 180, 255)
-        )
+        draw.text((side_x + 8, MAP_Y + 34), "[ ミニマップ & 凡例 ]", fill=(100, 180, 255))
         draw.text((side_x + 8, MAP_Y + 52), "@:自分  p:シエル  >:階段", fill=TEXT_MUTED)
         draw.text((side_x + 8, MAP_Y + 70), "x:魔物  !:薬品    $:鉱脈", fill=TEXT_MUTED)
         draw.text((side_x + 8, MAP_Y + 88), "_:祭壇  %:薬草    ★:神器", fill=TEXT_MUTED)
-        draw.text(
-            (side_x + 8, MAP_Y + 104), "天候: 晴れ  状態: 良好", fill=(120, 255, 180)
-        )
+        draw.text((side_x + 8, MAP_Y + 104), "天候: 晴れ  状態: 良好", fill=(120, 255, 180))
 
         # Character Stats Card
         draw.rectangle(
@@ -346,9 +333,7 @@ for sc_idx, sc in enumerate(scenes):
 
         # HP Bar
         hp_cur, hp_max = sc["player_hp"]
-        draw.text(
-            (side_x + 8, MAP_Y + 192), f"HP: {hp_cur}/{hp_max}", fill=COLOR_HP_GREEN
-        )
+        draw.text((side_x + 8, MAP_Y + 192), f"HP: {hp_cur}/{hp_max}", fill=COLOR_HP_GREEN)
         draw.rectangle(
             [(side_x + 8, MAP_Y + 208), (side_x + side_w - 8, MAP_Y + 214)],
             fill=(30, 40, 50),
@@ -361,9 +346,7 @@ for sc_idx, sc in enumerate(scenes):
 
         # MP Bar
         mp_cur, mp_max = sc["player_mp"]
-        draw.text(
-            (side_x + 8, MAP_Y + 224), f"MP: {mp_cur}/{mp_max}", fill=COLOR_MP_BLUE
-        )
+        draw.text((side_x + 8, MAP_Y + 224), f"MP: {mp_cur}/{mp_max}", fill=COLOR_MP_BLUE)
         draw.rectangle(
             [(side_x + 8, MAP_Y + 240), (side_x + side_w - 8, MAP_Y + 246)],
             fill=(30, 40, 50),

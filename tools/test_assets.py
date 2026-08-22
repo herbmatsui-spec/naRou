@@ -3,6 +3,7 @@
 Asset testing script for testing processed assets.
 Runs functional tests to ensure assets work correctly in the game context.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -224,9 +225,7 @@ def test_asset_integrity(assets_dir: str, config: dict) -> tuple[bool, list[str]
                         stats["passed"] += 1
                     else:
                         stats["failed"] += 1
-                        issues.extend(
-                            [f"{tile_path}: {issue}" for issue in tile_issues]
-                        )
+                        issues.extend([f"{tile_path}: {issue}" for issue in tile_issues])
 
     # Test fonts
     font_dir = os.path.join(assets_dir, "fonts")
@@ -241,9 +240,7 @@ def test_asset_integrity(assets_dir: str, config: dict) -> tuple[bool, list[str]
                         stats["passed"] += 1
                     else:
                         stats["failed"] += 1
-                        issues.extend(
-                            [f"{font_path}: {issue}" for issue in font_issues]
-                        )
+                        issues.extend([f"{font_path}: {issue}" for issue in font_issues])
 
     # Test sounds
     sound_dir = os.path.join(assets_dir, "sounds")
@@ -258,9 +255,7 @@ def test_asset_integrity(assets_dir: str, config: dict) -> tuple[bool, list[str]
                         stats["passed"] += 1
                     else:
                         stats["failed"] += 1
-                        issues.extend(
-                            [f"{sound_path}: {issue}" for issue in sound_issues]
-                        )
+                        issues.extend([f"{sound_path}: {issue}" for issue in sound_issues])
 
     # Test models
     model_dir = os.path.join(assets_dir, "models")
@@ -275,9 +270,7 @@ def test_asset_integrity(assets_dir: str, config: dict) -> tuple[bool, list[str]
                         stats["passed"] += 1
                     else:
                         stats["failed"] += 1
-                        issues.extend(
-                            [f"{model_path}: {issue}" for issue in model_issues]
-                        )
+                        issues.extend([f"{model_path}: {issue}" for issue in model_issues])
 
     return len(issues) == 0, issues, stats
 
@@ -340,13 +333,9 @@ def main():
         default=None,
         help="Directory containing processed assets (overrides config)",
     )
-    parser.add_argument(
-        "--output", default=None, help="Output file for test report (JSON)"
-    )
+    parser.add_argument("--output", default=None, help="Output file for test report (JSON)")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
-    parser.add_argument(
-        "--perf-only", action="store_true", help="Run only performance tests"
-    )
+    parser.add_argument("--perf-only", action="store_true", help="Run only performance tests")
 
     args = parser.parse_args()
 

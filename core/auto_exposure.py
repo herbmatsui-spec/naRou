@@ -27,9 +27,7 @@ class AutoExposure:
         # Calculate luminance from RGB
         if hdr.ndim == 3 and hdr.shape[2] >= 3:
             # Standard luminance weights
-            luminance = (
-                0.2126 * hdr[:, :, 0] + 0.7152 * hdr[:, :, 1] + 0.0722 * hdr[:, :, 2]
-            )
+            luminance = 0.2126 * hdr[:, :, 0] + 0.7152 * hdr[:, :, 1] + 0.0722 * hdr[:, :, 2]
         elif hdr.ndim == 3 and hdr.shape[2] == 2:
             # RG16F approximate
             luminance = hdr[:, :, 0] + hdr[:, :, 1]
@@ -54,9 +52,7 @@ class AutoExposure:
         target_exposure = np.clip(target_exposure, self.min_exposure, self.max_exposure)
 
         # Smooth adaptation (exponential moving average)
-        self.current_exposure += (
-            target_exposure - self.current_exposure
-        ) * self.adaptation_speed
+        self.current_exposure += (target_exposure - self.current_exposure) * self.adaptation_speed
 
         return self.current_exposure
 
@@ -100,16 +96,12 @@ class HistogramAutoExposure(AutoExposure):
 
         # Calculate luminance
         if hdr.ndim == 3 and hdr.shape[2] >= 3:
-            luminance = (
-                0.2126 * hdr[:, :, 0] + 0.7152 * hdr[:, :, 1] + 0.0722 * hdr[:, :, 2]
-            )
+            luminance = 0.2126 * hdr[:, :, 0] + 0.7152 * hdr[:, :, 1] + 0.0722 * hdr[:, :, 2]
         else:
             luminance = hdr.flatten()
 
         # Build histogram
-        hist, bin_edges = np.histogram(
-            luminance, bins=self.bins, range=self.histogram_range
-        )
+        hist, bin_edges = np.histogram(luminance, bins=self.bins, range=self.histogram_range)
 
         # Find target percentile
         cumsum = np.cumsum(hist)
@@ -134,8 +126,6 @@ class HistogramAutoExposure(AutoExposure):
         target_exposure = np.clip(target_exposure, self.min_exposure, self.max_exposure)
 
         # Smooth adaptation
-        self.current_exposure += (
-            target_exposure - self.current_exposure
-        ) * self.adaptation_speed
+        self.current_exposure += (target_exposure - self.current_exposure) * self.adaptation_speed
 
         return self.current_exposure

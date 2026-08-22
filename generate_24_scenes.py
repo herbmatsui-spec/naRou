@@ -9,6 +9,7 @@ grand gallery, so they never drift apart.
 Usage:
     python generate_24_scenes.py
 """
+
 from __future__ import annotations
 
 import json

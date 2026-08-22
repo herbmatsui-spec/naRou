@@ -4,19 +4,19 @@ Step 1〜67で実装した全9システムの結合テスト。
 """
 
 import unittest
-from skill_eater_toxicity_overdrive import ToxicityOverdriveManager
-from skill_eater_base_expansion import SlumBaseExpansionManager
-from skill_eater_pet_dispatch import PetDispatchManager
-from skill_eater_underground_arena import UndergroundArenaManager
-from skill_eater_env_puzzles import EnvironmentalPuzzleManager
-from skill_eater_rampage_events import SkillRampageManager
-from skill_eater_bounty_system import MidasBountyManager
+
 from skill_eater_base_defense import BaseDefenseManager
+from skill_eater_base_expansion import SlumBaseExpansionManager
 from skill_eater_boss_anti_meta import AntiMetaBossBattleManager
+from skill_eater_bounty_system import MidasBountyManager
+from skill_eater_env_puzzles import EnvironmentalPuzzleManager
+from skill_eater_pet_dispatch import PetDispatchManager
+from skill_eater_rampage_events import SkillRampageManager
+from skill_eater_toxicity_overdrive import ToxicityOverdriveManager
+from skill_eater_underground_arena import UndergroundArenaManager
 
 
 class TestSkillEaterPhase2(unittest.TestCase):
-
     def test_01_toxicity_overdrive(self):
         """Step 1-6: オーバードライブ、バフ、反動気絶のテスト"""
         manager = ToxicityOverdriveManager(trigger_threshold=100.0, duration_turns=2)
@@ -57,7 +57,7 @@ class TestSkillEaterPhase2(unittest.TestCase):
     def test_03_pet_dispatch(self):
         """Step 17-23: ペット派遣・適合度・治療のテスト"""
         manager = PetDispatchManager()
-        
+
         # 適合度チェック
         suit = manager.check_dispatch_suitability("husk_hound_01", "midas_scrap_dump")
         self.assertTrue(suit["can_dispatch"])
@@ -95,23 +95,29 @@ class TestSkillEaterPhase2(unittest.TestCase):
     def test_05_environmental_puzzles(self):
         """Step 33-39: 環境ギミックの解除とトラップテスト"""
         puzzles = EnvironmentalPuzzleManager()
-        
+
         # スキル不足で失敗 -> トラップダメージ
-        fail_res = puzzles.attempt_solve_puzzle("neon_security_gate", ["Fire Magic"], player_power=60)
+        fail_res = puzzles.attempt_solve_puzzle(
+            "neon_security_gate", ["Fire Magic"], player_power=60
+        )
         self.assertFalse(fail_res["success"])
         self.assertEqual(fail_res["trap_damage"], 35)
 
         # スキル充足で成功
-        success_res = puzzles.attempt_solve_puzzle("neon_security_gate", ["Lightning Magic", "Network Hacking"], player_power=60)
+        success_res = puzzles.attempt_solve_puzzle(
+            "neon_security_gate", ["Lightning Magic", "Network Hacking"], player_power=60
+        )
         self.assertTrue(success_res["success"])
         self.assertTrue(success_res["opened_gate"])
 
     def test_06_skill_rampage_events(self):
         """Step 40-48: スキル暴走発生と討伐ドロップのテスト"""
         rampage = SkillRampageManager()
-        
+
         # 強制暴走発生
-        res = rampage.trigger_synthesis_with_rampage_check("Absolute Black Hole", skill_tier=3, force_rampage=True)
+        res = rampage.trigger_synthesis_with_rampage_check(
+            "Absolute Black Hole", skill_tier=3, force_rampage=True
+        )
         self.assertTrue(res["rampage"])
         boss_id = res["spawned_boss"]["boss_id"]
 
@@ -129,7 +135,7 @@ class TestSkillEaterPhase2(unittest.TestCase):
         bounty.gather_intel("exec_01_valerius")
         bounty.set_ambush_trap("exec_01_valerius")
         combat_info = bounty.initiate_combat("exec_01_valerius")
-        self.assertEqual(combat_info["effective_hp"], 2100) # 3000 * 0.7
+        self.assertEqual(combat_info["effective_hp"], 2100)  # 3000 * 0.7
 
         # 討伐
         kill_res = bounty.eliminate_executive("exec_01_valerius")
@@ -151,7 +157,7 @@ class TestSkillEaterPhase2(unittest.TestCase):
     def test_08_anti_meta_boss_battle(self):
         """Step 62-67: 対メタ中ボス戦とPhase 3移行フラグテスト"""
         boss = AntiMetaBossBattleManager()
-        
+
         # 通常の高火力攻撃は1ダメージに無効化される
         atk1 = boss.process_player_attack(raw_damage=1000, used_skill="Super Mega Slash")
         self.assertEqual(atk1["damage_taken"], 1)
@@ -167,6 +173,40 @@ class TestSkillEaterPhase2(unittest.TestCase):
         self.assertTrue(kill_atk["boss_defeated"])
         self.assertTrue(kill_atk["phase2_completed"])
         self.assertEqual(kill_atk["unlocked_phase"], 3)
+
+    def test_09_facility_alternative_cost_upgrade(self):
+        """Step 33-46: 必須スキル未所持時の代替アルド支払い拡張テスト"""
+        from skill_eater_economy_system import SkillEaterEconomySystem
+        from skill_eater_system import CharacterState
+
+        eco = SkillEaterEconomySystem()
+        player = CharacterState(
+            id="hero",
+            name="主人公",
+            hp=100,
+            max_hp=100,
+            mp=50,
+            max_mp=50,
+            atk=10,
+            defense=10,
+            intelligence=10,
+            speed=10,
+        )
+        # rehab_lab requires rar_utility_005, cost=2000, alternative_cost=10000 -> total 12000
+
+        # Case 1: Insufficient funds & no skill -> False
+        eco.aldo_currency = 5000
+        ok, msg = eco.upgrade_facility(player, "rehab_lab")
+        self.assertFalse(ok)
+        self.assertIn("強化には企業秘密スキル", msg)
+
+        # Case 2: Enough funds for alternative cost -> True
+        eco.aldo_currency = 15000
+        ok, msg = eco.upgrade_facility(player, "rehab_lab")
+        self.assertTrue(ok)
+        self.assertIn("闇ルート決済", msg)
+        self.assertEqual(eco.aldo_currency, 3000)  # 15000 - 12000
+        self.assertEqual(eco.base_facilities["rehab_lab"].level, 2)
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@
 Skill Tree System for naRou
 Manages skill trees, tiers, effects, and player progression.
 """
+
 from __future__ import annotations
 
 import logging
@@ -14,8 +15,8 @@ import yaml
 try:
     from components import SkillTreeJobComponent
 except Exception:
-        # TODO: handle exception properly
-        # pragma: no cover - optional dependency
+    # TODO: handle exception properly
+    # pragma: no cover - optional dependency
     SkillTreeJobComponent = None
 
 
@@ -555,9 +556,7 @@ class SkillInheritanceManager:
                     comp.inherited_skills.append(sid)
         # generic base stat bonus
         if rule.level_bonus:
-            comp.inherited_stat_bonus = (
-                getattr(comp, "inherited_stat_bonus", 0) + rule.level_bonus
-            )
+            comp.inherited_stat_bonus = getattr(comp, "inherited_stat_bonus", 0) + rule.level_bonus
         return True
 
 

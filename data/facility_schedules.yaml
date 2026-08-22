@@ -1,0 +1,97 @@
+# Facility Schedules Configuration
+facilities:
+  # 研究室 - 夜ボーナス
+  - facility_id: "lab"
+    name: "研究室"
+    type: "lab"
+    base_efficiency: 1.0
+    phase_modifiers:
+      NIGHT: 1.5
+      DAWN: 1.2
+      DUSK: 1.1
+    is_24h: false
+    active_phases: [DAWN, DAY, DUSK, NIGHT]
+
+  # 工房 - 昼効率
+  - facility_id: "workshop"
+    name: "工房"
+    type: "workshop"
+    base_efficiency: 1.0
+    phase_modifiers:
+      DAY: 1.3
+      DUSK: 1.1
+      DAWN: 0.9
+    is_24h: false
+    active_phases: [DAWN, DAY, DUSK]
+
+  # 医療ベイ - 24時間
+  - facility_id: "medical_bay"
+    name: "医療ベイ"
+    type: "medical_bay"
+    base_efficiency: 1.0
+    phase_modifiers: {}
+    is_24h: true
+    active_phases: [DAWN, DAY, DUSK, NIGHT]
+
+  # 闘技場 - 夕暮れ〜夜のみ
+  - facility_id: "arena"
+    name: "闘技場"
+    type: "arena"
+    base_efficiency: 1.0
+    phase_modifiers:
+      DUSK: 1.2
+      NIGHT: 1.1
+    is_24h: false
+    active_phases: [DUSK, NIGHT]
+
+  # 一般店 - 昼〜夕暮れ
+  - facility_id: "general_shop"
+    name: "一般店"
+    type: "shop"
+    base_efficiency: 1.0
+    phase_modifiers:
+      DAY: 1.0
+      DUSK: 1.0
+    is_24h: false
+    active_phases: [DAY, DUSK]
+
+  # 魔道具店 - 夜明け〜昼
+  - facility_id: "magic_shop"
+    name: "魔道具店"
+    type: "shop"
+    base_efficiency: 1.0
+    phase_modifiers:
+      DAWN: 1.1
+      DAY: 1.0
+    is_24h: false
+    active_phases: [DAWN, DAY]
+
+  # 冒険者ギルド - 昼〜夕暮れ
+  - facility_id: "adventurers_guild"
+    name: "冒険者ギルド"
+    type: "guild"
+    base_efficiency: 1.0
+    phase_modifiers:
+      DAY: 1.0
+      DUSK: 1.0
+    is_24h: false
+    active_phases: [DAY, DUSK]
+
+  # 鍛冶屋 - 昼のみ
+  - facility_id: "forge"
+    name: "鍛冶屋"
+    type: "workshop"
+    base_efficiency: 1.0
+    phase_modifiers:
+      DAY: 1.2
+    is_24h: false
+    active_phases: [DAY]
+
+  # 診療所 - 24時間
+  - facility_id: "clinic"
+    name: "診療所"
+    type: "medical_bay"
+    base_efficiency: 1.0
+    phase_modifiers: {}
+    is_24h: true
+    active_phases: [DAWN, DAY, DUSK, NIGHT]

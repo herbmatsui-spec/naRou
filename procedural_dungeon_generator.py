@@ -49,6 +49,9 @@ class DungeonThemeData:
     environmental_hazards: list[str] = field(default_factory=list)
     special_rooms: list[str] = field(default_factory=list)
     story_hooks: list[str] = field(default_factory=list)
+    depth_range: list[int] = field(default_factory=list)
+    transition_sounds: dict[str, str] = field(default_factory=dict)
+    transition_emotes: dict[str, str] = field(default_factory=dict)
 
 
 # Step 56, 57: DungeonThemeRegistry
@@ -86,6 +89,9 @@ class DungeonThemeRegistry:
                 environmental_hazards=tdata.get("environmental_hazards", []),
                 special_rooms=tdata.get("special_rooms", []),
                 story_hooks=tdata.get("story_hooks", []),
+                depth_range=tdata.get("depth_range", []),
+                transition_sounds=tdata.get("transition_sounds", {}),
+                transition_emotes=tdata.get("transition_emotes", {}),
             )
 
     def get(self, theme_id: str) -> DungeonThemeData | None:
@@ -114,13 +120,9 @@ class ProceduralDungeonGenerator:
 
         # デフォルトフォールバック
         all_t = list(self.registry.all_themes().values())
-        return (
-            all_t[0] if all_t else DungeonThemeData(theme_id="default", name="通常迷宮")
-        )
+        return all_t[0] if all_t else DungeonThemeData(theme_id="default", name="通常迷宮")
 
-    def generate_dungeon(
-        self, player: Entity, width: int = 40, height: int = 30
-    ) -> dict[str, Any]:
+    def generate_dungeon(self, player: Entity, width: int = 40, height: int = 30) -> dict[str, Any]:
         """ダンジョン生成スタブ"""
         theme = self.select_theme_by_story(player)
         return {"theme": theme, "width": width, "height": height}
@@ -144,9 +146,7 @@ class ProceduralDungeonGenerator:
 
         # フロア数決定（仕様に定義されたフロア数を上限にする）
         max_defined_floors = len(spec.floor_specs)
-        num_floors = random.randint(
-            spec.min_floors, min(spec.max_floors, max_defined_floors)
-        )
+        num_floors = random.randint(spec.min_floors, min(spec.max_floors, max_defined_floors))
 
         floors = []
         for floor_idx in range(num_floors):
@@ -221,9 +221,7 @@ class ProceduralDungeonGenerator:
 
         # ボス部屋（ボスフロアの場合）
         if floor_spec.is_boss_floor and floor_spec.boss_room_spec:
-            boss_room = self._build_room_from_spec(
-                floor_spec.boss_room_spec, theme, floor_number
-            )
+            boss_room = self._build_room_from_spec(floor_spec.boss_room_spec, theme, floor_number)
             boss_room["floor"] = floor_number
             boss_room["is_boss_room"] = True
             rooms.append(boss_room)

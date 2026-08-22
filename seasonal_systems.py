@@ -3,6 +3,7 @@
 Consolidated managers for the seasonal content pipeline proposal. These are
 tooling/process systems that operate on world-event data.
 """
+
 from __future__ import annotations
 
 import logging
@@ -36,9 +37,7 @@ class EventAnnouncer:
     def __init__(self, announcement_period: int = 7 * 86400):
         self.announcement_period = announcement_period  # seconds before start
 
-    def build_announcement(
-        self, event: dict, start_time: float, now: float | None = None
-    ) -> dict:
+    def build_announcement(self, event: dict, start_time: float, now: float | None = None) -> dict:
         now = now if now is not None else time.time()
         countdown = max(0, int(start_time - now))
         announced = (start_time - now) <= self.announcement_period
@@ -74,9 +73,7 @@ class EventFeedbackManager:
         self._feedback: list[dict] = []
         self._legends: list[dict] = []
 
-    def submit_survey(
-        self, event_id: str, satisfaction: int, improvements: list[str]
-    ) -> None:
+    def submit_survey(self, event_id: str, satisfaction: int, improvements: list[str]) -> None:
         self._feedback.append(
             {
                 "event_id": event_id,
@@ -120,9 +117,7 @@ class EventAnalyticsManager:
 
     def reward_balance(self, event_id: str) -> dict[str, float]:
         rewards = [
-            a.value
-            for a in self._actions
-            if a.event_id == event_id and a.action_type == "reward"
+            a.value for a in self._actions if a.event_id == event_id and a.action_type == "reward"
         ]
         if not rewards:
             return {"avg": 0.0, "count": 0.0, "max": 0.0}

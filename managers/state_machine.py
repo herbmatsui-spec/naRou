@@ -2,6 +2,7 @@
 
 Extracted from Engine.change_state (game.py).
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -10,7 +11,6 @@ from constants import GAME_STATE_TO_LEGACY
 
 if TYPE_CHECKING:
     from constants import GameState
-
     from game import Engine
 
 
@@ -32,7 +32,7 @@ class StateMachine:
         engine.current_state = new_state
 
         # 旧 game_state 文字列への双方向同期
-        engine.game_state = GAME_STATE_TO_LEGACY.get(new_state.value, "play")
+        engine.game_state = GAME_STATE_TO_LEGACY.get(new_state, "play")
 
         # on_enter hook
         if new_state.value == "menu" and hasattr(engine, "look_cursor"):

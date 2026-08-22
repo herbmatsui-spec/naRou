@@ -1,0 +1,43 @@
+# World Clock Configuration
+time_config:
+  ticks_per_hour: 100
+  ticks_per_minute: 10
+  start_year: 517
+  start_month: 8
+  start_day: 15
+  start_hour: 8
+  start_minute: 0
+
+# Phase definitions (for reference)
+phases:
+  - id: DAWN
+    name: "夜明け"
+    short: "明"
+    start_hour: 0
+    end_hour: 6
+    description: "夜明け前の静かな時間帯"
+  - id: DAY
+    name: "昼"
+    short: "昼"
+    start_hour: 6
+    end_hour: 18
+    description: "活動的な昼間"
+  - id: DUSK
+    name: "夕暮れ"
+    short: "暮"
+    start_hour: 18
+    end_hour: 22
+    description: "夕暮れから夜への移行"
+  - id: NIGHT
+    name: "夜"
+    short: "夜"
+    start_hour: 22
+    end_hour: 24
+    description: "夜間活動の時間帯"
+
+# Audio file mappings
+audio:
+  clock_tower_bell: "audio/Audio/clock_tower_bell.ogg"
+  shift_change_announcement: "audio/Audio/shift_change_announcement.ogg"
+  night_ambience: "audio/Audio/night_ambience.ogg"
+  dawn_ambience: "audio/Audio/dawn_ambience.ogg"

@@ -125,9 +125,7 @@ class SaveSystem:
             # New format: 32 bytes SHA256 + 32 bytes HMAC + payload
             # Legacy format: 32 bytes SHA256 + payload (no HMAC)
             if len(data) < 64:
-                raise SaveDataCorruptedError(
-                    "セーブデータが破損しています（サイズ不正）。"
-                )
+                raise SaveDataCorruptedError("セーブデータが破損しています（サイズ不正）。")
 
             checksum = data[:32]
             save_hmac = data[32:64]
@@ -152,9 +150,7 @@ class SaveSystem:
             if hasattr(loaded_engine, "player") and loaded_engine.player:
                 p_version = getattr(loaded_engine.player, "save_version", "1.0.0")
                 if p_version not in cls.SUPPORTED_VERSIONS:
-                    raise SaveDataCorruptedError(
-                        f"未対応のセーブバージョンです: {p_version}"
-                    )
+                    raise SaveDataCorruptedError(f"未対応のセーブバージョンです: {p_version}")
                 cls._ensure_compatibility(loaded_engine.player)
 
             # ペット自体のフィールド互換性確保
@@ -201,35 +197,39 @@ class SaveSystem:
     @classmethod
     def serialize_engine_to_dict(cls, engine: Any) -> dict[str, Any]:
         """Engine全体を辞書形式にシリアライズ (Step 24)"""
+        territory_state = getattr(engine, "territory_state", None)
         data: dict[str, Any] = {
             "save_version": cls.CURRENT_VERSION,
             "dungeon_level": getattr(engine, "dungeon_level", 1),
             "turns": getattr(engine, "turns", 0),
             "game_state": getattr(engine, "game_state", "play"),
-            "player": engine.player.to_dict()
-            if hasattr(engine, "player") and engine.player
-            else None,
-            "pet": engine.pet.to_dict()
-            if hasattr(engine, "pet") and engine.pet
-            else None,
-            "survival": {
-                "gold": getattr(engine.survival, "gold", 0),
-                "platinum": getattr(engine.survival, "platinum", 0),
-                "hunger": getattr(engine.survival, "hunger", 8000),
-                "sleepiness": getattr(engine.survival, "sleepiness", 0),
-                "karma": getattr(engine.survival, "karma", 20),
-            }
-            if hasattr(engine, "survival") and engine.survival
-            else {},
-            "inventory": [itm.to_dict() for itm in engine.inventory.items]
-            if hasattr(engine, "inventory") and engine.inventory
-            else [],
-            "pet_inventory": [itm.to_dict() for itm in engine.pet_inventory.items]
-            if hasattr(engine, "pet_inventory") and engine.pet_inventory
-            else [],
-            "items_on_ground": [
-                itm.to_dict() for itm in getattr(engine, "items_on_ground", [])
-            ],
+            "player": (
+                engine.player.to_dict() if hasattr(engine, "player") and engine.player else None
+            ),
+            "pet": engine.pet.to_dict() if hasattr(engine, "pet") and engine.pet else None,
+            "survival": (
+                {
+                    "gold": getattr(engine.survival, "gold", 0),
+                    "platinum": getattr(engine.survival, "platinum", 0),
+                    "hunger": getattr(engine.survival, "hunger", 8000),
+                    "sleepiness": getattr(engine.survival, "sleepiness", 0),
+                    "karma": getattr(engine.survival, "karma", 20),
+                }
+                if hasattr(engine, "survival") and engine.survival
+                else {}
+            ),
+            "inventory": (
+                [itm.to_dict() for itm in engine.inventory.items]
+                if hasattr(engine, "inventory") and engine.inventory
+                else []
+            ),
+            "pet_inventory": (
+                [itm.to_dict() for itm in engine.pet_inventory.items]
+                if hasattr(engine, "pet_inventory") and engine.pet_inventory
+                else []
+            ),
+            "items_on_ground": [itm.to_dict() for itm in getattr(engine, "items_on_ground", [])],
+            "territory": territory_state.to_dict() if territory_state else None,
         }
         return data
 
@@ -267,14 +267,8 @@ class SaveSystem:
             engine.survival.sleep = surv_data.get("sleep", 100)
 
         # Inventories
-        if (
-            hasattr(engine, "inventory")
-            and engine.inventory
-            and "inventory" in migrated_data
-        ):
-            engine.inventory.items = [
-                Item.from_dict(it) for it in migrated_data["inventory"]
-            ]
+        if hasattr(engine, "inventory") and engine.inventory and "inventory" in migrated_data:
+            engine.inventory.items = [Item.from_dict(it) for it in migrated_data["inventory"]]
 
         if (
             hasattr(engine, "pet_inventory")
@@ -286,9 +280,12 @@ class SaveSystem:
             ]
 
         if "items_on_ground" in migrated_data:
-            engine.items_on_ground = [
-                Item.from_dict(it) for it in migrated_data["items_on_ground"]
-            ]
+            engine.items_on_ground = [Item.from_dict(it) for it in migrated_data["items_on_ground"]]
+
+        if "territory" in migrated_data and migrated_data["territory"]:
+            from skill_eater_territory_system import TerritoryState
+
+            engine.territory_state = TerritoryState.from_dict(migrated_data["territory"])
 
         return engine
 
@@ -326,13 +323,9 @@ class SaveSystem:
             if "checksum" in payload and "data" in payload:
                 dict_data = payload["data"]
                 expected_str = json.dumps(dict_data, ensure_ascii=False, indent=2)
-                expected_checksum = hashlib.sha256(
-                    expected_str.encode("utf-8")
-                ).hexdigest()
+                expected_checksum = hashlib.sha256(expected_str.encode("utf-8")).hexdigest()
                 if payload["checksum"] != expected_checksum:
-                    raise SaveDataCorruptedError(
-                        "JSONセーブデータのチェックサムが一致しません。"
-                    )
+                    raise SaveDataCorruptedError("JSONセーブデータのチェックサムが一致しません。")
             else:
                 dict_data = payload
 

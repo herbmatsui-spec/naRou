@@ -7,6 +7,7 @@ Python list of RGB tuples suitable for tcod rendering. Run:
 
     python tools/generate_palette.py > core/palette_generated.py
 """
+
 from __future__ import annotations
 
 import json

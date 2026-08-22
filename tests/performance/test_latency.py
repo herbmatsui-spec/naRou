@@ -3,6 +3,7 @@
 Latency Performance Test
 レイテンシパフォーマンステスト
 """
+
 from __future__ import annotations
 
 import sys

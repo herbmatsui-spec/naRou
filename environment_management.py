@@ -90,29 +90,19 @@ class EnvironmentManager:
 
 def main():
     parser = argparse.ArgumentParser(description="Environment Management")
-    parser.add_argument(
-        "--dir", default="environment_management", help="Environment directory"
-    )
-    parser.add_argument(
-        "--create", nargs=2, metavar=("NAME", "BASE"), help="Create environment"
-    )
-    parser.add_argument(
-        "--set", nargs=3, metavar=("ENV", "KEY", "VALUE"), help="Set variable"
-    )
+    parser.add_argument("--dir", default="environment_management", help="Environment directory")
+    parser.add_argument("--create", nargs=2, metavar=("NAME", "BASE"), help="Create environment")
+    parser.add_argument("--set", nargs=3, metavar=("ENV", "KEY", "VALUE"), help="Set variable")
     parser.add_argument("--get", nargs=2, metavar=("ENV", "KEY"), help="Get variable")
     parser.add_argument("--activate", help="Activate environment")
-    parser.add_argument(
-        "--diff", nargs=2, metavar=("ENV1", "ENV2"), help="Compare environments"
-    )
+    parser.add_argument("--diff", nargs=2, metavar=("ENV1", "ENV2"), help="Compare environments")
     parser.add_argument("--list", action="store_true", help="List environments")
     args = parser.parse_args()
 
     mgr = EnvironmentManager(args.dir)
 
     if args.create:
-        mgr.create_environment(
-            args.create[0], args.create[1] if args.create[1] != "none" else None
-        )
+        mgr.create_environment(args.create[0], args.create[1] if args.create[1] != "none" else None)
     elif args.set:
         mgr.set_variable(args.set[0], args.set[1], args.set[2])
     elif args.get:

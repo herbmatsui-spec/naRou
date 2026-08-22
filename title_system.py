@@ -6,7 +6,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from entity import Entity
 
 import yaml
 
@@ -162,13 +165,9 @@ class TitleManager:
             "piety": lambda c: self.check_piety(player, c.value),
             "gold_owned": lambda c: self.check_gold(player, c.value),
             "pet_count": lambda c: self.check_pet_count(player, c.count),
-            "craft_count": lambda c: self.check_craft_count(
-                player, c.category, c.count
-            ),
+            "craft_count": lambda c: self.check_craft_count(player, c.category, c.count),
             "level": lambda c: self.check_level(player, c.value),
-            "game_clear_time": lambda c: self.check_game_clear_time(
-                player, c.max_turns
-            ),
+            "game_clear_time": lambda c: self.check_game_clear_time(player, c.max_turns),
         }
         checker = check_map.get(condition.type)
         if checker:

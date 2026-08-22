@@ -97,9 +97,7 @@ class EnemySpec:
     position: tuple[int, int] = (0, 0)  # 部屋内相対座標
     level_modifier: int = 0
     equipment_overrides: dict[str, str] = field(default_factory=dict)
-    ai_hints: list[str] = field(
-        default_factory=list
-    )  # "protect_boss", "guard_entrance" 等
+    ai_hints: list[str] = field(default_factory=list)  # "protect_boss", "guard_entrance" 等
     spawn_condition: str = "always"  # always|quest_stage|player_level|flag
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -202,9 +200,7 @@ def _parse_room_spec(data: dict[str, Any]) -> RoomSpec:
     """部屋仕様パース"""
     room_type_str = data.get("room_type", "CHAMBER")
     room_type = (
-        RoomType[room_type_str]
-        if room_type_str in RoomType.__members__
-        else RoomType.CHAMBER
+        RoomType[room_type_str] if room_type_str in RoomType.__members__ else RoomType.CHAMBER
     )
 
     room = RoomSpec(
@@ -226,9 +222,7 @@ def _parse_room_spec(data: dict[str, Any]) -> RoomSpec:
     for trap_data in data.get("traps", []):
         trap_type_str = trap_data.get("trap_type", "SPIKE")
         trap_type = (
-            TrapType[trap_type_str]
-            if trap_type_str in TrapType.__members__
-            else TrapType.SPIKE
+            TrapType[trap_type_str] if trap_type_str in TrapType.__members__ else TrapType.SPIKE
         )
         trap = TrapSpec(
             trap_id=trap_data.get("trap_id", ""),
@@ -245,11 +239,7 @@ def _parse_room_spec(data: dict[str, Any]) -> RoomSpec:
     # 敵
     for enemy_data in data.get("enemies", []):
         role_str = enemy_data.get("role", "GUARD")
-        role = (
-            EnemyRole[role_str]
-            if role_str in EnemyRole.__members__
-            else EnemyRole.GUARD
-        )
+        role = EnemyRole[role_str] if role_str in EnemyRole.__members__ else EnemyRole.GUARD
         enemy = EnemySpec(
             enemy_id=enemy_data.get("enemy_id", ""),
             monster_id=enemy_data.get("monster_id", ""),
@@ -293,10 +283,7 @@ def verify_dungeon_against_spec(
 
     # フロア数チェック
     generated_floors = generated.get("floors", [])
-    if (
-        len(generated_floors) < spec.min_floors
-        or len(generated_floors) > spec.max_floors
-    ):
+    if len(generated_floors) < spec.min_floors or len(generated_floors) > spec.max_floors:
         result.satisfied = False
         result.floor_count_mismatch = True
         result.details["floor_count"] = {

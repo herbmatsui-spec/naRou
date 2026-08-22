@@ -3,6 +3,7 @@
 Font atlas generator for rendering text with bitmap fonts.
 Generates font atlases with character metrics and UV coordinates.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -126,9 +127,7 @@ def main():
     parser.add_argument(
         "--chars", default="", help="Characters to include (default: ASCII printable)"
     )
-    parser.add_argument(
-        "--padding", type=int, default=2, help="Padding between characters"
-    )
+    parser.add_argument("--padding", type=int, default=2, help="Padding between characters")
     parser.add_argument(
         "--msdf", action="store_true", help="Generate MSDF atlas with distance field"
     )

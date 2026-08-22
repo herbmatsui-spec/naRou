@@ -7,11 +7,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from skill_tree_system import (
-    PassiveSkill,
-    get_passive_skill_manager,
-    get_passive_skill_registry,
-)
+from skill_tree_system import PassiveSkill, get_passive_skill_manager, get_passive_skill_registry
 
 
 class FakePlayer:

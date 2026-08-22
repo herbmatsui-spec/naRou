@@ -121,9 +121,11 @@ AUTOTILE_MAP = {
 class TileAtlas:
     """Unified tile atlas loader and UV provider."""
 
-    def __init__(
-        self, def_path: str = "assets/tiles/tileset_def.json", default_scale: str = "16"
-    ):
+    def __init__(self, def_path: str | None = None, default_scale: str = "16"):
+        if def_path is None:
+            # Default to assets/tiles/tileset_def.json relative to this file
+            base_dir = Path(__file__).resolve().parent.parent  # naRou/
+            def_path = base_dir / "assets" / "tiles" / "tileset_def.json"
         self.def_path = Path(def_path)
         self.default_scale = default_scale
         self.defs: dict[str, TileDef] = {}

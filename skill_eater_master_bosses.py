@@ -3,12 +3,14 @@ Skill Eater Phase 3: Master Skill Bosses System (Steps 23-30)
 スキル銀行本部の各部門を守護するマスタースキル保持者たち（四天王格）のバトルと弱点ハック、概念の鍵ドロップを管理。
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List
+
 
 class MasterBossManager:
     """
     マスタースキル保持者（四天王）戦闘マネージャー
     """
+
     def __init__(self):
         # Step 24: ボス定義
         self.bosses: Dict[str, Dict[str, Any]] = {
@@ -18,9 +20,9 @@ class MasterBossManager:
                 "hp": 8000,
                 "max_hp": 8000,
                 "master_skill": "Compound Multiplication (無限複利増殖)",
-                "weakness_fusion_keyword": "Fire + Ice", # 熱狂ショック合成が弱点
+                "weakness_fusion_keyword": "Fire + Ice",  # 熱狂ショック合成が弱点
                 "barrier_active": True,
-                "is_defeated": False
+                "is_defeated": False,
             },
             "debt_boss": {
                 "name": "収奪の執行長レヴィアタン",
@@ -28,10 +30,10 @@ class MasterBossManager:
                 "hp": 12000,
                 "max_hp": 12000,
                 "master_skill": "Absolute Foreclosure (絶対差押領)",
-                "weakness_fusion_keyword": "Defense + Sword", # 剛剣両断合成が弱点
+                "weakness_fusion_keyword": "Defense + Sword",  # 剛剣両断合成が弱点
                 "barrier_active": True,
-                "is_defeated": False
-            }
+                "is_defeated": False,
+            },
         }
         self.collected_concept_keys: List[str] = []
 
@@ -39,7 +41,7 @@ class MasterBossManager:
         """Step 25, 26, 27, 28: ボス戦闘と専用弱点によるバリア解除"""
         if boss_id not in self.bosses:
             return {"error": "Boss not found"}
-        
+
         boss = self.bosses[boss_id]
         if boss["is_defeated"]:
             return {"error": "Boss already defeated"}
@@ -72,7 +74,7 @@ class MasterBossManager:
             "max_hp": boss["max_hp"],
             "barrier_active": boss["barrier_active"],
             "weakness_hit": weakness_hit,
-            "message": msg
+            "message": msg,
         }
 
     def _resolve_boss_defeat(self, boss_id: str, weakness_hit: bool = False) -> Dict[str, Any]:
@@ -88,5 +90,5 @@ class MasterBossManager:
             "stolen_master_skill": boss["master_skill"],
             "dropped_concept_key": concept_key,
             "total_keys_collected": self.collected_concept_keys,
-            "message": f"MASTER DEFEATED: {boss['name']} was neutralized! Acquired [{concept_key}]!"
+            "message": f"MASTER DEFEATED: {boss['name']} was neutralized! Acquired [{concept_key}]!",
         }

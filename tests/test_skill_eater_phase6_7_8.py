@@ -2,6 +2,7 @@
 test_skill_eater_phase6_7_8.py
 Phase 6 (クエスト・メタ特効), Phase 7 (法則書き換え), Phase 8 (輪廻転生) の検証テスト
 """
+
 from __future__ import annotations
 
 import unittest
@@ -73,16 +74,12 @@ class TestSkillEaterPhase678(unittest.TestCase):
 
         # 頭取を倒してマスタースキル(ROOT権限)取得
         self.rules.root_access_granted = True
-        succ2, _msg, _ = self.rules.override_rule(
-            "damage_multiplier", 10.0, player=player
-        )
+        succ2, _msg, _ = self.rules.override_rule("damage_multiplier", 10.0, player=player)
         self.assertTrue(succ2)
         self.assertEqual(self.rules.damage_multiplier, 10.0)
 
         # 喰らい確率を100%に固定
-        succ3, _, _ = self.rules.override_rule(
-            "devour_success_rate_override", 1.0, player=player
-        )
+        succ3, _, _ = self.rules.override_rule("devour_success_rate_override", 1.0, player=player)
         self.assertTrue(succ3)
         self.assertEqual(self.rules.devour_success_rate_override, 1.0)
 
@@ -112,9 +109,7 @@ class TestSkillEaterPhase678(unittest.TestCase):
         self.assertEqual(new_player.hp, 140)  # 100 + 40
         self.assertTrue(new_player.has_skill("rar_combat_012"))
         self.assertFalse(new_player.has_skill("com_combat_001"))
-        self.assertIn(
-            "first_eater_vault", self.reincarnation_sys.meta_state.unlocked_secrets
-        )
+        self.assertIn("first_eater_vault", self.reincarnation_sys.meta_state.unlocked_secrets)
 
 
 if __name__ == "__main__":

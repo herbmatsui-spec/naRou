@@ -103,21 +103,6 @@ exclusive_skills:
         target: "self"
     inherit_chance: 0.2
 
-  divine_heal:
-    name: "ディバインヒール"
-    job: "archbishop"
-    type: "active"
-    mp_cost: 30
-    cooldown: 5
-    description: "神聖な光で全味方のHPを大回復し、状態異常を全回復"
-    effects:
-      - type: "heal"
-        formula: "magic * 2.0 + will"
-        target: "all_allies"
-      - type: "cure_all"
-        target: "all_allies"
-    inherit_chance: 0.15
-
-meta:
+  meta:
   version: "1.0.0"
   last_updated: "2026-08-19"

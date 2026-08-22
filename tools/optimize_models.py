@@ -3,6 +3,7 @@
 3D model optimization script for optimizing game models.
 Supports model scanning, optimization, compression, and format conversion.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -131,17 +132,13 @@ def scale_model(input_path: str, output_path: str, scale_factor: float = 1.0) ->
     return optimize_model(input_path, output_path, "gltf", "medium")
 
 
-def compress_model(
-    input_path: str, output_path: str, compression: str = "gltf"
-) -> bool:
+def compress_model(input_path: str, output_path: str, compression: str = "gltf") -> bool:
     """Compress 3D model (draco compression, etc.)."""
     # Placeholder for compression
     return optimize_model(input_path, output_path, compression, "medium")
 
 
-def export_model(
-    input_path: str, output_path: str, target_format: str = "gltf"
-) -> bool:
+def export_model(input_path: str, output_path: str, target_format: str = "gltf") -> bool:
     """Export 3D model to target format."""
     return optimize_model(input_path, output_path, target_format, "medium")
 
@@ -221,9 +218,7 @@ def document_models(model_files: list[str], output_path: str) -> str:
     return output_path
 
 
-def log_model_event(
-    message: str, log_path: str | None = None, level: str = "INFO"
-) -> str:
+def log_model_event(message: str, log_path: str | None = None, level: str = "INFO") -> str:
     """Append a timestamped log entry for a model operation (Step 70)."""
     log_path = log_path or os.path.join("assets", "logs", "model_build.log")
     os.makedirs(os.path.dirname(os.path.abspath(log_path)), exist_ok=True)

@@ -6,9 +6,7 @@ from render_system import RenderSystem
 
 
 class DummyContext:
-    def __init__(
-        self, inventory_tab, inventory, pet_inventory=None, inventory_target="player"
-    ):
+    def __init__(self, inventory_tab, inventory, pet_inventory=None, inventory_target="player"):
         self.inventory_tab = inventory_tab
         self.inventory = inventory
         self.pet_inventory = pet_inventory if pet_inventory else inventory
@@ -44,7 +42,4 @@ def test_get_tabbed_items_filters_by_category():
 
     ctx.inventory_tab = 4
     result = RenderSystem.get_tabbed_items(ctx)
-    assert all(
-        i.category not in ("weapon", "shield", "armor", "potion", "food")
-        for i in result
-    )
+    assert all(i.category not in ("weapon", "shield", "armor", "potion", "food") for i in result)

@@ -6,6 +6,7 @@ Verifies:
 3. DialogueManager decoupling
 4. EventBus integration
 """
+
 from __future__ import annotations
 
 import os

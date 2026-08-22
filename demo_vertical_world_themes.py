@@ -3,6 +3,7 @@
 Vertical World System テーマデモ
 実際のYAMLテーマデータを使用したデモ
 """
+
 from __future__ import annotations
 
 from world_layer import WorldLayer
@@ -26,15 +27,9 @@ def demo_themed_content():
     print(
         f"   固有ボス: {surface_plains_shallow.theme_data.get('enemy_pools', {}).get('unique_boss')}"
     )
-    print(
-        f"   環境ハザード: {surface_plains_shallow.theme_data.get('environmental_hazards', [])}"
-    )
-    print(
-        f"   特殊ルーム: {surface_plains_shallow.theme_data.get('special_rooms', [])}"
-    )
-    print(
-        f"   ストーリーフック: {surface_plains_shallow.theme_data.get('story_hooks', [])}"
-    )
+    print(f"   環境ハザード: {surface_plains_shallow.theme_data.get('environmental_hazards', [])}")
+    print(f"   特殊ルーム: {surface_plains_shallow.theme_data.get('special_rooms', [])}")
+    print(f"   ストーリーフック: {surface_plains_shallow.theme_data.get('story_hooks', [])}")
     print(
         f"   一般的な資源: {surface_plains_shallow.theme_data.get('resources', {}).get('common', [])}"
     )
@@ -44,9 +39,7 @@ def demo_themed_content():
     surface_plains_shallow_ethereal = WorldLayer("surface", "plains", 3, "ethereal")
     print(f"   テーマID: {surface_plains_shallow_ethereal.theme_data.get('theme_id')}")
     print(f"   名前: {surface_plains_shallow_ethereal.theme_data.get('name')}")
-    print(
-        f"   難易度: {surface_plains_shallow_ethereal.theme_data.get('difficulty_modifier')}"
-    )
+    print(f"   難易度: {surface_plains_shallow_ethereal.theme_data.get('difficulty_modifier')}")
     print(
         f"   一般的なモンスター: {surface_plains_shallow_ethereal.theme_data.get('enemy_pools', {}).get('common', [])}"
     )
@@ -62,9 +55,7 @@ def demo_themed_content():
     underground_forest_shallow = WorldLayer("underground", "forest", 15, "material")
     print(f"   テーマID: {underground_forest_shallow.theme_data.get('theme_id')}")
     print(f"   名前: {underground_forest_shallow.theme_data.get('name')}")
-    print(
-        f"   難易度: {underground_forest_shallow.theme_data.get('difficulty_modifier')}"
-    )
+    print(f"   難易度: {underground_forest_shallow.theme_data.get('difficulty_modifier')}")
     print(
         f"   一般的なモンスター: {underground_forest_shallow.theme_data.get('enemy_pools', {}).get('common', [])}"
     )
@@ -81,12 +72,8 @@ def demo_themed_content():
     print(
         f"   一般的なモンスター: {heaven_plains_mid.theme_data.get('enemy_pools', {}).get('common', [])}"
     )
-    print(
-        f"   固有ボス: {heaven_plains_mid.theme_data.get('enemy_pools', {}).get('unique_boss')}"
-    )
-    print(
-        f"   環境ハザード: {heaven_plains_mid.theme_data.get('environmental_hazards', [])}"
-    )
+    print(f"   固有ボス: {heaven_plains_mid.theme_data.get('enemy_pools', {}).get('unique_boss')}")
+    print(f"   環境ハザード: {heaven_plains_mid.theme_data.get('environmental_hazards', [])}")
     print()
 
     # WorldMapManagerで実際にマップを生成してみる

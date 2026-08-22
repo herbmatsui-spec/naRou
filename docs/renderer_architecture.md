@@ -147,7 +147,7 @@ create_texture(path)
     │
     ├─▶ TCOD: tcod.image.Image → texture_id
     └─▶ WebGL: gl.createTexture() + Image.onload → texture_id
-    
+
 destroy_texture(id)
     │
     ├─▶ TCOD: del cache[id]

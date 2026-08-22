@@ -2,9 +2,11 @@
 Master End-to-End Test Suite for World A (Skill Eater) Complete Integration (Step 71)
 Tests all 6 chapters & 72 steps: Initialization -> Scan -> Devour -> Synthesis -> Base/Gimmicks -> Epilogue
 """
+
 from __future__ import annotations
 
 import unittest
+
 from entity import Entity
 from game import Engine
 from renderer import NullRenderer

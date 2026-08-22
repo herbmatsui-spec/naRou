@@ -9,10 +9,13 @@ from typing import Any
 
 from constants import ENERGY_THRESHOLD
 from core_framework import EventBus
+from time_system import TimeConfig, TimePhase, WorldClock
 
 
 class TimeSystem:
-    """Tickベースの絶対時間とElona風エネルギーチャージシステム (ステップ9, 10, 11, 12, 17)"""
+    """Tickベースの絶対時間とElona風エネルギーチャージシステム (ステップ9, 10, 11, 12, 17)
+    内部的にWorldClockを使用し、後方互換性を維持
+    """
 
     def __init__(
         self,
@@ -23,42 +26,92 @@ class TimeSystem:
         minute: int = 0,
         event_bus: EventBus | None = None,
     ):
-        self.year = year
-        self.month = month
-        self.day = day
-        self.hour = hour
-        self.minute = minute
-        self.ticks = 0
+        # WorldClockに委譲
+        config = TimeConfig(
+            start_year=year,
+            start_month=month,
+            start_day=day,
+            start_hour=hour,
+            start_minute=minute,
+        )
+        self._world_clock = WorldClock(config, event_bus)
         self.event_bus = event_bus
 
+    # --- 後方互換プロパティ ---
+    @property
+    def year(self) -> int:
+        return self._world_clock.year
+
+    @year.setter
+    def year(self, value: int) -> None:
+        self._world_clock.year = value
+
+    @property
+    def month(self) -> int:
+        return self._world_clock.month
+
+    @month.setter
+    def month(self, value: int) -> None:
+        self._world_clock.month = value
+
+    @property
+    def day(self) -> int:
+        return self._world_clock.day
+
+    @day.setter
+    def day(self, value: int) -> None:
+        self._world_clock.day = value
+
+    @property
+    def hour(self) -> int:
+        return self._world_clock.hour
+
+    @hour.setter
+    def hour(self, value: int) -> None:
+        self._world_clock.hour = value % 24
+
+    @property
+    def minute(self) -> int:
+        return self._world_clock.minute
+
+    @minute.setter
+    def minute(self, value: int) -> None:
+        self._world_clock.minute = value % 60
+
+    @property
+    def ticks(self) -> int:
+        return self._world_clock.total_ticks
+
+    @ticks.setter
+    def ticks(self, value: int) -> None:
+        self._world_clock.total_ticks = value
+
+    @property
+    def world_clock(self) -> WorldClock:
+        """WorldClockインスタンスへのアクセス"""
+        return self._world_clock
+
+    @property
+    def current_phase(self) -> TimePhase:
+        return self._world_clock.current_phase
+
+    # --- メソッド ---
     def pass_ticks(self, ticks: int = 10) -> None:
-        """絶対Tickの経過と日付計算"""
-        self.ticks += ticks
-        # 100 Ticks = 1分として計算
-        mins_passed = ticks // 100
-        if mins_passed > 0 or (self.ticks % 100 < ticks):
-            self.minute += max(1, mins_passed)
-            while self.minute >= 60:
-                self.minute -= 60
-                self.hour += 1
-                while self.hour >= 24:
-                    self.hour -= 24
-                    self.day += 1
-                    if self.event_bus:
-                        self.event_bus.publish(
-                            "NEW_DAY", {"day": self.day, "month": self.month}
-                        )
-                    if self.day > 30:
-                        self.day = 1
-                        self.month += 1
-                        if self.event_bus:
-                            self.event_bus.publish("NEW_MONTH", {"month": self.month})
-                        if self.month > 12:
-                            self.month = 1
-                            self.year += 1
+        """絶対Tickの経過と日付計算 (WorldClockに委譲)"""
+        self._world_clock.advance_ticks(ticks)
 
     def to_string(self) -> str:
-        return f"{self.year}年{self.month:02d}月{self.day:02d}日 {self.hour:02d}:{self.minute:02d}"
+        return self._world_clock.to_string()
+
+    # --- セーブ/ロード ---
+    def to_dict(self) -> dict:
+        return self._world_clock.to_dict()
+
+    @classmethod
+    def from_dict(cls, data: dict, event_bus: EventBus | None = None) -> "TimeSystem":
+        ts = cls(event_bus=event_bus)
+        ts._world_clock = WorldClock.from_dict(data, event_bus)
+        return ts
 
 
 class TurnQueue:
@@ -75,9 +128,7 @@ class TurnQueue:
         ticks_elapsed = 0
         while ticks_elapsed < 500:  # 無限ループ防止ガード
             # 閾値に達しているEntityがいるか探す
-            ready_entities = [
-                e for e in entities if e.energy >= ENERGY_THRESHOLD and e.hp > 0
-            ]
+            ready_entities = [e for e in entities if e.energy >= ENERGY_THRESHOLD and e.hp > 0]
             if ready_entities:
                 # 速度が最も速い、または余剰エネルギーが多い順
                 ready_entities.sort(key=lambda e: (e.energy, e.speed), reverse=True)

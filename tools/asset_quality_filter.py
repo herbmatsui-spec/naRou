@@ -3,6 +3,7 @@
 Asset Quality Filter for naRou
 Filters and validates generated assets based on quality criteria.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -27,9 +28,7 @@ class AssetQualityFilter:
     def __init__(self):
         """Initialize the Asset Quality Filter."""
 
-    def check_resolution(
-        self, image_path: Path, expected_size: tuple[int, int]
-    ) -> bool:
+    def check_resolution(self, image_path: Path, expected_size: tuple[int, int]) -> bool:
         """
         Check if image has the expected resolution.
 
@@ -53,9 +52,7 @@ class AssetQualityFilter:
             logger.error(f"Error checking resolution for {image_path}: {e}")
             return False
 
-    def check_transparency(
-        self, image_path: Path, min_transparent_ratio: float = 0.0
-    ) -> bool:
+    def check_transparency(self, image_path: Path, min_transparent_ratio: float = 0.0) -> bool:
         """
         Check if image has sufficient transparency (for assets that should be transparent).
 
@@ -264,9 +261,7 @@ def main():
         choices=["terrain", "entity", "effect", "ui", "portrait", "background"],
         help="Asset category for specific checks",
     )
-    parser.add_argument(
-        "--reject-dir", type=str, help="Directory to move rejected assets to"
-    )
+    parser.add_argument("--reject-dir", type=str, help="Directory to move rejected assets to")
 
     args = parser.parse_args()
 
@@ -306,9 +301,7 @@ def main():
             return 1
 
         output_dir = Path(args.output) if args.output else input_path / "filtered"
-        reject_dir = (
-            Path(args.reject_dir) if args.reject_dir else input_path / "rejected"
-        )
+        reject_dir = Path(args.reject_dir) if args.reject_dir else input_path / "rejected"
 
         output_dir.mkdir(parents=True, exist_ok=True)
         if reject_dir:

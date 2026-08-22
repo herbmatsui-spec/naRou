@@ -1,0 +1,179 @@
+# Dynamic Events Balance Configuration
+# SkillEaterTerritoryControl - Phase 4 Event Parameters
+
+faction_war:
+  trigger:
+    influence_diff_threshold: 0.2      # 影響力差の閾値 (20%以内)
+    min_adjacent_borders: 3            # 最小隣接国境数
+    cooldown_turns: 50                 # 再発生クールダウン
+  duration:
+    min_turns: 10
+    max_turns: 30
+  effects:
+    morale_penalty_per_turn: -1        # ターン毎士気ペナルティ
+    raid_success_bonus: 0.2            # 襲撃成功率ボーナス
+    propaganda_disabled: true          # プロパガンダ無効化
+  resolution:
+    winner_morale_bonus: 20
+    winner_influence_bonus: 500
+    loser_morale_penalty: -10
+
+betrayal:
+  trigger:
+    morale_threshold: 20               # 士気閾値
+    min_controlled_districts: 3        # 最小支配区画数
+    cooldown_turns: 80
+  effects:
+    rebel_districts_min: 1
+    rebel_districts_max: 2
+    parent_influence_loss: 300
+    parent_reputation_loss: 15
+    rebel_initial_morale: 50
+    rebel_initial_influence: 500
+
+third_party:
+  trigger:
+    min_neutral_districts: 5
+    max_total_influence: 5000
+    cooldown_turns: 100
+  duration:
+    min_turns: 15
+    max_turns: 40
+  effects:
+    initial_districts_min: 2
+    initial_districts_max: 3
+    initial_morale: 80
+    initial_influence: 3000
+    is_hostile: true
+  names:
+    - "mercenary_guild"
+    - "ancient_order"
+    - "shadow_syndicate"
+    - "tech_cult"
+  resolution:
+    defeat_all_districts: true
+    defeat_morale_bonus: 10
+    defeat_reputation_bonus: 10
+
+midas_raid:
+  trigger:
+    heat_level_threshold: 80
+    min_target_districts: 2
+  effects:
+    heat_reset: true
+    confiscate_illegal_skills: true
+    confiscate_aldo_half: true
+    neutralize_districts: true
+    npc_influence_loss: 500
+    npc_reputation_loss: 30
+    player_illegal_skill_confiscate: true
+    player_aldo_confiscate_ratio: 0.5
+
+# Action Costs & Balance
+actions:
+  patrol:
+    action_points: 1
+    aldo_cost: 100
+    cooldown: 1
+    base_success: 0.95
+    stability_bonus: 5
+    resource_multiplier: 1.05
+    consecutive_bonus_threshold: 3
+    consecutive_bonus_multiplier: 2.0
+
+  raid:
+    action_points: 3
+    aldo_cost: 500
+    cooldown: 3
+    base_success: 0.50
+    stability_penalty: -15
+    influence_gain: 50
+    influence_loss_target: 50
+    war_trigger_chance: 0.3
+
+  propaganda:
+    action_points: 2
+    aldo_cost: 300
+    cooldown: 2
+    base_success: 0.40
+    reputation_bonus_per_adjacent: 10
+    reputation_factor: 0.5
+    stability_penalty_on_target: -20
+    failure_reputation_penalty: -5
+    failure_target_reputation_bonus: 5
+
+  sabotage:
+    action_points: 3
+    aldo_cost: 800
+    cooldown: 4
+    base_success: 0.30
+    defense_penalty_factor: 0.05
+    stability_penalty_factor: 0.002
+    duration_turns: 3
+    resource_reduction: 0.5
+    defense_reduction: 1
+    discovery_chance: 0.3
+    discovery_reputation_penalty: -20
+    discovery_heat_increase: 15
+
+  negotiate_ceasefire:
+    action_points: 2
+    aldo_cost: 2000
+    cooldown: 5
+    base_success: 0.35
+    morale_factor: 0.5
+    relation_factor: 0.5
+    war_pressure_factor: 2
+    duration_turns: 10
+    reputation_gain: 10
+
+# District Unlock Thresholds
+district_unlocks:
+  exclusive_shop:
+    min_turns_controlled: 10
+    min_stability: 70
+  hidden_dungeon:
+    min_turns_controlled: 20
+    min_stability: 80
+    requires_hidden_entrance: true
+
+# Stability Natural Variation
+stability:
+  high_morale_bonus_threshold: 50
+  high_morale_bonus: 1
+  low_morale_penalty_threshold: 30
+  low_morale_penalty: -2
+  adjacent_hostile_penalty: -5
+  sabotage_penalty: -10
+  loss_threshold: 0
+  loss_reset_stability: 20
+  auto_capture_adjacent_threshold: 2
+
+# Faction Morale
+morale:
+  per_district_bonus: 1
+  war_penalty_per_turn: -2
+  positive_income_bonus: 2
+  negative_income_penalty: -3
+  min_morale: 0
+  max_morale: 100
+
+# Ceasefire
+ceasefire:
+  default_duration: 10
+  mediation_duration: 5
+
+# Difficulty Scaling
+difficulty:
+  easy:
+    action_cost_multiplier: 0.8
+    success_rate_bonus: 0.1
+    event_trigger_chance_multiplier: 0.7
+  normal:
+    action_cost_multiplier: 1.0
+    success_rate_bonus: 0.0
+    event_trigger_chance_multiplier: 1.0
+  hard:
+    action_cost_multiplier: 1.3
+    success_rate_bonus: -0.1
+    event_trigger_chance_multiplier: 1.5

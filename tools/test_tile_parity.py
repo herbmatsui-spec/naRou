@@ -79,9 +79,7 @@ def render_with_tcod(map_data: list[list[str]], output_path: str) -> np.ndarray:
             # For autotile, calculate variant
             variant = 0
             if tile_id in ("TILE_WALL", "TILE_FLOOR"):
-                variant = renderer.tile_atlas.calculate_neighbor_mask(
-                    map_data, x, y, tile_id
-                )
+                variant = renderer.tile_atlas.calculate_neighbor_mask(map_data, x, y, tile_id)
 
             # Draw tile
             call = type(
@@ -104,15 +102,11 @@ def render_with_tcod(map_data: list[list[str]], output_path: str) -> np.ndarray:
             tile_id = map_data[y][x]
             variant = 0
             if tile_id in ("TILE_WALL", "TILE_FLOOR"):
-                variant = renderer.tile_atlas.calculate_neighbor_mask(
-                    map_data, x, y, tile_id
-                )
+                variant = renderer.tile_atlas.calculate_neighbor_mask(map_data, x, y, tile_id)
 
             try:
                 uv = renderer.tile_atlas.get_uv(tile_id, variant=variant, scale="32")
-                master_path = renderer.tile_atlas.get_master_image_path(
-                    tile_id, scale="32"
-                )
+                master_path = renderer.tile_atlas.get_master_image_path(tile_id, scale="32")
                 if master_path and master_path.exists():
                     import tcod.image
 
@@ -155,15 +149,15 @@ async function render() {{
         resolution: 1,
         autoDensity: true
     }});
-    
+
     // Load TileAtlas
     const TileAtlas = (await import('./demos/lib/TileAtlas.js')).TileAtlas;
     const data = await TileAtlas.loadAll(["32"]);
     const tileAtlas = new TileAtlas(data.baseTextures, data.metadatas, data.defs);
-    
+
     const tileLayer = new PIXI.Container();
     app.stage.addChild(tileLayer);
-    
+
     // Render tiles
     for (let y = 0; y < height; y++) {{
         for (let x = 0; x < width; x++) {{
@@ -172,7 +166,7 @@ async function render() {{
             if (tileId === "TILE_WALL" || tileId === "TILE_FLOOR") {{
                 variant = tileAtlas.calculateNeighborMask(mapData, x, y, tileId);
             }}
-            
+
             const td = tileAtlas.defs[tileId];
             let sprite;
             if (td && td.animated) {{
@@ -185,15 +179,15 @@ async function render() {{
             tileLayer.addChild(sprite);
         }}
     }}
-    
+
     // Render one frame
     app.render();
-    
+
     // Save as PNG
     const buffer = canvas.toBuffer('image/png');
     fs.writeFileSync('{output_path}', buffer);
     console.log('Web render saved to {output_path}');
-    
+
     app.destroy();
 }}
 
@@ -202,9 +196,7 @@ render().catch(console.error);
     return script
 
 
-def compare_images(
-    img1: np.ndarray, img2: np.ndarray, threshold: float = 0.005
-) -> dict[str, Any]:
+def compare_images(img1: np.ndarray, img2: np.ndarray, threshold: float = 0.005) -> dict[str, Any]:
     """Compare two images and return similarity metrics."""
     # Resize to same size if needed
     if img1.shape != img2.shape:

@@ -147,9 +147,7 @@ class ScheduleContext:
     ):
         self.current_time = current_time or datetime.now()
         # day_of_week 未指定時は current_time から計算 (0=月曜 ... 6=日曜)
-        self.day_of_week = (
-            day_of_week if day_of_week is not None else self.current_time.weekday()
-        )
+        self.day_of_week = day_of_week if day_of_week is not None else self.current_time.weekday()
         self.moon_phase = moon_phase
         self.season = season
         self.weather = weather
@@ -166,19 +164,17 @@ class ScheduleContext:
             world_phase = phase.name if phase else None
             # 時刻・季節・天候・月齢は WorldStateManager から取得想定
             return cls(
-                current_time=ws_mgr.get_current_datetime()
-                if hasattr(ws_mgr, "get_current_datetime")
-                else None,
-                day_of_week=ws_mgr.get_day_of_week()
-                if hasattr(ws_mgr, "get_day_of_week")
-                else None,
-                moon_phase=ws_mgr.get_moon_phase()
-                if hasattr(ws_mgr, "get_moon_phase")
-                else None,
+                current_time=(
+                    ws_mgr.get_current_datetime()
+                    if hasattr(ws_mgr, "get_current_datetime")
+                    else None
+                ),
+                day_of_week=(
+                    ws_mgr.get_day_of_week() if hasattr(ws_mgr, "get_day_of_week") else None
+                ),
+                moon_phase=ws_mgr.get_moon_phase() if hasattr(ws_mgr, "get_moon_phase") else None,
                 season=ws_mgr.get_season() if hasattr(ws_mgr, "get_season") else None,
-                weather=ws_mgr.get_weather()
-                if hasattr(ws_mgr, "get_weather")
-                else None,
+                weather=ws_mgr.get_weather() if hasattr(ws_mgr, "get_weather") else None,
                 world_phase=world_phase,
             )
         return cls()
@@ -224,17 +220,13 @@ class QuestScheduler:
 
         # テンプレート単体
         if "template" in schedule_data:
-            conditions.append(
-                self._expand_template(schedule_data["template"], schedule_data)
-            )
+            conditions.append(self._expand_template(schedule_data["template"], schedule_data))
         # 複数条件
         elif "conditions" in schedule_data:
             logic = LogicOperator[schedule_data.get("logic", "AND")]
             for cond_data in schedule_data["conditions"]:
                 if "template" in cond_data:
-                    conditions.append(
-                        self._expand_template(cond_data["template"], cond_data)
-                    )
+                    conditions.append(self._expand_template(cond_data["template"], cond_data))
                 else:
                     conditions.append(self._parse_condition(cond_data))
             return QuestSchedule(
@@ -259,9 +251,7 @@ class QuestScheduler:
             enabled=s_data.get("enabled", True),
         )
 
-    def _expand_template(
-        self, template_name: str, override: dict[str, Any]
-    ) -> ScheduleCondition:
+    def _expand_template(self, template_name: str, override: dict[str, Any]) -> ScheduleCondition:
         """テンプレート展開 + 上書きマージ"""
         tmpl = self._templates.get(template_name, {})
         merged = {**tmpl, **override}
@@ -349,9 +339,7 @@ class QuestScheduler:
 
         return True
 
-    def _check_override(
-        self, override: dict[str, Any], context: ScheduleContext
-    ) -> bool:
+    def _check_override(self, override: dict[str, Any], context: ScheduleContext) -> bool:
         """上書きが現在のコンテキストに適用されるか判定"""
         # 日付指定がある場合
         if "date" in override:
@@ -373,15 +361,9 @@ class QuestScheduler:
                 end_str = dr["end"]
                 start_parts = start_str.split("_")
                 end_parts = end_str.split("_")
-                start_date = datetime(
-                    int(start_parts[1]), int(start_parts[3]), int(start_parts[5])
-                )
-                end_date = datetime(
-                    int(end_parts[1]), int(end_parts[3]), int(end_parts[5])
-                )
-                return (
-                    start_date.date() <= context.current_time.date() <= end_date.date()
-                )
+                start_date = datetime(int(start_parts[1]), int(start_parts[3]), int(start_parts[5]))
+                end_date = datetime(int(end_parts[1]), int(end_parts[3]), int(end_parts[5]))
+                return start_date.date() <= context.current_time.date() <= end_date.date()
             except (ValueError, IndexError, KeyError):
                 return False
         return True

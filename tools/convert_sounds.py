@@ -3,6 +3,7 @@
 Sound conversion script for converting audio files to game-appropriate formats.
 Supports WAV to OGG/MP3 conversion, quality optimization, and metadata extraction.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -59,9 +60,7 @@ def get_sound_metadata(file_path: str) -> dict:
     return metadata
 
 
-def convert_sound_format(
-    input_path: str, output_path: str, target_format: str = "ogg"
-) -> bool:
+def convert_sound_format(input_path: str, output_path: str, target_format: str = "ogg") -> bool:
     """Convert sound file to target format."""
     # In a real implementation, this would use ffmpeg or similar
     # For this basic implementation, we'll just copy the file with new extension
@@ -82,9 +81,7 @@ def convert_sound_format(
         return False
 
 
-def optimize_sound_quality(
-    input_path: str, output_path: str, quality: str = "medium"
-) -> bool:
+def optimize_sound_quality(input_path: str, output_path: str, quality: str = "medium") -> bool:
     """Optimize sound quality (bitrate, sample rate, etc.)."""
     # Placeholder for quality optimization
     # Would normally use ffmpeg with appropriate parameters
@@ -180,9 +177,7 @@ def validate_sound(file_path: str) -> tuple[bool, list[str]]:
     return len(issues) == 0, issues
 
 
-def test_sounds(
-    sound_files: list[str], output_dir: str | None = None
-) -> tuple[bool, list[str]]:
+def test_sounds(sound_files: list[str], output_dir: str | None = None) -> tuple[bool, list[str]]:
     """Step 50: Run validation tests on a list of sound files.
 
     Returns (all_valid, issues) where issues lists per-file problems.
@@ -267,15 +262,11 @@ def analyze_sounds(sound_files: list[str]) -> dict:
     if stats["total_size"] > 50 * 1024 * 1024:
         recommendations.append("Total sound size exceeds 50MB; consider compression")
     if stats["formats"].get("wav", 0) > 0:
-        recommendations.append(
-            "WAV files detected; convert to OGG for smaller footprint"
-        )
+        recommendations.append("WAV files detected; convert to OGG for smaller footprint")
     return {"statistics": stats, "recommendations": recommendations}
 
 
-def optimize_sounds_batch(
-    sound_files: list[str], output_dir: str, quality: str = "medium"
-) -> dict:
+def optimize_sounds_batch(sound_files: list[str], output_dir: str, quality: str = "medium") -> dict:
     """Optimize a batch of sounds into an output directory (Step 55)."""
     os.makedirs(output_dir, exist_ok=True)
     results = {}
@@ -303,9 +294,7 @@ def restore_sounds(backup_dir: str, output_dir: str) -> dict:
     return {"restored": count, "output_dir": output_dir}
 
 
-def export_sounds(
-    sound_files: list[str], export_dir: str, target_format: str = "ogg"
-) -> dict:
+def export_sounds(sound_files: list[str], export_dir: str, target_format: str = "ogg") -> dict:
     """Export sounds converted to a target format (Step 58)."""
     os.makedirs(export_dir, exist_ok=True)
     results = {}

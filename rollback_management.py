@@ -178,16 +178,12 @@ class RollbackManager:
 
     def list_rollbacks(self):
         """List all rollbacks."""
-        return sorted(
-            self.rollbacks.values(), key=lambda r: r["created_at"], reverse=True
-        )
+        return sorted(self.rollbacks.values(), key=lambda r: r["created_at"], reverse=True)
 
 
 def main():
     parser = argparse.ArgumentParser(description="Rollback Management")
-    parser.add_argument(
-        "--dir", default="rollback_management", help="Rollback directory"
-    )
+    parser.add_argument("--dir", default="rollback_management", help="Rollback directory")
     parser.add_argument(
         "--create",
         nargs=3,

@@ -19,10 +19,7 @@ from quest_condition_ast import (
     XorCondition,
     is_condition_node,
 )
-from quest_condition_evaluator import (
-    DictContext,
-    evaluate,
-)
+from quest_condition_evaluator import DictContext, evaluate
 from quest_condition_parser import ConditionParseError, parse_condition
 
 # ---------------------------------------------------------------------------
@@ -160,9 +157,7 @@ def test_questobjective_condition_satisfied():
     obj.condition_tree = parse_condition(obj.condition_dsl)
     assert is_condition_node(obj.condition_tree)
     assert (
-        obj.evaluate(
-            DictContext({"player": {"level": 2}, "flags": {"slew_guardian": True}})
-        )
+        obj.evaluate(DictContext({"player": {"level": 2}, "flags": {"slew_guardian": True}}))
         is True
     )
     assert obj.evaluate(DictContext({"player": {"level": 2}, "flags": {}})) is False
@@ -188,9 +183,7 @@ main_quests:
     rewards:
       gold: 10
 """
-    with tempfile.NamedTemporaryFile(
-        "w", suffix=".yaml", delete=False, encoding="utf-8"
-    ) as f:
+    with tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False, encoding="utf-8") as f:
         f.write(yaml_text)
         path = f.name
     try:
@@ -199,9 +192,7 @@ main_quests:
         obj = quest.objectives[0]
         assert obj.condition_tree is not None
         assert (
-            obj.evaluate(
-                DictContext({"player": {"level": 1}, "flags": {"slew_guardian": True}})
-            )
+            obj.evaluate(DictContext({"player": {"level": 1}, "flags": {"slew_guardian": True}}))
             is True
         )
         assert obj.evaluate(DictContext({"player": {"level": 1}, "flags": {}})) is False

@@ -8,12 +8,12 @@ export class AnimationController {
         this.animationClock = 0;
         this.frameTimes = {};
     }
-    
+
     // Update all animations
     update(deltaTime) {
         this.animationTime += deltaTime;
         this.animationClock = Math.floor(this.animationTime * 10) % 4; // 4 frames for walk cycle
-        
+
         for (const [entityId, anim] of this.activeAnimations) {
             if (anim.state === 'running') {
                 anim.frameTime += deltaTime;
@@ -24,7 +24,7 @@ export class AnimationController {
             }
         }
     }
-    
+
     // Start animation for an entity
     startAnimation(entityId, animationData) {
         const entity = animationData.entityData;
@@ -32,7 +32,7 @@ export class AnimationController {
         const directions = entity.directions || 1;
         const fps = entity.fps || 4;
         const loop = animationData.loop !== false;
-        
+
         const animation = {
             entityId: entityId,
             type: animationData.type || 'idle',
@@ -45,31 +45,31 @@ export class AnimationController {
             frames: frames,
             directions: directions
         };
-        
+
         this.activeAnimations.set(entityId, animation);
         return animation;
     }
-    
+
     // Get current frame for entity
     getCurrentFrame(entityId) {
         const animation = this.activeAnimations.get(entityId);
         if (!animation || animation.state === 'paused' || animation.state === 'stopped') {
             return null;
         }
-        
+
         const frame = animation.frame;
         const direction = animation.direction;
         const tileSize = animation.entityData?.tileSize || 32;
-        
+
         // Calculate texture coordinates from atlas
         const textureKey = `${entityId}_anim_${animation.type}_${direction}_${frame}`;
         const texture = this.textureAtlas.getTexture(textureKey);
-        
+
         if (!texture) {
             // Fallback: create colored rectangle
             return this._createFallbackTexture(frame, direction, tileSize);
         }
-        
+
         return {
             texture: texture,
             x: direction * tileSize,
@@ -78,19 +78,19 @@ export class AnimationController {
             height: tileSize
         };
     }
-    
+
     // Create fallback colored rectangle for missing textures
     _createFallbackTexture(frame, direction, size) {
         const canvas = document.createElement('canvas');
         canvas.width = size;
         canvas.height = size;
         const ctx = canvas.getContext('2d');
-        
+
         // Color based on animation type and frame
         const colors = this._getColorsForAnimationType('idle');
         ctx.fillStyle = colors[frame % colors.length];
         ctx.fillRect(0, 0, size, size);
-        
+
         // Add simple pattern based on frame
         ctx.strokeStyle = 'rgba(0,0,0,0.3)';
         ctx.lineWidth = 2;
@@ -98,9 +98,9 @@ export class AnimationController {
         ctx.moveTo(0, 0);
         ctx.lineTo(size, size);
         ctx.stroke();
-        
+
         const texture = PIXI.Texture.from(canvas);
-        
+
         return {
             texture: texture,
             x: direction * size,
@@ -109,7 +109,7 @@ export class AnimationController {
             height: size
         };
     }
-    
+
     // Get colors for animation type
     _getColorsForAnimationType(type) {
         const colorMap = {
@@ -121,14 +121,14 @@ export class AnimationController {
         };
         return colorMap[type] || colorMap['idle'];
     }
-    
+
     // Update entity animation state
     updateAnimation(entityId, newState, direction = 0) {
         const animation = this.activeAnimations.get(entityId);
         if (!animation) {
             return;
         }
-        
+
         if (newState === 'hit') {
             // Hit animation: single frame, then return to previous state
             animation.frame = 0;
@@ -150,7 +150,7 @@ export class AnimationController {
             animation.direction = direction;
         }
     }
-    
+
     // Stop animation for an entity
     stopAnimation(entityId) {
         const animation = this.activeAnimations.get(entityId);
@@ -159,7 +159,7 @@ export class AnimationController {
             this.activeAnimations.delete(entityId);
         }
     }
-    
+
     // Clear all animations
     clear() {
         for (const animation of this.activeAnimations.values()) {

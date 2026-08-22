@@ -19,7 +19,7 @@ def resize_image(input_path: Path, output_path: Path, target_size: int) -> bool:
         img = Image.open(input_path).convert("RGBA")
         if img.size == (target_size, target_size):
             return True  # Already correct size
-        
+
         resized = img.resize((target_size, target_size), Image.NEAREST)
         resized.save(output_path)
         return True
@@ -28,23 +28,25 @@ def resize_image(input_path: Path, output_path: Path, target_size: int) -> bool:
         return False
 
 
-def process_directory(input_dir: Path, output_dir: Path, target_size: int, recursive: bool = False) -> int:
+def process_directory(
+    input_dir: Path, output_dir: Path, target_size: int, recursive: bool = False
+) -> int:
     """Process all images in a directory."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     pattern = "**/*.png" if recursive else "*.png"
     count = 0
-    
+
     for img_path in input_dir.glob(pattern):
         if img_path.is_file():
             rel_path = img_path.relative_to(input_dir)
             out_path = output_dir / rel_path
             out_path.parent.mkdir(parents=True, exist_ok=True)
-            
+
             if resize_image(img_path, out_path, target_size):
                 count += 1
                 print(f"Resized: {rel_path}")
-    
+
     return count
 
 
@@ -54,12 +56,12 @@ def main():
     parser.add_argument("output", help="Output directory")
     parser.add_argument("--size", type=int, default=16, help="Target tile size (default: 16)")
     parser.add_argument("--recursive", "-r", action="store_true", help="Process subdirectories")
-    
+
     args = parser.parse_args()
-    
+
     input_path = Path(args.input)
     output_path = Path(args.output)
-    
+
     if input_path.is_file():
         output_path.mkdir(parents=True, exist_ok=True)
         if resize_image(input_path, output_path / input_path.name, args.size):

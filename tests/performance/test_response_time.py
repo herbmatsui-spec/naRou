@@ -3,6 +3,7 @@
 Response Time Performance Test
 応答時間パフォーマンステスト
 """
+
 from __future__ import annotations
 
 import sys

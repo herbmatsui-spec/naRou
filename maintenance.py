@@ -148,9 +148,7 @@ if __name__ == "__main__":
     parser.add_argument("--keep", type=int, default=10, help="Backups to keep")
     args = parser.parse_args()
 
-    if args.all or not any(
-        [args.cache, args.logs, args.backups, args.update, args.health]
-    ):
+    if args.all or not any([args.cache, args.logs, args.backups, args.update, args.health]):
         maintenance_all()
     else:
         if args.cache:

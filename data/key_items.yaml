@@ -1,0 +1,128 @@
+# 鍵アイテム定義 (SkillEaterSecretAccess)
+
+key_items:
+  - id: "keycard_lv1"
+    name: "セキュリティキーカード Lv.1"
+    type: "keycard"
+    level: 1
+    subtype: ""
+    consumable: false
+    description: "下層施設の扉を開ける汎用カード。セキュリティレベル1相当。"
+    market_value: 500
+
+  - id: "keycard_lv2"
+    name: "セキュリティキーカード Lv.2"
+    type: "keycard"
+    level: 2
+    subtype: ""
+    consumable: false
+    description: "中層施設の扉を開けるカード。セキュリティレベル2相当。研究棟などで使用可。"
+    market_value: 2000
+
+  - id: "keycard_lv3"
+    name: "セキュリティキーカード Lv.3"
+    type: "keycard"
+    level: 3
+    subtype: ""
+    consumable: false
+    description: "上層施設・金庫室の扉を開けるハイグレードカード。セキュリティレベル3相当。"
+    market_value: 8000
+
+  - id: "keycard_lv4"
+    name: "セキュリティキーカード Lv.4"
+    type: "keycard"
+    level: 4
+    subtype: ""
+    consumable: false
+    description: "最高機密エリアへのアクセスを許可するマスターカード。セキュリティレベル4相当。"
+    market_value: 25000
+
+  - id: "keycard_lv5"
+    name: "セキュリティキーカード Lv.5 (管理者)"
+    type: "keycard"
+    level: 5
+    subtype: ""
+    consumable: false
+    description: "ミダス社最高幹部のみが所持する伝説のカード。全ての扉を開く。"
+    market_value: 100000
+
+  - id: "biometric_fingerprint"
+    name: "生体認証キー:指紋"
+    type: "biometric"
+    level: 1
+    subtype: "fingerprint"
+    consumable: true
+    description: "登録済み指紋データが記録されたチップ。1回使用で消滅する。"
+    market_value: 3000
+
+  - id: "biometric_retina"
+    name: "生体認証キー:網膜"
+    type: "biometric"
+    level: 2
+    subtype: "retina"
+    consumable: true
+    description: "網膜パターンを記録された高セキュリティ認証チップ。1回使用で消滅する。"
+    market_value: 12000
+
+  - id: "biometric_dna"
+    name: "生体認証キー:遺伝子"
+    type: "biometric"
+    level: 3
+    subtype: "dna"
+    consumable: true
+    description: "DNA照合型の究極認証キー。特定個体のみ使用可能。1回使用で消滅する。"
+    market_value: 50000
+
+  - id: "decryption_module_basic"
+    name: "暗号解除モジュール・基礎"
+    type: "decryption"
+    level: 1
+    subtype: ""
+    consumable: true
+    description: "古代暗号・企業暗号の基礎レベルを解除するプログラム。1回使用で消滅する。"
+    market_value: 1500
+
+  - id: "decryption_module_advanced"
+    name: "暗号解除モジュール・上級"
+    type: "decryption"
+    level: 2
+    subtype: ""
+    consumable: true
+    description: "高度な量子暗号・概念暗号を解除するモジュール。1回使用で消滅する。"
+    market_value: 10000
+
+  - id: "decryption_module_master"
+    name: "暗号解除モジュール・マスター"
+    type: "decryption"
+    level: 3
+    subtype: ""
+    consumable: true
+    description: "あらゆる暗号を理論値で解除する伝説のモジュール。1回使用で消滅する。"
+    market_value: 50000
+
+  - id: "physical_key_ancient"
+    name: "古代の物理鍵"
+    type: "physical"
+    level: 1
+    subtype: "ancient"
+    consumable: false
+    description: "古代文明が残した物理鍵。特定の遺跡・祭壇でのみ機能する。永続使用可能。"
+    market_value: 15000
+
+  - id: "physical_key_midas"
+    name: "ミダス社マスターキー"
+    type: "physical"
+    level: 2
+    subtype: "midas"
+    consumable: false
+    description: "ミダス社施設の物理鍵穴に対応したマスターキー。永続使用可能。"
+    market_value: 30000
+
+  - id: "physical_key_void"
+    name: "虚無の鍵"
+    type: "physical"
+    level: 3
+    subtype: "void"
+    consumable: false
+    description: "異界・虚無次元の扉を開くと言われる黒い鍵。永続使用可能。"
+    market_value: 80000

@@ -12,20 +12,20 @@ export class ScreenShake {
         this.targetContainer = targetContainer;
         this.intensity = intensity;
         this.duration = duration;
-        
+
         // シェイク状態
         this.isShaking = false;
         this.shakeTime = 0;
         this.shakeIntensity = 0;
         this.originalPosition = { x: 0, y: 0 };
-        
+
         // 減衰パターン
         this.decayPattern = 'exponential'; // 'linear', 'exponential', 'smooth'
-        
+
         // ノイズ生成用
         this.seed = Math.random() * 1000;
     }
-    
+
     /**
      * シェイクを開始
      * @param {number} intensity - オプション：強度を上書き
@@ -36,46 +36,46 @@ export class ScreenShake {
         this.shakeDuration = duration !== undefined ? duration : this.duration;
         this.shakeTime = this.shakeDuration;
         this.isShaking = true;
-        
+
         // 元の位置を保存
         this.originalPosition = {
             x: this.targetContainer.x,
             y: this.targetContainer.y
         };
-        
+
         // ノイズシードをリセット
         this.seed = Math.random() * 1000;
     }
-    
+
     /**
      * シェイクを停止
      */
     stop() {
         this.isShaking = false;
         this.shakeTime = 0;
-        
+
         // 元の位置に戻す
         this.targetContainer.x = this.originalPosition.x;
         this.targetContainer.y = this.originalPosition.y;
     }
-    
+
     /**
      * シェイクを更新
      * @param {number} deltaTime - 経過時間（秒）
      */
     update(deltaTime) {
         if (!this.isShaking) return;
-        
+
         this.shakeTime -= deltaTime;
-        
+
         if (this.shakeTime <= 0) {
             this.stop();
             return;
         }
-        
+
         // 経過時間の割合（0.0 - 1.0）
         const elapsed = 1.0 - (this.shakeTime / this.shakeDuration);
-        
+
         // 減衰計算
         let decay;
         switch (this.decayPattern) {
@@ -90,22 +90,22 @@ export class ScreenShake {
                 decay = Math.cos(elapsed * Math.PI / 2);
                 break;
         }
-        
+
         // 現在の強度
         const currentIntensity = this.shakeIntensity * decay;
-        
+
         // ノイズオフセットを生成
         const offsetX = this._noise(this.seed) * currentIntensity * 2 - currentIntensity;
         const offsetY = this._noise(this.seed + 1) * currentIntensity * 2 - currentIntensity;
-        
+
         // 位置を適用
         this.targetContainer.x = this.originalPosition.x + offsetX;
         this.targetContainer.y = this.originalPosition.y + offsetY;
-        
+
         // シードを更新（次フレームのノイズを変える）
         this.seed += 0.1;
     }
-    
+
     /**
      * 疑似ノイズ関数
      * @param {number} x - 入力値
@@ -115,7 +115,7 @@ export class ScreenShake {
         const n = Math.sin(x * 12.9898 + 78.233) * 43758.5453;
         return n - Math.floor(n);
     }
-    
+
     /**
      * プリセットシェイクを実行
      * @param {string} preset - プリセット名 ('light', 'medium', 'heavy', 'explosion')
@@ -127,11 +127,11 @@ export class ScreenShake {
             'heavy': { intensity: 10, duration: 0.6 },
             'explosion': { intensity: 15, duration: 0.8 }
         };
-        
+
         const config = presets[preset] || presets['medium'];
         this.start(config.intensity, config.duration);
     }
-    
+
     /**
      * 減衰パターンを設定
      * @param {string} pattern - 減衰パターン ('linear', 'exponential', 'smooth')
@@ -139,7 +139,7 @@ export class ScreenShake {
     setDecayPattern(pattern) {
         this.decayPattern = pattern;
     }
-    
+
     /**
      * デフォルト強度を設定
      * @param {number} intensity - 強度（ピクセル）
@@ -147,7 +147,7 @@ export class ScreenShake {
     setIntensity(intensity) {
         this.intensity = intensity;
     }
-    
+
     /**
      * デフォルト持続時間を設定
      * @param {number} duration - 持続時間（秒）
@@ -155,7 +155,7 @@ export class ScreenShake {
     setDuration(duration) {
         this.duration = duration;
     }
-    
+
     /**
      * シェイク中かどうか
      * @returns {boolean} シェイク中フラグ
@@ -163,7 +163,7 @@ export class ScreenShake {
     getIsShaking() {
         return this.isShaking;
     }
-    
+
     /**
      * シェイクの残り時間
      * @returns {number} 残り時間（秒）

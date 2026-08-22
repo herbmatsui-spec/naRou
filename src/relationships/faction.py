@@ -184,17 +184,13 @@ class FactionRelationshipSystem:
 
         return True
 
-    def get_faction_relation(
-        self, faction_a: str, faction_b: str
-    ) -> FactionRelation | None:
+    def get_faction_relation(self, faction_a: str, faction_b: str) -> FactionRelation | None:
         """二つの派閥間の関係を取得"""
         # 順序を正規化
         key = tuple(sorted([faction_a, faction_b]))
         return self.faction_relations.get(key)
 
-    def aggregate_faction_relationships(
-        self, faction_id: str
-    ) -> dict[str, dict[str, int]]:
+    def aggregate_faction_relationships(self, faction_id: str) -> dict[str, dict[str, int]]:
         """
         派閥内の個人関係から派閥間関係を集約
         戻り値: {他派閥ID: {関係タイプ: 強度}}
@@ -240,9 +236,7 @@ class FactionRelationshipSystem:
                     aggregated[other_faction_id][edge.relationship_type.value] += (
                         edge.level * member_weight
                     )
-                    member_counts[other_faction_id][edge.relationship_type] += (
-                        member_weight
-                    )
+                    member_counts[other_faction_id][edge.relationship_type] += member_weight
 
         # 平均を計算
         result: dict[str, dict[str, int]] = {}
@@ -265,9 +259,7 @@ class FactionRelationshipSystem:
         if not node:
             return 1.0
 
-        affiliation = node.faction_affiliations.get(
-            faction_id, FactionAffiliation.MEMBER
-        )
+        affiliation = node.faction_affiliations.get(faction_id, FactionAffiliation.MEMBER)
         weight_map = self._faction_config.get("member_weight", {})
 
         if affiliation == FactionAffiliation.LEADER:
@@ -463,9 +455,7 @@ class FactionRelationshipSystem:
 
         return results
 
-    def get_faction_influence_on_relationships(
-        self, character_id: str
-    ) -> dict[str, int]:
+    def get_faction_influence_on_relationships(self, character_id: str) -> dict[str, int]:
         """キャラクターの派閥所属が個人関係に与える影響を取得"""
         node = self.graph.get_node(character_id)
         if not node:
@@ -498,9 +488,7 @@ class FactionRelationshipSystem:
 
         return influences
 
-    def apply_faction_influence_to_relationships(
-        self, character_id: str
-    ) -> dict[str, int]:
+    def apply_faction_influence_to_relationships(self, character_id: str) -> dict[str, int]:
         """派閥影響を個人関係に適用"""
         influences = self.get_faction_influence_on_relationships(character_id)
         applied = {}

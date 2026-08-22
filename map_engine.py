@@ -7,14 +7,27 @@ Vertical World Extension: Steps 13-18
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import json
 import math
 import random
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from constants import TILE_STAIRS_DOWN, TILE_STAIRS_UP
+if TYPE_CHECKING:
+    from secret_area_system import SecretArea
+    from world_map_manager import WorldMapManager
+
+from constants import (
+    TILE_FALSE_WALL,
+    TILE_HIDDEN_DOOR,
+    TILE_SECRET_FLOOR,
+    TILE_STAIRS_DOWN,
+    TILE_STAIRS_UP,
+    TILE_VENT,
+    TILE_WALL,
+)
 from feature_flags import is_enabled
 
 # ワールドレイヤーシステムのインポート（オプション）
@@ -86,9 +99,7 @@ class TileRegistry:
         self.atlas_32_meta = _safe_load(atlas_dir / "tileset_32x32.json")
 
         # Load tiny_rogue_16 metadata
-        self.atlas_tiny_rogue_meta = _safe_load(
-            atlas_dir / "tileset_tiny_rogue_16x16.json"
-        )
+        self.atlas_tiny_rogue_meta = _safe_load(atlas_dir / "tileset_tiny_rogue_16x16.json")
 
     def get_uv(
         self, tile_id: str, variant: int = 0, scale: str = "16"
@@ -278,6 +289,9 @@ class GameMap:
         # Proposal 8: 緻密なプロシージャル・ディテール (壁画・血文字・刻印・苔)
         self.micro_details: dict[tuple[int, int], dict[str, Any]] = {}
 
+        # SkillEaterSecretAccess - 隠しタイル管理
+        self.hidden_tiles: dict[tuple[int, int], dict[str, Any]] = {}
+
     def is_in_bounds(self, x: int, y: int) -> bool:
         return 0 <= x < self.width and 0 <= y < self.height
 
@@ -285,13 +299,26 @@ class GameMap:
         if not self.is_in_bounds(x, y):
             return False
         tile = self.tiles[x][y]
-        return tile not in ("TILE_WALL",)
+        # 隠し扉・偽の壁は発見済みなら通行可能
+        if tile in (TILE_HIDDEN_DOOR, TILE_FALSE_WALL):
+            return True
+        # 床下通路・換気ダクトは常に通行可能（発見後）
+        if tile in (TILE_SECRET_FLOOR, TILE_VENT):
+            return True
+        return tile not in (TILE_WALL,)
 
     def is_transparent(self, x: int, y: int) -> bool:
         """光を通すか（FOV計算用）"""
         if not self.is_in_bounds(x, y):
             return False
-        return self.tiles[x][y] != "TILE_WALL"
+        tile = self.tiles[x][y]
+        # 隠し扉・偽の壁は発見済みでも光を通さない（壁扱い）
+        if tile in (TILE_HIDDEN_DOOR, TILE_FALSE_WALL):
+            return False
+        # 床下通路・換気ダクトは光を通す
+        if tile in (TILE_SECRET_FLOOR, TILE_VENT):
+            return True
+        return tile != TILE_WALL
 
     def create_room(self, room: RectRoom) -> None:
         """部屋の内部を床にする (Tiny Rogue variants randomization)"""
@@ -470,6 +497,9 @@ class GameMap:
         # 壁面に松明（光源）を配置 (Phase 2-A: ダイナミックライティング)
         self._place_torches(max_per_room=2, global_cap=40)
 
+        # SkillEaterSecretAccess - 秘密エリア配置 (Steps 49-52)
+        self._place_secret_areas()
+
     def _place_torches(self, max_per_room: int = 2, global_cap: int = 40) -> None:
         """壁でかつ床に接するタイルを松明（光源）として記録する。"""
         self.torch_positions = []
@@ -507,6 +537,113 @@ class GameMap:
             if len(self.torch_positions) >= global_cap:
                 break
         self.torch_positions = candidates[:global_cap]
+
+    def _place_secret_areas(self) -> None:
+        """秘密エリアをダンジョンに配置 (SkillEaterSecretAccess Steps 49-52)"""
+        if not self.world_layer:
+            return
+
+        try:
+            from secret_area_system import SECRET_REGISTRY
+
+            SECRET_REGISTRY.load_from_yaml()
+
+            layer_key = f"{self.world_layer.zone}:{self.world_layer.biome}:{self.world_layer.depth}:{self.world_layer.dimension}"
+            areas = SECRET_REGISTRY.get_areas_in_layer(layer_key)
+
+            if not areas:
+                return
+
+            # テーマからギミック密度を取得
+            gimmicks = self.world_layer.theme_data.get("gimmicks", [])
+            secret_door_chance = 0.15
+            false_wall_chance = 0.1
+            secret_floor_chance = 0.05
+            vent_chance = 0.08
+
+            for g in gimmicks:
+                if "secret_doors:" in g:
+                    secret_door_chance = float(g.split(":")[1])
+                elif "false_walls:" in g:
+                    false_wall_chance = float(g.split(":")[1])
+                elif "secret_floors:" in g:
+                    secret_floor_chance = float(g.split(":")[1])
+                elif "vents:" in g:
+                    vent_chance = float(g.split(":")[1])
+
+            used_positions = set()
+            # 階段位置は除外
+            if self.stairs_up_pos:
+                used_positions.add(self.stairs_up_pos)
+            if self.stairs_down_pos:
+                used_positions.add(self.stairs_down_pos)
+
+            for area in areas:
+                if area.position in used_positions:
+                    # 指定位置が使えない場合、近くの適切な場所を探す
+                    alt_pos = self._find_secret_position(area, used_positions)
+                    if alt_pos:
+                        area.position = alt_pos
+                    else:
+                        continue
+
+                used_positions.add(area.position)
+                x, y = area.position
+
+                if not self.is_in_bounds(x, y):
+                    continue
+
+                # 元のタイルを記録
+                original_tile = self.tiles[x][y]
+                if not hasattr(self, "hidden_tiles"):
+                    self.hidden_tiles = {}
+                self.hidden_tiles[(x, y)] = {
+                    "original_tile": original_tile,
+                    "secret_type": area.secret_type,
+                    "area_id": area.id,
+                }
+
+                # 秘密タイプに応じて壁タイルに見せかける
+                if area.secret_type in ("hidden_door", "false_wall"):
+                    self.tiles[x][y] = "TILE_WALL"
+                elif area.secret_type in ("secret_floor", "vent"):
+                    self.tiles[x][y] = "TILE_FLOOR"
+
+                # ランダム配置の場合の確率判定（YAMLで指定位置がない場合）
+                # ここではYAMLで指定された位置を優先的に使用
+        except Exception:
+            pass
+
+    def _find_secret_position(
+        self, area: SecretArea, used_positions: set
+    ) -> tuple[int, int] | None:
+        """秘密エリアの代替位置を探す"""
+        # 部屋の境界壁を候補とする
+        candidates = []
+        for room in self.rooms:
+            if area.secret_type in ("hidden_door", "false_wall"):
+                # 部屋の境界壁
+                for x in range(room.x1, room.x2):
+                    for y in (room.y1, room.y2 - 1):
+                        if (x, y) not in used_positions and self.is_in_bounds(x, y):
+                            if self.tiles[x][y] == "TILE_WALL":
+                                candidates.append((x, y))
+                for y in range(room.y1, room.y2):
+                    for x in (room.x1, room.x2 - 1):
+                        if (x, y) not in used_positions and self.is_in_bounds(x, y):
+                            if self.tiles[x][y] == "TILE_WALL":
+                                candidates.append((x, y))
+            elif area.secret_type in ("secret_floor", "vent"):
+                # 部屋の内部床
+                for x in range(room.x1 + 1, room.x2 - 1):
+                    for y in range(room.y1 + 1, room.y2 - 1):
+                        if (x, y) not in used_positions and self.is_in_bounds(x, y):
+                            if self.tiles[x][y] == "TILE_FLOOR":
+                                candidates.append((x, y))
+
+        if candidates:
+            return random.choice(candidates)
+        return None
 
     def generate_town(self) -> None:
         """街マップ生成（ステップ25）"""
@@ -625,6 +762,51 @@ class GameMap:
                 if not tile_def.get("loop", True) and anim["frame"] == 0:
                     del self.tile_animations[(x, y)]
 
+        # SkillEaterSecretAccess - 隠し扉アニメーション (Step 39)
+        self._update_hidden_door_animations(delta_time)
+
+    def _update_hidden_door_animations(self, delta_time: float) -> None:
+        """隠し扉の開閉アニメーション更新"""
+        if not hasattr(self, "hidden_tiles"):
+            return
+
+        for (x, y), hidden_info in list(self.hidden_tiles.items()):
+            if hidden_info["secret_type"] != "hidden_door":
+                continue
+
+            area_id = hidden_info.get("area_id")
+            if not area_id:
+                continue
+
+            from secret_area_system import SECRET_REGISTRY
+
+            area = SECRET_REGISTRY.get_secret_area(area_id)
+            if not area or not area.is_unlocked:
+                continue
+
+            # 解放済みの隠し扉を開くアニメーション
+            anim_key = f"hidden_door_{x}_{y}"
+            if anim_key not in self.tile_animations:
+                self.tile_animations[anim_key] = {
+                    "tile_id": "TILE_HIDDEN_DOOR",
+                    "frame": 0,
+                    "timer": 0.0,
+                    "fps": 6,  # 6 FPS
+                    "frames": 4,  # 4フレームで開く
+                    "target_tile": "TILE_FLOOR",
+                    "pos": (x, y),
+                }
+
+            anim = self.tile_animations[anim_key]
+            anim["timer"] += delta_time
+            if anim["timer"] >= 1.0 / anim["fps"]:
+                anim["timer"] = 0
+                anim["frame"] = min(anim["frame"] + 1, anim["frames"] - 1)
+                if anim["frame"] == anim["frames"] - 1:
+                    # アニメーション完了: 床タイルに変更
+                    self.tiles[x][y] = anim["target_tile"]
+                    del self.tile_animations[anim_key]
+
     def calculate_wall_variant(self, x: int, y: int) -> int:
         """Calculate wall variant based on neighboring tiles (autotiling)"""
         if not self.is_in_bounds(x, y) or self.tiles[x][y] != "TILE_WALL":
@@ -679,6 +861,68 @@ class GameMap:
         """上り階段が前の層へ続くかチェック（垂直ワールド拡張用）"""
         return not (not self.world_layer or not self.stairs_up_pos)
 
+    # SkillEaterSecretAccess - ミニマップ・探索済みフラグ統合 (Step 58)
+    def get_secret_minimap_data(self) -> dict:
+        """ミニマップ用の秘密エリアデータを取得"""
+        discovered_secrets = {}
+        locked_secrets = {}
+
+        if hasattr(self, "hidden_tiles"):
+            for (x, y), info in self.hidden_tiles.items():
+                area_id = info.get("area_id")
+                secret_type = info.get("secret_type")
+
+                from secret_area_system import SECRET_REGISTRY
+
+                area = SECRET_REGISTRY.get_secret_area(area_id) if area_id else None
+
+                if area and area.is_discovered:
+                    if area.is_unlocked:
+                        discovered_secrets[(x, y)] = {
+                            "type": secret_type,
+                            "name": area.name,
+                            "icon": "🔓",
+                        }
+                    else:
+                        locked_secrets[(x, y)] = {
+                            "type": secret_type,
+                            "name": area.name,
+                            "icon": "🔒",
+                            "hint": area.get_hint_text() if area else "",
+                        }
+
+        return {
+            "discovered": discovered_secrets,
+            "locked": locked_secrets,
+        }
+
+    # SkillEaterSecretAccess - ロックされた秘密のヒント (Step 59)
+    def get_secret_hint_at(self, x: int, y: int) -> str | None:
+        """指定座標の秘密エリアのヒントを取得"""
+        if not hasattr(self, "hidden_tiles"):
+            return None
+
+        info = self.hidden_tiles.get((x, y))
+        if not info:
+            return None
+
+        area_id = info.get("area_id")
+        if not area_id:
+            return None
+
+        from secret_area_system import SECRET_REGISTRY
+
+        area = SECRET_REGISTRY.get_secret_area(area_id)
+        if not area:
+            return None
+
+        if area.is_unlocked:
+            return f"【{area.name}】は既に解放済みです。"
+        elif area.is_discovered:
+            return f"【{area.name}】解除条件: {area.get_hint_text()}"
+        else:
+            return "この壁には何か秘密がありそうだ…"
+
     def get_layer_transition_info(self) -> dict[str, Any]:
         """階層間移動に必要な情報を取得（垂直ワールド拡張用）"""
         if not self.world_layer:
@@ -732,9 +976,7 @@ class GameMap:
 
         return None
 
-    def _calculate_target_layer_down(
-        self, world_manager: WorldMapManager
-    ) -> WorldLayer | None:
+    def _calculate_target_layer_down(self, world_manager: WorldMapManager) -> WorldLayer | None:
         """下り階段でのターゲットレイヤーを計算"""
         if not self.world_layer:
             return None
@@ -772,9 +1014,7 @@ class GameMap:
             new_zone, current_biome, new_depth, current_dimension
         )
 
-    def _calculate_target_layer_up(
-        self, world_manager: WorldMapManager
-    ) -> WorldLayer | None:
+    def _calculate_target_layer_up(self, world_manager: WorldMapManager) -> WorldLayer | None:
         """上り階段でのターゲットレイヤーを計算"""
         if not self.world_layer:
             return None

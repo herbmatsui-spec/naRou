@@ -94,9 +94,7 @@ class EntityManager:
                 return entity
         return None
 
-    def get_entities_in_range(
-        self, center_x: int, center_y: int, radius: int
-    ) -> list[Entity]:
+    def get_entities_in_range(self, center_x: int, center_y: int, radius: int) -> list[Entity]:
         """
         指定された範囲内のエンティティを取得する
 
@@ -231,10 +229,7 @@ class EntityManager:
         Returns:
             ブロックされている場合True
         """
-        return any(
-            entity.x == x and entity.y == y and entity.hp > 0
-            for entity in self.entities
-        )
+        return any(entity.x == x and entity.y == y and entity.hp > 0 for entity in self.entities)
 
     def clear(self) -> None:
         """すべてのエンティティ、アイテム、リソースノードをクリアする"""

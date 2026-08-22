@@ -70,11 +70,7 @@ class TitleRepository(CachedRepository[Title, str]):
 
     def _build_indexes(self):
         for title in self._data.values():
-            cat = (
-                getattr(title.category, "value", str(title.category))
-                if title.category
-                else ""
-            )
+            cat = getattr(title.category, "value", str(title.category)) if title.category else ""
             if cat:
                 self._by_category.setdefault(cat, []).append(title)
             if title.is_hidden:

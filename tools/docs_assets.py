@@ -3,6 +3,7 @@
 Documentation generator script for creating documentation about assets.
 Generates API references, usage guides, and asset catalogs.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -63,7 +64,7 @@ function getTileUV(tileIndex, tilesetData) {{
     if (tileIndex < 0 || tileIndex >= tilesetData.tile_count) {{
         return null; // Invalid tile index
     }}
-    
+
     const tile = tilesetData.tiles[tileIndex];
     return {{
         u: tile.u,
@@ -88,17 +89,13 @@ function getTileByPosition(row, col, tilesetData) {{
                         if metadata.get("tiles"):
                             doc_content += "\n| Index | Name | X | Y | Width | Height | U | V | U Width | V Height |\n"
                             doc_content += "|-------|------|---|---|-------|--------|---|---|---------|----------|\n"
-                            for tile in metadata["tiles"][
-                                :20
-                            ]:  # Limit to first 20 tiles
+                            for tile in metadata["tiles"][:20]:  # Limit to first 20 tiles
                                 doc_content += f"| {tile.get('index', 'N/A')} | {tile.get('name', 'unnamed')} | {tile.get('x', 0)} | {tile.get('y', 0)} | {tile.get('width', 0)} | {tile.get('height', 0)} | {tile.get('u', 0):.4f} | {tile.get('v', 0):.4f} | {tile.get('uw', 0):.4f} | {tile.get('vh', 0):.4f} |\n"
 
                             if len(metadata["tiles"]) > 20:
                                 doc_content += f"\n*Showing first 20 tiles. Total tiles: {len(metadata['tiles'])}*\n"
                         else:
-                            doc_content += (
-                                "\n*No detailed tile information available*\n"
-                            )
+                            doc_content += "\n*No detailed tile information available*\n"
 
                         # Add technical details
                         doc_content += f"""
@@ -117,9 +114,7 @@ function getTileByPosition(row, col, tilesetData) {{
                         stats["files_generated"] += 1
 
                     except Exception as e:
-                        stats["errors"].append(
-                            f"Error generating docs for {json_path}: {e}"
-                        )
+                        stats["errors"].append(f"Error generating docs for {json_path}: {e}")
 
     # Generate index documentation
     try:
@@ -143,7 +138,9 @@ Pipeline Version: {config.get("version", "1.0.0")}
             index_content += "| Tileset Name | Documentation |\n"
             index_content += "|--------------|---------------|\n"
             for tileset_name in sorted(tileset_files):
-                index_content += f"| {tileset_name} | [{tileset_name}_docs.md]({tileset_name}_docs.md) |\n"
+                index_content += (
+                    f"| {tileset_name} | [{tileset_name}_docs.md]({tileset_name}_docs.md) |\n"
+                )
         else:
             index_content += "*No tilesets found*\n"
 
@@ -229,39 +226,39 @@ class FontRenderer {{
         this.fontData = fontData;
         this.atlas = atlasImage;
     }}
-    
+
     renderText(text, x, y, size = 1, color = '#FFFFFF') {{
         let cursorX = x;
         let cursorY = y;
-        
+
         for (const char of text) {{
             const glyph = this.fontData.metrics[char] || this.fontData.metrics['?'];
             if (!glyph) continue;
-            
+
             // Calculate glyph position and size
             const glyphWidth = glyph.width * size;
             const glyphHeight = glyph.height * size;
             const glyphX = cursorX + (glyph.bearing_x * size);
             const glyphY = cursorY - (glyph.height - glyph.bearing_y) * size;
-            
+
             // Texture coordinates
             const u = glyph.u;
             const v = glyph.v;
             const width = glyph.uw;
             const height = glyph.vh;
-            
+
             // Render glyph quad (implementation depends on your graphics API)
             this.renderGlyphQuad(
                 glyphX, glyphY, glyphWidth, glyphHeight,
                 u, v, width, height,
                 color
             ));
-            
+
             // Move cursor for next character
             cursorX += glyph.advance * size;
         }}
     }}
-    
+
     renderGlyphQuad(x, y, width, height, u, v, texWidth, texHeight, color) {{
         // Implementation-specific rendering code
         // This would bind the atlas texture and draw a textured quad
@@ -284,9 +281,7 @@ function getKerning(fontData, char1, char2) {{
                         if metrics:
                             # Group characters by type
                             ascii_chars = [c for c in metrics if ord(c) < 128]
-                            extended_chars = [
-                                c for c in metrics if ord(c) >= 128
-                            ]
+                            extended_chars = [c for c in metrics if ord(c) >= 128]
 
                             doc_content += f"""- **Total Characters**: {len(metrics)}
 - **ASCII Characters** (0-127): {len(ascii_chars)}
@@ -301,9 +296,7 @@ function getKerning(fontData, char1, char2) {{
                                 line = ""
                                 for col in range(16):
                                     char_code = row * 16 + col
-                                    if (
-                                        char_code < 32 or char_code > 126
-                                    ):  # Non-printable ASCII
+                                    if char_code < 32 or char_code > 126:  # Non-printable ASCII
                                         line += " . "
                                     else:
                                         char = chr(char_code)
@@ -318,9 +311,7 @@ function getKerning(fontData, char1, char2) {{
                             if extended_chars:
                                 doc_content += f"\n**Extended Characters**: {''.join(sorted(extended_chars[:50]))}"
                                 if len(extended_chars) > 50:
-                                    doc_content += (
-                                        f"... and {len(extended_chars) - 50} more"
-                                    )
+                                    doc_content += f"... and {len(extended_chars) - 50} more"
                         else:
                             doc_content += "\n*No character metrics available*\n"
 
@@ -341,9 +332,7 @@ function getKerning(fontData, char1, char2) {{
                         stats["files_generated"] += 1
 
                     except Exception as e:
-                        stats["errors"].append(
-                            f"Error generating docs for {json_path}: {e}"
-                        )
+                        stats["errors"].append(f"Error generating docs for {json_path}: {e}")
 
     # Generate index documentation
     try:
@@ -367,9 +356,7 @@ Pipeline Version: {config.get("version", "1.0.0")}
             index_content += "| Font Name | Documentation |\n"
             index_content += "|-----------|---------------|\n"
             for font_name in sorted(font_files):
-                index_content += (
-                    f"| {font_name} | [{font_name}_docs.md]({font_name}_docs.md) |\n"
-                )
+                index_content += f"| {font_name} | [{font_name}_docs.md]({font_name}_docs.md) |\n"
         else:
             index_content += "*No fonts found*\n"
 
@@ -461,7 +448,7 @@ class SoundManager {{
         this.context = audioContext;
         this.sounds = new Map(); // Cache for loaded sounds
     }}
-    
+
     async loadSound(name, url) {{
         const response = await fetch(url);
         const arrayBuffer = await response.arrayBuffer();
@@ -469,32 +456,32 @@ class SoundManager {{
         this.sounds.set(name, audioBuffer);
         return audioBuffer;
     }}
-    
+
     playSound(name, options = {{}}) {{
         const buffer = this.sounds.get(name);
         if (!buffer) {{
             console.warn(`Sound not found: {{name}}`);
             return null;
         }}
-        
+
         const source = this.context.createBufferSource();
         source.buffer = buffer;
-        
+
         // Apply options
         const gainNode = this.context.createGain();
         gainNode.gain.value = options.volume || 1.0;
         source.connect(gainNode).connect(this.context.destination);
-        
+
         // Set looping if requested
         source.loop = options.loop || false;
-        
+
         // Play sound
         source.start(0);
-        
+
         // Return source for potential stopping
         return source;
     }}
-    
+
     stopSound(source) {{
         if (source) {{
             source.stop();
@@ -556,9 +543,7 @@ function playSoundWithAudioElement(src, volume = 1.0, loop = false) {{
                     stats["files_generated"] += 1
 
                 except Exception as e:
-                    stats["errors"].append(
-                        f"Error generating docs for {sound_path}: {e}"
-                    )
+                    stats["errors"].append(f"Error generating docs for {sound_path}: {e}")
 
     # Generate index documentation
     try:
@@ -575,10 +560,7 @@ Pipeline Version: {config.get("version", "1.0.0")}
         sound_files = []
         for root, dirs, files in os.walk(sound_dir):
             for file in files:
-                if any(
-                    file.lower().endswith(ext)
-                    for ext in [".ogg", ".mp3", ".wav", ".flac"]
-                ):
+                if any(file.lower().endswith(ext) for ext in [".ogg", ".mp3", ".wav", ".flac"]):
                     sound_files.append(os.path.splitext(file)[0])
 
         if sound_files:
@@ -708,13 +690,13 @@ class ModelLoader {{
         this.gl = glContext;
         this.models = new Map(); // Cache for loaded models
     }}
-    
+
     async loadModel(name, url) {{
         // In a real implementation, you would use a library like:
         // - THREE.js with GLTFLoader
         // - Babylon.js with AssetsManager
         // - Custom parser for OBJ/FBX/etc.
-        // 
+        //
         // For this example, we'll show the concept:
         const response = await fetch(url);
         const arrayBuffer = await response.arrayBuffer();
@@ -723,28 +705,28 @@ class ModelLoader {{
         this.models.set(name, modelData);
         return modelData;
     }}
-    
+
     renderModel(name, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1]) {{
         const model = this.models.get(name);
         if (!model) {{
             console.warn(`Model not found: {{name}}`);
             return;
         }}
-        
+
         // Apply transformation matrix
         const modelMatrix = this.createTransformationMatrix(position, rotation, scale);
-        
+
         // Set uniforms and draw
         this.gl.useModelMatrix(modelMatrix);
         this.gl.drawModel(model);
     }}
-    
+
     // Helper methods would go here...
     createTransformationMatrix(position, rotation, scale) {{
         // Implementation depends on your math library
         return identityMatrix;
     }}
-    
+
     parseModelFormat(arrayBuffer, format) {{
         // Format-specific parsing logic
         // This would delegate to specialized parsers
@@ -822,7 +804,9 @@ class ModelLoader {{
                     if ext in format_info:
                         doc_content += format_info[ext]
                     else:
-                        doc_content += f"- **{ext.upper()[1:]}**: Format-specific details not available"
+                        doc_content += (
+                            f"- **{ext.upper()[1:]}**: Format-specific details not available"
+                        )
 
                     doc_content += """
 ## Related Documentation
@@ -840,9 +824,7 @@ class ModelLoader {{
                     stats["files_generated"] += 1
 
                 except Exception as e:
-                    stats["errors"].append(
-                        f"Error generating docs for {model_path}: {e}"
-                    )
+                    stats["errors"].append(f"Error generating docs for {model_path}: {e}")
 
     # Generate index documentation
     try:
@@ -1382,9 +1364,7 @@ def generate_documentation(config: dict) -> dict:
         "total_docs_generated": sum(
             result.get("files_generated", 0) for result in docs["results"].values()
         ),
-        "total_errors": sum(
-            len(result.get("errors", [])) for result in docs["results"].values()
-        ),
+        "total_errors": sum(len(result.get("errors", [])) for result in docs["results"].values()),
         "assets_documented": sum(
             result.get("assets_documented", 0)
             for result in docs["results"].values()
@@ -1417,9 +1397,7 @@ def print_documentation_summary(docs: dict, verbose: bool = False):
 
     print("\nSUMMARY:")
     summary = docs.get("summary", {})
-    print(
-        f"  Total Documentation Files Generated: {summary.get('total_docs_generated', 0)}"
-    )
+    print(f"  Total Documentation Files Generated: {summary.get('total_docs_generated', 0)}")
     print(f"  Total Errors Encountered: {summary.get('total_errors', 0)}")
     print(f"  Total Assets Documented: {summary.get('assets_documented', 0)}")
 
@@ -1449,9 +1427,7 @@ def main():
         default="tools/asset_pipeline_config.json",
         help="Path to configuration file",
     )
-    parser.add_argument(
-        "--output", default=None, help="Output file for documentation (JSON)"
-    )
+    parser.add_argument("--output", default=None, help="Output file for documentation (JSON)")
     parser.add_argument(
         "--assets",
         nargs="+",
@@ -1486,18 +1462,14 @@ def main():
 
     # Filter results if needed
     if args.assets != ["all"]:
-        filtered_results = {
-            k: v for k, v in docs["results"].items() if k in assets_to_document
-        }
+        filtered_results = {k: v for k, v in docs["results"].items() if k in assets_to_document}
         docs["results"] = filtered_results
 
         # Recalculate summary
         total_files_generated = sum(
             result.get("files_generated", 0) for result in docs["results"].values()
         )
-        total_errors = sum(
-            len(result.get("errors", [])) for result in docs["results"].values()
-        )
+        total_errors = sum(len(result.get("errors", [])) for result in docs["results"].values())
         total_assets_documented = sum(
             result.get("assets_documented", 0)
             for result in docs["results"].values()

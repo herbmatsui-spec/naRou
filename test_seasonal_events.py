@@ -11,12 +11,7 @@ from asset_manager import ASSET_MANAGER
 from balance_tool import BALANCE_TOOL
 from community_goal_manager import COMMUNITY_GOAL_MANAGER
 from feedback_system import FEEDBACK_SYSTEM
-from world_event_system import (
-    EVENT_SCHEDULER,
-    RANKING_MANAGER,
-    REGISTRY,
-    WorldEventManager,
-)
+from world_event_system import EVENT_SCHEDULER, RANKING_MANAGER, REGISTRY, WorldEventManager
 
 
 class MockEntity:
@@ -101,9 +96,7 @@ def test_seasonal_event_flow():
         )
 
     # 6. コミュニティゴール進捗を確認
-    progress = COMMUNITY_GOAL_MANAGER.get_progress(
-        "interworld_invasion", "total_points"
-    )
+    progress = COMMUNITY_GOAL_MANAGER.get_progress("interworld_invasion", "total_points")
     print(f"  コミュニティゴール進捗: {progress}")
     if progress == expected_points:
         print("✓ コミュニティゴール進捗が正しく更新される")
@@ -113,19 +106,13 @@ def test_seasonal_event_flow():
         )
 
     # 7. 称号付与をチェック（ポイントが十分であれば）
-    stats = {
-        "points": RANKING_MANAGER.get_player_score("interworld_invasion", player.id)
-    }
+    stats = {"points": RANKING_MANAGER.get_player_score("interworld_invasion", player.id)}
     newly_granted = wm.check_and_grant_event_titles(player, event, stats)
     print(f"  新規獲得称号: {newly_granted}")
     # 現在のポイントは800なので、"異世界の征服者"(1000ポイント以上)はまだ獲得できない
     # ポイントを追加して1000超えるようにする
-    wm.add_event_points(
-        player, "interworld_invasion", "alien_soldier", amount=2
-    )  # +200点
-    stats = {
-        "points": RANKING_MANAGER.get_player_score("interworld_invasion", player.id)
-    }
+    wm.add_event_points(player, "interworld_invasion", "alien_soldier", amount=2)  # +200点
+    stats = {"points": RANKING_MANAGER.get_player_score("interworld_invasion", player.id)}
     newly_granted = wm.check_and_grant_event_titles(player, event, stats)
     print(f"  追加ポイント後の新規獲得称号: {newly_granted}")
     if "異世界の征服者" in newly_granted:
@@ -135,18 +122,12 @@ def test_seasonal_event_flow():
 
     # 8. フィードバックを送信（イベント終了後に）
     # イベント終了ターンを過ぎたことをシミュレート
-    end_turn = (
-        event.end_turn if event.end_turn is not None else test_turn + event.duration
-    )
+    end_turn = event.end_turn if event.end_turn is not None else test_turn + event.duration
     feedback_turn = end_turn + 10
-    print(
-        f"  イベント終了ターン: {end_turn}, フィードバック送信ターン: {feedback_turn}"
-    )
+    print(f"  イベント終了ターン: {end_turn}, フィードバック送信ターン: {feedback_turn}")
     # フィードバックを送信
     feedback = {"rating": 5, "comment": "楽しかった！"}
-    success = FEEDBACK_SYSTEM.submit_feedback(
-        "interworld_invasion", player.id, feedback
-    )
+    success = FEEDBACK_SYSTEM.submit_feedback("interworld_invasion", player.id, feedback)
     if success:
         print("✓ フィードバックが送信される")
     else:

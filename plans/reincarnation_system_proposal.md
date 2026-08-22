@@ -154,7 +154,7 @@ legacy_skills:
   soul_memory:      # 魂の記憶
     min_reincarnation: 2
     description: "前生のスキル経験値の一部を保持"
-    effect: 
+    effect:
       type: "skill_experience_retention"
       ratio: 0.1  # 前生のスキル経験値の10%を現在のスキルに加算
     unlock_condition: "reincarnation_count >= 2"
@@ -304,10 +304,10 @@ class Entity:
     unlocked_reincarnation_dungeons: List[str] = field(default_factory=list)
     collected_fragments: List[str] = field(default_factory=list)
     favor: Dict[str, int] = field(default_factory=list)  # 神ID: 恩寵値
-    
+
     # 転生準備用一時フィールド（転生選択画面で使用）
     inheritance_selection: Dict[str, Any] = field(default_factory=dict)
-    
+
     # チャレンジ進捗用（実績システムと連携可）
     challenge_progress: Dict[str, int] = field(default_factory=dict)
 ```

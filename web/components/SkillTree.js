@@ -17,26 +17,26 @@ const SkillTree = () => {
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [unlockedSkills, setUnlockedSkills] = useState([]);
   const [skillPoints, setSkillPoints] = useState(0);
-  
+
   // Initialize skill tree from data
   const [skillTree, setSkillTree] = useState(skillTreeData);
-  
+
   // Calculate skill points from player state
   useEffect(() => {
     const totalPoints = 0; // Calculate from game state
     setSkillPoints(totalPoints);
   }, []);
-  
+
   // Unlock skill recursively based on prerequisites
   const unlockSkill = (skillId) => {
     const skill = findSkill(skillId);
     if (!skill || skill.unlocked) return false;
-    
+
     // Check all prerequisites are unlocked
     if (skill.prerequisites && skill.prerequisites.some(prereq => !unlockedSkills.includes(prereq))) {
       return false;
     }
-    
+
     // Unlock the skill
     setSkillTree(prev => {
       const newTree = JSON.parse(JSON.stringify(prev));
@@ -52,43 +52,43 @@ const SkillTree = () => {
       }
       return newTree;
     });
-    
+
     setUnlockedSkills(prev => [...prev, skillId]);
     return true;
   };
-  
+
   // Find skill in tree by ID
   const findSkillInTree = (tree, skillId) => {
     if (!tree) return null;
-    
+
     if (tree.id === skillId) return tree;
-    
+
     if (tree.children) {
       for (const child of tree.children) {
         const found = findSkillInTree(child, skillId);
         if (found) return found;
       }
     }
-    
+
     return null;
   };
-  
+
   // Find skill from flattened data
   const findSkill = (skillId) => {
-    return skillTreeData.find(skill => skill.id === skillId) || 
+    return skillTreeData.find(skill => skill.id === skillId) ||
            skillTreeData.flatMap(s => [s, ...(s.children || [])]).find(skill => skill.id === skillId);
   };
-  
+
   // Handle skill selection
   const handleSkillSelect = (skillId) => {
     const skill bilateral = findSkill(skillId);
     if (!skill bilateral || !skill.unlocked || skill.selected) return;
-    
+
     // Check if we have enough points
     if (skillPoints < skill.cost) {
       return;
     }
-    
+
     // Select the skill
     setSkillTree(prev => {
       const newTree = JSON.parse(JSON.stringify(prev));
@@ -103,52 +103,52 @@ const SkillTree = () => {
       }
       return newTree;
     });
-    
+
     setSkillPoints(prev => prev - skill.cost);
     setSelectedSkill(skillId);
   };
-  
+
   // Find parent skill
   const findParent = (tree, skillId) => {
     if (!tree.children) return null;
-    
+
     for (const child of tree.children) {
       if (child.id === skillId) return tree;
       const found = findParent(child, skillId);
       if (found) return found;
     }
-    
+
     return null;
   };
-  
+
   // Get skill tier levels
   const getSkillTier = (skill) => {
     if (!skill) return null;
-    
+
     const tiers = skillTreeData.filter(s => s.tier === skill.tier);
     return tiers.length;
   };
-  
+
   // Render skill node
   const renderSkillNode = (skill, level = 0) => {
     if (!skill) return null;
-    
+
     const isUnlocked = unlockedSkills.includes(skill.id);
     const isSelected = selectedSkill === skill.id;
     const isLocked = !isUnlocked;
     const isMaxLevel = skill.level >= (skill.maxLevel || 1);
-    
+
     const nodeClass = `skill-node ${skill.category} ${isUnlocked ? 'unlocked' : 'locked'} ${isSelected ? 'selected' : ''} ${isMaxLevel ? 'max-level' : ''}`;
-    
+
     return (
-      <div 
+      <div
         className={nodeClass}
         key={skill.id}
         onClick={() => handleSkillSelect(skill.id)}
-        style={{ 
+        style={{
           gridColumn: skill.position.col,
           gridRow: skill.position.row,
-          marginLeft: `${level * 20}px` 
+          marginLeft: `${level * 20}px`
         }}
       >
         <div className="skill-node-content">
@@ -178,7 +178,7 @@ const SkillTree = () => {
       </div>
     );
   };
-  
+
   // Render skill tree
   const renderSkillTree = () => {
     return (
@@ -187,7 +187,7 @@ const SkillTree = () => {
           <h2>Skill Tree</h2>
           <div className="skill-points">ポイント: {skillPoints}</div>
         </div>
-        
+
         <div className="skill-tree-grid">
           {skillTree.map(tier => (
             <div key={tier.id} className="skill-tier">
@@ -201,7 +201,7 @@ const SkillTree = () => {
             </div>
           ))}
         </div>
-        
+
         <div className="skill-details">
           {selectedSkill && (
             <div className="selected-skill-details">
@@ -225,7 +225,7 @@ const SkillTree = () => {
       </div>
     );
   };
-  
+
   return renderSkillTree();
 };
 

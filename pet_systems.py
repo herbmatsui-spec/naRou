@@ -2,6 +2,7 @@
 
 Consolidated managers for the pet contract/evolution/fusion proposal.
 """
+
 from __future__ import annotations
 
 import logging
@@ -209,10 +210,11 @@ class PetBondSystem:
             CONTRACT_REG.load()
             mgr = PetContractManager(CONTRACT_REG)
             new_val = mgr.update_bond(pet_ai, amount)
-            logger.debug("Pet bond increased by %d (reason: %s), current: %d", amount, reason, new_val)
+            logger.debug(
+                "Pet bond increased by %d (reason: %s), current: %d", amount, reason, new_val
+            )
             return new_val
         except Exception as e:
             logger.warning("Failed to update bond via PetBondSystem: %s", e)
             pet_ai.bond = getattr(pet_ai, "bond", 0) + amount
             return pet_ai.bond
-

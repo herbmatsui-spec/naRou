@@ -25,7 +25,7 @@ class LogWindow extends UIComponent {
             const messageElement = this.createElement('div', {
                 className: `log-message log-message--${msg.type || 'story'}`
             }, [msg.text]);
-            
+
             container.appendChild(messageElement);
         });
 
@@ -62,19 +62,19 @@ class LogWindow extends UIComponent {
                 animation: logFadeIn var(--motion-duration-standard) var(--motion-easing-smooth);
                 line-height: 1.5;
             }
-            .log-message--story { 
-                color: var(--colors-content-text-main); 
+            .log-message--story {
+                color: var(--colors-content-text-main);
             }
-            .log-message--combat { 
-                color: var(--colors-status-danger); 
+            .log-message--combat {
+                color: var(--colors-status-danger);
                 font-weight: var(--typography-weight-medium);
             }
-            .log-message--system { 
-                color: var(--colors-brand-primary); 
+            .log-message--system {
+                color: var(--colors-brand-primary);
                 font-style: italic;
             }
-            .log-message--warning { 
-                color: var(--colors-status-warning); 
+            .log-message--warning {
+                color: var(--colors-status-warning);
                 background: rgba(234, 179, 8, 0.1);
             }
             @keyframes logFadeIn {

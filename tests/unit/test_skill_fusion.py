@@ -9,7 +9,8 @@ from skill_fusion_system import FusionManager, FusionRegistry
 def registry(tmp_path):
     # create temporary yaml file
     yaml_path = tmp_path / "skill_fusion.yaml"
-    yaml_path.write_text("""
+    yaml_path.write_text(
+        """
     fusions:
       test_fusion:
         name: Test Fusion
@@ -17,7 +18,8 @@ def registry(tmp_path):
         required_skills: []
         result_skills: []
         bonus_effects: []
-    """)
+    """
+    )
     reg = FusionRegistry()
     reg.load(str(yaml_path))
     return reg

@@ -1,9 +1,11 @@
 """
 転生専用ダンジョンシステム
 """
+
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import os
 from dataclasses import dataclass
@@ -136,9 +138,7 @@ class ReincarnationDungeonManager:
 
         # 転生回数条件をチェック
         reinc_count = (
-            player
-            if isinstance(player, int)
-            else getattr(player, "reincarnation_count", 0)
+            player if isinstance(player, int) else getattr(player, "reincarnation_count", 0)
         )
         if reinc_count < dungeon_data.min_reincarnation:
             return False

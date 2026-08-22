@@ -42,9 +42,7 @@ def install(package_path=None, dev=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Install naRou")
     parser.add_argument("--package", help="Path to package file")
-    parser.add_argument(
-        "--dev", action="store_true", help="Install in development mode"
-    )
+    parser.add_argument("--dev", action="store_true", help="Install in development mode")
     args = parser.parse_args()
 
     success = install(args.package, args.dev)

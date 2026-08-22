@@ -114,9 +114,7 @@ class AchievementManager:
     def __init__(self, registry: AchievementRegistry | None = None):
         self.registry = registry or REGISTRY
 
-    def check_achievement(
-        self, player: Entity, ach_id: str, engine: Any | None = None
-    ) -> bool:
+    def check_achievement(self, player: Entity, ach_id: str, engine: Any | None = None) -> bool:
         """個別実績の達成条件チェック (Steps 23, 35, 40, 44, 47, 50, 54, 58, 62, 64, 69)"""
         if ach_id in player.achievements:
             return False
@@ -131,11 +129,7 @@ class AchievementManager:
         # 1. 討伐数 (Step 2, 23)
         if ctype == "kill_count":
             target = cond.get("target", 1)
-            tot_kills = (
-                sum(player.kill_counts.values())
-                if hasattr(player, "kill_counts")
-                else 0
-            )
+            tot_kills = sum(player.kill_counts.values()) if hasattr(player, "kill_counts") else 0
             return tot_kills >= target
 
         # 2. モンスター種族討伐数 (Step 3)
@@ -157,8 +151,7 @@ class AchievementManager:
         elif ctype == "speedrun":
             limit = cond.get("time_limit_seconds", 3600)
             return (
-                player.play_time_seconds <= limit
-                and getattr(player, "max_dungeon_depth", 0) >= 5
+                player.play_time_seconds <= limit and getattr(player, "max_dungeon_depth", 0) >= 5
             )
 
         # 5. 祭り参加者 (Step 41, 44)
@@ -190,10 +183,7 @@ class AchievementManager:
         elif ctype == "reincarnation":
             req_reinc = cond.get("reincarnation_count", 5)
             req_lvl = cond.get("total_level_earned", 1000)
-            return (
-                player.reincarnation_count >= req_reinc
-                and player.total_level_earned >= req_lvl
-            )
+            return player.reincarnation_count >= req_reinc and player.total_level_earned >= req_lvl
 
         # 11. メタマスター (Step 63, 64)
         elif ctype == "meta_progression_all":
@@ -207,9 +197,7 @@ class AchievementManager:
 
         return False
 
-    def grant_achievement(
-        self, player: Entity, ach_id: str, engine: Any | None = None
-    ) -> bool:
+    def grant_achievement(self, player: Entity, ach_id: str, engine: Any | None = None) -> bool:
         """実績付与および報酬付与 (Step 24)"""
         if ach_id in player.achievements:
             return False
@@ -265,9 +253,7 @@ class AchievementManager:
 
         return True
 
-    def check_all_achievements(
-        self, player: Entity, engine: Any | None = None
-    ) -> list[str]:
+    def check_all_achievements(self, player: Entity, engine: Any | None = None) -> list[str]:
         """全未達成実績を一括チェックして付与"""
         granted = []
         for ach_id in self.registry.all():

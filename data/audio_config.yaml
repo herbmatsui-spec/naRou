@@ -40,7 +40,7 @@ se:
   ui_notify: 'handleCoins.ogg'
   ui_select: 'metalLatch.ogg'
   ui_cancel: 'metalClick.ogg'
-  
+
   # Footstep variations (terrain-specific)
   footstep_stone: 'footstep00.ogg'
   footstep_grass: 'footstep01.ogg'
@@ -52,7 +52,7 @@ se:
   footstep_sand: 'footstep07.ogg'
   footstep_carpet: 'footstep08.ogg'
   footstep_gravel: 'footstep09.ogg'
-  
+
   # Combat sounds
   hit_light: 'knifeSlice.ogg'
   hit_heavy: 'chop.ogg'
@@ -60,7 +60,7 @@ se:
   crit: 'metalPot1.ogg'
   block: 'metalLatch.ogg'
   dodge: 'cloth1.ogg'
-  
+
   # Magic/Spell sounds
   cast_fire: 'drawKnife1.ogg'
   cast_ice: 'creak1.ogg'
@@ -68,7 +68,7 @@ se:
   cast_heal: 'bookOpen.ogg'
   cast_poison: 'dropLeather.ogg'
   cast_teleport: 'drawKnife2.ogg'
-  
+
   # Item/Interaction sounds
   get_item: 'handleCoins.ogg'
   get_rare_item: 'handleCoins2.ogg'
@@ -80,13 +80,13 @@ se:
   open_door: 'doorOpen_1.ogg'
   close_door: 'doorClose_1.ogg'
   pick_lock: 'metalClick.ogg'
-  
+
   # Status effects
   level_up: 'fanfare_victory'
   heal: 'bookOpen.ogg'
   poison_tick: 'creak2.ogg'
   burn_tick: 'chop.ogg'
-  
+
   # Monster sounds
   monster_slime: 'cloth2.ogg'
   monster_goblin: 'bookPlace1.ogg'
@@ -95,13 +95,21 @@ se:
   monster_undead: 'creak3.ogg'
   monster_alert: 'metalClick.ogg'
   monster_death: 'dropLeather.ogg'
-  
+
   # Environmental
   trap_trigger: 'metalLatch.ogg'
   trap_disarm: 'bookClose.ogg'
   secret_found: 'handleSmallLeather.ogg'
   stairs_up: 'creak1.ogg'
   stairs_down: 'creak2.ogg'
+
+  # Secret Access (SkillEaterSecretAccess)
+  secret_wall_slide: 'secret_wall_slide.ogg'
+  keycard_beep: 'keycard_beep.ogg'
+  vent_crawl: 'vent_crawl.ogg'
+  ancient_mechanism: 'ancient_mechanism.ogg'
+  perception_success: 'handleSmallLeather.ogg'
+  perception_fail: 'creak2.ogg'
 
 # Ambient loop mappings (for depth-based ambient)
 ambient_loops:
@@ -112,3 +120,24 @@ ambient_loops:
   town_night: 'amb_town_chatter'
   forest: 'amb_cave_wind'
   cave: 'amb_cave_wind'
+
+# World Clock Audio (Steps 53-64)
+world_clock:
+  enabled: true
+  master_volume: 0.7
+  ambience_volume: 0.5
+  # Audio file mappings
+  clock_tower_bell: 'audio/Audio/clock_tower_bell.ogg'
+  shift_change_announcement: 'audio/Audio/shift_change_announcement.ogg'
+  night_ambience: 'audio/Audio/night_ambience.ogg'
+  dawn_ambience: 'audio/Audio/dawn_ambience.ogg'
+  # Phase ambience mapping
+  phase_ambience:
+    DAWN: 'dawn_ambience'
+    NIGHT: 'night_ambience'
+  # Bell patterns at phase boundaries
+  phase_bell_patterns:
+    DAWN: 3
+    DAY: 1
+    DUSK: 2
+    NIGHT: 4

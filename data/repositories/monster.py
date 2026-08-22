@@ -26,9 +26,7 @@ class MonsterRepository(CachedRepository[MonsterDefinition, str]):
     def get_by_level(self, level: int) -> list[MonsterDefinition]:
         return self._by_level.get(level, [])
 
-    def get_by_level_range(
-        self, min_level: int, max_level: int
-    ) -> list[MonsterDefinition]:
+    def get_by_level_range(self, min_level: int, max_level: int) -> list[MonsterDefinition]:
         result = []
         for level in range(min_level, max_level + 1):
             result.extend(self._by_level.get(level, []))

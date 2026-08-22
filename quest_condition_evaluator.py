@@ -6,13 +6,12 @@ AST評価エンジン：プレイヤー/ワールド状態 → bool
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from quest_condition_ast import (
-    ConditionNode,
-)
+from quest_condition_ast import ConditionNode
 
 if TYPE_CHECKING:
     from entity import Entity

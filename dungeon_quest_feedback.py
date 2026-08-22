@@ -6,6 +6,7 @@ Dungeon Quest Feedback Module (偏執的クエストシステム / 設計書 Pha
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
@@ -177,9 +178,11 @@ class DungeonQuestFeedback:
             if target_element == "generated_floors":
                 obj.current_count = min(
                     obj.required_count,
-                    self._feedback_cache[obj.objective_id].generated_floors
-                    if obj.objective_id in self._feedback_cache
-                    else 0,
+                    (
+                        self._feedback_cache[obj.objective_id].generated_floors
+                        if obj.objective_id in self._feedback_cache
+                        else 0
+                    ),
                 )
                 # または feedback から直接
                 # 下で統一処理
@@ -251,9 +254,7 @@ class DungeonQuestPipeline:
         generated = self.generator.generate_from_spec(spec)
 
         # フィードバック処理
-        feedback = self.feedback_processor.process_generation_result(
-            generated, spec_id, quest_id
-        )
+        feedback = self.feedback_processor.process_generation_result(generated, spec_id, quest_id)
 
         return {
             "generated": generated,
@@ -264,10 +265,7 @@ class DungeonQuestPipeline:
         """仕様読み込み（簡易版）"""
         # デフォルトスペックのハードコードフォールバック
         if spec_id == "default_dungeon":
-            from quest_dungeon_spec import (
-                DungeonSpec,
-                FloorSpec,
-            )
+            from quest_dungeon_spec import DungeonSpec, FloorSpec
 
             return DungeonSpec(
                 spec_id="default_dungeon",
@@ -279,9 +277,7 @@ class DungeonQuestPipeline:
                 floor_specs=[
                     FloorSpec(floor_number=1, min_rooms=3, max_rooms=5),
                     FloorSpec(floor_number=2, min_rooms=3, max_rooms=5),
-                    FloorSpec(
-                        floor_number=3, min_rooms=2, max_rooms=4, is_boss_floor=True
-                    ),
+                    FloorSpec(floor_number=3, min_rooms=2, max_rooms=4, is_boss_floor=True),
                 ],
             )
         # YAMLから読み込みを試みる

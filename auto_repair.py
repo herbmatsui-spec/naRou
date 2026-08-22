@@ -18,6 +18,7 @@ def run_command(cmd, cwd=None):
     if isinstance(cmd, str):
         # Split string command into list
         import shlex
+
         cmd = shlex.split(cmd)
     print(f"Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
@@ -64,9 +65,7 @@ def repair_tests():
     print("Repairing tests...")
 
     # Run tests and capture failures
-    result = subprocess.run(
-        ["pytest", "-v", "--tb=short"], capture_output=True, text=True
-    )
+    result = subprocess.run(["pytest", "-v", "--tb=short"], capture_output=True, text=True)
 
     if result.returncode != 0:
         print("Some tests failed. Attempting to fix...")
@@ -207,19 +206,13 @@ if __name__ == "__main__":
     parser.add_argument("--data", action="store_true", help="Repair data")
     parser.add_argument("--git", action="store_true", help="Repair git")
     parser.add_argument("--all", action="store_true", help="Run all repairs")
-    parser.add_argument(
-        "--monitor", action="store_true", help="Monitor and auto-repair"
-    )
-    parser.add_argument(
-        "--interval", type=int, default=300, help="Monitor interval (seconds)"
-    )
+    parser.add_argument("--monitor", action="store_true", help="Monitor and auto-repair")
+    parser.add_argument("--interval", type=int, default=300, help="Monitor interval (seconds)")
     args = parser.parse_args()
 
     if args.monitor:
         monitor_and_repair(args.interval)
-    elif args.all or not any(
-        [args.deps, args.code, args.tests, args.config, args.data, args.git]
-    ):
+    elif args.all or not any([args.deps, args.code, args.tests, args.config, args.data, args.git]):
         repair_all()
     else:
         if args.deps:

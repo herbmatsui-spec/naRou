@@ -19,6 +19,7 @@ Key capabilities:
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import json
 import os
@@ -183,9 +184,7 @@ class TelemetryManager:
     def get_variant(self, experiment: str, variants: list[str] | None = None) -> str:
         variants = variants or ["control", "treatment"]
         seed = int(
-            uuid.uuid5(
-                uuid.NAMESPACE_DNS, f"{self.get_anonymous_id()}:{experiment}"
-            ).hex,
+            uuid.uuid5(uuid.NAMESPACE_DNS, f"{self.get_anonymous_id()}:{experiment}").hex,
             16,
         )
         return variants[seed % len(variants)]
@@ -198,7 +197,9 @@ def get_telemetry_manager() -> TelemetryManager:
 
         enabled = get_config_manager().get_telemetry_enabled()
     except Exception as e:
-        logger.debug("Failed to read telemetry config from config_manager, defaulting to False: %s", e)
+        logger.debug(
+            "Failed to read telemetry config from config_manager, defaulting to False: %s", e
+        )
         enabled = False
     mgr = TelemetryManager()
     # The flag is surfaced via config; manager itself always instantiable.

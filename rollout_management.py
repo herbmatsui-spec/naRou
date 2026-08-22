@@ -169,17 +169,13 @@ class RolloutManager:
 
     def list_rollouts(self):
         """List all rollouts."""
-        return sorted(
-            self.rollouts.values(), key=lambda r: r["created_at"], reverse=True
-        )
+        return sorted(self.rollouts.values(), key=lambda r: r["created_at"], reverse=True)
 
 
 def main():
     parser = argparse.ArgumentParser(description="Rollout Management")
     parser.add_argument("--dir", default="rollout_management", help="Rollout directory")
-    parser.add_argument(
-        "--create", nargs=2, metavar=("VERSION", "STRATEGY"), help="Create rollout"
-    )
+    parser.add_argument("--create", nargs=2, metavar=("VERSION", "STRATEGY"), help="Create rollout")
     parser.add_argument(
         "--add-step", nargs=3, metavar=("ROLL_ID", "NAME", "ACTION"), help="Add step"
     )

@@ -1,6 +1,7 @@
 """
 Generate GIF showcasing Skill Tree & Job System features.
 """
+
 from __future__ import annotations
 
 from PIL import Image, ImageDraw
@@ -157,9 +158,7 @@ for sc_idx, sc in enumerate(scenes):
         draw = ImageDraw.Draw(img)
 
         # Header
-        draw.rectangle(
-            [(12, 10), (W - 12, 48)], fill=PANEL_BG, outline=PANEL_BORDER, width=2
-        )
+        draw.rectangle([(12, 10), (W - 12, 48)], fill=PANEL_BG, outline=PANEL_BORDER, width=2)
         draw.text((24, 16), "naRou: Masterpiece Edition", fill=GOLD)
         draw.text((24, 34), sc["title"], fill=TEXT_WHITE)
         draw.text((420, 34), sc["subtitle"], fill=TEXT_MUTED)

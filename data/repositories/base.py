@@ -27,9 +27,7 @@ class Repository(Protocol[T, ID]):
     def get_all(self) -> list[T]: ...
 
     @abstractmethod
-    def query(
-        self, filters: list[QueryFilter], limit: int = 100, offset: int = 0
-    ) -> list[T]: ...
+    def query(self, filters: list[QueryFilter], limit: int = 100, offset: int = 0) -> list[T]: ...
 
     @abstractmethod
     def count(self, filters: list[QueryFilter]) -> int: ...
@@ -55,9 +53,7 @@ class InMemoryRepository(Generic[T, ID]):
     def get_all(self) -> list[T]:
         return list(self._data.values())
 
-    def query(
-        self, filters: list[QueryFilter], limit: int = 100, offset: int = 0
-    ) -> list[T]:
+    def query(self, filters: list[QueryFilter], limit: int = 100, offset: int = 0) -> list[T]:
         results = list(self._data.values())
         for f in filters:
             results = [r for r in results if self._match(getattr(r, f.field, None), f)]

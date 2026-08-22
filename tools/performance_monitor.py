@@ -3,6 +3,7 @@
 Performance Monitor for naRou
 Handles CPU, memory, disk I/O, network, and response time monitoring.
 """
+
 from __future__ import annotations
 
 import json
@@ -118,24 +119,16 @@ class PerformanceMonitor:
         disk_read_mb = 0.0
         disk_write_mb = 0.0
         if self._baseline_disk and disk_io:
-            disk_read_mb = (disk_io.read_bytes - self._baseline_disk.read_bytes) / (
-                1024 * 1024
-            )
-            disk_write_mb = (disk_io.write_bytes - self._baseline_disk.write_bytes) / (
-                1024 * 1024
-            )
+            disk_read_mb = (disk_io.read_bytes - self._baseline_disk.read_bytes) / (1024 * 1024)
+            disk_write_mb = (disk_io.write_bytes - self._baseline_disk.write_bytes) / (1024 * 1024)
 
         # Network (delta from baseline)
         net_io = psutil.net_io_counters()
         network_sent_mb = 0.0
         network_recv_mb = 0.0
         if self._baseline_net and net_io:
-            network_sent_mb = (net_io.bytes_sent - self._baseline_net.bytes_sent) / (
-                1024 * 1024
-            )
-            network_recv_mb = (net_io.bytes_recv - self._baseline_net.bytes_recv) / (
-                1024 * 1024
-            )
+            network_sent_mb = (net_io.bytes_sent - self._baseline_net.bytes_sent) / (1024 * 1024)
+            network_recv_mb = (net_io.bytes_recv - self._baseline_net.bytes_recv) / (1024 * 1024)
 
         # Process footprint
         footprint_mb = memory_mb
@@ -315,9 +308,9 @@ class PerformanceMonitor:
             history = self._metrics_history
             return {
                 "samples": len(history),
-                "duration_seconds": history[-1].timestamp - history[0].timestamp
-                if len(history) > 1
-                else 0,
+                "duration_seconds": (
+                    history[-1].timestamp - history[0].timestamp if len(history) > 1 else 0
+                ),
                 "cpu": {
                     "avg": sum(m.cpu_percent for m in history) / len(history),
                     "max": max(m.cpu_percent for m in history),

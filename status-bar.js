@@ -16,7 +16,7 @@ class StatusBar extends UIComponent {
      */
     render({ label, current, max, colorToken = '--colors-brand-primary', id = 'status-bar' }) {
         const percentage = Math.min(Math.max((current / max) * 100, 0), 100);
-        
+
         const container = this.createElement('div', {
             id: id,
             className: 'status-bar-container'

@@ -2,6 +2,7 @@
 test_skill_eater_phase1.py
 Phase 1: スキルデータ管理および《解析》プロトタイプの検証テスト
 """
+
 from __future__ import annotations
 
 import unittest
@@ -73,12 +74,8 @@ class TestSkillEaterPhase1(unittest.TestCase):
         self.assertEqual(result.hologram_visual_mode, "BASIC")
 
         # Lv1ではCommonは詳細が見えるが、Rareは詳細が隠される
-        common_info = next(
-            s for s in result.revealed_skills if s.skill_id == "com_combat_001"
-        )
-        rare_info = next(
-            s for s in result.revealed_skills if s.skill_id == "rar_combat_012"
-        )
+        common_info = next(s for s in result.revealed_skills if s.skill_id == "com_combat_001")
+        rare_info = next(s for s in result.revealed_skills if s.skill_id == "rar_combat_012")
 
         self.assertEqual(common_info.name, "初級剣術")
         self.assertEqual(rare_info.market_value, None)  # 隠されている
@@ -120,9 +117,7 @@ class TestSkillEaterPhase1(unittest.TestCase):
         self.assertEqual(result.hologram_visual_mode, "EXPLOIT")
 
         # 高Lv解析ではUniqueの詳細や弱点、高確率の喰らい成功率が取得できる
-        unique_info = next(
-            s for s in result.revealed_skills if s.skill_id == "uni_midas_001"
-        )
+        unique_info = next(s for s in result.revealed_skills if s.skill_id == "uni_midas_001")
         self.assertEqual(unique_info.name, "黄金錬成")
         self.assertIn("Magic/ArmorPierce", result.weaknesses)
         # HPが減っており解析Lvが高いため、成功率は高水準

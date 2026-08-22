@@ -7,6 +7,7 @@ Steps 37-43
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -34,9 +35,7 @@ class PetEvolutionRegistry:
     """ペット進化レジストリ (シングルトン) (Steps 39, 40)"""
 
     _instance: PetEvolutionRegistry | None = None
-    _evolutions: dict[
-        str, list[PetEvolutionData]
-    ] = {}  # pet_type -> [PetEvolutionData]
+    _evolutions: dict[str, list[PetEvolutionData]] = {}  # pet_type -> [PetEvolutionData]
     _loaded: bool = False
 
     def __new__(cls):

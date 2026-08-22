@@ -40,7 +40,7 @@ class LightSource:
     seed: float = 0.0
     flicker: float = 1.0
     effective_radius: float = 0.0
-    
+
     def update_flicker(self, time: float) -> None:
         """Update flicker based on time and position seed"""
 ```
@@ -56,7 +56,7 @@ class EnemyCone:
     range: float = 6.0
     color: Tuple[int, int, int] = (255, 60, 60)
     pulse: float = 0.12
-    
+
     def update_pulse(self, time: float) -> None:
         """Update pulse intensity based on time"""
 ```
@@ -116,7 +116,7 @@ class Particle:
 
 ```
 1. begin_frame() - Clear console, update particles
-2. render_lighting_pass() - 
+2. render_lighting_pass() -
    a) Multiplicative: FOV darkness (console.tiles_rgb["bg"])
    b) Additive: Light source halos
    c) Additive: Enemy vision cones
@@ -286,7 +286,7 @@ def _get_from_pool(self, ptype):
 # Lighting tests
 python tools/test_lighting.py
 
-# Particle tests  
+# Particle tests
 python tools/test_particles.py
 
 # Both

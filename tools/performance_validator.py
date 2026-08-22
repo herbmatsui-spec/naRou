@@ -3,6 +3,7 @@
 Performance Validator Tool
 パフォーマンス検証ツール
 """
+
 from __future__ import annotations
 
 import json
@@ -58,9 +59,7 @@ class PerformanceValidator:
         self.validation_history.append(validation_result)
         return validation_result
 
-    def run_benchmark(
-        self, func: Callable, benchmark_name: str, *args, **kwargs
-    ) -> dict[str, Any]:
+    def run_benchmark(self, func: Callable, benchmark_name: str, *args, **kwargs) -> dict[str, Any]:
         """ベンチマークテストを実行"""
         validation_result = self.validate_performance(func, *args, **kwargs)
 
@@ -114,9 +113,7 @@ class PerformanceValidator:
             },
             "improvement": {
                 "execution_time_percent": time_improvement,
-                "faster_function": func_b.__name__
-                if time_improvement > 0
-                else func_a.__name__,
+                "faster_function": func_b.__name__ if time_improvement > 0 else func_a.__name__,
             },
         }
 
@@ -159,8 +156,7 @@ class PerformanceValidator:
 
         # 実行時間目標チェック
         if "max_execution_time" in target_criteria and (
-            validation_result["execution_time"]
-            > target_criteria["max_execution_time"]
+            validation_result["execution_time"] > target_criteria["max_execution_time"]
         ):
             target_met = False
             failed_criteria.append("max_execution_time")
@@ -186,8 +182,7 @@ class PerformanceValidator:
             "actual_results": {
                 "execution_time": validation_result["execution_time"],
                 "cpu_usage": validation_result["cpu_usage"],
-                "memory_usage_mb": validation_result["memory_usage"].get("used", 0)
-                / (1024 * 1024),
+                "memory_usage_mb": validation_result["memory_usage"].get("used", 0) / (1024 * 1024),
             },
             "target_met": target_met,
             "failed_criteria": failed_criteria,
@@ -219,18 +214,12 @@ class PerformanceValidator:
         # 検証履歴サマリー
         if self.validation_history:
             report.append(f"総検証回数: {len(self.validation_history)}")
-            successful_validations = [
-                v for v in self.validation_history if v["success"]
-            ]
+            successful_validations = [v for v in self.validation_history if v["success"]]
             report.append(f"成功回数: {len(successful_validations)}")
-            report.append(
-                f"失敗回数: {len(self.validation_history) - len(successful_validations)}"
-            )
+            report.append(f"失敗回数: {len(self.validation_history) - len(successful_validations)}")
 
             if successful_validations:
-                avg_time = statistics.mean(
-                    [v["execution_time"] for v in successful_validations]
-                )
+                avg_time = statistics.mean([v["execution_time"] for v in successful_validations])
                 report.append(f"平均実行時間: {avg_time:.4f}秒")
 
         # ベンチマークサマリー
@@ -262,9 +251,7 @@ class PerformanceValidator:
         if self.validation_history:
             report.append("詳細な検証履歴:")
             report.append("-" * 40)
-            for i, validation in enumerate(
-                self.validation_history[-10:], 1
-            ):  # 最新10件
+            for i, validation in enumerate(self.validation_history[-10:], 1):  # 最新10件
                 report.append(f"{i}. {validation['function_name']}")
                 report.append(f"   タイムスタンプ: {validation['timestamp']}")
                 report.append(f"   成功: {validation['success']}")
@@ -290,13 +277,9 @@ class PerformanceValidator:
             for name, target in self.targets.items():
                 report.append(f"目標: {name}")
                 report.append(f"  タイムスタンプ: {target['timestamp']}")
-                report.append(
-                    f"  達成状況: {'達成' if target['target_met'] else '未達成'}"
-                )
+                report.append(f"  達成状況: {'達成' if target['target_met'] else '未達成'}")
                 if not target["target_met"]:
-                    report.append(
-                        f"  未達成基準: {', '.join(target['failed_criteria'])}"
-                    )
+                    report.append(f"  未達成基準: {', '.join(target['failed_criteria'])}")
                 report.append("")
 
         return "\n".join(report)
@@ -341,7 +324,7 @@ class PerformanceValidator:
 <body>
     <h1>パフォーマンス検証レポート</h1>
     <p><strong>生成日時:</strong> {datetime.now().isoformat()}</p>
-    
+
     <div class="summary">
         <h2>サマリー</h2>
         <div class="metric">
@@ -354,7 +337,7 @@ class PerformanceValidator:
             <strong>平均実行時間:</strong> {(statistics.mean([v["execution_time"] for v in self.validation_history if v["success"]]) if self.validation_history else 0):.4f}秒
         </div>
     </div>
-    
+
     <h2>詳細レポート</h2>
     <pre>{report}</pre>
 </body>
@@ -394,9 +377,7 @@ class PerformanceValidator:
         # 実際のExcel生成にはopenpyxlなどが必要だが、
         # ここではCSVベースの簡易版を返す
         lines = []
-        lines.append(
-            "タイムスタンプ,関数名,成功,実行時間(秒),CPU使用率(%),メモリ使用量(MB)"
-        )
+        lines.append("タイムスタンプ,関数名,成功,実行時間(秒),CPU使用率(%),メモリ使用量(MB)")
 
         for validation in self.validation_history:
             mem_mb = validation["memory_usage"].get("used", 0) / (1024 * 1024)
@@ -433,14 +414,10 @@ class PerformanceValidator:
             "targets": self.targets,
             "summary": {
                 "total_validations": len(self.validation_history),
-                "successful_validations": len(
-                    [v for v in self.validation_history if v["success"]]
-                ),
+                "successful_validations": len([v for v in self.validation_history if v["success"]]),
                 "total_benchmarks": len(self.benchmarks),
                 "total_targets": len(self.targets),
-                "met_targets": len(
-                    [t for t in self.targets.values() if t["target_met"]]
-                ),
+                "met_targets": len([t for t in self.targets.values() if t["target_met"]]),
             },
         }
         return json.dumps(report_data, indent=2, ensure_ascii=False)
@@ -506,9 +483,7 @@ def main():
     # パフォーマンス検証テスト
     print("Performance validation test...")
     result = validator.validate_performance(sample_function, 1000)
-    print(
-        f"Validation result: {result['success']}, Time: {result['execution_time']:.4f}s"
-    )
+    print(f"Validation result: {result['success']}, Time: {result['execution_time']:.4f}s")
 
     # ベンチマークテスト
     print("\nBenchmark test...")

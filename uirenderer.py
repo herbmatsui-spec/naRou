@@ -69,21 +69,15 @@ class UIRenderer:
                     info = f"{ent.name} [AI:{role} 意図:{label}]"
                     iy = vy - 1
                     if iy >= 0:
-                        console.print(
-                            x=vx, y=iy, string=info[:VIEW_WIDTH], fg=(255, 210, 120)
-                        )
+                        console.print(x=vx, y=iy, string=info[:VIEW_WIDTH], fg=(255, 210, 120))
 
         # 8.5 マップ凡例ガイド
         lx, ly = SCREEN_WIDTH - 21, 13
         console.draw_rect(x=lx, y=ly, width=20, height=8, ch=0, bg=(12, 16, 24))
-        console.draw_frame(
-            x=lx, y=ly, width=20, height=8, title=" [凡例] ", fg=(100, 180, 255)
-        )
+        console.draw_frame(x=lx, y=ly, width=20, height=8, title=" [凡例] ", fg=(100, 180, 255))
         console.print(x=lx + 1, y=ly + 1, string="@:自分  p:仲間", fg=(200, 240, 255))
         console.print(x=lx + 1, y=ly + 2, string="#:壁    .:床", fg=(180, 180, 180))
-        console.print(
-            x=lx + 1, y=ly + 3, string=">:階段下 <:階段上", fg=(255, 220, 100)
-        )
+        console.print(x=lx + 1, y=ly + 3, string=">:階段下 <:階段上", fg=(255, 220, 100))
         console.print(x=lx + 1, y=ly + 4, string="_:祭壇  %:薬草", fg=(255, 215, 0))
         console.print(x=lx + 1, y=ly + 5, string="?:キノコ $:鉱石", fg=(100, 255, 180))
         console.print(x=lx + 1, y=ly + 6, string="x:敵(赤) !:薬品", fg=(255, 120, 120))
@@ -100,12 +94,13 @@ class UIRenderer:
         )
         console.print(x=1, y=ui_y, string="━" * 78, fg=(60, 70, 90))
 
+        # アクセシビリティ: 色覚モード時は数値を強制表示
+        is_a11y = getattr(context, "color_vision_mode", "none") != "none"
+
         p = context.player
         s = context.survival
         god_name = GodInfo.GODS[p.god_id]["name"].split(" ")[0]
-        hunger_str = (
-            "満腹" if s.hunger > 7000 else ("普通" if s.hunger > 2000 else "★飢餓")
-        )
+        hunger_str = "満腹" if s.hunger > 7000 else ("普通" if s.hunger > 2000 else "★飢餓")
         bleed_tag = (
             " [出血]"
             if any(e.name == STATUS_BLEEDING for e in getattr(p, "status_effects", []))
@@ -113,8 +108,8 @@ class UIRenderer:
         )
 
         # 行1: プレイヤー情報 & HP/MPバー
-        hp_bar = GaugeBar.render(p.hp, p.max_hp, length=8)
-        mp_bar = GaugeBar.render(p.mp, p.max_mp, length=6)
+        hp_bar = GaugeBar.render(p.hp, p.max_hp, length=8, force_numeric=is_a11y)
+        mp_bar = GaugeBar.render(p.mp, p.max_mp, length=6, force_numeric=is_a11y)
         x = 2
         x += cls._draw_ui_icon(console, x, ui_y + 1, "heart", COLOR_HP_GREEN)
         console.print(
@@ -133,18 +128,14 @@ class UIRenderer:
         )
         x = 46
         x += cls._draw_ui_icon(console, x, ui_y + 1, "mana", COLOR_MP_BLUE)
-        console.print(
-            x=x, y=ui_y + 1, string=f"MP:[{mp_bar}] {p.mp}/{p.max_mp}", fg=COLOR_MP_BLUE
-        )
+        console.print(x=x, y=ui_y + 1, string=f"MP:[{mp_bar}] {p.mp}/{p.max_mp}", fg=COLOR_MP_BLUE)
         x = 66
         x += cls._draw_ui_icon(console, x, ui_y + 1, "coin", COLOR_GOLD_YELLOW)
-        console.print(
-            x=x, y=ui_y + 1, string=f"Lv.{p.level} {s.gold}G", fg=COLOR_GOLD_YELLOW
-        )
+        console.print(x=x, y=ui_y + 1, string=f"Lv.{p.level} {s.gold}G", fg=COLOR_GOLD_YELLOW)
 
         # 行2: ペット情報 & 環境情報
         pet_hp_bar = (
-            GaugeBar.render(context.pet.hp, context.pet.max_hp, length=6)
+            GaugeBar.render(context.pet.hp, context.pet.max_hp, length=6, force_numeric=is_a11y)
             if context.pet.hp > 0
             else " DEAD "
         )
@@ -153,12 +144,8 @@ class UIRenderer:
             if context.pet.hp > 0
             else "死亡"
         )
-        console.print(
-            x=2, y=ui_y + 2, string=f"【仲間】シエル {pet_str}", fg=COLOR_PET_PINK
-        )
-        console.print(
-            x=34, y=ui_y + 2, string=f"信仰:{god_name}({p.piety})", fg=(200, 150, 255)
-        )
+        console.print(x=2, y=ui_y + 2, string=f"【仲間】シエル {pet_str}", fg=COLOR_PET_PINK)
+        console.print(x=34, y=ui_y + 2, string=f"信仰:{god_name}({p.piety})", fg=(200, 150, 255))
         console.print(
             x=54,
             y=ui_y + 2,
@@ -185,6 +172,9 @@ class UIRenderer:
                 fg=(140, 180, 220),
             )
 
+        # スキル喰いシステム専用HUD (行4-5)
+        cls._draw_skill_eater_hud(console, context, ui_y)
+
         # 称号・実績獲得通知UI
         achieve_notifs = getattr(context.player, "achievement_notifications", []) or []
         for i, notif in enumerate(achieve_notifs[:3]):
@@ -194,14 +184,10 @@ class UIRenderer:
         if hasattr(context, "notification_manager") and context.notification_manager:
             latest_notif = context.notification_manager.get_latest()
             if latest_notif:
-                notif_box_w = min(
-                    70, len(latest_notif.message) + len(latest_notif.title) + 6
-                )
+                notif_box_w = min(70, len(latest_notif.message) + len(latest_notif.title) + 6)
                 nbx = max(2, (SCREEN_WIDTH - notif_box_w) // 2)
                 nby = 2
-                console.draw_rect(
-                    x=nbx, y=nby, width=notif_box_w, height=3, ch=0, bg=(20, 25, 40)
-                )
+                console.draw_rect(x=nbx, y=nby, width=notif_box_w, height=3, ch=0, bg=(20, 25, 40))
                 console.draw_frame(
                     x=nbx,
                     y=nby,
@@ -216,6 +202,72 @@ class UIRenderer:
                     string=latest_notif.message[: notif_box_w - 4],
                     fg=(255, 255, 255),
                 )
+
+    @classmethod
+    def _draw_skill_eater_hud(cls, console, context, ui_y):
+        """スキル喰いシステム専用HUD（行4-5）"""
+        # Aの世界でない場合は非表示
+        if not context.world_a_data:
+            return
+
+        # アクセシビリティ: 色覚モード時は数値を強制表示
+        is_a11y = getattr(context, "color_vision_mode", "none") != "none"
+
+        # 背景矩形で視認性向上
+        console.draw_rect(x=0, y=ui_y + 3, width=78, height=3, ch=0, bg=(8, 10, 14))
+        console.draw_frame(x=0, y=ui_y + 3, width=78, height=3, fg=(60, 70, 90))
+
+        # 毒性ゲージ
+        if context.toxicity_manager:
+            gauge = context.toxicity_manager.render_toxicity_gauge_ui()
+            tox_pct = gauge["percent"]
+            tox_blocks = "█" * (tox_pct // 10) + "░" * (10 - tox_pct // 10)
+            # 色決定
+            if tox_pct >= 80:
+                fg_color = (255, 80, 80)
+            elif tox_pct >= 40:
+                fg_color = (255, 215, 0)
+            else:
+                fg_color = (100, 255, 100)
+            # 色覚モード時は数値を併記
+            if is_a11y:
+                console.print(
+                    x=2,
+                    y=ui_y + 4,
+                    string=f"☠ 毒性:[{tox_blocks}] {tox_pct}% ({tox_pct}%)",
+                    fg=fg_color,
+                )
+            else:
+                console.print(
+                    x=2, y=ui_y + 4, string=f"☠ 毒性:[{tox_blocks}] {tox_pct}%", fg=fg_color
+                )
+
+        # 所持スキル数
+        skills = context.world_a_data.get("skills", [])
+        skill_count = len(skills)
+        skill_fg = (255, 100, 100) if skill_count >= 10 else (180, 220, 255)
+        console.print(
+            x=2, y=ui_y + 5, string=f"💾 スキル:{skill_count}/10  [Shift+T]合成", fg=skill_fg
+        )
+
+        # 捕食成功率（直近スキャン結果があれば表示）
+        if context.last_scan_result:
+            rate = int(context.last_scan_result.devour_success_rate * 100)
+            if is_a11y:
+                console.print(
+                    x=40,
+                    y=ui_y + 4,
+                    string=f"🎯 捕食:{rate}% ({rate}%)  [V]喰らう",
+                    fg=(255, 180, 180),
+                )
+            else:
+                console.print(
+                    x=40, y=ui_y + 4, string=f"🎯 捕食:{rate}%  [V]喰らう", fg=(255, 180, 180)
+                )
+        else:
+            console.print(
+                x=40, y=ui_y + 4, string="🎯 捕食:解析(X)で表示  [V]喰らう", fg=(160, 160, 160)
+            )
 
     @staticmethod
     def _draw_ui_icon(

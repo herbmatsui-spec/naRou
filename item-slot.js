@@ -53,7 +53,7 @@ class ItemSlot extends UIComponent {
                 justify-content: center;
                 position: relative;
                 cursor: pointer;
-                transition: transform var(--motion-duration-fast) var(--motion-easing-smooth), 
+                transition: transform var(--motion-duration-fast) var(--motion-easing-smooth),
                                 border-color var(--motion-duration-fast) var(--motion-easing-smooth);
             }
             .item-slot:hover {
@@ -81,8 +81,8 @@ class ItemSlot extends UIComponent {
             .item-slot--uncommon { border-color: var(--colors-status-success); }
             .item-slot--rare { border-color: var(--colors-brand-primary); }
             .item-slot--epic { border-color: var(--colors-brand-secondary); }
-            .item-slot--legendary { 
-                border-color: var(--colors-brand-accent); 
+            .item-slot--legendary {
+                border-color: var(--colors-brand-accent);
                 box-shadow: 0 0 8px var(--colors-brand-accent);
                 animation: slotPulse var(--motion-duration-slow) infinite alternate ease-in-out;
             }

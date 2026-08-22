@@ -3,14 +3,13 @@
 Extracted from Engine._on_kill (game.py) to reduce the Engine god-class
 surface and keep combat settlement cohesive and testable.
 """
+
 from __future__ import annotations
 
-import random
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from entity import Entity
-
     from game import Engine
 
 
@@ -36,10 +35,7 @@ class CombatManager:
         engine.entity_manager.add_item(corpse)
 
         # 転生経験値ペナルティ適用 (Steps 57, 58)
-        from constants import (
-            REINCARNATION_XP_PENALTY_BASE,
-            REINCARNATION_XP_PENALTY_STEP,
-        )
+        from constants import REINCARNATION_XP_PENALTY_BASE, REINCARNATION_XP_PENALTY_STEP
 
         base_exp = 35 * engine.dungeon_level
         reinc_cnt = getattr(engine.player, "reincarnation_count", 0)

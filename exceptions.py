@@ -1,20 +1,22 @@
 from __future__ import annotations
 
 import os
+import sys
 import traceback
 from datetime import datetime
+from typing import Any
 
 
-class ElonaError(Exception):
-    def __init__(self, message="", context=None):
+class NaRouError(Exception):
+    """Base exception class for all naRou errors."""
+
+    def __init__(self, message: str = "", context: dict[str, Any] | None = None):
         super().__init__(message)
         self.message = message
         self.context = context or {}
         self.timestamp = datetime.now().isoformat()
 
-    def log_to_file(self, log_dir="logs"):
-        import sys
-
+    def log_to_file(self, log_dir: str = "logs") -> str:
         os.makedirs(log_dir, exist_ok=True)
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         fn = os.path.join(log_dir, f"error_log_{ts}.txt")
@@ -28,46 +30,80 @@ class ElonaError(Exception):
         return fn
 
 
-class GameLogicError(ElonaError):
-    pass
+class GameLogicError(NaRouError):
+    """Game logic related errors."""
 
 
-class SaveSystemError(ElonaError):
-    pass
+class SaveSystemError(NaRouError):
+    """Save/load system errors."""
 
 
 class SaveDataCorruptedError(SaveSystemError):
-    pass
+    """Save data is corrupted."""
 
 
-class ConfigError(ElonaError):
-    pass
+class ConfigError(NaRouError):
+    """Configuration errors."""
 
 
-class NetworkError(ElonaError):
-    pass
+class NetworkError(NaRouError):
+    """Network related errors."""
 
 
-class ResourceLoadError(ElonaError):
-    pass
+class ResourceLoadError(NaRouError):
+    """Resource loading errors."""
 
 
-class DataParseError(ElonaError):
-    pass
+class DataParseError(NaRouError):
+    """Data parsing errors."""
 
 
-class AIBehaviorError(ElonaError):
-    pass
+class AIBehaviorError(NaRouError):
+    """AI behavior errors."""
 
 
-class RenderingError(ElonaError):
-    pass
+class RenderingError(NaRouError):
+    """Rendering errors."""
 
 
-class SystemInitError(ElonaError):
-    pass
+class SystemInitError(NaRouError):
+    """System initialization errors."""
 
 
+class AudioError(NaRouError):
+    """Audio system errors."""
 
 
+class UIError(NaRouError):
+    """UI system errors."""
 
+
+class QuestError(NaRouError):
+    """Quest system errors."""
+
+
+class CombatError(NaRouError):
+    """Combat system errors."""
+
+
+class ValidationError(NaRouError):
+    """Data validation errors."""
+
+
+# Backwards compatibility aliases
+ElonaError = NaRouError
+GameLogicError = GameLogicError
+SaveSystemError = SaveSystemError
+SaveDataCorruptedError = SaveDataCorruptedError
+ConfigError = ConfigError
+NetworkError = NetworkError
+ResourceLoadError = ResourceLoadError
+DataParseError = DataParseError
+AIBehaviorError = AIBehaviorError
+RenderingError = RenderingError
+SystemInitError = SystemInitError
+
+
+def is_narou_error(exc: BaseException) -> bool:
+    """Check if an exception is a NaRouError."""
+    return isinstance(exc, NaRouError)

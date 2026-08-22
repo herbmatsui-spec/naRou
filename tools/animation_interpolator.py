@@ -3,6 +3,7 @@
 Animation Interpolator for naRou
 Interpolates animation frames to create smoother animations.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -62,9 +63,7 @@ class AnimationInterpolator:
         frames_per_interval = (target_frame_count - len(frames)) // intervals
         remainder = (target_frame_count - len(frames)) % intervals
 
-        logger.info(
-            f"Interpolating {len(frames)} keyframes to {target_frame_count} frames"
-        )
+        logger.info(f"Interpolating {len(frames)} keyframes to {target_frame_count} frames")
         logger.info(
             f"{intervals} intervals, {frames_per_interval} frames per interval, {remainder} remainder"
         )
@@ -180,9 +179,7 @@ class AnimationInterpolator:
 
 def main():
     parser = argparse.ArgumentParser(description="Interpolate animation frames")
-    parser.add_argument(
-        "input_frames", nargs="+", type=str, help="Input frame files (in order)"
-    )
+    parser.add_argument("input_frames", nargs="+", type=str, help="Input frame files (in order)")
     parser.add_argument(
         "--target-frames",
         type=int,
@@ -217,9 +214,7 @@ def main():
 
     if args.loop and len(frame_paths) >= 2:
         # For looping animations, also interpolate from last frame to first
-        logger.info(
-            "Creating looping animation: adding interpolation from last to first frame"
-        )
+        logger.info("Creating looping animation: adding interpolation from last to first frame")
         # We'll handle this by duplicating the first frame at the end for interpolation purposes
         extended_frames = frame_paths + [frame_paths[0]]
         result_frames = interpolator.interpolate_frames(
@@ -229,9 +224,7 @@ def main():
         if len(result_frames) > args.target_frames:
             result_frames = result_frames[:-1]
     else:
-        result_frames = interpolator.interpolate_frames(
-            frame_paths, args.target_frames, output_dir
-        )
+        result_frames = interpolator.interpolate_frames(frame_paths, args.target_frames, output_dir)
 
     if result_frames:
         logger.info(

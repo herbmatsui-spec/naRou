@@ -3,16 +3,18 @@ Pub/Sub Event Bus System
 Decouples systems by allowing them to subscribe to and publish events.
 """
 
-from typing import Callable, Any, Dict, List
+from typing import Any, Callable, Dict, List
 
 # --- Event Constants ---
 EVENT_BEFORE_DAMAGE = "EVENT_BEFORE_DAMAGE"
 EVENT_ON_MOVE = "EVENT_ON_MOVE"
 
+
 class EventBus:
     """Singleton event bus for pub/sub messaging."""
+
     _instance = None
-    
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(EventBus, cls).__new__(cls)
@@ -41,6 +43,7 @@ class EventBus:
     def clear(self) -> None:
         """Clear all subscribers (useful for testing or state reset)."""
         self.subscribers.clear()
+
 
 # Global singleton instance
 event_bus = EventBus()

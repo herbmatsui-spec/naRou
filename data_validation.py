@@ -2,10 +2,10 @@
 
 Centralizes safe YAML loading used across managers and systems.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
 import yaml
 

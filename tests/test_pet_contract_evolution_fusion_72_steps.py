@@ -1,6 +1,7 @@
 """
 総合テストスクリプト: ペット契約・進化・融合システム全72ステップの検証
 """
+
 from __future__ import annotations
 
 import ast
@@ -41,9 +42,9 @@ def test_all_72_steps_pet_contract_evolution_fusion():
     assert "puppy" in pe_data["pet_evolutions"], "Step 8-9 Failed"
     puppy_evos = pe_data["pet_evolutions"]["puppy"].get("evolutions", [])
     hound = next((e for e in puppy_evos if e.get("id") == "hound"), None)
-    assert hound is not None and hound.get("requirements", {}).get("level") == 15, (
-        "Step 10-11 Failed"
-    )
+    assert (
+        hound is not None and hound.get("requirements", {}).get("level") == 15
+    ), "Step 10-11 Failed"
     guard = next((e for e in puppy_evos if e.get("id") == "guard_dog"), None)
     assert guard is not None and "metal_ingot" in guard.get("requirements", {}).get(
         "items", []
@@ -56,12 +57,11 @@ def test_all_72_steps_pet_contract_evolution_fusion():
     print("[OK] Steps 7-13, 36 (data/pet_evolutions.yaml)")
 
     # Step 14 - 18, 65, 66, 69: Entity pet_ai component & Entity fields
-    from entity import Entity, PetAI
+    from entity import Entity
 
     tree = ast.parse(open("components.py", encoding="utf-8").read())
     petai_class = next(
-        n for n in ast.walk(tree)
-        if isinstance(n, ast.ClassDef) and n.name == "PetAIComponent"
+        n for n in ast.walk(tree) if isinstance(n, ast.ClassDef) and n.name == "PetAIComponent"
     )
     fields = [n.target.id for n in petai_class.body if isinstance(n, ast.AnnAssign)]
     assert "bond" in fields, "Step 15 Failed"
@@ -76,11 +76,7 @@ def test_all_72_steps_pet_contract_evolution_fusion():
     print("[OK] Steps 14-18, 65, 66, 69 (Entity pet_ai component & Entity fields)")
 
     # Step 19 - 28: pet_contract_system.py & methods
-    from pet_contract_system import (
-        PetContractData,
-        PetContractManager,
-        PetContractRegistry,
-    )
+    from pet_contract_system import PetContractData, PetContractManager, PetContractRegistry
 
     PetContractData("test", "Test Contract", "🤝", 1000, {}, {}, [])  # Step 20
     pcr1 = PetContractRegistry()
@@ -101,11 +97,7 @@ def test_all_72_steps_pet_contract_evolution_fusion():
     print("[OK] Steps 19-28 (pet_contract_system.py & manager)")
 
     # Step 37 - 43: pet_evolution_system.py
-    from pet_evolution_system import (
-        PetEvolutionData,
-        PetEvolutionManager,
-        PetEvolutionRegistry,
-    )
+    from pet_evolution_system import PetEvolutionData, PetEvolutionManager, PetEvolutionRegistry
 
     PetEvolutionData("test", "Test Evo", {}, {}, {}, {})  # Step 38
     per1 = PetEvolutionRegistry()
@@ -154,8 +146,7 @@ def test_all_72_steps_pet_contract_evolution_fusion():
     assert len(dh.get("possible_mutations", [])) >= 1, "Step 56 Failed"
     up = recipes[1]
     assert (
-        up.get("name") == "ユニコーンペガサス"
-        and up.get("required_facility") == "shrine"
+        up.get("name") == "ユニコーンペガサス" and up.get("required_facility") == "shrine"
     ), "Step 57-58 Failed"
     print("[OK] Steps 47-58 (data/pet_fusion.yaml)")
 
@@ -186,21 +177,15 @@ def test_all_72_steps_pet_contract_evolution_fusion():
     fuse_res_id = pfm.can_fuse([p1, p2], player)
     assert fuse_res_id == "dragon_hound", "Step 64 Failed"
     fused_entity = pfm.execute_fusion([p1, p2], player, fuse_res_id)
-    assert fused_entity is not None and fused_entity.pet_type == "dragon_hound", (
-        "Step 63 Failed"
-    )
+    assert fused_entity is not None and fused_entity.pet_type == "dragon_hound", "Step 63 Failed"
     assert len(player.pet_fusion_history) >= 1, "Step 63, 69 Failed"
     print("[OK] Steps 59-64 (pet_fusion_system.py & manager)")
 
     # Step 70: SaveSystem pet logic
-    save_file = (
-        "save_system.py" if os.path.exists("save_system.py") else "advanced_systems.py"
-    )
+    save_file = "save_system.py" if os.path.exists("save_system.py") else "advanced_systems.py"
     save_tree = ast.parse(open(save_file, encoding="utf-8").read())
     save_class = next(
-        n
-        for n in ast.walk(save_tree)
-        if isinstance(n, ast.ClassDef) and n.name == "SaveSystem"
+        n for n in ast.walk(save_tree) if isinstance(n, ast.ClassDef) and n.name == "SaveSystem"
     )
     save_code = ast.dump(save_class)
     assert "pet_fusion_history" in save_code or "pet" in save_code, "Step 70 Failed"
@@ -220,9 +205,7 @@ def test_all_72_steps_pet_contract_evolution_fusion():
     assert "use_alchemy_lab" in funcs, "Step 68 Failed"
     print("[OK] Steps 29-35, 44-46, 67-68 (game.py hooks & triggers)")
 
-    print(
-        "\nALL 72 STEPS OF PET CONTRACT, EVOLUTION & FUSION VERIFIED 100% SUCCESSFULLY!"
-    )
+    print("\nALL 72 STEPS OF PET CONTRACT, EVOLUTION & FUSION VERIFIED 100% SUCCESSFULLY!")
 
 
 if __name__ == "__main__":

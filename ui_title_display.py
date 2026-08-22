@@ -31,8 +31,6 @@ def get_player_event_titles(player: Entity, event_data: Any) -> list[dict[str, A
     :param event_data: WorldEventDataオブジェクト
     :return: [{"title": str, "description": str}, ...]
     """
-    newly_granted = TITLE_MANAGER.check_and_grant_titles(
-        player, event_data, {}
-    )  # statsは仮
+    newly_granted = TITLE_MANAGER.check_and_grant_titles(player, event_data, {})  # statsは仮
     # 実際には、イベントデータから称号の説明を取得する
     return [{"title": title, "description": ""} for title in newly_granted]

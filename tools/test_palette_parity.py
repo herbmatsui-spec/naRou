@@ -7,6 +7,7 @@ Verifies that the three sources of color truth stay in sync:
 
 Run: python tools/test_palette_parity.py
 """
+
 from __future__ import annotations
 
 import json

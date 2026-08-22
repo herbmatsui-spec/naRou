@@ -28,7 +28,7 @@
   <script type="module">
     import { PostProcessManager } from './demos/lib/PostProcessManager.js';
     import { ScreenShake } from './demos/lib/ScreenShake.js';
-    
+
     // PixiJSアプリケーションの初期化
     const app = new PIXI.Application({
       width: 960,
@@ -36,32 +36,32 @@
       backgroundColor: 0x0a0b10,
       antialias: true
     });
-    
+
     document.getElementById('container').appendChild(app.view);
-    
+
     // 背景レイヤー
     const backgroundLayer = new PIXI.Container();
     app.stage.addChild(backgroundLayer);
-    
+
     // タイルレイヤー
     const tileLayer = new PIXI.Container();
     app.stage.addChild(tileLayer);
-    
+
     // エンティティレイヤー
     const entityLayer = new PIXI.Container();
     app.stage.addChild(entityLayer);
-    
+
     // エフェクトレイヤー
     const effectLayer = new PIXI.Container();
     app.stage.addChild(effectLayer);
-    
+
     // ポストプロセスマネージャーを初期化
     const postProcessManager = new PostProcessManager(app);
     app.stage.addChild(postProcessManager.getEffectsContainer());
-    
+
     // スクリーンシェイクを初期化
     const screenShake = new ScreenShake(app.stage, 5, 0.5);
-    
+
     // ダミーコンテンツを生成
     // 背景グラフィック
     const bgGraphics = new PIXI.Graphics();
@@ -69,7 +69,7 @@
     bgGraphics.drawRect(0, 0, 960, 576);
     bgGraphics.endFill();
     backgroundLayer.addChild(bgGraphics);
-    
+
     // グリッド
     const gridGraphics = new PIXI.Graphics();
     gridGraphics.lineStyle(1, 0xffffff * 0.05);
@@ -82,7 +82,7 @@
       gridGraphics.lineTo(960, y);
     }
     tileLayer.addChild(gridGraphics);
-    
+
     // 明るいオブジェクト（ブルーム効果を示すため）
     const brightObjects = [];
     for (let i = 0; i < 10; i++) {
@@ -95,22 +95,22 @@
       entityLayer.addChild(obj);
       brightObjects.push(obj);
     }
-    
+
     // マウス位置
     let mouseX = 480;
     let mouseY = 288;
-    
+
     app.view.addEventListener('mousemove', (e) => {
       const rect = app.view.getBoundingClientRect();
       mouseX = e.clientX - rect.left;
       mouseY = e.clientY - rect.top;
     });
-    
+
     app.view.addEventListener('click', (e) => {
       const rect = app.view.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      
+
       // クリック位置に明るいオブジェクトを追加
       const obj = new PIXI.Graphics();
       obj.beginFill(0xffffff);
@@ -120,48 +120,48 @@
       obj.y = y;
       entityLayer.addChild(obj);
       brightObjects.push(obj);
-      
+
       // シェイク
       screenShake.shake('light');
     });
-    
+
     // シェイク関数
     window.shakeLight = () => screenShake.shake('light');
     window.shakeMedium = () => screenShake.shake('medium');
     window.shakeHeavy = () => screenShake.shake('heavy');
     window.shakeExplosion = () => screenShake.shake('explosion');
-    
+
     // パラメータ更新
     window.updateBloom = () => {
       const value = document.querySelector('input[onchange="updateBloom()"]').value / 100;
       postProcessManager.setBloomIntensity(value);
     };
-    
+
     window.updateGrain = () => {
       const value = document.querySelector('input[onchange="updateGrain()"]').value / 100;
       postProcessManager.setGrainIntensity(value);
     };
-    
+
     window.updateVignette = () => {
       const value = document.querySelector('input[onchange="updateVignette()"]').value / 100;
       postProcessManager.setVignetteIntensity(value);
     };
-    
+
     // ゲームループ
     app.ticker.add((delta) => {
       // ポストプロセスを更新
       postProcessManager.update(delta / 60);
-      
+
       // スクリーンシェイクを更新
       screenShake.update(delta / 60);
-      
+
       // 明るいオブジェクトをアニメーション
       const time = Date.now() / 1000;
       brightObjects.forEach((obj, i) => {
         obj.alpha = 0.7 + Math.sin(time * 2 + i) * 0.3;
         obj.scale.set(1 + Math.sin(time * 3 + i) * 0.1);
       });
-      
+
       // 情報を更新
       document.getElementById('fps').textContent = Math.round(app.ticker.FPS);
     });

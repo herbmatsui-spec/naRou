@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import math
 import sys
@@ -25,7 +26,7 @@ FRAMES = []
 def get_font(size=14):
     try:
         return ImageFont.truetype("arial.ttf", size)
-    except:
+    except Exception:
         return ImageFont.load_default()
 
 
@@ -105,18 +106,14 @@ def render_frame(scene, progress):
     draw.text((15, 8), scene["title"], fill=(255, 215, 0), font=font_title)
 
     # メインバトル / ステータスボックス
-    draw.rectangle(
-        [20, 50, WIDTH - 20, 220], outline=(70, 80, 100), width=2, fill=(15, 18, 25)
-    )
+    draw.rectangle([20, 50, WIDTH - 20, 220], outline=(70, 80, 100), width=2, fill=(15, 18, 25))
 
     # アクター・ターゲット情報
     draw.text((40, 65), f"👤 {scene['actor']}", fill=(120, 220, 255), font=font_title)
     draw.text((360, 65), f"🎯 {scene['target']}", fill=(255, 140, 140), font=font_title)
 
     # 行動アクションテキスト
-    draw.text(
-        (40, 110), f"⚡ ACTION: {scene['action']}", fill=(240, 240, 240), font=font_body
-    )
+    draw.text((40, 110), f"⚡ ACTION: {scene['action']}", fill=(240, 240, 240), font=font_body)
 
     if "sound" in scene:
         draw.text((40, 140), scene["sound"], fill=(255, 180, 80), font=font_small)
@@ -150,9 +147,7 @@ def render_frame(scene, progress):
     draw.text((365, 182), "TARGET HP", fill=(255, 255, 255), font=font_small)
 
     # ログウィンドウ
-    draw.rectangle(
-        [20, 235, WIDTH - 20, HEIGHT - 20], fill=(5, 8, 12), outline=(50, 60, 80)
-    )
+    draw.rectangle([20, 235, WIDTH - 20, HEIGHT - 20], fill=(5, 8, 12), outline=(50, 60, 80))
     draw.text((35, 248), "LOG >", fill=(100, 200, 100), font=font_body)
     draw.text((85, 248), scene["log"], fill=(255, 255, 220), font=font_body)
 
@@ -172,7 +167,5 @@ for scene in scenes:
         FRAMES.append(frame)
 
 print(f"Saving {len(FRAMES)} frames to {OUTPUT_PATH}...")
-FRAMES[0].save(
-    OUTPUT_PATH, save_all=True, append_images=FRAMES[1:], duration=100, loop=0
-)
+FRAMES[0].save(OUTPUT_PATH, save_all=True, append_images=FRAMES[1:], duration=100, loop=0)
 print("GIF generated successfully!")

@@ -43,6 +43,142 @@ dungeon_themes:
     story_hooks:
       - "discover_lost_magic"
 
+  # Skill Eater 専用テーマ (Steps 5, 41-45)
+  industrial_ruins:
+    theme_id: "industrial_ruins"
+    name: "廃工場跡"
+    base_layout: "factory_grid"
+    difficulty_modifier: 1.2
+    depth_range: [1, 15]
+    enemy_pools:
+      common:
+        - "scrap_golem"
+        - "rust_stalker"
+        - "oil_slime"
+      elite:
+        - "assembly_line_overseer"
+        - "toxic_furnace"
+    environmental_hazards:
+      - "conveyor_belt"
+      - "chemical_leak"
+      - "spark_shower"
+    special_rooms:
+      - "control_room"
+      - "storage_warehouse"
+      - "maintenance_shaft"
+    transition_sounds:
+      stairs: "stair_creak.ogg"
+      elevator: "elevator_hum.ogg"
+    transition_emotes:
+      down: "emote_arrow_down.png"
+      up: "emote_arrow_up.png"
+    gimmicks:
+      - "secret_doors:0.2"
+      - "false_walls:0.1"
+      - "vents:0.15"
+
+  neon_sewers:
+    theme_id: "neon_sewers"
+    name: "ネオン下水道"
+    base_layout: "sewer_network"
+    difficulty_modifier: 1.4
+    depth_range: [16, 30]
+    enemy_pools:
+      common:
+        - "neon_rat"
+        - "glow_slime"
+        - "pipe_wraith"
+      elite:
+        - "sewer_king"
+        - "chemical_abomination"
+    environmental_hazards:
+      - "toxic_current"
+      - "neon_gas"
+      - "electrified_water"
+    special_rooms:
+      - "pump_station"
+      - "filtration_chamber"
+      - "junction_box"
+    transition_sounds:
+      stairs: "stair_creak.ogg"
+      elevator: "elevator_hum.ogg"
+    transition_emotes:
+      down: "emote_arrow_down.png"
+      up: "emote_arrow_up.png"
+    gimmicks:
+      - "secret_doors:0.15"
+      - "false_walls:0.2"
+      - "vents:0.2"
+      - "secret_floors:0.1"
+
+  midas_labs:
+    theme_id: "midas_labs"
+    name: "ミダス研究棟"
+    base_layout: "lab_complex"
+    difficulty_modifier: 1.8
+    depth_range: [31, 50]
+    enemy_pools:
+      common:
+        - "test_subject"
+        - "security_drone"
+        - "mutated_scientist"
+      elite:
+        - "lab_director"
+        - "prototype_weapon"
+    environmental_hazards:
+      - "containment_breach"
+      - "radiation_zone"
+      - "mind_control_field"
+    special_rooms:
+      - "experiment_log"
+      - "specimen_vault"
+      - "server_room"
+    transition_sounds:
+      stairs: "stair_creak.ogg"
+      elevator: "elevator_hum.ogg"
+    transition_emotes:
+      down: "emote_arrow_down.png"
+      up: "emote_arrow_up.png"
+    gimmicks:
+      - "secret_doors:0.25"
+      - "false_walls:0.15"
+      - "secret_floors:0.1"
+      - "vents:0.1"
+
+  babel_core:
+    theme_id: "babel_core"
+    name: "バベル核心"
+    base_layout: "core_chamber"
+    difficulty_modifier: 2.5
+    depth_range: [51, 99]
+    enemy_pools:
+      common:
+        - "babel_guardian"
+        - "concept_warden"
+        - "law_enforcer"
+      elite:
+        - "master_skill_holder"
+        - "reality_anchor"
+    environmental_hazards:
+      - "reality_erosion"
+      - "concept_collapse"
+      - "time_dilation"
+    special_rooms:
+      - "master_chamber"
+      - "concept_archive"
+      - "world_core"
+    transition_sounds:
+      stairs: "stair_creak.ogg"
+      elevator: "elevator_hum.ogg"
+    transition_emotes:
+      down: "emote_arrow_down.png"
+      up: "emote_arrow_up.png"
+    gimmicks:
+      - "secret_doors:0.3"
+      - "false_walls:0.2"
+      - "secret_floors:0.15"
+      - "vents:0.1"
+
   # 新しい垂直ワールド構造: zone.biome.depth_range.dimension
   vertical_world:
     surface:
@@ -270,6 +406,11 @@ dungeon_themes:
                 - "rare_spores"
               rare:
                 - "queen's_nectar"
+            gimmicks:
+              - "secret_doors:0.3"
+              - "false_walls:0.2"
+              - "secret_floors:0.1"
+              - "vents:0.15"
           ethereal:
             theme_id: "underground_forest_shallow_ethereal"
             name: "幽霊のキノコ林"
@@ -301,6 +442,10 @@ dungeon_themes:
                 - "memory_fragment"
               rare:
                 - "soul_mushroom"
+            gimmicks:
+              - "secret_doors:0.2"
+              - "false_walls:0.15"
+              - "vents:0.1"
     otherworld:
       ruins:
         depth_51_60:
@@ -335,6 +480,11 @@ dungeon_themes:
                 - "stabilized_chronite"
               rare:
                 - "eternity_shard"
+            gimmicks:
+              - "secret_doors:0.25"
+              - "false_walls:0.2"
+              - "secret_floors:0.15"
+              - "vents:0.1"
           ethereal:
             theme_id: "otherworld_ruins_mid_ethereal"
             name: "霊界の遺跡"
@@ -366,7 +516,12 @@ dungeon_themes:
                 - "divine_remnant"
               rare:
                 - "god_touch"
-    heaven:
+            gimmicks:
+              - "secret_doors:0.3"
+              - "false_walls:0.25"
+              - "secret_floors:0.2"
+              - "vents:0.15"
+      heaven:
       plains:
         depth_101_110:
           material:
@@ -400,6 +555,9 @@ dungeon_themes:
                 - "divine_essence"
               rare:
                 - "fragment_of_divinity"
+            gimmicks:
+              - "secret_doors:0.1"
+              - "false_walls:0.05"
           ethereal:
             theme_id: "heaven_plains_mid_ethereal"
             name: "魂の楽園"
@@ -431,3 +589,6 @@ dungeon_themes:
                 - "blessing_scroll"
               rare:
                 - "teardrop_of_compassion"
+            gimmicks:
+              - "secret_doors:0.15"
+              - "vents:0.1"

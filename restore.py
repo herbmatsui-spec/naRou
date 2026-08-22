@@ -60,7 +60,9 @@ def restore_backup(backup_file, target_dir="."):
 
             # Backup existing file/dir
             if os.path.exists(dest):
-                backup_dest = f"{dest}.bak.{__import__('datetime').datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                backup_dest = (
+                    f"{dest}.bak.{__import__('datetime').datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                )
                 print(f"Backing up existing {dest} to {backup_dest}")
                 if os.path.isdir(dest):
                     shutil.move(dest, backup_dest)

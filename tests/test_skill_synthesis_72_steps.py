@@ -1,6 +1,7 @@
 """
 総合テストスクリプト: スキル合成・進化システム全72ステップの完全検証
 """
+
 from __future__ import annotations
 
 import os
@@ -22,9 +23,7 @@ def test_all_72_steps_skill_synthesis_system():
     # Step 1: data/skill_fusion.yaml 基本構造作成
     with open("data/skill_fusion.yaml", encoding="utf-8") as f:
         f_raw = yaml.safe_load(f)
-    assert f_raw and "fusion_recipes" in f_raw, (
-        "Step 1 Failed: fusion_recipes key missing"
-    )
+    assert f_raw and "fusion_recipes" in f_raw, "Step 1 Failed: fusion_recipes key missing"
     print("[OK] Step 1 (data/skill_fusion.yaml 基本構造)")
 
     # Step 2: data/skill_fusion.yaml 基本融合レシピ追加
@@ -37,9 +36,7 @@ def test_all_72_steps_skill_synthesis_system():
     # Step 3: data/skill_evolution.yaml 基本構造作成
     with open("data/skill_evolution.yaml", encoding="utf-8") as f:
         evo_raw = yaml.safe_load(f)
-    assert evo_raw and "evolution_chains" in evo_raw, (
-        "Step 3 Failed: evolution_chains key missing"
-    )
+    assert evo_raw and "evolution_chains" in evo_raw, "Step 3 Failed: evolution_chains key missing"
     print("[OK] Step 3 (data/skill_evolution.yaml 基本構造)")
 
     # Step 4: data/skill_evolution.yaml 剣の熟達進化チェーン追加
@@ -58,17 +55,15 @@ def test_all_72_steps_skill_synthesis_system():
     ds = awa_raw.get("awakenings", {}).get("dragon_slaying_awakening")
     assert ds is not None, "Step 6 Failed: dragon_slaying_awakening missing"
     assert ds.get("base_skill") == "swordsmanship", "Step 6 Failed: base_skill mismatch"
-    assert ds.get("awakened_skill") == "true_dragon_slayer", (
-        "Step 6 Failed: awakened_skill mismatch"
-    )
+    assert (
+        ds.get("awakened_skill") == "true_dragon_slayer"
+    ), "Step 6 Failed: awakened_skill mismatch"
     print("[OK] Step 6 (竜殺しの覚醒 dragon_slaying_awakening)")
 
     # Step 7: data/skill_transfer.yaml 基本構造作成
     with open("data/skill_transfer.yaml", encoding="utf-8") as f:
         tra_raw = yaml.safe_load(f)
-    assert tra_raw and "transfer_traits" in tra_raw, (
-        "Step 7 Failed: transfer_traits key missing"
-    )
+    assert tra_raw and "transfer_traits" in tra_raw, "Step 7 Failed: transfer_traits key missing"
     print("[OK] Step 7 (data/skill_transfer.yaml 基本構造)")
 
     # Step 8: data/skill_transfer.yaml クリティカル強化転移追加
@@ -80,41 +75,39 @@ def test_all_72_steps_skill_synthesis_system():
     # Step 9: data/skill_resonance.yaml 基本構造作成
     with open("data/skill_resonance.yaml", encoding="utf-8") as f:
         res_raw = yaml.safe_load(f)
-    assert res_raw and "resonance_sets" in res_raw, (
-        "Step 9 Failed: resonance_sets key missing"
-    )
+    assert res_raw and "resonance_sets" in res_raw, "Step 9 Failed: resonance_sets key missing"
     print("[OK] Step 9 (data/skill_resonance.yaml 基本構造)")
 
     # Step 10: data/skill_resonance.yaml 炎の騎士セット追加
     fk = res_raw.get("resonance_sets", {}).get("flame_knight_set")
     assert fk is not None, "Step 10 Failed: flame_knight_set missing"
-    assert "swordsmanship" in fk.get("required_skills", []), (
-        "Step 10 Failed: required_skills mismatch"
-    )
+    assert "swordsmanship" in fk.get(
+        "required_skills", []
+    ), "Step 10 Failed: required_skills mismatch"
     print("[OK] Step 10 (炎の騎士セット flame_knight_set)")
 
     # Step 11: data/skill_inheritance.yaml 基本構造作成
     with open("data/skill_inheritance.yaml", encoding="utf-8") as f:
         inh_raw = yaml.safe_load(f)
-    assert inh_raw and "inheritance_rules" in inh_raw, (
-        "Step 11 Failed: inheritance_rules key missing"
-    )
+    assert (
+        inh_raw and "inheritance_rules" in inh_raw
+    ), "Step 11 Failed: inheritance_rules key missing"
     print("[OK] Step 11 (data/skill_inheritance.yaml 基本構造)")
 
     # Step 12: data/skill_inheritance.yaml 血統スキル継承追加
     bs = inh_raw.get("inheritance_rules", {}).get("bloodline_skills")
     assert bs is not None, "Step 12 Failed: bloodline_skills missing"
-    assert "swordsmanship" in bs.get("eligible_skills", []), (
-        "Step 12 Failed: eligible_skills mismatch"
-    )
+    assert "swordsmanship" in bs.get(
+        "eligible_skills", []
+    ), "Step 12 Failed: eligible_skills mismatch"
     print("[OK] Step 12 (血統スキル継承 bloodline_skills)")
 
     # Step 13: data/skill_specialization.yaml 基本構造作成
     with open("data/skill_specialization.yaml", encoding="utf-8") as f:
         spec_raw = yaml.safe_load(f)
-    assert spec_raw and "specialization_paths" in spec_raw, (
-        "Step 13 Failed: specialization_paths key missing"
-    )
+    assert (
+        spec_raw and "specialization_paths" in spec_raw
+    ), "Step 13 Failed: specialization_paths key missing"
     print("[OK] Step 13 (data/skill_specialization.yaml 基本構造)")
 
     # Step 14: data/skill_specialization.yaml ファイアボール専門化パス追加
@@ -127,9 +120,7 @@ def test_all_72_steps_skill_synthesis_system():
     # Step 15: data/skill_fusion_chains.yaml 基本構造作成
     with open("data/skill_fusion_chains.yaml", encoding="utf-8") as f:
         fc_raw = yaml.safe_load(f)
-    assert fc_raw and "fusion_chains" in fc_raw, (
-        "Step 15 Failed: fusion_chains key missing"
-    )
+    assert fc_raw and "fusion_chains" in fc_raw, "Step 15 Failed: fusion_chains key missing"
     print("[OK] Step 15 (data/skill_fusion_chains.yaml 基本構造)")
 
     # Step 16: data/skill_fusion_chains.yaml 究極竜殺し融合連鎖追加
@@ -141,9 +132,9 @@ def test_all_72_steps_skill_synthesis_system():
     # Step 17: data/skill_archive.yaml 基本構造作成
     with open("data/skill_archive.yaml", encoding="utf-8") as f:
         arc_raw = yaml.safe_load(f)
-    assert arc_raw and "archive_categories" in arc_raw, (
-        "Step 17 Failed: archive_categories key missing"
-    )
+    assert (
+        arc_raw and "archive_categories" in arc_raw
+    ), "Step 17 Failed: archive_categories key missing"
     print("[OK] Step 17 (data/skill_archive.yaml 基本構造)")
 
     # Step 18: data/skill_archive.yaml 元素魔法アーカイブ追加
@@ -154,29 +145,18 @@ def test_all_72_steps_skill_synthesis_system():
 
     # Steps 19-28: Entity スキル合成関連フィールド (SkillFusionComponent へ委譲)
     from entity import Entity, Skill
-    from components import SkillFusionComponent
 
     comp_code = open("components.py", encoding="utf-8").read()
-    assert "class SkillFusionComponent" in comp_code, (
-        "Step 19 Failed: SkillFusionComponent missing"
-    )
+    assert "class SkillFusionComponent" in comp_code, "Step 19 Failed: SkillFusionComponent missing"
 
     e = Entity()
     assert hasattr(e, "skill_fusion_materials") and isinstance(
         e.skill_fusion_materials, dict
     ), "Step 20 Failed"
-    assert hasattr(e, "skill_evolution") and isinstance(e.skill_evolution, dict), (
-        "Step 21 Failed"
-    )
-    assert hasattr(e, "awakened_skills") and isinstance(e.awakened_skills, list), (
-        "Step 22 Failed"
-    )
-    assert hasattr(e, "skill_traits") and isinstance(e.skill_traits, dict), (
-        "Step 23 Failed"
-    )
-    assert hasattr(e, "equipped_skills") and isinstance(e.equipped_skills, list), (
-        "Step 24 Failed"
-    )
+    assert hasattr(e, "skill_evolution") and isinstance(e.skill_evolution, dict), "Step 21 Failed"
+    assert hasattr(e, "awakened_skills") and isinstance(e.awakened_skills, list), "Step 22 Failed"
+    assert hasattr(e, "skill_traits") and isinstance(e.skill_traits, dict), "Step 23 Failed"
+    assert hasattr(e, "equipped_skills") and isinstance(e.equipped_skills, list), "Step 24 Failed"
     assert hasattr(e, "inheritable_skills") and isinstance(
         e.inheritable_skills, list
     ), "Step 25 Failed"
@@ -193,11 +173,7 @@ def test_all_72_steps_skill_synthesis_system():
 
     # Steps 29-35: skill_fusion_system.py
     from skill_fusion_system import REGISTRY as FUSION_REG
-    from skill_fusion_system import (
-        SkillFusionData,
-        SkillFusionManager,
-        SkillFusionRegistry,
-    )
+    from skill_fusion_system import SkillFusionData, SkillFusionManager, SkillFusionRegistry
 
     assert SkillFusionData is not None, "Step 30 Failed"
     fr1 = SkillFusionRegistry()
@@ -234,13 +210,13 @@ def test_all_72_steps_skill_synthesis_system():
     emgr = SkillEvolutionManager(EVO_REG)
     e.skills["swordsmanship"] = Skill("swordsmanship", level=15)
     next_st = emgr.check_evolution(e, "sword_mastery")
-    assert next_st is not None and next_st.get("id") == "sword_stage_1", (
-        "Step 41 Failed: check_evolution"
-    )
+    assert (
+        next_st is not None and next_st.get("id") == "sword_stage_1"
+    ), "Step 41 Failed: check_evolution"
     ok_evo = emgr.evolve_skill(e, "sword_mastery")
-    assert ok_evo and e.skill_evolution.get("sword_mastery") == "sword_stage_1", (
-        "Step 42 Failed: evolve_skill"
-    )
+    assert (
+        ok_evo and e.skill_evolution.get("sword_mastery") == "sword_stage_1"
+    ), "Step 42 Failed: evolve_skill"
     print("[OK] Steps 36-42 (skill_evolution_system.py Data/Registry/Manager)")
 
     # Steps 43-49: skill_awakening_system.py
@@ -268,11 +244,7 @@ def test_all_72_steps_skill_synthesis_system():
 
     # Steps 50-56: skill_transfer_system.py
     from skill_transfer_system import REGISTRY as TRA_REG
-    from skill_transfer_system import (
-        SkillTransferData,
-        SkillTransferManager,
-        SkillTransferRegistry,
-    )
+    from skill_transfer_system import SkillTransferData, SkillTransferManager, SkillTransferRegistry
 
     assert SkillTransferData is not None, "Step 51 Failed"
     tr1 = SkillTransferRegistry()
@@ -285,13 +257,9 @@ def test_all_72_steps_skill_synthesis_system():
     e.skill_points = 50
     e.gold = 10000
     e.skills["swordsmanship"] = Skill("swordsmanship", level=10)
-    assert tmgr.can_transfer(e, "critical_boost", "swordsmanship"), (
-        "Step 55 Failed: can_transfer"
-    )
+    assert tmgr.can_transfer(e, "critical_boost", "swordsmanship"), "Step 55 Failed: can_transfer"
     ok_tra = tmgr.transfer_trait(e, "critical_boost", "swordsmanship")
-    assert ok_tra and "swordsmanship" in e.skill_traits, (
-        "Step 56 Failed: transfer_trait"
-    )
+    assert ok_tra and "swordsmanship" in e.skill_traits, "Step 56 Failed: transfer_trait"
     print("[OK] Steps 50-56 (skill_transfer_system.py Data/Registry/Manager)")
 
     # Steps 57-64: skill_resonance_system.py
@@ -337,29 +305,23 @@ def test_all_72_steps_skill_synthesis_system():
     avail_inh = imgr.get_inheritable_skills(e, "bloodline_skills")
     assert "swordsmanship" in avail_inh, "Step 69 Failed: get_inheritable_skills"
     ok_inh = imgr.inherit_skill(e, "swordsmanship", "bloodline_skills")
-    assert ok_inh and "swordsmanship" in e.inheritable_skills, (
-        "Step 69 Failed: inherit_skill"
-    )
+    assert ok_inh and "swordsmanship" in e.inheritable_skills, "Step 69 Failed: inherit_skill"
     print("[OK] Steps 65-69 (skill_inheritance_system.py Data/Registry/Manager)")
 
     # Steps 70-71: skill_specialization_system.py
     from skill_specialization_system import REGISTRY as SPEC_REG
-    from skill_specialization_system import (
-        SkillSpecializationData,
-        SkillSpecializationManager,
-    )
+    from skill_specialization_system import SkillSpecializationData, SkillSpecializationManager
 
     assert SkillSpecializationData is not None, "Step 71 Failed"
     SPEC_REG.load()
     assert len(SPEC_REG.all()) >= 1, "Step 71 Failed: registry load"
     smgr = SkillSpecializationManager(SPEC_REG)
-    assert smgr.can_specialize(e, "fireball_specialization", "inferno_burst"), (
-        "Step 71 Failed: can_specialize"
-    )
+    assert smgr.can_specialize(
+        e, "fireball_specialization", "inferno_burst"
+    ), "Step 71 Failed: can_specialize"
     ok_spec = smgr.specialize_skill(e, "fireball_specialization", "inferno_burst")
     assert (
-        ok_spec
-        and e.skill_specialization.get("fireball_specialization") == "inferno_burst"
+        ok_spec and e.skill_specialization.get("fireball_specialization") == "inferno_burst"
     ), "Step 71 Failed: specialize_skill"
     print("[OK] Steps 70-71 (skill_specialization_system.py Data/Registry/Manager)")
 
@@ -368,27 +330,17 @@ def test_all_72_steps_skill_synthesis_system():
     from save_system import SaveSystem
 
     eng = Engine()
-    assert hasattr(eng, "skill_fusion_manager"), (
-        "Step 72 Failed: fusion manager on Engine"
-    )
-    assert hasattr(eng, "skill_evolution_manager"), (
-        "Step 72 Failed: evolution manager on Engine"
-    )
-    assert hasattr(eng, "skill_awakening_manager"), (
-        "Step 72 Failed: awakening manager on Engine"
-    )
-    assert hasattr(eng, "skill_transfer_manager"), (
-        "Step 72 Failed: transfer manager on Engine"
-    )
-    assert hasattr(eng, "skill_resonance_manager"), (
-        "Step 72 Failed: resonance manager on Engine"
-    )
-    assert hasattr(eng, "skill_inheritance_manager"), (
-        "Step 72 Failed: inheritance manager on Engine"
-    )
-    assert hasattr(eng, "skill_specialization_manager"), (
-        "Step 72 Failed: specialization manager on Engine"
-    )
+    assert hasattr(eng, "skill_fusion_manager"), "Step 72 Failed: fusion manager on Engine"
+    assert hasattr(eng, "skill_evolution_manager"), "Step 72 Failed: evolution manager on Engine"
+    assert hasattr(eng, "skill_awakening_manager"), "Step 72 Failed: awakening manager on Engine"
+    assert hasattr(eng, "skill_transfer_manager"), "Step 72 Failed: transfer manager on Engine"
+    assert hasattr(eng, "skill_resonance_manager"), "Step 72 Failed: resonance manager on Engine"
+    assert hasattr(
+        eng, "skill_inheritance_manager"
+    ), "Step 72 Failed: inheritance manager on Engine"
+    assert hasattr(
+        eng, "skill_specialization_manager"
+    ), "Step 72 Failed: specialization manager on Engine"
 
     eng.player.skill_evolution["sword_mastery"] = "sword_stage_2"
     eng.player.awakened_skills = ["dragon_slaying_awakening"]
@@ -396,17 +348,15 @@ def test_all_72_steps_skill_synthesis_system():
     assert "セーブ完了" in save_msg, "Step 72 Save failed"
     loaded_eng, _ = SaveSystem.load()
     assert loaded_eng is not None, "Step 72 Load failed"
-    assert loaded_eng.player.skill_evolution.get("sword_mastery") == "sword_stage_2", (
-        "Step 72 State persistence failed"
-    )
-    assert "dragon_slaying_awakening" in loaded_eng.player.awakened_skills, (
-        "Step 72 State persistence failed"
-    )
+    assert (
+        loaded_eng.player.skill_evolution.get("sword_mastery") == "sword_stage_2"
+    ), "Step 72 State persistence failed"
+    assert (
+        "dragon_slaying_awakening" in loaded_eng.player.awakened_skills
+    ), "Step 72 State persistence failed"
     print("[OK] Step 72 (game.py Engine 統合 & save_system.py 完全永続化)")
 
-    print(
-        "\nALL 72 STEPS OF SKILL SYNTHESIS & EVOLUTION SYSTEM VERIFIED 100% SUCCESSFULLY!"
-    )
+    print("\nALL 72 STEPS OF SKILL SYNTHESIS & EVOLUTION SYSTEM VERIFIED 100% SUCCESSFULLY!")
 
 
 if __name__ == "__main__":

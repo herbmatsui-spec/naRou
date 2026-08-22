@@ -1,0 +1,172 @@
+# 探索メタプログレッション バランス設定
+# Phase 7: バランス調整パラメータ
+
+# 探索経験値計算式
+exploration_exp:
+  base_multiplier: 10           # depth * room_count * base_multiplier
+  first_visit_bonus: 500        # 初見部屋ボーナス
+  first_floor_bonus: 1000       # 初見フロアボーナス
+  secret_room_bonus: 2000       # 秘密部屋ボーナス
+  floor_clear_base: 200         # フロアクリア基礎 (depth * floor_clear_base)
+  floor_clear_per_floor: 100    # クリア済みフロア数 * floor_clear_per_floor
+
+# 探索ランク設定
+exploration_rank:
+  exp_per_rank: 1000            # ランクアップ必要経験値
+  max_rank: 99                  # 最大ランク
+
+# アセンションノード解放条件
+ascension_nodes:
+  deep_delver:
+    thresholds: [50, 100, 150, 200]  # 深度閾値
+    max_level: 4
+    buff_per_level:
+      all_resistance: 10
+      max_hp_bonus: 50
+  full_clearer:
+    thresholds: [99]               # 全フロア数
+    max_level: 1
+    buff_per_level:
+      item_find_rate: 25
+      gold_gain: 20
+  secret_finder:
+    thresholds: [50]               # 秘密部屋発見数
+    max_level: 1
+    buff_per_level:
+      crit_rate: 15
+      secret_detection: 50
+  speed_runner:
+    thresholds: [10000]            # ターン数（未実装：深度経験値で代用）
+    max_level: 1
+    buff_per_level:
+      speed: 10
+      turn_time_reduction: 15
+  hazard_master:
+    thresholds: [100]              # ハザード0維持フロア数（未実装：フロアクリア数で代用）
+    max_level: 1
+    buff_per_level:
+      hazard_resistance: 100
+      mp_cost_reduction: 20
+
+# バウンティ設定
+bounty:
+  deep_targets:
+    abyss_warden:
+      min_depth: 100
+      base_hp: 15000
+      base_atk: 800
+      reward_aldo: 50000
+      reward_crystal: "Concept of Absolute Void"
+    void_stalker:
+      min_depth: 150
+      base_hp: 25000
+      base_atk: 1200
+      reward_aldo: 100000
+      reward_crystal: "Concept of Absolute Space"
+    babel_architect:
+      min_depth: 200
+      base_hp: 50000
+      base_atk: 2000
+      reward_aldo: 500000
+      reward_crystal: "Concept of Absolute Creation"
+
+  secret_bosses:
+    shadow_monarch:
+      spawn_condition: "all_secret_rooms_found"
+      threshold: 50
+      base_hp: 30000
+      base_atk: 1000
+      reward_aldo: 200000
+      reward_crystal: "Concept of Absolute Shadow"
+    time_lost_king:
+      spawn_condition: "depth_200_and_all_bounties_cleared"
+      base_hp: 40000
+      base_atk: 1500
+      reward_aldo: 300000
+      reward_crystal: "Concept of Absolute Time"
+
+  shadow_brokers:
+    - id: "shadow_broker_01"
+      name: "闇ブローカー・シルク"
+      min_depth: 30
+      base_hp: 8000
+      base_atk: 400
+      reward_aldo: 20000
+      encounter_rate_per_depth: 0.005
+    - id: "shadow_broker_02"
+      name: "闇ブローカー・ヴェノム"
+      min_depth: 60
+      base_hp: 10000
+      base_atk: 500
+      reward_aldo: 30000
+      encounter_rate_per_depth: 0.005
+    - id: "shadow_broker_03"
+      name: "闇ブローカー・ゴースト"
+      min_depth: 100
+      base_hp: 12000
+      base_atk: 600
+      reward_aldo: 50000
+      encounter_rate_per_depth: 0.005
+    - id: "shadow_broker_04"
+      name: "闇ブローカー・アイアン"
+      min_depth: 140
+      base_hp: 15000
+      base_atk: 700
+      reward_aldo: 80000
+      encounter_rate_per_depth: 0.005
+    - id: "shadow_broker_05"
+      name: "闇ブローカー・オメガ"
+      min_depth: 180
+      base_hp: 20000
+      base_atk: 900
+      reward_aldo: 120000
+      encounter_rate_per_depth: 0.005
+
+# 概念結晶ドロップ率設定
+concept_crystal_drops:
+  first_floor_boss:
+    base_rate: 0.15
+    depth_bonus_per_level: 0.005
+    rank_bonus_per_level: 0.05
+    first_clear_bonus: 0.20
+    max_rate: 0.95
+    crystal_categories: ["Fire", "Ice", "Lightning", "Dark", "Holy", "Physical", "Arcane"]
+  secret_area:
+    base_rate: 0.25
+    depth_bonus_per_level: 0.003
+    rank_bonus_per_level: 0.05
+    first_clear_bonus: 0.15
+    max_rate: 0.95
+    crystal_categories: ["Shadow", "Illusion", "Space", "Time", "Mind", "Soul"]
+  faction_boss:
+    base_rate: 0.30
+    depth_bonus_per_level: 0.002
+    rank_bonus_per_level: 0.03
+    first_clear_bonus: 0.10
+    max_rate: 0.95
+    crystal_categories: ["Order", "Chaos", "Wealth", "Knowledge", "Power", "Freedom"]
+  deep_bounty:
+    base_rate: 0.50
+    depth_bonus_per_level: 0.001
+    rank_bonus_per_level: 0.02
+    first_clear_bonus: 0.0
+    max_rate: 0.95
+    crystal_categories: ["Void", "Genesis", "Absolute", "Origin", "End", "Infinity"]
+
+# ニューゲーム+ 引継ぎボーナス上限
+new_game_plus:
+  max_bonus_cap: 50
+  depth_bonus_mult: 1           # depth // 10 * mult → 全ステータス
+  secret_bonus_mult: 2          # secrets * mult → アイテム発見率
+  faction_bonus_mult: 5         # 総友好度 // 10 * mult → 派閥評価
+  base_tier_mult: 1             # base_tier * mult → 初期施設レベル
+  rank_bonus_mult: 100          # rank * mult → 初期探索経験値
+  ascension_bonus_mult: 5       # nodes * 5% * mult → ダメージ倍率
+  crystal_bonus_mult: 10        # crystals * mult → 初期MP
+
+# 周回スケーリング
+cycle_scaling:
+  enemy_hp_mult_per_cycle: 0.15     # 転生毎に敵HP +15%
+  enemy_atk_mult_per_cycle: 0.10    # 転生毎に敵ATK +10%
+  reward_mult_per_cycle: 0.20       # 転生毎に報酬 +20%
+  max_cycle_mult: 5.0               # 最大倍率

@@ -3,12 +3,14 @@ Skill Eater Phase 3: Slum Finale System (Steps 49-53)
 本部襲撃と同時進行する、拠点NPCと育成ペットたちによるスラム街最終防衛戦を管理。
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List
+
 
 class SlumFinaleManager:
     """
     スラム街最終防衛戦（同時進行イベント）マネージャー
     """
+
     def __init__(self, base_power: int = 500):
         self.slum_defensive_power = base_power
         self.total_raid_waves = 3
@@ -22,7 +24,7 @@ class SlumFinaleManager:
             return {"status": "BASE_ALREADY_DESTROYED"}
 
         defense_margin = self.slum_defensive_power - enemy_assault_power
-        
+
         if defense_margin >= 0:
             result = "WAVE_REPELLED_PERFECTLY"
             sector_lost = None
@@ -43,7 +45,7 @@ class SlumFinaleManager:
             "result": result,
             "fallen_sectors": self.fallen_sectors,
             "is_base_destroyed": self.is_base_destroyed,
-            "message": msg
+            "message": msg,
         }
 
     def trigger_final_stand_boost(self, player_encouragement_buff: int = 300) -> Dict[str, Any]:
@@ -52,5 +54,5 @@ class SlumFinaleManager:
         return {
             "success": True,
             "boosted_defensive_power": self.slum_defensive_power,
-            "message": "FINAL STAND: The entire Slum rallied for the ultimate defense!"
+            "message": "FINAL STAND: The entire Slum rallied for the ultimate defense!",
         }

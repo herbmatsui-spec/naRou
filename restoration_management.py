@@ -76,9 +76,7 @@ class RestorationManager:
                                     "name": backup_file.stem,
                                     "path": str(backup_file),
                                     "size": stat.st_size,
-                                    "created_at": datetime.fromtimestamp(
-                                        stat.st_mtime
-                                    ).isoformat(),
+                                    "created_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
                                     "source_dir": backup_dir,
                                 }
                             )
@@ -246,13 +244,9 @@ class RestorationManager:
 
 def main():
     parser = argparse.ArgumentParser(description="Restoration Management")
-    parser.add_argument(
-        "--dir", default="restoration_management", help="Restoration directory"
-    )
+    parser.add_argument("--dir", default="restoration_management", help="Restoration directory")
     parser.add_argument("--find", nargs="?", const=True, help="Find backups")
-    parser.add_argument(
-        "--restore", nargs=2, metavar=("BACKUP", "TARGET"), help="Restore backup"
-    )
+    parser.add_argument("--restore", nargs=2, metavar=("BACKUP", "TARGET"), help="Restore backup")
     parser.add_argument(
         "--selective",
         nargs=3,
@@ -266,9 +260,7 @@ def main():
         metavar=("RESTORE_POINT", "TARGET"),
         help="Rollback to restore point",
     )
-    parser.add_argument(
-        "--history", action="store_true", help="Show restoration history"
-    )
+    parser.add_argument("--history", action="store_true", help="Show restoration history")
     args = parser.parse_args()
 
     mgr = RestorationManager(args.dir)

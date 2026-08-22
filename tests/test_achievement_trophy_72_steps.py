@@ -1,6 +1,7 @@
 """
 総合テストスクリプト: 実績・トロフィーシステム全72ステップの完全検証
 """
+
 from __future__ import annotations
 
 import os
@@ -22,37 +23,31 @@ def test_all_72_steps_achievement_trophy_system():
     # Step 1: data/achievements.yaml 基本構造作成
     with open("data/achievements.yaml", encoding="utf-8") as f:
         ach_raw = yaml.safe_load(f)
-    assert ach_raw and "achievements" in ach_raw, (
-        "Step 1 Failed: achievements key missing"
-    )
+    assert ach_raw and "achievements" in ach_raw, "Step 1 Failed: achievements key missing"
     print("[OK] Step 1 (data/achievements.yaml 基本構造)")
 
     # Step 2: data/achievements.yaml 基本実績定義
     first_blood = ach_raw.get("achievements", {}).get("first_blood")
     assert first_blood is not None, "Step 2 Failed: first_blood missing"
-    assert first_blood.get("name") == "最初の血", (
-        "Step 2 Failed: first_blood name mismatch"
-    )
+    assert first_blood.get("name") == "最初の血", "Step 2 Failed: first_blood name mismatch"
     assert first_blood.get("reward_gold") == 100, "Step 2 Failed: reward_gold mismatch"
     print("[OK] Step 2 (基本実績 first_blood)")
 
     # Step 3: data/achievements.yaml 称号連動実績追加
     goblin_slayer = ach_raw.get("achievements", {}).get("goblin_slayer")
     assert goblin_slayer is not None, "Step 3 Failed: goblin_slayer missing"
-    assert "condition" in goblin_slayer, (
-        "Step 3 Failed: goblin_slayer condition missing"
-    )
-    assert goblin_slayer.get("reward_title") == "goblin_slayer", (
-        "Step 3 Failed: reward_title mismatch"
-    )
+    assert "condition" in goblin_slayer, "Step 3 Failed: goblin_slayer condition missing"
+    assert (
+        goblin_slayer.get("reward_title") == "goblin_slayer"
+    ), "Step 3 Failed: reward_title mismatch"
     print("[OK] Step 3 (称号連動実績 goblin_slayer)")
 
     # Step 4: data/meta_progression.yaml 基本構造作成
     with open("data/meta_progression.yaml", encoding="utf-8") as f:
         meta_raw = yaml.safe_load(f)
-    assert meta_raw and "meta_progression" in meta_raw, (
-        "Step 4 Failed: meta_progression key missing"
-    )
+    assert (
+        meta_raw and "meta_progression" in meta_raw
+    ), "Step 4 Failed: meta_progression key missing"
     print("[OK] Step 4 (data/meta_progression.yaml 基本構造)")
 
     # Step 5: data/meta_progression.yaml 基本メタ進行定義
@@ -65,14 +60,10 @@ def test_all_72_steps_achievement_trophy_system():
     from entity import Entity
 
     entity_code = open("entity.py", encoding="utf-8").read()
-    assert "# TODO: Achievement fields" in entity_code, (
-        "Step 6 Failed: placeholder comment missing"
-    )
+    assert "# TODO: Achievement fields" in entity_code, "Step 6 Failed: placeholder comment missing"
 
     e = Entity()
-    assert hasattr(e, "achievements") and isinstance(e.achievements, list), (
-        "Step 7 Failed"
-    )
+    assert hasattr(e, "achievements") and isinstance(e.achievements, list), "Step 7 Failed"
     assert hasattr(e, "achievement_progress") and isinstance(
         e.achievement_progress, dict
     ), "Step 8 Failed"
@@ -85,36 +76,28 @@ def test_all_72_steps_achievement_trophy_system():
     assert hasattr(e, "unique_items_obtained") and isinstance(
         e.unique_items_obtained, list
     ), "Step 11 Failed"
-    assert hasattr(e, "social_points") and isinstance(e.social_points, int), (
-        "Step 12 Failed"
-    )
-    assert hasattr(e, "weekly_play_time") and isinstance(e.weekly_play_time, int), (
-        "Step 13 Failed"
-    )
+    assert hasattr(e, "social_points") and isinstance(e.social_points, int), "Step 12 Failed"
+    assert hasattr(e, "weekly_play_time") and isinstance(e.weekly_play_time, int), "Step 13 Failed"
     assert hasattr(e, "reincarnation_count") and isinstance(
         e.reincarnation_count, int
     ), "Step 14 Failed"
-    assert hasattr(e, "total_level_earned") and isinstance(e.total_level_earned, int), (
-        "Step 15 Failed"
-    )
-    assert hasattr(e, "permanent_bonuses") and isinstance(e.permanent_bonuses, dict), (
-        "Step 16 Failed"
-    )
-    assert hasattr(e, "meta_progression") and isinstance(e.meta_progression, dict), (
-        "Step 17 Failed"
-    )
+    assert hasattr(e, "total_level_earned") and isinstance(
+        e.total_level_earned, int
+    ), "Step 15 Failed"
+    assert hasattr(e, "permanent_bonuses") and isinstance(
+        e.permanent_bonuses, dict
+    ), "Step 16 Failed"
+    assert hasattr(e, "meta_progression") and isinstance(e.meta_progression, dict), "Step 17 Failed"
     assert hasattr(e, "dungeon_floors_visited") and isinstance(
         e.dungeon_floors_visited, set
     ), "Step 33 Failed"
-    assert hasattr(e, "play_time_seconds") and isinstance(e.play_time_seconds, int), (
-        "Step 38 Failed"
-    )
+    assert hasattr(e, "play_time_seconds") and isinstance(
+        e.play_time_seconds, int
+    ), "Step 38 Failed"
     assert hasattr(e, "last_festival_check") and isinstance(
         e.last_festival_check, str
     ), "Step 42 Failed"
-    assert hasattr(e, "friend_helps") and isinstance(e.friend_helps, int), (
-        "Step 56 Failed"
-    )
+    assert hasattr(e, "friend_helps") and isinstance(e.friend_helps, int), "Step 56 Failed"
     assert hasattr(e, "special_items_combo") and isinstance(
         e.special_items_combo, list
     ), "Step 67 Failed"
@@ -161,25 +144,23 @@ def test_all_72_steps_achievement_trophy_system():
     save_msg = SaveSystem.save(eng)
     assert "セーブ完了" in save_msg, "Step 30 Save failed"
     loaded_eng, _load_msg = SaveSystem.load()
-    assert loaded_eng is not None and "first_blood" in loaded_eng.player.achievements, (
-        "Step 31 Load failed"
-    )
+    assert (
+        loaded_eng is not None and "first_blood" in loaded_eng.player.achievements
+    ), "Step 31 Load failed"
     print("[OK] Steps 29-31 (SaveSystem 実績データ保存・復元)")
 
     # Steps 32, 34, 35: ダンジョン探検家実績 & カウンター
     dungeon_exp = REGISTRY.get("dungeon_explorer")
-    assert dungeon_exp is not None and dungeon_exp.reward_title == "dungeon_explorer", (
-        "Step 32 Failed"
-    )
+    assert (
+        dungeon_exp is not None and dungeon_exp.reward_title == "dungeon_explorer"
+    ), "Step 32 Failed"
     eng.player.dungeon_floors_visited = {(1, i) for i in range(1, 12)}
     assert mgr.check_achievement(eng.player, "dungeon_explorer", eng), "Step 35 Failed"
     print("[OK] Steps 32-35 (ダンジョン探検家実績)")
 
     # Steps 36, 37, 39, 40: スピードランナー実績
     speed_runner = REGISTRY.get("speed_runner")
-    assert speed_runner is not None and speed_runner.time_limit == 3600, (
-        "Step 37 Failed"
-    )
+    assert speed_runner is not None and speed_runner.time_limit == 3600, "Step 37 Failed"
     eng.player.play_time_seconds = 1200
     eng.player.max_dungeon_depth = 10
     assert mgr.check_achievement(eng.player, "speed_runner", eng), "Step 40 Failed"
@@ -187,13 +168,9 @@ def test_all_72_steps_achievement_trophy_system():
 
     # Steps 41, 43, 44: 祭り参加者実績
     festival = REGISTRY.get("festival_participant")
-    assert festival is not None and "12-25" in festival.available_dates, (
-        "Step 41 Failed"
-    )
+    assert festival is not None and "12-25" in festival.available_dates, "Step 41 Failed"
     eng.player.last_festival_check = "12-25"
-    assert mgr.check_achievement(eng.player, "festival_participant", eng), (
-        "Step 44 Failed"
-    )
+    assert mgr.check_achievement(eng.player, "festival_participant", eng), "Step 44 Failed"
     print("[OK] Steps 41-44 (祭り参加者実績)")
 
     # Steps 45, 46, 47: モンスター収集家実績
@@ -231,23 +208,19 @@ def test_all_72_steps_achievement_trophy_system():
 
     # Steps 55, 57, 58: 友達助っ人実績
     f_help = REGISTRY.get("friend_helper")
-    assert f_help is not None and f_help.reward_title == "loyal_friend", (
-        "Step 55 Failed"
-    )
+    assert f_help is not None and f_help.reward_title == "loyal_friend", "Step 55 Failed"
     eng.player.friend_helps = 5
     assert mgr.check_achievement(eng.player, "friend_helper", eng), "Step 58 Failed"
     print("[OK] Steps 55-58 (友達助っ人実績)")
 
     # Steps 59, 60, 61, 62: 転生英雄実績
     r_hero = REGISTRY.get("reincarnation_hero")
-    assert r_hero is not None and r_hero.requirement.get("reincarnation_count") == 5, (
-        "Step 59 Failed"
-    )
+    assert (
+        r_hero is not None and r_hero.requirement.get("reincarnation_count") == 5
+    ), "Step 59 Failed"
     eng.player.reincarnation_count = 5
     eng.player.total_level_earned = 1000
-    assert mgr.check_achievement(eng.player, "reincarnation_hero", eng), (
-        "Step 62 Failed"
-    )
+    assert mgr.check_achievement(eng.player, "reincarnation_hero", eng), "Step 62 Failed"
     print("[OK] Steps 59-62 (転生英雄実績)")
 
     # Steps 63, 64: メタマスター実績
@@ -261,9 +234,7 @@ def test_all_72_steps_achievement_trophy_system():
     cow = REGISTRY.get("the_secret_cow_level")
     assert cow is not None and cow.hidden, "Step 65, 66 Failed"
     eng.player.special_items_combo = ["wirts_leg", "tome_of_town_portal"]
-    assert mgr.check_achievement(eng.player, "the_secret_cow_level", eng), (
-        "Step 69 Failed"
-    )
+    assert mgr.check_achievement(eng.player, "the_secret_cow_level", eng), "Step 69 Failed"
     print("[OK] Steps 65-69 (秘密の牛レベル隠し実績)")
 
     # Steps 70, 71, 72: UI通知・画面描画・ショートカット

@@ -2,6 +2,7 @@
 プロシージャル・クエスト生成システム 総合テスト (全36ステップ)
 依頼ボード / ランダムダンジョン探索 / NPC個別クエスト の自動生成を検証。
 """
+
 from __future__ import annotations
 
 import os
@@ -39,9 +40,7 @@ def test_all_36_steps_procedural_quest_generation():
     # Step 3: 難易度ティア (6段階)
     diffs = qg.get("difficulty_tiers", {})
     assert "tutorial" in diffs and len(diffs) >= 6, "Step 3 Failed: difficulty_tiers"
-    print(
-        f"[OK] Step 3 (難易度ティア {len(diffs)}段階: tutorial..abyss, 指数スケーリング)"
-    )
+    print(f"[OK] Step 3 (難易度ティア {len(diffs)}段階: tutorial..abyss, 指数スケーリング)")
 
     # Step 4: 報酬テーブル (5段階)
     rewards = qg.get("reward_tables", {})
@@ -61,9 +60,7 @@ def test_all_36_steps_procedural_quest_generation():
     print(f"[OK] Step 6 (NPC個別クエストテーマ {len(npc_themes)}種)")
 
     # Step 7: 既存 scenario_templates の維持
-    assert "goblin_invasion" in raw.get("scenario_templates", {}), (
-        "Step 7 Failed: backward compat"
-    )
+    assert "goblin_invasion" in raw.get("scenario_templates", {}), "Step 7 Failed: backward compat"
     print("[OK] Step 7 (既存 scenario_templates.goblin_invasion の維持/後方互換)")
 
     # Step 8: 依頼ボード設定
@@ -95,14 +92,9 @@ def test_all_36_steps_procedural_quest_generation():
     # Step 13
     assert NPCQuestTheme is not None, "Step 13 Failed"
     # Step 14
-    assert QuestObjectiveSpec is not None and GeneratedQuest is not None, (
-        "Step 14 Failed"
-    )
+    assert QuestObjectiveSpec is not None and GeneratedQuest is not None, "Step 14 Failed"
     gq = GeneratedQuest(title="t", archetype_id="slay")
-    assert (
-        gq.to_dict()["title"] == "t"
-        and GeneratedQuest.from_dict(gq.to_dict()).title == "t"
-    )
+    assert gq.to_dict()["title"] == "t" and GeneratedQuest.from_dict(gq.to_dict()).title == "t"
     print(
         "[OK] Steps 9-14 (QuestArchetype/DifficultyTier/RewardTable/StageSetting/NPCQuestTheme/QuestObjectiveSpec/GeneratedQuest)"
     )
@@ -140,9 +132,7 @@ def test_all_36_steps_procedural_quest_generation():
     # Step 19: シード決定論
     rng_a = gen._seeded_rng("board", 123)
     rng_b = gen._seeded_rng("board", 123)
-    assert rng_a.randint(0, 1_000_000) == rng_b.randint(0, 1_000_000), (
-        "Step 19 Failed: determinism"
-    )
+    assert rng_a.randint(0, 1_000_000) == rng_b.randint(0, 1_000_000), "Step 19 Failed: determinism"
     print("[OK] Step 19 (シード決定論ヘルパー _seeded_rng)")
 
     # Step 20: コア合成 _compose
@@ -157,9 +147,9 @@ def test_all_36_steps_procedural_quest_generation():
     assert isinstance(cq, GeneratedQuest) and cq.quest_id, "Step 20 Failed: _compose"
     # Step 21: タイトル/説明文自動生成
     assert cq.title and cq.description, "Step 21 Failed: title/desc"
-    assert "{setting}" not in cq.title and "{enemy}" not in cq.title, (
-        "Step 21 Failed: template unfilled"
-    )
+    assert (
+        "{setting}" not in cq.title and "{enemy}" not in cq.title
+    ), "Step 21 Failed: template unfilled"
     # Step 22: 目的自動生成（難易度でスケール）
     easy = gen._compose(
         "board",
@@ -177,16 +167,12 @@ def test_all_36_steps_procedural_quest_generation():
         REGISTRY.get_setting("forest"),
         2,
     )
-    assert easy.objectives and easy.objectives[0].required_count >= 1, (
-        "Step 22 Failed: objective"
-    )
-    assert hard.objectives[0].required_count > easy.objectives[0].required_count, (
-        "Step 22 Failed: scaling"
-    )
+    assert easy.objectives and easy.objectives[0].required_count >= 1, "Step 22 Failed: objective"
+    assert (
+        hard.objectives[0].required_count > easy.objectives[0].required_count
+    ), "Step 22 Failed: scaling"
     # Step 23: 報酬合成
-    assert cq.reward.get("gold", 0) > 0 and cq.reward.get("exp", 0) > 0, (
-        "Step 23 Failed: reward"
-    )
+    assert cq.reward.get("gold", 0) > 0 and cq.reward.get("exp", 0) > 0, "Step 23 Failed: reward"
     print("[OK] Steps 20-23 (_compose/title/desc/objective scaling/reward)")
 
     # ---------------------------------------------------------
@@ -267,12 +253,8 @@ def test_all_36_steps_procedural_quest_generation():
     # Step 35: ProceduralQuestComponent 追加と永続化
     from components import ProceduralQuestComponent
 
-    assert isinstance(p.procedural_quest, ProceduralQuestComponent), (
-        "Step 35 Failed: component"
-    )
-    print(
-        "[OK] Steps 34-35 (update_progress/complete_quest 報酬付与 / ProceduralQuestComponent)"
-    )
+    assert isinstance(p.procedural_quest, ProceduralQuestComponent), "Step 35 Failed: component"
+    print("[OK] Steps 34-35 (update_progress/complete_quest 報酬付与 / ProceduralQuestComponent)")
 
     # ---------------------------------------------------------
     # フェーズI: 統合・テスト (Step 36)
@@ -281,20 +263,14 @@ def test_all_36_steps_procedural_quest_generation():
     from game import Engine
 
     eng = Engine()
-    assert hasattr(eng, "quest_generation_registry"), (
-        "Step 36 Failed: registry on Engine"
-    )
-    assert hasattr(eng, "procedural_quest_generator"), (
-        "Step 36 Failed: generator on Engine"
-    )
+    assert hasattr(eng, "quest_generation_registry"), "Step 36 Failed: registry on Engine"
+    assert hasattr(eng, "procedural_quest_generator"), "Step 36 Failed: generator on Engine"
     assert hasattr(eng, "procedural_quest_manager"), "Step 36 Failed: manager on Engine"
 
     # Step 36b: 決定論（同一シード → 同一クエスト）
     a = gen.generate_board_quest(p, seed=12345)
     b = gen.generate_board_quest(p, seed=12345)
-    assert a.quest_id == b.quest_id and a.title == b.title, (
-        "Step 36 Failed: determinism"
-    )
+    assert a.quest_id == b.quest_id and a.title == b.title, "Step 36 Failed: determinism"
 
     # Step 36c: 組み合わせ爆発（アーキタイプ×難易度×報酬×舞台 = 7×6×5×8 = 1680通りの一意性）
     combos = set()
@@ -327,9 +303,7 @@ def test_all_36_steps_procedural_quest_generation():
         assert "セーブ完了" in msg, "Step 36 Failed: save"
         loaded, _ = SaveSystem.load()
         assert loaded is not None, "Step 36 Failed: load"
-        assert loaded.player.procedural_quest.completed_count == 5, (
-            "Step 36 Failed: persistence"
-        )
+        assert loaded.player.procedural_quest.completed_count == 5, "Step 36 Failed: persistence"
     finally:
         SaveSystem.SAVE_PATH = "savegame.bin"
         if "tmp" in dir() and os.path.exists(tmp):
@@ -360,15 +334,11 @@ def test_all_36_steps_procedural_quest_generation():
         seed=12345,
     )
     assert synced_quest is not None, "Step 38 Failed: quest generation returned None"
-    assert synced_quest.quest_id == "test_synced_001", (
-        "Step 38 Failed: quest_id mismatch"
-    )
-    assert synced_quest.title == "テストダンジョンクエスト", (
-        "Step 38 Failed: title mismatch"
-    )
-    assert synced_quest.description == "テスト用のダンジョン同期クエスト", (
-        "Step 38 Failed: description mismatch"
-    )
+    assert synced_quest.quest_id == "test_synced_001", "Step 38 Failed: quest_id mismatch"
+    assert synced_quest.title == "テストダンジョンクエスト", "Step 38 Failed: title mismatch"
+    assert (
+        synced_quest.description == "テスト用のダンジョン同期クエスト"
+    ), "Step 38 Failed: description mismatch"
     assert synced_quest.source_type == "dungeon_synced", "Step 38 Failed: source_type"
     print("[OK] Step 38 (ダンジョン同期クエスト生成)")
 
@@ -386,26 +356,17 @@ def test_all_36_steps_procedural_quest_generation():
     print("[OK] Step 39 (クエスト目的のダンジョン同期)")
 
     # Step 40: フィードバック情報が報酬に含まれている
-    assert "dungeon_feedback" in synced_quest.reward, (
-        "Step 40 Failed: dungeon_feedback in reward"
-    )
+    assert "dungeon_feedback" in synced_quest.reward, "Step 40 Failed: dungeon_feedback in reward"
     feedback = synced_quest.reward["dungeon_feedback"]
     assert "spec_id" in feedback, "Step 40 Failed: spec_id in feedback"
-    assert feedback["spec_id"] == "standard_exploration", (
-        "Step 40 Failed: feedback spec_id"
-    )
-    assert "generated_floors" in feedback, (
-        "Step 40 Failed: generated_floors in feedback"
-    )
+    assert feedback["spec_id"] == "standard_exploration", "Step 40 Failed: feedback spec_id"
+    assert "generated_floors" in feedback, "Step 40 Failed: generated_floors in feedback"
     assert (
-        isinstance(feedback["generated_floors"], int)
-        and feedback["generated_floors"] > 0
+        isinstance(feedback["generated_floors"], int) and feedback["generated_floors"] > 0
     ), "Step 40 Failed: generated_floors positive"
     print("[OK] Step 40 (ダンジョンフィードバック情報)")
 
-    print(
-        "\nALL 40 STEPS OF PROCEDURAL QUEST GENERATION SYSTEM VERIFIED 100% SUCCESSFULLY!"
-    )
+    print("\nALL 40 STEPS OF PROCEDURAL QUEST GENERATION SYSTEM VERIFIED 100% SUCCESSFULLY!")
 
 
 if __name__ == "__main__":

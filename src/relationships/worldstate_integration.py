@@ -6,6 +6,7 @@ Step 17: Integration with world state system
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import time
 from collections import defaultdict, deque
@@ -147,9 +148,7 @@ class WorldStateRelationshipIntegration:
             },
         }
 
-    def update_for_phase(
-        self, phase: WorldPhase, player_id: str = "player"
-    ) -> dict[str, Any]:
+    def update_for_phase(self, phase: WorldPhase, player_id: str = "player") -> dict[str, Any]:
         """フェーズ変更時に呼び出し、関係に影響を与える"""
         results = {}
 
@@ -182,9 +181,11 @@ class WorldStateRelationshipIntegration:
                         self.rm.modify_relationship(
                             player_id,
                             target_id,
-                            InteractionType.EMOTIONAL_SUPPORT
-                            if delta > 0
-                            else InteractionType.ARGUMENT,
+                            (
+                                InteractionType.EMOTIONAL_SUPPORT
+                                if delta > 0
+                                else InteractionType.ARGUMENT
+                            ),
                             delta,
                         )
                         results[target_id] = results.get(target_id, {})
@@ -193,9 +194,7 @@ class WorldStateRelationshipIntegration:
         # ワールドステートマネージャーに通知
         if self.world_state_manager:
             try:
-                self.world_state_manager.set_variable(
-                    None, "relationship_phase_effects", results
-                )
+                self.world_state_manager.set_variable(None, "relationship_phase_effects", results)
             except Exception:
                 # TODO: handle exception properly
                 logger.exception("Unhandled exception")
@@ -285,9 +284,7 @@ class WorldStateRelationshipIntegration:
                     self.rm.modify_relationship(
                         char_a, char_b, InteractionType.EMOTIONAL_SUPPORT, delta
                     )
-                    affected_relationships.append(
-                        (char_a, char_b, edge.relationship_type)
-                    )
+                    affected_relationships.append((char_a, char_b, edge.relationship_type))
                     self._stats["relationship_changes_from_world"] += 1
 
         # エフェクトを記録
@@ -314,9 +311,7 @@ class WorldStateRelationshipIntegration:
 
         return effect
 
-    def calculate_global_trend(
-        self, player_id: str = "player"
-    ) -> WorldRelationshipTrend:
+    def calculate_global_trend(self, player_id: str = "player") -> WorldRelationshipTrend:
         """グローバルな関係トレンドを計算"""
         # プレイヤーの関係から平均を計算
         relationships = self.rm.get_all_relationships(player_id)
@@ -340,16 +335,12 @@ class WorldStateRelationshipIntegration:
         global_favorability_avg = (
             favorability_sum / favorability_count if favorability_count > 0 else 0.0
         )
-        global_conflict_level = (
-            conflict_sum / conflict_count if conflict_count > 0 else 0.0
-        )
+        global_conflict_level = conflict_sum / conflict_count if conflict_count > 0 else 0.0
 
         # 支配的な関係タイプ
         dominant_relationship_type = RelationshipType.FAVORABILITY
         if rel_type_counts:
-            dominant_relationship_type = max(
-                rel_type_counts, key=lambda x: rel_type_counts[x]
-            )
+            dominant_relationship_type = max(rel_type_counts, key=lambda x: rel_type_counts[x])
 
         # フェーズを取得
         current_phase = WorldPhase.BEGINNING
@@ -386,12 +377,8 @@ class WorldStateRelationshipIntegration:
         current_trend = self.calculate_global_trend(player_id)
 
         # 現在の減衰率に基づく予測
-        predicted_favorability = current_trend.global_favorability_avg * (
-            1 - 0.001 * days_ahead
-        )
-        predicted_conflict = current_trend.global_conflict_level * (
-            1 - 0.0005 * days_ahead
-        )
+        predicted_favorability = current_trend.global_favorability_avg * (1 - 0.001 * days_ahead)
+        predicted_conflict = current_trend.global_conflict_level * (1 - 0.0005 * days_ahead)
 
         # フェーズによる影響
         future_phase = self._predict_future_phase(days_ahead)
@@ -501,15 +488,12 @@ class WorldStateRelationshipIntegration:
         """統合状態をデシリアライズ"""
         self._active_world_events.clear()
         self._event_history = data.get("event_history", [])
-        self._last_phase = (
-            WorldPhase(data["last_phase"]) if data.get("last_phase") else None
-        )
+        self._last_phase = WorldPhase(data["last_phase"]) if data.get("last_phase") else None
         self._stats = data.get("stats", self._stats)
 
         for eid, effect_data in data.get("active_world_events", {}).items():
             affected = [
-                (a, b, RelationshipType(rt))
-                for a, b, rt in effect_data["affected_relationships"]
+                (a, b, RelationshipType(rt)) for a, b, rt in effect_data["affected_relationships"]
             ]
             self._active_world_events[eid] = WorldEventRelationshipEffect(
                 event_id=effect_data["event_id"],

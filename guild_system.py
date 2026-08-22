@@ -7,6 +7,7 @@ Steps 15-23, 46-48
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -199,8 +200,7 @@ class GuildManager:
                             getattr(player.attributes, attr) + bonus,
                         )
                     if (
-                        hasattr(player, "_base_attributes")
-                        and player._base_attributes is not None
+                        hasattr(player, "_base_attributes") and player._base_attributes is not None
                     ) and hasattr(player._base_attributes, attr):
                         setattr(
                             player._base_attributes,

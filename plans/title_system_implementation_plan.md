@@ -1,7 +1,7 @@
 # 称号・二つ名システム 詳細実装計画書
 
-**対象**: 低性能LLMでも実装可能なよう、12の微小ステップに分割  
-**前提**: 既存コードベース（entity.py, systems.py, game.py, advanced_systems.py）への最小限の追加  
+**対象**: 低性能LLMでも実装可能なよう、12の微小ステップに分割
+**前提**: 既存コードベース（entity.py, systems.py, game.py, advanced_systems.py）への最小限の追加
 **推定総工数**: 2日（各ステップ 1-3時間）
 
 ---
@@ -25,8 +25,8 @@
 
 ## ステップ 1: データ定義ファイル作成 `data/titles.yaml`
 
-**目的**: 全称号の定義をデータ駆動で管理  
-**ファイル**: 新規作成 `data/titles.yaml`  
+**目的**: 全称号の定義をデータ駆動で管理
+**ファイル**: 新規作成 `data/titles.yaml`
 **所要時間**: 30分
 
 ```yaml
@@ -210,8 +210,8 @@ titles:
 
 ## ステップ 2: TitleData データクラス作成 `title_system.py` (前半)
 
-**目的**: 称号定義をPythonオブジェクトとして扱う  
-**ファイル**: 新規作成 `title_system.py`  
+**目的**: 称号定義をPythonオブジェクトとして扱う
+**ファイル**: 新規作成 `title_system.py`
 **所要時間**: 45分
 
 ```python
@@ -336,8 +336,8 @@ REGISTRY = TitleRegistry()
 
 ## ステップ 3: Entity クラスに titles フィールド追加 `entity.py`
 
-**目的**: プレイヤー/ペットが所持する称号リストを保持  
-**ファイル**: `entity.py` (Entity.__init__ 内)  
+**目的**: プレイヤー/ペットが所持する称号リストを保持
+**ファイル**: `entity.py` (Entity.__init__ 内)
 **所要時間**: 15分
 
 ```python
@@ -359,8 +359,8 @@ REGISTRY = TitleRegistry()
 
 ## ステップ 4: 称号判定ロジック実装 `title_system.py` (中盤)
 
-**目的**: 条件チェック・称号付与・効果適用のコアロジック  
-**ファイル**: `title_system.py` (TitleRegistry クラスの後ろに追加)  
+**目的**: 条件チェック・称号付与・効果適用のコアロジック
+**ファイル**: `title_system.py` (TitleRegistry クラスの後ろに追加)
 **所要時間**: 60分
 
 ```python
@@ -522,8 +522,8 @@ MANAGER = TitleManager()
 
 ## ステップ 5: キルカウント・各種カウンター追加 `entity.py`
 
-**目的**: 称号条件判定に必要な統計データを Entity に保持  
-**ファイル**: `entity.py` (Entity.__init__ 末尾付近)  
+**目的**: 称号条件判定に必要な統計データを Entity に保持
+**ファイル**: `entity.py` (Entity.__init__ 末尾付近)
 **所要時間**: 20分
 
 ```python
@@ -545,8 +545,8 @@ MANAGER = TitleManager()
 
 ## ステップ 6: キルカウント増加フック `game.py` (_on_kill 内)
 
-**目的**: モンスター討伐時に kill_counts をインクリメント  
-**ファイル**: `game.py` (Engine._on_kill メソッド)  
+**目的**: モンスター討伐時に kill_counts をインクリメント
+**ファイル**: `game.py` (Engine._on_kill メソッド)
 **所要時間**: 15分
 
 ```python
@@ -560,7 +560,7 @@ MANAGER = TitleManager()
             # モンスター名正規化（小文字・スペース→アンダースコア）
             key = entity.name.lower().replace(' ', '_')
             self.player.kill_counts[key] = self.player.kill_counts.get(key, 0) + 1
-            
+
             # 称号チェック（即時 or ターン終了時）
             # ここでは即時チェック（軽量なので問題なし）
             from title_system import MANAGER
@@ -576,8 +576,8 @@ MANAGER = TitleManager()
 
 ## ステップ 7: ターン終了時の定期称号チェック `game.py` (advance_world)
 
-**目的**: キル以外の条件（レベル、深度、信仰等）を定期判定  
-**ファイル**: `game.py` (Engine.advance_world メソッド末尾)  
+**目的**: キル以外の条件（レベル、深度、信仰等）を定期判定
+**ファイル**: `game.py` (Engine.advance_world メソッド末尾)
 **所要時間**: 15分
 
 ```python
@@ -589,7 +589,7 @@ MANAGER = TitleManager()
         # === 称号システム: 定期チェック（100ターンごと等で軽量化可） ===
         if self.player and hasattr(self.player, 'total_turns'):
             self.player.total_turns += 1
-            
+
             # 10ターンごとにチェック（パフォーマンス考慮）
             if self.player.total_turns % 10 == 0:
                 from title_system import MANAGER
@@ -603,8 +603,8 @@ MANAGER = TitleManager()
 
 ## ステップ 8: 称号装備/解除・効果の動的適用 `title_system.py` (後盤)
 
-**目的**: 称号を「装備」して二つ名表示・効果発動、「解除」で効果消失  
-**ファイル**: `title_system.py` (TitleManager クラスに追加)  
+**目的**: 称号を「装備」して二つ名表示・効果発動、「解除」で効果消失
+**ファイル**: `title_system.py` (TitleManager クラスに追加)
 **所要時間**: 30分
 
 ```python
@@ -662,7 +662,7 @@ MANAGER = TitleManager()
         return result
 ```
 
-**確認項目**: 
+**確認項目**:
 - `MANAGER.equip_title(player, 'goblin_slayer')` で `player.equipped_title == 'goblin_slayer'`
 - `MANAGER.get_display_name(player)` で `"Player《緑皮の悪夢》"` が返ること
 
@@ -670,8 +670,8 @@ MANAGER = TitleManager()
 
 ## ステップ 9: UI統合 - 称号画面追加 `game.py` (render_all / input handling)
 
-**目的**: 称号一覧表示・装備操作UI  
-**ファイル**: `game.py` (render_all 関数・メインループ内)  
+**目的**: 称号一覧表示・装備操作UI
+**ファイル**: `game.py` (render_all 関数・メインループ内)
 **所要時間**: 45分
 
 ```python
@@ -729,8 +729,8 @@ def render_title_screen(console: tcod.console.Console, engine: Engine) -> None:
 
 ## ステップ 10: 称号獲得通知表示 `game.py` (render_all / message log)
 
-**目的**: 称号獲得時にメッセージログ・ポップアップで通知  
-**ファイル**: `game.py` (render_all 内のメッセージログ描画部)  
+**目的**: 称号獲得時にメッセージログ・ポップアップで通知
+**ファイル**: `game.py` (render_all 内のメッセージログ描画部)
 **所要時間**: 20分
 
 ```python
@@ -757,8 +757,8 @@ if engine.player and engine.player.title_notifications:
 
 ## ステップ 11: セーブ/ロード対応 `advanced_systems.py` (SaveSystem)
 
-**目的**: 称号データをセーブファイルに永続化  
-**ファイル**: `advanced_systems.py` (SaveSystem.save / load)  
+**目的**: 称号データをセーブファイルに永続化
+**ファイル**: `advanced_systems.py` (SaveSystem.save / load)
 **所要時間**: 20分
 
 ```python
@@ -767,7 +767,7 @@ if engine.player and engine.player.title_notifications:
     @classmethod
     def save(cls, engine: Any) -> str:
         # ... 既存処理 ...
-        
+
         # 称号データは Entity に含まれるため自動保存される（pickle）
         # 明示的に保存したい場合のみ以下追加：
         save_data = {
@@ -798,8 +798,8 @@ if engine.player and engine.player.title_notifications:
 
 ## ステップ 12: 統合テスト・デバッグ用チートコマンド `advanced_systems.py` (DebugConsole)
 
-**目的**: 開発中に全称号強制獲得・リセット等で動作確認  
-**ファイル**: `advanced_systems.py` (DebugConsole.process_command)  
+**目的**: 開発中に全称号強制獲得・リセット等で動作確認
+**ファイル**: `advanced_systems.py` (DebugConsole.process_command)
 **所要時間**: 20分
 
 ```python
@@ -807,7 +807,7 @@ if engine.player and engine.player.title_notifications:
 
     def process_command(self, cmd: str, engine: Any) -> str:
         # ... 既存コマンド ...
-        
+
         parts = cmd.split()
         if parts[0] == "title":
             if len(parts) < 2:
@@ -815,16 +815,16 @@ if engine.player and engine.player.title_notifications:
             from title_system import REGISTRY, MANAGER
             player = engine.player
             sub = parts[1]
-            
+
             if sub == "list":
                 return ", ".join([f"{t.id}({'★' if t.id in player.titles else ' '})" for t in REGISTRY.all()])
-            
+
             elif sub == "grant" and len(parts) >= 3:
                 tid = parts[2]
                 if MANAGER.grant_title(player, tid):
                     return f"Granted: {tid}"
                 return f"Failed or already owned: {tid}"
-            
+
             elif sub == "revoke" and len(parts) >= 3:
                 tid = parts[2]
                 if tid in player.titles:
@@ -833,21 +833,21 @@ if engine.player and engine.player.title_notifications:
                         MANAGER.unequip_title(player)
                     return f"Revoked: {tid}"
                 return f"Not owned: {tid}"
-            
+
             elif sub == "equip" and len(parts) >= 3:
                 if MANAGER.equip_title(player, parts[2]):
                     return f"Equipped: {parts[2]}"
                 return "Failed"
-            
+
             elif sub == "unequip":
                 MANAGER.unequip_title(player)
                 return "Unequipped"
-            
+
             elif sub == "all":
                 for t in REGISTRY.all():
                     MANAGER.grant_title(player, t.id)
                 return "All titles granted!"
-            
+
             elif sub == "reset":
                 player.titles.clear()
                 player.equipped_title = ""
@@ -857,7 +857,7 @@ if engine.player and engine.player.title_notifications:
                 player.near_death_count = 0
                 player.total_turns = 0
                 return "Title data reset!"
-        
+
         return "Unknown command"
 ```
 

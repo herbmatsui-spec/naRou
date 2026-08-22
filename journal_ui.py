@@ -6,6 +6,7 @@ Handles the rendering and interaction of the Adventurer's Journal.
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 from typing import Any
 
@@ -69,9 +70,7 @@ class JournalUI:
         # ウィンドウ枠の描画
         for x in range(start_x, start_x + self.window_width):
             console.print(x, start_y, "═", fg=self.header_color)
-            console.print(
-                x, start_y + self.window_height - 1, "═", fg=self.header_color
-            )
+            console.print(x, start_y + self.window_height - 1, "═", fg=self.header_color)
         for y in range(start_y, start_y + self.window_height):
             console.print(start_x, y, "║", fg=self.header_color)
             console.print(start_x + self.window_width - 1, y, "║", fg=self.header_color)
@@ -108,17 +107,11 @@ class JournalUI:
         current_y = start_y + 2
 
         if active_quest:
-            console.print(
-                start_x + 2, current_y, "【現在の目標】", fg=self.highlight_color
-            )
+            console.print(start_x + 2, current_y, "【現在の目標】", fg=self.highlight_color)
             current_y += 1
-            console.print(
-                start_x + 2, current_y, active_quest.title, fg=self.text_color
-            )
+            console.print(start_x + 2, current_y, active_quest.title, fg=self.text_color)
             current_y += 1
-            console.print(
-                start_x + 2, current_y, active_quest.description, fg=self.text_color
-            )
+            console.print(start_x + 2, current_y, active_quest.description, fg=self.text_color)
             current_y += 2
 
             # 達成条件のチェックリスト
@@ -145,9 +138,7 @@ class JournalUI:
 
         # 完了済みクエストの表示
         current_y += 2
-        console.print(
-            start_x + 2, current_y, "【完了した記録】", fg=self.highlight_color
-        )
+        console.print(start_x + 2, current_y, "【完了した記録】", fg=self.highlight_color)
         current_y += 1
 
         completed_quests = [
@@ -156,17 +147,13 @@ class JournalUI:
         # 正確には Enum を使うべきだが、ここでは簡易的に
         from main_quest_system import QuestStatus
 
-        completed_quests = [
-            q for q in mqs.quests.values() if q.status == QuestStatus.COMPLETED
-        ]
+        completed_quests = [q for q in mqs.quests.values() if q.status == QuestStatus.COMPLETED]
 
         for i, q in enumerate(completed_quests):
             if current_y >= start_y + self.window_height - 2:
                 break
 
-            color = (
-                self.highlight_color if i == self.selected_index else self.text_color
-            )
+            color = self.highlight_color if i == self.selected_index else self.text_color
             console.print(start_x + 4, current_y, f"✓ {q.title}", fg=color)
             current_y += 1
 
@@ -201,12 +188,8 @@ class JournalUI:
                         for obj in q.objectives:
                             if current_y >= start_y + self.window_height - 2:
                                 break
-                            mark = (
-                                "✓" if obj.current_count >= obj.required_count else "○"
-                            )
-                            color = (
-                                self.completed_color if mark == "✓" else self.text_color
-                            )
+                            mark = "✓" if obj.current_count >= obj.required_count else "○"
+                            color = self.completed_color if mark == "✓" else self.text_color
                             console.print(
                                 start_x + 4,
                                 current_y,
@@ -215,9 +198,7 @@ class JournalUI:
                             )
                             current_y += 1
                 else:
-                    console.print(
-                        start_x + 4, current_y, "（なし）", fg=self.text_color
-                    )
+                    console.print(start_x + 4, current_y, "（なし）", fg=self.text_color)
                     current_y += 1
                 # 完了済み生成クエスト
                 current_y += 1
@@ -231,18 +212,14 @@ class JournalUI:
                 for qid in comp.completed_quest_ids[-10:]:
                     if current_y >= start_y + self.window_height - 2:
                         break
-                    console.print(
-                        start_x + 4, current_y, f"✓ {qid}", fg=self.text_color
-                    )
+                    console.print(start_x + 4, current_y, f"✓ {qid}", fg=self.text_color)
                     current_y += 1
             except Exception as e:
                 logger.warning("Failed to render completed quests list in journal UI: %s", e)
 
         # ---- 考古学・発掘・解読メタゲーム セクション (Step 28) ----
         current_y += 2
-        console.print(
-            start_x + 2, current_y, "【考古学・発掘・解読】", fg=self.highlight_color
-        )
+        console.print(start_x + 2, current_y, "【考古学・発掘・解読】", fg=self.highlight_color)
         current_y += 1
         amgr = getattr(engine, "archaeology_manager", None)
         player = getattr(engine, "player", None)
@@ -288,9 +265,11 @@ class JournalUI:
                         start_x + 2,
                         current_y,
                         f"{tr} 真理『{g['name']}』",
-                        fg=self.completed_color
-                        if gi == engine.arch_interpret_truth_idx
-                        else self.text_color,
+                        fg=(
+                            self.completed_color
+                            if gi == engine.arch_interpret_truth_idx
+                            else self.text_color
+                        ),
                     )
                     current_y += 1
                     for ei, eid in enumerate(g["endings"]):
@@ -310,12 +289,14 @@ class JournalUI:
                             start_x + 6,
                             current_y,
                             f"{mark} {ename}",
-                            fg=self.highlight_color
-                            if (
-                                gi == engine.arch_interpret_truth_idx
-                                and ei == engine.arch_interpret_ending_idx
-                            )
-                            else self.text_color,
+                            fg=(
+                                self.highlight_color
+                                if (
+                                    gi == engine.arch_interpret_truth_idx
+                                    and ei == engine.arch_interpret_ending_idx
+                                )
+                                else self.text_color
+                            ),
                         )
                         current_y += 1
             else:
@@ -367,9 +348,7 @@ class JournalUI:
                     console.print(start_x + 4, current_y, f"💡 {h}", fg=self.text_color)
                     current_y += 1
         else:
-            console.print(
-                start_x + 4, current_y, "（考古学システム未登録）", fg=self.text_color
-            )
+            console.print(start_x + 4, current_y, "（考古学システム未登録）", fg=self.text_color)
             current_y += 1
 
         console.print(

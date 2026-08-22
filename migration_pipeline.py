@@ -159,9 +159,7 @@ class MigrationPipeline:
                 setattr(player, field_name, factory())
 
     @classmethod
-    def migrate(
-        cls, data: dict[str, Any], target_version: str = "2.0.0"
-    ) -> dict[str, Any]:
+    def migrate(cls, data: dict[str, Any], target_version: str = "2.0.0") -> dict[str, Any]:
         """Apply sequential migrations from current save_version up to target_version."""
         version = data.get("save_version", "1.0.0")
         if version == "1.0.0":

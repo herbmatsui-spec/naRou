@@ -164,9 +164,7 @@ class BalanceSimulator:
             "one_shot_count": one_shot_warnings,
             "stalled_count": stalled_battles,
             "is_balanced": (
-                stalled_battles == 0
-                and one_shot_warnings < trials * 0.3
-                and not win_rate_alert
+                stalled_battles == 0 and one_shot_warnings < trials * 0.3 and not win_rate_alert
             ),
         }
         return result
@@ -206,9 +204,7 @@ class BalanceSimulator:
             f.write(html_str)
         return output_html
 
-    def run_full_validation(
-        self, output_path: str = "balance_report.json"
-    ) -> dict[str, Any]:
+    def run_full_validation(self, output_path: str = "balance_report.json") -> dict[str, Any]:
         scenarios = [(1, "slime", 0.95), (3, "goblin", 0.85), (5, "orc", 0.70)]
         results = {}
         all_passed = True
@@ -227,9 +223,9 @@ class BalanceSimulator:
         checker_res = self.checker.check_standards()
 
         self.report = {
-            "summary": "PASS"
-            if all_passed and checker_res["status"] == "PASS"
-            else "WARNINGS_DETECTED",
+            "summary": (
+                "PASS" if all_passed and checker_res["status"] == "PASS" else "WARNINGS_DETECTED"
+            ),
             "scenarios": results,
             "balance_standards": checker_res,
         }

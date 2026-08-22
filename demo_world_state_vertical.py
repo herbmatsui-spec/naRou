@@ -2,6 +2,7 @@
 """
 World State System 垂直ワールド拡張 デモ
 """
+
 from __future__ import annotations
 
 from world_state_system import WorldStateManager
@@ -55,9 +56,7 @@ def demo_world_state_extension():
     for zone, biome, depth, dimension, expected in test_checks:
         result = ws_manager.is_layer_visited(zone, biome, depth, dimension)
         status = "✓" if result == expected else "✗"
-        print(
-            f"   {status} {zone}:{biome}:{depth}:{dimension}: {result} (期待: {expected})"
-        )
+        print(f"   {status} {zone}:{biome}:{depth}:{dimension}: {result} (期待: {expected})")
     print()
 
     print("5. レイヤー発見の記録")
@@ -72,12 +71,8 @@ def demo_world_state_extension():
     ]
 
     for zone, biome, depth, dimension, disc_type, disc_data in discoveries:
-        ws_manager.add_layer_discovery(
-            zone, biome, depth, dimension, disc_type, disc_data
-        )
-        print(
-            f"   発見記録: {zone}:{biome}:{depth}:{dimension} - {disc_type}: {disc_data}"
-        )
+        ws_manager.add_layer_discovery(zone, biome, depth, dimension, disc_type, disc_data)
+        print(f"   発見記録: {zone}:{biome}:{depth}:{dimension} - {disc_type}: {disc_data}")
     print()
 
     print("6. レイヤー発見の取得")
@@ -103,9 +98,7 @@ def demo_world_state_extension():
     for i, entry in enumerate(tpl.player_layer_history[:3]):  # 最初の3つを表示
         print(f"   エントリ{i + 1}: {entry['layer']} at {entry['timestamp']}")
     if len(tpl.player_layer_history) > 3:
-        print(
-            f"   ...および{len(tpl.player_layer_history) - 3}つ以上のその他のエントリ"
-        )
+        print(f"   ...および{len(tpl.player_layer_history) - 3}つ以上のその他のエントリ")
     print()
 
     print("=== World State System デモ完了 ===")

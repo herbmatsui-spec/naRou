@@ -7,7 +7,7 @@ Kernel の薄い互換ラッパーとして機能
 
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from packages.core.kernel.kernel import Kernel
@@ -28,9 +28,7 @@ class SystemCoordinator:
         self._kernel: Kernel = engine.kernel
         self._registration_order: list[str] = []
 
-    def register_system(
-        self, name: str, system: Any, dependencies: list[str] | None = None
-    ) -> Any:
+    def register_system(self, name: str, system: Any, dependencies: list[str] | None = None) -> Any:
         """
         システムを Kernel に登録する。
         dependencies は互換性のために受け取るが、Kernel 側ではパッケージ単位で管理されるためここでは無視。

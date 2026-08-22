@@ -1,9 +1,11 @@
 """
 Unit test for World A (Skill Eater) Package Integration (Steps 1-12)
 """
+
 from __future__ import annotations
 
 import unittest
+
 from packages.core.kernel.kernel import Kernel
 from packages.core.package import CorePackage
 from packages.world_a.package import WorldAPackage
@@ -29,6 +31,7 @@ class TestWorldAPackageIntegration(unittest.TestCase):
     def test_engine_loads_world_a_package(self):
         from game import Engine
         from renderer import NullRenderer
+
         engine = Engine(renderer=NullRenderer())
         self.assertTrue(engine.kernel.has_system("skill_eater_combat_system"))
         self.assertEqual(engine.game_state_data.current_world, "main")

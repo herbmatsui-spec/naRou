@@ -14,13 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import tcod
 import tcod.console
 
-from core.lighting import (
-    EnemyCone,
-    LightingDrawCall,
-    LightMap,
-    LightSource,
-    TerminalLightingSystem,
-)
+from core.lighting import EnemyCone, LightingDrawCall, LightMap, LightSource, TerminalLightingSystem
 
 
 def test_light_map_update():
@@ -84,9 +78,7 @@ def test_enemy_cones():
     lighting = TerminalLightingSystem(40, 24)
 
     cones = [
-        EnemyCone(
-            x=15, y=10, angle=0.0, half_angle=0.6, range=6.0, color=(255, 60, 60)
-        ),
+        EnemyCone(x=15, y=10, angle=0.0, half_angle=0.6, range=6.0, color=(255, 60, 60)),
     ]
 
     lighting.set_enemy_cones(cones, 0.0)
@@ -141,16 +133,12 @@ def test_render_pass():
     lighting = TerminalLightingSystem(40, 24)
 
     # Setup test data
-    intensity_grid = [
-        [1.0 if (x + y) % 2 == 0 else 0.5 for x in range(40)] for y in range(24)
-    ]
+    intensity_grid = [[1.0 if (x + y) % 2 == 0 else 0.5 for x in range(40)] for y in range(24)]
     color_grid = [[(255, 240, 210) for x in range(40)] for y in range(24)]
 
     lighting.update_light_map(intensity_grid, color_grid)
 
-    sources = [
-        LightSource(x=20, y=12, radius=7.5, intensity=1.0, color=(255, 240, 210))
-    ]
+    sources = [LightSource(x=20, y=12, radius=7.5, intensity=1.0, color=(255, 240, 210))]
     cones = [EnemyCone(x=10, y=10, angle=0.0, half_angle=0.6, range=6.0)]
 
     lighting.set_light_sources(sources, 0.0)

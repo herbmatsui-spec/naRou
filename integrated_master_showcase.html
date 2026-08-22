@@ -5,12 +5,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>naRou: Masterpiece Edition - Integrated Master Showcase Demo</title>
-  
+
   <!-- Modern Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Noto+Sans+JP:wght@400;500;700;900&family=Outfit:wght@400;600;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
-  
+
   <!-- PixiJS Rendering Engine -->
   <script src="https://cdn.pixijs.com/pixi.js"></script>
 
@@ -587,7 +587,7 @@
     <section class="viewport-container spring-anim">
       <div class="canvas-wrapper">
         <canvas id="gameCanvas" width="680" height="480"></canvas>
-        
+
         <!-- HUD Overlay -->
         <div class="viewport-hud">
           <div class="hud-stat-box">
@@ -803,7 +803,7 @@
     const entityLayer = new PIXI.Container();
     const fxLayer = new PIXI.Container();
     const lightLayer = new PIXI.Graphics();
-    
+
     app.stage.addChild(dungeonLayer);
     app.stage.addChild(entityLayer);
     app.stage.addChild(fxLayer);
@@ -833,7 +833,7 @@
         for (let c = 0; c < cols; c++) {
           const isWall = (r === 0 || r === rows - 1 || c === 0 || c === cols - 1 || (r === 4 && c > 2 && c < 7));
           const tile = new PIXI.Graphics();
-          
+
           if (isWall) {
             tile.beginFill(profile.wallColor);
             tile.lineStyle(1, 0x000000, 0.4);
@@ -857,7 +857,7 @@
       pBody.beginFill(0x38bdf8);
       pBody.drawCircle(0, 0, 14);
       pBody.endFill();
-      
+
       const pGlow = new PIXI.Graphics();
       pGlow.beginFill(0x38bdf8, 0.3);
       pGlow.drawCircle(0, 0, 22);
@@ -907,7 +907,7 @@
 
         mon.addChild(mBody);
         mon.addChild(mText);
-        
+
         mon.x = 180 + Math.random() * 320;
         mon.y = 120 + Math.random() * 240;
         entityLayer.addChild(mon);
@@ -967,7 +967,7 @@
 
     function renderDynamicLighting() {
       lightLayer.clear();
-      
+
       const currentKey = `${state.zone}_${state.biome}_${state.dim}`;
       const profile = themeProfiles[currentKey] || themeProfiles['surface_plains_material'];
 
@@ -1039,7 +1039,7 @@
       document.getElementById('hudMp').textContent = `${state.mp}/${state.maxMp}`;
       document.getElementById('hudKarma').textContent = `${state.karma > 0 ? '+' : ''}${state.karma}`;
       document.getElementById('hudFrags').textContent = `${state.fragmentsDecoded}/${state.totalFragments}`;
-      
+
       const pct = Math.round((state.fragmentsDecoded / state.totalFragments) * 100);
       document.getElementById('truthStatus').textContent = `真理到達: ${pct}%`;
     }
@@ -1088,7 +1088,7 @@
       state.zone = zone;
       state.biome = biome;
       state.dim = dim;
-      
+
       // Update UI buttons
       document.querySelectorAll('#zoneButtons .pill-btn').forEach(b => b.classList.toggle('active', b.dataset.zone === zone));
       document.querySelectorAll('#biomeButtons .pill-btn').forEach(b => b.classList.toggle('active', b.dataset.biome === biome));
@@ -1148,7 +1148,7 @@
     document.getElementById('btnDecrypt').addEventListener('click', () => {
       if (state.fragmentsDecoded < state.totalFragments) {
         state.fragmentsDecoded = 3;
-        
+
         // Decrypt glyphs visually
         const heroEl = document.getElementById('glyphHero');
         if (heroEl) {
@@ -1190,12 +1190,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>naRou: Masterpiece Edition - Integrated Master Showcase Demo</title>
-  
+
   <!-- Modern Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Noto+Sans+JP:wght@400;500;700;900&family=Outfit:wght@400;600;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
-  
+
   <!-- PixiJS Rendering Engine -->
   <script src="https://cdn.pixijs.com/pixi.js"></script>
 
@@ -1772,7 +1772,7 @@
     <section class="viewport-container spring-anim">
       <div class="canvas-wrapper">
         <canvas id="gameCanvas" width="680" height="480"></canvas>
-        
+
         <!-- HUD Overlay -->
         <div class="viewport-hud">
           <div class="hud-stat-box">
@@ -1988,7 +1988,7 @@
     const entityLayer = new PIXI.Container();
     const fxLayer = new PIXI.Container();
     const lightLayer = new PIXI.Graphics();
-    
+
     app.stage.addChild(dungeonLayer);
     app.stage.addChild(entityLayer);
     app.stage.addChild(fxLayer);
@@ -2018,7 +2018,7 @@
         for (let c = 0; c < cols; c++) {
           const isWall = (r === 0 || r === rows - 1 || c === 0 || c === cols - 1 || (r === 4 && c > 2 && c < 7));
           const tile = new PIXI.Graphics();
-          
+
           if (isWall) {
             tile.beginFill(profile.wallColor);
             tile.lineStyle(1, 0x000000, 0.4);
@@ -2042,7 +2042,7 @@
       pBody.beginFill(0x38bdf8);
       pBody.drawCircle(0, 0, 14);
       pBody.endFill();
-      
+
       const pGlow = new PIXI.Graphics();
       pGlow.beginFill(0x38bdf8, 0.3);
       pGlow.drawCircle(0, 0, 22);
@@ -2092,7 +2092,7 @@
 
         mon.addChild(mBody);
         mon.addChild(mText);
-        
+
         mon.x = 180 + Math.random() * 320;
         mon.y = 120 + Math.random() * 240;
         entityLayer.addChild(mon);
@@ -2152,7 +2152,7 @@
 
     function renderDynamicLighting() {
       lightLayer.clear();
-      
+
       const currentKey = `${state.zone}_${state.biome}_${state.dim}`;
       const profile = themeProfiles[currentKey] || themeProfiles['surface_plains_material'];
 
@@ -2224,7 +2224,7 @@
       document.getElementById('hudMp').textContent = `${state.mp}/${state.maxMp}`;
       document.getElementById('hudKarma').textContent = `${state.karma > 0 ? '+' : ''}${state.karma}`;
       document.getElementById('hudFrags').textContent = `${state.fragmentsDecoded}/${state.totalFragments}`;
-      
+
       const pct = Math.round((state.fragmentsDecoded / state.totalFragments) * 100);
       document.getElementById('truthStatus').textContent = `真理到達: ${pct}%`;
     }
@@ -2273,7 +2273,7 @@
       state.zone = zone;
       state.biome = biome;
       state.dim = dim;
-      
+
       // Update UI buttons
       document.querySelectorAll('#zoneButtons .pill-btn').forEach(b => b.classList.toggle('active', b.dataset.zone === zone));
       document.querySelectorAll('#biomeButtons .pill-btn').forEach(b => b.classList.toggle('active', b.dataset.biome === biome));
@@ -2333,7 +2333,7 @@
     document.getElementById('btnDecrypt').addEventListener('click', () => {
       if (state.fragmentsDecoded < state.totalFragments) {
         state.fragmentsDecoded = 3;
-        
+
         // Decrypt glyphs visually
         const heroEl = document.getElementById('glyphHero');
         if (heroEl) {

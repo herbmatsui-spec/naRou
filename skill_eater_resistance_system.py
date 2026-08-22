@@ -6,8 +6,7 @@ Handles faction reputation, turn-in contributions, and progressive unlock of fac
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
-
+from typing import Any, Dict, List
 
 DONATION_VALUE_TABLE: Dict[str, int] = {
     "SCRAP_BEAST_FANG": 25,
@@ -76,7 +75,11 @@ class ResistanceMarketManager:
     def use_medical_station(self) -> Dict[str, Any]:
         """Uses the unlocked Level 1 Resistance Medical Station to clear toxicity."""
         if "FREE_MEDICAL_STATION" not in self.state.unlocked_facilities:
-            return {"success": False, "error": "FACILITY_LOCKED", "message": "貢献度Lv1に達していないため医療設備は利用不可です。"}
+            return {
+                "success": False,
+                "error": "FACILITY_LOCKED",
+                "message": "貢献度Lv1に達していないため医療設備は利用不可です。",
+            }
         return {
             "success": True,
             "detox_amount": 100,
@@ -87,7 +90,11 @@ class ResistanceMarketManager:
     def access_advanced_forge(self) -> Dict[str, Any]:
         """Provides access to Level 2 permanent skill synthesis forge."""
         if "ADVANCED_SYNTHESIS_FORGE" not in self.state.unlocked_facilities:
-            return {"success": False, "error": "FACILITY_LOCKED", "message": "貢献度Lv2に達していないため高度合成炉は利用不可です。"}
+            return {
+                "success": False,
+                "error": "FACILITY_LOCKED",
+                "message": "貢献度Lv2に達していないため高度合成炉は利用不可です。",
+            }
         return {
             "success": True,
             "can_craft_permanent_skills": True,
@@ -109,7 +116,13 @@ class ResistanceMarketManager:
         """Provides Cyberpunk x Fantasy hybrid underground market ambient setting."""
         return {
             "bgm": "bgm_resistance_cyber_fantasy_slum.ogg",
-            "ambient_sfx": ["amb_neon_hum.ogg", "amb_dripping_water.ogg", "amb_black_market_whisper.ogg"],
+            "ambient_sfx": [
+                "amb_neon_hum.ogg",
+                "amb_dripping_water.ogg",
+                "amb_black_market_whisper.ogg",
+            ],
             "visual_lighting": "CYAN_MAGENTA_NEON_ON_ANCIENT_STONE",
-            "dialogue_tone": "REBEL_SOLIDARITY" if self.state.reputation_level >= 2 else "SUSPICIOUS_WATCHFUL",
+            "dialogue_tone": (
+                "REBEL_SOLIDARITY" if self.state.reputation_level >= 2 else "SUSPICIOUS_WATCHFUL"
+            ),
         }

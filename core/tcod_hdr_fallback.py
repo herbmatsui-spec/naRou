@@ -44,9 +44,7 @@ class TCODHDRFallback:
         self.pseudo_hdr.bloom_enabled = self.bloom_enabled
         self.pseudo_hdr.apply(console, self.hdr_buffer)
 
-    def add_hdr_color(
-        self, x: int, y: int, color: tuple, intensity: float = 1.0
-    ) -> None:
+    def add_hdr_color(self, x: int, y: int, color: tuple, intensity: float = 1.0) -> None:
         """Add HDR color to framebuffer at position."""
         if 0 <= x < self.console_width and 0 <= y < self.console_height:
             r, g, b = [c / 255.0 for c in color[:3]]
@@ -63,9 +61,7 @@ class TCODHDRFallback:
 
         if x0 < x1 and y0 < y1:
             r, g, b = [c / 255.0 for c in color[:3]]
-            self.hdr_buffer[y0:y1, x0:x1] += (
-                np.array([r, g, b], dtype=np.float32) * intensity
-            )
+            self.hdr_buffer[y0:y1, x0:x1] += np.array([r, g, b], dtype=np.float32) * intensity
 
     def set_exposure(self, exposure: float) -> None:
         self.exposure = exposure

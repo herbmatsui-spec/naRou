@@ -2,6 +2,7 @@
 """
 ワールドステートの簡単なテスト
 """
+
 from __future__ import annotations
 
 from world_state_system import WorldStateManager
@@ -15,9 +16,7 @@ def test_world_state_basic():
 
     # 初期状態をチェック
     print(f"初期訪問済みレイヤー数: {len(ws_manager.get_visited_layers())}")
-    print(
-        f"初期ヒストリ数: {len(ws_manager.registry.get_template().player_layer_history)}"
-    )
+    print(f"初期ヒストリ数: {len(ws_manager.registry.get_template().player_layer_history)}")
 
     # レイヤー訪問を記録
     print("\nレイヤー訪問を記録中...")
@@ -25,9 +24,7 @@ def test_world_state_basic():
 
     # すぐにチェック
     print(f"記録後訪問済みレイヤー数: {len(ws_manager.get_visited_layers())}")
-    print(
-        f"記録後ヒストリ数: {len(ws_manager.registry.get_template().player_layer_history)}"
-    )
+    print(f"記録後ヒストリ数: {len(ws_manager.registry.get_template().player_layer_history)}")
 
     # テンプレートを直接取得して中身をチェック
     tpl = ws_manager.registry.get_template()

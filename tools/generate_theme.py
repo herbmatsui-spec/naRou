@@ -13,6 +13,7 @@ Emits:
 Run as part of the asset pipeline / a build step so theme.css is always derived
 from design_tokens.json.
 """
+
 from __future__ import annotations
 
 import json

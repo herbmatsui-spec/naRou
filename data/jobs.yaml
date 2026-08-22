@@ -212,7 +212,6 @@ jobs:
     stat_modifiers:
       dexterity: 20
       perception: 10
-      dexterity: 5
     equipment_restrictions:
       can_use_dagger: true
       can_use_light_armor: true

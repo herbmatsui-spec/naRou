@@ -1,7 +1,7 @@
 /**
  * UIProvider
  * Handles the bridge between design-tokens.json and the browser CSS.
- * It transforms JSON tokens into CSS Custom Properties (--token-name) 
+ * It transforms JSON tokens into CSS Custom Properties (--token-name)
  * and injects them into the :root element.
  */
 class UIProvider {

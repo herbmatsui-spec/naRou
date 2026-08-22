@@ -103,9 +103,7 @@ def pack_atlas(
                             img = img.resize((TILE_SIZE, TILE_SIZE), Image.NEAREST)
                         dir_images.append(img)
                     else:
-                        dir_images.append(
-                            Image.new("RGBA", (TILE_SIZE, TILE_SIZE), (0, 0, 0, 0))
-                        )
+                        dir_images.append(Image.new("RGBA", (TILE_SIZE, TILE_SIZE), (0, 0, 0, 0)))
 
                 # Check row space
                 if x + TILE_SIZE + PADDING > ATLAS_WIDTH:
@@ -160,9 +158,7 @@ def pack_atlas(
             row_height = 0
 
         if y + TILE_SIZE + PADDING > ATLAS_HEIGHT:
-            raise RuntimeError(
-                f"Atlas too small! Need larger than {ATLAS_WIDTH}x{ATLAS_HEIGHT}"
-            )
+            raise RuntimeError(f"Atlas too small! Need larger than {ATLAS_WIDTH}x{ATLAS_HEIGHT}")
 
         # Paste tile
         atlas.paste(tile_img, (x, y))

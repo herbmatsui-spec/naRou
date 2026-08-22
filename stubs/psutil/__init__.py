@@ -2,6 +2,7 @@
 Provides minimal interfaces returning zero or dummy values so that the code
 can run without the external dependency.
 """
+
 from __future__ import annotations
 
 from collections import namedtuple
@@ -48,9 +49,7 @@ def disk_io_counters():
 
 
 def net_io_counters():
-    Net = namedtuple(
-        "Net", ["bytes_sent", "bytes_recv", "packets_sent", "packets_recv"]
-    )
+    Net = namedtuple("Net", ["bytes_sent", "bytes_recv", "packets_sent", "packets_recv"])
     return Net(bytes_sent=1000, bytes_recv=1000, packets_sent=10, packets_recv=10)
 
 

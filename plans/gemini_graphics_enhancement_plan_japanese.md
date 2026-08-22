@@ -51,7 +51,7 @@ categories:
     negative: "blurry, gradient, anti-aliasing, watermark, text, signature, 3d render, photo, realistic"
     variants_per_combo: 4
     size: "16x16"
-    
+
   entity:
     base_prompt: |
       {style} pixel art character sprite, {race} {class} {gender},
@@ -67,7 +67,7 @@ categories:
     negative: "blurry, gradient, anti-aliasing, watermark, text, extra limbs, deformed, asymmetric"
     variants_per_combo: 3
     size: "32x32"
-    
+
   effect:
     base_prompt: |
       {style} pixel art effect animation, {element} {effect_type},
@@ -81,7 +81,7 @@ categories:
     negative: "blurry, gradient, anti-aliasing, watermark, text, static, non-loopable"
     variants_per_combo: 4
     size: "32x32"
-    
+
   ui:
     base_prompt: |
       {style} pixel art UI element, {component_type}, {theme} theme,
@@ -93,7 +93,7 @@ categories:
     negative: "blurry, gradient, anti-aliasing, watermark, text, 3d, realistic, photo"
     variants_per_combo: 3
     size: "variable"
-    
+
   portrait:
     base_prompt: |
       {style} pixel art portrait, {race} {class} {gender},
@@ -109,7 +109,7 @@ categories:
     negative: "blurry, gradient, anti-aliasing, watermark, text, full_body, deformed, asymmetric_face"
     variants_per_combo: 3
     size: "64x64"
-    
+
   background:
     base_prompt: |
       {style} pixel art background, {biome} {time_of_day} {weather},

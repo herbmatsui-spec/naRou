@@ -77,7 +77,7 @@ awakenings:
     requirements:
       skill_level: 50
       dragon_kills: 100
-      specific_items: 
+      specific_items:
         - item_id: "dragon_heart"
           count: 1
         - item_id: "dragon_scale_armor"
@@ -86,12 +86,12 @@ awakenings:
       skill_id: "dragon_slaying_awakened"
       name: "覚醒・竜殺し"
       description: "竜の血を宿した究極の竜殺し技"
-      bonuses: 
+      bonuses:
         damage_vs_dragon: 2.0  # 竜に対して2倍ダメージ
         area_of_effect: 2      # 範囲が2マスに拡大
         mana_cost_reduction: 0.3 # マナ消費30%削減
     visual_effect: "dragon_aura"  # 覚醒時の視覚効果
-    passive_effects: 
+    passive_effects:
       - "dragon_sense"  # 近くの竜を感知する能力
 ```
 
@@ -112,9 +112,9 @@ transfer_traits:
     source_traits: ["critical_chance", "critical_damage"]
     target_skills: ["sword_skills", "axe_skills"]  # 転移可能なスキルカテゴリ
     transfer_ratio: 0.5  # 50% の特性値を転移
-    cost: 
+    cost:
       skill_points: 100
-      rare_materials: 
+      rare_materials:
         - item_id: "philosophers_stone"
           count: 1
     irreversible: true  # 一度転移すると元に戻せない
@@ -145,7 +145,7 @@ resonance_sets:
           mana_cost: -0.15
       - name: "炎のオーラ"
         description: "周囲の敵に継続ダメージを与える"
-        effect: 
+        effect:
           type: "damage_over_time"
           damage: 5
           interval: 2
@@ -172,7 +172,7 @@ inheritance_rules:
     inheritance_rate: 0.3  # 30% の確率で継承
     level_bonus: 0.5  # 継承時のレベルボーナス（継承スキルは+50% レベルで開始）
     requirements:
-      specific_achievements: 
+      specific_achievements:
         - "ancient_hero"
         - "bloodline_discovery"
 ```
@@ -198,7 +198,7 @@ specialization_paths:
         description: "発射速度重視のファイアボール"
         requirements:
           skill_level: 25
-          specific_usage: 
+          specific_usage:
             use_count: 500  # 500回使用
             time_limit: 3600  # 1時間以内
         bonuses:

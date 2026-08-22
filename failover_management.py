@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import argparse
 import json
@@ -209,12 +210,8 @@ class FailoverManager:
             self.state["recoveries"] += 1
 
             # Check for auto-failback
-            if current == "backup" and self.config["failover"].get(
-                "auto_failback", True
-            ):
-                recovery_threshold = self.config["monitoring"].get(
-                    "recovery_threshold", 2
-                )
+            if current == "backup" and self.config["failover"].get("auto_failback", True):
+                recovery_threshold = self.config["monitoring"].get("recovery_threshold", 2)
                 if self.state["recoveries"] >= recovery_threshold:
                     print("Primary recovered, initiating failback...")
                     self.failback("auto: primary recovered")
@@ -226,9 +223,7 @@ class FailoverManager:
             )
 
             # Check for auto-failover
-            if current == "primary" and self.config["failover"].get(
-                "auto_failover", True
-            ):
+            if current == "primary" and self.config["failover"].get("auto_failover", True):
                 max_failures = self.config["monitoring"].get("max_failures", 3)
                 if self.state["failures"] >= max_failures:
                     print("Max failures reached, initiating failover...")
@@ -279,9 +274,7 @@ class FailoverManager:
 
 def main():
     parser = argparse.ArgumentParser(description="Failover Management")
-    parser.add_argument(
-        "--dir", default="failover_management", help="Failover directory"
-    )
+    parser.add_argument("--dir", default="failover_management", help="Failover directory")
     parser.add_argument("--failover", action="store_true", help="Manual failover")
     parser.add_argument("--failback", action="store_true", help="Manual failback")
     parser.add_argument("--monitor", action="store_true", help="Run monitor loop")

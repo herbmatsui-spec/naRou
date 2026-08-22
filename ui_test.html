@@ -46,7 +46,7 @@
     <div id="token-tests">
         <h3>Colors</h3>
         <div id="color-tests"></div>
-        
+
         <h3 style="margin-top: var(--spacing-8)">Typography & Spacing</h3>
         <div class="token-card">
             <span>Spacing-4 test: </span>
@@ -57,10 +57,10 @@
     <script>
         async function runTests() {
             await window.UIProvider.init();
-            
+
             const colors = window.UIProvider.tokens.colors;
             const colorContainer = document.getElementById('color-tests');
-            
+
             const flattenColors = (obj, prefix = '') => {
                 let results = [];
                 for (const [key, value] of Object.entries(obj)) {

@@ -197,8 +197,6 @@ def calculate_facing(dx: int, dy: int) -> int:
         return 0 if dy > 0 else 3  # 下 or 上
 
 
-def calculate_facing_to_target(
-    ent_x: int, ent_y: int, target_x: int, target_y: int
-) -> int:
+def calculate_facing_to_target(ent_x: int, ent_y: int, target_x: int, target_y: int) -> int:
     """ターゲットへの向き計算"""
     return calculate_facing(target_x - ent_x, target_y - ent_y)

@@ -22,9 +22,7 @@ class SystemInitializer:
         engine: Engine,
     ) -> tuple[LookCursor, ContextMenu, TutorialManager, NotificationManager, any]:
         """Instantiate UI tools, notification managers, and background web server."""
-        look_cursor = LookCursor(
-            engine.game_state_data.player.x, engine.game_state_data.player.y
-        )
+        look_cursor = LookCursor(engine.game_state_data.player.x, engine.game_state_data.player.y)
         context_menu = ContextMenu()
         tutorial_manager = TutorialManager()
         notification_manager = NotificationManager()

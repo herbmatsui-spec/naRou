@@ -2,6 +2,7 @@
 test_skill_eater_full_72_steps.py
 全72ステップ（9つの改善案）を包括的に検証する総合ユニットテストスイート
 """
+
 from __future__ import annotations
 
 import unittest
@@ -16,13 +17,7 @@ from skill_eater_meta_quest_system import (
 )
 from skill_eater_servant_system import SkillEaterServantSystem
 from skill_eater_synthesis_system import SkillEaterSynthesisSystem
-from skill_eater_system import (
-    CharacterState,
-    SkillDef,
-    SkillEaterRegistry,
-    SkillTier,
-    SkillType,
-)
+from skill_eater_system import CharacterState, SkillDef, SkillEaterRegistry, SkillTier, SkillType
 
 
 class TestSkillEater72Steps(unittest.TestCase):
@@ -65,15 +60,11 @@ class TestSkillEater72Steps(unittest.TestCase):
         self.assertTrue(syn_res.result_skill.is_illegal)
 
         # 正規市場では売却拒絶
-        ok_norm, _, _ = self.economy.sell_skill_to_normal_market(
-            player, syn_res.result_skill.id
-        )
+        ok_norm, _, _ = self.economy.sell_skill_to_normal_market(player, syn_res.result_skill.id)
         self.assertFalse(ok_norm)
 
         # 闇市場で売却するとheat_level上昇
-        ok_blk, _, _ = self.economy.sell_skill_to_black_market(
-            player, syn_res.result_skill.id
-        )
+        ok_blk, _, _ = self.economy.sell_skill_to_black_market(player, syn_res.result_skill.id)
         self.assertTrue(ok_blk)
         self.assertEqual(self.economy.heat_level, 10)
 
@@ -322,9 +313,7 @@ class TestSkillEater72Steps(unittest.TestCase):
         old_fire_val = self.registry.get_skill("com_magic_001").market_value
 
         _new_player, _msg = self.reincarnation.process_reincarnation(player, [])
-        self.assertEqual(
-            self.reincarnation.meta_state.dominant_element_last_life, "Fire"
-        )
+        self.assertEqual(self.reincarnation.meta_state.dominant_element_last_life, "Fire")
 
         new_fire_val = self.registry.get_skill("com_magic_001").market_value
         self.assertLess(new_fire_val, old_fire_val)  # 炎スキルが暴落
@@ -384,18 +373,14 @@ class TestSkillEater72Steps(unittest.TestCase):
 
         # ハック前: 暗号化されている
         scan_pre = self.combat.analyze_target(analyzer, boss)
-        info_pre = next(
-            s for s in scan_pre.revealed_skills if s.skill_id == "uni_midas_001"
-        )
+        info_pre = next(s for s in scan_pre.revealed_skills if s.skill_id == "uni_midas_001")
         self.assertTrue(info_pre.is_encrypted)
         self.assertEqual(info_pre.name, "【暗号化プロテクト中】")
 
         # ハック実行
         boss.encryption_broken = True  # ハック成功状態
         scan_post = self.combat.analyze_target(analyzer, boss)
-        info_post = next(
-            s for s in scan_post.revealed_skills if s.skill_id == "uni_midas_001"
-        )
+        info_post = next(s for s in scan_post.revealed_skills if s.skill_id == "uni_midas_001")
         self.assertFalse(info_post.is_encrypted)
         self.assertEqual(info_post.name, "黄金錬成")
 

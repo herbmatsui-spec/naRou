@@ -3,15 +3,13 @@ skill_eater_servant_system.py
 Aの世界（スキル喰い） Phase 4: 従属システム（使い捨てオートタレット化）
 提案6: 従属者移植・治癒・自壊のEmote & Audio演出 (Steps 41〜43)
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
 from skill_eater_audio_system import SkillEaterAudioSystem
-from skill_eater_presentation_system import (
-    PresentationEvent,
-    SkillEaterPresentationSystem,
-)
+from skill_eater_presentation_system import PresentationEvent, SkillEaterPresentationSystem
 from skill_eater_system import CharacterState, SkillEaterRegistry
 
 
@@ -187,9 +185,7 @@ class SkillEaterServantSystem:
 
             log_msg = f"{servant.custom_name}の自律一斉射撃！ {target_enemy.name}に {dmg} のダメージ！ (残稼働: {max(0, servant.duration_turns)}T)"
             if crumbled:
-                log_msg += (
-                    f" ➔ 魔力回路が焼き切れ、{servant.custom_name} は粉々に自壊した。"
-                )
+                log_msg += f" ➔ 魔力回路が焼き切れ、{servant.custom_name} は粉々に自壊した。"
 
             return ServantActionResult(
                 servant_id=servant.id,

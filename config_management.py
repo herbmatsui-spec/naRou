@@ -50,11 +50,7 @@ class ConfigManager:
         """Deep merge two dictionaries."""
         result = base.copy()
         for key, value in override.items():
-            if (
-                key in result
-                and isinstance(result[key], dict)
-                and isinstance(value, dict)
-            ):
+            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
                 result[key] = self._deep_merge(result[key], value)
             else:
                 result[key] = value
@@ -115,20 +111,12 @@ def main():
     parser = argparse.ArgumentParser(description="Configuration Management")
     parser.add_argument("--dir", default="config_management", help="Config directory")
     parser.add_argument("--load", help="Load and display config")
-    parser.add_argument(
-        "--save", nargs=2, metavar=("NAME", "FILE"), help="Save config from file"
-    )
+    parser.add_argument("--save", nargs=2, metavar=("NAME", "FILE"), help="Save config from file")
     parser.add_argument("--merge", nargs="+", help="Merge configs")
-    parser.add_argument(
-        "--get", nargs=2, metavar=("NAME", "KEY"), help="Get config value"
-    )
-    parser.add_argument(
-        "--set", nargs=3, metavar=("NAME", "KEY", "VALUE"), help="Set config value"
-    )
+    parser.add_argument("--get", nargs=2, metavar=("NAME", "KEY"), help="Get config value")
+    parser.add_argument("--set", nargs=3, metavar=("NAME", "KEY", "VALUE"), help="Set config value")
     parser.add_argument("--list", action="store_true", help="List configs")
-    parser.add_argument(
-        "--validate", nargs=2, metavar=("NAME", "SCHEMA"), help="Validate config"
-    )
+    parser.add_argument("--validate", nargs=2, metavar=("NAME", "SCHEMA"), help="Validate config")
     args = parser.parse_args()
 
     mgr = ConfigManager(args.dir)

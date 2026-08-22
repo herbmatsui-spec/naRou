@@ -2,6 +2,7 @@
 
 Extracted from entity.py (Steps 83-88).
 """
+
 from __future__ import annotations
 
 import json

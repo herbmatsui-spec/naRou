@@ -204,6 +204,6 @@
 
 ---
 
-**評価実施日**: 2026-08-18  
-**評価者**: Zoo (AI Software Engineer)  
+**評価実施日**: 2026-08-18
+**評価者**: Zoo (AI Software Engineer)
 **対象バージョン**: naRou: Masterpiece Edition v1.0.0 (Commercial Release Candidate)

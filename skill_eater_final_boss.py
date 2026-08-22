@@ -3,16 +3,18 @@ Skill Eater Phase 3: Final Boss Causality Battle System (Steps 54-62)
 ドン・ミダスとの多段階決戦、因果律操作（行動キャンセル）、論理矛盾によるフリーズ誘発、世界崩壊・Phase 4移行フラグを管理。
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List
+
 
 class FinalBossCausalityManager:
     """
     最終ボス「ドン・ミダス」因果律バトルマネージャー
     """
+
     def __init__(self):
         # Step 55: 第一形態
         self.boss_name = "ドン・ミダス (Don Midas)"
-        self.phase = 1 # 1: 通常形態, 2: 世界コア融合・因果律形態
+        self.phase = 1  # 1: 通常形態, 2: 世界コア融合・因果律形態
         self.hp = 15000
         self.max_hp = 15000
         self.is_defeated = False
@@ -20,7 +22,9 @@ class FinalBossCausalityManager:
         self.freeze_turns = 0
         self.stolen_player_actions: List[str] = []
 
-    def attack_don_midas(self, action_name: str, damage: int, is_paradox_combo: bool = False) -> Dict[str, Any]:
+    def attack_don_midas(
+        self, action_name: str, damage: int, is_paradox_combo: bool = False
+    ) -> Dict[str, Any]:
         """Step 56, 57, 58, 59: 第一・第二形態遷移、因果律キャンセル、論理矛盾フリーズ"""
         if self.is_defeated:
             return {"status": "BOSS_ALREADY_DEFEATED"}
@@ -31,7 +35,7 @@ class FinalBossCausalityManager:
             self.freeze_turns -= 1
             if self.freeze_turns <= 0:
                 self.is_frozen = False
-            
+
             if self.hp <= 0:
                 return self.conclude_battle()
             return {
@@ -39,7 +43,7 @@ class FinalBossCausalityManager:
                 "boss_frozen": True,
                 "damage_dealt": damage * 3,
                 "boss_hp": self.hp,
-                "message": f"CRITICAL EXTRACTION: Exploited causality freeze for {damage * 3} damage!"
+                "message": f"CRITICAL EXTRACTION: Exploited causality freeze for {damage * 3} damage!",
             }
 
         # Step 56: 第一形態 -> 第二形態（世界コア融合）
@@ -52,7 +56,7 @@ class FinalBossCausalityManager:
                 return {
                     "phase": 2,
                     "transition": True,
-                    "message": "PHASE 2 TRIGGERED: Don Midas merged with the World Core! Causality manipulation active!"
+                    "message": "PHASE 2 TRIGGERED: Don Midas merged with the World Core! Causality manipulation active!",
                 }
             return {"phase": 1, "boss_hp": self.hp, "damage_dealt": damage}
 
@@ -65,7 +69,7 @@ class FinalBossCausalityManager:
                 "phase": 2,
                 "paradox_triggered": True,
                 "boss_frozen": True,
-                "message": "LOGIC PARADOX ERROR: Causality engine crashed! Don Midas is completely frozen for 2 turns!"
+                "message": "LOGIC PARADOX ERROR: Causality engine crashed! Don Midas is completely frozen for 2 turns!",
             }
         else:
             # Step 57 & 58: 因果律操作によるプレイヤー行動キャンセル
@@ -76,13 +80,16 @@ class FinalBossCausalityManager:
                 "cancelled_action": action_name,
                 "damage_dealt": 0,
                 "boss_hp": self.hp,
-                "message": f"CAUSALITY REVERSAL: Don Midas erased the causality of [{action_name}]! Damage nullified."
+                "message": f"CAUSALITY REVERSAL: Don Midas erased the causality of [{action_name}]! Damage nullified.",
             }
 
     def execute_core_extraction(self) -> Dict[str, Any]:
         """Step 60: ボスフリーズ中の「強制抽出（コアぶっこ抜き）」コマンド"""
         if not self.is_frozen:
-            return {"success": False, "message": "Cannot extract core unless boss causality is frozen."}
+            return {
+                "success": False,
+                "message": "Cannot extract core unless boss causality is frozen.",
+            }
 
         self.hp = 0
         return self.conclude_battle()
@@ -95,5 +102,5 @@ class FinalBossCausalityManager:
             "phase3_completed": True,
             "unlocked_phase": 4,
             "message": "WORLD CORE SHATTERED: The Midas Skill Monopoly has collapsed entirely. Moving to Phase 4 (Inheritance Preparation).",
-            "system_log": "KERNEL CRITICAL: System world shutdown imminent. Select skills to carry over."
+            "system_log": "KERNEL CRITICAL: System world shutdown imminent. Select skills to carry over.",
         }

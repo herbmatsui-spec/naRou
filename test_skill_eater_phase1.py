@@ -1,14 +1,13 @@
 """Unit tests for Phase 1 System (Steps 65-71)."""
 
-import pytest
-from skill_eater_combat_system import Phase1CombatManager
-from skill_eater_crafting_system import PatchworkCraftingEngine, PatchworkSkill, SkillScrap
-from skill_eater_slum_map import SlumMapManager
-from skill_eater_meta_recipes import MetaRecipeCraftingEngine
-from skill_eater_toxicity_system import SafehouseLocation, SkillToxicityManager
-from skill_eater_resistance_system import ResistanceMarketManager
-from skill_eater_pursuer_system import HoundSpawnManager
 from skill_eater_awakening_system import DevourAwakeningManager
+from skill_eater_combat_system import Phase1CombatManager
+from skill_eater_crafting_system import PatchworkCraftingEngine, PatchworkSkill
+from skill_eater_meta_recipes import MetaRecipeCraftingEngine
+from skill_eater_pursuer_system import HoundSpawnManager
+from skill_eater_resistance_system import ResistanceMarketManager
+from skill_eater_slum_map import SlumMapManager
+from skill_eater_toxicity_system import SafehouseLocation, SkillToxicityManager
 
 
 def test_step65_environmental_kill_and_weak_point_combat():
@@ -36,13 +35,13 @@ def test_step65_environmental_kill_and_weak_point_combat():
 
 def test_step66_patchwork_crafting_and_durability_break():
     craft_engine = PatchworkCraftingEngine()
-    
+
     # Synthesize scraps
     scraps = ["SCRAP_BEAST_FANG", "SCRAP_AGILITY_FRAGMENT"]
     craft_res = craft_engine.synthesize_patchwork_skill(scraps)
     assert craft_res["success"] is True
     assert "瞬突・牙咬み" in craft_res["skill"]["name"]
-    
+
     # Use patchwork skill until it breaks
     skill = PatchworkSkill(
         skill_id="SK_TEST",
@@ -52,11 +51,11 @@ def test_step66_patchwork_crafting_and_durability_break():
         max_durability=2,
         current_durability=2,
     )
-    
+
     use1 = craft_engine.use_patchwork_skill(skill)
     assert use1["is_shattered"] is False
     assert skill.current_durability == 1
-    
+
     use2 = craft_engine.use_patchwork_skill(skill)
     assert use2["is_shattered"] is True
     assert skill.is_broken is True
@@ -83,7 +82,7 @@ def test_step67_husk_memory_extraction_and_safe_unlock():
 
 def test_step68_meta_recipes_and_resistance_reputation():
     meta_engine = MetaRecipeCraftingEngine()
-    
+
     # Craft C4 magic bomb from junk
     junk_ingredients = ["SLIME_MUCUS", "FLINT_STONE", "SULFUR_POWDER"]
     craft_res = meta_engine.craft_with_meta_knowledge(junk_ingredients)
@@ -93,7 +92,9 @@ def test_step68_meta_recipes_and_resistance_reputation():
 
     # Resistance donations
     res_mgr = ResistanceMarketManager()
-    donate_res = res_mgr.donate_items_to_resistance(["SCRAP_IRON_GUARD", "SAFE_PASSWORD_MIDAS_SLUM"])
+    donate_res = res_mgr.donate_items_to_resistance(
+        ["SCRAP_IRON_GUARD", "SAFE_PASSWORD_MIDAS_SLUM"]
+    )
     assert donate_res["success"] is True
     assert donate_res["earned_reputation"] == 140
     assert res_mgr.state.reputation_level == 1
@@ -166,3 +167,136 @@ def test_step71_awakening_event_and_phase1_end_to_end():
     assert export_res["success"] is True
     assert save_state["phase1_completed"] is True
     assert "ユニークスキル《重圧魔導砲》" in save_state["acquired_skills"]
+
+
+def test_devour_rate_can_reach_100_percent():
+    from skill_eater_combat_system import SkillEaterCombatSystem
+    from skill_eater_system import CharacterState
+
+    combat_sys = SkillEaterCombatSystem()
+    predator = CharacterState(
+        id="hero",
+        name="主人公",
+        hp=100,
+        max_hp=100,
+        mp=50,
+        max_mp=50,
+        atk=20,
+        defense=10,
+        intelligence=10,
+        speed=10,
+        analysis_level=10,
+    )
+    prey = CharacterState(
+        id="target",
+        name="敵",
+        hp=0,
+        max_hp=100,
+        mp=10,
+        max_mp=10,
+        atk=10,
+        defense=5,
+        intelligence=5,
+        speed=5,
+    )
+    # base 0.60 + analysis 0.50 + hp_loss 0.50 = 1.60 -> capped at 1.0
+    rate = combat_sys.calculate_devour_rate(predator, prey)
+    assert rate == 1.0
+
+
+def test_devour_failure_backlash_uses_current_hp():
+    from skill_eater_combat_system import SkillEaterCombatSystem
+    from skill_eater_system import CharacterState
+
+    combat_sys = SkillEaterCombatSystem()
+    predator = CharacterState(
+        id="hero",
+        name="主人公",
+        hp=40,
+        max_hp=200,
+        mp=50,
+        max_mp=50,
+        atk=20,
+        defense=10,
+        intelligence=10,
+        speed=10,
+    )
+    prey = CharacterState(
+        id="target",
+        name="敵",
+        hp=50,
+        max_hp=100,
+        mp=10,
+        max_mp=10,
+        atk=10,
+        defense=5,
+        intelligence=5,
+        speed=5,
+    )
+    prey.add_skill("com_magic_001")
+
+    # Force failure
+    res = combat_sys.execute_devour(
+        predator, prey, target_skill_id="com_magic_001", force_success=False
+    )
+    assert res.success is False
+    # Backlash should be max(5, int(40 * 0.15)) = 6 (instead of max_hp 200 * 0.15 = 30)
+    assert res.damage_dealt == 6
+    assert predator.hp == 34
+
+
+def test_skill_archive_and_retrieval():
+    from skill_eater_combat_system import SkillEaterCombatSystem
+    from skill_eater_system import (
+        CharacterState,
+        SkillDef,
+        SkillEaterRegistry,
+        SkillTier,
+        SkillType,
+    )
+
+    registry = SkillEaterRegistry.get_instance()
+    concept_skill = SkillDef(
+        id="con_test_001",
+        name="概念テスト",
+        tier=SkillTier.CONCEPT,
+        type=SkillType.PASSIVE,
+        memory_usage=5,
+    )
+    registry._skills["con_test_001"] = concept_skill
+
+    player = CharacterState(
+        id="hero",
+        name="主人公",
+        hp=100,
+        max_hp=100,
+        mp=50,
+        max_mp=50,
+        atk=10,
+        defense=10,
+        intelligence=10,
+        speed=10,
+        max_memory_capacity=5,
+    )
+    player.add_skill("con_test_001")
+    assert player.current_memory_usage == 5
+    assert player.has_skill("con_test_001") is True
+
+    # Archive the skill
+    ok = player.archive_skill("con_test_001")
+    assert ok is True
+    assert player.has_skill("con_test_001") is False
+    assert "con_test_001" in player.get_archived_skill_ids()
+    assert player.current_memory_usage == 0
+
+    # Turn end does not increase addiction for archived skills
+    combat_sys = SkillEaterCombatSystem()
+    res = combat_sys.process_turn_end(player)
+    assert player.addiction_buildup == 0
+
+    # Retrieve when memory is available
+    ok_retrieve = player.retrieve_skill("con_test_001")
+    assert ok_retrieve is True
+    assert player.current_memory_usage == 5
+    assert player.has_skill("con_test_001") is True
+    assert "con_test_001" not in player.get_archived_skill_ids()

@@ -1,6 +1,6 @@
 /**
  * SkillTree
- * A stateless component that manages the layout of SkillNodes and 
+ * A stateless component that manages the layout of SkillNodes and
  * draws connecting lines between them using SVG.
  */
 class SkillTree extends UIComponent {
@@ -22,7 +22,7 @@ class SkillTree extends UIComponent {
         const svg = this.createElement('svg', {
             className: 'skill-tree-svg'
         }, []);
-        
+
         // Determine canvas size based on nodes
         const maxX = Math.max(...nodes.map(n => n.position.x), 0) + 100;
         const maxY = Math.max(...nodes.map(n => n.position.y), 0) + 100;

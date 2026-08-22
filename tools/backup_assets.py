@@ -3,6 +3,7 @@
 Asset backup script for backing up asset pipeline outputs and configurations.
 Supports full backups, incremental backups, and restoration points.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -213,9 +214,7 @@ def create_backup_rotation_policy(backup_dir: str, config: dict) -> dict:
     try:
         # Get rotation policy from config
         max_full_backups = config.get("backup", {}).get("max_full_backups", 5)
-        config.get("backup", {}).get(
-            "max_incremental_backups", 20
-        )
+        config.get("backup", {}).get("max_incremental_backups", 20)
         max_age_days = config.get("backup", {}).get("max_age_days", 30)
 
         max_age_seconds = max_age_days * 24 * 3600
@@ -263,8 +262,7 @@ def create_backup_rotation_policy(backup_dir: str, config: dict) -> dict:
         full_backups = [
             b
             for b in backups
-            if "full" in b["name"].lower()
-            or "backup_manifest.json" in os.listdir(b["path"])
+            if "full" in b["name"].lower() or "backup_manifest.json" in os.listdir(b["path"])
         ]
         if len(full_backups) > max_full_backups:
             # Mark excess full backups for removal (keep newest)
@@ -314,9 +312,7 @@ def main():
         default=None,
         help="Source directory to backup (overrides config output)",
     )
-    parser.add_argument(
-        "--backup-dir", required=True, help="Directory to store backups"
-    )
+    parser.add_argument("--backup-dir", required=True, help="Directory to store backups")
     parser.add_argument(
         "--type",
         choices=["full", "incremental", "rotate"],
@@ -361,9 +357,7 @@ def main():
         if args.last_backup is None:
             print("Error: --last-backup is required for incremental backup")
             sys.exit(1)
-        result = backup_incremental(
-            source_dir, args.backup_dir, args.last_backup, config
-        )
+        result = backup_incremental(source_dir, args.backup_dir, args.last_backup, config)
     elif args.type == "rotate":
         result = create_backup_rotation_policy(args.backup_dir, config)
 
@@ -372,9 +366,7 @@ def main():
         print(f"\n{'=' * 60}")
         print("BACKUP OPERATION RESULTS")
         print(f"{'=' * 60}")
-        print(
-            f"Operation: {result.get('backup_type', result.get('policy_type', 'unknown'))}"
-        )
+        print(f"Operation: {result.get('backup_type', result.get('policy_type', 'unknown'))}")
         print(f"Timestamp: {result.get('datetime', 'N/A')}")
 
         if result.get("backup_type") in ["full", "incremental"]:

@@ -80,9 +80,7 @@ class BGMPlayer:
 
                         pygame.mixer.music.load(str(path))
                         pygame.mixer.music.set_volume(volume)
-                        pygame.mixer.music.play(
-                            -1 if loop else 0, fade_ms=int(fade_in * 1000)
-                        )
+                        pygame.mixer.music.play(-1 if loop else 0, fade_ms=int(fade_in * 1000))
                         self._current_path = str(path)
                         self._volume = volume
 

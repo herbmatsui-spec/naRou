@@ -26,7 +26,7 @@ This document describes the unified entity rendering system for naRou, implement
    - Shared logic for facing calculation and state transitions
 
 4. **TCODRenderer** (`core/tcod_renderer.py`)
-   - Implements `draw_entity(EntityDrawCall)` 
+   - Implements `draw_entity(EntityDrawCall)`
    - Sub-image extraction from master atlas
    - Performance monitoring
 
@@ -199,8 +199,8 @@ const tileAtlas = new TileAtlas(data.baseTextures, data.metadatas, data.defs);
 const sprite = tileAtlas.createSprite("TILE_WALL", { variant: 3, scale: "32" });
 
 // Animated sprite
-const anim = tileAtlas.createAnimatedSprite("TILE_WATER", { 
-    direction: 0, state: "idle", fps: 5, loop: true 
+const anim = tileAtlas.createAnimatedSprite("TILE_WATER", {
+    direction: 0, state: "idle", fps: 5, loop: true
 });
 
 // Autotile
@@ -265,7 +265,7 @@ Both renderers monitor FPS and automatically reduce quality:
 
 ### Atlas Images
 - `assets/tiles/tileset_16x16.png` + `.json`
-- `assets/tiles/tileset_32x32.png` + `.json`  
+- `assets/tiles/tileset_32x32.png` + `.json`
 - `assets/tiles/tileset_64x64.png` + `.json`
 
 ### Source Assets

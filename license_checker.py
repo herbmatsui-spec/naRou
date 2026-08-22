@@ -8,6 +8,7 @@ Designed for offline-first: caches last successful check for 7 days.
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import base64
 import hashlib

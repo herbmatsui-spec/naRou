@@ -24,9 +24,7 @@ def test_particle_creation():
     ps = TerminalParticleSystem(40, 24, max_particles=100)
 
     # Emit some particles
-    ps.emit(
-        {"type": "dust", "x": 20, "y": 12, "count": 5, "lifetime": 1.0, "speed": 0.5}
-    )
+    ps.emit({"type": "dust", "x": 20, "y": 12, "count": 5, "lifetime": 1.0, "speed": 0.5})
 
     assert len(ps.particles) == 5
     assert all(p.active for p in ps.particles)
@@ -98,9 +96,7 @@ def test_particle_update():
     ps = TerminalParticleSystem(40, 24, max_particles=100)
 
     # Emit particles
-    ps.emit(
-        {"type": "spark", "x": 20, "y": 12, "count": 10, "lifetime": 1.0, "speed": 1.5}
-    )
+    ps.emit({"type": "spark", "x": 20, "y": 12, "count": 10, "lifetime": 1.0, "speed": 1.5})
 
     # Update a few frames
     initial_positions = [(p.x, p.y) for p in ps.particles if p.active]
@@ -111,11 +107,7 @@ def test_particle_update():
     final_positions = [(p.x, p.y) for p in ps.particles if p.active]
 
     # Particles should have moved
-    moved = sum(
-        1
-        for i, (ix, iy) in enumerate(initial_positions)
-        if (ix, iy) != final_positions[i]
-    )
+    moved = sum(1 for i, (ix, iy) in enumerate(initial_positions) if (ix, iy) != final_positions[i])
 
     assert moved > 0, "Particles should move"
 
@@ -193,9 +185,7 @@ def test_particle_drawing():
     ps = TerminalParticleSystem(40, 24)
 
     # Emit particles
-    ps.emit(
-        {"type": "magic", "x": 20, "y": 12, "count": 10, "lifetime": 2.0, "speed": 0.8}
-    )
+    ps.emit({"type": "magic", "x": 20, "y": 12, "count": 10, "lifetime": 2.0, "speed": 0.8})
 
     # Update a bit
     for _ in range(3):

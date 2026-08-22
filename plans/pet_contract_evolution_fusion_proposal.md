@@ -115,7 +115,7 @@ pet_evolutions:
           - remove: ["bite"]
         evolution_bonus:
           type: "hybrid_bonus"
-          value: 
+          value:
             strength: +3
             intelligence: +3
 ```

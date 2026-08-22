@@ -112,9 +112,7 @@ class SkillAwakeningManager:
         # 信仰値チェック
         return not ("piety" in req and player.piety < req["piety"])
 
-    def awaken_skill(
-        self, player: Entity, awakening_id: str, engine: Any | None = None
-    ) -> bool:
+    def awaken_skill(self, player: Entity, awakening_id: str, engine: Any | None = None) -> bool:
         """スキルを覚醒させる (Step 49)"""
         if not self.can_awaken(player, awakening_id):
             return False

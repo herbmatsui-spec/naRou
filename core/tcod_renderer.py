@@ -8,9 +8,7 @@ import tcod
 import tcod.console
 import tcod.tileset
 
-from core.entity_renderer import (
-    EntityRenderer,
-)
+from core.entity_renderer import EntityRenderer
 from core.lighting import TerminalLightingSystem, TerminalParticleSystem
 from core.msdf_atlas import MSDFAtlas
 from core.renderer_base import (
@@ -51,9 +49,7 @@ class TCODRenderer(RendererBase):
         self.context: tcod.context.Context | None = None
 
         # Sub-image cache: (tile_id, variant, frame, direction, state) -> tcod.image.Image
-        self._subimage_cache: dict[
-            tuple[str, int, int, int, str], tcod.image.Image
-        ] = {}
+        self._subimage_cache: dict[tuple[str, int, int, int, str], tcod.image.Image] = {}
 
         # Master image cache: master_key -> tcod.image.Image
         self._master_images: dict[str, tcod.image.Image] = {}
@@ -182,9 +178,7 @@ class TCODRenderer(RendererBase):
 
         # Get UV from TileAtlas
         try:
-            uv = self.tile_atlas.get_uv(
-                tile_id, variant, frame, direction, state, scale="32"
-            )
+            uv = self.tile_atlas.get_uv(tile_id, variant, frame, direction, state, scale="32")
         except KeyError:
             return None
 
@@ -217,7 +211,6 @@ class TCODRenderer(RendererBase):
                 else:
                     sub.put_pixel(px, py, (rgba[0], rgba[1], rgba[2], 255))
 
-
         self._subimage_cache[key] = sub
         return sub
 
@@ -239,9 +232,7 @@ class TCODRenderer(RendererBase):
     def draw_entity(self, call: EntityDrawCall) -> None:
         """Draw an entity with direction/state animation."""
         # Get sub-image from entity renderer cache
-        sub_image = self._get_entity_subimage(
-            call.tile_id, call.direction, call.state, call.frame
-        )
+        sub_image = self._get_entity_subimage(call.tile_id, call.direction, call.state, call.frame)
         if sub_image:
             # Apply bounce offset
             draw_y = call.y + int(call.bounce)
@@ -320,7 +311,6 @@ class TCODRenderer(RendererBase):
                 else:
                     sub.put_pixel(px, py, (rgba[0], rgba[1], rgba[2], 255))
 
-
         self._subimage_cache[key] = sub
         return sub
 
@@ -346,9 +336,7 @@ class TCODRenderer(RendererBase):
         )
         self._tile_animations[(x, y)] = anim
 
-    def get_tile_animation_frame(
-        self, x: int, y: int
-    ) -> tuple[int, int, int, int] | None:
+    def get_tile_animation_frame(self, x: int, y: int) -> tuple[int, int, int, int] | None:
         """Get current animation frame UV for a position."""
         anim = self._tile_animations.get((x, y))
         if not anim:
@@ -427,9 +415,7 @@ class TCODRenderer(RendererBase):
             return (img.width, img.height)
         return (0, 0)
 
-    def clear(
-        self, color: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)
-    ) -> None:
+    def clear(self, color: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)) -> None:
         r, g, b, _a = [int(c * 255) for c in color]
         self.console.clear(fg=(r, g, b), bg=(0, 0, 0))
 
@@ -455,8 +441,6 @@ class TCODRenderer(RendererBase):
     def set_msdf_atlas(self, atlas: MSDFAtlas) -> None:
         self._msdf_atlas = atlas
 
-    def _color_to_tuple(
-        self, color: tuple[float, float, float, float]
-    ) -> tuple[int, int, int]:
+    def _color_to_tuple(self, color: tuple[float, float, float, float]) -> tuple[int, int, int]:
         r, g, b = (int(c * 255) for c in color[:3])
         return (r, g, b)

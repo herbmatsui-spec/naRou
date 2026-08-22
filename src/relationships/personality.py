@@ -131,9 +131,7 @@ ARCHETYPE_PROFILES: dict[CharacterArchetype, dict[PersonalityTrait, float]] = {
 
 
 # アーキタイプによる関係形成の傾向
-ARCHETYPE_RELATIONSHIP_TENDENCIES: dict[
-    CharacterArchetype, dict[RelationshipType, float]
-] = {
+ARCHETYPE_RELATIONSHIP_TENDENCIES: dict[CharacterArchetype, dict[RelationshipType, float]] = {
     CharacterArchetype.HERO: {
         RelationshipType.FAVORABILITY: 1.2,
         RelationshipType.FRIENDSHIP: 1.3,
@@ -241,9 +239,7 @@ class PersonalityProfile:
             return None
         return max(self.traits, key=lambda t: self.traits[t])
 
-    def calculate_relationship_modifier(
-        self, relationship_type: RelationshipType
-    ) -> float:
+    def calculate_relationship_modifier(self, relationship_type: RelationshipType) -> float:
         """関係タイプに対する修正子を計算"""
         if relationship_type in self.relationship_tendencies:
             return self.relationship_tendencies[relationship_type]
@@ -338,9 +334,7 @@ class PersonalitySystem:
                 profile.traits[trait] = max(0.0, min(1.0, value))
 
         # 関係傾向を計算
-        profile.relationship_tendencies = self._calculate_relationship_tendencies(
-            profile
-        )
+        profile.relationship_tendencies = self._calculate_relationship_tendencies(profile)
         profile.dominant_trait = profile.get_dominant_trait()
 
         return profile
@@ -383,9 +377,9 @@ class PersonalitySystem:
         elif rel_type == RelationshipType.ENMITY:
             modifier *= 0.7 + (1 - t.get(PersonalityTrait.AGREEABLENESS, 0.5)) * 0.6
         elif rel_type == RelationshipType.BETRAYAL:
-            betrayal_factor = (
-                1 - t.get(PersonalityTrait.CONSCIENTIOUSNESS, 0.5)
-            ) * 0.7 + t.get(PersonalityTrait.NEUROTICISM, 0.5) * 0.3
+            betrayal_factor = (1 - t.get(PersonalityTrait.CONSCIENTIOUSNESS, 0.5)) * 0.7 + t.get(
+                PersonalityTrait.NEUROTICISM, 0.5
+            ) * 0.3
             modifier *= 0.6 + betrayal_factor
         elif rel_type == RelationshipType.MENTORSHIP:
             modifier *= (
@@ -423,12 +417,8 @@ class PersonalitySystem:
         # ソースキャラクターの特性による影響
         if source_profile:
             # 関係傾向による基本修正
-            rel_tendency = source_profile.relationship_tendencies.get(
-                relationship_type, 1.0
-            )
-            modifier *= (
-                1.0 + (rel_tendency - 1.0) * self._config["archetype_influence_factor"]
-            )
+            rel_tendency = source_profile.relationship_tendencies.get(relationship_type, 1.0)
+            modifier *= 1.0 + (rel_tendency - 1.0) * self._config["archetype_influence_factor"]
 
         # ターゲットキャラクターの特性による影響（受容性）
         if target_profile:
@@ -553,9 +543,9 @@ class PersonalitySystem:
                     "character_id": profile.character_id,
                     "traits": {t.value: v for t, v in profile.traits.items()},
                     "archetype": profile.archetype.value if profile.archetype else None,
-                    "dominant_trait": profile.dominant_trait.value
-                    if profile.dominant_trait
-                    else None,
+                    "dominant_trait": (
+                        profile.dominant_trait.value if profile.dominant_trait else None
+                    ),
                     "relationship_tendencies": {
                         rt.value: v for rt, v in profile.relationship_tendencies.items()
                     },
@@ -571,16 +561,17 @@ class PersonalitySystem:
         for char_id, profile_data in data.get("profiles", {}).items():
             profile = PersonalityProfile(
                 character_id=profile_data["character_id"],
-                traits={
-                    PersonalityTrait(k): v
-                    for k, v in profile_data.get("traits", {}).items()
-                },
-                archetype=CharacterArchetype(profile_data["archetype"])
-                if profile_data.get("archetype")
-                else None,
-                dominant_trait=PersonalityTrait(profile_data["dominant_trait"])
-                if profile_data.get("dominant_trait")
-                else None,
+                traits={PersonalityTrait(k): v for k, v in profile_data.get("traits", {}).items()},
+                archetype=(
+                    CharacterArchetype(profile_data["archetype"])
+                    if profile_data.get("archetype")
+                    else None
+                ),
+                dominant_trait=(
+                    PersonalityTrait(profile_data["dominant_trait"])
+                    if profile_data.get("dominant_trait")
+                    else None
+                ),
                 relationship_tendencies={
                     RelationshipType(k): v
                     for k, v in profile_data.get("relationship_tendencies", {}).items()

@@ -8,23 +8,23 @@ export class PostProcessManager {
      */
     constructor(app) {
         this.app = app;
-        
+
         // ポストプロセス用のレンダーテクスチャ
         this.renderTexture = PIXI.RenderTexture.create({
             width: app.screen.width,
             height: app.screen.height,
             resolution: app.renderer.resolution
         });
-        
+
         // ポストプロセス用スプライト
         this.postProcessSprite = new PIXI.Sprite(this.renderTexture);
         this.postProcessSprite.width = app.screen.width;
         this.postProcessSprite.height = app.screen.height;
-        
+
         // エフェクトコンテナ
         this.effectsContainer = new PIXI.Container();
         this.effectsContainer.addChild(this.postProcessSprite);
-        
+
         // エフェクト状態
         this.bloomEnabled = true;
         this.bloomIntensity = 0.3;
@@ -39,14 +39,14 @@ export class PostProcessManager {
         // 衝撃波（Shockwaves）と熱歪み（Heat Haze）
         this.shockwaves = []; // [{x, y, radius, maxRadius, progress, duration}]
         this.heatHazeTime = 0;
-        
+
         // ブルーム用のグラフィック
         this.bloomGraphics = new PIXI.Graphics();
-        
+
         // グレイン用のノイズテクスチャ
         this.noiseTexture = this._createNoiseTexture();
         this.rippleTexture = this._createRippleTexture();
-        
+
         // ビネット用のグラフィック
         this.vignetteGraphics = new PIXI.Graphics();
 
@@ -83,7 +83,7 @@ export class PostProcessManager {
         ctx.fillRect(0, 0, size, size);
         return PIXI.Texture.from(canvas);
     }
-    
+
     /**
      * ノイズテクスチャを作成
      * @returns {PIXI.Texture} ノイズテクスチャ
@@ -94,7 +94,7 @@ export class PostProcessManager {
         canvas.width = size;
         canvas.height = size;
         const ctx = canvas.getContext('2d');
-        
+
         const imageData = ctx.createImageData(size, size);
         for (let i = 0; i < imageData.data.length; i += 4) {
             const value = Math.random() * 255;
@@ -103,15 +103,15 @@ export class PostProcessManager {
             imageData.data[i + 2] = value; // B
             imageData.data[i + 3] = 255;   // A
         }
-        
+
         ctx.putImageData(imageData, 0, 0);
-        
+
         const texture = PIXI.Texture.from(canvas);
         texture.baseTexture.wrapMode = PIXI.WRAP_MODES.REPEAT;
-        
+
         return texture;
     }
-    
+
     /**
      * エフェクトを初期化
      */
@@ -122,7 +122,7 @@ export class PostProcessManager {
             bloomScale: this.bloomIntensity,
             quality: 4
         });
-        
+
         // グレインフィルタ
         this.grainFilter = new PIXI.filters.NoiseFilter({
             noise: this.grainIntensity,
@@ -150,7 +150,7 @@ export class PostProcessManager {
             void main(void) {
                 vec2 dir = vTextureCoord - vec2(0.5);
                 float dist = length(dir);
-                
+
                 float r = texture2D(uSampler, vTextureCoord - dir * uRedShift).r;
                 float g = texture2D(uSampler, vTextureCoord).g;
                 float b = texture2D(uSampler, vTextureCoord + dir * uBlueShift).b;
@@ -168,11 +168,11 @@ export class PostProcessManager {
             uVignette: this.vignetteIntensity,
             uVignetteColor: [0.0, 0.0, 0.0]
         });
-        
+
         // フィルタを適用
         this._applyFilters();
     }
-    
+
     /**
      * フィルタを適用
      */
@@ -218,7 +218,7 @@ export class PostProcessManager {
         this.cinematicFilter.uniforms.uVignette = 0.8 * intensity;
         this.cinematicFilter.uniforms.uVignetteColor = [0.4 * intensity, 0.0, 0.0];
     }
-    
+
     /**
      * ブルーム強度を設定
      * @param {number} intensity - ブルーム強度 (0.0 - 1.0)
@@ -227,7 +227,7 @@ export class PostProcessManager {
         this.bloomIntensity = Math.max(0, Math.min(1, intensity));
         this.bloomFilter.bloomScale = this.bloomIntensity;
     }
-    
+
     /**
      * ブルーム閾値を設定
      * @param {number} threshold - ブルーム閾値 (0.0 - 1.0)
@@ -236,7 +236,7 @@ export class PostProcessManager {
         this.bloomThreshold = Math.max(0, Math.min(1, threshold));
         this.bloomFilter.threshold = this.bloomThreshold;
     }
-    
+
     /**
      * グレイン強度を設定
      * @param {number} intensity - グレイン強度 (0.0 - 1.0)
@@ -245,7 +245,7 @@ export class PostProcessManager {
         this.grainIntensity = Math.max(0, Math.min(1, intensity));
         this.grainFilter.noise = this.grainIntensity;
     }
-    
+
     /**
      * ビネット強度を設定
      * @param {number} intensity - ビネット強度 (0.0 - 1.0)
@@ -254,7 +254,7 @@ export class PostProcessManager {
         this.vignetteIntensity = Math.max(0, Math.min(1, intensity));
         this.vignetteFilter.strength = this.vignetteIntensity;
     }
-    
+
     /**
      * ブルームを有効/無効化
      * @param {boolean} enabled - 有効/無効
@@ -263,7 +263,7 @@ export class PostProcessManager {
         this.bloomEnabled = enabled;
         this._applyFilters();
     }
-    
+
     /**
      * グレインを有効/無効化
      * @param {boolean} enabled - 有効/無効
@@ -272,7 +272,7 @@ export class PostProcessManager {
         this.grainEnabled = enabled;
         this._applyFilters();
     }
-    
+
     /**
      * ビネットを有効/無効化
      * @param {boolean} enabled - 有効/無効
@@ -299,7 +299,7 @@ export class PostProcessManager {
         this.cinematicMode = !!enabled;
         this._applyFilters();
     }
-    
+
     /**
      * ポストプロセスを更新
      * @param {number} deltaTime - 経過時間（秒）
@@ -347,7 +347,7 @@ export class PostProcessManager {
             }
         }
     }
-    
+
     /**
      * ポストプロセス用のレンダーターゲットを取得
      * @returns {PIXI.RenderTexture} レンダーテクスチャ
@@ -355,7 +355,7 @@ export class PostProcessManager {
     getRenderTexture() {
         return this.renderTexture;
     }
-    
+
     /**
      * ポストプロセスコンテナを取得
      * @returns {PIXI.Container} エフェクトコンテナ
@@ -363,7 +363,7 @@ export class PostProcessManager {
     getEffectsContainer() {
         return this.effectsContainer;
     }
-    
+
     /**
      * ポストプロセスをリセット
      */
@@ -375,10 +375,10 @@ export class PostProcessManager {
         this.grainIntensity = 0.05;
         this.vignetteEnabled = true;
         this.vignetteIntensity = 0.4;
-        
+
         this._applyFilters();
     }
-    
+
     /**
      * リソースを破棄
      */
@@ -386,11 +386,11 @@ export class PostProcessManager {
         if (this.renderTexture) {
             this.renderTexture.destroy();
         }
-        
+
         if (this.noiseTexture) {
             this.noiseTexture.destroy();
         }
-        
+
         if (this.effectsContainer) {
             this.effectsContainer.destroy();
         }

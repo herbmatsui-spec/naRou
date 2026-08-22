@@ -13,7 +13,6 @@ from constants import (
     INTENT_HEAL,
     INTENT_MOVE,
 )
-
 from enemy_intent import compute_intent
 
 
@@ -377,7 +376,7 @@ def test_spread_moves_when_crowded():
 
     eng = FakeGridEngine(10, 10)
     a = _monster("鬼A", 10, 10 + 1)  # プレイヤー隣
-    b = _monster("鬼B", 10, 11)       # a と重なるように隣接(詰まり)
+    b = _monster("鬼B", 10, 11)  # a と重なるように隣接(詰まり)
     eng.add(a)
     # b を a の隣に置く
     b.x, b.y = 9, 11
@@ -483,7 +482,3 @@ def test_hard_difficulty_increases_kiter_range():
     # 難易度hardでは normal より小さな間合いにはならない（ボーナス方向）
     assert dhard >= dnorm
     assert dnorm > 0 and dhard > 0
-
-
-
-

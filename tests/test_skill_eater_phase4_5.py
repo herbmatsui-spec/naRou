@@ -2,6 +2,7 @@
 test_skill_eater_phase4_5.py
 Phase 4 (従属・移植・AI) & Phase 5 (派閥・経済・買収) の検証テスト
 """
+
 from __future__ import annotations
 
 import unittest
@@ -60,9 +61,7 @@ class TestSkillEaterPhase4And5(unittest.TestCase):
         self.assertEqual(servant.get_skill_count(), 0)
 
         # スキル移植
-        success, _msg = self.servant_sys.transplant_skill(
-            player, servant, "com_combat_002"
-        )
+        success, _msg = self.servant_sys.transplant_skill(player, servant, "com_combat_002")
         self.assertTrue(success)
         self.assertFalse(player.has_skill("com_combat_002"))  # プレイヤーから消費
         self.assertTrue(servant.state.has_skill("com_combat_002"))
@@ -99,9 +98,7 @@ class TestSkillEaterPhase4And5(unittest.TestCase):
             speed=5,
         )
 
-        res = self.servant_sys.execute_servant_turn(
-            servant, enemies=[], allies=[wounded_ally]
-        )
+        res = self.servant_sys.execute_servant_turn(servant, enemies=[], allies=[wounded_ally])
         self.assertEqual(res.action_type, "SKILL")
         self.assertEqual(res.skill_used_id, "com_combat_002")
         self.assertGreater(wounded_ally.hp, 10)  # 回復された
@@ -121,16 +118,12 @@ class TestSkillEaterPhase4And5(unittest.TestCase):
             intelligence=10,
             speed=10,
         )
-        self.assertEqual(
-            self.economy_sys.evaluate_social_tier(player), "奴隷（ノースキル）"
-        )
+        self.assertEqual(self.economy_sys.evaluate_social_tier(player), "奴隷（ノースキル）")
 
         # レアスキル所持（市場価値85,000）
         player.add_skill("rar_combat_012")  # 鋼鉄の皮膚
         self.assertEqual(self.economy_sys.get_player_skill_net_worth(player), 85000)
-        self.assertEqual(
-            self.economy_sys.evaluate_social_tier(player), "中流階級（シルバー）"
-        )
+        self.assertEqual(self.economy_sys.evaluate_social_tier(player), "中流階級（シルバー）")
 
     def test_black_market_sale_and_facility_upgrade(self):
         player = CharacterState(
@@ -149,9 +142,7 @@ class TestSkillEaterPhase4And5(unittest.TestCase):
         player.add_skill("rar_utility_005")  # 思考加速（秘密スキル・200,000アルド）
 
         # 売却
-        succ, val, _ = self.economy_sys.sell_skill_to_black_market(
-            player, "com_labor_001"
-        )
+        succ, val, _ = self.economy_sys.sell_skill_to_black_market(player, "com_labor_001")
         self.assertTrue(succ)
         self.assertEqual(val, 500)
         self.assertEqual(self.economy_sys.aldo_currency, 500)

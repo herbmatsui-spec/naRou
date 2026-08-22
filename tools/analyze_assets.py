@@ -3,6 +3,7 @@
 Asset analysis script for performing deeper analysis on assets.
 Includes quality analysis, optimization recommendations, and asset usage patterns.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -56,9 +57,7 @@ def analyze_tileset_quality(tileset_dir: str, config: dict) -> dict:
                         if atlas_width > 0 and atlas_height > 0:
                             atlas_area = atlas_width * atlas_height
                             used_area = tile_count * (tile_size * tile_size)
-                            usage_ratio = (
-                                used_area / atlas_area if atlas_area > 0 else 0
-                            )
+                            usage_ratio = used_area / atlas_area if atlas_area > 0 else 0
 
                             if usage_ratio < 0.5:
                                 analysis["optimization_opportunities"].append(
@@ -71,10 +70,7 @@ def analyze_tileset_quality(tileset_dir: str, config: dict) -> dict:
                                 )
 
                         # Check for oversized atlases
-                        if (
-                            atlas_width > max_atlas_size
-                            or atlas_height > max_atlas_size
-                        ):
+                        if atlas_width > max_atlas_size or atlas_height > max_atlas_size:
                             analysis["quality_issues"].append(
                                 {
                                     "type": "oversized_atlas",
@@ -126,14 +122,9 @@ def analyze_tileset_quality(tileset_dir: str, config: dict) -> dict:
         )
 
     if any(issue["type"] == "oversized_atlas" for issue in analysis["quality_issues"]):
-        analysis["recommendations"].append(
-            "Reduce atlas dimensions to meet engine requirements"
-        )
+        analysis["recommendations"].append("Reduce atlas dimensions to meet engine requirements")
 
-    if any(
-        op["type"] == "non_power_of_two"
-        for op in analysis["optimization_opportunities"]
-    ):
+    if any(op["type"] == "non_power_of_two" for op in analysis["optimization_opportunities"]):
         analysis["recommendations"].append(
             "Use power-of-two dimensions for better GPU compatibility"
         )
@@ -178,9 +169,7 @@ def analyze_font_quality(font_dir: str, config: dict) -> dict:
                         # Check for inefficient atlas usage
                         if len(metrics) > 0 and atlas_width > 0 and atlas_height > 0:
                             # Estimate used area based on character metrics
-                            used_width = sum(
-                                m.get("width", 0) for m in metrics.values()
-                            )
+                            used_width = sum(m.get("width", 0) for m in metrics.values())
                             used_height = max(
                                 (m.get("height", 0) for m in metrics.values()),
                                 default=0,
@@ -191,9 +180,7 @@ def analyze_font_quality(font_dir: str, config: dict) -> dict:
 
                             atlas_area = atlas_width * atlas_height
                             used_area = used_width * used_height
-                            usage_ratio = (
-                                used_area / atlas_area if atlas_area > 0 else 0
-                            )
+                            usage_ratio = used_area / atlas_area if atlas_area > 0 else 0
 
                             if usage_ratio < 0.3:
                                 analysis["optimization_opportunities"].append(
@@ -268,10 +255,7 @@ def analyze_sound_quality(sound_dir: str, config: dict) -> dict:
 
     # Quality thresholds from config
     music_bitrate_threshold = (
-        config.get("sound", {})
-        .get("quality", {})
-        .get("music", {})
-        .get("bitrate", "192k")
+        config.get("sound", {}).get("quality", {}).get("music", {}).get("bitrate", "192k")
     )
     sfx_bitrate_threshold = (
         config.get("sound", {}).get("quality", {}).get("sfx", {}).get("bitrate", "128k")
@@ -449,8 +433,7 @@ def analyze_model_quality(model_dir: str, config: dict) -> dict:
                                     "type": "large_file_size",
                                     "asset": file,
                                     "size_mb": file_size / (1024 * 1024),
-                                    "threshold_mb": large_file_threshold
-                                    / (1024 * 1024),
+                                    "threshold_mb": large_file_threshold / (1024 * 1024),
                                     "description": f"Model file is {file_size / (1024 * 1024):.1f}MB (>{large_file_threshold / (1024 * 1024):.0f}MB)",
                                 }
                             )
@@ -485,8 +468,7 @@ def analyze_model_quality(model_dir: str, config: dict) -> dict:
                                     "type": "large_file_size",
                                     "asset": file,
                                     "size_mb": file_size / (1024 * 1024),
-                                    "threshold_mb": large_file_threshold
-                                    / (1024 * 1024),
+                                    "threshold_mb": large_file_threshold / (1024 * 1024),
                                     "description": f"Model file is {file_size / (1024 * 1024):.1f}MB (>{large_file_threshold / (1024 * 1024):.0f}MB)",
                                 }
                             )
@@ -584,9 +566,7 @@ def print_analysis_summary(report: dict):
     summary = report.get("summary", {})
     print(f"  Analyses Performed: {summary.get('total_analyses', 0)}")
     print(f"  Quality Issues Found: {summary.get('total_quality_issues', 0)}")
-    print(
-        f"  Optimization Opportunities: {summary.get('total_optimization_opportunities', 0)}"
-    )
+    print(f"  Optimization Opportunities: {summary.get('total_optimization_opportunities', 0)}")
     print(f"  Unique Recommendations: {summary.get('total_unique_recommendations', 0)}")
 
     if summary.get("recommendations_list"):
@@ -594,9 +574,7 @@ def print_analysis_summary(report: dict):
         for i, rec in enumerate(summary["recommendations_list"][:10], 1):  # Show top 10
             print(f"  {i}. {rec}")
         if len(summary["recommendations_list"]) > 10:
-            print(
-                f"  ... and {len(summary['recommendations_list']) - 10} more recommendations"
-            )
+            print(f"  ... and {len(summary['recommendations_list']) - 10} more recommendations")
 
     print("\nDETAILED FINDINGS BY ASSET TYPE:")
     for analysis_name, analysis in report.get("analyses", {}).items():
@@ -635,9 +613,7 @@ def main():
         default="tools/asset_pipeline_config.json",
         help="Path to configuration file",
     )
-    parser.add_argument(
-        "--output", default=None, help="Output file for analysis (JSON)"
-    )
+    parser.add_argument("--output", default=None, help="Output file for analysis (JSON)")
     parser.add_argument(
         "--assets",
         nargs="+",
@@ -672,9 +648,7 @@ def main():
 
     # Filter analyses if needed
     if args.assets != ["all"]:
-        filtered_analyses = {
-            k: v for k, v in report["analyses"].items() if k in assets_to_analyze
-        }
+        filtered_analyses = {k: v for k, v in report["analyses"].items() if k in assets_to_analyze}
         report["analyses"] = filtered_analyses
 
         # Recalculate summary

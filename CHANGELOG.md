@@ -8,7 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Tiny Rogue Graphics Pack integration (Kenney "Tiny Rogue" asset pack)
+- **スキル喰い専用チュートリアル5件追加** (`data/tutorial_guides.yaml`): 世界遷移時、初回解析、初回捕食、毒性警告、初回合成
+- **喰らいサイクル常時HUD表示** (`uirenderer.py`, `render_context.py`): 底部UIに毒性ゲージ、所持スキル数、捕食成功率を常時表示
+- **色覚モード時の数値強制表示** (`uirenderer.py`, `ui_fx_systems.py`): `GaugeBar.render()` に `force_numeric` パラメータ追加、色覚モード時に `%数値` をバーと併記
+- `RenderContext` に `world_a_data`, `toxicity_manager`, `skill_eater_combat_system`, `color_vision_mode`, `last_scan_result` 追加
+- `Engine.last_scan_result` プロパティ追加（解析結果保存用）
+
+### Changed
+- `UIRenderer.render()`: スキル喰いワールド時に専用HUD描画、色覚モード判定追加
+- `GaugeBar.render()`: `force_numeric` 引数で数値併記制御対応
 
 ### Refactored
 - Split `Engine` god-class into `managers/` (Combat, SkillReward, PetBond, WorldNews, Persistence, Faction, ContextMenu, StateMachine, SetupCoordinator)

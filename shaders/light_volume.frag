@@ -87,102 +87,102 @@ void main() {
     vec2 packed_normal = texture(u_normal, v_texcoord).rg;
     vec4 material = texture(u_material, v_texcoord);
     float depth = texture(u_depth, v_texcoord).r;
-    
+
     // Skip sky/background
     if (depth >= 1.0) {
         frag_color = vec4(0.0);
         return;
     }
-    
+
     // Reconstruct
     vec3 view_pos = reconstruct_position(v_texcoord, depth);
     vec3 normal = reconstruct_normal(packed_normal);
-    
+
     // Material unpack
     float roughness = material.r / 255.0;
     float metallic = material.g / 255.0;
     float emissive = material.b / 255.0;
     float ao = material.a / 255.0;
-    
+
     // Clamp roughness
     roughness = max(roughness, 0.04);
-    
+
     // F0 (specular color)
     vec3 f0 = mix(vec3(0.04), albedo.rgb, metallic);
-    
+
     // View direction
     vec3 view_dir = normalize(-view_pos);
-    
+
     // Accumulate lighting
     vec3 lighting = vec3(0.0);
-    
+
     for (int i = 0; i < u_light_count; i++) {
         Light light = u_lights[i];
-        
+
         // Light vector
         vec3 light_vec = light.position - view_pos;
         float dist = length(light_vec);
         vec3 light_dir = light_vec / (dist + 1e-6);
-        
+
         // Attenuation
         float attenuation = 1.0 / (1.0 + dist * dist / (light.radius * light.radius));
         attenuation *= light.intensity;
-        
+
         // Spot light cone
         if (light.type == 1) {
             float spot_dot = dot(-light_dir, normalize(light.direction));
             float spot_effect = smoothstep(light.outer_cone, light.inner_cone, spot_dot);
             attenuation *= spot_effect;
         }
-        
+
         // Decal projection
         if (light.type == 2) {
             // Project decal texture
             // Simplified: treat as directional light for now
             attenuation *= 1.0;
         }
-        
+
         if (attenuation <= 0.001) continue;
-        
+
         // Shadow
         float shadow = sample_shadow(light.position, view_pos, light.shadow_region);
         attenuation *= shadow;
-        
+
         // Half vector
         vec3 h = normalize(light_dir + view_dir);
-        
+
         // BRDF
         float n_dot_l = max(dot(normal, light_dir), 0.0);
         float n_dot_v = max(dot(normal, view_dir), 0.0);
         float n_dot_h = max(dot(normal, h), 0.0);
         float v_dot_h = max(dot(view_dir, h), 0.0);
-        
+
         if (n_dot_l <= 0.0) continue;
-        
+
         // Distribution
         float D = ggx_distribution(n_dot_h, roughness);
         // Geometry
         float G = ggx_geometry(n_dot_v, roughness) * ggx_geometry(n_dot_l, roughness);
         // Fresnel
         vec3 F = schlick_fresnel(f0, v_dot_h);
-        
+
         // Specular
         vec3 specular = D * G * F / (4.0 * n_dot_v * n_dot_l + 1e-6);
         specular *= attenuation;
-        
+
         // Diffuse (Disney)
         vec3 diffuse = albedo.rgb * (1.0 - metallic) / 3.14159265359;
         diffuse *= (1.0 - F) * n_dot_l * attenuation;
-        
+
         lighting += diffuse + specular;
     }
-    
+
     // Emissive
     lighting += albedo.rgb * emissive;
-    
+
     // Ambient occlusion
     lighting *= ao;
-    
+
     // Output
     frag_color = vec4(lighting, 1.0);
 }

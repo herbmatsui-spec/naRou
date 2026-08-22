@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 import importlib.util
 import os
@@ -62,7 +63,8 @@ def start_web_backend(open_browser: bool = False, port: int = 8080):
             web_server.launch_browser(f"http://localhost:{port}")
         return srv
     except Exception as exc:  # noqa: BLE001 - バックエンド起動失敗は致命的ではない
-        from exceptions import SystemInitError, ElonaError
+        from exceptions import ElonaError, SystemInitError
+
         err_msg = f"Web バックエンド起動に失敗しました: {exc}"
         print(err_msg)
         if isinstance(exc, (SystemInitError, ElonaError)):
@@ -106,10 +108,12 @@ def show_help():
 def main():
     # 環境変数でテキストモードを強制（run.py などから利用）
     import os
+
     if os.environ.get("NAROU_FORCE_TEXT") == "1":
         print("NAROU_FORCE_TEXT が設定されているため、テキストモードを起動します。")
         try:
             import main_text
+
             main_text.main()
         except ImportError:
             print("エラー: main_text.py が見つかりません。")
@@ -125,9 +129,7 @@ def main():
         print("0. 終了")
         print("========================================")
 
-        choice = input(
-            "実行したいメニューの番号を入力してください (? または help でヘルプ表示): "
-        )
+        choice = input("実行したいメニューの番号を入力してください (? または help でヘルプ表示): ")
 
         if choice == "1":
             print("\nゲーム本編を起動します...\n")
@@ -144,6 +146,7 @@ def main():
                 logger.exception("Import error during game launch: %s", e)
             except Exception as e:  # noqa: BLE001
                 from exceptions import ElonaError
+
                 print(f"\n【重大なエラーが発生しました】: {e}")
                 if isinstance(e, ElonaError):
                     logger.error("Elona domain error caught: %s", e)

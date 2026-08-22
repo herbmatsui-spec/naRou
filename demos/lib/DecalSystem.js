@@ -115,10 +115,10 @@ export class DecalSystem {
         const isLeft = this.stepCount % 2 === 0;
         const angle = Math.atan2(dirY, dirX) - Math.PI / 2;
         const sideOffset = isLeft ? -4 : 4;
-        
+
         const sx = x + Math.cos(angle + Math.PI / 2) * sideOffset;
         const sy = y + Math.sin(angle + Math.PI / 2) * sideOffset;
-        
+
         this.stamp(sx, sy, 'footprint', angle, 0.8, 0.4);
     }
 
@@ -260,10 +260,10 @@ export class DecalSystem {
         const isLeft = this.stepCount % 2 === 0;
         const angle = Math.atan2(dirY, dirX) - Math.PI / 2;
         const sideOffset = isLeft ? -4 : 4;
-        
+
         const sx = x + Math.cos(angle + Math.PI / 2) * sideOffset;
         const sy = y + Math.sin(angle + Math.PI / 2) * sideOffset;
-        
+
         this.stamp(sx, sy, 'footprint', angle, 0.8, 0.4);
     }
 

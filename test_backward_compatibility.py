@@ -3,9 +3,11 @@
 後方互換性テスト
 既存の機能が壊れていないことを確認
 """
+
 from __future__ import annotations
 
 import logging
+
 logger = logging.getLogger(__name__)
 from map_engine import GameMap
 from world_layer import WorldLayer
@@ -78,9 +80,7 @@ def test_backward_compatibility():
             if game_map.explored[x][y]:
                 explored_count += 1
 
-        print(
-            f"   探索状況サンプリング: {explored_count}/{total_samples} タイルが探索済み"
-        )
+        print(f"   探索状況サンプリング: {explored_count}/{total_samples} タイルが探索済み")
         print("   ✓ 基本マップ機能が動作中")
     except Exception as e:
         logger.exception("Unhandled exception")

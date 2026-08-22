@@ -6,6 +6,7 @@ Tests for MetaProgressionSystem:
 4. Reincarnation integration with memory fragments and cycle modifiers
 5. SaveSystem serialization & restoration of memory fragments & cycle modifiers
 """
+
 from __future__ import annotations
 
 import os
@@ -43,23 +44,16 @@ def test_dynamic_memory_fragment_generation():
     assert "第3世代" in combat_frag.name
     assert combat_frag.generation == 3
     assert len(combat_frag.buff_traits) > 0
-    assert (
-        "physical_atk_bonus" in combat_frag.buff_traits
-        or "str_bonus" in combat_frag.buff_traits
-    )
+    assert "physical_atk_bonus" in combat_frag.buff_traits or "str_bonus" in combat_frag.buff_traits
 
     # 2. 魔導系トリガーでの動的生成
-    magic_frag = MemoryFragmentGenerator.generate(
-        player=player, trigger_type="spell_mastery"
-    )
+    magic_frag = MemoryFragmentGenerator.generate(player=player, trigger_type="spell_mastery")
     assert magic_frag.category == "magic"
     assert "第3世代" in magic_frag.name
     assert len(magic_frag.buff_traits) > 0
 
     # 3. 探索系トリガーでの動的生成
-    explore_frag = MemoryFragmentGenerator.generate(
-        player=player, trigger_type="deep_dungeon"
-    )
+    explore_frag = MemoryFragmentGenerator.generate(player=player, trigger_type="deep_dungeon")
     assert explore_frag.category == "exploration"
     assert len(explore_frag.buff_traits) > 0
 
@@ -96,9 +90,7 @@ def test_meta_goals_evaluation_and_bonuses():
             description="テスト用フレーバー",
             generation=1,
             category=cat,
-            buff_traits={"str_bonus": 1.0}
-            if cat == "combat"
-            else {"magic_atk_bonus": 2.0},
+            buff_traits={"str_bonus": 1.0} if cat == "combat" else {"magic_atk_bonus": 2.0},
         )
         mgr.add_memory_fragment(player, frag, eng)
 
@@ -108,16 +100,11 @@ def test_meta_goals_evaluation_and_bonuses():
 
     # メタゴール: fragment_collector_10 (10個収集) と elemental_mastery (4属性以上) が達成されているはず
     assert (
-        player.get_component(AchievementComponent).meta_progression.get(
-            "fragment_collector_10", 0
-        )
+        player.get_component(AchievementComponent).meta_progression.get("fragment_collector_10", 0)
         == 1
     )
     assert (
-        player.get_component(AchievementComponent).meta_progression.get(
-            "elemental_mastery", 0
-        )
-        == 1
+        player.get_component(AchievementComponent).meta_progression.get("elemental_mastery", 0) == 1
     )
 
     # 永続ボーナスが適用されていること

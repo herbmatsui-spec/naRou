@@ -92,9 +92,7 @@ class TestRelationshipGraph(unittest.TestCase):
         """エッジ操作のテスト"""
         edge = RelationshipEdge("alice", "bob", RelationshipType.FAVORABILITY, level=30)
         self.graph.add_edge(edge)
-        self.assertTrue(
-            self.graph.has_edge("alice", "bob", RelationshipType.FAVORABILITY)
-        )
+        self.assertTrue(self.graph.has_edge("alice", "bob", RelationshipType.FAVORABILITY))
 
         # 取得テスト
         retrieved = self.graph.get_edge("alice", "bob", RelationshipType.FAVORABILITY)
@@ -110,12 +108,8 @@ class TestRelationshipGraph(unittest.TestCase):
         self.graph.add_edge(
             RelationshipEdge("alice", "bob", RelationshipType.FAVORABILITY, level=30)
         )
-        self.graph.add_edge(
-            RelationshipEdge("alice", "bob", RelationshipType.FRIENDSHIP, level=50)
-        )
-        self.graph.add_edge(
-            RelationshipEdge("alice", "bob", RelationshipType.ROMANCE, level=70)
-        )
+        self.graph.add_edge(RelationshipEdge("alice", "bob", RelationshipType.FRIENDSHIP, level=50))
+        self.graph.add_edge(RelationshipEdge("alice", "bob", RelationshipType.ROMANCE, level=70))
 
         edges = self.graph.get_edges_between("alice", "bob")
         self.assertEqual(len(edges), 3)
@@ -152,9 +146,7 @@ class TestRelationshipGraph(unittest.TestCase):
 
         self.assertEqual(len(restored.nodes), 3)
         self.assertEqual(len(restored.edges), 2)
-        self.assertEqual(
-            restored.get_edge("alice", "bob", RelationshipType.FAVORABILITY).level, 30
-        )
+        self.assertEqual(restored.get_edge("alice", "bob", RelationshipType.FAVORABILITY).level, 30)
 
 
 class TestRelationshipManager(unittest.TestCase):
@@ -170,7 +162,8 @@ class TestRelationshipManager(unittest.TestCase):
     def _create_test_data(self):
         """テスト用データを作成"""
         with open(self.data_file, "w", encoding="utf-8") as f:
-            f.write("""
+            f.write(
+                """
 relationship_templates:
   friends:
     id: "friends"
@@ -187,7 +180,8 @@ global_settings:
   max_single_change: 25
   min_relationship_level: -100
   max_relationship_level: 100
-""")
+"""
+            )
 
     def test_initialization(self):
         """初期化のテスト"""
@@ -208,9 +202,7 @@ global_settings:
         success = self.manager.establish_relationship("npc1", "npc2", "friends")
         self.assertTrue(success)
 
-        level = self.manager.get_relationship_level(
-            "npc1", "npc2", RelationshipType.FAVORABILITY
-        )
+        level = self.manager.get_relationship_level("npc1", "npc2", RelationshipType.FAVORABILITY)
         self.assertEqual(level, 30)
 
     def test_relationship_modification(self):
@@ -219,9 +211,7 @@ global_settings:
         self.manager.initialize_character("npc2", "NPC2")
         self.manager.establish_relationship("npc1", "npc2", "friends")
 
-        changes = self.manager.modify_relationship(
-            "npc1", "npc2", InteractionType.TALK, 10
-        )
+        changes = self.manager.modify_relationship("npc1", "npc2", InteractionType.TALK, 10)
         self.assertIn(RelationshipType.FAVORABILITY, changes)
         self.assertEqual(changes[RelationshipType.FAVORABILITY], 40)
 
@@ -233,7 +223,8 @@ class TestDynamicSystem(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.data_file = os.path.join(self.temp_dir, "test_relations.yaml")
         with open(self.data_file, "w", encoding="utf-8") as f:
-            f.write("""
+            f.write(
+                """
 relationship_templates:
   friends:
     id: "friends"
@@ -241,7 +232,8 @@ relationship_templates:
     relationship_type: "favorability"
     initial_level: 30
     decay_rate: 0.01
-""")
+"""
+            )
         self.manager = RelationshipManager(self.data_file)
         self.manager.initialize_character("npc1", "NPC1")
         self.manager.initialize_character("npc2", "NPC2")
@@ -265,7 +257,8 @@ class TestFactionSystem(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.data_file = os.path.join(self.temp_dir, "test_relations.yaml")
         with open(self.data_file, "w", encoding="utf-8") as f:
-            f.write("""
+            f.write(
+                """
 relationship_templates:
   friends:
     id: "friends"
@@ -273,7 +266,8 @@ relationship_templates:
     relationship_type: "favorability"
     initial_level: 30
     decay_rate: 0.01
-""")
+"""
+            )
         self.manager = RelationshipManager(self.data_file)
         self.graph = self.manager.graph
         self.faction_system = FactionRelationshipSystem(self.manager)
@@ -287,9 +281,7 @@ relationship_templates:
         """メンバー所属のテスト"""
         self.manager.initialize_character("npc1", "NPC1")
         self.faction_system.register_faction("guild_a", "Guild A")
-        self.faction_system.assign_to_faction(
-            "npc1", "guild_a", FactionAffiliation.MEMBER
-        )
+        self.faction_system.assign_to_faction("npc1", "guild_a", FactionAffiliation.MEMBER)
 
         node = self.graph.get_node("npc1")
         self.assertIn("guild_a", node.faction_affiliations)
@@ -311,7 +303,8 @@ class TestRomanceSystem(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.data_file = os.path.join(self.temp_dir, "test_relations.yaml")
         with open(self.data_file, "w", encoding="utf-8") as f:
-            f.write("""
+            f.write(
+                """
 relationship_templates:
   lovers:
     id: "lovers"
@@ -319,7 +312,8 @@ relationship_templates:
     relationship_type: "romance"
     initial_level: 70
     decay_rate: 0.003
-""")
+"""
+            )
         self.manager = RelationshipManager(self.data_file)
         self.manager.initialize_character("player", "Player")
         self.manager.initialize_character("npc1", "NPC1")
@@ -355,7 +349,8 @@ class TestMentorshipSystem(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.data_file = os.path.join(self.temp_dir, "test_relations.yaml")
         with open(self.data_file, "w", encoding="utf-8") as f:
-            f.write("""
+            f.write(
+                """
 relationship_templates:
   master_apprentice:
     id: "master_apprentice"
@@ -363,7 +358,8 @@ relationship_templates:
     relationship_type: "mentorship"
     initial_level: 50
     decay_rate: 0.001
-""")
+"""
+            )
         self.manager = RelationshipManager(self.data_file)
         self.manager.initialize_character("master", "Master")
         self.manager.initialize_character("apprentice", "Apprentice")
@@ -394,7 +390,8 @@ class TestBetrayalSystem(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.data_file = os.path.join(self.temp_dir, "test_relations.yaml")
         with open(self.data_file, "w", encoding="utf-8") as f:
-            f.write("""
+            f.write(
+                """
 relationship_templates:
   friends:
     id: "friends"
@@ -402,7 +399,8 @@ relationship_templates:
     relationship_type: "favorability"
     initial_level: 60
     decay_rate: 0.01
-""")
+"""
+            )
         self.manager = RelationshipManager(self.data_file)
         self.manager.initialize_character("npc1", "NPC1")
         self.manager.initialize_character("npc2", "NPC2")
@@ -434,7 +432,8 @@ class TestMemorySystem(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.data_file = os.path.join(self.temp_dir, "test_relations.yaml")
         with open(self.data_file, "w", encoding="utf-8") as f:
-            f.write("""
+            f.write(
+                """
 relationship_templates:
   friends:
     id: "friends"
@@ -442,7 +441,8 @@ relationship_templates:
     relationship_type: "favorability"
     initial_level: 30
     decay_rate: 0.01
-""")
+"""
+            )
         self.manager = RelationshipManager(self.data_file)
         self.manager.initialize_character("npc1", "NPC1")
         self.manager.initialize_character("npc2", "NPC2")
@@ -475,7 +475,8 @@ class TestPersonalitySystem(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.data_file = os.path.join(self.temp_dir, "test_relations.yaml")
         with open(self.data_file, "w", encoding="utf-8") as f:
-            f.write("""
+            f.write(
+                """
 relationship_templates:
   friends:
     id: "friends"
@@ -483,7 +484,8 @@ relationship_templates:
     relationship_type: "favorability"
     initial_level: 30
     decay_rate: 0.01
-""")
+"""
+            )
         self.manager = RelationshipManager(self.data_file)
         self.manager.initialize_character("npc1", "NPC1")
         self.personality = PersonalitySystem(self.manager)
@@ -498,9 +500,7 @@ relationship_templates:
 
     def test_interaction_modifier(self):
         """インタラクション修正子のテスト"""
-        self.personality.assign_personality(
-            "npc1", {PersonalityTrait.EXTRAVERSION: 0.8}
-        )
+        self.personality.assign_personality("npc1", {PersonalityTrait.EXTRAVERSION: 0.8})
         modifier = self.personality.get_interaction_modifier(
             "npc1", "npc2", InteractionType.TALK, RelationshipType.FAVORABILITY
         )
@@ -514,7 +514,8 @@ class TestDialogueSystem(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.data_file = os.path.join(self.temp_dir, "test_relations.yaml")
         with open(self.data_file, "w", encoding="utf-8") as f:
-            f.write("""
+            f.write(
+                """
 relationship_templates:
   friends:
     id: "friends"
@@ -522,7 +523,8 @@ relationship_templates:
     relationship_type: "favorability"
     initial_level: 60
     decay_rate: 0.01
-""")
+"""
+            )
         self.manager = RelationshipManager(self.data_file)
         self.manager.initialize_character("player", "Player")
         self.manager.initialize_character("npc1", "NPC1")
@@ -535,9 +537,7 @@ relationship_templates:
         import random
 
         random.seed(0)
-        dialogue = self.dialogue.generate_dialogue(
-            "npc1", "player", DialogueContext.GREETING
-        )
+        dialogue = self.dialogue.generate_dialogue("npc1", "player", DialogueContext.GREETING)
         self.assertIsNotNone(dialogue)
         self.assertTrue(isinstance(dialogue.text, str) and len(dialogue.text) > 0)
 
@@ -549,7 +549,8 @@ class TestVisualization(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.data_file = os.path.join(self.temp_dir, "test_relations.yaml")
         with open(self.data_file, "w", encoding="utf-8") as f:
-            f.write("""
+            f.write(
+                """
 relationship_templates:
   friends:
     id: "friends"
@@ -557,7 +558,8 @@ relationship_templates:
     relationship_type: "favorability"
     initial_level: 60
     decay_rate: 0.01
-""")
+"""
+            )
         self.manager = RelationshipManager(self.data_file)
         self.manager.initialize_character("npc1", "NPC1")
         self.manager.initialize_character("npc2", "NPC2")
@@ -591,7 +593,8 @@ class TestSaveLoad(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.data_file = os.path.join(self.temp_dir, "test_relations.yaml")
         with open(self.data_file, "w", encoding="utf-8") as f:
-            f.write("""
+            f.write(
+                """
 relationship_templates:
   friends:
     id: "friends"
@@ -605,7 +608,8 @@ relationship_templates:
     relationship_type: "romance"
     initial_level: 70
     decay_rate: 0.003
-""")
+"""
+            )
         self.engine = create_engine(self.data_file)
         self.engine.initialize_character("player", "Player")
         self.engine.initialize_character("npc1", "NPC1", "hero")
@@ -667,7 +671,8 @@ class TestIntegrationEngine(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.data_file = os.path.join(self.temp_dir, "test_relations.yaml")
         with open(self.data_file, "w", encoding="utf-8") as f:
-            f.write("""
+            f.write(
+                """
 relationship_templates:
   friends:
     id: "friends"
@@ -687,7 +692,8 @@ relationship_templates:
     relationship_type: "mentorship"
     initial_level: 50
     decay_rate: 0.001
-""")
+"""
+            )
         self.engine = create_engine(self.data_file)
 
     def test_engine_initialization(self):
@@ -739,7 +745,8 @@ class TestBranching(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.data_file = os.path.join(self.temp_dir, "test_relations.yaml")
         with open(self.data_file, "w", encoding="utf-8") as f:
-            f.write("""
+            f.write(
+                """
 relationship_templates:
   lovers:
     id: "lovers"
@@ -747,7 +754,8 @@ relationship_templates:
     relationship_type: "romance"
     initial_level: 70
     decay_rate: 0.003
-""")
+"""
+            )
         self.manager = RelationshipManager(self.data_file)
         self.manager.initialize_character("player", "Player")
         self.manager.initialize_character("npc1", "NPC1")

@@ -26,9 +26,7 @@ class TitleManager:
         :return: 新規獲得した称号のタイトル名リスト
         """
         newly_granted = []
-        player_id = getattr(
-            player, "id", str(id(player))
-        )  # プレイヤーIDを取得（仮実装）
+        player_id = getattr(player, "id", str(id(player)))  # プレイヤーIDを取得（仮実装）
         if player_id not in self.player_titles:
             self.player_titles[player_id] = set()
 

@@ -83,15 +83,11 @@ def validate_tileset_def() -> ValidationResult:
 
         meta = atlas_meta[atlas_scale]
         if "tiles" not in meta:
-            errors.append(
-                f"{tile_id}: metadata for scale {atlas_scale} has no 'tiles' key"
-            )
+            errors.append(f"{tile_id}: metadata for scale {atlas_scale} has no 'tiles' key")
             continue
 
         if file_key not in meta["tiles"]:
-            errors.append(
-                f"{tile_id}: file '{file_key}' not found in {atlas_scale} atlas metadata"
-            )
+            errors.append(f"{tile_id}: file '{file_key}' not found in {atlas_scale} atlas metadata")
             continue
 
         meta_tile = meta["tiles"][file_key]
@@ -144,9 +140,7 @@ def validate_tileset_def() -> ValidationResult:
             def_files = {t.get("file") for t in tiles.values()}
             orphaned = meta_tiles - def_files
             if orphaned:
-                warnings.append(
-                    f"Scale {scale}: orphaned in metadata (not in defs): {orphaned}"
-                )
+                warnings.append(f"Scale {scale}: orphaned in metadata (not in defs): {orphaned}")
 
     ok = len(errors) == 0
     return ValidationResult(ok, errors, warnings, info)

@@ -3,6 +3,7 @@
 These assert that: telemetry is off by default, no PII leaves the process, queue
 persists, GDPR deletion works, and batch flush clears the queue.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

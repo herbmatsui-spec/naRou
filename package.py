@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Package script for naRou project."""
+
 from __future__ import annotations
 
 import argparse
@@ -28,6 +29,7 @@ def package():
     # Copy build artifacts
     if os.path.exists("dist"):
         import shutil
+
         shutil.copytree("dist", "package", dirs_exist_ok=True)
 
     # Create package metadata

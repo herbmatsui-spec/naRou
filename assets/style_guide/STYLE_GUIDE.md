@@ -11,7 +11,7 @@
 
 # 基本色
 - #000000: Black
-- #FFFFFF: White  
+- #FFFFFF: White
 - #FF0000: Red
 - #00FF00: Green
 - #0000FF: Blue
