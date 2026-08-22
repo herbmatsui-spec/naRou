@@ -12,7 +12,7 @@ import yaml
 from typing_extensions import Self
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from ecs.entity import Entity
 
 
 # Step 44: SkillAwakeningData
@@ -122,7 +122,7 @@ class SkillAwakeningManager:
             return False
 
         player.awakened_skills.append(awakening_id)
-        from entity import Skill
+        from ecs.entity import Skill
 
         player.skills[data.awakened_skill] = Skill(data.awakened_skill, level=1)
 

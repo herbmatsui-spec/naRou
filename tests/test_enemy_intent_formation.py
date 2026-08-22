@@ -145,7 +145,7 @@ class FakeConsole:
 
 
 def test_render_entity_intent_draws_for_monster():
-    from entity import Entity
+    from ecs.entity import Entity
     from entity_renderer import render_entity_intent
 
     e = Entity(x=5, y=5, name="gob", is_player=False, is_pet=False)
@@ -158,7 +158,7 @@ def test_render_entity_intent_draws_for_monster():
 
 
 def test_render_entity_intent_skips_player_and_pet():
-    from entity import Entity
+    from ecs.entity import Entity
     from entity_renderer import render_entity_intent
 
     for kw in ({"is_player": True}, {"is_pet": True}):
@@ -170,7 +170,7 @@ def test_render_entity_intent_skips_player_and_pet():
 
 
 def test_render_entity_intent_skips_when_none():
-    from entity import Entity
+    from ecs.entity import Entity
     from entity_renderer import render_entity_intent
 
     e = Entity(x=5, y=5, name="gob", is_player=False, is_pet=False)
@@ -196,7 +196,7 @@ class TestIntentIntegration:
         return eng
 
     def _add_monster(self, eng, dx, dy, **kw):
-        from entity import Entity
+        from ecs.entity import Entity
 
         hp = kw.pop("hp", 30)
         max_hp = kw.pop("max_hp", 30)
@@ -254,7 +254,7 @@ class TestIntentIntegration:
         assert compute_intent(e, eng)["type"] == INTENT_ATTACK
 
     def test_save_compat_roundtrip(self):
-        from entity import Entity
+        from ecs.entity import Entity
 
         e = Entity(name="ゴブリン弓兵")
         d = e.to_dict()
@@ -322,7 +322,7 @@ def _cheb(ax, ay, bx, by):
 
 
 def _monster(name, x, y, ai_role="brute"):
-    from entity import Entity
+    from ecs.entity import Entity
 
     e = Entity(x=x, y=y, name=name, is_player=False, is_pet=False)
     e.hp, e.max_hp = 30, 30
@@ -402,7 +402,7 @@ def test_spread_noop_when_alone():
 
 def test_brute_still_melee_adjacent():
     from ai_system import AdvancedAISystem
-    from entity import Entity
+    from ecs.entity import Entity
 
     eng = FakeGridEngine(10, 10)
     eng.player = Entity(x=10, y=10, name="hero", is_player=True)
@@ -418,7 +418,7 @@ def test_brute_still_melee_adjacent():
 
 def test_process_ai_kiter_role():
     from ai_system import AdvancedAISystem
-    from entity import Entity
+    from ecs.entity import Entity
 
     eng = FakeGridEngine(10, 10)
     eng.player = Entity(x=10, y=10, name="hero", is_player=True)

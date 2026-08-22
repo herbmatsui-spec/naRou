@@ -57,7 +57,7 @@ def test_all_72_steps_pet_contract_evolution_fusion():
     print("[OK] Steps 7-13, 36 (data/pet_evolutions.yaml)")
 
     # Step 14 - 18, 65, 66, 69: Entity pet_ai component & Entity fields
-    from entity import Entity
+    from ecs.entity import Entity
 
     tree = ast.parse(open("components.py", encoding="utf-8").read())
     petai_class = next(

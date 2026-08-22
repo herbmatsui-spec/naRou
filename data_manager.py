@@ -60,7 +60,7 @@ from data.repositories import (
     SpellRepository,
     TitleRepository,
 )
-from entity import Attributes, Entity
+from ecs.entity import Attributes, Entity
 from item_system import MATERIALS, Item, create_sample_item
 from systems import MonsterPreset
 

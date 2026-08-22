@@ -49,7 +49,7 @@ class BGMManager:
 
     def play_bgm(self, theme: str, fade_in: bool = True) -> str:
         """指定テーマのBGMを再生/クロスフェード切り替え (Step 7.1)"""
-        bgm_conf = self.config.get("bgm", {}).get(theme, {})
+        bgm_conf = (self.config or {}).get("bgm", {}).get(theme, {})
         track_id = bgm_conf.get("track", f"bgm_{theme}")
         self.current_theme = theme
         self.current_track = track_id

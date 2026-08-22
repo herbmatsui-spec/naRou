@@ -14,7 +14,7 @@ from constants import AI_ROLE_KITER, DEFAULT_GOD_ID, KITER_PREFERRED_RANGE
 
 logger = logging.getLogger(__name__)
 
-from components import (
+from ecs.components import (
     AchievementComponent,
     AffectionComponent,
     ArchaeologyComponent,

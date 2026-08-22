@@ -22,7 +22,7 @@ from constants import (
     VIEW_WIDTH,
 )
 from core.tiny_rogue_tiles import get_ui_tile_id
-from entity import GodInfo
+from ecs.entity import GodInfo
 from feature_flags import is_enabled
 from render_context import RenderContext
 from systems import STATUS_BLEEDING

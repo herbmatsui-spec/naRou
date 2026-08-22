@@ -13,9 +13,10 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from constants import Element
+from naRou import combat
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from ecs.entity import Entity
     from item_system import Item
 
 # 状態異常
@@ -90,12 +91,7 @@ class CombatSystem:
     @staticmethod
     def aoe_radius(cx: int, cy: int, radius: int = 1) -> list[tuple[int, int]]:
         """円形範囲の座標リスト"""
-        coords = []
-        for dx in range(-radius, radius + 1):
-            for dy in range(-radius, radius + 1):
-                if abs(dx) + abs(dy) <= radius * 1.5:
-                    coords.append((cx + dx, cy + dy))
-        return coords
+        return combat.aoe_radius(cx, cy, radius)
 
     @staticmethod
     def aoe_beam(
@@ -103,12 +99,12 @@ class CombatSystem:
     ) -> list[tuple[int, int]]:
         """直線ビーム範囲"""
         dx, dy = direction
-        return [(sx + dx * i, sy + dy * i) for i in range(1, length + 1)]
+        return combat.aoe_beam(sx, sy, direction, length)
 
     @staticmethod
     def aoe_nova(cx: int, cy: int) -> list[tuple[int, int]]:
         """周囲全方位（8マス）"""
-        return [(cx + dx, cy + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1) if (dx, dy) != (0, 0)]
+        return combat.aoe_nova(cx, cy)
 
     @staticmethod
     def publish_damage_event(
@@ -148,8 +144,7 @@ class CombatSystem:
     def calc_element_damage(base_dmg: int, element: Element, resistance: int) -> int:
         """属性耐性を考慮したダメージ計算 (ステップ38)"""
         # resistance: 100=無効, 0=通常, -50=弱点(1.5倍)
-        multiplier = max(0.0, 1.0 - (resistance / 100.0))
-        return max(0, int(base_dmg * multiplier))
+        return combat.calc_element_damage(base_dmg, element, resistance)
 
     @staticmethod
     def calc_spell_success(caster: Entity, spell_id: str) -> tuple[bool, int | None]:
@@ -555,7 +550,7 @@ class MonsterPreset:
     @staticmethod
     def create(name: str, x: int, y: int) -> Entity:
         from config_manager import DataCache
-        from entity import Attributes, Entity
+        from ecs.entity import Attributes, Entity
 
         m_data = DataCache.get_data("data/monsters.yaml")
         if m_data and name in m_data:

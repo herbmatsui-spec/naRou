@@ -296,7 +296,7 @@ class SkillFusionManager(FusionManager):
                 mats[mat_id] -= count
 
         # 出力スキル獲得
-        from entity import Skill
+        from ecs.entity import Skill
 
         if not hasattr(player, "skills"):
             player.skills = {}

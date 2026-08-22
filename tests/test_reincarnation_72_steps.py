@@ -88,7 +88,7 @@ def test_all_72_steps_reincarnation_system():
     print("[OK] Step 10 (敵ステータススケーリング)")
 
     # Steps 11-20: Entity 転生関連フィールド (ReincarnationComponent へ委譲)
-    from entity import Entity
+    from ecs.entity import Entity
 
     comp_code = open("components.py", encoding="utf-8").read()
     assert (

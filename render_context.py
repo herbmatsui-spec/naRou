@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from entity import Entity
+from ecs.entity import Entity
 from fx_manager import FXManager
 from item_system import Item
 

@@ -14,7 +14,7 @@ from constants import GameState as GameStateEnum
 # Export GameState for backward compatibility
 GameState = GameStateEnum
 from crafting_system import ResourceNode
-from entity import Entity
+from ecs.entity import Entity
 from item_system import Inventory, Item
 from systems import Quest, SurvivalSystem
 

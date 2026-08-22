@@ -165,10 +165,7 @@ class WorldClock:
     def npc_registry(self):
         """NPCスケジュールレジストリ取得 (遅延初期化)"""
         if self._npc_registry is None:
-            try:
-                from naRou.npc_schedule import NPCScheduleRegistry
-            except ImportError:
-                from npc_schedule import NPCScheduleRegistry
+            from naRou.skill_eater.ai.npc_schedule import NPCScheduleRegistry
             self._npc_registry = NPCScheduleRegistry()
             self._npc_registry.load_from_yaml("data/npc_schedules.yaml")
         return self._npc_registry

@@ -110,6 +110,11 @@ BOND_NEGLECTED_LOSS = 1
 BOND_WALKING_GAIN = 1
 PET_NEGLECTED_BOND_DISTANCE = 10
 PET_WALKING_BOND_DISTANCE = 3
+REINCARNATION_XP_PENALTY_BASE = 0.5
+REINCARNATION_XP_PENALTY_STEP = 0.05
+SKILL_DROP_CHANCE = 0.3
+SKILL_DROP_MAX = 3
+SKILL_DROP_MIN = 1
 
 # Food/Hunger
 HUNGER_MAX = 10000
@@ -219,10 +224,14 @@ class Element(Enum):
     NONE = "none"
     FIRE = "fire"
     ICE = "ice"
+    COLD = "ice"
     LIGHTNING = "lightning"
     POISON = "poison"
     HOLY = "holy"
     DARK = "dark"
+    DARKNESS = "dark"
+    CHAOS = "chaos"
+    MAGIC = "magic"
     PHYSICAL = "physical"
 
 
@@ -382,3 +391,8 @@ REWARD_CONCEPT_CRYSTAL = "concept_crystal"
 REWARD_FORBIDDEN_SKILL = "forbidden_skill"
 REWARD_HIDDEN_MERCHANT = "hidden_merchant"
 REWARD_SHORTCUT = "shortcut"
+
+try:
+    from god_system import GodInfo
+except Exception:
+    pass

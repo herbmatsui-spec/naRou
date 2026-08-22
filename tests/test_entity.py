@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from entity import Entity
+from ecs.entity import Entity
 
 
 def test_entity_default_components_present():

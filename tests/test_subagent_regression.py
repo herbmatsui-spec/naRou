@@ -15,7 +15,7 @@ for p in [str(NAROU_DIR), str(NAROU_DIR.parent)]:
 
 from ai_autonomous_subagent import AutonomousSubagentAI
 from game import Engine
-from entity import Entity
+from ecs.entity import Entity
 from item_system import Item
 
 

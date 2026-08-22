@@ -12,7 +12,7 @@ from constants import ENERGY_THRESHOLD
 from core_framework import AStar, BaseSystem, Point
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from ecs.entity import Entity
     from game import Engine
 
 

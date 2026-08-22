@@ -14,7 +14,7 @@ import yaml
 from typing_extensions import Self
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from ecs.entity import Entity
 
 # Phase 5 Step 18: 仕様型のインポート
 try:

@@ -9,7 +9,7 @@ import random
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from ecs.entity import Entity
     from game import Engine
 
 

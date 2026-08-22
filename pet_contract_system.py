@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any
 import yaml
 
 if TYPE_CHECKING:
-    from entity import PetAI
+    from ecs.entity import PetAI
 
 
 @dataclass

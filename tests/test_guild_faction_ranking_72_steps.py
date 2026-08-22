@@ -47,7 +47,7 @@ def test_all_72_steps_guild_faction():
     print("[OK] Steps 7-10 (data/factions.yaml)")
 
     # Step 11 - 14: entity.py fields
-    from entity import Entity
+    from ecs.entity import Entity
 
     p = Entity(0, 0, "@")
     assert hasattr(p, "guild_id") and hasattr(p, "guild_rank"), "Step 12 Failed"

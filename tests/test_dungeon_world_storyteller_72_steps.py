@@ -143,7 +143,7 @@ def test_all_72_steps_storyteller_system():
     print("[OK] Step 18 (ストーリー通知UI要素 story_notification)")
 
     # Steps 19-32: entity.py ストーリー関連フィールド追加
-    from entity import Entity
+    from ecs.entity import Entity
 
     ent_code = open("entity.py", encoding="utf-8").read()
     assert (

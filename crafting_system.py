@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from ecs.entity import Entity
     from item_system import Inventory, Item
 
 

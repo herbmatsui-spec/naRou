@@ -16,7 +16,7 @@ import yaml
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from ecs.entity import Entity
     from game import Engine
     from quest_condition_ast import ConditionNode
     from quest_condition_evaluator import EvaluationContext

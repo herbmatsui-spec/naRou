@@ -13,7 +13,7 @@ import yaml
 from typing_extensions import Self
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from ecs.entity import Entity
 
 
 # Step 19: AchievementData クラス定義

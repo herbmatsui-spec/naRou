@@ -238,7 +238,7 @@ class SaveSystem:
         cls, data: dict[str, Any], target_engine: Any | None = None
     ) -> Any:
         """辞書から Engine の状態を復元 (Step 25)"""
-        from entity import Entity
+        from ecs.entity import Entity
         from game import Engine
         from item_system import Item
 

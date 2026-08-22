@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from entity import Entity  # For type hinting
+from ecs.entity import Entity  # For type hinting
 
 
 @dataclass

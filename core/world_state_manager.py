@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from constants import MAP_HEIGHT, MAP_WIDTH, GameState
-from entity import Entity
+from ecs.entity import Entity
 from game_state import GameStateData
 from item_system import Inventory
 from map_engine import GameMap

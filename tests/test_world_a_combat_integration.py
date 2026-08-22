@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import unittest
 
-from entity import Entity
+from ecs.entity import Entity
 from game import Engine
 from renderer import NullRenderer
 

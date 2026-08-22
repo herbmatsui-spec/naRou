@@ -1,0 +1,1 @@
+Summary: Fixed import conflicts preventing tests from running. Coverage measurement now works. To achieve 90%+ coverage, write additional tests.

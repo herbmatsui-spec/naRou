@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from ecs.entity import Entity
 
 import yaml
 
@@ -127,7 +127,7 @@ class TitleManager:
         return getattr(player, "kill_counts", {}).get(target, 0) >= required
 
     def check_skill_level(self, player: Entity, skill: str, level: int) -> bool:
-        from entity import Skill
+        from ecs.entity import Skill
 
         return player.skills.get(skill, Skill("")).level >= level
 

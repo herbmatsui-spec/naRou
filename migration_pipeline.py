@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from components import (
+from ecs.components import (
     AchievementComponent,
     BaseStatsComponent,
     EconomyComponent,

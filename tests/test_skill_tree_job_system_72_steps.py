@@ -36,7 +36,7 @@ def test_all_72_steps():
     print("[OK] Steps 1-8 (skill_trees.yaml)")
 
     # Step 9 - 10: entity.py fields
-    from entity import Entity
+    from ecs.entity import Entity
 
     p = Entity(0, 0, "@")
     assert hasattr(p, "skill_tree_progress") and isinstance(

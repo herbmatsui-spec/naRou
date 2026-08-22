@@ -19,8 +19,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from components import AchievementComponent
-from entity import Entity
+from ecs.components import AchievementComponent
+from ecs.entity import Entity
 from game import Engine
 from meta_progression_system import (
     MemoryFragmentData,

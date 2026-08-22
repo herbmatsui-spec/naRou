@@ -75,5 +75,6 @@ class AutonomousSubagentAI:
         # Check stairs transition
         if getattr(self.engine, "dungeon_level", 1) != self.bb.current_floor:
             self.floor_progression.on_floor_transition(self.engine.dungeon_level)
+            self.fsm.change_state("explore")
 
         return self.fsm.update()

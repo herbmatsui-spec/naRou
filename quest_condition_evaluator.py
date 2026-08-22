@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any
 from quest_condition_ast import ConditionNode
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from ecs.entity import Entity
     from game import Engine
     from world_state_system import WorldStateManager
 

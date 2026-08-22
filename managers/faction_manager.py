@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from ecs.entity import Entity
     from game import Engine
 
 
@@ -27,6 +27,9 @@ class FactionManager:
         from constants import FACTION_INFLUENCE_INTERVAL
 
         if engine.turns % FACTION_INFLUENCE_INTERVAL == 0:
-            for fid in engine.faction_war_registry.all():
-                chg = engine.faction_war_manager.calculate_influence_change(fid, engine)
-                engine.faction_war_manager.apply_influence_effects(fid, chg)
+            registry = getattr(engine, "faction_war_registry", None)
+            manager = getattr(engine, "faction_war_manager", None)
+            if registry and manager:
+                for fid in registry.all():
+                    chg = manager.calculate_influence_change(fid, engine)
+                    manager.apply_influence_effects(fid, chg)

@@ -728,7 +728,7 @@ def spawn_hidden_merchant(engine, area: SecretArea) -> bool:
                 from skill_eater_economy_system import SkillEaterEconomySystem
                 economy = SkillEaterEconomySystem()
                 # 商人エンティティを生成
-                from entity import Entity
+                from ecs.entity import Entity
                 merchant = Entity(
                     area.position[0], area.position[1],
                     "🤝", (255, 215, 0), f"隠し商人 {merchant_id}"

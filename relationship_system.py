@@ -12,7 +12,7 @@ import yaml
 from typing_extensions import Self
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from ecs.entity import Entity
 
 # Phase 2 連携：遅延インポート用
 try:

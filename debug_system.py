@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from ecs.entity import Entity
     from item_system import Inventory
 
 

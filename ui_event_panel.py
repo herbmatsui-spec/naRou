@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from entity import Entity  # For type hinting
+from ecs.entity import Entity  # For type hinting
 from ranking_manager import RANKING_MANAGER
 from time_system import TimePhase, get_world_clock
 from title_manager import TITLE_MANAGER

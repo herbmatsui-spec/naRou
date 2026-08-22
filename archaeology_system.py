@@ -19,7 +19,7 @@ from typing_extensions import Self
 from core_framework import BaseSystem
 
 try:
-    from components import ReincarnationComponent
+    from ecs.components import ReincarnationComponent
 except Exception:
     # TODO: handle exception properly
     # 循環防止（通常は存在）

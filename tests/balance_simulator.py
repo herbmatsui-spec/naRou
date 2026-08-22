@@ -8,7 +8,7 @@ from typing import Any
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from entity import Attributes, Entity
+from ecs.entity import Attributes, Entity
 from systems import CombatSystem, MonsterPreset
 
 

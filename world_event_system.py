@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 import yaml
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from ecs.entity import Entity
 
 from typing_extensions import Self
 

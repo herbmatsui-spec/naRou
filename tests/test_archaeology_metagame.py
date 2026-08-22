@@ -33,7 +33,7 @@ def test_archaeology_metagame_full_36_steps():
     print("[OK] Step 2 (story_endings.yaml 基本構造)")
 
     # Step 3: 統合ポイント（components に ArchaeologyComponent が定義可能であること）
-    from components import ArchaeologyComponent
+    from ecs.components import ArchaeologyComponent
 
     print("[OK] Step 3 (統合ポイント: ArchaeologyComponent 定義確認)")
 
@@ -96,7 +96,7 @@ def test_archaeology_metagame_full_36_steps():
     print("[OK] Step 10 (ArchaeologyComponent フィールド)")
 
     # Step 11: Entity プロパティ委譲
-    import entity
+    from ecs.entity import Entity
 
     e = entity.Entity(x=0, y=0)
     assert isinstance(e.archaeology, ArchaeologyComponent), "Step 11 Failed"
@@ -230,7 +230,7 @@ def test_archaeology_metagame_full_36_steps():
     print("[OK] Step 29 (_play_se は安全に無効化)")
 
     # Step 30: メタ進行連携（ReincarnationComponent.collected_fragments に同期）
-    from components import ReincarnationComponent
+    from ecs.components import ReincarnationComponent
 
     rcomp = e4.get_component(ReincarnationComponent)
     assert any(

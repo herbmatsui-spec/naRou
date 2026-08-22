@@ -178,7 +178,7 @@ def test_all_36_steps_procedural_quest_generation():
     # ---------------------------------------------------------
     # フェーズE: 依頼ボード (Steps 24-27)
     # ---------------------------------------------------------
-    from entity import Entity
+    from ecs.entity import Entity
 
     p = Entity()
 
@@ -251,7 +251,7 @@ def test_all_36_steps_procedural_quest_generation():
     assert p.gold > gold_before, "Step 34 Failed: reward not granted"
     assert p.procedural_quest.completed_count >= 1, "Step 34 Failed: completed count"
     # Step 35: ProceduralQuestComponent 追加と永続化
-    from components import ProceduralQuestComponent
+    from ecs.components import ProceduralQuestComponent
 
     assert isinstance(p.procedural_quest, ProceduralQuestComponent), "Step 35 Failed: component"
     print("[OK] Steps 34-35 (update_progress/complete_quest 報酬付与 / ProceduralQuestComponent)")
@@ -322,7 +322,7 @@ def test_all_36_steps_procedural_quest_generation():
     print("[OK] Step 37 (ダンジョン仕様ロード)")
 
     # Step 38: ダンジョン同期クエスト生成
-    from entity import Entity
+    from ecs.entity import Entity
 
     p = Entity()
     synced_quest = gen.generate_dungeon_synced_quest(

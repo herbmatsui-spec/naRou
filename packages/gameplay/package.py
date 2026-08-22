@@ -45,7 +45,7 @@ def _spawn_dungeon(kernel: Kernel, engine) -> None:
         SPAWN_RESOURCE_NODE_CHANCE,
         SPAWN_SNAIL_CHANCE,
     )
-    from entity import Entity
+    from ecs.entity import Entity
     from item_system import create_sample_item
 
     game_map = engine.game_map
@@ -162,6 +162,29 @@ def _spawn_dungeon(kernel: Kernel, engine) -> None:
             )
             ntype = random.choice(["herb", "mushroom", "ore_vein"])
             entity_manager.add_resource_node(ResourceNode(rx, ry, ntype))
+
+    # === 階段部屋の守護者（20%強化敵）の配置 ===
+    if len(game_map.rooms) > 1:
+        stairs_room = game_map.rooms[-1]
+        gx, gy = stairs_room.center
+        # 階段のすぐ隣に配置
+        gx = min(max(stairs_room.x1 + 1, gx + 1), stairs_room.x2 - 1)
+        gy = min(max(stairs_room.y1 + 1, gy), stairs_room.y2 - 1)
+        
+        if data_manager:
+            guardian = data_manager.get_random_monster_for_floor(engine.dungeon_level, gx, gy)
+        else:
+            from systems import MonsterPreset
+            guardian = MonsterPreset.create(random.choice(["orc", "goblin_leader", "golem", "skeleton"]), gx, gy)
+            
+        if guardian:
+            guardian.name = f"強敵『{guardian.name}』(階段番)"
+            if hasattr(guardian, "hp"):
+                guardian.hp = int(guardian.hp * 1.2)
+                guardian.max_hp = int(getattr(guardian, "max_hp", guardian.hp) * 1.2)
+            if hasattr(guardian, "attack_power"):
+                guardian.attack_power = int(guardian.attack_power * 1.2)
+            entity_manager.add_entity(guardian)
 
 
 class GameplayLoop:

@@ -8,7 +8,7 @@ from __future__ import annotations
 import random
 from typing import Any
 
-from entity import Entity  # Assuming Entity is defined elsewhere
+from ecs.entity import Entity  # Assuming Entity is defined elsewhere
 
 
 class RewardManager:

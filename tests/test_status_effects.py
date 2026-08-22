@@ -1,5 +1,5 @@
-from entity import Attributes, Entity
-from systems import CombatSystem, StatusEffect
+from ecs.entity import Attributes, Entity
+from naRou.systems import CombatSystem, StatusEffect
 
 
 def test_status_effect_husk_and_regen():

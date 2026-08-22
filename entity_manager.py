@@ -6,7 +6,7 @@ Step 10: エンティティ管理の委譲
 
 from __future__ import annotations
 
-from entity import Entity
+from ecs.entity import Entity
 from item_system import Item
 from resource_node import ResourceNode
 

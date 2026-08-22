@@ -13,7 +13,7 @@ from typing import Any
 import yaml
 
 try:
-    from components import SkillTreeJobComponent
+    from ecs.components import SkillTreeJobComponent
 except Exception:
     # TODO: handle exception properly
     # pragma: no cover - optional dependency

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from entity import Entity
+from ecs.entity import Entity
 from title_manager import TITLE_MANAGER
 
 

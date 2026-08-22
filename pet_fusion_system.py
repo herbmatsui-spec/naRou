@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any
 import yaml
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from ecs.entity import Entity
 
 
 @dataclass
@@ -162,7 +162,7 @@ class PetFusionManager:
         self, pets: list[Entity], player: Entity, result_pet_id: str
     ) -> Entity | None:
         """ペット融合を実行 (Step 63)"""
-        from entity import Attributes, Entity
+        from ecs.entity import Attributes, Entity
 
         recipe = next(
             (r for r in self.registry.all().values() if r.result_pet == result_pet_id),

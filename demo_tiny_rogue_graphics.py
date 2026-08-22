@@ -18,7 +18,7 @@ import tcod.event
 
 from constants import MAP_HEIGHT, MAP_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, VIEW_HEIGHT, VIEW_WIDTH
 from core_framework import EventBus
-from entity import Attributes, Entity
+from ecs.entity import Attributes, Entity
 from feature_flags import is_enabled, set_flag
 from fx_manager import FXManager
 from item_system import Item

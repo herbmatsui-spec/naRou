@@ -152,7 +152,7 @@ class TestTinyRogueEntityRendering:
             assert tile_id == expected_tile, f"{mtype}: expected {expected_tile}, got {tile_id}"
 
     def test_player_and_pet_unchanged(self):
-        from entity import Entity
+        from ecs.entity import Entity
         from entity_renderer import EntityRenderer
 
         player = Entity(0, 0, "@", (255, 255, 255), "Player")

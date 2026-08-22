@@ -73,7 +73,7 @@ def _get_enemy_name_map():
 
 if TYPE_CHECKING:
     from dungeon_quest_feedback import DungeonGenerationFeedback
-    from entity import Entity
+    from ecs.entity import Entity
     from game import Engine
 
 
@@ -309,7 +309,7 @@ class QuestGenerationRegistry:
             logger.exception(
                 "Failed to load all quest configs: %s. Using hardcoded fallback.", e
             )
-            self._load_fallback_hardcoded()
+            self._load_fallback()
             self._pet_quest_templates = {}
             self._loaded = True
 

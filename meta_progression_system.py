@@ -19,7 +19,7 @@ from typing import Any
 import yaml
 
 from archaeology_system import ArchaeologyRegistry
-from components import (
+from ecs.components import (
     AchievementComponent,
     ArchaeologyComponent,
     ReincarnationComponent,

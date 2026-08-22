@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
     from event_bus import EventBus
-    from entity import Entity
+    from ecs.entity import Entity
     from systems import CombatSystem, Quest, StatusEffect
     from renderer import Renderer
     from game import Engine

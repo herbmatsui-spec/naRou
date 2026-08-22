@@ -62,7 +62,7 @@ def test_all_36_steps_procedural_quest_enhancement():
 
     # Step 11-12: _compose が日本語表示名を使う（英語ID非含有）
     gen = ProceduralQuestGenerator(REGISTRY)
-    from entity import Entity
+    from ecs.entity import Entity
 
     p = Entity()
     leaks = 0

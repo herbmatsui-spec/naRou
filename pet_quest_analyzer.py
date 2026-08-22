@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from entity import Entity  # For type hinting
+from ecs.entity import Entity  # For type hinting
 
 
 @dataclass

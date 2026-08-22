@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from core_framework import Point
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from ecs.entity import Entity
     from game import Engine
 
 

@@ -12,6 +12,7 @@ import hashlib
 import logging
 import os
 import random
+import yaml
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from dungeon_quest_feedback import DungeonGenerationFeedback
-    from entity import Entity
+    from ecs.entity import Entity
     from game import Engine
 
 # 敵名のローマ字↔カタカナ/日本語ゆれを吸収する軽量マップ（ゲーム内実体名との照合用）
@@ -1149,33 +1150,47 @@ class ProceduralQuestGenerator:
 # フェーズH: 管理・進捗・報酬 (Steps 34-35)
 # ============================================================
 
-# 敵名のローマ字↔カタカナ/日本語ゆれを吸収する軽量マップ（ゲーム内実体名との照合用）
-_ENEMY_NAME_MAP = {
-    "goblin": ["ゴブリン", "goblin", "ゴブリ"],
-    "slime": ["スライム", "ぷち", "slime"],
-    "wolf": ["オオカミ", "ウルフ", "wolf"],
-    "frost_wolf": ["フロストウルフ", "ice wolf", "frost_wolf"],
-    "bat": ["コウモリ", "bat"],
-    "cave_bear": ["ケイブベア", "cave_bear", "熊"],
-    "bear": ["ベア", "bear", "熊"],
-    "skeleton": ["スケルトン", "skeleton"],
-    "ghost": ["ゴースト", "ghost"],
-    "golem": ["ゴーレム", "golem"],
-    "fire_lizard": ["ファイアリザード", "fire_lizard"],
-    "magma_elemental": ["マグマエレメンタル", "magma_elemental"],
-    "ifrit": ["イフリート", "ifrit"],
-    "yeti": ["イエティ", "yeti"],
-    "ice_sprite": ["アイススプライト", "ice_sprite"],
-    "crocodile": ["クロコダイル", "ワニ", "crocodile"],
-    "venom_toad": ["ベノムトード", "venom_toad"],
-    "abyssal_horror": ["アビサルホラー", "abyssal_horror"],
-    "void_lord": ["ヴォイドロード", "void_lord"],
-    "nightmare": ["ナイトメア", "nightmare"],
-    "bandit": ["バンディット", "bandit", "盗賊"],
-    "stray_dog": ["野良犬", "stray_dog"],
-    "pickpocket": ["スリ", "pickpocket"],
-    "dog": ["犬", "dog"],
-}
+def _get_enemy_name_map():
+    """Load and return enemy name aliases map with caching"""
+    global _ENEMY_NAME_MAP_CACHE
+    if _ENEMY_NAME_MAP_CACHE is None:
+        try:
+            enemy_map_path = os.path.join(os.path.dirname(__file__), "data", "enemy_name_aliases.yaml")
+            if os.path.exists(enemy_map_path):
+                with open(enemy_map_path, encoding="utf-8") as f:
+                    _ENEMY_NAME_MAP_CACHE = yaml.safe_load(f) or {}
+            else:
+                # Fallback hardcoded map
+                _ENEMY_NAME_MAP_CACHE = {
+                    "goblin": ["ゴブリン", "goblin", "ゴブリ"],
+                    "slime": ["スライム", "ぷち", "slime"],
+                    "wolf": ["オオカミ", "ウルフ", "wolf"],
+                    "frost_wolf": ["フロストウルフ", "ice wolf", "frost_wolf"],
+                    "bat": ["コウモリ", "bat"],
+                    "cave_bear": ["ケイブベア", "cave_bear", "熊"],
+                    "bear": ["ベア", "bear", "熊"],
+                    "skeleton": ["スケルトン", "skeleton"],
+                    "ghost": ["ゴースト", "ghost"],
+                    "golem": ["ゴーレム", "golem"],
+                    "fire_lizard": ["ファイアリザード", "fire_lizard"],
+                    "magma_elemental": ["マグマエレメンタル", "magma_elemental"],
+                    "ifrit": ["イフリート", "ifrit"],
+                    "yeti": ["イエティ", "yeti"],
+                    "ice_sprite": ["アイススプライト", "ice_sprite"],
+                    "crocodile": ["クロコダイル", "ワニ", "crocodile"],
+                    "venom_toad": ["ベノムトード", "venom_toad"],
+                    "abyssal_horror": ["アビサルホラー", "abyssal_horror"],
+                    "void_lord": ["ヴォイドロード", "void_lord"],
+                    "nightmare": ["ナイトメア", "nightmare"],
+                    "bandit": ["バンディット", "bandit", "盗賊"],
+                    "stray_dog": ["野良犬", "stray_dog"],
+                    "pickpocket": ["スリ", "pickpocket"],
+                    "dog": ["犬", "dog"],
+                }
+        except Exception as e:
+            logger.warning("Failed to load enemy name map: %s", e)
+            _ENEMY_NAME_MAP_CACHE = {"goblin": ["ゴブリン", "goblin", "ゴブリ"]}
+    return _ENEMY_NAME_MAP_CACHE
 
 
 def _norm_target(s: Any) -> str:
@@ -1192,7 +1207,7 @@ def _target_matches(quest_target: str, event_norm: str) -> bool:
         return True
     if q in event_norm or event_norm in q:
         return True
-    for key, variants in _ENEMY_NAME_MAP.items():
+    for key, variants in _get_enemy_name_map().items():
         norms = [v.lower().replace(" ", "_") for v in variants]
         q_in = q in norms
         e_in = event_norm in norms or key == event_norm

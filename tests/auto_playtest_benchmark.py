@@ -91,6 +91,11 @@ class AutonomousPlaytestBenchmark:
                 elif action == "offer_altar":
                     altars_offered += 1
                     player.piety = getattr(player, "piety", 0) + 10
+                    # Consume one offering item from inventory
+                    for itm in list(engine.inventory.items):
+                        if any(kw in itm.name for kw in ["肉", "鉱石", "パン", "ハーブ"]):
+                            engine.inventory.remove_item(itm)
+                            break
                     if hasattr(engine, "advance_world"):
                         engine.advance_world()
 

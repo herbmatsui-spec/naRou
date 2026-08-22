@@ -1,16 +1,9 @@
-"""
-Elona Roguelike - Engine integration module (i18n).
+"""Engine package – re-exports the Engine class for backward compatibility."""
 
-Thin wrapper that exposes a LocalizationManager bound to the game engine so
-other systems can fetch localized strings through a shared entry point.
-"""
-
-from __future__ import annotations
-
+from .engine import Engine
+from ..localization_manager import LocalizationManager
 import atexit
 import logging
-
-from localization_manager import LocalizationManager
 
 
 class GameLocalizer:
@@ -52,4 +45,4 @@ def _shutdown_hook():
 
 atexit.register(_shutdown_hook)
 
-__all__ = ["GameLocalizer", "get_localizer"]
+__all__ = ["Engine", "GameLocalizer", "get_localizer"]
