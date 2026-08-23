@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from naRou.entity import Entity
+
     from naRou.game import Engine
 
 
@@ -19,14 +20,14 @@ class AIBlackboard:
     engine: Engine
     strategy_name: str = "hybrid"
     strategy_params: dict[str, Any] = field(default_factory=dict)
-    
+
     # Target and navigation
     current_target_pos: tuple[int, int] | None = None
     current_target_enemy: Entity | None = None
     current_path: list[tuple[int, int]] = field(default_factory=list)
     frontier_targets: list[tuple[int, int]] = field(default_factory=list)
     unexplored_clusters: list[list[tuple[int, int]]] = field(default_factory=list)
-    
+
     # Spatial & temporal memory
     visited_positions: deque[tuple[int, int]] = field(default_factory=lambda: deque(maxlen=100))
     dead_end_tiles: set[tuple[int, int]] = field(default_factory=set)
@@ -35,7 +36,7 @@ class AIBlackboard:
     discovered_stairs_pos: tuple[int, int] | None = None
     discovered_altar_pos: tuple[int, int] | None = None
     combat_history: deque[int] = field(default_factory=lambda: deque(maxlen=10))
-    
+
     # Counters and metrics
     stalled_turns: int = 0
     consecutive_kites: int = 0

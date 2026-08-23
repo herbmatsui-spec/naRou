@@ -46,12 +46,8 @@ class ConfigService:
         return self._config_manager.raw
 
 
-from __future__ import annotations
 
-import logging
-from typing import Any
 
-logger = logging.getLogger(__name__)
 
 
 class SoundService:

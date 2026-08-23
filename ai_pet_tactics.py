@@ -8,8 +8,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from naRou.ai_blackboard import AIBlackboard
     from naRou.entity import Entity
+
+    from naRou.ai_blackboard import AIBlackboard
 
 
 class PetTacticsCoordinator:
@@ -145,7 +146,7 @@ class PetTacticsCoordinator:
 
         # Look for surplus meat
         for item in engine.inventory.items:
-            if "肉" in item.name and not "腐" in item.name:
+            if "肉" in item.name and "腐" not in item.name:
                 return ("feed_pet", item)
 
         return None

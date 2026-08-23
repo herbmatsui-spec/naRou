@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol
-
+from typing import TYPE_CHECKING, Any, Protocol
 
 if TYPE_CHECKING:
-    from event_bus import EventBus
-    from ecs.entity import Entity
-    from systems import CombatSystem, Quest, StatusEffect
-    from renderer import Renderer
-    from game import Engine
     from config_manager import ConfigManager
+    from ecs.entity import Entity
+    from event_bus import EventBus
+    from game import Engine
+    from renderer import Renderer
     from sound_manager import SoundManager
+    from systems import CombatSystem, Quest, StatusEffect
 
 
 class IEventBus(Protocol):

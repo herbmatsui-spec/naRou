@@ -6,10 +6,14 @@ Phase 1: データ構造定義 (Steps 1-12)
 from __future__ import annotations
 
 import random
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from .system import TerritoryState
 
 import yaml
 

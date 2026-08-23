@@ -6,7 +6,9 @@ Detects movement loops, dead-ends, and manages multi-tier escape tactics.
 from __future__ import annotations
 
 from collections import deque
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
+from naRou.core_framework import Point
 
 if TYPE_CHECKING:
     from naRou.ai_blackboard import AIBlackboard
@@ -46,7 +48,7 @@ class DeadEndDetector:
         game_map = blackboard.engine.game_map
         max_x = len(game_map.tiles)
         max_y = len(game_map.tiles[0])
-        
+
         # Dead ends: explored walkable tiles with only 1 walkable neighbor and no special objects
         changed = True
         new_dead_ends: set[tuple[int, int]] = set()
@@ -150,6 +152,7 @@ class EscapeTactics:
     def find_broad_escape_path(blackboard: AIBlackboard) -> tuple[int, int] | None:
         """Level 2 Escape: Breadth-first search for the farthest reachable unvisited tile."""
         from collections import deque
+
         from naRou.core_framework import Point
 
         engine = blackboard.engine
@@ -165,7 +168,7 @@ class EscapeTactics:
 
         while queue:
             cx, cy, path = queue.popleft()
-            
+
             # If we reached a tile never in recent history, return first move
             if (cx, cy) not in visited_set and len(path) > 0:
                 return path[0]

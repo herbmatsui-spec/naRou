@@ -30,6 +30,11 @@ dev = [
 [project.scripts]
 narou = "game:main"
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["naRou*"]
+exclude = ["tests*", "tools*", "demos*", "plans*", "output*", "test_output*", "telemetry_cache*", "web*", "shaders*", "templates*", "cloud_save*", "subagent*", "feedback*", "audio*", "assets*", "webgl*", "webgpu*", "engine*", "mods*", "emote*", "stubs*", "dotenv*", "skill_eater*", "systems*", "managers*", "packages*", "scripts*", "ecs*", "data*", "core*", "tiny rogue*"]
+
 [tool.pytest.ini_options]
 testpaths = "tests"
 addopts = "-v"
@@ -60,6 +65,7 @@ explicit_package_bases = true
 exclude = [
     "src/relationships/__init__.py",
     "naRou/audio/dynamic_audio.py",
+    "procedural_questigator.py",
 ]
 
 [[tool.mypy.overrides]]

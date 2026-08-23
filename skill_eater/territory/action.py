@@ -16,18 +16,20 @@ import yaml
 
 from skill_eater_economy_system import FactionState
 
-
 from .base import (
-    TerritoryActionType,
-    District,
-    ActionResult,
-    SabotageEffect,
-    CeasefireAgreement,
     ActionLog,
-    DynamicEventType,
+    ActionResult,
+    CeasefireAgreement,
+    District,
     DynamicEvent,
+    DynamicEventType,
+    SabotageEffect,
+    TerritoryActionBase,
+    TerritoryActionType,
 )
 from .system import TerritoryState
+
+
 class PatrolAction(TerritoryActionBase):
     def __init__(self):
         super().__init__(TerritoryActionType.PATROL)

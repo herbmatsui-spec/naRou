@@ -12,10 +12,10 @@ _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
-from ai_system import TACTIC_AGGRESSIVE, AdvancedAISystem
 from constants import QUALITY_GOD
 from data_manager import DataManager
 from game import Engine
+from skill_eater.ai.ai_system import TACTIC_AGGRESSIVE, AdvancedAISystem
 
 
 def test_data_manager_item_generation():

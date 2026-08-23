@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 class AIState(ABC):
     """Abstract base class for all AI behavior states."""
-    
+
     def __init__(self, blackboard: AIBlackboard):
         self.bb = blackboard
 

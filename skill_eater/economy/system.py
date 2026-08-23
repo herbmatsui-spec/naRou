@@ -15,7 +15,16 @@ from skill_eater_audio_system import SkillEaterAudioSystem
 from skill_eater_economy_system import FactionState, SkillEaterEconomySystem
 from skill_eater_presentation_system import SkillEaterPresentationSystem
 from skill_eater_system import CharacterState, SkillEaterRegistry
-from .base import (DistrictType, ContrabandType, Rarity, BlackMarketLocation, SmuggleRoute, ContrabandItem, MarketPriceSnapshot)
+
+from .base import (
+    BlackMarketLocation,
+    ContrabandItem,
+    ContrabandType,
+    DistrictType,
+    MarketPriceSnapshot,
+    Rarity,
+    SmuggleRoute,
+)
 
 
 class BlackMarketNetwork:

@@ -1,9 +1,10 @@
 """Engine package – re-exports the Engine class for backward compatibility."""
 
-from .engine import Engine
-from ..localization_manager import LocalizationManager
 import atexit
 import logging
+
+from ..localization_manager import LocalizationManager
+from .engine import Engine
 
 
 class GameLocalizer:

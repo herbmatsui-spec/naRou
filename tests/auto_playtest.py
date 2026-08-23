@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 import argparse
-from collections import deque
-from dataclasses import asdict, dataclass, field
-from datetime import datetime
 import json
 import os
-from pathlib import Path
 import random
 import sys
 import time
+from collections import deque
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 # Add project directories to sys.path
@@ -22,9 +22,10 @@ for p in [str(NAROU_DIR), str(PROJECT_ROOT)]:
 
 os.chdir(PROJECT_ROOT)
 
+from naRou.entity import Entity
+
 from naRou.constants import MAP_HEIGHT, MAP_WIDTH, TILE_STAIRS_DOWN
 from naRou.core_framework import AStar, Point
-from naRou.entity import Entity
 from naRou.game import Engine
 from naRou.item_system import Item
 

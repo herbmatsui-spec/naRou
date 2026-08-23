@@ -5,6 +5,7 @@ Combat utility functions for pure calculations.
 from __future__ import annotations
 
 from typing import Tuple
+
 from constants import Element
 
 

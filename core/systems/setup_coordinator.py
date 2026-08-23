@@ -11,9 +11,9 @@ if TYPE_CHECKING:
 def setup_systems(engine: "Engine") -> None:
     """各種マネージャーとサブシステムの生成・初期化 (Step 8)"""
     from advanced_systems import UniqueItemManager
-    from naRou.skill_eater.ai.ai_system import AdvancedAISystem
     from data_manager import DataManager
     from fx_manager import FXManager
+    from skill_eater.ai.ai_system import AdvancedAISystem
     from skill_fusion_system import FusionRegistry
     from ui_fx_systems import NotificationManager, TutorialManager
 

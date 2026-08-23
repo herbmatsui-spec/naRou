@@ -2,4 +2,4 @@
 Exports the main public classes from the engine module.
 """
 
-from .engine import SkillEaterCombatSystem, Phase1CombatManager
+from .engine import Phase1CombatManager, SkillEaterCombatSystem

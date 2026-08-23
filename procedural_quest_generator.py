@@ -281,22 +281,10 @@ class QuestGenerationRegistry:
     # Step 17: load()
     def load(self, file_path: str = "data/procedural_scenarios.yaml") -> None:
         """YAML(procedural_scenarios.yaml) から quest_generation を読み込む (Step 17)"""
-        from config_loader import ConfigLoader
-        
-        # Reset all data
-        self._archetypes = {}
-        self._difficulties = {}
-        self._rewards = {}
-        self._settings = {}
-        self._npc_themes = {}
-        self._board_config = {}
-        self._display_names = {}
-        self._chain_config = {}
-        self._pet_quest_templates = {}
-        
         # Use enhanced config loader with retry and fallback
-        loader = ConfigLoader(self)
         try:
+            from config_loader import ConfigLoader
+            loader = ConfigLoader(self)
             result = loader.load_all(
                 main_path=file_path,
                 fallback_path="data/quest_generation_fallback.yaml",

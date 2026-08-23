@@ -1,6 +1,6 @@
 """
 Unified Autonomous Subagent AI Engine
-Master AI combining Hierarchical FSM, Blackboard memory, Safety Heatmaps, 
+Master AI combining Hierarchical FSM, Blackboard memory, Safety Heatmaps,
 Combat Tactics, Item Decisions, Pet Coordination, and Floor Progression.
 """
 
@@ -12,6 +12,11 @@ if TYPE_CHECKING:
     from naRou.game import Engine
 
 from naRou.ai_blackboard import AIBlackboard
+from naRou.ai_combat_tactics import CombatTacticsManager
+from naRou.ai_floor_progression import FloorProgressionManager
+from naRou.ai_item_decider import ItemDecider
+from naRou.ai_pet_tactics import PetTacticsCoordinator
+from naRou.ai_safety_grid import SafetyGridEvaluator
 from naRou.ai_state_machine import AIStateMachine
 from naRou.ai_states import (
     CombatState,
@@ -23,11 +28,6 @@ from naRou.ai_states import (
     OfferPrayState,
     RestRecoverState,
 )
-from naRou.ai_safety_grid import SafetyGridEvaluator
-from naRou.ai_combat_tactics import CombatTacticsManager
-from naRou.ai_item_decider import ItemDecider
-from naRou.ai_pet_tactics import PetTacticsCoordinator
-from naRou.ai_floor_progression import FloorProgressionManager
 
 
 class AutonomousSubagentAI:

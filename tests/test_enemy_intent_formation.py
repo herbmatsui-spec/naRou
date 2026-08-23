@@ -334,7 +334,7 @@ def _monster(name, x, y, ai_role="brute"):
 
 
 def test_kiter_retreats_when_too_close():
-    from ai_system import KiteAction
+    from skill_eater.ai.ai_system import KiteAction
 
     eng = FakeGridEngine(10, 10)
     k = _monster("弓兵", 9, 10, "kiter")
@@ -343,7 +343,7 @@ def test_kiter_retreats_when_too_close():
 
 
 def test_kiter_holds_at_range():
-    from ai_system import KiteAction
+    from skill_eater.ai.ai_system import KiteAction
 
     eng = FakeGridEngine(10, 10)
     k = _monster("弓兵", 7, 10, "kiter")
@@ -352,7 +352,7 @@ def test_kiter_holds_at_range():
 
 
 def test_kiter_approaches_when_far():
-    from ai_system import KiteAction
+    from skill_eater.ai.ai_system import KiteAction
 
     eng = FakeGridEngine(10, 10)
     k = _monster("弓兵", 2, 10, "kiter")
@@ -361,7 +361,7 @@ def test_kiter_approaches_when_far():
 
 
 def test_flanker_moves_and_not_onto_player():
-    from ai_system import FlankAction
+    from skill_eater.ai.ai_system import FlankAction
 
     eng = FakeGridEngine(10, 10)
     f = _monster("騎士", 10, 8, "flanker")
@@ -372,7 +372,7 @@ def test_flanker_moves_and_not_onto_player():
 
 
 def test_spread_moves_when_crowded():
-    from ai_system import SpreadAction
+    from skill_eater.ai.ai_system import SpreadAction
 
     eng = FakeGridEngine(10, 10)
     a = _monster("鬼A", 10, 10 + 1)  # プレイヤー隣
@@ -392,7 +392,7 @@ def test_spread_moves_when_crowded():
 
 
 def test_spread_noop_when_alone():
-    from ai_system import SpreadAction
+    from skill_eater.ai.ai_system import SpreadAction
 
     eng = FakeGridEngine(10, 10)
     a = _monster("鬼A", 5, 5)
@@ -400,10 +400,11 @@ def test_spread_noop_when_alone():
     assert SpreadAction().execute(a, eng) is False
 
 
-def test_brute_still_melee_adjacent():
-    from ai_system import AdvancedAISystem
+def test_brute_still_melee_adjacent(monkeypatch):
     from ecs.entity import Entity
+    from skill_eater.ai.ai_system import AdvancedAISystem
 
+    monkeypatch.setattr("random.randint", lambda a, b: 1)
     eng = FakeGridEngine(10, 10)
     eng.player = Entity(x=10, y=10, name="hero", is_player=True)
     eng.player.faction = "player"
@@ -417,8 +418,8 @@ def test_brute_still_melee_adjacent():
 
 
 def test_process_ai_kiter_role():
-    from ai_system import AdvancedAISystem
     from ecs.entity import Entity
+    from skill_eater.ai.ai_system import AdvancedAISystem
 
     eng = FakeGridEngine(10, 10)
     eng.player = Entity(x=10, y=10, name="hero", is_player=True)
@@ -432,7 +433,7 @@ def test_process_ai_kiter_role():
 
 
 def test_allies_in_sight_counts():
-    from ai_system import AdvancedAISystem
+    from skill_eater.ai.ai_system import AdvancedAISystem
 
     eng = FakeGridEngine(10, 10)
     a = _monster("鬼A", 9, 10, "brute")
@@ -444,7 +445,7 @@ def test_allies_in_sight_counts():
 
 
 def test_pincer_flanks_with_two_allies():
-    from ai_system import AdvancedAISystem
+    from skill_eater.ai.ai_system import AdvancedAISystem
 
     eng = FakeGridEngine(10, 10)
     a = _monster("鬼A", 9, 10, "brute")
@@ -459,7 +460,7 @@ def test_pincer_flanks_with_two_allies():
 
 
 def test_hard_difficulty_increases_kiter_range():
-    from ai_system import KiteAction
+    from skill_eater.ai.ai_system import KiteAction
 
     def settle(eng, k):
         for _ in range(12):

@@ -98,7 +98,7 @@ def test_archaeology_metagame_full_36_steps():
     # Step 11: Entity プロパティ委譲
     from ecs.entity import Entity
 
-    e = entity.Entity(x=0, y=0)
+    e = Entity(x=0, y=0)
     assert isinstance(e.archaeology, ArchaeologyComponent), "Step 11 Failed"
     assert isinstance(e.get_component(ArchaeologyComponent), ArchaeologyComponent), "Step 11 Failed"
     print("[OK] Step 11 (Entity.archaeology 委譲)")
@@ -141,7 +141,7 @@ def test_archaeology_metagame_full_36_steps():
     print("[OK] Step 16 (resolve_excavation 重み付き抽選)")
 
     # Step 17: 収集（重複排除）
-    e3 = entity.Entity(x=0, y=0)
+    e3 = Entity(x=0, y=0)
     assert mgr.collect_fragment(e3, "goblin_child_screams") is True
     assert mgr.collect_fragment(e3, "goblin_child_screams") is False, "Step 17 Failed: 重複排除"
     print("[OK] Step 17 (collect_fragment 重複排除)")
@@ -152,7 +152,7 @@ def test_archaeology_metagame_full_36_steps():
     print("[OK] Step 18 (acquire_key / has_key_for_cipher)")
 
     # Step 19: 解読（鍵必須）
-    e5 = entity.Entity(x=0, y=0)
+    e5 = Entity(x=0, y=0)
     mgr.collect_fragment(e5, "traitor_kings_will")  # 鍵なし
     assert (
         mgr.decode_fragment(e5, "traitor_kings_will") is False
@@ -165,7 +165,7 @@ def test_archaeology_metagame_full_36_steps():
     print("[OK] Step 19 (decode_fragment 鍵必須 + 鍵入手で自動解読)")
 
     # Step 20: 部分真理の蓄積（1件解読のみでは到達しない）
-    e4 = entity.Entity(x=0, y=0)
+    e4 = Entity(x=0, y=0)
     mgr.acquire_key(e4, "goblin_rune_key")
     mgr.collect_fragment(e4, "goblin_child_screams")
     mgr.decode_fragment(e4, "goblin_child_screams")
@@ -269,7 +269,7 @@ def test_archaeology_metagame_full_36_steps():
 
     # ================= 検証に基づく3改善の追加検証 =================
     # 改善①: エンディング実解決パイプライン
-    e6 = entity.Entity(x=0, y=0)
+    e6 = Entity(x=0, y=0)
     for f in ("goblin_child_screams", "traitor_kings_will"):
         mgr.collect_fragment(e6, f)
         mgr.acquire_key(e6, "goblin_rune_key")
@@ -306,7 +306,7 @@ def test_archaeology_metagame_full_36_steps():
     print("[OK] 改善② (JournalUI.visible 別名 + 候補グループ化)")
 
     # 改善③: 遅延解読 + ヒント蓄積 + 発掘バリエーション
-    e7 = entity.Entity(x=0, y=0)
+    e7 = Entity(x=0, y=0)
     mgr.collect_fragment(e7, "traitor_kings_will")  # 鍵なし
     assert mgr.decode_fragment(e7, "traitor_kings_will") is False, "改善③ Failed: 鍵なし"
     assert len(e7.archaeology.decoder_hints_seen) >= 1, "改善③ Failed: ヒント蓄積"

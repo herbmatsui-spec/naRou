@@ -57,10 +57,6 @@ from item_system import Inventory, Item
 from localization_manager import LocalizationManager
 from logging_config import configure_logging
 from map_engine import GameMap
-from renderer import Renderer, get_renderer, set_renderer
-from skill_tree_system import SkillTreeManager
-from sound_manager import SoundManager
-from system_coordinator import SystemCoordinator
 from naRou.systems import (
     FACTION_GUARD,
     AggroList,
@@ -70,6 +66,10 @@ from naRou.systems import (
     StatusEffect,
     SurvivalSystem,
 )
+from renderer import Renderer, get_renderer, set_renderer
+from skill_tree_system import SkillTreeManager
+from sound_manager import SoundManager
+from system_coordinator import SystemCoordinator
 from ui_fx_systems import FloatingText, Particle, ScreenShake
 
 configure_logging()

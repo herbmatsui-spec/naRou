@@ -6,8 +6,8 @@ Validates that the AutonomousSubagentAI resolves oscillations, avoids fatal dama
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 NAROU_DIR = Path(__file__).resolve().parent.parent
 for p in [str(NAROU_DIR), str(NAROU_DIR.parent)]:

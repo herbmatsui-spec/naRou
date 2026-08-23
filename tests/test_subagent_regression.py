@@ -5,8 +5,8 @@ CI/CD Automated Regression Test Suite for Autonomous Subagent AI
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 NAROU_DIR = Path(__file__).resolve().parent.parent
 for p in [str(NAROU_DIR), str(NAROU_DIR.parent)]:
@@ -14,8 +14,8 @@ for p in [str(NAROU_DIR), str(NAROU_DIR.parent)]:
         sys.path.insert(0, p)
 
 from ai_autonomous_subagent import AutonomousSubagentAI
-from game import Engine
 from ecs.entity import Entity
+from game import Engine
 from item_system import Item
 
 

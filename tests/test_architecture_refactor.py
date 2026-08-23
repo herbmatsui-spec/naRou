@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
+from dialogue_system import DialogueManager
 from ecs.components import (
     AchievementComponent,
     GuildFactionComponent,
@@ -28,7 +29,6 @@ from ecs.components import (
     StorytellerComponent,
     TitleComponent,
 )
-from dialogue_system import DialogueManager
 from ecs.entity import Entity
 from game import Engine
 from save_system import SaveSystem
