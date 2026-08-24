@@ -270,7 +270,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             if not _ENGINE_INSTANCE:
                 self.wfile.write(json.dumps({"error": "Engine not initialized"}, ensure_ascii=False).encode("utf-8"))
                 return
-            
+
             content_length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(content_length).decode("utf-8") if content_length else ""
             try:
@@ -278,15 +278,15 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             except Exception:
                 self.wfile.write(json.dumps({"error": "Invalid JSON"}, ensure_ascii=False).encode("utf-8"))
                 return
-            
+
             template_id = data.get("template_id")
             window_id = data.get("window_id")
             tier = data.get("tier", 1)
-            
+
             if not template_id or not window_id:
                 self.wfile.write(json.dumps({"error": "Missing template_id or window_id"}, ensure_ascii=False).encode("utf-8"))
                 return
-            
+
             # Find the event
             active_events = getattr(_ENGINE_INSTANCE, "active_template_events", [])
             event = None
@@ -294,29 +294,29 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 if evt.template_id == template_id:
                     event = evt
                     break
-            
+
             if not event:
                 self.wfile.write(json.dumps({"error": "Event not found"}, ensure_ascii=False).encode("utf-8"))
                 return
-            
+
             # Execute intervention
             intervention_engine = _ENGINE_INSTANCE.kernel.get_system("skill_eater_intervention_engine")
             if not intervention_engine:
                 self.wfile.write(json.dumps({"error": "Intervention engine not available"}, ensure_ascii=False).encode("utf-8"))
                 return
-            
+
             from naRou.systems.skill_eater_meta_intervention_system import InterventionAction
             action = InterventionAction(tier=tier, window_id=window_id, params={})
             player = _ENGINE_INSTANCE.player
             result = intervention_engine.execute(event, action, player)
-            
+
             if result.success:
                 intervention_engine.apply_rewards(player, result, event)
-            
+
             # Remove event if completed
             if event in _ENGINE_INSTANCE.active_template_events:
                 _ENGINE_INSTANCE.active_template_events.remove(event)
-            
+
             response = {
                 "success": result.success,
                 "message": result.message,
