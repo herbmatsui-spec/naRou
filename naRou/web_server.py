@@ -241,6 +241,94 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 fragments = []
             self.wfile.write(json.dumps({"fragments": fragments}, ensure_ascii=False).encode("utf-8"))
             return
+        elif self.path.split("?", 1)[0] == "/api/meta_intervention/events":
+            # Get active template intervention events
+            self._set_headers("application/json; charset=utf-8")
+            if _ENGINE_INSTANCE and hasattr(_ENGINE_INSTANCE, "active_template_events"):
+                events_data = []
+                for evt in _ENGINE_INSTANCE.active_template_events:
+                    events_data.append({
+                        "template_id": evt.template_id,
+                        "archetype": evt.archetype,
+                        "context": evt.context,
+                        "faction": evt.faction,
+                        "difficulty": evt.difficulty,
+                        "turn_spawned": evt.turn_spawned,
+                        "exploit_windows": [
+                            {"id": w.id, "tier": w.tier, "base_success": w.base_success,
+                             "req_gold": w.req_gold, "req_skill": w.req_skill}
+                            for w in evt.exploit_windows
+                        ],
+                    })
+                self.wfile.write(json.dumps({"events": events_data}, ensure_ascii=False).encode("utf-8"))
+            else:
+                self.wfile.write(json.dumps({"events": []}, ensure_ascii=False).encode("utf-8"))
+            return
+        elif self.path.split("?", 1)[0] == "/api/meta_intervention/intervene":
+            # Execute intervention via web API
+            self._set_headers("application/json; charset=utf-8")
+            if not _ENGINE_INSTANCE:
+                self.wfile.write(json.dumps({"error": "Engine not initialized"}, ensure_ascii=False).encode("utf-8"))
+                return
+            
+            content_length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(content_length).decode("utf-8") if content_length else ""
+            try:
+                data = json.loads(body) if body else {}
+            except Exception:
+                self.wfile.write(json.dumps({"error": "Invalid JSON"}, ensure_ascii=False).encode("utf-8"))
+                return
+            
+            template_id = data.get("template_id")
+            window_id = data.get("window_id")
+            tier = data.get("tier", 1)
+            
+            if not template_id or not window_id:
+                self.wfile.write(json.dumps({"error": "Missing template_id or window_id"}, ensure_ascii=False).encode("utf-8"))
+                return
+            
+            # Find the event
+            active_events = getattr(_ENGINE_INSTANCE, "active_template_events", [])
+            event = None
+            for evt in active_events:
+                if evt.template_id == template_id:
+                    event = evt
+                    break
+            
+            if not event:
+                self.wfile.write(json.dumps({"error": "Event not found"}, ensure_ascii=False).encode("utf-8"))
+                return
+            
+            # Execute intervention
+            intervention_engine = _ENGINE_INSTANCE.kernel.get_system("skill_eater_intervention_engine")
+            if not intervention_engine:
+                self.wfile.write(json.dumps({"error": "Intervention engine not available"}, ensure_ascii=False).encode("utf-8"))
+                return
+            
+            from naRou.systems.skill_eater_meta_intervention_system import InterventionAction
+            action = InterventionAction(tier=tier, window_id=window_id, params={})
+            player = _ENGINE_INSTANCE.player
+            result = intervention_engine.execute(event, action, player)
+            
+            if result.success:
+                intervention_engine.apply_rewards(player, result, event)
+            
+            # Remove event if completed
+            if event in _ENGINE_INSTANCE.active_template_events:
+                _ENGINE_INSTANCE.active_template_events.remove(event)
+            
+            response = {
+                "success": result.success,
+                "message": result.message,
+                "completeness": result.completeness,
+                "karma_gained": result.karma_gained,
+                "stolen_skill": result.stolen_skill,
+                "unique_skill_granted": result.unique_skill_granted,
+                "exposure_gained": result.exposure_gained,
+                "karma_good_evil_change": result.karma_good_evil_change,
+            }
+            self.wfile.write(json.dumps(response, ensure_ascii=False).encode("utf-8"))
+            return
         elif self.path == "/" or self.path.endswith(".html") or self.path == "/index.html":
             html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "web_game_client.html")
             if not os.path.exists(html_path):

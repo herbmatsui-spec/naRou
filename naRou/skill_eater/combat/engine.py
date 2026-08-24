@@ -15,6 +15,8 @@ from naRou.skill_eater_audio_system import SkillEaterAudioSystem
 from naRou.skill_eater_presentation_system import PresentationEvent, SkillEaterPresentationSystem
 from naRou.skill_eater_system import CharacterState, SkillEaterRegistry, SkillTier
 from naRou.feature_flags import get_husk_enabled
+from naRou.systems.skill_eater_husk_system import create_husk
+from naRou.ecs.components.components import HuskInventoryComponent
 
 # 属性シナジー＆消化不良の定義
 SYNERGY_COMBOS: dict[tuple[str, str], tuple[str, int]] = {
@@ -199,7 +201,7 @@ class SkillEaterCombatSystem:
                     skill_id=skill_def.id,
                     name=skill_def.name if (can_see_full or lv >= 2) else "???",
                     tier=skill_def.tier.value if (can_see_full or lv >= 2) else "???",
-                    type=skill_def.type.value if can_see_full else "???",
+                    type=skill_def.type.value if (can_see_full or lv >= 2) else "???",
                     tags=skill_def.tags if can_see_full else [],
                     market_value=market_val,
                     is_weakness_revealed=can_see_full,
@@ -740,7 +742,13 @@ class SkillEaterCombatSystem:
         if is_success:
             prey.remove_skill(target_skill_id)
             if get_husk_enabled() and prey.is_husk:
-                pass  # TODO: Husk generation will be implemented in later steps
+                # Generate husk from the devoured prey
+                husk = create_husk(prey.name, prey.level)
+                # Add husk to predator's inventory
+                predator_husk_inv = predator.get_component(HuskInventoryComponent)
+                predator_husk_inv.husks.append(husk)
+                # Add notification to logs
+                logs.append(f"【抜け殻獲得】{prey.name}の抜け殻を回収した！")
             stat_loss = max(2, int(prey.defense * 0.3))
             prey.defense = max(1, prey.defense - stat_loss)
             prey.atk = max(1, prey.atk - stat_loss)

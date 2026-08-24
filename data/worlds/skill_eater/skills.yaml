@@ -204,3 +204,86 @@ skills:
         target: "Self"
         element: "Fire"
         multiplier: 4.0
+
+  - id: "meta_zamamami"
+    name: "《ざまぁの極み》"
+    tier: "MetaUnique"
+    type: "Active"
+    mp_cost: 50
+    cooldown: 100
+    market_value: -1
+    tags: ["MetaUnique", "Mental", "Active", "AntiTemplate"]
+    flavor_text: "「ざまぁ」を期待する敵の自尊心を粉砕し、精神即死を誘発する禁忌のメタスキル。"
+    effects:
+      - type: "MetaDamage"
+        target: "Enemy"
+        condition: "enemy.expects_zamama"
+        formula: "int * 5.0 + target.max_hp * 0.5"
+        effect: "MentalDeath"
+
+  - id: "meta_exile_pride"
+    name: "《追放者の意地》"
+    tier: "MetaUnique"
+    type: "Passive"
+    mp_cost: 0
+    cooldown: 0
+    market_value: -1
+    tags: ["MetaUnique", "Guts", "Passive", "AntiTemplate"]
+    flavor_text: "不利な状況こそが力となる。追放テンプレを逆手に取った自己強化の極み。"
+    effects:
+      - type: "ConditionalStatMod"
+        target: "Self"
+        condition: "hp_below_30_or_surrounded"
+        stats:
+          atk: "*2.0"
+          def: "*2.0"
+          spd: "*1.5"
+          drop_rate: "*2.0"
+
+  - id: "meta_credit_return"
+    name: "《横取り還元》"
+    tier: "MetaUnique"
+    type: "Active"
+    mp_cost: 30
+    cooldown: 50
+    market_value: -1
+    tags: ["MetaUnique", "Economy", "Active", "AntiTemplate"]
+    flavor_text: "他者が得た功績・スキル・アイテムを強制的に再割り当てする強奪の上位互換。"
+    effects:
+      - type: "MetaSteal"
+        target: "Enemy"
+        condition: "enemy.recently_stole_credit"
+        steal_types: ["skill", "item", "credit", "gold"]
+        probability: 1.0
+
+  - id: "meta_original_edit"
+    name: "《原典編集》"
+    tier: "MetaUnique"
+    type: "Active"
+    mp_cost: 100
+    cooldown: 200
+    market_value: -1
+    tags: ["MetaUnique", "Meta", "Active", "AntiTemplate"]
+    flavor_text: "読み取ったテンプレートフラグをその場で別の定形ルートへ書き換える、原典閲覧の完全形。"
+    effects:
+      - type: "MetaRewrite"
+        target: "TemplateFlag"
+        condition: "flag_detected"
+        new_route: "player_chosen"
+        cost: "karma_1000"
+
+  - id: "meta_reader_privilege"
+    name: "《読者特権・外伝創生》"
+    tier: "MetaUnique"
+    type: "Active"
+    mp_cost: 80
+    cooldown: 150
+    market_value: -1
+    tags: ["MetaUnique", "Meta", "Active", "Summon"]
+    flavor_text: "破壊したテンプレートを「自分だけのIF外伝」として保存し、任意の場面で召喚・再現できる。"
+    effects:
+      - type: "MetaSummon"
+        target: "Self"
+        summon_type: "TemplateEcho"
+        duration: 30
+        stats_multiplier: 1.5

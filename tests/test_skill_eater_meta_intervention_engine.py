@@ -1,6 +1,7 @@
 """Tests for meta intervention engine."""
 
 import pytest
+from typing import Any
 from naRou.systems.skill_eater_template_model import load_templates
 from naRou.systems.skill_eater_meta_intervention_system import (
     TemplateEventGenerator, InterventionEngine, InterventionAction, TemplateEvent, InterventionResult
