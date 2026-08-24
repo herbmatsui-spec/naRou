@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from naRou.ui_fx_systems import ContextMenu, LookCursor, NotificationManager, TutorialManager
+from naRou.ui.ui_fx_systems import ContextMenu, LookCursor, NotificationManager, TutorialManager
 from naRou.web_server import start_web_server
 
 if TYPE_CHECKING:

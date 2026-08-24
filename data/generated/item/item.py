@@ -118,3 +118,20 @@ class ItemDefinition(DataModel):
     """
     Whether item is identified
     """
+    quality: str | None = "normal"
+    """
+    Item quality (bad, normal, good, miracle, god)
+    """
+    enchantments: list[Any] | None = []
+    """
+    List of enchantments
+    """
+    salvage_materials: dict[str, int] | None = {}
+    """
+    Materials returned when item is salvaged / broken down
+    """
+    food_tags: list[str] | None = []
+    """
+    Food tags (meat, vegetable, sweet, etc.) for pet favorite foods
+    """
+

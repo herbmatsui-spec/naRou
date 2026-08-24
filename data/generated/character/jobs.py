@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import ConfigDict, Field, RootModel
 
 from data.schemas._base import DataModel
@@ -24,16 +26,18 @@ class UnlockConditions(DataModel):
 
 class Job(DataModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra="ignore",
+        populate_by_name=True,
     )
+    id: str | None = None
     name: str = Field(..., min_length=1)
-    description: str
+    description: str | None = ""
     description_en: str | None = None
-    tier: int = Field(..., ge=0)
-    stat_modifiers: dict[str, int]
-    equipment_restrictions: dict[str, bool]
-    exclusive_skills: list[ExclusiveSkill]
-    unlock_conditions: UnlockConditions
+    tier: int = Field(0, ge=0)
+    stat_modifiers: dict[str, int] = Field(default_factory=dict)
+    equipment_restrictions: dict[str, bool] = Field(default_factory=dict, alias="equipmentRestrictions")
+    exclusive_skills: list[Any] = Field(default_factory=list, alias="exclusiveSkills")
+    unlock_conditions: Any = Field(default_factory=dict, alias="unlockConditions")
 
 
 class Meta(DataModel):
@@ -50,3 +54,10 @@ class JobsDefinition(DataModel):
     )
     jobs: dict[str, Job]
     meta: Meta | None = None
+
+
+try:
+    Job.model_rebuild()
+except AttributeError:
+    pass
+

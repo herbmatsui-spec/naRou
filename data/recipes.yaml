@@ -1,0 +1,72 @@
+# ==============================================================================
+# Crafting Recipes (data/recipes.yaml)
+# ==============================================================================
+
+recipe_shortsword:
+  id: "recipe_shortsword"
+  name: "短剣の製作"
+  result_item_id: "shortsword"
+  result_count: 1
+  category: "weapon"
+  required_materials:
+    item_iron_ingot: 1
+  difficulty: 5
+  description: "鉄インゴットから軽量な短剣を鍛造する。"
+
+recipe_longsword:
+  id: "recipe_longsword"
+  name: "長剣の製作"
+  result_item_id: "longsword"
+  result_count: 1
+  category: "weapon"
+  required_materials:
+    item_iron_ingot: 2
+    item_wood_log: 1
+  difficulty: 10
+  description: "鉄と木材を組み合わせて長剣を鍛造する。"
+
+recipe_katana:
+  id: "recipe_katana"
+  name: "刀の鍛造"
+  result_item_id: "katana"
+  result_count: 1
+  category: "weapon"
+  required_materials:
+    item_steel_ingot: 2
+  difficulty: 20
+  description: "鋼鉄を幾重にも折り返して鋭利な刀を鍛え上げる。"
+
+recipe_claymore:
+  id: "recipe_claymore"
+  name: "大剣の鍛造"
+  result_item_id: "claymore"
+  result_count: 1
+  category: "weapon"
+  required_materials:
+    item_steel_ingot: 3
+    item_wood_log: 1
+  difficulty: 25
+  description: "巨大な鋼鉄の刃を持つ両手持ちの大剣を製作する。"
+
+recipe_potion_heal:
+  id: "recipe_potion_heal"
+  name: "軽傷治療薬の調合"
+  result_item_id: "potion_heal"
+  result_count: 1
+  category: "potion"
+  required_materials:
+    item_herb: 2
+  difficulty: 8
+  description: "薬草をすりつぶして傷を癒すポーションを抽出する。"
+
+recipe_potion_cure_poison:
+  id: "recipe_potion_cure_poison"
+  name: "毒消し薬の調合"
+  result_item_id: "potion_cure_poison"
+  result_count: 1
+  category: "potion"
+  required_materials:
+    item_herb: 1
+    item_wood_log: 1
+  difficulty: 12
+  description: "薬草と木の灰から解毒成分を精製する。"

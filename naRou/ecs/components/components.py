@@ -212,10 +212,14 @@ class BaseStatsComponent:
 
 @dataclass
 class AffectionComponent:
-    """ペット/キャラクターの好感度・騎乗状態用コンポーネント (Step 73, 79)"""
+    """ペット/キャラクターの好感度・騎乗状態・性格用コンポーネント (Step 73, 79, Phase 6)"""
 
     affection: int = 50  # 好感度 (親密・魂の友など)
+    bond: int = 50  # 絆値 (0〜100)
+    personality: str = "brave"  # 性格 (brave, cowardly, calm, gluttonous, aggressive)
+    favorite_food_tags: list[str] = field(default_factory=list)  # 好物タグ
     is_mounted: bool = False  # 騎乗中フラグ (ステップ79)
+
 
 
 @dataclass
@@ -328,3 +332,89 @@ class Attributes:
             magic=data.get("magic", 10),
             charisma=data.get("charisma", 10),
         )
+
+
+@dataclass
+class ActiveStatusEffect:
+    """付与されている個別状態異常 (Step 54)"""
+
+    effect_type: str  # STATUS_POISON, STATUS_BURN, etc.
+    duration: int  # 残りターン数
+    power: int = 1  # 威力 / スリップダメージ補正
+    source_name: str = ""  # 付与元
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "effect_type": self.effect_type,
+            "duration": self.duration,
+            "power": self.power,
+            "source_name": self.source_name,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ActiveStatusEffect:
+        return cls(
+            effect_type=data.get("effect_type", "poison"),
+            duration=data.get("duration", 1),
+            power=data.get("power", 1),
+            source_name=data.get("source_name", ""),
+        )
+
+
+@dataclass
+class StatusEffectsComponent:
+    """状態異常管理ECSコンポーネント (Step 54)"""
+
+    effects: dict[str, ActiveStatusEffect] = field(default_factory=dict)
+
+    def has_effect(self, effect_type: str) -> bool:
+        return effect_type in self.effects and self.effects[effect_type].duration > 0
+
+    def get_effect(self, effect_type: str) -> ActiveStatusEffect | None:
+        return self.effects.get(effect_type)
+
+    def add_effect(
+        self,
+        effect_type: str,
+        duration: int,
+        power: int = 1,
+        source_name: str = "",
+    ) -> bool:
+        """状態異常の付与または持続更新。新規付与時はTrueを返す。"""
+        if effect_type in self.effects:
+            curr = self.effects[effect_type]
+            curr.duration = max(curr.duration, duration)
+            curr.power = max(curr.power, power)
+            return False
+        else:
+            self.effects[effect_type] = ActiveStatusEffect(
+                effect_type=effect_type,
+                duration=duration,
+                power=power,
+                source_name=source_name,
+            )
+            return True
+
+    def remove_effect(self, effect_type: str) -> bool:
+        """指定した状態異常を解除"""
+        if effect_type in self.effects:
+            del self.effects[effect_type]
+            return True
+        return False
+
+    def clear_all(self) -> None:
+        """全状態異常の解除"""
+        self.effects.clear()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "effects": {k: v.to_dict() for k, v in self.effects.items()}
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> StatusEffectsComponent:
+        eff_dict = {}
+        for k, v in data.get("effects", {}).items():
+            eff_dict[k] = ActiveStatusEffect.from_dict(v)
+        return cls(effects=eff_dict)
+

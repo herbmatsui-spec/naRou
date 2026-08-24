@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from naRou.constants import CAT_FOOD, TILE_WALL
-from naRou.ui_fx_systems import ContextAction
+from naRou.ui.ui_fx_systems import ContextAction
 
 if TYPE_CHECKING:
     from game import Engine

@@ -10,7 +10,7 @@ import tcod
 
 from naRou.constants import CAT_FOOD, VIEW_HEIGHT, VIEW_WIDTH
 from naRou.render_context import RenderContext
-from naRou.ui_fx_systems import DynamicLighting
+from naRou.ui.ui_fx_systems import DynamicLighting
 
 
 class ItemRenderer:

@@ -28,25 +28,50 @@ import yaml
 from naRou.constants import QUALITY_BAD, QUALITY_GOD, QUALITY_GOOD, QUALITY_MIRACLE, QUALITY_NORMAL
 from naRou.core_framework import BaseSystem
 from data.generated.character.gods import God
+try:
+    God.model_rebuild()
+except AttributeError:
+    pass
 from data.generated.character.jobs import Job
+try:
+    Job.model_rebuild()
+except AttributeError:
+    pass
 from data.generated.dungeon.dungeon import DungeonThemeDefinition
+try:
+    DungeonThemeDefinition.model_rebuild()
+except AttributeError:
+    pass
 from data.generated.faction.factions import Faction
+if hasattr(Faction, "model_rebuild"): Faction.model_rebuild()
 
 # 生成されたPydanticモデル（スキーマバリデーション用）
+from data.generated.item.enchantment import EnchantmentDefinition
 from data.generated.item.item import ItemDefinition
+if hasattr(ItemDefinition, "model_rebuild"): ItemDefinition.model_rebuild()
+from data.generated.item.recipe import RecipeDefinition
+if hasattr(RecipeDefinition, "model_rebuild"): RecipeDefinition.model_rebuild()
 from data.generated.meta.achievements import Achievement
+if hasattr(Achievement, "model_rebuild"): Achievement.model_rebuild()
 from data.generated.meta.titles import Title
+if hasattr(Title, "model_rebuild"): Title.model_rebuild()
 from data.generated.monster.monster import MonsterDefinition
+if hasattr(MonsterDefinition, "model_rebuild"): MonsterDefinition.model_rebuild()
 from data.generated.quest.quest import QuestDefinition
+if hasattr(QuestDefinition, "model_rebuild"): QuestDefinition.model_rebuild()
 from data.generated.skill.skill_fusion import SkillFusion
+if hasattr(SkillFusion, "model_rebuild"): SkillFusion.model_rebuild()
 from data.generated.skill.skill_trees import SkillTree
+if hasattr(SkillTree, "model_rebuild"): SkillTree.model_rebuild()
 from data.generated.skill.spells import Spell
+if hasattr(Spell, "model_rebuild"): Spell.model_rebuild()
 from data.generated.social.guilds import Guild
 
 # リポジトリ層
 from data.repositories import (
     AchievementRepository,
     DungeonThemeRepository,
+    EnchantmentRepository,
     FactionRepository,
     GodRepository,
     GuildRepository,
@@ -54,6 +79,7 @@ from data.repositories import (
     JobRepository,
     MonsterRepository,
     QuestRepository,
+    RecipeRepository,
     SkillFusionRepository,
     SkillRepository,
     SkillTreeRepository,
@@ -76,8 +102,9 @@ class DataManager(BaseSystem):
         self.data_dir = Path(data_dir)
         self.schemas_dir = Path(schemas_dir)
 
-        # リポジトリ
         self.items: ItemRepository
+        self.enchantments: EnchantmentRepository
+        self.recipes: RecipeRepository
         self.monsters: MonsterRepository
         self.skills: SkillRepository
         self.skill_trees: SkillTreeRepository
@@ -112,6 +139,21 @@ class DataManager(BaseSystem):
         items_raw = self._load_yaml("items.yaml") or {}
         self.items = ItemRepository(
             {k: ItemDefinition.model_validate(v) for k, v in items_raw.items()}
+        )
+
+        # エンチャント (ラッパー key: enchantments またはリスト/辞書)
+        ench_raw = self._load_yaml("enchantments.yaml") or {}
+        ench_list = ench_raw.get("enchantments", []) if isinstance(ench_raw, dict) else []
+        ench_dict = {}
+        for item in ench_list:
+            if isinstance(item, dict) and "id" in item:
+                ench_dict[item["id"]] = EnchantmentDefinition.model_validate(item)
+        self.enchantments = EnchantmentRepository(ench_dict)
+
+        # クラフトレシピ (フラット辞書)
+        recipes_raw = self._load_yaml("recipes.yaml") or {}
+        self.recipes = RecipeRepository(
+            {k: RecipeDefinition.model_validate(v) for k, v in recipes_raw.items()}
         )
 
         # モンスター (フラット辞書)

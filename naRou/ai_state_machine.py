@@ -5,36 +5,12 @@ Manages state lifecycle (enter/exit), transitions, and action decisions.
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
+
+from naRou.ai.states.base_state import AIState
 
 if TYPE_CHECKING:
     from naRou.ai_blackboard import AIBlackboard
-
-
-class AIState(ABC):
-    """Abstract base class for all AI behavior states."""
-    
-    def __init__(self, blackboard: AIBlackboard):
-        self.bb = blackboard
-
-    def enter(self) -> None:
-        """Called when entering this state."""
-        pass
-
-    def exit(self) -> None:
-        """Called when exiting this state."""
-        pass
-
-    @abstractmethod
-    def check_transition(self) -> str | None:
-        """Evaluate conditions and return the next state name, or None to stay."""
-        pass
-
-    @abstractmethod
-    def decide_action(self) -> tuple[str, Any]:
-        """Determine and return the action (action_name, params) to perform."""
-        pass
 
 
 class AIStateMachine:

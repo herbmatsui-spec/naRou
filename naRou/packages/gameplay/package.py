@@ -197,7 +197,7 @@ class GameplayLoop:
         from naRou.constants import ENERGY_THRESHOLD, TILE_TRAP
         from naRou.sound_manager import SoundManager
         from naRou.systems import CombatSystem
-        from naRou.ui_fx_systems import FloatingText
+        from naRou.ui.ui_fx_systems import FloatingText
 
         tx, ty = self.engine.player.x + dx, self.engine.player.y + dy
         target = self.engine.get_entity_at(tx, ty)

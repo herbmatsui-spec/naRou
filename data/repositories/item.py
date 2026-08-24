@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from data.generated.item.item import ItemDefinition
 from data.repositories.base import CachedRepository
 
@@ -46,11 +48,63 @@ class ItemRepository(CachedRepository[ItemDefinition, str]):
     def query_by_price_range(self, min_value: int, max_value: int) -> list[ItemDefinition]:
         return [item for item in self._data.values() if min_value <= item.base_value <= max_value]
 
+class EnchantmentRepository(CachedRepository[Any, str]):
+    """エンチャントリポジトリ"""
+
+    def __init__(self, enchantments: dict[str, Any]):
+        super().__init__(enchantments)
+        self._by_type: dict[str, list[Any]] = {}
+        self._by_category: dict[str, list[Any]] = {}
+        self._build_indexes()
+
+    def _build_indexes(self):
+        for ench in self._data.values():
+            e_type = getattr(ench, "type", "")
+            if e_type:
+                self._by_type.setdefault(e_type, []).append(ench)
+            app_cats = getattr(ench, "applicable_categories", [])
+            for cat in app_cats:
+                self._by_category.setdefault(cat, []).append(ench)
+
+    def get_by_type(self, ench_type: str) -> list[Any]:
+        return self._by_type.get(ench_type, [])
+
+    def get_for_category(self, category: str) -> list[Any]:
+        return self._by_category.get(category, [])
+
     def invalidate_cache(self):
         super().invalidate_cache()
+        self._by_type.clear()
         self._by_category.clear()
-        self._by_material.clear()
         self._build_indexes()
 
 
-__all__ = ["ItemRepository"]
+
+class RecipeRepository(CachedRepository[Any, str]):
+    """クラフトレシピリポジトリ"""
+
+    def __init__(self, recipes: dict[str, Any]):
+        super().__init__(recipes)
+        self._by_category: dict[str, list[Any]] = {}
+        self._by_result_item: dict[str, list[Any]] = {}
+        self._build_indexes()
+
+    def _build_indexes(self):
+        for recipe in self._data.values():
+            cat = getattr(recipe, "category", "")
+            if cat:
+                self._by_category.setdefault(cat, []).append(recipe)
+            res_id = getattr(recipe, "result_item_id", "")
+            if res_id:
+                self._by_result_item.setdefault(res_id, []).append(recipe)
+
+    def get_by_category(self, category: str) -> list[Any]:
+        return self._by_category.get(category, [])
+
+    def get_by_result_item(self, result_item_id: str) -> list[Any]:
+        return self._by_result_item.get(result_item_id, [])
+
+
+__all__ = ["ItemRepository", "EnchantmentRepository", "RecipeRepository"]
+
+

@@ -15,7 +15,7 @@ def setup_systems(engine: "Engine") -> None:
     from naRou.data_manager import DataManager
     from naRou.fx_manager import FXManager
     from naRou.skill_fusion_system import FusionRegistry
-    from naRou.ui_fx_systems import NotificationManager, TutorialManager
+    from naRou.ui.ui_fx_systems import NotificationManager, TutorialManager
 
     # Core systems are now provided by CorePackage via Kernel
     engine.fx_manager = FXManager(event_bus=engine.event_bus)

@@ -1,0 +1,138 @@
+# ==============================================================================
+# Elona Masterpiece Edition - Random Enchantment Catalog (data/enchantments.yaml)
+# ==============================================================================
+
+enchantments:
+  - id: "ench_str"
+    name: "剛力"
+    description: "装備者の筋力を強化する"
+    type: "stat_bonus"
+    target_stat: "strength"
+    power_range: [1, 5]
+    applicable_categories: ["weapon", "armor", "ring"]
+    min_quality: "good"
+
+  - id: "ench_dex"
+    name: "疾風"
+    description: "装備者の器用さを強化する"
+    type: "stat_bonus"
+    target_stat: "dexterity"
+    power_range: [1, 5]
+    applicable_categories: ["weapon", "ring"]
+    min_quality: "good"
+
+  - id: "ench_end"
+    name: "不屈"
+    description: "装備者の耐久を強化する"
+    type: "stat_bonus"
+    target_stat: "endurance"
+    power_range: [1, 5]
+    applicable_categories: ["armor", "shield", "helm", "ring"]
+    min_quality: "good"
+
+  - id: "ench_mag"
+    name: "魔導"
+    description: "装備者の魔力を強化する"
+    type: "stat_bonus"
+    target_stat: "magic"
+    power_range: [1, 5]
+    applicable_categories: ["weapon", "armor", "ring"]
+    min_quality: "good"
+
+  - id: "ench_fire_dmg"
+    name: "紅蓮"
+    description: "攻撃時に火炎属性の追加ダメージを与える"
+    type: "element_damage"
+    element: "fire"
+    power_range: [2, 10]
+    applicable_categories: ["weapon"]
+    min_quality: "good"
+
+  - id: "ench_ice_dmg"
+    name: "氷結"
+    description: "攻撃時に氷結属性の追加ダメージを与える"
+    type: "element_damage"
+    element: "ice"
+    power_range: [2, 10]
+    applicable_categories: ["weapon"]
+    min_quality: "good"
+
+  - id: "ench_lightning_dmg"
+    name: "雷光"
+    description: "攻撃時に雷撃属性の追加ダメージを与える"
+    type: "element_damage"
+    element: "lightning"
+    power_range: [2, 10]
+    applicable_categories: ["weapon"]
+    min_quality: "good"
+
+  - id: "ench_poison_dmg"
+    name: "猛毒"
+    description: "攻撃時に毒属性の追加ダメージを与える"
+    type: "element_damage"
+    element: "poison"
+    power_range: [2, 8]
+    applicable_categories: ["weapon"]
+    min_quality: "good"
+
+  - id: "ench_res_fire"
+    name: "耐火"
+    description: "火炎耐性を付与する"
+    type: "resistance"
+    element: "fire"
+    power_range: [10, 30]
+    applicable_categories: ["armor", "shield", "helm", "ring"]
+    min_quality: "good"
+
+  - id: "ench_res_ice"
+    name: "耐寒"
+    description: "冷気・氷結耐性を付与する"
+    type: "resistance"
+    element: "ice"
+    power_range: [10, 30]
+    applicable_categories: ["armor", "shield", "helm", "ring"]
+    min_quality: "good"
+
+  - id: "ench_res_poison"
+    name: "耐毒"
+    description: "毒耐性を付与する"
+    type: "resistance"
+    element: "poison"
+    power_range: [10, 30]
+    applicable_categories: ["armor", "shield", "helm", "ring"]
+    min_quality: "good"
+
+  - id: "ench_pv"
+    name: "堅牢"
+    description: "追加の防御値(PV)を付与する"
+    type: "combat_bonus"
+    target_stat: "pv"
+    power_range: [2, 8]
+    applicable_categories: ["armor", "shield", "helm"]
+    min_quality: "good"
+
+  - id: "ench_dv"
+    name: "見切り"
+    description: "追加の回避値(DV)を付与する"
+    type: "combat_bonus"
+    target_stat: "dv"
+    power_range: [2, 8]
+    applicable_categories: ["armor", "ring", "shield"]
+    min_quality: "good"
+
+  - id: "ench_hit"
+    name: "必中"
+    description: "命中率を大幅に向上させる"
+    type: "combat_bonus"
+    target_stat: "hit_bonus"
+    power_range: [3, 10]
+    applicable_categories: ["weapon", "ring"]
+    min_quality: "good"
+
+  - id: "ench_vampiric"
+    name: "吸血"
+    description: "与えたダメージの一部をHPとして吸収する"
+    type: "special"
+    power_range: [5, 15]
+    applicable_categories: ["weapon"]
+    min_quality: "miracle"

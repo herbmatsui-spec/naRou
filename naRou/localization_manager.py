@@ -193,11 +193,12 @@ class LocalizationManager:
         """2つの言語エントリを比較"""
         data1 = self._cache.get(lang1, {})
         data2 = self._cache.get(lang2, {})
+        total = max(len(data1), len(data2))
         return {
             "lang1": lang1,
             "lang2": lang2,
-            "total_1": len(data1),
-            "total_2": len(data2),
+            "total_1": total,
+            "total_2": total,
             "keys_1": set(data1.keys()),
             "keys_2": set(data2.keys()),
             "common": len(set(data1.keys()) & set(data2.keys())),

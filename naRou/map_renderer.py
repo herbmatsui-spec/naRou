@@ -24,7 +24,7 @@ from naRou.constants import (
 from naRou.feature_flags import is_enabled
 from naRou.map_engine import TILE_REGISTRY
 from naRou.render_context import RenderContext
-from naRou.ui_fx_systems import DynamicLighting
+from naRou.ui.ui_fx_systems import DynamicLighting
 
 
 class ParallaxBackground:

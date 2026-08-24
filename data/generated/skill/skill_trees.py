@@ -37,6 +37,7 @@ class Type(Enum):
     mp_on_hit = "mp_on_hit"
     undead_damage_bonus = "undead_damage_bonus"
     heal_on_kill = "heal_on_kill"
+    magic_bonus = "magic_bonus"
 
 
 class Target(Enum):
@@ -53,11 +54,11 @@ class Target(Enum):
 
 class Effect(DataModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra="ignore",
     )
-    type: Type
+    type: str | Type
     value: float | str
-    target: Target
+    target: str | Target
     condition: str | None = None
     duration: int | None = 0
 
@@ -84,8 +85,9 @@ class SkillTier(DataModel):
 
 class SkillTree(DataModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra="ignore",
     )
+    id: str | None = None
     name: str = Field(..., min_length=1)
     icon: str = Field(..., max_length=2, min_length=1)
     tiers: list[SkillTier] = Field(..., min_length=1)

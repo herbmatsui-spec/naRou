@@ -1,6 +1,6 @@
 """
 Unified Autonomous Subagent AI Engine
-Master AI combining Hierarchical FSM, Blackboard memory, Safety Heatmaps, 
+Master AI combining Hierarchical FSM, Blackboard memory, Safety Heatmaps,
 Combat Tactics, Item Decisions, Pet Coordination, and Floor Progression.
 """
 
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 from naRou.ai_blackboard import AIBlackboard
 from naRou.ai_state_machine import AIStateMachine
-from naRou.ai_states import (
+from naRou.ai.states import (
     CombatState,
     DescendState,
     EmergencyState,
@@ -33,7 +33,12 @@ from naRou.ai_floor_progression import FloorProgressionManager
 class AutonomousSubagentAI:
     """Master AI engine governing the player character with high-level autonomy."""
 
-    def __init__(self, engine: Engine, strategy_name: str = "hybrid", strategy_params: dict[str, Any] | None = None):
+    def __init__(
+        self,
+        engine: Engine,
+        strategy_name: str = "hybrid",
+        strategy_params: dict[str, Any] | None = None,
+    ):
         self.engine = engine
         self.bb = AIBlackboard(
             engine=engine,

@@ -70,7 +70,7 @@ from naRou.systems import (
     StatusEffect,
     SurvivalSystem,
 )
-from naRou.ui_fx_systems import FloatingText, Particle, ScreenShake
+from naRou.ui.ui_fx_systems import FloatingText, Particle, ScreenShake
 
 configure_logging()
 
@@ -1980,7 +1980,7 @@ class Engine:
         fused = self.pet_fusion_manager.execute_fusion(pets[:2], self.player, res_id)
         if fused:
             self.pet = fused
-            from naRou.ui_fx_systems import play_pet_fusion_fx
+            from naRou.ui.ui_fx_systems import play_pet_fusion_fx
 
             play_pet_fusion_fx(self, p1_name, p2_name, fused.name)
 
@@ -2130,7 +2130,7 @@ class Engine:
     def render(self, console: Any) -> None:
         """描画処理 (ゲームロジックを含まない)"""
         if self.game_state_data.game_state == "skill_tree":
-            from naRou.ui_fx_systems import format_skill_tree_display
+            from naRou.ui.ui_fx_systems import format_skill_tree_display
 
             skill_tree_text = format_skill_tree_display(self.skill_tree_registry)
             y = 1
@@ -2138,8 +2138,9 @@ class Engine:
                 console.print(x=1, y=y, string=line, fg=(255, 255, 255))
                 y += 1
             return
+
         if self.game_state_data.game_state == "job":
-            from naRou.ui_fx_systems import format_job_display
+            from naRou.ui.ui_fx_systems import format_job_display
 
             job_text = format_job_display(self.job_registry, self.player)
             y = 1
@@ -2513,7 +2514,7 @@ def get_tabbed_items(engine: Engine) -> list[Item]:
 def render_all(console: tcod.console.Console, engine: Engine) -> None:
     """RenderSystem への委譲 (後方互換性)"""
     if engine.game_state_data.game_state == "skill_tree":
-        from naRou.ui_fx_systems import format_skill_tree_display
+        from naRou.ui.ui_fx_systems import format_skill_tree_display
 
         skill_tree_text = format_skill_tree_display(engine.skill_tree_registry)
         y = 1

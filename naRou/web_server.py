@@ -15,8 +15,8 @@ from typing import TYPE_CHECKING, Any
 
 logger = logging.getLogger(__name__)
 
-from naRou.ui_event_panel import get_current_event_info, get_event_ranking, get_player_event_score
-from naRou.ui_ranking_panel import get_all_event_rankings
+from naRou.ui.ui_event_panel import get_current_event_info, get_event_ranking, get_player_event_score
+from naRou.ui.ui_ranking_panel import get_all_event_rankings
 
 # Dynamic-lighting foundation (Phase 2-A). Import is optional so the server still
 # runs if fov.py is unavailable.
@@ -214,6 +214,26 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 logger.exception("チュートリアル読み込み失敗")
                 steps = []
             self.wfile.write(json.dumps({"steps": steps}, ensure_ascii=False).encode("utf-8"))
+            return
+        elif self.path.split("?", 1)[0] == "/api/recipes":
+            self._set_headers("application/json; charset=utf-8")
+            try:
+                from naRou.systems.crafting_system import CraftingSystem
+                cs = CraftingSystem()
+                recipes = cs.get_recipes_status(_ENGINE_INSTANCE.player) if _ENGINE_INSTANCE and _ENGINE_INSTANCE.player else []
+            except Exception:
+                recipes = []
+            self.wfile.write(json.dumps({"recipes": recipes}, ensure_ascii=False).encode("utf-8"))
+            return
+        elif self.path.split("?", 1)[0] == "/api/archaeology/fragments":
+            self._set_headers("application/json; charset=utf-8")
+            try:
+                from naRou.systems.archaeology_decoder_system import ArchaeologyDecoderSystem
+                ads = ArchaeologyDecoderSystem()
+                fragments = ads.get_all_fragments_state(_ENGINE_INSTANCE.player) if _ENGINE_INSTANCE and _ENGINE_INSTANCE.player else []
+            except Exception:
+                fragments = []
+            self.wfile.write(json.dumps({"fragments": fragments}, ensure_ascii=False).encode("utf-8"))
             return
         elif self.path == "/" or self.path.endswith(".html") or self.path == "/index.html":
             html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "web_game_client.html")
@@ -636,6 +656,10 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 "hp": pet.hp if pet else 0,
                 "max_hp": pet.max_hp if pet else 0,
                 "tactic": getattr(pet, "tactic", "balanced") if pet else "balanced",
+                "personality": getattr(pet, "personality", "brave") if pet else "brave",
+                "personality_label": {"brave": "勇敢", "cowardly": "臆病", "calm": "冷静", "gluttonous": "食いしん坊", "aggressive": "好戦的"}.get(getattr(pet, "personality", "brave"), "勇敢") if pet else "勇敢",
+                "bond": getattr(pet, "bond", 50) if pet else 50,
+                "favorite_food_tags": getattr(pet, "favorite_food_tags", ["meat"]) if pet else [],
             },
             "map": visible_tiles,
             "raw_tiles": raw_tiles,
@@ -733,7 +757,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                     (255, 120, 50),
                     level="SUCCESS",
                 )
-                from naRou.ui_fx_systems import Particle
+                from naRou.ui.ui_fx_systems import Particle
 
                 for e in list(engine.entities):
                     if e.faction == "monster" and e.hp > 0:
@@ -768,6 +792,87 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 engine.pet.tactic = tactic
                 engine.log(f"シエルへの戦術指示を【{tactic}】に変更しました。", (255, 180, 220))
                 return f"戦術指示: {tactic}"
+        elif action == "craft":
+            recipe_id = data.get("recipe_id")
+            if not recipe_id:
+                return "レシピが指定されていません"
+            from naRou.systems.crafting_system import CraftingSystem
+            cs = CraftingSystem()
+            success, item, msg = cs.craft_item(engine.player, recipe_id)
+            if success:
+                engine.log(f"🔨 {msg}", (100, 255, 150), level="SUCCESS")
+                engine.advance_world()
+            else:
+                engine.log(f"⚠️ {msg}", (255, 120, 120), level="WARNING")
+            return msg
+        elif action == "salvage":
+            item_id = data.get("item_id")
+            target_item = None
+            for itm in engine.inventory.items:
+                if getattr(itm, "item_id", "") == item_id or itm.name == item_id or getattr(itm, "uid", "") == item_id:
+                    target_item = itm
+                    break
+            if not target_item:
+                return "分解対象のアイテムが見つかりません"
+            from naRou.systems.crafting_system import CraftingSystem
+            cs = CraftingSystem()
+            success, mats, msg = cs.salvage_item(engine.player, target_item)
+            if success:
+                engine.log(f"⚙️ {msg}", (255, 215, 0), level="SUCCESS")
+                engine.advance_world()
+            else:
+                engine.log(f"⚠️ {msg}", (255, 120, 120), level="WARNING")
+            return msg
+        elif action == "read_fragment":
+            fragment_id = data.get("fragment_id")
+            if not fragment_id:
+                return "フラグメントIDが指定されていません"
+            from naRou.systems.archaeology_decoder_system import ArchaeologyDecoderSystem
+            ads = ArchaeologyDecoderSystem()
+            success, msg = ads.collect_fragment(engine.player, fragment_id)
+            if success:
+                engine.log(msg, (200, 180, 255), level="SUCCESS")
+            return msg
+        elif action == "unlock_decoder_key":
+            key_id = data.get("key_id")
+            if not key_id:
+                return "鍵IDが指定されていません"
+            from naRou.systems.archaeology_decoder_system import ArchaeologyDecoderSystem
+            ads = ArchaeologyDecoderSystem()
+            success, msg = ads.unlock_decoder_key(engine.player, key_id)
+            if success:
+                engine.log(msg, (255, 215, 0), level="SUCCESS")
+            return msg
+        elif action == "feed_pet":
+            if not engine.pet:
+                return "ペットがいません"
+            item_id = data.get("item_id")
+            target_item = None
+            if item_id:
+                for itm in engine.inventory.items:
+                    if getattr(itm, "item_id", None) == item_id or itm.name == item_id or getattr(itm, "display_name", None) == item_id:
+                        target_item = itm
+                        break
+            if not target_item:
+                # 荷物内の最初の食料
+                foods = [i for i in engine.inventory.items if i.category in ("food", "potion", "herb", "consumable")]
+                if foods:
+                    target_item = foods[0]
+            if not target_item:
+                return "与えられる食べ物がありません"
+
+            from naRou.systems.pet_personality_system import PetPersonalitySystem
+            success, new_bond, msg = PetPersonalitySystem.feed_pet(engine.pet, target_item)
+            if success:
+                engine.inventory.remove_item(target_item, 1)
+                engine.log(msg, (255, 180, 220), level="SUCCESS")
+                engine.advance_world()
+            else:
+                engine.log(msg, (255, 120, 120), level="WARNING")
+            return msg
+
+
+
 
         if dx != 0 or dy != 0:
             acted = engine.player_act(dx, dy)

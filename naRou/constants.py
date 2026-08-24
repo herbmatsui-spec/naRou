@@ -116,6 +116,29 @@ SKILL_DROP_CHANCE = 0.3
 SKILL_DROP_MAX = 3
 SKILL_DROP_MIN = 1
 
+# Pet Personalities (Step 49)
+PERSONALITY_BRAVE = "brave"
+PERSONALITY_COWARDLY = "cowardly"
+PERSONALITY_CALM = "calm"
+PERSONALITY_GLUTTONOUS = "gluttonous"
+PERSONALITY_AGGRESSIVE = "aggressive"
+
+PERSONALITY_LABELS = {
+    PERSONALITY_BRAVE: "勇敢",
+    PERSONALITY_COWARDLY: "臆病",
+    PERSONALITY_CALM: "冷静",
+    PERSONALITY_GLUTTONOUS: "食いしん坊",
+    PERSONALITY_AGGRESSIVE: "好戦的",
+}
+
+# Food Tags (Step 51-52)
+FOOD_TAG_MEAT = "meat"
+FOOD_TAG_VEGETABLE = "vegetable"
+FOOD_TAG_SWEET = "sweet"
+FOOD_TAG_FISH = "fish"
+FOOD_TAG_HERB = "herb"
+
+
 # Food/Hunger
 HUNGER_MAX = 10000
 HUNGER_PER_TURN = 1
@@ -127,6 +150,29 @@ FOOD_ROT_TIME = 86400  # 24 hours in seconds
 CRAFT_SUCCESS_BASE = 70
 CRAFT_SUCCESS_SKILL_BONUS = 2
 CRAFT_CRIT_CHANCE = 0.05
+
+# Materials / Crafting Resources
+MATERIAL_WOOD = "wood"
+MATERIAL_IRON = "iron"
+MATERIAL_STEEL = "steel"
+MATERIAL_MYTHRIL = "mythril"
+MATERIAL_RUBINUS = "rubinus"
+MATERIAL_DIAMOND = "diamond"
+MATERIAL_LEATHER = "leather"
+MATERIAL_CLOTH = "cloth"
+MATERIAL_HERB = "herb"
+
+MATERIAL_NAMES = {
+    MATERIAL_WOOD: "木材",
+    MATERIAL_IRON: "鉄インゴット",
+    MATERIAL_STEEL: "鋼鉄インゴット",
+    MATERIAL_MYTHRIL: "ミスリル鉱石",
+    MATERIAL_RUBINUS: "ルビナス原石",
+    MATERIAL_DIAMOND: "ダイヤモンド",
+    MATERIAL_LEATHER: "革",
+    MATERIAL_CLOTH: "布",
+    MATERIAL_HERB: "薬草",
+}
 
 # Wish
 WISH_COST_BASE = 1000
@@ -235,6 +281,67 @@ class Element(Enum):
     PHYSICAL = "physical"
 
 
+ELEMENT_LABELS = {
+    "fire": "火炎",
+    "ice": "氷結",
+    "lightning": "電撃",
+    "poison": "毒",
+    "holy": "聖なる力",
+    "dark": "暗黒",
+    "chaos": "混沌",
+    "magic": "魔法",
+    "physical": "物理",
+}
+
+ELEMENT_WEAKNESS_MAP = {
+    "fire": "ice",       # 火炎は氷結に強い (氷結属性持ちは火炎が弱点)
+    "ice": "lightning",  # 氷結は電撃に強い
+    "lightning": "poison",
+    "poison": "holy",
+    "holy": "dark",
+    "dark": "holy",
+}
+
+# Status Effects (Steps 50, 54)
+STATUS_POISON = "poison"
+STATUS_BURN = "burn"
+STATUS_FREEZE = "freeze"
+STATUS_PARALYZE = "paralyze"
+STATUS_CONFUSION = "confusion"
+STATUS_BLIND = "blind"
+STATUS_SLEEP = "sleep"
+
+ALL_STATUS_EFFECTS = (
+    STATUS_POISON,
+    STATUS_BURN,
+    STATUS_FREEZE,
+    STATUS_PARALYZE,
+    STATUS_CONFUSION,
+    STATUS_BLIND,
+    STATUS_SLEEP,
+)
+
+STATUS_LABELS = {
+    STATUS_POISON: "毒",
+    STATUS_BURN: "炎上",
+    STATUS_FREEZE: "凍結",
+    STATUS_PARALYZE: "麻痺",
+    STATUS_CONFUSION: "混乱",
+    STATUS_BLIND: "盲目",
+    STATUS_SLEEP: "睡眠",
+}
+
+STATUS_ICONS = {
+    STATUS_POISON: "🧪",
+    STATUS_BURN: "🔥",
+    STATUS_FREEZE: "❄️",
+    STATUS_PARALYZE: "⚡",
+    STATUS_CONFUSION: "💫",
+    STATUS_BLIND: "👁️‍🗨️",
+    STATUS_SLEEP: "💤",
+}
+
+
 # Game States
 class GameState(Enum):
     TITLE = "title"
@@ -294,6 +401,32 @@ QUALITY_NORMAL = "normal"
 QUALITY_GOOD = "good"
 QUALITY_MIRACLE = "miracle"
 QUALITY_GOD = "god"
+
+ALL_QUALITIES = (QUALITY_BAD, QUALITY_NORMAL, QUALITY_GOOD, QUALITY_MIRACLE, QUALITY_GOD)
+
+QUALITY_LABELS = {
+    QUALITY_BAD: "粗悪",
+    QUALITY_NORMAL: "通常",
+    QUALITY_GOOD: "良質",
+    QUALITY_MIRACLE: "奇跡",
+    QUALITY_GOD: "神器",
+}
+
+QUALITY_COLORS = {
+    QUALITY_BAD: (130, 130, 130),       # 灰色
+    QUALITY_NORMAL: (255, 255, 255),    # 白
+    QUALITY_GOOD: (100, 200, 255),      # 青
+    QUALITY_MIRACLE: (200, 100, 255),   # 紫
+    QUALITY_GOD: (255, 215, 0),         # 金
+}
+
+QUALITY_VALUE_MULTIPLIERS = {
+    QUALITY_BAD: 0.5,
+    QUALITY_NORMAL: 1.0,
+    QUALITY_GOOD: 1.5,
+    QUALITY_MIRACLE: 3.0,
+    QUALITY_GOD: 6.0,
+}
 CAT_WEAPON = "weapon"
 CAT_SHIELD = "shield"
 CAT_HELM = "helm"

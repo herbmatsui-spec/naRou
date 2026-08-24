@@ -65,15 +65,17 @@ class Effect(DataModel):
 
 class SkillFusion(DataModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra="ignore",
+        populate_by_name=True,
     )
+    id: str | None = None
     name: str = Field(..., min_length=1)
-    description: str
-    required_skills: list[RequiredSkill] = Field(..., min_length=1)
+    description: str | None = ""
+    required_skills: list[Any] = Field(default_factory=list)
     required_job: str | None = None
     required_god: str | None = None
-    result_skills: list[ResultSkill] = Field(..., min_length=1)
-    bonus_effects: list[Effect]
+    result_skills: list[Any] = Field(default_factory=list)
+    bonus_effects: list[Any] = Field(default_factory=list, alias="bonusEffects")
 
 
 class SkillFusionDefinition(DataModel):

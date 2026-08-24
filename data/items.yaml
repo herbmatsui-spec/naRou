@@ -18,6 +18,9 @@ longsword:
   pv: 0
   dv: 0
   material: "iron"
+  salvage_materials:
+    item_iron_ingot: 2
+    item_wood_log: 1
 
 shortsword:
   name: "短剣"
@@ -33,6 +36,8 @@ shortsword:
   pv: 0
   dv: 0
   material: "iron"
+  salvage_materials:
+    item_iron_ingot: 1
 
 katana:
   name: "刀"
@@ -48,6 +53,8 @@ katana:
   pv: 0
   dv: 1
   material: "steel"
+  salvage_materials:
+    item_steel_ingot: 2
 
 claymore:
   name: "大剣"
@@ -63,6 +70,9 @@ claymore:
   pv: 1
   dv: -2
   material: "steel"
+  salvage_materials:
+    item_steel_ingot: 3
+    item_wood_log: 1
 
 dagger:
   name: "ダガー"
@@ -335,6 +345,7 @@ bread:
   base_weight: 0.5
   base_value: 15
   nutrition: 1500
+  food_tags: ["vegetable"]
 
 ration:
   name: "旅糧"
@@ -344,6 +355,7 @@ ration:
   base_weight: 1.0
   base_value: 25
   nutrition: 3200
+  food_tags: ["meat", "vegetable"]
 
 apple:
   name: "りんご"
@@ -353,6 +365,7 @@ apple:
   base_weight: 0.3
   base_value: 10
   nutrition: 800
+  food_tags: ["sweet", "vegetable"]
 
 meat_ration:
   name: "干し肉"
@@ -362,6 +375,38 @@ meat_ration:
   base_weight: 0.6
   base_value: 35
   nutrition: 2400
+  food_tags: ["meat"]
+
+fresh_meat:
+  name: "新鮮な肉"
+  category: "food"
+  char: "🥩"
+  color: [255, 100, 100]
+  base_weight: 0.8
+  base_value: 40
+  nutrition: 3000
+  food_tags: ["meat"]
+
+grilled_fish:
+  name: "焼き魚"
+  category: "food"
+  char: "🐟"
+  color: [100, 180, 255]
+  base_weight: 0.5
+  base_value: 30
+  nutrition: 2000
+  food_tags: ["fish"]
+
+sweet_candy:
+  name: "甘いキャンディ"
+  category: "food"
+  char: "🍬"
+  color: [255, 150, 220]
+  base_weight: 0.1
+  base_value: 20
+  nutrition: 500
+  food_tags: ["sweet"]
+
 
 # --- 魔法書 (Spellbooks) ---
 book_fire:
@@ -402,6 +447,7 @@ rod_wishing:
   color: [100, 255, 255]
   base_weight: 0.8
   base_value: 3500
+  quality: "god"
   sp_stock: 1
 
 rod_lightning:
@@ -428,3 +474,68 @@ mythril_ore:
   color: [150, 220, 255]
   base_weight: 1.5
   base_value: 300
+
+item_wood_log:
+  name: "木材"
+  category: "ore"
+  char: "🪵"
+  color: [139, 69, 19]
+  base_weight: 1.0
+  base_value: 20
+  material: "wood"
+
+item_iron_ingot:
+  name: "鉄インゴット"
+  category: "ore"
+  char: "🧱"
+  color: [192, 192, 192]
+  base_weight: 1.5
+  base_value: 50
+  material: "iron"
+
+item_steel_ingot:
+  name: "鋼鉄インゴット"
+  category: "ore"
+  char: "🧱"
+  color: [160, 180, 200]
+  base_weight: 2.0
+  base_value: 120
+  material: "steel"
+
+item_rubinus_ore:
+  name: "ルビナス原石"
+  category: "ore"
+  char: "♦️"
+  color: [220, 20, 60]
+  base_weight: 1.2
+  base_value: 400
+  material: "rubinus"
+
+item_leather:
+  name: "革"
+  category: "ore"
+  char: "📜"
+  color: [160, 110, 60]
+  base_weight: 0.5
+  base_value: 30
+  material: "leather"
+
+item_cloth:
+  name: "布"
+  category: "ore"
+  char: "🧶"
+  color: [240, 240, 240]
+  base_weight: 0.3
+  base_value: 25
+  material: "cloth"
+
+item_herb:
+  name: "薬草"
+  category: "food"
+  char: "🌿"
+  color: [50, 205, 50]
+  base_weight: 0.2
+  base_value: 15
+  heal_amount: 15
+  food_tags: ["herb", "vegetable"]
+

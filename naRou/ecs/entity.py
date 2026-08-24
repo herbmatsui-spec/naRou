@@ -32,6 +32,7 @@ from naRou.ecs.components import (
     Skill,
     SkillFusionComponent,
     SkillTreeJobComponent,
+    StatusEffectsComponent,
     StorytellerComponent,
     TitleComponent,
 )
@@ -173,6 +174,11 @@ class Entity:
         self.components[BaseStatsComponent] = BaseStatsComponent()
         self.components[EconomyComponent] = EconomyComponent()
         self.components[LevelComponent] = LevelComponent()
+        self.components[StatusEffectsComponent] = StatusEffectsComponent()
+
+        # 属性耐性 & 弱点 (Step 51, 53)
+        self.base_resistances: dict[str, int] = {}
+        self.weaknesses: list[str] = []
 
     def get_component(self, component_type: type[T]) -> T:
         """指定されたコンポーネントを取得（存在しなければ初期化して登録）"""
@@ -183,6 +189,46 @@ class Entity:
     def has_component(self, component_type: type) -> bool:
         """指定されたコンポーネントを所持しているか判定"""
         return component_type in self.components
+
+    # -------------------------------------------------------------
+    # 状態異常プロパティ・メソッド (StatusEffectsComponent への委譲: Step 54)
+    # -------------------------------------------------------------
+    @property
+    def status_effects(self) -> StatusEffectsComponent:
+        return self.get_component(StatusEffectsComponent)
+
+    def has_status(self, effect_type: str) -> bool:
+        return self.status_effects.has_effect(effect_type)
+
+    def add_status(
+        self,
+        effect_type: str,
+        duration: int,
+        power: int = 1,
+        source_name: str = "",
+    ) -> bool:
+        return self.status_effects.add_effect(effect_type, duration, power, source_name)
+
+    def remove_status(self, effect_type: str) -> bool:
+        return self.status_effects.remove_effect(effect_type)
+
+    def clear_statuses(self) -> None:
+        self.status_effects.clear_all()
+
+    # -------------------------------------------------------------
+    # 属性耐性計算 (Step 53, 56)
+    # -------------------------------------------------------------
+    def get_elemental_resistance(self, element: str) -> int:
+        """基礎耐性 + 装備エンチャント耐性の合算"""
+        base = self.base_resistances.get(element, 0)
+        equip_res = 0
+        if hasattr(self, "inventory") and self.inventory:
+            equip_res = self.inventory.get_elemental_resistances().get(element, 0)
+        return base + equip_res
+
+    def is_weak_to(self, element: str) -> bool:
+        """指定属性が弱点かどうか判定"""
+        return element in self.weaknesses
 
     # -------------------------------------------------------------
     # 称号・統計プロパティ (TitleComponent への委譲)
@@ -995,6 +1041,12 @@ class Entity:
     def archaeology(self) -> ArchaeologyComponent:
         return self.get_component(ArchaeologyComponent)
 
+    @archaeology.setter
+    def archaeology(self, val: ArchaeologyComponent):
+        self.components[ArchaeologyComponent] = val
+
+
+
     @property
     def excavated_sites(self) -> list[str]:
         return self.get_component(ArchaeologyComponent).excavated_sites
@@ -1053,6 +1105,32 @@ class Entity:
     @affection.setter
     def affection(self, val: int) -> None:
         self.get_component(AffectionComponent).affection = val
+        self.get_component(AffectionComponent).bond = val
+
+    @property
+    def bond(self) -> int:
+        return self.get_component(AffectionComponent).bond
+
+    @bond.setter
+    def bond(self, val: int) -> None:
+        self.get_component(AffectionComponent).bond = max(0, min(100, val))
+        self.get_component(AffectionComponent).affection = self.get_component(AffectionComponent).bond
+
+    @property
+    def personality(self) -> str:
+        return self.get_component(AffectionComponent).personality
+
+    @personality.setter
+    def personality(self, val: str) -> None:
+        self.get_component(AffectionComponent).personality = val
+
+    @property
+    def favorite_food_tags(self) -> list[str]:
+        return self.get_component(AffectionComponent).favorite_food_tags
+
+    @favorite_food_tags.setter
+    def favorite_food_tags(self, val: list[str]) -> None:
+        self.get_component(AffectionComponent).favorite_food_tags = val
 
     @property
     def is_mounted(self) -> bool:
@@ -1061,6 +1139,7 @@ class Entity:
     @is_mounted.setter
     def is_mounted(self, val: bool) -> None:
         self.get_component(AffectionComponent).is_mounted = val
+
 
     @property
     def gene_skills(self) -> list[str]:

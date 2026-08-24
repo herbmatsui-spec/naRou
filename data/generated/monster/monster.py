@@ -57,7 +57,7 @@ class AiType(Enum):
 
 class MonsterDefinition(DataModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra="ignore",
     )
     id: str | None = Field(None, pattern="^mn_[a-z_][a-z0-9_]*$")
     """
@@ -140,11 +140,25 @@ class MonsterDefinition(DataModel):
     Faction ID for reputation/aggro
     """
     ai_type: AiType | None = None
-    resistances: dict[str, int] | None = {}
+    resistances: dict[str, int] | None = Field(default_factory=dict)
     """
     Element resistances (fire, cold, lightning, etc.)
     """
-    attributes: dict[str, int] | None = {}
+    weaknesses: list[str] | None = Field(default_factory=list)
+    """
+    Element weaknesses (fire, ice, lightning, holy, etc.)
+    """
+    attributes: dict[str, int] | None = Field(default_factory=dict)
     """
     Base attributes (str, dex, con, int, wis, cha)
     """
+    personalities: list[str] | None = Field(default_factory=list)
+    """
+    Available personalities for this pet (brave, cowardly, calm, etc.)
+    """
+    favorite_food_tags: list[str] | None = Field(default_factory=list)
+    """
+    Favorite food tags (meat, vegetable, sweet, etc.)
+    """
+
+

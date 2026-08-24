@@ -69,7 +69,7 @@ from naRou.core.entity_renderer import calculate_facing
 from naRou.core.tile_atlas import TileAtlas
 from naRou.render_context import RenderContext
 from naRou.systems import MonsterPreset
-from naRou.ui_fx_systems import DynamicLighting
+from naRou.ui.ui_fx_systems import DynamicLighting
 
 
 class EntityRenderer:
