@@ -1,0 +1,20 @@
+id: genius_discrimination
+archetype: genius_discrimination
+contexts: [academy, royal_court, magic_guild]
+faction_weight:
+  noble: 0.4
+  guild: 0.3
+  merchant: 0.2
+  guard: 0.1
+route_steps:
+  - { flag: public_ridicule, turn: 1, actor: establishment, on_fail: ignored }
+  - { flag: resources_denied, turn: 3, actor: establishment, on_fail: leaked }
+  - { flag: expulsion, turn: 5, actor: establishment, on_fail: proved_wrong }
+exploit_windows:
+  - { id: buy_research, tier: 1, req_gold: 500, base_success: 0.75 }
+  - { id: prove_worth, tier: 2, req_skill: [analysis, magic_theory], base_success: 0.5 }
+  - { id: systemic_change, tier: 3, req_skill: [authority, magic_mastery], base_success: 0.2 }
+reward:
+  karma_t1: 200
+  karma_t2: 1000
+  stealable_skill: genius_recognition

@@ -1,56 +1,269 @@
 main_quests:
+  # ===== プロローグ: 線形開始 =====
   - quest_id: "prologue_01"
     title: "運命の始まり"
     description: "村の長から古文書を受け取り、世界の異変について知る。"
     required_phase: "BEGINNING"
+    prerequisite_quest_ids: []
+    is_parallel: false
     objectives:
       - objective_id: "talk_elder"
         description: "村の長に話しかける"
-        target_type: "visit"
-        target_id: "village_elder"
-        required_count: 1
+        condition_dsl: "(has player.visited_locations.village_elder)"
+        auto_evaluate: true
+        narrative_dag_id: "prologue_branching"
     rewards:
       gold: 100
       world_phase: "AWAKENING"
-    next_quest_id: "awakening_01"
+    next_quest_ids: ["awakening_01"]
+    phase_unlock_condition: "(truthy quest.completed.prologue_01)"
+    narrative_dag_id: "prologue_branching"
 
+  # ===== 覚醒期: メインライン + 並行派閥導入 =====
   - quest_id: "awakening_01"
     title: "目覚めの試練"
     description: "封印された洞窟へ向かい、古の守護者を倒して世界の断片を回収せよ。"
     required_phase: "AWAKENING"
+    prerequisite_quest_ids: ["prologue_01"]
+    is_parallel: false
     objectives:
       - objective_id: "kill_guardian"
         description: "古の守護者を討伐する"
-        target_type: "kill"
-        target_id: "ancient_guardian"
-        required_count: 1
+        condition_dsl: "(>= player.kill_counts.ancient_guardian 1)"
+        auto_evaluate: true
       - objective_id: "collect_fragment"
         description: "世界の断片を回収する"
-        target_type: "collect"
-        target_id: "world_fragment"
-        required_count: 1
+        condition_dsl: "(>= player.collect_counts.world_fragment 1)"
+        auto_evaluate: true
     rewards:
       gold: 1000
       world_phase: "EXPLORATION"
-    next_quest_id: "exploration_01"
+    next_quest_ids: ["exploration_01", "faction_intro_01"]
+    phase_unlock_condition: "(truthy quest.completed.awakening_01)"
+    narrative_dag_id: "awakening_approach"
 
+  # 派閥導入クエスト（並行進行可能）
+  - quest_id: "faction_intro_01"
+    title: "三つ巴の招待"
+    description: "王国・教会・闇の手、三派閥から招待が届く。いずれかを選ぶか、全てを保留するか。"
+    required_phase: "AWAKENING"
+    prerequisite_quest_ids: ["prologue_01"]
+    is_parallel: true
+    objectives:
+      - objective_id: "meet_factions"
+        description: "三派閥の代表と面会する"
+        condition_dsl: "(and (has player.visited_locations.kingdom_emissary) (has player.visited_locations.church_emissary) (has player.visited_locations.shadow_emissary))"
+        auto_evaluate: true
+    rewards:
+      gold: 500
+    next_quest_ids: ["faction_kingdom_01", "faction_church_01", "faction_shadow_01"]
+    phase_unlock_condition: ""
+    narrative_dag_id: "faction_war_choice"
+
+  # 派閥別クエスト（並行・分岐）
+  - quest_id: "faction_kingdom_01"
+    title: "王国の盾"
+    description: "ガルド王国の騎士として前線を守れ。"
+    required_phase: "AWAKENING"
+    prerequisite_quest_ids: ["faction_intro_01"]
+    is_parallel: true
+    objectives:
+      - objective_id: "defend_frontline"
+        description: "前線基地を防衛する"
+        condition_dsl: "(and (>= player.kill_counts.goblin 10) (>= player.kill_counts.orc 3))"
+        auto_evaluate: true
+    rewards:
+      gold: 2000
+      faction_rep:
+        kingdom_garde: 50
+    next_quest_ids: ["faction_kingdom_02"]
+    phase_unlock_condition: ""
+
+  - quest_id: "faction_church_01"
+    title: "光の導き手"
+    description: "ルミエスト教会の聖職者として民を救済せよ。"
+    required_phase: "AWAKENING"
+    prerequisite_quest_ids: ["faction_intro_01"]
+    is_parallel: true
+    objectives:
+      - objective_id: "heal_villagers"
+        description: "病に冒された村人を治療する"
+        condition_dsl: "(>= player.collect_counts.heal_herb 20)"
+        auto_evaluate: true
+    rewards:
+      gold: 1500
+      faction_rep:
+        church_of_lumiest: 50
+    next_quest_ids: ["faction_church_02"]
+    phase_unlock_condition: ""
+
+  - quest_id: "faction_shadow_01"
+    title: "闇の歩み手"
+    description: "シャドウハンドの刺客として暗躍せよ。"
+    required_phase: "AWAKENING"
+    prerequisite_quest_ids: ["faction_intro_01"]
+    is_parallel: true
+    objectives:
+      - objective_id: "assassinate_targets"
+        description: "標的を暗殺する"
+        condition_dsl: "(>= player.kill_counts.corrupt_noble 3)"
+        auto_evaluate: true
+    rewards:
+      gold: 3000
+      faction_rep:
+        shadow_hand: 50
+    next_quest_ids: ["faction_shadow_02"]
+    phase_unlock_condition: ""
+
+  # 派閥第2段階（探索期で解放）
+  - quest_id: "faction_kingdom_02"
+    title: "王国の要塞"
+    description: "王国の要塞を守り、敵の大軍を撃退せよ。"
+    required_phase: "EXPLORATION"
+    prerequisite_quest_ids: ["faction_kingdom_01", "awakening_01"]
+    is_parallel: true
+    objectives:
+      - objective_id: "defend_fortress"
+        description: "要塞防衛戦で勝利する"
+        condition_dsl: "(and (>= player.kill_counts.undead 20) (has flags.fortress_defended))"
+        auto_evaluate: true
+    rewards:
+      gold: 5000
+      faction_rep:
+        kingdom_garde: 100
+    next_quest_ids: ["confrontation_01"]
+    phase_unlock_condition: ""
+
+  - quest_id: "faction_church_02"
+    title: "聖域の守護"
+    description: "教会の聖域を汚す邪悪を祓え。"
+    required_phase: "EXPLORATION"
+    prerequisite_quest_ids: ["faction_church_01", "awakening_01"]
+    is_parallel: true
+    objectives:
+      - objective_id: "purify_sanctuary"
+        description: "聖域を浄化する"
+        condition_dsl: "(and (>= player.kill_counts.demon 10) (has flags.sanctuary_purified))"
+        auto_evaluate: true
+    rewards:
+      gold: 4000
+      faction_rep:
+        church_of_lumiest: 100
+    next_quest_ids: ["confrontation_01"]
+    phase_unlock_condition: ""
+
+  - quest_id: "faction_shadow_02"
+    title: "闇の支配者"
+    description: "影から世界を操る真の黒幕を暴け。"
+    required_phase: "EXPLORATION"
+    prerequisite_quest_ids: ["faction_shadow_01", "awakening_01"]
+    is_parallel: true
+    objectives:
+      - objective_id: "expose_mastermind"
+        description: "黒幕の正体を暴く"
+        condition_dsl: "(and (has flags.mastermind_identified) (>= player.level 15))"
+        auto_evaluate: true
+    rewards:
+      gold: 6000
+      faction_rep:
+        shadow_hand: 100
+    next_quest_ids: ["confrontation_01"]
+    phase_unlock_condition: ""
+
+  # ===== 探索期: メインライン =====
   - quest_id: "exploration_01"
     title: "失われた記憶の探索"
     description: "各地に散らばる世界の断片をさらに収集し、世界の真実を解き明かせ。"
     required_phase: "EXPLORATION"
+    prerequisite_quest_ids: ["awakening_01"]
+    is_parallel: false
     objectives:
       - objective_id: "collect_fragments_more"
         description: "世界の断片をさらに収集する"
-        target_type: "collect"
-        target_id: "world_fragment"
-        required_count: 3
+        condition_dsl: "(>= player.collect_counts.world_fragment 3)"
+        auto_evaluate: true
       - objective_id: "prove_resolve"
         description: "試練: Lv5以上 または 既に守護者を討伐済み"
-        target_type: "variable"
-        target_id: "prove_resolve"
-        required_count: 1
         condition_dsl: "(or (>= player.level 5) (has flags.slew_guardian))"
+        auto_evaluate: true
     rewards:
       gold: 5000
       world_phase: "CONFRONTATION"
-    next_quest_id: "confrontation_01"
+    next_quest_ids: ["confrontation_01"]
+    phase_unlock_condition: "(truthy quest.completed.exploration_01)"
+    narrative_dag_id: "build_specialized_branching"
+
+  # ===== 対決期: 分岐合流 =====
+  - quest_id: "confrontation_01"
+    title: "最終決戦"
+    description: "世界の真実を知った今、最後の敵と対峙せよ。"
+    required_phase: "CONFRONTATION"
+    prerequisite_quest_ids: ["exploration_01"]
+    is_parallel: false
+    objectives:
+      - objective_id: "defeat_final_boss"
+        description: "世界の支配者を討伐する"
+        condition_dsl: "(>= player.kill_counts.world_overlord 1)"
+        auto_evaluate: true
+      - objective_id: "restore_balance"
+        description: "世界の均衡を取り戻す"
+        condition_dsl: "(has flags.world_restored)"
+        auto_evaluate: true
+    rewards:
+      gold: 50000
+    next_quest_ids: ["ending_kingdom", "ending_church", "ending_shadow", "ending_neutral"]
+    phase_unlock_condition: ""
+    narrative_dag_id: ""
+
+  # エンディング分岐（それぞれ派閥ルートに依存）
+  - quest_id: "ending_kingdom"
+    title: "王国の勝利"
+    description: "ガルド王国の平和が訪れる。"
+    required_phase: "CONFRONTATION"
+    prerequisite_quest_ids: ["confrontation_01", "faction_kingdom_02"]
+    is_parallel: false
+    objectives: []
+    rewards:
+      title: "王国の救世主"
+      ending_scene: "ending_kingdom_victory"
+    next_quest_ids: []
+    phase_unlock_condition: ""
+
+  - quest_id: "ending_church"
+    title: "光の福音"
+    description: "ルミエスト教会の教えが世界に広まる。"
+    required_phase: "CONFRONTATION"
+    prerequisite_quest_ids: ["confrontation_01", "faction_church_02"]
+    is_parallel: false
+    objectives: []
+    rewards:
+      title: "光の使徒"
+      ending_scene: "ending_church_victory"
+    next_quest_ids: []
+    phase_unlock_condition: ""
+
+  - quest_id: "ending_shadow"
+    title: "闇の秩序"
+    description: "シャドウハンドが新たな世界秩序を築く。"
+    required_phase: "CONFRONTATION"
+    prerequisite_quest_ids: ["confrontation_01", "faction_shadow_02"]
+    is_parallel: false
+    objectives: []
+    rewards:
+      title: "影の支配者"
+      ending_scene: "ending_shadow_victory"
+    next_quest_ids: []
+    phase_unlock_condition: ""
+
+  - quest_id: "ending_neutral"
+    title: "孤高の道"
+    description: "どの派閥にも属さず、真の自由を手に入れる。"
+    required_phase: "CONFRONTATION"
+    prerequisite_quest_ids: ["confrontation_01"]
+    is_parallel: false
+    objectives: []
+    rewards:
+      title: "真理の求道者"
+      ending_scene: "ending_neutral_victory"
+    next_quest_ids: []
+    phase_unlock_condition: ""

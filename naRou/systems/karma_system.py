@@ -43,6 +43,7 @@ class KarmaRegistry:
         alignment_ranges = {
             "law_chaos": {"range": [-100, 100], "neutral": 0},
             "good_evil": {"range": [-100, 100], "neutral": 0},
+            "exposure": {"range": [0, 100], "neutral": 0},
         }
         actions = {
             "help_innocent": {"law_chaos": 5, "good_evil": 10},
@@ -50,6 +51,10 @@ class KarmaRegistry:
             "donate_to_temple": {"law_chaos": 1, "good_evil": 2},
             "steal": {"law_chaos": -1, "good_evil": -2},
             "murder_innocent": {"law_chaos": -2, "good_evil": -5},
+            "template_deep_read": {"law_chaos": -1, "good_evil": 0, "exposure": 1},
+            "template_intervene_t1": {"law_chaos": 0, "good_evil": 0, "exposure": 1},
+            "template_intervene_t2": {"law_chaos": -2, "good_evil": -2, "exposure": 3},
+            "template_intervene_t3": {"law_chaos": -5, "good_evil": -5, "exposure": 10},
         }
         if os.path.exists(path):
             try:
@@ -95,22 +100,29 @@ class KarmaManager:
     def __init__(self, registry: KarmaRegistry | None = None):
         self.registry = registry or REGISTRY
 
-    def update_karma(self, player: Any, action: str, amount: int = 1) -> tuple[int, int]:
-        """カーマを更新"""
+    def update_karma(self, player: Any, action: str, amount: int = 1) -> tuple[int, int, int]:
+        """カーマを更新（露見度も含む）"""
         karma_data = self.registry.get("default")
         if not karma_data:
-            return getattr(player, "karma_law_chaos", 0), getattr(player, "karma_good_evil", 0)
+            return (
+                getattr(player, "karma_law_chaos", 0),
+                getattr(player, "karma_good_evil", 0),
+                getattr(player, "template_exposure", 0),
+            )
 
-        action_data = karma_data.actions.get(action, {"law_chaos": 0, "good_evil": 0})
+        action_data = karma_data.actions.get(action, {"law_chaos": 0, "good_evil": 0, "exposure": 0})
         law_chaos_change = action_data.get("law_chaos", 0) * amount
         good_evil_change = action_data.get("good_evil", 0) * amount
+        exposure_change = action_data.get("exposure", 0) * amount
 
         player.karma_law_chaos += law_chaos_change
         player.karma_good_evil += good_evil_change
+        player.template_exposure = getattr(player, "template_exposure", 0) + exposure_change
 
         # 範囲制限
         law_chaos_range = karma_data.alignment_ranges.get("law_chaos", {}).get("range", [-100, 100])
         good_evil_range = karma_data.alignment_ranges.get("good_evil", {}).get("range", [-100, 100])
+        exposure_range = karma_data.alignment_ranges.get("exposure", {}).get("range", [0, 100])
 
         player.karma_law_chaos = max(
             law_chaos_range[0], min(law_chaos_range[1], player.karma_law_chaos)
@@ -118,7 +130,10 @@ class KarmaManager:
         player.karma_good_evil = max(
             good_evil_range[0], min(good_evil_range[1], player.karma_good_evil)
         )
-        return player.karma_law_chaos, player.karma_good_evil
+        player.template_exposure = max(
+            exposure_range[0], min(exposure_range[1], player.template_exposure)
+        )
+        return player.karma_law_chaos, player.karma_good_evil, player.template_exposure
 
     def get_karma_bonuses(self, player: Any) -> dict[str, Any]:
         """カーマボーナスを取得"""

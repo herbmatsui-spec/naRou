@@ -347,23 +347,23 @@ class WorldClock:
         for cb in self._on_phase_changed_callbacks:
             try:
                 cb(old_phase, new_phase)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error("Phase change callback failed: %s", e, exc_info=True)
 
     def _fire_hour_changed(self, hour: int) -> None:
         # 時報用コールバック
         for cb in self._on_hour_changed_callbacks:
             try:
                 cb(hour)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error("Hour change callback failed: %s", e, exc_info=True)
 
     def _fire_day_changed(self, day: int) -> None:
         for cb in self._on_day_changed_callbacks:
             try:
                 cb(day)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error("Day change callback failed: %s", e, exc_info=True)
 
     # --- 表示 ---
     def get_phase(self) -> TimePhase:

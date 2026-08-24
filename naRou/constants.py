@@ -392,8 +392,13 @@ STARTING_GOLD = 100
 AI_ROLE_KITER = "kiter"
 AI_ROLE_BRUTE = "brute"
 AI_ROLE_FLANKER = "flanker"
+AI_ROLE_SUPPORT = "support"
+AI_ROLE_MELEE = "melee"
+AI_ROLE_TANK = "tank"
+AI_ROLE_CASTER = "caster"
 PINCER_MIN_ALLIES = 2
 KITER_PREFERRED_RANGE = 3
+HARD_KITER_RANGE_BONUS = 2
 
 # Item Quality & Categories
 QUALITY_BAD = "bad"
@@ -444,11 +449,24 @@ CAT_GOLD = "gold"
 
 # Entity Intent
 INTENT_ATTACK = "attack"
+INTENT_MOVE = "move"
 INTENT_CAST = "cast"
 INTENT_HEAL = "heal"
 INTENT_FLEE = "flee"
-INTENT_MOVE = "move"
 INTENT_GUARD = "guard"
+INTENT_GLYPH = "glyph"
+
+INTENT_LABEL_JA = {
+    INTENT_ATTACK: "攻撃",
+    INTENT_MOVE: "移動",
+    INTENT_CAST: "詠唱",
+    INTENT_HEAL: "回復",
+    INTENT_FLEE: "逃走",
+    INTENT_GUARD: "防御",
+    INTENT_GLYPH: "魔法陣",
+}
+
+FLEE_HP_RATIO = 0.25
 
 
 # Save
@@ -473,59 +491,3 @@ WS_PORT = 8765
 LOG_MESSAGE_MAX = 100
 HELP_TEXT_LINES = 20
 
-# AI Roles
-AI_ROLE_KITER = "kiter"
-AI_ROLE_SUPPORT = "support"
-AI_ROLE_MELEE = "melee"
-AI_ROLE_TANK = "tank"
-AI_ROLE_CASTER = "caster"
-
-# Intent System
-INTENT_ATTACK = "attack"
-INTENT_MOVE = "move"
-INTENT_CAST = "cast"
-INTENT_HEAL = "heal"
-INTENT_FLEE = "flee"
-INTENT_GLYPH = "glyph"
-
-INTENT_LABEL_JA = {
-    INTENT_ATTACK: "攻撃",
-    INTENT_MOVE: "移動",
-    INTENT_CAST: "詠唱",
-    INTENT_HEAL: "回復",
-    INTENT_FLEE: "逃走",
-    INTENT_GLYPH: "魔法陣",
-}
-
-FLEE_HP_RATIO = 0.25
-
-# Secret Area System
-ACCESS_FACTION_REP = "faction_rep"
-ACCESS_QUEST_FLAG = "quest_flag"
-ACCESS_SKILL_REQUIRED = "skill_required"
-ACCESS_SACRIFICE = "sacrifice"
-ACCESS_TIME_WINDOW = "time_window"
-
-KEY_TYPE_PHYSICAL = "physical"
-KEY_TYPE_KEYCARD = "keycard"
-KEY_TYPE_BIOMETRIC = "biometric"
-KEY_TYPE_DECRYPTION = "decryption"
-
-TILE_SECRET_FLOOR = 10
-TILE_HIDDEN_DOOR = 11
-TILE_FALSE_WALL = 12
-TILE_VENT = 13
-
-EMOTE_EYE = "eye"
-EMOTE_KEY = "key"
-
-REWARD_LORE = "lore"
-REWARD_CONCEPT_CRYSTAL = "concept_crystal"
-REWARD_FORBIDDEN_SKILL = "forbidden_skill"
-REWARD_HIDDEN_MERCHANT = "hidden_merchant"
-REWARD_SHORTCUT = "shortcut"
-
-try:
-    from naRou.god_system import GodInfo
-except Exception:
-    pass

@@ -36,6 +36,7 @@ class RaidTriggerType(str, Enum):
     HEAT_LEVEL = "HeatLevel"
     ELAPSED_TURNS = "ElapsedTurns"
     META_QUEST = "MetaQuest"
+    AUDIT_THREAT = "AuditThreat"
 
 
 class DefenseFacilityType(str, Enum):
@@ -106,6 +107,11 @@ class DefenseFacility:
     effect_description: str = ""
     special_ability: str = ""
     is_built: bool = False
+    # 監査拡張用フィールド
+    element: str = "none"
+    blueprint_id: str = ""
+    status_effect: str = "none"
+    status_duration: int = 0
 
     @property
     def max_hp(self) -> int:
@@ -194,6 +200,10 @@ class DefenseFacility:
             effect_description=data.get("effect_description", ""),
             special_ability=data.get("special_ability", ""),
             is_built=data.get("is_built", False),
+            element=data.get("element", "none"),
+            blueprint_id=data.get("blueprint_id", ""),
+            status_effect=data.get("status_effect", "none"),
+            status_duration=data.get("status_duration", 0),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -216,6 +226,10 @@ class DefenseFacility:
             "effect_description": self.effect_description,
             "special_ability": self.special_ability,
             "is_built": self.is_built,
+            "element": self.element,
+            "blueprint_id": self.blueprint_id,
+            "status_effect": self.status_effect,
+            "status_duration": self.status_duration,
         }
 
 

@@ -35,6 +35,7 @@ from naRou.ecs.components import (
     StatusEffectsComponent,
     StorytellerComponent,
     TitleComponent,
+    HuskInventoryComponent,
 )
 
 # 後方互換: PetAI を PetAIComponent の別名として再エクスポート
@@ -175,6 +176,7 @@ class Entity:
         self.components[EconomyComponent] = EconomyComponent()
         self.components[LevelComponent] = LevelComponent()
         self.components[StatusEffectsComponent] = StatusEffectsComponent()
+        self.components[HuskInventoryComponent] = HuskInventoryComponent()
 
         # 属性耐性 & 弱点 (Step 51, 53)
         self.base_resistances: dict[str, int] = {}
@@ -196,6 +198,11 @@ class Entity:
     @property
     def status_effects(self) -> StatusEffectsComponent:
         return self.get_component(StatusEffectsComponent)
+
+    @status_effects.setter
+    def status_effects(self, value) -> None:
+        # Legacy call sites assign [] to reset status effects.
+        self.get_component(StatusEffectsComponent).clear_all()
 
     def has_status(self, effect_type: str) -> bool:
         return self.status_effects.has_effect(effect_type)
@@ -682,6 +689,14 @@ class Entity:
     @karma_good_evil.setter
     def karma_good_evil(self, val: int):
         self.get_component(ReincarnationComponent).karma_good_evil = val
+
+    @property
+    def template_exposure(self) -> int:
+        return self.get_component(ReincarnationComponent).template_exposure
+
+    @template_exposure.setter
+    def template_exposure(self, val: int):
+        self.get_component(ReincarnationComponent).template_exposure = val
 
     @property
     def legacy_skills(self) -> list[str]:
@@ -1400,7 +1415,11 @@ class Entity:
         # コンポーネントのシリアライズ (JSONシリアライズ可能に変換: Step 21)
         for comp_type, comp in self.components.items():
             comp_name = comp_type.__name__
-            if hasattr(comp, "__dict__"):
+            if hasattr(comp, 'to_dict') and callable(getattr(comp, 'to_dict')):
+                # Use component's custom to_dict method if available
+                data["components"][comp_name] = comp.to_dict()
+            elif hasattr(comp, "__dict__"):
+                # Fall back to copying __dict__ for components without custom to_dict
                 comp_dict = {}
                 for k, v in comp.__dict__.items():
                     if callable(v):
@@ -1481,8 +1500,20 @@ class Entity:
         for comp_type, comp in ent.components.items():
             comp_name = comp_type.__name__
             if comp_name in comp_data_dict:
-                for k, v in comp_data_dict[comp_name].items():
-                    setattr(comp, k, v)
+                if hasattr(comp_type, 'from_dict') and callable(getattr(comp_type, 'from_dict')):
+                    # Use component's custom from_dict method if available
+                    try:
+                        new_comp = comp_type.from_dict(comp_data_dict[comp_name])
+                        # Update current component's attributes from the new instance
+                        comp.__dict__.update(new_comp.__dict__)
+                    except Exception:
+                        # Fall back to attribute-by-value copying if custom from_dict fails
+                        for k, v in comp_data_dict[comp_name].items():
+                            setattr(comp, k, v)
+                else:
+                    # Fall back to setting attributes directly
+                    for k, v in comp_data_dict[comp_name].items():
+                        setattr(comp, k, v)
 
         # スキルの復元
         if "skills" in data and ent._skills is not None:

@@ -351,6 +351,74 @@ class JournalUI:
             console.print(start_x + 4, current_y, "（考古学システム未登録）", fg=self.text_color)
             current_y += 1
 
+        # ---- 運命の分岐点タイムライン ----
+        current_y += 1
+        if current_y < start_y + self.window_height - 3:
+            console.print(start_x + 2, current_y, "【運命の分岐点】", fg=self.highlight_color)
+            current_y += 1
+            narrator = getattr(engine, "narrative_executor", None)
+            player = getattr(engine, "player", None)
+            if narrator is not None and player is not None:
+                try:
+                    state = narrator.get_active_state(player)
+                    if state and state.history:
+                        for entry in state.history[-10:]:  # 最新10件
+                            if current_y >= start_y + self.window_height - 3:
+                                break
+                            # タイムスタンプ表示
+                            time_str = entry.timestamp[:16].replace("T", " ") if entry.timestamp else "??:??"
+                            node_type_icon = {
+                                "START": "🏁",
+                                "CHOICE": "🔀",
+                                "EVENT": "⚡",
+                                "CONDITION": "🔍",
+                                "END": "🏁",
+                                "MERGE": "➡️",
+                            }.get(entry.node_type, "📍")
+                            
+                            if entry.choice_text:
+                                # 選択肢エントリ
+                                console.print(start_x + 2, current_y, f"{time_str} {node_type_icon} [選択] 「{entry.choice_text[:30]}」", fg=self.highlight_color)
+                                current_y += 1
+                                if entry.choice_reason:
+                                    console.print(start_x + 4, current_y, f"  理由: {entry.choice_reason[:50]}", fg=self.text_color)
+                                    current_y += 1
+                            else:
+                                # 自動遷移・イベントエントリ
+                                console.print(start_x + 2, current_y, f"{time_str} {node_type_icon} {entry.node_title or entry.node_id}", fg=self.text_color)
+                                current_y += 1
+                            
+                            # 報酬・効果表示
+                            rewards = []
+                            for k, v in entry.immediate_rewards.items():
+                                rewards.append(f"{k}={v}")
+                            for k, v in entry.long_term_effects.items():
+                                rewards.append(f"{k}={v}(長期)")
+                            if rewards:
+                                console.print(start_x + 4, current_y, f"  結果: {', '.join(rewards[:3])}", fg=self.completed_color)
+                                current_y += 1
+                            if entry.flags_set:
+                                console.print(start_x + 4, current_y, f"  フラグ設定: {', '.join(entry.flags_set[:3])}", fg=self.text_color)
+                                current_y += 1
+                            if entry.flags_cleared:
+                                console.print(start_x + 4, current_y, f"  フラグ解除: {', '.join(entry.flags_cleared[:3])}", fg=self.text_color)
+                                current_y += 1
+                            
+                            # エンディング到達表示
+                            if entry.node_type == "END" and state.ending_id:
+                                console.print(start_x + 2, current_y, f"  ★ エンディング到達: {state.ending_id}", fg=self.highlight_color)
+                                current_y += 1
+                    else:
+                        console.print(start_x + 4, current_y, "（まだ分岐点はありません）", fg=self.text_color)
+                        current_y += 1
+                except Exception as e:
+                    logger.warning("Failed to render narrative history: %s", e)
+                    console.print(start_x + 4, current_y, "（履歴取得エラー）", fg=self.text_color)
+                    current_y += 1
+            else:
+                console.print(start_x + 4, current_y, "（ナラティブシステム未登録）", fg=self.text_color)
+                current_y += 1
+
         console.print(
             start_x + 2,
             start_y + self.window_height - 2,

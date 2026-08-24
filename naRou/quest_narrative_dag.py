@@ -147,6 +147,19 @@ class NarrativeContext:
     def set_var(self, key: str, value: Any) -> None:
         self.variables[key] = value
 
+    def resolve(self, key: str) -> Any:
+        """キーを解決（EvaluationContext と互換）"""
+        # flags. プレフィックス
+        if key.startswith("flags."):
+            flag_key = key[6:]
+            return flag_key in self.flags
+        # player. プレフィックス（簡易対応）
+        if key.startswith("player.") and self.player:
+            attr = key[7:]
+            return getattr(self.player, attr, None)
+        # variables
+        return self.variables.get(key, None)
+
 
 class NarrativeDAG:
     """ナラティブ DAG 全体管理"""

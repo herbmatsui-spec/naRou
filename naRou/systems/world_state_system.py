@@ -125,9 +125,9 @@ class WorldStateManager:
             self.registry.get_template().current_phase = phase
             if engine:
                 # EventBusを通じてフェーズ変更を通知
-                from naRou.core_framework import EventBus
+                from naRou.event_bus import event_bus
 
-                EventBus.publish("WORLD_PHASE_CHANGED", {"old": old_phase, "new": phase})
+                event_bus.publish("WORLD_PHASE_CHANGED", {"old": old_phase, "new": phase})
 
     def get_variable(self, player: Entity, var_name: str, default: Any = None) -> Any:
         """ワールド変数を取得 (Step 52)"""

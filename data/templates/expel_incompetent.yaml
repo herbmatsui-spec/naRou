@@ -1,0 +1,16 @@
+id: expel_incompetent
+archetype: expel
+contexts: [slum, guild]
+faction_weight:
+  outlaw: 0.4
+  guild: 0.3
+route_steps:
+  - { flag: sell_skill_cheap, turn: 2, actor: npc, on_fail: expelled }
+  - { flag: rise_later, turn: 8, actor: npc, on_fail: none }
+exploit_windows:
+  - { id: buy_cheap, tier: 1, req_gold: 200, base_success: 0.85 }
+  - { id: exclusive_contract, tier: 2, req_skill: [negotiation], base_success: 0.55 }
+reward:
+  karma_t1: 120
+  karma_t2: 700
+  stealable_skill: farming_blessing_minor

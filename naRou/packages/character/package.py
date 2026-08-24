@@ -15,7 +15,7 @@ def _initialize_player_and_pet(kernel: Kernel, engine) -> None:
     player.piety = 80
     player.hp = player.max_hp
     player.mp = player.max_mp
-    player.status_effects = []
+    player.clear_statuses()
     player.resistances = ResistanceSet()
     player.resistances.fire = 10
     player.faction = "player"
@@ -25,7 +25,7 @@ def _initialize_player_and_pet(kernel: Kernel, engine) -> None:
         meta_mgr = kernel.get_system("meta_progression_manager")
         meta_mgr.recalculate_and_apply_bonuses(player)
 
-    pet.status_effects = []
+    pet.clear_statuses()
     pet.resistances = ResistanceSet()
     pet.faction = "player"
 

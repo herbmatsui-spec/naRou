@@ -353,6 +353,12 @@ class CombatSystem:
             if caster.mp < mp_cost:
                 return 0, "MPが足りない！"
             caster.mp -= mp_cost
+            dmg = random.randint(5, 15) + int(caster.attributes.magic * 1.5)
+            target.hp -= dmg
+            return dmg, f"🔥{caster.name}の火球が{target.name}に命中し{dmg}ダメージ！"
+
+        return 0, f"不明な魔法: {spell_name}"
+
 
     # === エクスクルーシブスキル処理 (Steps 62, 63) ===
     @staticmethod
@@ -388,9 +394,7 @@ class CombatSystem:
                 data = yaml.safe_load(f) or {}
             return data.get("exclusive_skills", {}).get(skill_id)
         except Exception:
-            logger.exception("Unhandled exception")
-            import logging
-            logging.getLogger(__name__).exception("Unhandled exception")
+            logger.exception("Failed to load exclusive skill data")
             return None
 
     @staticmethod
@@ -624,5 +628,4 @@ class MonsterPreset:
         return e
 
 
-# --- LocalizationManager integration (i18n, Step 3.x) ---
-from naRou.localization_manager import localize  # noqa: E402,F401
+

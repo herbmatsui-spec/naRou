@@ -26,6 +26,9 @@ class WorldAPackage(IPackage):
                 "skill_eater_servant_system",
                 "skill_eater_meta_quest_system",
                 "skill_eater_exploration_system",
+                "skill_eater_meta_intervention",
+                "skill_eater_intervention_engine",
+                "skill_eater_reincarnation_system",
                 "skill_eater_toxicity_manager",
                 "slum_base_expansion_manager",
                 "skill_eater_pet_dispatch_manager",
@@ -50,12 +53,14 @@ class WorldAPackage(IPackage):
         from naRou.skill_eater_economy_system import SkillEaterEconomySystem
         from naRou.skill_eater_epilogue import EpilogueAndTransitionManager
         from naRou.skill_eater_exploration_system import SkillEaterExplorationSystem
-        from naRou.skill_eater_meta_quest_system import SkillEaterQuestSystem
+        from naRou.systems.skill_eater_meta_intervention_system import TemplateEventGenerator, InterventionEngine
+        from naRou.skill_eater_meta_quest_system import SkillEaterQuestSystem, SkillEaterReincarnationSystem
         from naRou.skill_eater_pet_dispatch import PetDispatchManager
         from naRou.skill_eater_presentation_system import SkillEaterPresentationSystem
         from naRou.skill_eater_servant_system import SkillEaterServantSystem
         from naRou.skill_eater_synthesis_system import SkillEaterSynthesisSystem
         from naRou.skill_eater_system import SkillEaterRegistry
+        from naRou.systems.skill_eater_template_model import load_templates
         from naRou.skill_eater_temporal_vault import TemporalVaultManager
         from naRou.skill_eater_toxicity_system import SkillToxicityManager
         from naRou.skill_eater_underground_arena import UndergroundArenaManager
@@ -109,8 +114,32 @@ class WorldAPackage(IPackage):
         meta_sys = SkillEaterQuestSystem(registry=registry, audio=audio_sys, presentation=pres_sys)
         kernel.register_system("skill_eater_meta_quest_system", meta_sys)
 
+        # Reincarnation system for meta_state
+        reincarnation_sys = SkillEaterReincarnationSystem(registry=registry, audio=audio_sys, presentation=pres_sys)
+        kernel.register_system("skill_eater_reincarnation_system", reincarnation_sys)
+
         explore_sys = SkillEaterExplorationSystem(audio=audio_sys, presentation=pres_sys)
         kernel.register_system("skill_eater_exploration_system", explore_sys)
+
+        # Template Intervention System (Phase C)
+        templates = load_templates("data/templates")
+        meta_intervention = TemplateEventGenerator(templates=templates)
+        kernel.register_system("skill_eater_meta_intervention", meta_intervention)
+
+        # Intervention Engine (Phase D)
+        reincarnation_sys = kernel.get_system("skill_eater_reincarnation_system")
+        meta_quest = kernel.get_system("skill_eater_meta_quest_system")
+        intervention_engine = InterventionEngine(
+            registry=registry,
+            presentation=pres_sys,
+            rule_engine=meta_quest.rule_engine if meta_quest else None,
+            meta_state=reincarnation_sys.meta_state if reincarnation_sys else None,
+            templates=templates,
+        )
+        kernel.register_system("skill_eater_intervention_engine", intervention_engine)
+
+        # Wire generator to exploration system
+        explore_sys.template_generator = meta_intervention
 
         # Phase 2-5 Advanced Subsystems
         kernel.register_system("skill_eater_toxicity_manager", SkillToxicityManager())

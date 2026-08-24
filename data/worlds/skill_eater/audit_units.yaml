@@ -1,0 +1,177 @@
+# 監査ユニット定義 YAML
+# 第1〜第5監査執行部隊の編成データ
+
+T1:
+  units:
+    - name: "Cleaner Drone"
+      hp: 80
+      atk: 20
+      defense: 5
+      speed: 12
+      weakness: "thunder"
+    - name: "Sweeper Security"
+      hp: 120
+      atk: 30
+      defense: 10
+      speed: 8
+      weakness: "ice"
+    - name: "Cleaner Heavy"
+      hp: 200
+      atk: 40
+      defense: 15
+      speed: 5
+      weakness: "fire"
+  captain:
+    name: "Sweep Commander"
+    hp: 600
+    atk: 80
+    defense: 20
+    speed: 8
+    special_skill_id: "sweep_priority"
+    weakness: "thunder"
+
+T2:
+  units:
+    - name: "Peacekeeper Shield"
+      hp: 200
+      atk: 25
+      defense: 25
+      speed: 6
+      weakness: "fire"
+    - name: "Peacekeeper Sniper"
+      hp: 100
+      atk: 50
+      defense: 5
+      speed: 10
+      weakness: "ice"
+    - name: "Peacekeeper Medic"
+      hp: 150
+      atk: 15
+      defense: 10
+      speed: 8
+      weakness: "poison"
+    - name: "Peacekeeper Elite"
+      hp: 300
+      atk: 60
+      defense: 20
+      speed: 7
+      weakness: "thunder"
+  captain:
+    name: "Peacekeeper Captain"
+    hp: 1100
+    atk: 120
+    defense: 30
+    speed: 8
+    special_skill_id: "critical_control"
+    weakness: "ice"
+
+T3:
+  units:
+    - name: "Purifier Flamer"
+      hp: 180
+      atk: 55
+      defense: 10
+      speed: 8
+      weakness: "ice"
+    - name: "Purifier Toxin"
+      hp: 150
+      atk: 40
+      defense: 10
+      speed: 9
+      weakness: "fire"
+    - name: "Purifier EMP"
+      hp: 120
+      atk: 30
+      defense: 5
+      speed: 11
+      weakness: "thunder"
+    - name: "Purifier Heavy"
+      hp: 400
+      atk: 80
+      defense: 30
+      speed: 5
+      weakness: "poison"
+  captain:
+    name: "Purifier Cardinal"
+    hp: 1800
+    atk: 180
+    defense: 40
+    speed: 7
+    special_skill_id: "purification_field"
+    weakness: "thunder"
+
+T4:
+  units:
+    - name: "Cardinal Husk Pilot"
+      hp: 250
+      atk: 70
+      defense: 20
+      speed: 9
+      weakness: "thunder"
+    - name: "Cardinal AntiDevour"
+      hp: 350
+      atk: 90
+      defense: 35
+      speed: 6
+      weakness: "poison"
+    - name: "Cardinal Shield Bearer"
+      hp: 500
+      atk: 40
+      defense: 50
+      speed: 4
+      weakness: "fire"
+    - name: "Cardinal Assassin"
+      hp: 180
+      atk: 120
+      defense: 10
+      speed: 13
+      weakness: "ice"
+  captain:
+    name: "Cardinal Inquisitor"
+    hp: 3000
+    atk: 250
+    defense: 60
+    speed: 8
+    special_skill_id: "execute_death_immunity"
+    weakness: "thunder"
+
+T5:
+  units:
+    - name: "Inquisitor Judge"
+      hp: 400
+      atk: 100
+      defense: 40
+      speed: 8
+      weakness: "ice"
+    - name: "Inquisitor Executioner"
+      hp: 300
+      atk: 150
+      defense: 20
+      speed: 10
+      weakness: "fire"
+    - name: "Inquisitor Warden"
+      hp: 600
+      atk: 60
+      defense: 80
+      speed: 4
+      weakness: "poison"
+    - name: "Inquisitor Seeker"
+      hp: 200
+      atk: 80
+      defense: 10
+      speed: 14
+      weakness: "thunder"
+    - name: "Inquisitor Herald"
+      hp: 250
+      atk: 70
+      defense: 15
+      speed: 12
+      weakness: "physical"
+  captain:
+    name: "High Inquisitor"
+    hp: 5200
+    atk: 350
+    defense: 80
+    speed: 9
+    special_skill_id: "judgment_decree"
+    weakness: "thunder"

@@ -23,6 +23,7 @@ from naRou.ai.states import (
     OfferPrayState,
     RestRecoverState,
 )
+from naRou.ai.states.excavate_states import ExcavateState, InterpretState
 from naRou.ai_safety_grid import SafetyGridEvaluator
 from naRou.ai_combat_tactics import CombatTacticsManager
 from naRou.ai_item_decider import ItemDecider
@@ -65,6 +66,8 @@ class AutonomousSubagentAI:
             "pray": OfferPrayState(self.bb),
             "offer_pray": OfferPrayState(self.bb),
             "escape": EscapeState(self.bb),
+            "excavate": ExcavateState(self.bb),
+            "interpret": InterpretState(self.bb),
         }
         for k, v in list(states_map.items()):
             self.fsm.register_state(k.lower(), v)
@@ -82,4 +85,17 @@ class AutonomousSubagentAI:
             self.floor_progression.on_floor_transition(self.engine.dungeon_level)
             self.fsm.change_state("explore")
 
+        self._sync_archaeology_flags()
+
         return self.fsm.update()
+
+    def _sync_archaeology_flags(self) -> None:
+        """Sync reached truths from player component into blackboard (Step 45/64)."""
+        comp = getattr(self.engine.player, "archaeology", None)
+        if comp is None:
+            return
+        reached = getattr(comp, "reached_truths", [])
+        for tid in reached:
+            if tid not in self.bb.reached_truths:
+                self.bb.reached_truths.append(tid)
+                self.bb.pending_interpret = True

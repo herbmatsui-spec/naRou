@@ -1,0 +1,20 @@
+id: betray
+archetype: betray
+contexts: [dungeon_entrance, party_camp, guild_hall]
+faction_weight:
+  outlaw: 0.4
+  guild: 0.3
+  merchant: 0.2
+  guard: 0.1
+route_steps:
+  - { flag: secret_communication, turn: 1, actor: traitor, on_fail: leaked }
+  - { flag: ambush_prepared, turn: 3, actor: traitor, on_fail: foiled }
+  - { flag: execution, turn: 5, actor: traitor, on_fail: counter }
+exploit_windows:
+  - { id: intercept_message, tier: 1, req_gold: 150, base_success: 0.9 }
+  - { id: preemptive_devour, tier: 2, req_skill: [analysis, stealth], base_success: 0.6 }
+  - { id: turn_tables, tier: 3, req_skill: [mind_read, authority], base_success: 0.35 }
+reward:
+  karma_t1: 130
+  karma_t2: 750
+  stealable_skill: traitor_sense

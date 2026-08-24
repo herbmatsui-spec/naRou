@@ -23,6 +23,8 @@ from naRou.input_actions import (
     ActionScan,
     ActionSearch,
     ActionSynthesisMenu,
+    ActionTemplateIntervene,
+    ActionTemplateScan,
     CastFireballAction,
     DebugAction,
     DescendStairsAction,
@@ -186,6 +188,13 @@ class InputHandler:
             "play", KeyBinding(KS.T, ActionSynthesisMenu(), SHIFT, description="《スキル合成》")
         )
         reg.register("play", KeyBinding(KS.SEMICOLON, ActionSearch(), description="《秘密検索》"))
+        # Template Intervention (Phase F)
+        reg.register(
+            "play", KeyBinding(KS.R, ActionTemplateScan(), SHIFT, description="《原典閲覧》")
+        )
+        reg.register(
+            "play", KeyBinding(KS.I, ActionTemplateIntervene(), SHIFT, description="《テンプレ介入》")
+        )
 
         cls._actions_registered = True
 
@@ -569,6 +578,59 @@ class InputHandler:
                         engine.mine_wall()
             return
 
+        # テンプレート介入メニュー
+        if engine.game_state == "template_intervention":
+            active_events = getattr(engine, "active_template_events", [])
+            if not active_events:
+                engine.game_state = "play"
+                return
+
+            event = active_events[-1]
+            windows = event.exploit_windows
+
+            if event.sym in (tcod.event.KeySym.ESCAPE,):
+                engine.game_state = "play"
+                return
+
+            # 数字キーで選択 (1-9)
+            if tcod.event.KeySym.N1 <= event.sym <= tcod.event.KeySym.N9:
+                num = event.sym - tcod.event.KeySym.N1
+                if num < len(windows):
+                    window = windows[num]
+                    # 介入エンジンを取得して実行
+                    intervention_engine = engine.kernel.get_system("skill_eater_intervention_engine")
+                    if intervention_engine:
+                        from naRou.systems.skill_eater_meta_intervention_system import (
+                            InterventionAction,
+                        )
+                        action = InterventionAction(
+                            tier=window.tier,
+                            window_id=window.id,
+                            params={}
+                        )
+                        # プレイヤーを取得
+                        player = engine.player
+                        result = intervention_engine.execute(event, action, player)
+
+                        if result.success:
+                            engine.log(f"✅ {result.message}", (100, 255, 100))
+                            # 報酬適用
+                            intervention_engine.apply_rewards(player, result, event)
+                            engine.log(f"  因果ポイント: +{result.karma_gained}  完全性: {result.completeness:.0%}", (255, 255, 100))
+                            if result.stolen_skill:
+                                engine.log(f"  強奪スキル: {result.stolen_skill}", (255, 200, 100))
+                            if result.unique_skill_granted:
+                                engine.log(f"  限定ユニーク習得: {result.unique_skill_granted}", (255, 100, 255))
+                        else:
+                            engine.log(f"❌ {result.message}", (255, 100, 100))
+
+                        # 介入完了後、イベントを削除
+                        if event in engine.active_template_events:
+                            engine.active_template_events.remove(event)
+
+                    engine.game_state = "play"
+            return
+
         # 通常プレイ状態のキー入力
         dx, dy = 0, 0
         if event.sym in (tcod.event.KeySym.UP, tcod.event.KeySym.K):
@@ -670,5 +732,4 @@ class InputHandler:
             engine.advance_world()
 
 
-# --- LocalizationManager integration (i18n, Step 3.x) ---
-from naRou.localization_manager import localize  # noqa: E402,F401
+

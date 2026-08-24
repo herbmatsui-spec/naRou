@@ -191,7 +191,7 @@ def create_mock_engine():
     return engine
 
 
-class TestPlayer:
+class MockPlayer:
     """テスト用プレイヤー（Mock の .get() 問題回避）"""
 
     def __init__(self, relationships=None, faction_rep=None):
@@ -365,7 +365,7 @@ def test_reputation_gate_npc():
         ],
     )
 
-    player = TestPlayer(relationships={"elder": {"trust": 55}})
+    player = MockPlayer(relationships={"elder": {"trust": 55}})
 
     ready = gate_sys.evaluate_npc_gates(player, "elder")
     assert len(ready) == 2  # 両方閾値超え
@@ -374,7 +374,7 @@ def test_reputation_gate_npc():
 def test_reputation_gate_faction():
     """派閥ゲート評価"""
     engine = create_mock_engine()
-    player = TestPlayer(faction_rep={"kingdom_garde": 30})
+    player = MockPlayer(faction_rep={"kingdom_garde": 30})
 
     # 派閥マネージャーモック
     from naRou.faction_war_system import REGISTRY as FW_REG
@@ -422,7 +422,7 @@ def test_reputation_gate_fire_once():
         ],
     )
 
-    player = TestPlayer(relationships={"npc1": {"trust": 50}})
+    player = MockPlayer(relationships={"npc1": {"trust": 50}})
 
     # 1回目
     fired1 = gate_sys.check_all_gates(player)
@@ -455,7 +455,7 @@ def test_reputation_gate_custom_action():
         ],
     )
 
-    player = TestPlayer(relationships={"npc1": {"trust": 0}})
+    player = MockPlayer(relationships={"npc1": {"trust": 0}})
 
     gate_sys.check_all_gates(player)
     assert called.get("done") is True
@@ -516,7 +516,7 @@ def test_memory_rumor_reputation_integration():
         ],
     )
 
-    player = TestPlayer(relationships={"merchant": {"trust": -30}})
+    player = MockPlayer(relationships={"merchant": {"trust": -30}})
     gate_sys.check_all_gates(player)
     assert hostile_triggered["done"] is True
 

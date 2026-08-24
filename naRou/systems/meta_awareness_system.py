@@ -42,3 +42,48 @@ class MetaAwarenessSystem:
             ],
             "optimal_avoidance_action": "ACCEPT_DISMISSAL_AND_ESCAPE",
         }
+
+    # --- Template intervention methods (Phase B) ---
+
+    def trigger_template_scan(
+        self, target: Any, presentation: Any = None
+    ) -> list[dict[str, Any]]:
+        """Scan target for template scenario flags. Returns list of detected templates."""
+        flags = getattr(target, "scenario_flags", {})
+        detected = []
+        for archetype, weight in flags.items():
+            if weight >= 0.3:  # threshold
+                detected.append({"archetype": archetype, "weight": weight})
+        if presentation and detected:
+            # Emit detection event
+            archetypes = ", ".join(d["archetype"] for d in detected)
+            presentation.add_event(
+                emote_file="emote_exclamations.png",
+                audio_file="bookFlip3.ogg",
+                message=f"《原典閲覧》テンプレ反応検出: {archetypes}",
+                duration_ms=1500,
+                event_type="secret_discover",
+            )
+        return detected
+
+    def get_reading_depth(self) -> int:
+        """Return reading depth based on awareness_level: 1=surface, 2=branches, 3=full."""
+        if self.awareness_level >= 6:
+            return 3
+        elif self.awareness_level >= 3:
+            return 2
+        return 1
+
+    def get_exploit_windows(self, template: Any, depth: int) -> list[Any]:
+        """Return exploit windows available at given reading depth."""
+        windows = getattr(template, "exploit_windows", [])
+        return [w for w in windows if w.tier <= depth]
+
+    def apply_deep_read_cost(self, player: Any, depth: int) -> None:
+        """Apply karma/exposure cost for deep reading."""
+        if depth >= 3:
+            # Cost: law_chaos -1, exposure +1
+            from naRou.systems.karma_system import KarmaManager
+
+            km = KarmaManager()
+            km.update_karma(player, "template_deep_read", 1)

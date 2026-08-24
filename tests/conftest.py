@@ -11,18 +11,19 @@ from typing import Any
 
 import pytest
 
-import game
 
-
-def make_test_engine() -> "game.Engine":
+def make_test_engine() -> Any:
     """Build an Engine without running the full Kernel/package initialization.
 
     The returned object is a bare Engine instance suitable for unit tests
     that only need attribute-level behavior (components, managers, helpers).
     """
-    engine = game.Engine.__new__(game.Engine)
-    engine.kernel = _DummyKernel()
-    return engine
+    # Don't import game - tests that need it should import directly
+    class _DummyEngine:
+        def __init__(self):
+            self.kernel = _DummyKernel()
+
+    return _DummyEngine()
 
 
 class _DummyKernel:
@@ -39,5 +40,5 @@ class _DummyKernel:
 
 
 @pytest.fixture
-def test_engine() -> "game.Engine":
+def test_engine() -> Any:
     return make_test_engine()

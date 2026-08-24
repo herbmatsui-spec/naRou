@@ -551,6 +551,117 @@ class ActionScan:
         return True
 
 
+class ActionTemplateScan:
+    """《原典閲覧》テンプレートスキャンアクション (Phase F)"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+
+        # Check if in skill_eater world
+        current_world = getattr(getattr(engine, "game_state_data", None), "current_world", "main")
+        if current_world != "skill_eater":
+            engine.log(
+                "《原典閲覧》はAの世界（スキル喰い）でのみ使用可能です。",
+                (180, 180, 180),
+            )
+            return True
+
+        # Get awareness system
+        awareness = engine.kernel.get_system("meta_awareness_system") if hasattr(engine, "kernel") else None
+        if not awareness:
+            engine.log("《原典閲覧》システムが初期化されていません。", (255, 100, 100))
+            return True
+
+        # Get presentation system
+        pres = engine.kernel.get_system("skill_eater_presentation_system") if hasattr(engine, "kernel") else None
+
+        # Scan nearby NPCs for template flags
+        from naRou.core_framework import Point
+        player_pos = Point(engine.player.x, engine.player.y)
+        found_any = False
+
+        for entity in engine.entity_manager.get_living_entities():
+            if entity == engine.player:
+                continue
+            p = Point(entity.x, entity.y)
+            dist = ((p.x - player_pos.x) ** 2 + (p.y - player_pos.y) ** 2) ** 0.5
+            if dist > 10:  # Scan range
+                continue
+
+            # Check for scenario_flags
+            flags = getattr(entity, "scenario_flags", {})
+            if not flags:
+                continue
+
+            detected = awareness.trigger_template_scan(entity, presentation=pres)
+            if detected:
+                found_any = True
+                for d in detected:
+                    engine.log(
+                        f"《原典閲覧》{d['archetype']} テンプレ反応: {entity.name} (重み: {d['weight']:.1f})",
+                        (255, 200, 100),
+                    )
+
+        if not found_any:
+            engine.log("《原典閲覧》範囲内にテンプレ反応なし。", (150, 150, 150))
+
+        return True
+
+
+class ActionTemplateIntervene:
+    """テンプレート介入アクション (Phase F)"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+
+        current_world = getattr(getattr(engine, "game_state_data", None), "current_world", "main")
+        if current_world != "skill_eater":
+            engine.log(
+                "テンプレート介入はAの世界（スキル喰い）でのみ使用可能です。",
+                (180, 180, 180),
+            )
+            return True
+
+        intervention_engine = engine.kernel.get_system("skill_eater_intervention_engine") if hasattr(engine, "kernel") else None
+        if not intervention_engine:
+            engine.log("介入エンジンが見つかりません。", (255, 100, 100))
+            return True
+
+        # Check for active template events
+        active_events = getattr(engine, "active_template_events", [])
+        if not active_events:
+            engine.log("介入可能なテンプレートイベントがありません。", (200, 200, 200))
+            return True
+
+        # Open intervention menu
+        engine.game_state = "template_intervention"
+        event = active_events[-1]
+        archetype_names = {
+            "expel": "無能追放",
+            "engagement_break": "婚約破棄",
+            "credit_steal": "手柄横取り",
+            "betray": "裏切り",
+            "genius_discrimination": "天才差別",
+            "servant_conversion": "眷属化",
+        }
+        archetype_name = archetype_names.get(event.archetype, event.archetype)
+        engine.log(f"【テンプレート介入】{event.template_id} ({archetype_name})", (255, 220, 100))
+        engine.log("  [1-3]介入選択  [R]原典閲覧  [ESC]キャンセル", (180, 180, 180))
+        return True
+
+
 class ActionDevour:
     """《喰らい》アクション (Step 13, 19, 22, 23)"""
 

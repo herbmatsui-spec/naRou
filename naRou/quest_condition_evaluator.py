@@ -17,6 +17,16 @@ if TYPE_CHECKING:
     from naRou.ecs.entity import Entity
     from game import Engine
     from naRou.world_state_system import WorldStateManager
+    from naRou.systems.main_quest_system import QuestStatus
+else:
+    # 実行時インポート（循環参照回避のため遅延）
+    QuestStatus = None
+
+def _get_quest_status():
+    global QuestStatus
+    if QuestStatus is None:
+        from naRou.systems.main_quest_system import QuestStatus
+    return QuestStatus
 
 
 @dataclass
@@ -107,7 +117,8 @@ class EvaluationContext:
     def resolve(self, key: str) -> Any:
         """
         ドット区切りパスを解決する（キャッシュ対応）
-        例: "player.level", "player.kill_counts.goblin", "world_state.variables.gold"
+        例: "player.level", "player.kill_counts.goblin", "world_state.variables.gold",
+        "quest.completed.prologue_01", "quest.active.awakening_01", "quest.status.exploration_01"
         """
         if key in self._property_cache:
             return self._property_cache[key]
@@ -122,13 +133,57 @@ class EvaluationContext:
         elif key.startswith("flags."):
             # フラグはストーリー変数の中で管理される
             flag_key = key[6:]  # Remove "flags."
-            val = self._resolve_player_key(f"story_variables.{flag_key}")
+            # まず extra_vars["_narrative_flags"] をチェック（ナラティブ用）
+            narrative_flags = self.extra_vars.get("_narrative_flags", set())
+            if flag_key in narrative_flags:
+                val = True
+            else:
+                # フォールバック: ストーリー変数
+                val = self._resolve_player_key(f"story_variables.{flag_key}")
+        elif key.startswith("quest."):
+            # クエスト状態参照
+            val = self._resolve_quest_key(key[6:])  # Remove "quest."
         else:
             # デフォルトはプレイヤーキーとして扱う
             val = self._resolve_player_key(key)
 
         self._property_cache[key] = val
         return val
+
+    def _resolve_quest_key(self, key: str) -> Any:
+        """クエスト関連のキーを解決"""
+        # 形式: "completed.quest_id", "active.quest_id", "status.quest_id"
+        parts = key.split(".", 1)
+        if len(parts) != 2:
+            return None
+        
+        sub_key, quest_id = parts[0], parts[1]
+        
+        # MainQuestSystem インスタンスを extra_vars から取得
+        quest_system = self.extra_vars.get("quest_system")
+        if not quest_system:
+            return None
+        
+        quest = quest_system.quests.get(quest_id)
+        if not quest:
+            return None
+        
+        QS = _get_quest_status()
+        
+        if sub_key == "completed":
+            return quest.status == QS.COMPLETED
+        elif sub_key == "active":
+            return quest.status == QS.ACTIVE
+        elif sub_key == "available":
+            return quest.status == QS.AVAILABLE
+        elif sub_key == "status":
+            return quest.status.name
+        elif sub_key == "locked":
+            return quest.status == QS.LOCKED
+        elif sub_key == "failed":
+            return quest.status == QS.FAILED
+        
+        return None
 
     def _resolve_player_key(self, key: str) -> Any:
         """プレイヤー関連のキーを解決"""

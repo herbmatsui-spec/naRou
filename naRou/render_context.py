@@ -6,18 +6,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from naRou.ecs.entity import Entity
-from naRou.fx_manager import FXManager
-from naRou.item_system import Item
-
 if TYPE_CHECKING:
     from naRou.crafting_system import ResourceNode
-from naRou.localization_manager import LocalizationManager
-from naRou.map_engine import GameMap
-from naRou.message_log import MessageLog
-from naRou.notification_manager import NotificationManager
-from naRou.survival_system import SurvivalSystem
-from naRou.turn_manager import TimeSystem
+    from naRou.ecs.entity import Entity
+    from naRou.fx_manager import FXManager
+    from naRou.item_system import Item
+    from naRou.localization_manager import LocalizationManager
+    from naRou.map_engine import GameMap
+    from naRou.message_log import MessageLog
+    from naRou.notification_manager import NotificationManager
+    from naRou.survival_system import SurvivalSystem
+    from naRou.turn_manager import TimeSystem
 
 
 class RenderContext:

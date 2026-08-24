@@ -685,5 +685,4 @@ class MonsterPreset:
         return e
 
 
-# --- LocalizationManager integration (i18n, Step 3.x) ---
-from naRou.localization_manager import localize  # noqa: E402,F401
+

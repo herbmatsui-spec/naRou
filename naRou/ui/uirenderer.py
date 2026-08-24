@@ -28,7 +28,6 @@ from naRou.render_context import RenderContext
 from naRou.ui.ui_fx_systems import GaugeBar
 
 
-
 class UIRenderer:
     """UI描画専用クラス (インラインUI描画担当)"""
 
@@ -94,6 +93,10 @@ class UIRenderer:
         )
         console.print(x=1, y=ui_y, string="━" * 78, fg=(60, 70, 90))
 
+        # 8.6 テンプレート介入メニュー（下部UIの上に描画）
+        if context.game_state == "template_intervention":
+            cls._draw_template_intervention_menu(console, context, ui_y)
+
         # アクセシビリティ: 色覚モード時は数値を強制表示
         is_a11y = getattr(context, "color_vision_mode", "none") != "none"
 
@@ -103,7 +106,7 @@ class UIRenderer:
         hunger_str = "満腹" if s.hunger > 7000 else ("普通" if s.hunger > 2000 else "★飢餓")
         bleed_tag = (
             " [出血]"
-            if any(e.name == STATUS_BLEEDING for e in getattr(p, "status_effects", []))
+            if any(e.name == "出血" for e in getattr(p, "status_effects", []))
             else ""
         )
 
@@ -308,3 +311,68 @@ class UIRenderer:
         except Exception:
             logger.exception("UI アイコン描画失敗")
             return 0
+
+    @classmethod
+    def _draw_template_intervention_menu(cls, console, context, ui_y):
+        """テンプレート介入メニューの描画"""
+        # 介入可能なイベントを取得
+        active_events = getattr(context, "active_template_events", [])
+        if not active_events:
+            return
+
+        # 最新のイベントを表示（複数ある場合は最新優先）
+        event = active_events[-1]
+
+        # メニュー枠の描画
+        menu_x = 10
+        menu_y = ui_y - 12
+        menu_w = 60
+        menu_h = 10
+
+        console.draw_rect(x=menu_x, y=menu_y, width=menu_w, height=menu_h, ch=0, bg=(15, 18, 25))
+        console.draw_frame(
+            x=menu_x, y=menu_y, width=menu_w, height=menu_h,
+            title=" 《テンプレート介入》 ", fg=(255, 200, 100), bg=(15, 18, 25)
+        )
+
+        # イベント情報
+        archetype_names = {
+            "expel": "無能追放",
+            "engagement_break": "婚約破棄",
+            "credit_steal": "手柄横取り",
+            "betray": "裏切り",
+            "genius_discrimination": "天才差別",
+            "servant_conversion": "眷属化",
+        }
+        archetype_name = archetype_names.get(event.archetype, event.archetype)
+
+        console.print(x=menu_x + 2, y=menu_y + 1,
+            string=f"対象: {event.template_id} ({archetype_name})", fg=(255, 255, 200))
+        console.print(x=menu_x + 2, y=menu_y + 2,
+            string=f"難易度: {event.difficulty:.1f}  完全性目標: 100%", fg=(200, 200, 200))
+
+        # 介入窓のリスト
+        y = menu_y + 3
+        for i, window in enumerate(event.exploit_windows):
+            tier_names = {1: "表面", 2: "構造", 3: "存在"}
+            tier_name = tier_names.get(window.tier, f"Tier{window.tier}")
+
+            # 必要条件
+            req_str = ""
+            if window.req_gold > 0:
+                req_str += f"Gold:{window.req_gold} "
+            if window.req_skill:
+                req_str += f"Skill:{','.join(window.req_skill)} "
+
+            color = (180, 255, 180) if window.tier == 1 else \
+                    (255, 220, 100) if window.tier == 2 else \
+                    (255, 150, 150)
+
+            console.print(x=menu_x + 2, y=y,
+                string=f"[{i+1}] T{window.tier}({tier_name}): {window.id}  {req_str}成功率:{window.base_success:.0%}",
+                fg=color)
+            y += 1
+
+        # 操作説明
+        console.print(x=menu_x + 2, y=menu_y + menu_h - 2,
+            string="[1-3]選択  [R]原典閲覧  [ESC]キャンセル", fg=(150, 150, 150))

@@ -14,6 +14,7 @@ from typing import Any, Dict, List
 from naRou.skill_eater_audio_system import SkillEaterAudioSystem
 from naRou.skill_eater_presentation_system import PresentationEvent, SkillEaterPresentationSystem
 from naRou.skill_eater_system import CharacterState, SkillEaterRegistry, SkillTier
+from naRou.feature_flags import get_husk_enabled
 
 # 属性シナジー＆消化不良の定義
 SYNERGY_COMBOS: dict[tuple[str, str], tuple[str, int]] = {
@@ -738,6 +739,8 @@ class SkillEaterCombatSystem:
 
         if is_success:
             prey.remove_skill(target_skill_id)
+            if get_husk_enabled() and prey.is_husk:
+                pass  # TODO: Husk generation will be implemented in later steps
             stat_loss = max(2, int(prey.defense * 0.3))
             prey.defense = max(1, prey.defense - stat_loss)
             prey.atk = max(1, prey.atk - stat_loss)

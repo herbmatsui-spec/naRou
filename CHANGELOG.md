@@ -5,7 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.0.6] - 2026-08-24
+
+### Added
+- **メタシナリオ介入システム「なろうテンプレ粉砕」** (提案3実装):
+  - プロシージャル・テンプレート生成: 文脈(スラム/ギルド/貴族街/ダンジョン)×派閥×重み付きアーキタイプで「無能追放」「婚約破棄」「横取り」「裏切り」等のなろう系お約束イベントを動的生成
+  - **《原典閲覧》（リーダーズ・プリビレッジ）**: `MetaAwarenessSystem` 拡張により、NPCのシナリオフラグ（追放/横取り/裏切り等）を検出・深度別読み取り(Lv1〜3)。深読みにはカルマ秩序逸脱・露見度上昇の代償
+  - **3階層介入アクション**:
+    - T1 表面介入: 安値買い占め等の表層ハイジャック(低リスク・低報酬)
+    - T2 構造介入: ヒロイン主導権移譲等の因果順序書き換え(中リスク・中報酬・善悪変動)
+    - T3 存在介入: テンプレートそのものを `GlobalRuleEngine.override_rule` で世界から抹消(高リスク・高報酬・世界法則改変)
+  - **完全性連動報酬システム**: 破壊完全性(0〜100%)に応じて因果ポイント倍率変動(×0.3〜×4.0)、限定ユニークスキル《ざまぁの極み》《追放者の意地》《横取り還元》《原典編集》《読者特権・外伝創生》
+  - **三重経済システム**: 因果ポイント(周回通貨・法則書き換え資源)・露見度(バレる恐怖・緊張軸)・秩序/混沌・善悪カルマ(既存連動)
+  - **テンプレ学習・耐性**: 同一アーキタイプ乱獲で成功率減衰(0.7倍/周)、世界変異メッセージで供給枯渇を表現
+  - **輪廻転生引き継ぎ**: 乱獲カウント半減引き継ぎ、`apply_world_modifier` で世界変異メッセージ生成
+  - **UI統合**: サイバー義眼ARオーバーレイ(`template_flag_badges`)、原典閲覧モード(IFルートタイムライン)、完全性ゲージ、演出イベント(`emote_exclamations`/`bookFlip3`/`fanfare`等)
+  - **キーバインド**: `Shift+R` 《原典閲覧》、`Shift+I` 《テンプレ介入》
+  - **Web API公開**: `/api/state` に `karma_law_chaos`/`karma_good_evil`/`template_exposure`、`meta_intervention` (active_events/total_karma_points/devoured_template_counts) を追加
+  - **新規ファイル**: `skill_eater_meta_intervention_system.py`、`skill_eater_template_model.py`、`data/templates/*.yaml`、`data/meta_intervention.yaml`、デモ・テスト一式
+
+### Fixed
+- `components.py` に `AchievementComponent` 不在による既存テスト収集エラーは、同コンポーネントが `naRou/systems/meta_progression_system.py` 内定義であるため影響外（本実装は依存せずモックでテスト完遂）
+
+### Tests
+- 新規テスト 35 件追加 (`test_skill_eater_meta_intervention_*.py` ×5): ローダー/原典閲覧/生成器/介入エンジン/統合ループ、全通過
+
+## [v1.0.5] - 2026-08-24
+
+### Fixed
+- **定数整合性・重複排除** (`naRou/constants.py`): `TILE_SECRET_FLOOR` (7 vs 10) 矛盾解消、`AI_ROLE_*`, `INTENT_*`, `EMOTE_*`, `ACCESS_*`, `KEY_TYPE_*`, `REWARD_*` 重複定義を一本化
+- **EventBus 一元化** (`naRou/event_bus.py`, `naRou/core_framework.py`): シングルトン重複を解消し、標準クラスと堅牢な例外ハンドリングに統合
+- **DIコンテナのクリーンアップ** (`naRou/di_container.py`): 未使用の `_services` フィールドを削除
+- **循環インポート解消** (`naRou/render_context.py`): TYPE_CHECKING による遅延インポートを導入し初期化デッドロックを防止
+- **英語ローカリゼーション完全対応** (`data/text/en.yaml`): ja.yaml と完全に同期する180行以上の英訳定義を追加
+- **テストコレクション警告解消** (`tests/test_phase2_social_simulation.py`): `TestPlayer` → `MockPlayer` にリネーム
+- **魔法詠唱の完全化** (`naRou/systems.py`): `fireball` のダメージ計算・戻り値および未知の魔法へのデフォルト戻り値を追加
+- **末尾 localize 不要インポートの削除**: 8つのモジュールから末尾のデッドインポートを除去
+
+## [v1.0.0] - 2026-08-20
 
 ### Added
 - **スキル喰い専用チュートリアル5件追加** (`data/tutorial_guides.yaml`): 世界遷移時、初回解析、初回捕食、毒性警告、初回合成

@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 from naRou.skill_eater_audio_system import SkillEaterAudioSystem
 from naRou.skill_eater_presentation_system import PresentationEvent, SkillEaterPresentationSystem
 from naRou.skill_eater_system import CharacterState
+from naRou.systems.skill_eater_meta_intervention_system import TemplateEventGenerator, TemplateEvent
 
 if TYPE_CHECKING:
     from naRou.skill_eater_procedural_dungeon import SkillEaterProceduralDungeon
@@ -124,6 +125,10 @@ class SkillEaterExplorationSystem:
         self._visited_floors: set[int] = set()
         self._visited_secret_rooms: set[str] = set()
 
+        # Template intervention generator (Phase C)
+        self.template_generator: TemplateEventGenerator | None = None
+        self.active_template_events: list[TemplateEvent] = []
+
     @classmethod
     def get_instance(cls) -> SkillEaterExplorationSystem:
         if cls._instance is None:
@@ -228,6 +233,9 @@ class SkillEaterExplorationSystem:
 
         # Phase 2 Step 19: 部屋移動時のアセンションノードチェック
         self._check_and_unlock_ascension_nodes()
+
+        # Template intervention: check for template events on room enter
+        self._check_template_event(target_room_id)
 
         return ExplorationResult(
             action_type="MOVE_ROOM",
@@ -509,3 +517,29 @@ class SkillEaterExplorationSystem:
         instance._visited_secret_rooms = set(data.get("visited_secret_rooms", []))
         instance.current_room_id = data.get("current_room_id", "slum_alley")
         return instance
+
+    # Template intervention hook (Phase C)
+    def _check_template_event(self, room_id: str) -> None:
+        """Check for template events when entering a room."""
+        if not self.template_generator:
+            return
+        # Map room to context
+        context_map = {
+            "slum_alley": "slum",
+            "underground_market": "slum",
+            "midas_tower_entrance": "noble_quarter",
+            "vault_chamber": "dungeon_entrance",
+        }
+        context = context_map.get(room_id, "slum")
+        # Use exploration rank as loop proxy
+        loop_count = max(1, self.exploration_rank.rank // 3)
+        event = self.template_generator.maybe_spawn(context, self.exploration_rank.rooms_visited, loop_count)
+        if event:
+            self.active_template_events.append(event)
+            self.presentation.add_event(
+                emote_file="emote_exclamations.png",
+                audio_file="bookFlip3.ogg",
+                message=f"《原典閲覧》{event.archetype} テンプレ発生: {room_id}",
+                duration_ms=2000,
+                event_type="secret_discover",
+            )

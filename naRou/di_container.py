@@ -12,7 +12,6 @@ class DIContainer:
     """Simple dependency injection container with singleton support."""
 
     def __init__(self):
-        self._services: dict[type, Any] = {}
         self._factories: dict[type, Callable[[], Any]] = {}
         self._singletons: dict[type, Any] = {}
         self._is_singleton: dict[type, bool] = {}
@@ -72,14 +71,12 @@ class DIContainer:
 
     def unregister(self, service_type: type) -> None:
         """Unregister a service."""
-        self._services.pop(service_type, None)
         self._factories.pop(service_type, None)
         self._singletons.pop(service_type, None)
         self._is_singleton.pop(service_type, None)
 
     def clear(self) -> None:
         """Clear all registrations."""
-        self._services.clear()
         self._factories.clear()
         self._singletons.clear()
         self._is_singleton.clear()

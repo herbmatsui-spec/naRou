@@ -48,6 +48,17 @@ class AIBlackboard:
     current_floor: int = 1
     total_turns: int = 0
 
+    # Archaeology / narrative memory (Phase: ending reach)
+    # strategy_params で "archaeology_priority": 0.6 等を渡す（Step 8）
+    collected_fragments: list[str] = field(default_factory=list)
+    owned_keys: list[str] = field(default_factory=list)
+    decoded_fragments: list[str] = field(default_factory=list)
+    reached_truths: list[str] = field(default_factory=list)
+    discovered_site_pos: tuple[int, int] | None = None
+    target_site_pos: tuple[int, int] | None = None
+    pending_interpret: bool = False
+    altar_offers_this_floor: int = 0
+
     def record_position(self, pos: tuple[int, int]) -> None:
         """Record current player position into history and update oscillation checks."""
         self.visited_positions.append(pos)
@@ -95,6 +106,9 @@ class AIBlackboard:
         self.unbreakable_walls.clear()
         self.discovered_stairs_pos = None
         self.discovered_altar_pos = None
+        self.discovered_site_pos = None
+        self.target_site_pos = None
+        self.altar_offers_this_floor = 0
         self.stalled_turns = 0
         self.consecutive_kites = 0
         self.stalemate_turns = 0

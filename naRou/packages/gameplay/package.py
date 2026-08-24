@@ -248,7 +248,7 @@ class GameplayLoop:
                 pass
 
             if (tx, ty) == self.engine.altar_pos:
-                from naRou.constants import GodInfo
+                from naRou.god_system import GodInfo
 
                 self.engine.log(
                     f"神【{GodInfo.GODS[self.engine.player.god_id]['name']}】の祭壇。([p]祈る [o]捧げる)",

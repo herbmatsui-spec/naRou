@@ -15,6 +15,8 @@ from naRou.ai.states.base_state import (
     TILE_STAIRS_DOWN,
 )
 
+from naRou.ai_floor_progression import FloorProgressionManager
+
 if TYPE_CHECKING:
     from naRou.ai_blackboard import AIBlackboard
     from naRou.entity import Entity
@@ -30,6 +32,14 @@ class ExploreState(AIState):
         # Emergency check
         if hp_ratio < 0.35:
             return "EMERGENCY"
+
+        # Archaeology: interpret a reached truth first (highest priority)
+        if self.bb.pending_interpret:
+            return "INTERPRET"
+
+        # Archaeology: excavate an available site at this depth
+        if FloorProgressionManager(self.bb).should_excavate():
+            return "EXCAVATE"
 
         # Check for visible enemies
         enemies_near = self._get_visible_enemies(range_=8)
@@ -336,19 +346,13 @@ class ExploreState(AIState):
         player = engine.player
         game_map = engine.game_map
 
-        # Check stairs
+        # Check stairs — discover immediately from stairs_down_pos (robust, no fog dependency)
         if not self.bb.discovered_stairs_pos:
             stairs_pos = getattr(game_map, "stairs_down_pos", None)
             if stairs_pos:
-                sx, sy = stairs_pos
-                if (
-                    sx < len(game_map.explored)
-                    and sy < len(game_map.explored[0])
-                    and game_map.explored[sx][sy]
-                ):
-                    self.bb.discovered_stairs_pos = stairs_pos
-
-            if not self.bb.discovered_stairs_pos:
+                self.bb.discovered_stairs_pos = stairs_pos
+            else:
+                # Fallback: scan explored tiles for a stairs glyph
                 max_x = min(MAP_WIDTH, len(game_map.tiles), len(game_map.explored))
                 max_y = min(MAP_HEIGHT, len(game_map.tiles[0]), len(game_map.explored[0]))
                 for x in range(max_x):
@@ -572,7 +576,7 @@ class DescendState(AIState):
         stairs_pos = self.bb.discovered_stairs_pos
 
         if not stairs_pos:
-            return ("wait", None)
+            return self._random_move_or_wait()
 
         sx, sy = stairs_pos
         # If already standing on stairs or on a stairs tile, execute descend
@@ -598,7 +602,25 @@ class DescendState(AIState):
             dy = path[1].y - player.y
             return ("move", (dx, dy))
 
+        # Fallback: avoid permanent wait when pathing fails
+        return self._random_move_or_wait()
+
+    def _random_move_or_wait(self) -> tuple[str, Any]:
+        """Random valid move to avoid stagnation; wait only if fully blocked."""
+        moves = self._get_valid_moves()
+        if moves:
+            return ("move", random.choice(moves))
         return ("wait", None)
+
+    def _get_valid_moves(self) -> list[tuple[int, int]]:
+        engine = self.bb.engine
+        player = engine.player
+        moves = []
+        for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (1, -1), (-1, 1), (1, 1)]:
+            nx, ny = player.x + dx, player.y + dy
+            if engine.game_map.is_walkable(nx, ny) and not engine.get_entity_at(nx, ny):
+                moves.append((dx, dy))
+        return moves
 
     def _get_adjacent_enemies(self) -> list[Entity]:
         engine = self.bb.engine
@@ -635,6 +657,10 @@ class OfferPrayState(AIState):
         if not self._has_offering_items():
             return "EXPLORE"
 
+        # Cap offerings per floor to avoid altar stall loops (Step fix)
+        if self.bb.altar_offers_this_floor >= 3:
+            return "EXPLORE"
+
         # Check for visible hostile enemies
         enemies_near = self._get_visible_enemies(range_=5)
         if enemies_near:
@@ -659,6 +685,7 @@ class OfferPrayState(AIState):
         ax, ay = altar_pos
         # If standing on altar, execute offer_altar
         if player.x == ax and player.y == ay:
+            self.bb.altar_offers_this_floor += 1
             return ("offer_altar", None)
 
         # Navigate to altar

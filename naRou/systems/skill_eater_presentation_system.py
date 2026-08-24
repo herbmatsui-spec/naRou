@@ -264,7 +264,7 @@ class SkillEaterPresentationSystem:
         )
 
         # Step 59: 捕食ストリーム演出用フラグ
-        return {
+        ui_data = {
             "is_diegetic": True,
             "ui_mode": "CYBERPUNK_AR_HUD",
             "aura_color": aura_color,
@@ -275,3 +275,29 @@ class SkillEaterPresentationSystem:
             "pulse_fx": pulse_fx,
             "absorption_particle_stream": True,
         }
+
+        # Template intervention UI (Phase F)
+        if hasattr(target, "scenario_flags") and target.scenario_flags:
+            flag_badges = []
+            for flag, weight in target.scenario_flags.items():
+                if weight >= 0.3:
+                    flag_badges.append({
+                        "archetype": flag,
+                        "weight": weight,
+                        "intensity": min(1.0, weight * 1.5),
+                    })
+            if flag_badges:
+                ui_data["template_flag_badges"] = flag_badges
+
+        # Reading mode data (original text view)
+        if hasattr(target, "template_reading_data"):
+            ui_data["reading_mode"] = target.template_reading_data
+
+        # Completeness gauge
+        if hasattr(target, "intervention_completeness"):
+            ui_data["completeness_gauge"] = {
+                "value": target.intervention_completeness,
+                "max": 1.0,
+            }
+
+        return ui_data

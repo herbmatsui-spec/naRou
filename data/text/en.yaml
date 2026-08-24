@@ -1,1 +1,181 @@
-hello: Hello
+# English
+meta:
+  language: "en"
+  name: "English"
+  native_name: "English"
+  direction: "ltr"
+  font: "Noto Sans"
+  fallback: true
+
+ui:
+  hello: "Hello"
+  menu:
+    new_game: "New Game"
+    continue: "Continue"
+    settings: "Settings"
+    quit: "Quit"
+    save: "Save"
+    load: "Load"
+    options: "Options"
+    credits: "Credits"
+    help: "Help"
+  settings:
+    graphics: "Graphics"
+    audio: "Audio"
+    gameplay: "Gameplay"
+    language: "Language"
+    accessibility: "Accessibility"
+    controls: "Controls"
+  buttons:
+    confirm: "Confirm"
+    cancel: "Cancel"
+    back: "Back"
+    next: "Next"
+    previous: "Previous"
+    apply: "Apply"
+    reset: "Reset"
+    default: "Default"
+  tooltips:
+    hover_save: "Save the game"
+    hover_load: "Load saved game"
+    hover_settings: "Open settings menu"
+    hover_quit: "Quit the game"
+
+game:
+  status:
+    hp: "HP"
+    mp: "MP"
+    sp: "SP"
+    level: "Level"
+    exp: "EXP"
+    gold: "Gold"
+    turn: "Turn"
+  combat:
+    attack: "Attack"
+    defend: "Defend"
+    skill: "Skill"
+    item: "Item"
+    flee: "Flee"
+    wait: "Wait"
+    critical: "Critical Hit!"
+    miss: "Miss!"
+    dodge: "Dodged!"
+  messages:
+    victory: "Victory!"
+    defeat: "Defeat..."
+    level_up: "Level Up!"
+    item_found: "Obtained {item}!"
+    gold_gained: "Obtained {amount} Gold"
+    exp_gained: "Gained {amount} EXP"
+    skill_learned: "Learned {skill}!"
+    game_over: "Game Over"
+    saved: "Game saved"
+    loaded: "Game loaded"
+  dungeon:
+    floor: "Floor {floor}"
+    stairs_up: "Stairs Up"
+    stairs_down: "Stairs Down"
+    trap: "It's a trap!"
+    treasure: "Treasure Chest"
+
+items:
+  categories:
+    weapon: "Weapon"
+    armor: "Armor"
+    accessory: "Accessory"
+    consumable: "Consumable"
+    material: "Material"
+    quest: "Quest Item"
+  effects:
+    heal_hp: "Restores {amount} HP"
+    heal_mp: "Restores {amount} MP"
+    boost_atk: "Increases Attack by {amount}"
+    boost_def: "Increases Defense by {amount}"
+    boost_spd: "Increases Speed by {amount}"
+    cure_poison: "Cures Poison"
+    cure_paralysis: "Cures Paralysis"
+    revive: "Revives fallen ally"
+
+skills:
+  types:
+    physical: "Physical"
+    magical: "Magical"
+    support: "Support"
+    passive: "Passive"
+  targeting:
+    single_enemy: "Single Enemy"
+    all_enemies: "All Enemies"
+    single_ally: "Single Ally"
+    all_allies: "All Allies"
+    self: "Self"
+  descriptions:
+    fireball: "Deals Fire damage to single enemy"
+    heal: "Restores HP of single ally"
+    shield: "Increases Defense of single ally"
+    poison: "Inflicts Poison on single enemy"
+    stun: "Stuns single enemy"
+
+classes:
+  warrior: "Warrior"
+  mage: "Mage"
+  rogue: "Rogue"
+  cleric: "Cleric"
+  ranger: "Ranger"
+  paladin: "Paladin"
+  necromancer: "Necromancer"
+  bard: "Bard"
+
+enemies:
+  goblin: "Goblin"
+  orc: "Orc"
+  skeleton: "Skeleton"
+  zombie: "Zombie"
+  slime: "Slime"
+  bat: "Bat"
+  spider: "Spider"
+  dragon: "Dragon"
+  demon: "Demon"
+  boss: "Boss"
+
+system:
+  errors:
+    save_failed: "Failed to save"
+    load_failed: "Failed to load"
+    file_corrupt: "Save data is corrupted"
+    no_save: "Save data not found"
+    invalid_data: "Invalid save data"
+  warnings:
+    low_hp: "HP is low!"
+    low_mp: "MP is low!"
+    inventory_full: "Inventory is full"
+    cannot_flee: "Cannot flee from this battle"
+  confirmations:
+    quit_game: "Are you sure you want to quit?"
+    delete_save: "Delete this save data?"
+    overwrite_save: "Overwrite existing save data?"
+    reset_settings: "Reset all settings to default?"
+
+accessibility:
+  color_blind:
+    protanopia: "Protanopia (Red-Blind)"
+    deuteranopia: "Deuteranopia (Green-Blind)"
+    tritanopia: "Tritanopia (Blue-Blind)"
+  text_scale:
+    small: "Small (80%)"
+    normal: "Normal (100%)"
+    large: "Large (125%)"
+    extra_large: "Extra Large (150%)"
+  screen_reader:
+    enabled: "Screen Reader Support"
+    announcements: "Read aloud game events"
+  input:
+    remap_keys: "Remap Keys"
+    gamepad_support: "Gamepad Support"
+    vibration: "Vibration Feedback"
+
+meta_info:
+  version: "1.0.5"
+  last_updated: "2026-08-24"
+  translators: ["Development Team"]
+  notes: "English localization file"
+

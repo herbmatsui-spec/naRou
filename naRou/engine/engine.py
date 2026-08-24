@@ -874,6 +874,14 @@ class Engine:
             else None
         )
 
+    @property
+    def template_intervention_system(self):
+        return (
+            self.kernel.get_system("skill_eater_meta_intervention")
+            if self.kernel.has_system("skill_eater_meta_intervention")
+            else None
+        )
+
     def execute_scan(self) -> bool:
         """周囲の対象をスキャン・解析する (Step 14, 20, 38, 39)"""
         combat_sys = self.skill_eater_combat_system
@@ -1008,8 +1016,19 @@ class Engine:
             if target_state.is_husk or len(target_state.skills) == 0:
                 target.is_husk = True
                 self.log(
-                    f"{target.name} はスキルを奪われ、抜け殻（Husk）と化した！", (180, 180, 180)
+                    f"{target.name} �̓X�L����D���A�����k�iHusk�j�Ɖ������I", (180, 180, 180)
                 )
+                # Step 10: Generate Husk from devoured monster
+                if get_husk_enabled():
+                    from naRou.systems.skill_eater_husk_system import create_husk
+                    from naRou.ecs.components.components import HuskInventoryComponent
+                    husk = create_husk(target.name, target.level)
+                    player_entity = self.player
+                    husk_inventory = player_entity.get_component(HuskInventoryComponent)
+                    husk_inventory.husks.append(husk)
+                    self.log(
+                        f"{target.name}の抜け殻を回収しました！", (200, 200, 100)
+                    )
         else:
             backlash = random.randint(3, 8)
             self.player.hp = max(1, self.player.hp - backlash)

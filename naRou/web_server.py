@@ -15,7 +15,11 @@ from typing import TYPE_CHECKING, Any
 
 logger = logging.getLogger(__name__)
 
-from naRou.ui.ui_event_panel import get_current_event_info, get_event_ranking, get_player_event_score
+from naRou.ui.ui_event_panel import (
+    get_current_event_info,
+    get_event_ranking,
+    get_player_event_score,
+)
 from naRou.ui.ui_ranking_panel import get_all_event_rankings
 
 # Dynamic-lighting foundation (Phase 2-A). Import is optional so the server still
@@ -24,8 +28,10 @@ try:
     from naRou.fov import compute_light_map as _compute_light_map
 
     _FOV_AVAILABLE = True
-except Exception:
-    logger.exception("FOV モジュール利用不可")
+except (ImportError, ModuleNotFoundError):
+    _FOV_AVAILABLE = False
+except Exception as e:
+    logger.warning("FOV モジュール利用不可: %s", e)
     _FOV_AVAILABLE = False
 
 if TYPE_CHECKING:
@@ -643,6 +649,9 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 "platinum": s.platinum,
                 "hunger": s.hunger,
                 "karma": s.karma,
+                "karma_law_chaos": getattr(p, "karma_law_chaos", 0),
+                "karma_good_evil": getattr(p, "karma_good_evil", 0),
+                "template_exposure": getattr(p, "template_exposure", 0),
                 "turns": engine.turns,
                 "job": getattr(p, "job", "冒険者"),
                 "job_level": getattr(p, "job_level", 1),
@@ -702,6 +711,33 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 else None
             ),
             "screen_shake": screen_shake,
+            "meta_intervention": {
+                "active_events": [
+                    {
+                        "template_id": evt.template_id,
+                        "archetype": evt.archetype,
+                        "context": evt.context,
+                        "faction": evt.faction,
+                        "difficulty": evt.difficulty,
+                        "turn_spawned": evt.turn_spawned,
+                        "exploit_windows": [
+                            {"id": w.id, "tier": w.tier, "base_success": w.base_success}
+                            for w in evt.exploit_windows
+                        ],
+                    }
+                    for evt in getattr(engine, "active_template_events", [])
+                ],
+                "total_karma_points": getattr(
+                    engine.kernel.get_system("skill_eater_reincarnation_system").meta_state,
+                    "total_karma_points",
+                    0,
+                ) if engine.kernel.has_system("skill_eater_reincarnation_system") else 0,
+                "devoured_template_counts": getattr(
+                    engine.kernel.get_system("skill_eater_reincarnation_system").meta_state,
+                    "devoured_template_counts",
+                    {},
+                ) if engine.kernel.has_system("skill_eater_reincarnation_system") else {},
+            },
         }
 
     def _handle_web_action(self, engine: Engine, action: str, data: dict[str, Any]) -> str:

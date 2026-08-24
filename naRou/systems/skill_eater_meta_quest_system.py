@@ -280,6 +280,7 @@ class ReincarnationMetaState:
     unlocked_secrets: list[str] = field(default_factory=list)
     inherited_skill_ids: list[str] = field(default_factory=list)
     devoured_element_counts: dict[str, int] = field(default_factory=dict)
+    devoured_template_counts: dict[str, int] = field(default_factory=dict)
     dominant_element_last_life: str | None = None
 
 
@@ -302,22 +303,36 @@ class SkillEaterReincarnationSystem:
 
     def apply_world_modifier(self) -> str:
         dominant = self.meta_state.dominant_element_last_life
-        if not dominant:
-            return "通常の世界線が展開されています。"
+        msg_parts = []
 
-        for s_def in self.registry.get_all_skills():
-            if dominant in s_def.tags:
-                s_def.market_value = max(100, int(s_def.market_value * 0.5))
-            elif (
-                dominant == "Fire"
-                and "Water" in s_def.tags
-                or dominant == "Water"
-                and "Fire" in s_def.tags
-            ):
-                s_def.market_value = int(s_def.market_value * 2.0)
+        # Element-based world modifier
+        if dominant:
+            for s_def in self.registry.get_all_skills():
+                if dominant in s_def.tags:
+                    s_def.market_value = max(100, int(s_def.market_value * 0.5))
+                elif (
+                    dominant == "Fire"
+                    and "Water" in s_def.tags
+                    or dominant == "Water"
+                    and "Fire" in s_def.tags
+                ):
+                    s_def.market_value = int(s_def.market_value * 2.0)
 
-        msg = f"【世界変異観測】前世で【{dominant}】属性スキルが乱獲されたため、この世界では{dominant}スキルの価値が暴落し、対抗属性が高騰しています！"
-        return msg
+            msg_parts.append(
+                f"【世界変異観測】前世で【{dominant}】属性スキルが乱獲されたため、この世界では{dominant}スキルの価値が暴落し、対抗属性が高騰しています！"
+            )
+        else:
+            msg_parts.append("通常の世界線が展開されています。")
+
+        # Template intervention effects (Phase E)
+        if self.meta_state.devoured_template_counts:
+            for archetype, count in self.meta_state.devoured_template_counts.items():
+                if count >= 3:
+                    msg_parts.append(
+                        f"【テンプレ枯渇】「{archetype}」が{count}回乱獲され、この世界では発生しにくくなりました。"
+                    )
+
+        return "\n".join(msg_parts)
 
     def process_reincarnation(
         self, player: CharacterState, selected_carryover_skill_ids: list[str]
@@ -349,6 +364,13 @@ class SkillEaterReincarnationSystem:
             )
             self.meta_state.dominant_element_last_life = dominant
             self.meta_state.devoured_element_counts.clear()
+
+        # Carry over template counts with decay (Phase E Step 56)
+        if self.meta_state.devoured_template_counts:
+            for archetype, count in list(self.meta_state.devoured_template_counts.items()):
+                # Decay by half, minimum 1
+                new_count = max(1, count // 2)
+                self.meta_state.devoured_template_counts[archetype] = new_count
 
         world_msg = self.apply_world_modifier()
 

@@ -1,9 +1,7 @@
-"""
-Pub/Sub Event Bus System
-Decouples systems by allowing them to subscribe to and publish events.
-"""
-
+import logging
 from typing import Any, Callable, Dict, List
+
+logger = logging.getLogger(__name__)
 
 # --- Event Constants ---
 EVENT_BEFORE_DAMAGE = "EVENT_BEFORE_DAMAGE"
@@ -11,15 +9,18 @@ EVENT_ON_MOVE = "EVENT_ON_MOVE"
 
 
 class EventBus:
-    """Singleton event bus for pub/sub messaging."""
+    """Pub/Sub Event Bus for decoupled system messaging."""
 
-    _instance = None
+    def __init__(self):
+        self.subscribers: Dict[str, List[Callable[[Any], None]]] = {}
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(EventBus, cls).__new__(cls)
-            cls._instance.subscribers: Dict[str, List[Callable]] = {}
-        return cls._instance
+    @property
+    def _subscribers(self) -> Dict[str, List[Callable[[Any], None]]]:
+        return self.subscribers
+
+    @_subscribers.setter
+    def _subscribers(self, value: Dict[str, List[Callable[[Any], None]]]) -> None:
+        self.subscribers = value
 
     def subscribe(self, event_type: str, callback: Callable[[Any], None]) -> None:
         """Register a callback for a specific event type."""
@@ -28,22 +29,30 @@ class EventBus:
         if callback not in self.subscribers[event_type]:
             self.subscribers[event_type].append(callback)
 
-    def unsubscribe(self, event_type: str, callback: Callable[[Any], None]) -> None:
+    def unsubscribe(self, event_type: str, callback: Callable[[Any], None]) -> bool:
         """Remove a callback from a specific event type."""
         if event_type in self.subscribers and callback in self.subscribers[event_type]:
             self.subscribers[event_type].remove(callback)
+            return True
+        return False
 
     def publish(self, event_type: str, data: Any = None) -> None:
         """Publish an event to all subscribed callbacks."""
         if event_type in self.subscribers:
-            # Create a copy of the list to allow safe modification during iteration
             for callback in list(self.subscribers[event_type]):
-                callback(data)
+                try:
+                    callback(data)
+                except Exception as e:
+                    logger.error(
+                        f"Error handling event {event_type} in {callback}: {e}",
+                        exc_info=True,
+                    )
 
     def clear(self) -> None:
         """Clear all subscribers (useful for testing or state reset)."""
         self.subscribers.clear()
 
 
-# Global singleton instance
+# Global event bus instance for convenience/backward compatibility
 event_bus = EventBus()
+

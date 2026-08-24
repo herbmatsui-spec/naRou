@@ -140,39 +140,7 @@ class AStar:
         return cls.get_path(start, goal, is_walkable)
 
 
-class EventBus:
-    """モジュール間の疎結合イベント通知バス (ステップ7, 商用高信頼性対応)"""
-
-    def __init__(self):
-        self._subscribers: dict[str, list[Callable[[Any], None]]] = {}
-
-    def subscribe(self, event_type: str, callback: Callable[[Any], None]) -> None:
-        if event_type not in self._subscribers:
-            self._subscribers[event_type] = []
-        if callback not in self._subscribers[event_type]:
-            self._subscribers[event_type].append(callback)
-
-    def unsubscribe(self, event_type: str, callback: Callable[[Any], None]) -> bool:
-        if event_type in self._subscribers and callback in self._subscribers[event_type]:
-            self._subscribers[event_type].remove(callback)
-            return True
-        return False
-
-    def publish(self, event_type: str, data: Any = None) -> None:
-        if event_type in self._subscribers:
-            for cb in list(self._subscribers[event_type]):
-                try:
-                    cb(data)
-                except Exception as e:
-                    logger.exception("Unhandled exception")
-                    import logging
-
-                    logging.getLogger("EventBus").error(
-                        f"Error handling event {event_type} in {cb}: {e}", exc_info=True
-                    )
-
-    def clear(self) -> None:
-        self._subscribers.clear()
+from naRou.event_bus import EventBus
 
 
 @dataclass
@@ -228,5 +196,4 @@ class BaseSystem:
         """毎ターンのシステム更新フック"""
 
 
-# --- LocalizationManager integration (i18n, Step 3.x) ---
-from naRou.localization_manager import localize  # noqa: E402,F401
+

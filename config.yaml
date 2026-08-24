@@ -16,16 +16,27 @@ game:
   difficulty_presets:
     easy:
       enemy_hp: 0.8
-      player_damage_taken: 0.5
+      enemy_damage: 0.8
+      player_damage: 1.2
+      player_hp: 1.2
       player_regen: 1.5
     hard:
       enemy_hp: 1.2
-      player_damage_taken: 1.5
+      enemy_damage: 1.2
+      player_damage: 0.8
+      player_hp: 0.8
       player_regen: 0.8
     normal:
       enemy_hp: 1.0
-      player_damage_taken: 1.0
+      enemy_damage: 1.0
+      player_damage: 1.0
+      player_hp: 1.0
       player_regen: 1.0
+husk:
+  decay_per_turn: 3
+  enabled: false
+  max_inventory: 10
+  forge_fuel: 5
 pet:
   attributes:
     charisma: 18
@@ -60,7 +71,7 @@ player:
   - 255
   - 255
   - 255
-  name: "\u540D\u7121\u3057\u306E\u5192\u967A\u8005"
+  name: "\u540D\u7121\u306E\u5192\u967A\u8005"
   speed: 85
   start_x: 20
   start_y: 20

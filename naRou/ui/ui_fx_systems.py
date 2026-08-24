@@ -1329,6 +1329,3 @@ def format_job_display(registry: JobRegistry, player) -> str:
                 lines.append(f"    {attr}: {sign}{val}")
         lines.append("")
 
-
-# --- LocalizationManager integration (i18n, Step 3.x) ---
-from naRou.localization_manager import localize  # noqa: E402,F401

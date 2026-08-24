@@ -19,6 +19,7 @@ class SkillTier(str, Enum):
     UNIQUE = "Unique"
     CONCEPT = "Concept"
     EATER = "Eater"
+    META_UNIQUE = "MetaUnique"
 
 
 class SkillType(str, Enum):

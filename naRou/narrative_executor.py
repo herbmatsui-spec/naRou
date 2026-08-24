@@ -11,6 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 import os
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 import yaml
@@ -30,6 +31,60 @@ from naRou.quest_narrative_dag import (
 
 
 @dataclass
+class HistoryEntry:
+    """ナラティブ履歴エントリ（選択・分岐の詳細記録）"""
+
+    node_id: str                    # ノードID
+    node_title: str                 # ノードタイトル
+    node_type: str                  # ノードタイプ (START/CHOICE/EVENT/END 等)
+    timestamp: str                  # ISO8601形式タイムスタンプ
+    # 選択肢の場合のみ
+    choice_text: str = ""           # 選択したテキスト
+    choice_reason: str = ""         # 分岐理由（条件式や説明）
+    # 結果
+    immediate_rewards: dict = field(default_factory=dict)      # 即時報酬
+    long_term_effects: dict = field(default_factory=dict)      # 長期効果
+    flags_set: list[str] = field(default_factory=list)         # 設定されたフラグ
+    flags_cleared: list[str] = field(default_factory=list)     # クリアされたフラグ
+    # 到達時のコンテキストスナップショット（任意）
+    karma_at_choice: int = 0
+    faction_rep_snapshot: dict = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "node_id": self.node_id,
+            "node_title": self.node_title,
+            "node_type": self.node_type,
+            "timestamp": self.timestamp,
+            "choice_text": self.choice_text,
+            "choice_reason": self.choice_reason,
+            "immediate_rewards": self.immediate_rewards,
+            "long_term_effects": self.long_term_effects,
+            "flags_set": self.flags_set,
+            "flags_cleared": self.flags_cleared,
+            "karma_at_choice": self.karma_at_choice,
+            "faction_rep_snapshot": self.faction_rep_snapshot,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> HistoryEntry:
+        return cls(
+            node_id=data.get("node_id", ""),
+            node_title=data.get("node_title", ""),
+            node_type=data.get("node_type", ""),
+            timestamp=data.get("timestamp", ""),
+            choice_text=data.get("choice_text", ""),
+            choice_reason=data.get("choice_reason", ""),
+            immediate_rewards=data.get("immediate_rewards", {}),
+            long_term_effects=data.get("long_term_effects", {}),
+            flags_set=data.get("flags_set", []),
+            flags_cleared=data.get("flags_cleared", []),
+            karma_at_choice=data.get("karma_at_choice", 0),
+            faction_rep_snapshot=data.get("faction_rep_snapshot", {}),
+        )
+
+
+@dataclass
 class NarrativeState:
     """ナラティブ実行状態（セーブデータ用）"""
 
@@ -37,7 +92,7 @@ class NarrativeState:
     current_node_id: str
     flags: set[str] = field(default_factory=set)
     variables: dict[str, Any] = field(default_factory=dict)
-    history: list[str] = field(default_factory=list)  # 通過したノードID履歴
+    history: list[HistoryEntry] = field(default_factory=list)  # 通過したノードの詳細履歴
     completed: bool = False
     ending_id: str | None = None
 
@@ -47,19 +102,34 @@ class NarrativeState:
             "current_node_id": self.current_node_id,
             "flags": list(self.flags),
             "variables": self.variables,
-            "history": self.history,
+            "history": [h.to_dict() for h in self.history],
             "completed": self.completed,
             "ending_id": self.ending_id,
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> NarrativeState:
+        # 旧形式互換: history が文字列リストの場合
+        history_data = data.get("history", [])
+        history: list[HistoryEntry] = []
+        for h in history_data:
+            if isinstance(h, str):
+                # 旧形式: ノードIDのみの文字列
+                history.append(HistoryEntry(
+                    node_id=h,
+                    node_title="",
+                    node_type="",
+                    timestamp="",
+                ))
+            elif isinstance(h, dict):
+                history.append(HistoryEntry.from_dict(h))
+
         return cls(
             dag_id=data["dag_id"],
             current_node_id=data["current_node_id"],
             flags=set(data.get("flags", [])),
             variables=data.get("variables", {}),
-            history=data.get("history", []),
+            history=history,
             completed=data.get("completed", False),
             ending_id=data.get("ending_id"),
         )
@@ -222,20 +292,44 @@ class NarrativeExecutor:
         self,
         ending_id: str,
         context: NarrativeContext,
+        main_quest_system: Any = None,
     ) -> bool:
-        """エンディング解放条件チェック"""
+        """エンディング解放条件チェック（DSL対応版）"""
         ending = self._endings.get(ending_id)
         if not ending:
             return False
 
-        # 全条件を満たす必要あり
-        for condition in ending.unlock_conditions:
-            if not self._check_condition(condition, context):
-                return False
+        # 全条件を満たす必要あり（AND）
+        for condition_dsl in ending.unlock_conditions:
+            if not condition_dsl.strip():
+                continue
+            try:
+                # DSL パース
+                from naRou.quest_condition_parser import parse_condition
+                from naRou.quest_condition_evaluator import evaluate_condition, EvaluationContext
+                
+                condition_tree = parse_condition(condition_dsl)
+                # NarrativeContext の情報を extra_vars 経由で EvaluationContext に渡す
+                extra_vars = dict(context.variables)
+                extra_vars["_narrative_flags"] = context.flags
+                if main_quest_system:
+                    extra_vars["quest_system"] = main_quest_system
+                
+                eval_context = EvaluationContext(
+                    player=context.player,
+                    extra_vars=extra_vars,
+                )
+                if not evaluate_condition(condition_tree, player=eval_context.player, extra_vars=eval_context.extra_vars):
+                    return False
+            except Exception as e:
+                logger.warning("エンディング条件評価エラー (%s): %s", condition_dsl, e)
+                # パース/評価失敗時は旧形式として互換チェック
+                if not self._check_condition_legacy(condition_dsl, context):
+                    return False
         return True
 
-    def _check_condition(self, condition: str, context: NarrativeContext) -> bool:
-        """条件チェック（簡易版）"""
+    def _check_condition_legacy(self, condition: str, context: NarrativeContext) -> bool:
+        """旧形式条件チェック（互換性維持）"""
         # フラグチェック
         if condition.startswith("has_flag:"):
             flag = condition.split(":", 1)[1]
@@ -306,19 +400,21 @@ class NarrativeExecutor:
             variables={},
         )
 
-        # 開始ノードの自動遷移を適用
-        current_node_id = self._apply_auto_transitions(dag, start_node.node_id, context)
+        # 開始ノードの自動遷移を適用（state を渡して履歴記録）
+        temp_state = NarrativeState(
+            dag_id=dag_id,
+            current_node_id=start_node.node_id,
+            flags=context.flags,
+            variables=context.variables,
+        )
+        current_node_id = self._apply_auto_transitions(dag, start_node.node_id, context, temp_state)
 
         state = NarrativeState(
             dag_id=dag_id,
             current_node_id=current_node_id,
             flags=context.flags,
             variables=context.variables,
-            history=(
-                [start_node.node_id, current_node_id]
-                if current_node_id != start_node.node_id
-                else [start_node.node_id]
-            ),
+            history=temp_state.history,
         )
 
         # プレイヤーIDで管理（簡易版：名前使用）
@@ -372,7 +468,7 @@ class NarrativeExecutor:
         available.sort(key=lambda e: (-e.weight, e.edge_id))
         return available
 
-    def make_choice(self, player: Entity, edge_id: str) -> list[str]:
+    def make_choice(self, player: Entity, edge_id: str, engine: Any = None) -> list[str]:
         """選択肢を選択して遷移実行。ログメッセージリストを返す。"""
         state = self.get_active_state(player)
         if not state or state.completed:
@@ -406,15 +502,62 @@ class NarrativeExecutor:
         if not edge.is_available(context):
             return ["現在その選択肢は選べません"]
 
+        # 選択肢の詳細情報を取得（履歴記録用）
+        choice_text = edge.choice_text
+        choice_reason = edge.condition_dsl if edge.condition_dsl else ""
+
         # 選択肢タイプの場合、選択肢の結果を適用
         logs = []
+        immediate_rewards = {}
+        long_term_effects = {}
+        flags_before = set(context.flags)
+        variables_before = dict(context.variables)
+        
         if edge.edge_type == NarrativeEdgeType.CHOICE:
             choice_logs = self.apply_choice_consequence(edge.edge_id, context)
             logs.extend(choice_logs)
+            # 報酬・効果を履歴用に抽出
+            choice = self._choices.get(edge.edge_id)
+            if choice:
+                for eff in choice.immediate_effects:
+                    immediate_rewards[eff.get("type", "")] = eff.get("value", 0)
+                for eff in choice.long_term_effects:
+                    long_term_effects[eff.get("type", "")] = eff.get("value", 0)
+                immediate_rewards.update(choice.world_state_changes)
 
         # 遷移実行
-        transition_logs = self._execute_transition(dag, edge, context, state)
+        transition_logs = self._execute_transition(dag, edge, context, state, engine)
         logs.extend(transition_logs)
+
+        # 履歴エントリ作成（遷移後の状態で）
+        final_node = dag.get_node(state.current_node_id)
+        flags_after = context.flags
+        flags_set = list(flags_after - flags_before)
+        flags_cleared = list(flags_before - flags_after)
+        
+        # カルマ・派閥評価スナップショット
+        karma_at = context.variables.get("karma", 0)
+        faction_rep_snapshot = {}
+        for key, value in context.variables.items():
+            if key.startswith("faction_rep.") or key.startswith("world_faction_rep."):
+                faction_rep_snapshot[key] = value
+
+        history_entry = HistoryEntry(
+            node_id=state.current_node_id,
+            node_title=final_node.title if final_node else "",
+            node_type=final_node.node_type.name if final_node else "",
+            timestamp=datetime.now().isoformat(),
+            choice_text=choice_text,
+            choice_reason=choice_reason,
+            immediate_rewards=immediate_rewards,
+            long_term_effects=long_term_effects,
+            flags_set=flags_set,
+            flags_cleared=flags_cleared,
+            karma_at_choice=karma_at,
+            faction_rep_snapshot=faction_rep_snapshot,
+        )
+        state.history.append(history_entry)
+
         return logs
 
     def _execute_transition(
@@ -423,8 +566,9 @@ class NarrativeExecutor:
         edge: NarrativeEdge,
         context: NarrativeContext,
         state: NarrativeState,
+        engine: Any = None,
     ) -> list[str]:
-        """エッジ遷移実行"""
+        """エッジ遷移実行（履歴記録は呼び出し元 make_choice で行う）"""
         logs = []
 
         # エッジの効果適用
@@ -438,13 +582,12 @@ class NarrativeExecutor:
             return ["遷移先ノードが存在しません"]
 
         # 自動遷移チェイン適用
-        final_node_id = self._apply_auto_transitions(dag, edge.target_node_id, context)
+        final_node_id = self._apply_auto_transitions(dag, edge.target_node_id, context, state)
 
-        # フラグ・変数更新
+        # フラグ・変数更新（_apply_auto_transitions 内で更新済みだが念のため）
         state.current_node_id = final_node_id
         state.flags = context.flags
         state.variables = context.variables
-        state.history.append(final_node_id)
 
         # 到達ノードの効果適用
         final_node = dag.get_node(final_node_id)
@@ -458,7 +601,8 @@ class NarrativeExecutor:
             logs.append(f"★ ナラティブ「{dag.dag_id}」が完了しました: {final_node.title}")
 
             # エンディング解放チェック・報酬付与
-            if self.check_ending_unlock(final_node.node_id, context):
+            mqs = getattr(engine, "main_quest_system", None)
+            if self.check_ending_unlock(final_node.node_id, context, mqs):
                 ending_logs = self.grant_ending_rewards(final_node.node_id, context)
                 logs.extend(ending_logs)
 
@@ -469,6 +613,7 @@ class NarrativeExecutor:
         dag: NarrativeDAG,
         start_node_id: str,
         context: NarrativeContext,
+        state: NarrativeState | None = None,
     ) -> str:
         """自動遷移（AUTO/CONDITION_TRUE 等）を連鎖適用"""
         current_id = start_node_id
@@ -500,8 +645,30 @@ class NarrativeExecutor:
                 break  # 自動遷移なし = ここで停止
 
             # 遷移実行
-            for key, value in edge.effects.items():
+            for key, value in auto_edge.effects.items():
                 context.variables[key] = value
+
+            # 履歴記録（state が渡されている場合）
+            if state is not None:
+                prev_id = state.current_node_id
+                state.current_node_id = auto_edge.target_node_id
+                state.flags = context.flags
+                state.variables = context.variables
+                
+                target_node = dag.get_node(auto_edge.target_node_id)
+                history_entry = HistoryEntry(
+                    node_id=auto_edge.target_node_id,
+                    node_title=target_node.title if target_node else "",
+                    node_type=target_node.node_type.name if target_node else "",
+                    timestamp=datetime.now().isoformat(),
+                    choice_text="",
+                    choice_reason=f"Auto transition from {prev_id} via {auto_edge.edge_id}",
+                    immediate_rewards=dict(auto_edge.effects),
+                    flags_set=[],
+                    flags_cleared=[],
+                    karma_at_choice=context.variables.get("karma", 0),
+                )
+                state.history.append(history_entry)
 
             current_id = auto_edge.target_node_id
 
@@ -569,11 +736,12 @@ class NarrativeExecutor:
         )
 
         # 強制遷移実行
-        final_id = self._apply_auto_transitions(dag, target_node_id, context)
+        prev_id = state.current_node_id
+        final_id = self._apply_auto_transitions(dag, target_node_id, context, state)
         state.current_node_id = final_id
         state.flags = context.flags
         state.variables = context.variables
-        state.history.append(final_id)
+        # 履歴は _apply_auto_transitions 内で記録済み
 
         return [f"強制遷移: {target_node_id} -> {final_id}"]
 

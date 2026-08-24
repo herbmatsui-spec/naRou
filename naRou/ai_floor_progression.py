@@ -17,6 +17,38 @@ class FloorProgressionManager:
     def __init__(self, blackboard: AIBlackboard):
         self.bb = blackboard
 
+    # ---- Phase B: Archaeology site detection (depth-based) ----
+    def get_available_site_id(self) -> str | None:
+        """現在の深度で、まだ発掘していない遺跡サイトIDを返す (Step 10-15)。"""
+        engine = self.bb.engine
+        mgr = getattr(engine, "archaeology_manager", None)
+        if mgr is None:
+            return None
+        depth = getattr(engine, "dungeon_level", 1)
+        registry = getattr(mgr, "registry", None)
+        if registry is None:
+            return None
+        site_id = registry.find_site_for_depth(depth)
+        if not site_id:
+            return None
+        excavated = getattr(engine.player.archaeology, "excavated_sites", [])
+        if site_id in excavated:
+            return None
+        return site_id
+
+    def should_excavate(self) -> bool:
+        """発掘すべきか (Step 16-18): 未発掘サイトがあり、安全なら True。"""
+        if self.get_available_site_id() is None:
+            return False
+        player = self.bb.engine.player
+        hp_ratio = player.hp / player.max_hp if getattr(player, "max_hp", 0) > 0 else 0
+        if hp_ratio < 0.5:
+            return False
+        energy = getattr(player, "energy", 100)
+        if energy <= 0:
+            return False
+        return True
+
     def compute_exploration_ratio(self) -> float:
         """Compute the ratio of explored walkable tiles over total walkable tiles."""
         engine = self.bb.engine
