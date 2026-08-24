@@ -9,7 +9,7 @@ from __future__ import annotations
 
 def main() -> None:
     import game
-    from core.text_renderer import TextRenderer
+    from naRou.core.text_renderer import TextRenderer
 
     engine = game.Engine()
     tr = TextRenderer(80, 50)

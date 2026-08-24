@@ -17,12 +17,12 @@ class TestExplorationMetaIntegration(unittest.TestCase):
     def setUp(self):
         """テスト前準備"""
         # シングルトンリセット
-        from reincarnation_system import ReincarnationManager
-        from skill_eater_ascension_board import AscensionBoard
-        from skill_eater_bounty_system import MidasBountyManager
-        from skill_eater_concept_crystal import ConceptCrystallizer
-        from skill_eater_dungeon_floor_manager import SkillEaterDungeonFloorManager
-        from skill_eater_exploration_system import SkillEaterExplorationSystem
+        from naRou.reincarnation_system import ReincarnationManager
+        from naRou.skill_eater_ascension_board import AscensionBoard
+        from naRou.skill_eater_bounty_system import MidasBountyManager
+        from naRou.skill_eater_concept_crystal import ConceptCrystallizer
+        from naRou.skill_eater_dungeon_floor_manager import SkillEaterDungeonFloorManager
+        from naRou.skill_eater_exploration_system import SkillEaterExplorationSystem
 
         SkillEaterExplorationSystem.reset_instance()
         AscensionBoard.reset_instance()
@@ -33,7 +33,7 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase1_exploration_rank(self):
         """Phase 1: 探索経験値・ランキングシステム"""
-        from skill_eater_exploration_system import SkillEaterExplorationSystem
+        from naRou.skill_eater_exploration_system import SkillEaterExplorationSystem
 
         exploration = SkillEaterExplorationSystem.get_instance()
 
@@ -65,7 +65,7 @@ class TestExplorationMetaIntegration(unittest.TestCase):
         self.assertFalse(exploration._is_first_visit("new_room"))
 
         # 秘密部屋判定テスト
-        from skill_eater_exploration_system import DungeonRoom
+        from naRou.skill_eater_exploration_system import DungeonRoom
         secret_room = DungeonRoom("secret_1", "秘密の部屋", "隠された部屋")
         normal_room = DungeonRoom("normal_1", "通常の部屋", "普通の部屋")
         self.assertTrue(exploration._is_secret_room(secret_room))
@@ -75,7 +75,7 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase1_move_to_room_exp(self):
         """Phase 1: 部屋移動時の経験値付与"""
-        from skill_eater_exploration_system import SkillEaterExplorationSystem
+        from naRou.skill_eater_exploration_system import SkillEaterExplorationSystem
 
         exploration = SkillEaterExplorationSystem.get_instance()
 
@@ -95,7 +95,7 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase1_secret_room_discovery(self):
         """Phase 1: 秘密部屋発見ボーナス"""
-        from skill_eater_exploration_system import DungeonRoom, SkillEaterExplorationSystem
+        from naRou.skill_eater_exploration_system import DungeonRoom, SkillEaterExplorationSystem
 
         exploration = SkillEaterExplorationSystem.get_instance()
         # 秘密部屋を追加
@@ -115,12 +115,12 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase1_floor_transition_exp(self):
         """Phase 1: フロア遷移時の初見フロアボーナス"""
-        from skill_eater_dungeon_floor_manager import SkillEaterDungeonFloorManager
+        from naRou.skill_eater_dungeon_floor_manager import SkillEaterDungeonFloorManager
 
         dungeon = SkillEaterDungeonFloorManager.get_instance()
         dungeon.initialize_dungeon(max_depth=10)
 
-        from skill_eater_exploration_system import SkillEaterExplorationSystem
+        from naRou.skill_eater_exploration_system import SkillEaterExplorationSystem
         exploration = SkillEaterExplorationSystem.get_instance()
 
         # 最初のフロアは既に訪問済み扱い
@@ -137,12 +137,12 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase1_floor_clear_exp(self):
         """Phase 1: フロアクリア時ボーナス"""
-        from skill_eater_dungeon_floor_manager import SkillEaterDungeonFloorManager
+        from naRou.skill_eater_dungeon_floor_manager import SkillEaterDungeonFloorManager
 
         dungeon = SkillEaterDungeonFloorManager.get_instance()
         dungeon.initialize_dungeon(max_depth=10)
 
-        from skill_eater_exploration_system import SkillEaterExplorationSystem
+        from naRou.skill_eater_exploration_system import SkillEaterExplorationSystem
         exploration = SkillEaterExplorationSystem.get_instance()
 
         old_exp = exploration.exploration_rank.total_exp
@@ -157,7 +157,7 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase1_rank_info(self):
         """Phase 1: ランク情報取得"""
-        from skill_eater_exploration_system import SkillEaterExplorationSystem
+        from naRou.skill_eater_exploration_system import SkillEaterExplorationSystem
 
         exploration = SkillEaterExplorationSystem.get_instance()
         info = exploration.get_exploration_rank_info()
@@ -175,7 +175,7 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase1_save_load(self):
         """Phase 1: セーブ/ロード"""
-        from skill_eater_exploration_system import SkillEaterExplorationSystem
+        from naRou.skill_eater_exploration_system import SkillEaterExplorationSystem
 
         exploration = SkillEaterExplorationSystem.get_instance()
         exploration.add_exploration_exp(5000)
@@ -200,8 +200,8 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase2_ascension_board_nodes(self):
         """Phase 2: アセンションボード探索連動ノード"""
-        from skill_eater_ascension_board import AscensionBoard
-        from skill_eater_exploration_system import ExplorationRank
+        from naRou.skill_eater_ascension_board import AscensionBoard
+        from naRou.skill_eater_exploration_system import ExplorationRank
 
         board = AscensionBoard.get_instance()
 
@@ -231,8 +231,8 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase2_node_buffs(self):
         """Phase 2: ノード解放時のバフ付与"""
-        from skill_eater_ascension_board import AscensionBoard
-        from skill_eater_exploration_system import ExplorationRank
+        from naRou.skill_eater_ascension_board import AscensionBoard
+        from naRou.skill_eater_exploration_system import ExplorationRank
 
         board = AscensionBoard.get_instance()
 
@@ -259,7 +259,7 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase3_bounty_targets(self):
         """Phase 3: 深層バウンティ対象生成"""
-        from skill_eater_bounty_system import MidasBountyManager
+        from naRou.skill_eater_bounty_system import MidasBountyManager
 
         bounty = MidasBountyManager()
 
@@ -288,8 +288,8 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase3_secret_boss(self):
         """Phase 3: 隠しボス出現条件"""
-        from skill_eater_bounty_system import MidasBountyManager
-        from skill_eater_exploration_system import ExplorationRank
+        from naRou.skill_eater_bounty_system import MidasBountyManager
+        from naRou.skill_eater_exploration_system import ExplorationRank
 
         bounty = MidasBountyManager()
 
@@ -305,7 +305,7 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase3_shadow_broker(self):
         """Phase 3: 闇ブローカー遭遇判定"""
-        from skill_eater_bounty_system import MidasBountyManager
+        from naRou.skill_eater_bounty_system import MidasBountyManager
 
         bounty = MidasBountyManager()
 
@@ -327,7 +327,7 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase3_eliminate_deep_target(self):
         """Phase 3: 深層ターゲット討伐・概念結晶ドロップ"""
-        from skill_eater_bounty_system import MidasBountyManager
+        from naRou.skill_eater_bounty_system import MidasBountyManager
 
         bounty = MidasBountyManager()
 
@@ -349,8 +349,8 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase4_concept_crystal_drops(self):
         """Phase 4: 概念結晶ドロップ判定"""
-        from skill_eater_concept_crystal import ConceptCrystallizer
-        from skill_eater_exploration_system import ExplorationRank
+        from naRou.skill_eater_concept_crystal import ConceptCrystallizer
+        from naRou.skill_eater_exploration_system import ExplorationRank
 
         crystallizer = ConceptCrystallizer()
 
@@ -383,7 +383,7 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase4_auto_crystallize(self):
         """Phase 4: 自動合成提案"""
-        from skill_eater_concept_crystal import ConceptCrystallizer
+        from naRou.skill_eater_concept_crystal import ConceptCrystallizer
 
         crystallizer = ConceptCrystallizer()
 
@@ -409,7 +409,7 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase5_new_game_plus(self):
         """Phase 5: ニューゲーム+引継ぎ"""
-        from reincarnation_system import ReincarnationManager
+        from naRou.reincarnation_system import ReincarnationManager
 
         manager = ReincarnationManager()
 
@@ -430,7 +430,7 @@ class TestExplorationMetaIntegration(unittest.TestCase):
         player = MockPlayer()
 
         # 探索システムモック
-        from skill_eater_exploration_system import SkillEaterExplorationSystem
+        from naRou.skill_eater_exploration_system import SkillEaterExplorationSystem
         exploration = SkillEaterExplorationSystem.get_instance()
         exploration.exploration_rank.rank = 10
         exploration.exploration_rank.total_exp = 15000
@@ -463,7 +463,7 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase5_apply_ng_plus(self):
         """Phase 5: NG+ボーナス適用"""
-        from reincarnation_system import NewGamePlusData, ReincarnationManager
+        from naRou.reincarnation_system import NewGamePlusData, ReincarnationManager
 
         manager = ReincarnationManager()
 
@@ -498,7 +498,7 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase6_audio_fallback(self):
         """Phase 6: 音声フォールバック"""
-        from skill_eater_audio_system import SkillEaterAudioSystem
+        from naRou.skill_eater_audio_system import SkillEaterAudioSystem
 
         audio = SkillEaterAudioSystem(enable_real_audio=False)  # モックモード
 
@@ -519,7 +519,7 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase6_presentation_priority(self):
         """Phase 6: 演出優先度制御"""
-        from skill_eater_presentation_system import SkillEaterPresentationSystem
+        from naRou.skill_eater_presentation_system import SkillEaterPresentationSystem
 
         presentation = SkillEaterPresentationSystem(is_mock_only=True)
 
@@ -544,7 +544,7 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_phase6_emote_fallback(self):
         """Phase 6: エモートフォールバック"""
-        from skill_eater_presentation_system import SkillEaterPresentationSystem
+        from naRou.skill_eater_presentation_system import SkillEaterPresentationSystem
 
         presentation = SkillEaterPresentationSystem(is_mock_only=True)
 
@@ -578,11 +578,11 @@ class TestExplorationMetaIntegration(unittest.TestCase):
 
     def test_full_integration_flow(self):
         """完全統合フローテスト"""
-        from skill_eater_ascension_board import AscensionBoard
-        from skill_eater_bounty_system import MidasBountyManager
-        from skill_eater_concept_crystal import ConceptCrystallizer
-        from skill_eater_dungeon_floor_manager import SkillEaterDungeonFloorManager
-        from skill_eater_exploration_system import SkillEaterExplorationSystem
+        from naRou.skill_eater_ascension_board import AscensionBoard
+        from naRou.skill_eater_bounty_system import MidasBountyManager
+        from naRou.skill_eater_concept_crystal import ConceptCrystallizer
+        from naRou.skill_eater_dungeon_floor_manager import SkillEaterDungeonFloorManager
+        from naRou.skill_eater_exploration_system import SkillEaterExplorationSystem
 
         # システム初期化
         exploration = SkillEaterExplorationSystem.get_instance()
@@ -619,7 +619,7 @@ class TestExplorationMetaIntegration(unittest.TestCase):
         # 確率的なのでNoneでもOK
 
         # 7. NG+データ収集（転生シミュレート）
-        from reincarnation_system import ReincarnationManager
+        from naRou.reincarnation_system import ReincarnationManager
         manager = ReincarnationManager()
 
         class MockPlayer:

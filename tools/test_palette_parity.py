@@ -58,7 +58,7 @@ def main() -> int:
 
     # 3. core/palette.py COLORS
     sys.path.insert(0, ROOT)
-    from core.palette import COLORS
+    from naRou.core.palette import COLORS
 
     errors = []
 

@@ -14,9 +14,9 @@ for p in [str(NAROU_DIR), str(NAROU_DIR.parent)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from ai_autonomous_subagent import AutonomousSubagentAI
+from naRou.ai.ai_autonomous_subagent import AutonomousSubagentAI
 from game import Engine
-from item_system import Item
+from naRou.item_system import Item
 
 
 class TestAIPerformanceImpact(unittest.TestCase):

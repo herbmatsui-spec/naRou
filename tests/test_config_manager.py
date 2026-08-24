@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from config_manager import ConfigManager, get_config_manager
+from naRou.config_manager import ConfigManager, get_config_manager
 
 
 def test_missing_config_returns_empty():

@@ -7,9 +7,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from skill_synergy_system import SkillSynergyManager
-from skill_tree_system import get_skill_tree_manager, get_skill_tree_registry
-from ui_skill_tree import SkillTreeRenderer
+from naRou.skill_synergy_system import SkillSynergyManager
+from naRou.skill_tree_system import get_skill_tree_manager, get_skill_tree_registry
+from naRou.ui_skill_tree import SkillTreeRenderer
 
 
 class FakePlayer:

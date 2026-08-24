@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from core.accessibility import detect_os_a11y, get_active_tokens, load_design_tokens
-from core.difficulty import DifficultyManager
+from naRou.core.accessibility import detect_os_a11y, get_active_tokens, load_design_tokens
+from naRou.core.difficulty import DifficultyManager
 
 
 def test_load_design_tokens_variants():

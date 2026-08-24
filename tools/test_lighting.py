@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import tcod
 import tcod.console
 
-from core.lighting import EnemyCone, LightingDrawCall, LightMap, LightSource, TerminalLightingSystem
+from naRou.core.lighting import EnemyCone, LightingDrawCall, LightMap, LightSource, TerminalLightingSystem
 
 
 def test_light_map_update():

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from skill_fusion_system import FusionManager, FusionRegistry
+from naRou.skill_fusion_system import FusionManager, FusionRegistry
 
 
 @pytest.fixture

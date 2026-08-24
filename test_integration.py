@@ -6,8 +6,8 @@
 
 from __future__ import annotations
 
-from world_map_manager import WorldMapManager
-from world_state_system import WorldStateManager
+from naRou.world_map_manager import WorldMapManager
+from naRou.world_state_system import WorldStateManager
 
 
 def test_integration():

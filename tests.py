@@ -7,7 +7,7 @@ verify language coverage and fallback behaviour.
 
 from __future__ import annotations
 
-from localization_manager import LocalizationManager
+from naRou.localization_manager import LocalizationManager
 
 
 def run_localization_tests() -> dict[str, object]:

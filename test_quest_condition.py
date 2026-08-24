@@ -11,9 +11,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from quest_condition_ast import *
-from quest_condition_evaluator import evaluate_condition
-from quest_condition_parser import parse_condition
+from naRou.quest_condition_ast import *
+from naRou.quest_condition_evaluator import evaluate_condition
+from naRou.quest_condition_parser import parse_condition
 
 
 # モックプレイヤー
@@ -142,7 +142,7 @@ def test_quest_objective_integration():
     print("\n=== Testing QuestObjective Integration ===\n")
 
     # 従来の目的（後方互換性）
-    from main_quest_system import QuestObjective
+    from naRou.main_quest_system import QuestObjective
 
     obj1 = QuestObjective(
         objective_id="test1",
@@ -177,7 +177,7 @@ def test_quest_objective_integration():
     engine = MockEngine()
     world_state = MockWorldState()
 
-    from quest_condition_evaluator import ParanoidEvaluationContext
+    from naRou.quest_condition_evaluator import ParanoidEvaluationContext
 
     context = ParanoidEvaluationContext(player, engine, world_state)
 

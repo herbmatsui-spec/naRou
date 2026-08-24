@@ -8,10 +8,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from config_manager import DataCache
+from naRou.config_manager import DataCache
 from game import Engine
-from sound_manager import AmbientLayer, BGMManager
-from world_state_system import WorldStateManager
+from naRou.sound_manager import AmbientLayer, BGMManager
+from naRou.world_state_system import WorldStateManager
 
 
 def test_dynamic_soundscape():

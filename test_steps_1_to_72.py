@@ -15,13 +15,13 @@ from audio.dynamic_audio import (
     play_positional_sound,
     play_ui_sound,
 )
-from emote_feedback_system import (
+from naRou.emote_feedback_system import (
     EMOTE_PATHS,
     CombatFeedbackManager,
     EmoteComponent,
     InteractableObject,
 )
-from visual_fx_system import (
+from naRou.visual_fx_system import (
     CameraShakeManager,
     EnvironmentFXManager,
     LightingManager,

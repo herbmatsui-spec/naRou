@@ -1,4 +1,4 @@
-from ecs.entity import Attributes, Entity
+from naRou.ecs.entity import Attributes, Entity
 from naRou.systems import CombatSystem, StatusEffect
 
 

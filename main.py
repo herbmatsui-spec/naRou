@@ -27,7 +27,7 @@ def run_script(script_name):
 def prompt_accessibility():
     """Step 35/36: 色覚対応と難易度を選択し、config に永続化する。"""
     try:
-        from config import configure, get_config
+        from naRou.config import configure, get_config
     except Exception as e:
         print(f"警告: 設定モジュールの読み込みに失敗しました: {e}")
         logger.exception("Failed to load config module: %s", e)
@@ -55,7 +55,7 @@ def start_web_backend(open_browser: bool = False, port: int = 8080):
     """Step 50/51: Web サーバーを別スレッドで起動し、必要ならブラウザを開く。"""
     try:
         import game
-        import web_server
+        from naRou import web_server
 
         eng = game.Engine()
         srv = web_server.start_web_server(eng, port=port)
@@ -63,7 +63,7 @@ def start_web_backend(open_browser: bool = False, port: int = 8080):
             web_server.launch_browser(f"http://localhost:{port}")
         return srv
     except Exception as exc:  # noqa: BLE001 - バックエンド起動失敗は致命的ではない
-        from exceptions import ElonaError, SystemInitError
+        from naRou.exceptions import ElonaError, SystemInitError
 
         err_msg = f"Web バックエンド起動に失敗しました: {exc}"
         print(err_msg)
@@ -145,7 +145,7 @@ def main():
                 print(f"エラー: モジュールが見つからないか、インポートエラーがあります: {e}")
                 logger.exception("Import error during game launch: %s", e)
             except Exception as e:  # noqa: BLE001
-                from exceptions import ElonaError
+                from naRou.exceptions import ElonaError
 
                 print(f"\n【重大なエラーが発生しました】: {e}")
                 if isinstance(e, ElonaError):

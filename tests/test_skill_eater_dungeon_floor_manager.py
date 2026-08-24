@@ -13,8 +13,8 @@ import pytest
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 os.environ["SDL_AUDIODRIVER"] = "dummy"
 
-from skill_eater_audio_system import SkillEaterAudioSystem
-from skill_eater_dungeon_floor_manager import (
+from naRou.skill_eater_audio_system import SkillEaterAudioSystem
+from naRou.skill_eater_dungeon_floor_manager import (
     DepthScalingConfig,
     DungeonFloor,
     DungeonTheme,
@@ -22,7 +22,7 @@ from skill_eater_dungeon_floor_manager import (
     FloorTransitionType,
     SkillEaterDungeonFloorManager,
 )
-from skill_eater_presentation_system import SkillEaterPresentationSystem
+from naRou.skill_eater_presentation_system import SkillEaterPresentationSystem
 
 
 class TestDataStructures:
@@ -60,7 +60,7 @@ class TestDataStructures:
 
     def test_dungeon_floor_to_dict_from_dict(self):
         """DungeonFloor シリアライズ/デシリアライズ テスト"""
-        from skill_eater_exploration_system import DungeonRoom
+        from naRou.skill_eater_exploration_system import DungeonRoom
 
         room1 = DungeonRoom("room_1", "Room 1", "Desc 1")
         room2 = DungeonRoom("room_2", "Room 2", "Desc 2")
@@ -592,7 +592,7 @@ class TestExplorationIntegration:
     def test_try_descend_returns_exploration_result(self):
         """try_descend が ExplorationResult を返すか"""
         result = self.manager.try_descend()
-        from skill_eater_exploration_system import ExplorationResult
+        from naRou.skill_eater_exploration_system import ExplorationResult
         assert isinstance(result, ExplorationResult)
         assert result.action_type in ("MOVE_FLOOR", "MOVE_ROOM")
         assert result.current_room_id != ""
@@ -602,7 +602,7 @@ class TestExplorationIntegration:
         self.manager.current_floor_id = "floor_2"
         self.manager.current_depth = 2
         result = self.manager.try_ascend()
-        from skill_eater_exploration_system import ExplorationResult
+        from naRou.skill_eater_exploration_system import ExplorationResult
         assert isinstance(result, ExplorationResult)
 
     def test_try_elevator_returns_exploration_result(self):
@@ -610,7 +610,7 @@ class TestExplorationIntegration:
         floor_1 = self.manager.floors["floor_1"]
         floor_1.exit_to_next = {"type": "elevator", "target_floor": "floor_3"}
         result = self.manager.try_elevator(target_depth=3)
-        from skill_eater_exploration_system import ExplorationResult
+        from naRou.skill_eater_exploration_system import ExplorationResult
         assert isinstance(result, ExplorationResult)
 
     def test_get_floor_info(self):

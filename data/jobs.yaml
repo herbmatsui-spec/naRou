@@ -1,1 +1,57 @@
-# placeholder
+jobs:
+  novice:
+    id: "novice"
+    name: "ノービス"
+    description: "冒険を始めたばかりの見習い"
+    tier: 1
+    stat_modifiers:
+      strength: 0
+      agility: 0
+      vitality: 0
+      magic: 0
+    unlock_conditions: {}
+  warrior:
+    id: "warrior"
+    name: "戦士"
+    description: "近接戦闘に特化した戦士"
+    tier: 2
+    stat_modifiers:
+      strength: 10
+      vitality: 5
+    unlock_conditions:
+      level: 10
+      attributes:
+        strength: 15
+      skills:
+        basic_sword: 30
+        shield: 20
+  swordmaster:
+    id: "swordmaster"
+    name: "剣聖"
+    description: "剣技の極致を極めた達人"
+    tier: 3
+    stat_modifiers:
+      strength: 20
+      agility: 10
+    unlock_conditions:
+      job: "warrior"
+  mage:
+    id: "mage"
+    name: "魔術師"
+    description: "攻撃魔法と補助魔法を操る術士"
+    tier: 2
+    stat_modifiers:
+      magic: 12
+      intelligence: 8
+    unlock_conditions:
+      level: 10
+  archmage:
+    id: "archmage"
+    name: "大魔道士"
+    description: "森羅万象の魔導を究めた賢者"
+    tier: 3
+    stat_modifiers:
+      magic: 25
+      intelligence: 15
+    unlock_conditions:
+      job: "mage"

@@ -8,9 +8,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from exceptions import ElonaError
+from naRou.exceptions import ElonaError
 from game import Engine
-from save_system import SaveSystem
+from naRou.save_system import SaveSystem
 from tests.balance_simulator import BalanceSimulator
 
 

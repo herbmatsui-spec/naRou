@@ -16,7 +16,7 @@ if _ROOT not in sys.path:
 
 import pytest
 
-from data_manager import DataManager
+from naRou.data_manager import DataManager
 
 
 @pytest.fixture(scope="module")

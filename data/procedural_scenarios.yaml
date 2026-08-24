@@ -1,1 +1,10 @@
-# placeholder
+scenario_templates:
+  goblin_invasion:
+    id: "goblin_invasion"
+    name: "ゴブリンの襲撃"
+    description: "村を襲うゴブリン部隊を撃退する"
+    chapters:
+      - chapter: 1
+        name: "前哨戦"
+      - chapter: 2
+        name: "首領討伐"

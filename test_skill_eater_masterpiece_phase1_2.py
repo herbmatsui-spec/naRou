@@ -4,8 +4,8 @@ test_skill_eater_masterpiece_phase1_2.py
 """
 import pytest
 
-from skill_eater_combat_system import SkillEaterCombatSystem
-from skill_eater_system import (
+from naRou.skill_eater_combat_system import SkillEaterCombatSystem
+from naRou.skill_eater_system import (
     CharacterSkillSlot,
     CharacterState,
     SkillDef,

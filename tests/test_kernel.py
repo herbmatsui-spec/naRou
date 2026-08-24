@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from packages.core.kernel.kernel import Kernel
-from packages.core.kernel.package import IPackage, PackageMetadata
+from naRou.packages.core.kernel.kernel import Kernel
+from naRou.packages.core.kernel.package import IPackage, PackageMetadata
 
 
 class _FakePackage(IPackage):

@@ -8,8 +8,8 @@ from typing import Any
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from ecs.entity import Attributes, Entity
-from systems import CombatSystem, MonsterPreset
+from naRou.ecs.entity import Attributes, Entity
+from naRou.systems import CombatSystem, MonsterPreset
 
 
 class BattleScenario:

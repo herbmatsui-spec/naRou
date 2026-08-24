@@ -9,7 +9,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-from feature_flags import is_enabled
+from naRou.feature_flags import is_enabled
 
 
 class BGMPlayer:

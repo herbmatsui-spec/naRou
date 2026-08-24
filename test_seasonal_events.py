@@ -7,11 +7,11 @@ from __future__ import annotations
 import json
 import sys
 
-from asset_manager import ASSET_MANAGER
-from balance_tool import BALANCE_TOOL
-from community_goal_manager import COMMUNITY_GOAL_MANAGER
-from feedback_system import FEEDBACK_SYSTEM
-from world_event_system import EVENT_SCHEDULER, RANKING_MANAGER, REGISTRY, WorldEventManager
+from naRou.asset_manager import ASSET_MANAGER
+from naRou.balance_tool import BALANCE_TOOL
+from naRou.community_goal_manager import COMMUNITY_GOAL_MANAGER
+from naRou.feedback_system import FEEDBACK_SYSTEM
+from naRou.world_event_system import EVENT_SCHEDULER, RANKING_MANAGER, REGISTRY, WorldEventManager
 
 
 class MockEntity:

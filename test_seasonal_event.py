@@ -4,8 +4,8 @@
 
 from __future__ import annotations
 
-from event_scheduler import EventScheduler
-from world_event_system import REGISTRY, WorldEventManager
+from naRou.event_scheduler import EventScheduler
+from naRou.world_event_system import REGISTRY, WorldEventManager
 
 
 class MockEntity:

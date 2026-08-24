@@ -16,16 +16,16 @@ import random
 import tcod
 import tcod.event
 
-from constants import MAP_HEIGHT, MAP_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, VIEW_HEIGHT, VIEW_WIDTH
-from core_framework import EventBus
-from ecs.entity import Attributes, Entity
-from feature_flags import is_enabled, set_flag
-from fx_manager import FXManager
-from item_system import Item
-from map_engine import GameMap
-from render_context import RenderContext
-from systems import MonsterPreset
-from ui_fx_systems import DynamicLighting
+from naRou.constants import MAP_HEIGHT, MAP_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, VIEW_HEIGHT, VIEW_WIDTH
+from naRou.core_framework import EventBus
+from naRou.ecs.entity import Attributes, Entity
+from naRou.feature_flags import is_enabled, set_flag
+from naRou.fx_manager import FXManager
+from naRou.item_system import Item
+from naRou.map_engine import GameMap
+from naRou.render_context import RenderContext
+from naRou.systems import MonsterPreset
+from naRou.ui_fx_systems import DynamicLighting
 
 # Enable Tiny Rogue graphics
 set_flag("ENABLE_TINY_ROGUE_GFX", True)
@@ -139,7 +139,7 @@ class DemoEngine:
         self.resource_nodes = []
 
         # Time system
-        from time_system import TimeSystem
+        from naRou.time_system import TimeSystem
 
         self.time_system = TimeSystem()
         self.dungeon_level = 1
@@ -179,7 +179,7 @@ class DemoEngine:
         if self.frame_count % 30 == 0:
             cam_x = max(0, min(MAP_WIDTH - VIEW_WIDTH, self.player.x - VIEW_WIDTH // 2))
             cam_y = max(0, min(MAP_HEIGHT - VIEW_HEIGHT, self.player.y - VIEW_HEIGHT // 2))
-            from ui_fx_systems import WeatherAtmosphereLayer
+            from naRou.ui_fx_systems import WeatherAtmosphereLayer
 
             WeatherAtmosphereLayer.spawn_weather_particles(
                 self.fx_manager,
@@ -240,32 +240,32 @@ def main():
             root_console.clear()
 
             # Render map (simplified for demo)
-            from map_renderer import MapRenderer
+            from naRou.map_renderer import MapRenderer
 
             MapRenderer.render(root_console, ctx, cam_x, cam_y, light_sources)
 
             # Render items
-            from item_renderer import ItemRenderer
+            from naRou.item_renderer import ItemRenderer
 
             ItemRenderer.render(root_console, ctx, cam_x, cam_y, light_sources)
 
             # Render entities
-            from entity_renderer import EntityRenderer
+            from naRou.entity_renderer import EntityRenderer
 
             EntityRenderer.render(root_console, ctx, cam_x, cam_y, light_sources)
 
             # Render particles
-            from particle_renderer import ParticleRenderer
+            from naRou.particle_renderer import ParticleRenderer
 
             ParticleRenderer.render(root_console, ctx, cam_x, cam_y)
 
             # Render UI
-            from uirenderer import UIRenderer
+            from naRou.uirenderer import UIRenderer
 
             UIRenderer.render(root_console, ctx, cam_x, cam_y)
 
             # Weather overlay
-            from ui_fx_systems import WeatherAtmosphereLayer
+            from naRou.ui_fx_systems import WeatherAtmosphereLayer
 
             WeatherAtmosphereLayer.apply_atmosphere(
                 root_console,
@@ -309,7 +309,7 @@ def main():
                     if event.sym == tcod.event.KeySym.ESCAPE:
                         return
                     elif event.sym == tcod.event.KeySym.G:
-                        from feature_flags import set_flag
+                        from naRou.feature_flags import set_flag
 
                         new_state = not is_enabled("ENABLE_TINY_ROGUE_GFX")
                         set_flag("ENABLE_TINY_ROGUE_GFX", new_state)

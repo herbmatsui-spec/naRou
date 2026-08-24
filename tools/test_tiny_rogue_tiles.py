@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from feature_flags import set_flag
+from naRou.feature_flags import set_flag
 
 set_flag("ENABLE_TINY_ROGUE_GFX", True)
 
-from core.tiny_rogue_tiles import (
+from naRou.core.tiny_rogue_tiles import (
     get_decoration_tile_id,
     get_dungeon_tile_id,
     get_effect_tile_id,

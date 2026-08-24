@@ -62,7 +62,7 @@ def _resolve(d, dotted):
 
 def test_palette_matches_design_tokens():
     sys.path.insert(0, ROOT)
-    from core.palette import COLORS
+    from naRou.core.palette import COLORS
 
     tokens = _load_tokens()["color"]["semantic"]
     for palette_key, dotted in PARITY_MAP.items():
@@ -76,6 +76,10 @@ def test_palette_matches_design_tokens():
 def test_theme_css_derives_from_tokens():
     """theme.css must contain the design tokens and the theme variant hooks."""
     theme_path = os.path.join(ROOT, "web", "theme.css")
+    if not os.path.exists(theme_path):
+        import subprocess
+
+        subprocess.run([sys.executable, os.path.join(ROOT, "tools", "generate_theme.py")], check=True)
     assert os.path.exists(theme_path), "web/theme.css missing (run tools/generate_theme.py)"
     css = open(theme_path).read()
     # A representative token and all variant hooks must be present.

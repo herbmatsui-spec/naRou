@@ -7,7 +7,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from skill_tree_system import SkillInheritanceManager
+from naRou.skill_tree_system import SkillInheritanceManager
 
 
 class FakeComp:

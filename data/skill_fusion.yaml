@@ -1,1 +1,48 @@
-# placeholder
+fusion_recipes:
+  fireball_fusion:
+    name: "火炎爆砕合成"
+    description: "火炎魔法を融合し強力な爆発を生み出す"
+    base_skill: "magic_cast"
+    materials:
+      magic_cast: 10
+      fire_essence: 1
+      magic_dart: 5
+    output: "mega_fireball"
+    required_level: 10
+
+fusions:
+  fireball_fusion:
+    id: "fireball_fusion"
+    name: "火炎爆砕合成"
+    description: "火炎魔法を融合し強力な爆発を生み出す"
+    required_skills: ["magic_cast", "magic_dart"]
+    result_skills: ["mega_fireball"]
+  spellblade:
+    id: "spellblade"
+    name: "魔法剣士"
+    description: "魔法と剣技を融合させた戦闘術"
+    required_skills: ["basic_sword", "basic_magic"]
+    result_skills: ["flame_sword"]
+    bonus_effects:
+      - type: "elemental_damage"
+        value: 15
+  holy_knight:
+    id: "holy_knight"
+    name: "聖騎士"
+    description: "神聖なる加護を受けた騎士"
+    required_job: "warrior"
+    required_skills: ["basic_sword", "holy_light"]
+    result_skills: ["holy_strike"]
+    bonus_effects:
+      - type: "holy_damage"
+        value: 20
+  shadow_assassin:
+    id: "shadow_assassin"
+    name: "影の暗殺者"
+    description: "闇に潜む必殺の刃"
+    required_job: "rogue"
+    required_skills: ["dagger_mastery", "stealth"]
+    result_skills: ["shadow_strike"]
+    bonus_effects:
+      - type: "critical_chance"
+        value: 10

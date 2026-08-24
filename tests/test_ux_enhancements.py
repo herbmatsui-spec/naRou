@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 from game import Engine
-from ui_fx_systems import TutorialManager
+from naRou.ui_fx_systems import TutorialManager
 
 
 def test_tutorial_manager_loading_and_triggers():
@@ -53,7 +53,7 @@ def test_screen_shake_and_log_levels():
 def test_web_server_serialization():
     eng = Engine()
     if eng.web_server:
-        from web_server import GameHTTPRequestHandler
+        from naRou.web_server import GameHTTPRequestHandler
 
         h = GameHTTPRequestHandler.__new__(GameHTTPRequestHandler)
         state = h._serialize_engine_state(eng)

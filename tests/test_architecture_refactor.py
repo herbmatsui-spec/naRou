@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from ecs.components import (
+from naRou.ecs.components import (
     AchievementComponent,
     GuildFactionComponent,
     ReincarnationComponent,
@@ -28,10 +28,10 @@ from ecs.components import (
     StorytellerComponent,
     TitleComponent,
 )
-from dialogue_system import DialogueManager
-from ecs.entity import Entity
+from naRou.dialogue_system import DialogueManager
+from naRou.ecs.entity import Entity
 from game import Engine
-from save_system import SaveSystem
+from naRou.save_system import SaveSystem
 
 
 def test_ecs_component_initialization_and_delegation():

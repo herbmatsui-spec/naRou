@@ -17,8 +17,8 @@ import numpy as np
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from core.tcod_renderer import TCODRenderer
-from core.tile_atlas import TileAtlas
+from naRou.core.tcod_renderer import TCODRenderer
+from naRou.core.tile_atlas import TileAtlas
 
 
 def create_test_map(width: int = 40, height: int = 24) -> list[list[str]]:

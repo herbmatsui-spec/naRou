@@ -4,13 +4,13 @@ test_skill_eater_masterpiece_phase3.py
 """
 import pytest
 
-from skill_eater_black_market import (
+from naRou.skill_eater_black_market import (
     CyberDoctorSurgery,
     MarketTrends,
     calculate_skill_market_value,
     sell_skill_to_black_market,
 )
-from skill_eater_system import CharacterState, SkillDef, SkillEaterRegistry, SkillTier, SkillType
+from naRou.skill_eater_system import CharacterState, SkillDef, SkillEaterRegistry, SkillTier, SkillType
 
 
 @pytest.fixture

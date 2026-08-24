@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from core.tile_atlas import AUTOTILE_MAP, TileAtlas
+from naRou.core.tile_atlas import AUTOTILE_MAP, TileAtlas
 
 
 def test_entity_uv_parity():
@@ -105,7 +105,7 @@ def test_autotile_mapping():
 
 def test_facing_calculation():
     """Test facing direction calculation."""
-    from core.entity_renderer import calculate_facing, calculate_facing_to_target
+    from naRou.core.entity_renderer import calculate_facing, calculate_facing_to_target
 
     print("\n" + "=" * 60)
     print("Facing Calculation Test")
@@ -144,8 +144,8 @@ def test_facing_calculation():
 
 def test_entity_animstate():
     """Test EntityAnimState updates."""
-    from core.entity_renderer import EntityRenderer
-    from core.tile_atlas import TileAtlas
+    from naRou.core.entity_renderer import EntityRenderer
+    from naRou.core.tile_atlas import TileAtlas
 
     print("\n" + "=" * 60)
     print("EntityAnimState Test")

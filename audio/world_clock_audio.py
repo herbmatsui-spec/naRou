@@ -13,7 +13,7 @@ try:
     from naRou.audio.dynamic_audio import play_ui_sound
     from naRou.time_system import TimePhase, get_world_clock
 except ImportError:
-    from time_system import TimePhase
+    from naRou.time_system import TimePhase
 
 
 class WorldClockAudioManager:

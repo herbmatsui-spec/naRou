@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from feature_flags import set_flag
+from naRou.feature_flags import set_flag
 
 set_flag("ENABLE_TINY_ROGUE_GFX", True)
 
-from core_framework import EventBus
-from fx_manager import FXManager
+from naRou.core_framework import EventBus
+from naRou.fx_manager import FXManager
 
 bus = EventBus()
 fx = FXManager(bus)

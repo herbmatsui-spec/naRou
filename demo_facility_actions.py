@@ -5,15 +5,15 @@ Aの世界（スキル喰い） 施設アクションシステム デモスク�
 """
 from __future__ import annotations
 
-from skill_eater_audio_system import SkillEaterAudioSystem
-from skill_eater_economy_system import SkillEaterEconomySystem
-from skill_eater_facility_actions import (
+from naRou.skill_eater_audio_system import SkillEaterAudioSystem
+from naRou.skill_eater_economy_system import SkillEaterEconomySystem
+from naRou.skill_eater_facility_actions import (
     FacilityActionRegistry,
     SkillEaterFacilitySystem,
     calculate_success_rate,
 )
-from skill_eater_presentation_system import SkillEaterPresentationSystem
-from skill_eater_system import CharacterState, SkillEaterRegistry
+from naRou.skill_eater_presentation_system import SkillEaterPresentationSystem
+from naRou.skill_eater_system import CharacterState, SkillEaterRegistry
 
 
 def print_header(title: str):
@@ -111,7 +111,7 @@ def demo_player_creation():
 def demo_success_rate_calculation(economy, player):
     print_header("3. 成功率計算デモ")
 
-    from skill_eater_facility_actions import FacilityAction
+    from naRou.skill_eater_facility_actions import FacilityAction
 
     test_action = FacilityAction(
         id="test", name="テスト", facility_id="workshop",

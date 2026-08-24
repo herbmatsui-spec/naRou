@@ -12,9 +12,9 @@ _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
-from ai_system import TACTIC_AGGRESSIVE, AdvancedAISystem
-from constants import QUALITY_GOD
-from data_manager import DataManager
+from naRou.skill_eater.ai.ai_system import TACTIC_AGGRESSIVE, AdvancedAISystem
+from naRou.constants import QUALITY_GOD
+from naRou.data_manager import DataManager
 from game import Engine
 
 
@@ -53,7 +53,7 @@ def test_advanced_ai_system_integration():
 
 
 def test_web_server_canvas_state_serialization():
-    from web_server import GameHTTPRequestHandler
+    from naRou.web_server import GameHTTPRequestHandler
 
     engine = Engine()
     handler = GameHTTPRequestHandler.__new__(GameHTTPRequestHandler)

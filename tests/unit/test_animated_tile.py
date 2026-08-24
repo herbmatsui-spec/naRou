@@ -6,7 +6,7 @@ import sys
 
 sys.path.insert(0, ".")
 
-from core.animated_tile import AnimatedTile, get_animated_tile
+from naRou.core.animated_tile import AnimatedTile, get_animated_tile
 
 
 def test_animated_tile_creation():

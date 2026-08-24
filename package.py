@@ -51,4 +51,4 @@ if __name__ == "__main__":
 
 
 # --- LocalizationManager integration (i18n, Step 3.x) ---
-from localization_manager import localize  # noqa: E402,F401
+from naRou.localization_manager import localize  # noqa: E402,F401

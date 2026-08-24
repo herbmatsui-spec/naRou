@@ -1,6 +1,6 @@
 """Unit tests for Phase 0 System (Steps 65-71)."""
 
-from skill_eater_phase0_system import EscapeMap, Phase0Manager, Phase0State, UIMode
+from naRou.skill_eater_phase0_system import EscapeMap, Phase0Manager, Phase0State, UIMode
 
 
 def test_step65_vr_tutorial_completion():

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from constants import (
+from naRou.constants import (
     AI_ROLE_BRUTE,
     AI_ROLE_KITER,
     INTENT_ATTACK,
@@ -13,7 +13,7 @@ from constants import (
     INTENT_HEAL,
     INTENT_MOVE,
 )
-from enemy_intent import compute_intent
+from naRou.enemy_intent import compute_intent
 
 
 class FakePoint:
@@ -128,7 +128,7 @@ def test_no_intent_when_player_dead():
 )
 def test_intent_shape(intent_type):
     # _make の出力形を確認（glyph/label が必ず存在）
-    from enemy_intent import _make
+    from naRou.enemy_intent import _make
 
     d = _make(intent_type, (1, 1))
     assert set(d.keys()) == {"type", "glyph", "label", "target"}
@@ -145,8 +145,8 @@ class FakeConsole:
 
 
 def test_render_entity_intent_draws_for_monster():
-    from ecs.entity import Entity
-    from entity_renderer import render_entity_intent
+    from naRou.ecs.entity import Entity
+    from naRou.entity_renderer import render_entity_intent
 
     e = Entity(x=5, y=5, name="gob", is_player=False, is_pet=False)
     e.faction = "monster"
@@ -158,8 +158,8 @@ def test_render_entity_intent_draws_for_monster():
 
 
 def test_render_entity_intent_skips_player_and_pet():
-    from ecs.entity import Entity
-    from entity_renderer import render_entity_intent
+    from naRou.ecs.entity import Entity
+    from naRou.entity_renderer import render_entity_intent
 
     for kw in ({"is_player": True}, {"is_pet": True}):
         e = Entity(x=5, y=5, name="hero", **kw)
@@ -170,8 +170,8 @@ def test_render_entity_intent_skips_player_and_pet():
 
 
 def test_render_entity_intent_skips_when_none():
-    from ecs.entity import Entity
-    from entity_renderer import render_entity_intent
+    from naRou.ecs.entity import Entity
+    from naRou.entity_renderer import render_entity_intent
 
     e = Entity(x=5, y=5, name="gob", is_player=False, is_pet=False)
     e.faction = "monster"
@@ -189,14 +189,14 @@ def test_render_entity_intent_skips_when_none():
 class TestIntentIntegration:
     def _make_engine(self):
         from game import Engine
-        from renderer import NullRenderer
+        from naRou.renderer import NullRenderer
 
         eng = Engine(renderer=NullRenderer())
         eng.game_state_data.current_world = "skill_eater"
         return eng
 
     def _add_monster(self, eng, dx, dy, **kw):
-        from ecs.entity import Entity
+        from naRou.ecs.entity import Entity
 
         hp = kw.pop("hp", 30)
         max_hp = kw.pop("max_hp", 30)
@@ -254,7 +254,7 @@ class TestIntentIntegration:
         assert compute_intent(e, eng)["type"] == INTENT_ATTACK
 
     def test_save_compat_roundtrip(self):
-        from ecs.entity import Entity
+        from naRou.ecs.entity import Entity
 
         e = Entity(name="ゴブリン弓兵")
         d = e.to_dict()
@@ -322,7 +322,7 @@ def _cheb(ax, ay, bx, by):
 
 
 def _monster(name, x, y, ai_role="brute"):
-    from ecs.entity import Entity
+    from naRou.ecs.entity import Entity
 
     e = Entity(x=x, y=y, name=name, is_player=False, is_pet=False)
     e.hp, e.max_hp = 30, 30
@@ -334,7 +334,7 @@ def _monster(name, x, y, ai_role="brute"):
 
 
 def test_kiter_retreats_when_too_close():
-    from ai_system import KiteAction
+    from naRou.skill_eater.ai.ai_system import KiteAction
 
     eng = FakeGridEngine(10, 10)
     k = _monster("弓兵", 9, 10, "kiter")
@@ -343,7 +343,7 @@ def test_kiter_retreats_when_too_close():
 
 
 def test_kiter_holds_at_range():
-    from ai_system import KiteAction
+    from naRou.skill_eater.ai.ai_system import KiteAction
 
     eng = FakeGridEngine(10, 10)
     k = _monster("弓兵", 7, 10, "kiter")
@@ -352,7 +352,7 @@ def test_kiter_holds_at_range():
 
 
 def test_kiter_approaches_when_far():
-    from ai_system import KiteAction
+    from naRou.skill_eater.ai.ai_system import KiteAction
 
     eng = FakeGridEngine(10, 10)
     k = _monster("弓兵", 2, 10, "kiter")
@@ -361,7 +361,7 @@ def test_kiter_approaches_when_far():
 
 
 def test_flanker_moves_and_not_onto_player():
-    from ai_system import FlankAction
+    from naRou.skill_eater.ai.ai_system import FlankAction
 
     eng = FakeGridEngine(10, 10)
     f = _monster("騎士", 10, 8, "flanker")
@@ -372,7 +372,7 @@ def test_flanker_moves_and_not_onto_player():
 
 
 def test_spread_moves_when_crowded():
-    from ai_system import SpreadAction
+    from naRou.skill_eater.ai.ai_system import SpreadAction
 
     eng = FakeGridEngine(10, 10)
     a = _monster("鬼A", 10, 10 + 1)  # プレイヤー隣
@@ -392,7 +392,7 @@ def test_spread_moves_when_crowded():
 
 
 def test_spread_noop_when_alone():
-    from ai_system import SpreadAction
+    from naRou.skill_eater.ai.ai_system import SpreadAction
 
     eng = FakeGridEngine(10, 10)
     a = _monster("鬼A", 5, 5)
@@ -401,8 +401,8 @@ def test_spread_noop_when_alone():
 
 
 def test_brute_still_melee_adjacent():
-    from ai_system import AdvancedAISystem
-    from ecs.entity import Entity
+    from naRou.skill_eater.ai.ai_system import AdvancedAISystem
+    from naRou.ecs.entity import Entity
 
     eng = FakeGridEngine(10, 10)
     eng.player = Entity(x=10, y=10, name="hero", is_player=True)
@@ -417,8 +417,8 @@ def test_brute_still_melee_adjacent():
 
 
 def test_process_ai_kiter_role():
-    from ai_system import AdvancedAISystem
-    from ecs.entity import Entity
+    from naRou.skill_eater.ai.ai_system import AdvancedAISystem
+    from naRou.ecs.entity import Entity
 
     eng = FakeGridEngine(10, 10)
     eng.player = Entity(x=10, y=10, name="hero", is_player=True)
@@ -432,7 +432,7 @@ def test_process_ai_kiter_role():
 
 
 def test_allies_in_sight_counts():
-    from ai_system import AdvancedAISystem
+    from naRou.skill_eater.ai.ai_system import AdvancedAISystem
 
     eng = FakeGridEngine(10, 10)
     a = _monster("鬼A", 9, 10, "brute")
@@ -444,7 +444,7 @@ def test_allies_in_sight_counts():
 
 
 def test_pincer_flanks_with_two_allies():
-    from ai_system import AdvancedAISystem
+    from naRou.skill_eater.ai.ai_system import AdvancedAISystem
 
     eng = FakeGridEngine(10, 10)
     a = _monster("鬼A", 9, 10, "brute")
@@ -459,7 +459,7 @@ def test_pincer_flanks_with_two_allies():
 
 
 def test_hard_difficulty_increases_kiter_range():
-    from ai_system import KiteAction
+    from naRou.skill_eater.ai.ai_system import KiteAction
 
     def settle(eng, k):
         for _ in range(12):

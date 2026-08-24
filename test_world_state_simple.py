@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from world_state_system import WorldStateManager
+from naRou.world_state_system import WorldStateManager
 
 
 def test_world_state_basic():

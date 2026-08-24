@@ -9,9 +9,9 @@ from pathlib import Path
 
 import numpy as np
 
-from core.msdf_atlas import MSDFAtlas
-from core.renderer_base import RendererBase, TextDrawCall, TileDrawCall, Viewport
-from core.tcod_renderer import TCODRenderer
+from naRou.core.msdf_atlas import MSDFAtlas
+from naRou.core.renderer_base import RendererBase, TextDrawCall, TileDrawCall, Viewport
+from naRou.core.tcod_renderer import TCODRenderer
 
 
 class MockWebGLRenderer(RendererBase):

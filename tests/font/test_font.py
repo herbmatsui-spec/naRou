@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from localization_manager import LocalizationManager
+from naRou.localization_manager import LocalizationManager
 
 
 class TestFont(unittest.TestCase):

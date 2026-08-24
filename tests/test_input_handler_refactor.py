@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import tcod.event
 
-from input_actions import ActionRegistry
-from input_handler import InputHandler
+from naRou.input_actions import ActionRegistry
+from naRou.input_handler import InputHandler
 
 
 class StubEngine:

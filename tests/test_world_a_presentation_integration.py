@@ -7,8 +7,8 @@ from __future__ import annotations
 import unittest
 
 from game import Engine
-from input_actions import ActionSynthesisMenu
-from renderer import NullRenderer
+from naRou.input_actions import ActionSynthesisMenu
+from naRou.renderer import NullRenderer
 
 
 class TestWorldAPresentationIntegration(unittest.TestCase):

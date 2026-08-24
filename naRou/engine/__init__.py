@@ -1,0 +1,40 @@
+"""Engine package – re-exports the Engine class for backward compatibility."""
+
+from .engine import Engine
+from ..localization_manager import LocalizationManager
+import atexit
+import logging
+
+
+class GameLocalizer:
+    """Engine-level localization helper."""
+
+    def __init__(self, engine: object = None, language: str = "en") -> None:
+        self.engine = engine
+        self._manager = LocalizationManager()
+        self._manager.set_language(language)
+
+    @property
+    def manager(self) -> LocalizationManager:
+        return self._manager
+
+    def localize(self, key: str, language: str | None = None) -> str:
+        return self._manager.get_text(key, language)
+
+    def set_language(self, language: str) -> bool:
+        success = self._manager.set_language(language)
+        if not success:
+            from naRou.exceptions import ResourceLoadError
+
+            raise ResourceLoadError(f"Failed to set localization language to '{language}'")
+        return success
+
+
+def get_localizer(engine: object = None, language: str = "en") -> GameLocalizer:
+    """Return a GameLocalizer instance bound to *engine*."""
+    return GameLocalizer(engine=engine, language=language)
+
+
+
+
+__all__ = ["Engine", "GameLocalizer", "get_localizer"]

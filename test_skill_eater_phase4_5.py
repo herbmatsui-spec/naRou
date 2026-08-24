@@ -5,11 +5,11 @@ Step 1〜33で実装した全システムの結合テスト。
 
 import unittest
 
-from skill_eater_concept_crystal import ConceptCrystallizer
-from skill_eater_epilogue import EpilogueAndTransitionManager
-from skill_eater_legacy_bequest import LegacyBequestManager
-from skill_eater_temporal_vault import TemporalVaultManager
-from skill_eater_world_preview import WorldPreviewManager
+from naRou.skill_eater_concept_crystal import ConceptCrystallizer
+from naRou.skill_eater_epilogue import EpilogueAndTransitionManager
+from naRou.skill_eater_legacy_bequest import LegacyBequestManager
+from naRou.skill_eater_temporal_vault import TemporalVaultManager
+from naRou.skill_eater_world_preview import WorldPreviewManager
 
 
 class TestSkillEaterPhase4And5(unittest.TestCase):

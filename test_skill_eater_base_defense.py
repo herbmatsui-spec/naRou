@@ -2,8 +2,8 @@
 
 import pytest
 
-from skill_eater_audio_system import SkillEaterAudioSystem
-from skill_eater_base_defense import (
+from naRou.skill_eater_audio_system import SkillEaterAudioSystem
+from naRou.skill_eater_base_defense import (
     AFTERMATH_DURATION,
     BREACH_DURATION,
     WARNING_DURATION,
@@ -14,9 +14,9 @@ from skill_eater_base_defense import (
     RaidPhase,
     RaidTriggerType,
 )
-from skill_eater_economy_system import SkillEaterEconomySystem
-from skill_eater_presentation_system import SkillEaterPresentationSystem
-from skill_eater_system import SkillEaterRegistry
+from naRou.skill_eater_economy_system import SkillEaterEconomySystem
+from naRou.skill_eater_presentation_system import SkillEaterPresentationSystem
+from naRou.skill_eater_system import SkillEaterRegistry
 
 
 @pytest.fixture
@@ -216,7 +216,7 @@ def test_step19_check_raid_triggers_meta_quest(defense_manager):
 
 def test_step20_start_raid_warning_phase_initializes_state(built_defense_manager):
     """Step 20: start_raid_warning_phase - 状態初期化"""
-    from skill_eater_base_defense import RaidTrigger
+    from naRou.skill_eater_base_defense import RaidTrigger
     trigger = RaidTrigger(RaidTriggerType.HEAT_LEVEL, 80)
 
     result = built_defense_manager.start_raid_warning_phase(trigger)
@@ -246,7 +246,7 @@ def test_step21_generate_raid_enemies_scales_with_heat(built_defense_manager):
 
 def test_step22_process_warning_phase_countdown(built_defense_manager):
     """Step 22: process_warning_phase - カウントダウン"""
-    from skill_eater_base_defense import RaidTrigger
+    from naRou.skill_eater_base_defense import RaidTrigger
     built_defense_manager.start_raid_warning_phase(RaidTrigger(RaidTriggerType.HEAT_LEVEL, 80))
 
     # センサーありで命中デバフ
@@ -748,7 +748,7 @@ def test_step67_raid_trigger_conditions(defense_manager):
 
 def test_step68_warning_phase_transition(defense_manager):
     """Step 68: WARNING→BREACH遷移"""
-    from skill_eater_base_defense import RaidTrigger
+    from naRou.skill_eater_base_defense import RaidTrigger
     defense_manager.start_raid_warning_phase(RaidTrigger(RaidTriggerType.HEAT_LEVEL, 80))
 
     # タイマー経過でBREACHへ

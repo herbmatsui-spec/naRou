@@ -31,7 +31,7 @@ STEAM_BUILD_DIR = "build/steam"
 
 
 # --- LocalizationManager integration (i18n) ---
-from localization_manager import localize  # noqa: E402,F401
+from naRou.localization_manager import localize  # noqa: E402,F401
 
 
 def run(cmd: list[str]) -> bool:

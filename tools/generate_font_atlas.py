@@ -137,7 +137,7 @@ def main():
     chars = args.chars if args.chars else "".join(chr(i) for i in range(32, 127))
 
     if args.msdf:
-        from core.msdf_atlas import MSDFAtlas
+        from naRou.core.msdf_atlas import MSDFAtlas
 
         os.makedirs(args.output, exist_ok=True)
         font_name = Path(args.font).stem

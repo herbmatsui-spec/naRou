@@ -7,7 +7,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from guild_systems import (
+from naRou.guild_systems import (
     FactionEventManager,
     GuildRoleManager,
     GuildWarManager,

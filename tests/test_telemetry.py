@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-import telemetry_manager as tm
+from naRou import telemetry_manager as tm
 
 
 @pytest.fixture()

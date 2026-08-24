@@ -11,8 +11,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from core.entity_renderer import EntityRenderer
-from core.tile_atlas import TileAtlas
+from naRou.core.entity_renderer import EntityRenderer
+from naRou.core.tile_atlas import TileAtlas
 
 
 def test_attack_animation_sync():

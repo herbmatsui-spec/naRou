@@ -8,19 +8,19 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
-from skill_eater_audio_system import AUDIO_DIR, SkillEaterAudioSystem
-from skill_eater_combat_system import SkillEaterCombatSystem
-from skill_eater_economy_system import SkillEaterEconomySystem
-from skill_eater_exploration_system import SkillEaterExplorationSystem
-from skill_eater_meta_quest_system import (
+from naRou.skill_eater_audio_system import AUDIO_DIR, SkillEaterAudioSystem
+from naRou.skill_eater_combat_system import SkillEaterCombatSystem
+from naRou.skill_eater_economy_system import SkillEaterEconomySystem
+from naRou.skill_eater_exploration_system import SkillEaterExplorationSystem
+from naRou.skill_eater_meta_quest_system import (
     GlobalRuleEngine,
     SkillEaterQuestSystem,
     SkillEaterReincarnationSystem,
 )
-from skill_eater_presentation_system import EMOTE_DIR, SkillEaterPresentationSystem
-from skill_eater_servant_system import SkillEaterServantSystem
-from skill_eater_synthesis_system import SkillEaterSynthesisSystem
-from skill_eater_system import CharacterState, SkillEaterRegistry
+from naRou.skill_eater_presentation_system import EMOTE_DIR, SkillEaterPresentationSystem
+from naRou.skill_eater_servant_system import SkillEaterServantSystem
+from naRou.skill_eater_synthesis_system import SkillEaterSynthesisSystem
+from naRou.skill_eater_system import CharacterState, SkillEaterRegistry
 
 
 class TestSkillEaterPresentationIntegration(unittest.TestCase):

@@ -4,9 +4,9 @@ test_skill_eater_masterpiece_phase5.py
 """
 import pytest
 
-from skill_eater_meta_quest_system import SkillEaterQuestSystem
-from skill_eater_presentation_system import SkillEaterPresentationSystem
-from skill_eater_system import (
+from naRou.skill_eater_meta_quest_system import SkillEaterQuestSystem
+from naRou.skill_eater_presentation_system import SkillEaterPresentationSystem
+from naRou.skill_eater_system import (
     CharacterSkillSlot,
     CharacterState,
     SkillDef,

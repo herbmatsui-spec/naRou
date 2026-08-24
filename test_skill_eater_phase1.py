@@ -1,13 +1,13 @@
 """Unit tests for Phase 1 System (Steps 65-71)."""
 
-from skill_eater_awakening_system import DevourAwakeningManager
-from skill_eater_combat_system import Phase1CombatManager
-from skill_eater_crafting_system import PatchworkCraftingEngine, PatchworkSkill
-from skill_eater_meta_recipes import MetaRecipeCraftingEngine
-from skill_eater_pursuer_system import HoundSpawnManager
-from skill_eater_resistance_system import ResistanceMarketManager
-from skill_eater_slum_map import SlumMapManager
-from skill_eater_toxicity_system import SafehouseLocation, SkillToxicityManager
+from naRou.skill_eater_awakening_system import DevourAwakeningManager
+from naRou.skill_eater_combat_system import Phase1CombatManager
+from naRou.skill_eater_crafting_system import PatchworkCraftingEngine, PatchworkSkill
+from naRou.skill_eater_meta_recipes import MetaRecipeCraftingEngine
+from naRou.skill_eater_pursuer_system import HoundSpawnManager
+from naRou.skill_eater_resistance_system import ResistanceMarketManager
+from naRou.skill_eater_slum_map import SlumMapManager
+from naRou.skill_eater_toxicity_system import SafehouseLocation, SkillToxicityManager
 
 
 def test_step65_environmental_kill_and_weak_point_combat():
@@ -170,8 +170,8 @@ def test_step71_awakening_event_and_phase1_end_to_end():
 
 
 def test_devour_rate_can_reach_100_percent():
-    from skill_eater_combat_system import SkillEaterCombatSystem
-    from skill_eater_system import CharacterState
+    from naRou.skill_eater_combat_system import SkillEaterCombatSystem
+    from naRou.skill_eater_system import CharacterState
 
     combat_sys = SkillEaterCombatSystem()
     predator = CharacterState(
@@ -205,8 +205,8 @@ def test_devour_rate_can_reach_100_percent():
 
 
 def test_devour_failure_backlash_uses_current_hp():
-    from skill_eater_combat_system import SkillEaterCombatSystem
-    from skill_eater_system import CharacterState
+    from naRou.skill_eater_combat_system import SkillEaterCombatSystem
+    from naRou.skill_eater_system import CharacterState
 
     combat_sys = SkillEaterCombatSystem()
     predator = CharacterState(
@@ -246,8 +246,8 @@ def test_devour_failure_backlash_uses_current_hp():
 
 
 def test_skill_archive_and_retrieval():
-    from skill_eater_combat_system import SkillEaterCombatSystem
-    from skill_eater_system import (
+    from naRou.skill_eater_combat_system import SkillEaterCombatSystem
+    from naRou.skill_eater_system import (
         CharacterState,
         SkillDef,
         SkillEaterRegistry,

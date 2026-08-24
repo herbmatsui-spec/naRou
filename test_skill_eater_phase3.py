@@ -5,14 +5,14 @@ Step 1〜62で実装した全9システムの結合テスト。
 
 import unittest
 
-from skill_eater_ascension_board import AscensionBoard
-from skill_eater_bank_dungeon import BankDungeonManager
-from skill_eater_combat_deck import CombatDeckSystem
-from skill_eater_concept_trials import ConceptTrialsManager
-from skill_eater_final_boss import FinalBossCausalityManager
-from skill_eater_master_bosses import MasterBossManager
-from skill_eater_slum_finale import SlumFinaleManager
-from skill_eater_world_hack import WorldLawOverrideManager
+from naRou.skill_eater_ascension_board import AscensionBoard
+from naRou.skill_eater_bank_dungeon import BankDungeonManager
+from naRou.skill_eater_combat_deck import CombatDeckSystem
+from naRou.skill_eater_concept_trials import ConceptTrialsManager
+from naRou.skill_eater_final_boss import FinalBossCausalityManager
+from naRou.skill_eater_master_bosses import MasterBossManager
+from naRou.skill_eater_slum_finale import SlumFinaleManager
+from naRou.skill_eater_world_hack import WorldLawOverrideManager
 
 
 class TestSkillEaterPhase3(unittest.TestCase):

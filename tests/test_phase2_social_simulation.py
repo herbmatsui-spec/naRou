@@ -9,20 +9,20 @@ from unittest.mock import Mock
 
 import pytest
 
-from npc_memory_system import (
+from naRou.npc_memory_system import (
     GLOBAL_MEMORY_REGISTRY,
     MemoryEntry,
     MemoryImportance,
     MemoryType,
     NPCMemoryManager,
 )
-from reputation_gate_system import (
+from naRou.reputation_gate_system import (
     GateAction,
     ReputationGate,
     ReputationThreshold,
     create_thresholds_from_yaml,
 )
-from rumor_propagation_system import RumorEngine, RumorPropagationConfig, RumorType
+from naRou.rumor_propagation_system import RumorEngine, RumorPropagationConfig, RumorType
 
 
 # The global memory registry is a process-wide singleton. Several tests populate
@@ -292,8 +292,8 @@ def test_rumor_distance_filter():
 
 def test_rumor_faction_modifier():
     """派閥修正値"""
-    from faction_war_system import REGISTRY as FW_REG
-    from faction_war_system import FactionWarData, FactionWarManager
+    from naRou.faction_war_system import REGISTRY as FW_REG
+    from naRou.faction_war_system import FactionWarData, FactionWarManager
 
     # レジストリクリア
     FW_REG._factions.clear()
@@ -377,8 +377,8 @@ def test_reputation_gate_faction():
     player = TestPlayer(faction_rep={"kingdom_garde": 30})
 
     # 派閥マネージャーモック
-    from faction_war_system import REGISTRY as FW_REG
-    from faction_war_system import FactionWarData
+    from naRou.faction_war_system import REGISTRY as FW_REG
+    from naRou.faction_war_system import FactionWarData
 
     FW_REG._factions.clear()
     FW_REG._factions["kingdom_garde"] = FactionWarData(

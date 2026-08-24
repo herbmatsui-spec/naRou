@@ -13,8 +13,8 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from core.entity_renderer import EntityRenderer
-from core.tile_atlas import TileAtlas
+from naRou.core.entity_renderer import EntityRenderer
+from naRou.core.tile_atlas import TileAtlas
 
 
 def generate_entity_reference_images():

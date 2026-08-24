@@ -6,7 +6,7 @@ Provides project-level localization helpers used by build/CI tooling.
 
 from __future__ import annotations
 
-from localization_manager import LocalizationManager
+from naRou.localization_manager import LocalizationManager
 
 
 def localize_project_string(key: str, language: str = "en") -> str:

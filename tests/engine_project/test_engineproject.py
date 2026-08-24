@@ -5,7 +5,7 @@ from __future__ import annotations
 import unittest
 
 from naRou.engine import get_localizer
-from naRou.project import available_languages
+from project import available_languages
 
 
 class TestEngineProject(unittest.TestCase):

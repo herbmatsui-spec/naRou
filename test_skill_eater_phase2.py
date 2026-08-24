@@ -5,15 +5,15 @@ Step 1〜67で実装した全9システムの結合テスト。
 
 import unittest
 
-from skill_eater_base_defense import BaseDefenseManager
-from skill_eater_base_expansion import SlumBaseExpansionManager
-from skill_eater_boss_anti_meta import AntiMetaBossBattleManager
-from skill_eater_bounty_system import MidasBountyManager
-from skill_eater_env_puzzles import EnvironmentalPuzzleManager
-from skill_eater_pet_dispatch import PetDispatchManager
-from skill_eater_rampage_events import SkillRampageManager
-from skill_eater_toxicity_overdrive import ToxicityOverdriveManager
-from skill_eater_underground_arena import UndergroundArenaManager
+from naRou.skill_eater_base_defense import BaseDefenseManager
+from naRou.skill_eater_base_expansion import SlumBaseExpansionManager
+from naRou.skill_eater_boss_anti_meta import AntiMetaBossBattleManager
+from naRou.skill_eater_bounty_system import MidasBountyManager
+from naRou.skill_eater_env_puzzles import EnvironmentalPuzzleManager
+from naRou.skill_eater_pet_dispatch import PetDispatchManager
+from naRou.skill_eater_rampage_events import SkillRampageManager
+from naRou.skill_eater_toxicity_overdrive import ToxicityOverdriveManager
+from naRou.skill_eater_underground_arena import UndergroundArenaManager
 
 
 class TestSkillEaterPhase2(unittest.TestCase):
@@ -176,8 +176,8 @@ class TestSkillEaterPhase2(unittest.TestCase):
 
     def test_09_facility_alternative_cost_upgrade(self):
         """Step 33-46: 必須スキル未所持時の代替アルド支払い拡張テスト"""
-        from skill_eater_economy_system import SkillEaterEconomySystem
-        from skill_eater_system import CharacterState
+        from naRou.skill_eater_economy_system import SkillEaterEconomySystem
+        from naRou.skill_eater_system import CharacterState
 
         eco = SkillEaterEconomySystem()
         player = CharacterState(

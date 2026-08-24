@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ecs.entity import Entity
+from naRou.ecs.entity import Entity
 
 
 def test_entity_default_components_present():

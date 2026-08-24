@@ -19,15 +19,15 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from ecs.components import AchievementComponent
-from ecs.entity import Entity
+from naRou.ecs.components import AchievementComponent
+from naRou.ecs.entity import Entity
 from game import Engine
-from meta_progression_system import (
+from naRou.meta_progression_system import (
     MemoryFragmentData,
     MemoryFragmentGenerator,
     MetaProgressionManager,
 )
-from save_system import SaveSystem
+from naRou.save_system import SaveSystem
 
 
 def test_dynamic_memory_fragment_generation():

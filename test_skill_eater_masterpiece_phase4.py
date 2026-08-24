@@ -4,9 +4,9 @@ test_skill_eater_masterpiece_phase4.py
 """
 import pytest
 
-from skill_eater_base_defense import BaseDefenseManager
-from skill_eater_pet_dispatch import PetDispatchManager
-from skill_eater_system import CharacterState, SkillDef, SkillEaterRegistry, SkillTier, SkillType
+from naRou.skill_eater_base_defense import BaseDefenseManager
+from naRou.skill_eater_pet_dispatch import PetDispatchManager
+from naRou.skill_eater_system import CharacterState, SkillDef, SkillEaterRegistry, SkillTier, SkillType
 
 
 @pytest.fixture

@@ -9,8 +9,8 @@ from __future__ import annotations
 import logging
 
 logger = logging.getLogger(__name__)
-from map_engine import GameMap
-from world_layer import WorldLayer
+from naRou.map_engine import GameMap
+from naRou.world_layer import WorldLayer
 
 
 def test_backward_compatibility():

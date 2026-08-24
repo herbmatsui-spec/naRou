@@ -1,1 +1,79 @@
-# placeholder
+skill_trees:
+  sword:
+    id: "sword"
+    name: "剣術ツリー"
+    icon: "⚔"
+    tiers:
+      - id: "basic_sword"
+        name: "基礎剣術"
+        description: "剣の基本を習得する"
+        cost: 5
+        prerequisites: []
+        effects:
+          - type: "damage_bonus"
+            value: 5
+            target: "melee"
+      - id: "sword_mastery"
+        name: "剣の熟達"
+        description: "剣術の技量を深める"
+        cost: 10
+        prerequisites: ["basic_sword"]
+        effects:
+          - type: "damage_bonus"
+            value: 10
+            target: "melee"
+      - id: "sword_essence"
+        name: "剣の神髄"
+        description: "剣の奥義を極める"
+        cost: 15
+        prerequisites: ["sword_mastery"]
+        effects:
+          - type: "damage_bonus"
+            value: 20
+            target: "melee"
+  magic:
+    id: "magic"
+    name: "魔法ツリー"
+    icon: "✨"
+    tiers:
+      - id: "basic_magic"
+        name: "基礎魔法"
+        description: "魔法の基本を習得する"
+        cost: 5
+        prerequisites: []
+        effects:
+          - type: "magic_bonus"
+            value: 5
+            target: "spell"
+      - id: "magic_mastery"
+        name: "魔法の熟達"
+        description: "魔力操作を深める"
+        cost: 10
+        prerequisites: ["basic_magic"]
+        effects:
+          - type: "magic_bonus"
+            value: 10
+            target: "spell"
+      - id: "magic_essence"
+        name: "魔法の神髄"
+        description: "大魔法の奥義を極める"
+        cost: 15
+        prerequisites: ["magic_mastery"]
+        effects:
+          - type: "magic_bonus"
+            value: 20
+            target: "spell"
+  martial_arts:
+    id: "martial_arts"
+    name: "格闘ツリー"
+    icon: "👊"
+    tiers:
+      - id: "basic_martial"
+        name: "基礎格闘"
+        description: "徒手空拳の基本を習得する"
+        cost: 5
+        prerequisites: []
+        effects:
+          - type: "unarmed_bonus"
+            value: 5
+            target: "melee"
