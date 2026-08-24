@@ -408,6 +408,7 @@ def test_brute_still_melee_adjacent():
     eng.player = Entity(x=10, y=10, name="hero", is_player=True)
     eng.player.faction = "player"
     m = _monster("鬼", 9, 10, "brute")
+    m.attributes.dexterity = 50
     eng.add(m)
     sys = AdvancedAISystem()
     hp0 = eng.player.hp

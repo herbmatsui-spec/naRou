@@ -103,6 +103,10 @@ DEFAULT_FIELD_FACTORIES: dict[str, Any] = {
     "world_a_unlocked": lambda: False,
     "toxicity_level": int,
     "slum_reputation": int,
+    # Meta Intervention (提案3)
+    "template_exposure": int,
+    "devoured_template_counts": dict,
+    "meta_intervention_unlocked_secrets": list,
     # 数値型
     "karma_law_chaos": int,
     "karma_good_evil": int,

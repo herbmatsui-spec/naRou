@@ -645,3 +645,16 @@ python naRou/ai/run_300x10_trials.py
 ### 📜 ライセンス
 This project is licensed under the **MIT License** - see the LICENSE file for details.
 All glory to Elona and the Infinite Multiverse.
+
+### 🧩 モジュール分割レイアウト（リファクタリング）
+
+巨大ファイルは責務ごとにサブモジュールへ分割済み:
+
+- \
+aRou/systems/\ — \combat_core.py\(定数・StatusEffect/ResistanceSet/AggroList), \combat_system.py\(CombatSystem), \survival_system.py\(SurvivalSystem), \quest.py\(Quest), \monster_preset.py\(MonsterPreset)。\
+aRou/systems/__init__.py\ が全シンボルを再公開。
+- \
+aRou/procedural_quest_generator.py\ は \
+aRou/quest_generation/\ への転送シム。実体は \models.py\ / \egistry.py\ / \generator.py\ / \manager.py\。
+
+新しい巨大クラスを追加する際も、同じ「サブモジュール化＋ルート転送シム」パターンを推奨。

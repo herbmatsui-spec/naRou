@@ -1,87 +1,27 @@
-"""
-Elona Roguelike - フェーズ5: 高度な戦闘・属性・フレンドリーファイア・出血システム
-Steps 37-45: 属性耐性, 詠唱失敗率, AoEパターン, Faction/Aggro, 出血と自然回復の相殺
-"""
-
+"""高度な戦闘システム - 属性・詠唱失敗・AoE・フレンドリーファイア・出血 (ステップ37〜45)。"""
 from __future__ import annotations
 
 import logging
-
-logger = logging.getLogger(__name__)
 import random
-from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from naRou.constants import Element
 from naRou import combat
+from naRou.constants import Element
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from naRou.ecs.entity import Entity
     from naRou.item_system import Item
 
-# 状態異常
-STATUS_POISON = "毒"
-STATUS_PARALYSIS = "麻痺"
-STATUS_CONFUSION = "混乱"
-STATUS_BLIND = "盲目"
-STATUS_BLEEDING = "出血"  # ステップ45
-STATUS_HASTE = "加速"
-STATUS_SLOW = "鈍足"
-STATUS_RETURN = "帰還待機"  # ステップ63 遅延ワープ
-
-# ファクション (ステップ42)
-FACTION_PLAYER = "player"
-FACTION_MONSTER = "monster"
-FACTION_TOWNSFOLK = "townsfolk"
-FACTION_GUARD = "guard"
-
-
-@dataclass
-class StatusEffect:
-    """状態異常 - Tick連動(ステップ16)"""
-
-    name: str
-    remaining_ticks: int  # 残り持続Tick
-    power: int = 1  # 効果の強さ
-    source: str | None = None
-
-
-class ResistanceSet:
-    """属性耐性セット (ステップ37)"""
-
-    def __init__(self):
-        self.fire = 0  # -100〜100, 0=通常, 100=無効, -50=弱点(1.5倍)
-        self.cold = 0
-        self.lightning = 0
-        self.darkness = 0
-        self.chaos = 0
-        self.magic = 0
-
-    def get(self, element: Element) -> int:
-        mapping = {
-            Element.FIRE: self.fire,
-            Element.COLD: self.cold,
-            Element.LIGHTNING: self.lightning,
-            Element.DARKNESS: self.darkness,
-            Element.CHAOS: self.chaos,
-            Element.MAGIC: self.magic,
-        }
-        return mapping.get(element, 0)
-
-
-class AggroList:
-    """ヘイトリスト (ステップ42)"""
-
-    def __init__(self):
-        self._table: dict[str, int] = {}  # entity name -> hate_value
-
-    def add_hate(self, target_name: str, amount: int) -> None:
-        self._table[target_name] = self._table.get(target_name, 0) + amount
-
-    def top_target(self) -> str | None:
-        if not self._table:
-            return None
-        return max(self._table, key=lambda k: self._table[k])
+from .combat_core import (
+    STATUS_BLEEDING,
+    STATUS_PARALYSIS,
+    STATUS_POISON,
+    AggroList,
+    ResistanceSet,
+    StatusEffect,
+)
 
 
 class CombatSystem:
@@ -206,17 +146,54 @@ class CombatSystem:
         except ImportError:
             pass
 
-        # 属性耐性適用
-        res = getattr(defender, "resistances", ResistanceSet())
-        res_val = res.get(element) if hasattr(res, "get") else 0
+        # 属性耐性 & 弱点判定 (Steps 55, 56)
+        elem_name = element.value if hasattr(element, "value") else str(element)
+        is_weak = False
+        if hasattr(defender, "is_weak_to") and defender.is_weak_to(elem_name):
+            is_weak = True
+            roll_dmg = int(roll_dmg * 1.5)
+
+        res_val = 0
+        if hasattr(defender, "get_elemental_resistance"):
+            res_val = defender.get_elemental_resistance(elem_name)
+        else:
+            res = getattr(defender, "resistances", ResistanceSet())
+            res_val = res.get(element) if hasattr(res, "get") else 0
+
         final_dmg = CombatSystem.calc_element_damage(roll_dmg, element, res_val)
+
+        # 武器のエンチャント属性追加ダメージの加算 (Step 13, 55)
+        extra_elem_logs = []
+        if attacker and hasattr(attacker, "inventory") and attacker.inventory:
+            for extra_elem, extra_pwr in attacker.inventory.get_weapon_element_damages():
+                if hasattr(defender, "is_weak_to") and defender.is_weak_to(extra_elem):
+                    extra_pwr = int(extra_pwr * 1.5)
+                    extra_elem_logs.append(f"【{extra_elem}弱点!】")
+                ext_res = defender.get_elemental_resistance(extra_elem) if hasattr(defender, "get_elemental_resistance") else 0
+                calc_ext = max(1, int(extra_pwr * (1.0 - ext_res / 100.0)))
+                final_dmg += calc_ext
+
+                # 状態異常の付与抽選 (Step 57)
+                if hasattr(defender, "add_status") and random.random() < 0.25:
+                    if extra_elem == "fire":
+                        defender.add_status("burn", duration=3, power=max(1, calc_ext // 2), source_name=attacker.name)
+                        extra_elem_logs.append("🔥炎上付与!")
+                    elif extra_elem == "ice":
+                        defender.add_status("freeze", duration=2, power=1, source_name=attacker.name)
+                        extra_elem_logs.append("❄️凍結付与!")
+                    elif extra_elem == "lightning":
+                        defender.add_status("paralyze", duration=2, power=1, source_name=attacker.name)
+                        extra_elem_logs.append("⚡麻痺付与!")
+                    elif extra_elem == "poison":
+                        defender.add_status("poison", duration=4, power=max(1, calc_ext // 2), source_name=attacker.name)
+                        extra_elem_logs.append("🧪毒付与!")
+
         final_dmg = max(
             1,
             final_dmg - random.randint(0, max(1, int(defender.attributes.endurance / 4))),
         )
 
         # 転生スケーリング適用 (Steps 53, 54)
-        # TODO: Reincarnation scaling
         if not getattr(attacker, "is_player", False):
             # 敵の攻撃力にプレイヤーの転生スケーリングを適用
             reinc_count = getattr(defender, "reincarnation_count", 0)
@@ -228,20 +205,22 @@ class CombatSystem:
         if getattr(defender, "is_player", False):
             from naRou.core.difficulty import DifficultyManager
 
-            final_dmg = int(DifficultyManager().player_damage_taken(final_dmg))
+            final_dmg = max(1, int(DifficultyManager().player_damage_taken(final_dmg)))
 
         # 出血判定 (ステップ45): 大きなダメージ時に5%
         if final_dmg > 8 and random.random() < 0.05:
-            if not hasattr(defender, "status_effects"):
-                defender.status_effects = []
-            # 既存の出血を更新
-            defender.status_effects = [
-                s for s in defender.status_effects if s.name != STATUS_BLEEDING
-            ]
-            defender.status_effects.append(StatusEffect(STATUS_BLEEDING, 500, power=2))
+            if hasattr(defender, "add_status"):
+                defender.add_status("bleeding", duration=5, power=2, source_name=attacker.name)
+            elif hasattr(defender, "status_effects"):
+                defender.status_effects = [
+                    s for s in defender.status_effects if s.name != STATUS_BLEEDING
+                ]
+                defender.status_effects.append(StatusEffect(STATUS_BLEEDING, 500, power=2))
 
         crit_msg = "★会心の一撃！ " if is_crit else ""
-        msg = f"{attacker.name}は{defender.name}に{final_dmg}ダメージ！ {crit_msg}"
+        weak_msg = "【効果はばつぐんだ！】" if is_weak else ""
+        extra_msg = " ".join(extra_elem_logs)
+        msg = f"{attacker.name}は{defender.name}に{final_dmg}ダメージ！ {crit_msg}{weak_msg} {extra_msg}".strip()
         return final_dmg, is_crit, msg
 
     @staticmethod
@@ -274,54 +253,76 @@ class CombatSystem:
         return logs
 
     @staticmethod
-    def process_status_effects(entity: Entity) -> list[str]:
-        """状態異常のTick処理 (ステップ16, 45, Phase 4 Steps 27-31)"""
-        if not hasattr(entity, "status_effects"):
-            entity.status_effects = []
+    def process_status_effects(entity: Entity) -> tuple[list[str], bool]:
+        """状態異常のTick処理 (ステップ16, 45, 58-61)"""
         logs = []
-        remaining = []
-        for eff in entity.status_effects:
-            if not getattr(eff, "is_infinite", False):
-                eff.remaining_ticks -= 10
+        is_bleeding = False
 
-            if eff.name == STATUS_POISON:
-                dmg = max(1, eff.power)
-                entity.hp -= dmg
-                if random.random() < 0.1:
-                    logs.append(f"{entity.name}は毒に蝕まれる！(-{dmg} HP)")
-            elif eff.name == STATUS_BLEEDING:
-                dmg = max(1, eff.power)
-                entity.hp -= dmg
-                if random.random() < 0.15:
-                    logs.append(f"{entity.name}の傷口から血が流れ出す！(-{dmg} HP)")
-            elif eff.name == "Husk":
-                # 行動不能 (Step 28)
-                entity.energy = min(entity.energy, 0)
-            elif eff.name == "Toxicity":
-                # 割合ダメージ (Step 29)
-                dmg = max(1, int(entity.max_hp * (0.01 * eff.power)))
-                entity.hp -= dmg
-                if random.random() < 0.1:
-                    logs.append(f"{entity.name}は拒絶反応に苦しむ！(-{dmg} HP)")
-            elif eff.name == "Regen":
-                # リジェネ (Step 30)
-                heal = max(1, eff.power)
-                entity.hp = min(entity.hp + heal, getattr(entity, "max_hp", entity.hp))
-                if random.random() < 0.1:
-                    logs.append(f"{entity.name}の傷が再生していく。(+{heal} HP)")
-            elif eff.name == STATUS_PARALYSIS:
-                entity.energy = min(entity.energy, 0)
+        # 1. ECS StatusEffectsComponent 処理 (Step 54, 58-61)
+        if hasattr(entity, "get_component"):
+            try:
+                from naRou.ecs.components import StatusEffectsComponent
+                sec = entity.get_component(StatusEffectsComponent)
+                expired = []
+                for eff_type, eff in list(sec.effects.items()):
+                    eff.duration -= 1
 
-            if eff.remaining_ticks > 0:
-                remaining.append(eff)
-            else:
-                if eff.name == STATUS_BLEEDING:
-                    logs.append(f"{entity.name}の出血が止まった。")
+                    if eff_type in ("poison", "毒"):
+                        dmg = max(1, eff.power)
+                        entity.hp -= dmg
+                        logs.append(f"{entity.name}は毒で{dmg}ダメージを受けた！")
+                    elif eff_type in ("burn", "炎上"):
+                        dmg = max(1, eff.power * 2)
+                        entity.hp -= dmg
+                        logs.append(f"{entity.name}は炎上で{dmg}ダメージを受けた！")
+                    elif eff_type in ("freeze", "凍結", "paralyze", "麻痺", "sleep", "睡眠"):
+                        entity.energy = min(entity.energy, 0)
+                        eff_label = "凍結" if "freeze" in eff_type else ("麻痺" if "paralyze" in eff_type else "睡眠")
+                        logs.append(f"{entity.name}は{eff_label}で動けない！")
+                    elif eff_type in ("bleeding", "出血"):
+                        is_bleeding = True
+                        dmg = max(1, eff.power)
+                        entity.hp -= dmg
+                        logs.append(f"{entity.name}は出血で{dmg}ダメージを受けた！")
 
-        entity.status_effects = remaining
+                    if eff.duration <= 0:
+                        expired.append(eff_type)
+                        logs.append(f"{entity.name}の{eff_type}状態が治まった。")
 
-        # 出血中は自然回復ストップ (ステップ45)
-        is_bleeding = any(e.name == STATUS_BLEEDING for e in entity.status_effects)
+                for exp_type in expired:
+                    sec.remove_effect(exp_type)
+            except Exception:
+                pass
+
+        # 2. 後方互換リスト型 status_effects 処理
+        if hasattr(entity, "status_effects") and isinstance(entity.status_effects, list):
+            remaining = []
+            for eff in entity.status_effects:
+                if not getattr(eff, "is_infinite", False):
+                    eff.remaining_ticks -= 10
+
+                if eff.name == STATUS_POISON:
+                    dmg = max(1, eff.power)
+                    entity.hp -= dmg
+                    if random.random() < 0.1:
+                        logs.append(f"{entity.name}は毒に蝕まれる！(-{dmg} HP)")
+                elif eff.name == STATUS_BLEEDING:
+                    is_bleeding = True
+                    dmg = max(1, eff.power)
+                    entity.hp -= dmg
+                    if random.random() < 0.15:
+                        logs.append(f"{entity.name}の傷口から血が流れ出す！(-{dmg} HP)")
+                elif eff.name == STATUS_PARALYSIS:
+                    entity.energy = min(entity.energy, 0)
+
+                if eff.remaining_ticks > 0:
+                    remaining.append(eff)
+                else:
+                    if eff.name == STATUS_BLEEDING:
+                        logs.append(f"{entity.name}の出血が止まった。")
+
+            entity.status_effects = remaining
+
         return logs, is_bleeding
 
     @staticmethod
@@ -353,12 +354,6 @@ class CombatSystem:
             if caster.mp < mp_cost:
                 return 0, "MPが足りない！"
             caster.mp -= mp_cost
-            dmg = random.randint(5, 15) + int(caster.attributes.magic * 1.5)
-            target.hp -= dmg
-            return dmg, f"🔥{caster.name}の火球が{target.name}に命中し{dmg}ダメージ！"
-
-        return 0, f"不明な魔法: {spell_name}"
-
 
     # === エクスクルーシブスキル処理 (Steps 62, 63) ===
     @staticmethod
@@ -394,7 +389,9 @@ class CombatSystem:
                 data = yaml.safe_load(f) or {}
             return data.get("exclusive_skills", {}).get(skill_id)
         except Exception:
-            logger.exception("Failed to load exclusive skill data")
+            logger.exception("Unhandled exception")
+            import logging
+            logging.getLogger(__name__).exception("Unhandled exception")
             return None
 
     @staticmethod
@@ -447,185 +444,3 @@ class CombatSystem:
             )
 
         return 0, f"{caster.name}は【{name}】を放った！"
-
-
-class SurvivalSystem:
-    """サバイバル・空腹・信仰・カルマ・エーテル病"""
-
-    def __init__(self):
-        self.hunger = 8000
-        self.sleepiness = 0
-        self.karma = 20
-        self.gold = 500
-        self.platinum = 5
-        self.ether_disease = 0
-        self.mutations: list[str] = []
-        self.god = "なし"
-        self.piety = 0
-        self.tax_pending = 0  # 未払い税金
-
-    def pass_turn(self, player: Entity) -> list[str]:
-        logs = []
-        self.hunger -= 1
-        self.sleepiness += 1
-        if self.hunger <= 0:
-            self.hunger = 0
-            player.hp -= 2
-            logs.append("★飢えが体を蝕んでいる！(-2 HP)")
-        elif self.hunger < 1000:
-            if random.random() < 0.1:
-                logs.append("空腹で倒れそうだ…何か食べないと。")
-        return logs
-
-    def eat(self, player: Entity, food_item: Item) -> list[str]:
-        logs = []
-        is_rotten = "腐った" in food_item.name
-        self.hunger = min(10000, self.hunger + food_item.nutrition)
-        if is_rotten:
-            logs.append(f"腐った {food_item.name} を食べた！ 激しい吐き気に襲われる！")
-            # 猛毒付与
-            if not hasattr(player, "status_effects"):
-                player.status_effects = []
-            player.status_effects.append(StatusEffect(STATUS_POISON, 1500, power=4))
-        else:
-            logs.append(f"{player.name}は {food_item.name} を食べた。")
-            if food_item.nutrition > 2000:
-                player.attributes.strength += 1
-                player.recalculate_stats()
-                logs.append("力がみなぎってきた！(筋力+1)")
-        return logs
-
-    def sleep(self, player: Entity) -> list[str]:
-        self.sleepiness = 0
-        player.hp = player.max_hp
-        player.mp = player.max_mp
-        player.stamina = player.max_stamina
-        return ["ぐっすり眠った。HP・MP・スタミナが全快した！"]
-
-
-from dataclasses import dataclass as _dc
-
-
-@_dc
-class Quest:
-    title: str
-    target_monster: str
-    target_count: int
-    current_count: int = 0
-    reward_gold: int = 200
-    reward_platinum: int = 2
-    completed: bool = False
-
-
-class MonsterPreset:
-    # Map monster names to Tiny Rogue tile IDs
-    MONSTER_TILE_MAP = {
-        "slime": "TR_MONSTER_01",
-        "red_slime": "TR_MONSTER_01",
-        "snail": "TR_MONSTER_02",
-        "goblin": "TR_MONSTER_01",
-        "kobold": "TR_MONSTER_02",
-        "orc": "TR_MONSTER_03",
-        "hound_fire": "TR_MONSTER_VAR_01",
-        "rogue_thief": "TR_MONSTER_VAR_02",
-        "novice_wizard": "TR_MONSTER_VAR_03",
-        "minotaur": "TR_MONSTER_VAR_01",
-        "lich": "TR_MONSTER_VAR_02",
-        "dragon_red": "TR_MONSTER_VAR_03",
-    }
-
-    # Map pet types to Tiny Rogue tile IDs so pets render with real art
-    # instead of the generic placeholder. Falls back to "PET" when unknown.
-    PET_TILE_MAP = {
-        "puppy": "TR_MONSTER_VAR_01",
-        "hound": "TR_MONSTER_VAR_01",
-        "hound_fire": "TR_MONSTER_VAR_01",
-        "guard_dog": "TR_MONSTER_VAR_01",
-        "magic_hound": "TR_MONSTER_VAR_01",
-        "wolf": "TR_MONSTER_VAR_01",
-        "panther": "TR_MONSTER_VAR_02",
-        "cat": "TR_MONSTER_VAR_02",
-        "tiger": "TR_MONSTER_VAR_02",
-        "slime": "TR_MONSTER_01",
-        "dragon": "TR_MONSTER_VAR_03",
-        "dragon_red": "TR_MONSTER_VAR_03",
-    }
-
-    @staticmethod
-    def create(name: str, x: int, y: int) -> Entity:
-        from naRou.config_manager import DataCache
-        from naRou.ecs.entity import Attributes, Entity
-
-        m_data = DataCache.get_data("data/monsters.yaml")
-        if m_data and name in m_data:
-            entry = m_data[name]
-            attr_dict = entry.get("attributes", {})
-            attr = Attributes(
-                strength=attr_dict.get("strength", 10),
-                endurance=attr_dict.get("endurance", 10),
-                dexterity=attr_dict.get("dexterity", 10),
-                perception=attr_dict.get("perception", 10),
-                learning=attr_dict.get("learning", 10),
-                will=attr_dict.get("will", 10),
-                magic=attr_dict.get("magic", 10),
-                charisma=attr_dict.get("charisma", 10),
-            )
-            e = Entity(
-                x=x,
-                y=y,
-                char=entry.get("char", "👾"),
-                color=tuple(entry.get("color", [255, 255, 255])),
-                name=entry.get("name", name),
-                speed=entry.get("speed", 70),
-                attributes=attr,
-            )
-            e.max_hp = entry.get("max_hp", 20)
-            e.hp = e.max_hp
-            e.faction = FACTION_MONSTER
-            e.aggro = AggroList()
-            e.resistances = ResistanceSet()
-            e.status_effects = []
-            # Store monster type for tile rendering
-            e.monster_type = name
-            return e
-
-        # フォールバック
-        presets = {
-            "slime": (
-                "ぷち",
-                "🍮",
-                (100, 255, 100),
-                50,
-                Attributes(strength=5, endurance=6, dexterity=6),
-            ),
-            "goblin": (
-                "ゴブリン",
-                "👺",
-                (200, 100, 50),
-                70,
-                Attributes(strength=8, endurance=8, dexterity=8),
-            ),
-            "orc": (
-                "オーク",
-                "👹",
-                (150, 150, 50),
-                65,
-                Attributes(strength=14, endurance=12, dexterity=6),
-            ),
-        }
-        if name not in presets:
-            return Entity(x, y, "👾", (255, 255, 255), "モンスター")
-        n, c, col, spd, attr = presets[name]
-        e = Entity(x, y, c, col, n, speed=spd, attributes=attr)
-        hp_map = {"slime": 14, "goblin": 24, "orc": 42}
-        e.max_hp = hp_map.get(name, 20)
-        e.hp = e.max_hp
-        e.faction = FACTION_MONSTER
-        e.aggro = AggroList()
-        e.resistances = ResistanceSet()
-        e.status_effects = []
-        e.monster_type = name
-        return e
-
-
-

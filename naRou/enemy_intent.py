@@ -88,10 +88,19 @@ def compute_intent(entity: Any, engine: Any) -> dict | None:
     return _make(INTENT_MOVE, (px, py))
 
 
+_GLYPHS: dict[str, str] = {
+    INTENT_ATTACK: "⚔",
+    INTENT_CAST: "✨",
+    INTENT_FLEE: "💨",
+    INTENT_HEAL: "💖",
+    INTENT_MOVE: "👣",
+}
+
+
 def _make(intent_type: str, target) -> dict:
     return {
         "type": intent_type,
-        "glyph": INTENT_GLYPH.get(intent_type, "·"),
-        "label": INTENT_LABEL_JA.get(intent_type, intent_type),
+        "glyph": _GLYPHS.get(intent_type, "·"),
+        "label": INTENT_LABEL_JA.get(intent_type, intent_type) if isinstance(INTENT_LABEL_JA, dict) else str(intent_type),
         "target": target,
     }

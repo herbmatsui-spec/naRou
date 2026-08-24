@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import logging
 import sys
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -22,12 +21,18 @@ except ImportError:
 
 import random
 from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from naRou.packages.core.kernel.kernel import Kernel
-
+from naRou.exceptions import SystemInitError, DataParseError, ResourceLoadError
 import tcod
 import tcod.event
+from naRou.exceptions import SystemInitError
+
+from naRou.core.world_state_manager import GameStateInitializer
+
+from naRou.core.system_initializer import SystemInitializer
 
 from naRou.advanced_systems import ResourceNode, SaveSystem, WishParser
 from naRou.config_manager import get_config_manager
@@ -46,6 +51,8 @@ from naRou.constants import (
     TILE_STAIRS_DOWN,
     TILE_WALL,
     VIEW_HEIGHT,
+    NATURAL_REGEN_HUNGER_THRESHOLD,
+    NATURAL_REGEN_INTERVAL,
     VIEW_WIDTH,
     Element,
     GameState,
@@ -53,14 +60,21 @@ from naRou.constants import (
 from naRou.core_framework import AStar, Point, bresenham_line
 from naRou.dialogue_system import DialogueManager
 from naRou.ecs.entity import Entity
+from naRou.input_handler import InputHandler
 from naRou.item_system import Inventory, Item
 from naRou.localization_manager import LocalizationManager
 from naRou.logging_config import configure_logging
 from naRou.map_engine import GameMap
 from naRou.renderer import Renderer, get_renderer, set_renderer
 from naRou.skill_tree_system import SkillTreeManager
+from naRou.feature_flags import get_husk_enabled
+from naRou.managers.faction_manager import FactionManager
+from naRou.managers.persistence_manager import PersistenceManager
+from naRou.managers.pet_bond_manager import PetBondManager
+from naRou.managers.world_news_manager import WorldNewsManager
 from naRou.sound_manager import SoundManager
 from naRou.system_coordinator import SystemCoordinator
+from naRou.systems.skill_eater_system import CharacterState, SkillEaterRegistry
 from naRou.systems import (
     FACTION_GUARD,
     AggroList,
@@ -70,9 +84,11 @@ from naRou.systems import (
     StatusEffect,
     SurvivalSystem,
 )
+from naRou.procedural_quest_generator import REGISTRY, GENERATOR
 from naRou.ui.ui_fx_systems import FloatingText, Particle, ScreenShake
 
 configure_logging()
+from naRou.core.lighting import EnemyCone, LightMap, LightSource
 
 
 class Engine:
@@ -82,40 +98,14 @@ class Engine:
 
     def __init__(self, renderer: Renderer | None = None, kernel: "Kernel | None" = None):
         # --- Kernel 初期化 & CorePackage ロード ---
-        from naRou.exceptions import SystemInitError
 
         # Dependency injection: allow tests to supply a pre-built kernel.
         if kernel is not None:
             self.kernel = kernel
         else:
-            from naRou.packages.character.package import CharacterPackage
-            from naRou.packages.core.kernel.kernel import Kernel
-            from naRou.packages.core.package import CorePackage
-            from naRou.packages.gameplay.package import GameplayPackage
-            from naRou.packages.meta.package import MetaPackage
-            from naRou.packages.narrative.package import NarrativePackage
-            from naRou.packages.platform.package import PlatformPackage
-            from naRou.packages.social.package import SocialPackage
-            from naRou.packages.world.package import WorldPackage
-            from naRou.packages.world_a.package import WorldAPackage
+            from naRou.engine.bootstrap import build_kernel
+            self.kernel = build_kernel()
 
-        if kernel is None:
-            try:
-                self.kernel = Kernel()
-                self.kernel.load_package(CorePackage())
-                self.kernel.load_package(GameplayPackage())
-                self.kernel.load_package(CharacterPackage())
-                self.kernel.load_package(SocialPackage())
-                self.kernel.load_package(MetaPackage())
-                self.kernel.load_package(WorldPackage())
-                self.kernel.load_package(NarrativePackage())
-                self.kernel.load_package(PlatformPackage())
-                self.kernel.load_package(WorldAPackage())
-            except Exception as e:
-                logger.exception("Failed to load core packages during engine initialization: %s", e)
-                raise SystemInitError(f"Package initialization failed: {e}") from e
-        else:
-            self.kernel = kernel
 
         # --- レンダラ設定 (Step 3) ---
         if renderer is not None:
@@ -137,7 +127,6 @@ class Engine:
         self.setup_systems()
 
         # --- GameStateInitializer によるゲーム状態データの初期化 (Phase 4) ---
-        from naRou.core.world_state_manager import GameStateInitializer
 
         self.game_state_initializer = GameStateInitializer(self)
         # Stub registry for faction war to satisfy references in tests/benchmarks
@@ -158,7 +147,6 @@ class Engine:
         self._spawn_dungeon()
 
         # --- Visual FX & UI システム & Web サービス初期化 (Phase 5) ---
-        from naRou.core.system_initializer import SystemInitializer
 
         (
             self.look_cursor,
@@ -170,7 +158,6 @@ class Engine:
 
     def _initialize_player_and_pet(self) -> None:
         """プレイヤーとペットの初期化処理"""
-        from naRou.exceptions import DataParseError
 
         if not self.game_state_data.player or not self.game_state_data.pet:
             raise DataParseError(
@@ -196,7 +183,6 @@ class Engine:
 
     def _setup_initial_inventory(self) -> None:
         """初期インベントリアイテムの設定 (GameplayPackage 経由)"""
-        from naRou.exceptions import ResourceLoadError
 
         starter_items = self.starter_items_factory(self.kernel)
         if not starter_items:
@@ -238,7 +224,6 @@ class Engine:
         self.check_tutorial_triggers("game_start")
 
         # Step 6.4: 既定の入力アクションを ActionRegistry に登録
-        from naRou.input_handler import InputHandler
 
         InputHandler.register_default_actions()
 
@@ -395,14 +380,12 @@ class Engine:
     @property
     def territory_state(self) -> Any:
         """テリトリーシステムの状態"""
-        from naRou.skill_eater_territory_system import TerritoryState
 
         return TerritoryState.get_instance()
 
     @territory_state.setter
     def territory_state(self, value: Any) -> None:
         """テリトリーシステムの状態を設定（デシリアライズ用）"""
-        from naRou.skill_eater_territory_system import TerritoryState
 
         TerritoryState._instance = value
 
@@ -679,13 +662,11 @@ class Engine:
 
     @property
     def quest_generation_registry(self):
-        from naRou.procedural_quest_generator import REGISTRY
 
         return REGISTRY
 
     @property
     def procedural_quest_generator(self):
-        from naRou.procedural_quest_generator import GENERATOR
 
         return GENERATOR
 
@@ -902,7 +883,6 @@ class Engine:
             self.log("周囲に解析可能な対象が見つかりません。", (200, 200, 200))
             return True
 
-        from naRou.skill_eater_system import CharacterState
 
         analyzer = CharacterState(
             id="player",
@@ -960,7 +940,6 @@ class Engine:
             )
             return True
 
-        from naRou.skill_eater_system import CharacterState, SkillEaterRegistry
 
         analyzer = CharacterState(
             id="player",
@@ -1020,8 +999,6 @@ class Engine:
                 )
                 # Step 10: Generate Husk from devoured monster
                 if get_husk_enabled():
-                    from naRou.systems.skill_eater_husk_system import create_husk
-                    from naRou.ecs.components.components import HuskInventoryComponent
                     husk = create_husk(target.name, target.level)
                     player_entity = self.player
                     husk_inventory = player_entity.get_component(HuskInventoryComponent)
@@ -1063,7 +1040,6 @@ class Engine:
         id_a = skill_a or skills[0]
         id_b = skill_b or skills[1]
 
-        from naRou.skill_eater_system import CharacterState
 
         char_state = CharacterState(
             id="player",
@@ -1078,7 +1054,7 @@ class Engine:
             speed=100,
         )
         for s in skills:
-            char_state.add_skill(s)
+            char_state.add_skill(s, ignore_capacity=True)
 
         res = synth_sys.synthesize(char_state, id_a, id_b)
         if res.success and res.result_skill:
@@ -1192,7 +1168,7 @@ class Engine:
 
     def setup_systems(self) -> None:
         """各種マネージャーとサブシステムの生成・初期化 (setup_coordinator に委譲)"""
-        from naRou.core.systems.setup_coordinator import setup_systems
+        from naRou.engine.bootstrap import setup_systems
 
         setup_systems(self)
 
@@ -1222,7 +1198,6 @@ class Engine:
 
     def change_state(self, new_state: GameState) -> None:
         """状態遷移（ステートマシン）の厳格化とフック処理 (StateMachine に委譲)"""
-        from naRou.core.state_machine import StateMachine
 
         StateMachine().apply(self, new_state)
 
@@ -1236,7 +1211,6 @@ class Engine:
 
     def open_context_menu(self) -> None:
         """Spaceキーによる文脈アクション候補の動的生成 (ContextMenuBuilder に委譲)"""
-        from naRou.managers.context_menu_builder import ContextMenuBuilder
 
         actions = ContextMenuBuilder().build_actions(self)
         if actions:
@@ -1287,7 +1261,6 @@ class Engine:
             self.dungeon_spawner(self.kernel, self)
         except Exception as e:
             logger.exception("Failed to spawn dungeon entities: %s", e)
-            from naRou.exceptions import ResourceLoadError
 
             raise ResourceLoadError(f"Dungeon spawn failure: {e}") from e
 
@@ -1345,13 +1318,11 @@ class Engine:
             )
 
         # === 戦闘報酬決済 (CombatManager に委譲) ===
-        from naRou.managers.combat_manager import CombatManager
 
         CombatManager().handle_kill_rewards(self, entity)
 
         # SkillEaterSecretAccess - モンスターからのキーアイテムドロップ (Step 26)
         try:
-            from naRou.secret_area_system import SECRET_REGISTRY
 
             SECRET_REGISTRY.load_from_yaml()
 
@@ -1382,7 +1353,6 @@ class Engine:
                     key_id = random.choice(available_keys)
                     key_def = SECRET_REGISTRY.get_key_item(key_id)
                     if key_def:
-                        from naRou.item_system import Item
 
                         key_item = Item(
                             key_def.name,
@@ -1420,7 +1390,6 @@ class Engine:
             )
 
             # 称号チェック（即時）
-            from naRou.title_system import MANAGER
 
             granted = MANAGER.check_all_titles(self.player)
             for tid in granted:
@@ -1431,12 +1400,10 @@ class Engine:
                 self.achievement_manager.check_all_achievements(self.player, self)
 
         # === スキルポイント付与 (SkillRewardManager に委譲) ===
-        from naRou.managers.skill_reward_manager import SkillRewardManager
 
         SkillRewardManager().grant_kill_skill_points(self, entity)
 
         # === ペット共闘時の絆度増加 (PetBondManager に委譲) ===
-        from naRou.managers.pet_bond_manager import PetBondManager
 
         PetBondManager().update_combat_bond(self, entity)
 
@@ -1467,13 +1434,11 @@ class Engine:
                         self.log(qmsg, (255, 215, 0))
 
         # === 派閥評判更新 (FactionManager に委譲) ===
-        from naRou.managers.faction_manager import FactionManager
 
         FactionManager().update_kill_reputation(self, entity)
 
         # === 動的記憶の欠片のドロップ判定 (強敵討伐 / 稀な確率) ===
         if random.random() < 0.08 and hasattr(self, "meta_progression_manager"):
-            from naRou.meta_progression_system import MemoryFragmentGenerator
 
             frag = MemoryFragmentGenerator.generate(
                 self.player,
@@ -1506,7 +1471,6 @@ class Engine:
             getattr(e, "effect_type", getattr(e, "type", getattr(e, "name", ""))) == "bleeding"
             for e in self.player.status_effects
         )
-        from naRou.constants import NATURAL_REGEN_HUNGER_THRESHOLD, NATURAL_REGEN_INTERVAL
 
         if (
             self.turns % NATURAL_REGEN_INTERVAL == 0
@@ -1523,22 +1487,18 @@ class Engine:
             SoundManager.bgm_manager.check_crisis_trigger(self.player.hp, self.player.max_hp)
 
         # オートセーブ: 50ターンごと (ステップ71) — PersistenceManager に委譲
-        from naRou.managers.persistence_manager import PersistenceManager
 
         PersistenceManager().autosave_if_due(self)
 
         # === 世界ニュース・称号・ジョブ・スキルツリー・ギルド (WorldNewsManager に委譲) ===
-        from naRou.managers.world_news_manager import WorldNewsManager
 
         WorldNewsManager().advance(self)
 
         # === 派閥影響力定期変動 (FactionManager に委譲) ===
-        from naRou.managers.faction_manager import FactionManager
 
         FactionManager().update_influence(self)
 
         # === ペット絆度 & 進化チェック (PetBondManager に委譲) ===
-        from naRou.managers.pet_bond_manager import PetBondManager
 
         PetBondManager().update_turn_bond(self)
 
@@ -1999,7 +1959,6 @@ class Engine:
         fused = self.pet_fusion_manager.execute_fusion(pets[:2], self.player, res_id)
         if fused:
             self.pet = fused
-            from naRou.ui.ui_fx_systems import play_pet_fusion_fx
 
             play_pet_fusion_fx(self, p1_name, p2_name, fused.name)
 
@@ -2149,7 +2108,6 @@ class Engine:
     def render(self, console: Any) -> None:
         """描画処理 (ゲームロジックを含まない)"""
         if self.game_state_data.game_state == "skill_tree":
-            from naRou.ui.ui_fx_systems import format_skill_tree_display
 
             skill_tree_text = format_skill_tree_display(self.skill_tree_registry)
             y = 1
@@ -2159,7 +2117,6 @@ class Engine:
             return
 
         if self.game_state_data.game_state == "job":
-            from naRou.ui.ui_fx_systems import format_job_display
 
             job_text = format_job_display(self.job_registry, self.player)
             y = 1
@@ -2169,7 +2126,6 @@ class Engine:
             return
 
         # Use new TCODRenderer with lighting and particle systems
-        from naRou.core.tcod_renderer import TCODRenderer
 
         # Create or reuse renderer
         if not hasattr(self, "_tcod_renderer") or self._tcod_renderer is None:
@@ -2182,7 +2138,6 @@ class Engine:
 
         # Frame time for lighting/particles
         if hasattr(self, "_last_render_time"):
-            import time
 
             time.time() - self._last_render_time
         self._last_render_time = time.time() if "time" in dir() else 0
@@ -2203,9 +2158,7 @@ class Engine:
         )
 
         # Prepare lighting data
-        import math
 
-        from naRou.core.lighting import EnemyCone, LightMap, LightSource
 
         # Light map from game_map
         light_map = None
@@ -2300,7 +2253,6 @@ class Engine:
                 )
 
         # Send lighting/particle data to renderer
-        from naRou.core.renderer_base import LightingDrawCall, ParticleDrawCall
 
         renderer.draw_lighting(
             LightingDrawCall(
@@ -2331,8 +2283,6 @@ class Engine:
         )
 
         # 2. Delegate to RenderSystem for map/items/entities (they will draw on top of lit background)
-        from naRou.render_context import RenderContext
-        from naRou.render_system import RenderSystem
 
         render_context = RenderContext(
             game_map=self.game_state_data.game_map,
@@ -2455,8 +2405,6 @@ class Engine:
 
     def run_text_mode(self, width: int = 80, height: int = 50) -> None:
         """Step 18: テキスト入力でゲームを進行する最小ループ。"""
-        from naRou.core.text_renderer import TextRenderer, get_text_action
-        from naRou.input_actions import MovementAction, WaitAction
 
         tr = TextRenderer(width, height)
         show_guide = True  # Step 40: 操作ガイド表示トグル
@@ -2488,8 +2436,6 @@ class Engine:
 
 def get_tabbed_items(engine: Engine) -> list[Item]:
     """RenderSystem への委譲 (後方互換性)"""
-    from naRou.render_context import RenderContext
-    from naRou.render_system import RenderSystem
 
     # Create render context
     render_context = RenderContext(
@@ -2533,7 +2479,6 @@ def get_tabbed_items(engine: Engine) -> list[Item]:
 def render_all(console: tcod.console.Console, engine: Engine) -> None:
     """RenderSystem への委譲 (後方互換性)"""
     if engine.game_state_data.game_state == "skill_tree":
-        from naRou.ui.ui_fx_systems import format_skill_tree_display
 
         skill_tree_text = format_skill_tree_display(engine.skill_tree_registry)
         y = 1
@@ -2541,8 +2486,6 @@ def render_all(console: tcod.console.Console, engine: Engine) -> None:
             console.print(x=1, y=y, string=line, fg=(255, 255, 255))
             y += 1
         return
-    from naRou.render_context import RenderContext
-    from naRou.render_system import RenderSystem
 
     # Create render context
     render_context = RenderContext(
@@ -2584,13 +2527,11 @@ def render_all(console: tcod.console.Console, engine: Engine) -> None:
 
 
 def main() -> None:
-    from naRou.input_handler import InputHandler
 
     engine = Engine()
     logger.debug("Engine created successfully")
 
     # Load tileset to avoid libtcod font fallback warning
-    from pathlib import Path
 
     tileset_path = Path("assets/tiles/tileset_32x32.png")
     if tileset_path.exists():
@@ -2625,7 +2566,6 @@ def main() -> None:
                             continue
                         elif event.sym == tcod.event.KeySym.G:
                             # Toggle Tiny Rogue graphics
-                            from naRou.feature_flags import is_enabled, set_flag
 
                             new_state = not is_enabled("ENABLE_TINY_ROGUE_GFX")
                             set_flag("ENABLE_TINY_ROGUE_GFX", new_state)
@@ -2645,7 +2585,6 @@ def main() -> None:
     except Exception as e:
         logger.exception("ロード失敗")
         # SDL コンテキストを作れない場合（ヘッドレス/ GPU なし等）のフォールバック
-        from naRou.feature_flags import get_text_mode_enabled
 
         if get_text_mode_enabled():
             logger.warning("SDL context unavailable (%s); falling back to text mode.", e)
@@ -2654,7 +2593,6 @@ def main() -> None:
         # Web サーバーのみでテストしたい場合はそのまま待機
         logger.warning("Could not initialize SDL context: %s", e)
         logger.info("Web server is still running. Access it at http://localhost:8080")
-        import time
 
         while True:
             time.sleep(1)

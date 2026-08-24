@@ -68,6 +68,8 @@ class WorldAPackage(IPackage):
         # Initialize and load registry
         registry = SkillEaterRegistry.get_instance()
         skills_yaml_candidates = [
+            Path(__file__).resolve().parents[3] / "data" / "worlds" / "skill_eater" / "skills.yaml",
+            Path(__file__).resolve().parents[3] / "data" / "skills_skill_eater.yaml",
             Path(__file__).resolve().parents[2] / "data" / "worlds" / "skill_eater" / "skills.yaml",
             Path(__file__).resolve().parents[2] / "data" / "skills_skill_eater.yaml",
         ]

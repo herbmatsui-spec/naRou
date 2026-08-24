@@ -168,12 +168,21 @@ class UIRenderer:
             tip_text = "💡 下り階段の上: [>]キーで次の地下階層へ進む"
             console.print(x=2, y=ui_y + 3, string=tip_text[:76], fg=(100, 255, 200))
         else:
-            console.print(
-                x=2,
-                y=ui_y + 3,
-                string="🎮 [矢印]:移動 [Space]:便利行動 [l]:調査 [i]:荷物 [c]:能力 [Shift+T]:称号 [?]:ヘルプ",
-                fg=(140, 180, 220),
-            )
+            # Check if in skill_eater world for meta intervention hints
+            if context.world_a_data:
+                console.print(
+                    x=2,
+                    y=ui_y + 3,
+                    string="🎮 [矢印]:移動 [Space]:便利行動 [l]:調査 [i]:荷物 [c]:能力 [Shift+T]:称号 [Shift+R]:原典閲覧 [Shift+I]:テンプレ介入 [?]:ヘルプ",
+                    fg=(140, 180, 220),
+                )
+            else:
+                console.print(
+                    x=2,
+                    y=ui_y + 3,
+                    string="🎮 [矢印]:移動 [Space]:便利行動 [l]:調査 [i]:荷物 [c]:能力 [Shift+T]:称号 [?]:ヘルプ",
+                    fg=(140, 180, 220),
+                )
 
         # スキル喰いシステム専用HUD (行4-5)
         cls._draw_skill_eater_hud(console, context, ui_y)
