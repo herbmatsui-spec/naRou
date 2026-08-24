@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **巨大ファイルの責務別分割**: `naRou/systems/systems_core.py` を `combat_core.py` / `combat_system.py` / `survival_system.py` / `quest.py` / `monster_preset.py` に分割し `naRou/systems/__init__.py` で再公開。ルートの死んだ `naRou/systems.py` を削除。
+- **`procedural_quest_generator.py` のパッケージ化**: `naRou/quest_generation/{models,registry,generator,manager}.py` に分割し、元ファイルは転送シム化。
+- **潜在バグ修正**: `emergency_quest_injector` が参照していた未定義の `PROCEDURAL_QUEST_GENERATOR` を `GENERATOR` のエイリアスとして新パッケージで定義。
+
 ## [v1.0.6] - 2026-08-24
 
 ### Added

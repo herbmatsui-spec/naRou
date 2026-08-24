@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from naRou.skill_eater_audio_system import SkillEaterAudioSystem
 from naRou.skill_eater_presentation_system import PresentationEvent, SkillEaterPresentationSystem
 from naRou.skill_eater_system import CharacterState
-from naRou.systems.skill_eater_meta_intervention_system import TemplateEventGenerator, TemplateEvent
+from naRou.systems.skill_eater_meta_intervention_system import TemplateEvent, TemplateEventGenerator
 
 if TYPE_CHECKING:
     from naRou.skill_eater_procedural_dungeon import SkillEaterProceduralDungeon
@@ -482,6 +482,26 @@ class SkillEaterExplorationSystem:
             "visited_floors": list(self._visited_floors),
             "visited_secret_rooms": list(self._visited_secret_rooms),
             "current_room_id": self.current_room_id,
+            "active_template_events": [
+                {
+                    "template_id": evt.template_id,
+                    "archetype": evt.archetype,
+                    "context": evt.context,
+                    "faction": evt.faction,
+                    "difficulty": evt.difficulty,
+                    "route_steps": [
+                        {"flag": rs.flag, "turn": rs.turn, "actor": rs.actor, "on_fail": rs.on_fail}
+                        for rs in evt.route_steps
+                    ],
+                    "exploit_windows": [
+                        {"id": w.id, "tier": w.tier, "req_gold": w.req_gold,
+                         "req_skill": w.req_skill, "base_success": w.base_success}
+                        for w in evt.exploit_windows
+                    ],
+                    "turn_spawned": evt.turn_spawned,
+                }
+                for evt in self.active_template_events
+            ],
         }
 
     # Phase 2 Step 18/19/20/21: アセンションボード連動ノードチェック
@@ -516,6 +536,26 @@ class SkillEaterExplorationSystem:
         instance._visited_floors = set(data.get("visited_floors", []))
         instance._visited_secret_rooms = set(data.get("visited_secret_rooms", []))
         instance.current_room_id = data.get("current_room_id", "slum_alley")
+
+        # Restore active template events
+        from naRou.systems.skill_eater_meta_intervention_system import TemplateEvent
+        from naRou.systems.skill_eater_template_model import ExploitWindow, RouteStep
+        events_data = data.get("active_template_events", [])
+        for evt_data in events_data:
+            route_steps = [RouteStep(**rs) for rs in evt_data.get("route_steps", [])]
+            exploit_windows = [ExploitWindow(**ew) for ew in evt_data.get("exploit_windows", [])]
+            event = TemplateEvent(
+                template_id=evt_data["template_id"],
+                archetype=evt_data["archetype"],
+                context=evt_data["context"],
+                faction=evt_data["faction"],
+                difficulty=evt_data["difficulty"],
+                route_steps=route_steps,
+                exploit_windows=exploit_windows,
+                turn_spawned=evt_data["turn_spawned"],
+            )
+            instance.active_template_events.append(event)
+
         return instance
 
     # Template intervention hook (Phase C)

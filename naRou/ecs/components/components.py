@@ -49,6 +49,167 @@ class AttributesComponent:
 
 
 @dataclass
+class TurnEnergyComponent:
+    """ターン制御用エネルギー値 (ゲームループ核心)"""
+    energy: int = 0
+    speed: int = 70
+
+    def to_dict(self) -> dict:
+        return {"energy": self.energy, "speed": self.speed}
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "TurnEnergyComponent":
+        return cls(energy=data.get("energy", 0), speed=data.get("speed", 70))
+
+
+@dataclass
+class CombatIntentComponent:
+    """戦闘時の一時的意図・AIロール (描画/AI用途のみ・セーブ不要)"""
+    next_intent: dict | None = None
+    ai_role: str = "brute"
+    preferred_range: int = 1
+
+    def to_dict(self) -> dict:
+        return {"ai_role": self.ai_role, "preferred_range": self.preferred_range}
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "CombatIntentComponent":
+        return cls(
+            ai_role=data.get("ai_role", "brute"),
+            preferred_range=data.get("preferred_range", 1)
+        )
+
+
+@dataclass
+class FaithComponent:
+    """信仰・神システム"""
+    god_id: str = "eyth"
+    piety: int = 0
+    received_servant: bool = False
+    received_artifact: bool = False
+
+    def to_dict(self) -> dict:
+        return {
+            "god_id": self.god_id,
+            "piety": self.piety,
+            "received_servant": self.received_servant,
+            "received_artifact": self.received_artifact,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "FaithComponent":
+        return cls(
+            god_id=data.get("god_id", "eyth"),
+            piety=data.get("piety", 0),
+            received_servant=data.get("received_servant", False),
+            received_artifact=data.get("received_artifact", False),
+        )
+
+
+@dataclass
+class MutationComponent:
+    """突然変異・エーテル病進行"""
+    mutations: dict[str, int] = field(default_factory=dict)
+    ether_disease_stages: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        return {
+            "mutations": dict(self.mutations),
+            "ether_disease_stages": list(self.ether_disease_stages),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "MutationComponent":
+        return cls(
+            mutations=data.get("mutations", {}),
+            ether_disease_stages=data.get("ether_disease_stages", []),
+        )
+
+
+@dataclass
+class TutorialProgressComponent:
+    """チュートリアル完了履歴・ポップアップ状態"""
+    completed_tutorials: set[str] = field(default_factory=set)
+    pending_tutorial_popup: dict[str, Any] | None = None
+
+    def to_dict(self) -> dict:
+        return {
+            "completed_tutorials": list(self.completed_tutorials),
+            "pending_tutorial_popup": self.pending_tutorial_popup,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "TutorialProgressComponent":
+        return cls(
+            completed_tutorials=set(data.get("completed_tutorials", [])),
+            pending_tutorial_popup=data.get("pending_tutorial_popup"),
+        )
+
+
+@dataclass
+class ResistanceComponent:
+    """属性耐性・弱点 (基礎値のみ・装備分は別システムで合算)"""
+    base_resistances: dict[str, int] = field(default_factory=dict)
+    weaknesses: list[str] = field(default_factory=list)
+
+    def get_resistance(self, element: str) -> int:
+        return self.base_resistances.get(element, 0)
+
+    def is_weak_to(self, element: str) -> bool:
+        return element in self.weaknesses
+
+    def to_dict(self) -> dict:
+        return {
+            "base_resistances": dict(self.base_resistances),
+            "weaknesses": list(self.weaknesses),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "ResistanceComponent":
+        return cls(
+            base_resistances=data.get("base_resistances", {}),
+            weaknesses=data.get("weaknesses", []),
+        )
+
+
+@dataclass
+class SkillInventoryComponent:
+    """スキル所持・経験値管理 (既存 Skill クラス使用)"""
+    skills: dict[str, Any] = field(default_factory=dict)
+
+    def ensure_default_skills(self, is_player_or_pet: bool) -> None:
+        if not self.skills and is_player_or_pet:
+            # 基本スキルの初期化
+            pass
+
+    def to_dict(self) -> dict:
+        return {
+            "skills": {
+                k: {"name": getattr(s, "name", str(s)), "level": getattr(s, "level", 1), "experience": getattr(s, "experience", 0), "potential": getattr(s, "potential", 100)}
+                for k, s in self.skills.items()
+            }
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "SkillInventoryComponent":
+        comp = cls()
+        return comp
+
+
+@dataclass
+class PetComponent:
+    """ペット一覧・召喚管理 (Entity 参照を保持)"""
+    pets: list[Any] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        return {"pet_count": len(self.pets)}
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "PetComponent":
+        return cls(pets=[])
+
+
+@dataclass
 class TitleComponent:
     """称号およびプレイヤー実績統計用コンポーネント"""
 
@@ -244,6 +405,7 @@ class EmoteComponent:
 class PetAIComponent:
     """ペットの作戦指示および絆・進化・装備データ (ECSコンポーネント)"""
 
+    tactic: str = "assault"
     bond: int = 0
     contract_id: str = "default"
     evolution_path: list[str] = field(default_factory=list)
@@ -342,6 +504,7 @@ class ReincarnationComponent:
     reincarnation_count: int = 0
     inherited_skills: list[str] = field(default_factory=list)
     template_exposure: int = 0  # 露見度 (Meta Intervention)
+    collected_fragments: list[str] = field(default_factory=list)  # 記憶の断片 (Step 10-12)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -349,6 +512,7 @@ class ReincarnationComponent:
             "reincarnation_count": self.reincarnation_count,
             "inherited_skills": self.inherited_skills,
             "template_exposure": self.template_exposure,
+            "collected_fragments": list(self.collected_fragments),
         }
 
     @classmethod
@@ -358,6 +522,7 @@ class ReincarnationComponent:
             reincarnation_count=data.get("reincarnation_count", 0),
             inherited_skills=data.get("inherited_skills", []),
             template_exposure=data.get("template_exposure", 0),
+            collected_fragments=data.get("collected_fragments", []),
         )
 
 
@@ -507,6 +672,12 @@ class StatusEffectsComponent:
     """状態異常管理ECSコンポーネント (Step 54)"""
 
     effects: dict[str, ActiveStatusEffect] = field(default_factory=dict)
+
+    def __iter__(self):
+        return iter(self.effects.values())
+
+    def __len__(self) -> int:
+        return len(self.effects)
 
     def has_effect(self, effect_type: str) -> bool:
         return effect_type in self.effects and self.effects[effect_type].duration > 0

@@ -21,8 +21,10 @@ from naRou.ecs.components import (
     Attributes,
     AttributesComponent,
     BaseStatsComponent,
+    CombatIntentComponent,
     EconomyComponent,
     EmoteComponent,
+    FaithComponent,
     GuildFactionComponent,
     LevelComponent,
     PetAIComponent,
@@ -31,10 +33,12 @@ from naRou.ecs.components import (
     ReincarnationComponent,
     Skill,
     SkillFusionComponent,
+    SkillInventoryComponent,
     SkillTreeJobComponent,
     StatusEffectsComponent,
     StorytellerComponent,
     TitleComponent,
+    TurnEnergyComponent,
     HuskInventoryComponent,
 )
 
@@ -69,16 +73,17 @@ class Entity:
         self.char = char
         self.color = color
         self.name = name
-        self.is_player = is_player
+        self._is_player: bool = is_player
         self.is_pet = is_pet
         self.speed = speed
-        self.energy = 0
+        self._skills: dict[str, Any] | None = None
+        # self.energy removed; managed by TurnEnergyComponent
 
         # 敵意図予測 (提案2) — 次回ターンに取る行動の予測。描画のみに使用。
-        self.next_intent: dict | None = None
+        # self.next_intent removed; managed by CombatIntentComponent
         # 敵AIロール・陣形 (提案4)
-        self.ai_role: str = self._default_ai_role(name)
-        self.preferred_range: int = KITER_PREFERRED_RANGE if self.ai_role == AI_ROLE_KITER else 1
+        # self.ai_role removed; managed by CombatIntentComponent
+        # self.preferred_range removed; managed by CombatIntentComponent
 
         # === ECS コンポーネントコンテナ ===
         self.components: dict[type, Any] = {}
@@ -91,24 +96,15 @@ class Entity:
         self._base_attributes: AttributesComponent | None = None
 
         # レベルと経験値 (LevelComponentへの委譲プロパティ)
-        self.level = 1
-        self.exp = 0
-        self.exp_next = 100
+        # self.level, self.exp, self.exp_next moved to LevelComponent
 
         # ペット関連 (ステップ73, 74, 80) — AffectionComponent/PetProfileComponent に委譲
-        self.tactic: str = PetAI.TACTIC_ASSAULT
+        # self.tactic removed; managed by PetAIComponent
 
-        # スキル一覧
-        if self.is_player or self.is_pet:
-            self._skills: dict[str, Skill] | None = self._init_default_skills()
-        else:
-            self._skills: dict[str, Skill] | None = None
+        # スキル一覧 (SkillInventoryComponent へ移譲)
 
         # 信仰システム (ステップ84, 86)
-        self.god_id: str = DEFAULT_GOD_ID
-        self.piety: int = 0  # 信仰深度
-        self.received_servant: bool = False
-        self.received_artifact: bool = False
+        # self.god_id, self.piety, self.received_servant, self.received_artifact moved to FaithComponent
 
         # TODO: Achievement fields
         # TODO: Story/world state fields
@@ -164,6 +160,7 @@ class Entity:
         self.components[PetProfileComponent] = PetProfileComponent()
         self.components[EmoteComponent] = EmoteComponent()
         self.components[PetAIComponent] = PetAIComponent()
+        self.components[CombatIntentComponent] = CombatIntentComponent()
         self.components[AchievementComponent] = AchievementComponent()
         self.components[ReincarnationComponent] = ReincarnationComponent()
         self.components[SkillTreeJobComponent] = SkillTreeJobComponent()
@@ -173,10 +170,13 @@ class Entity:
         self.components[ProceduralQuestComponent] = ProceduralQuestComponent()
         self.components[ArchaeologyComponent] = ArchaeologyComponent()
         self.components[BaseStatsComponent] = BaseStatsComponent()
+        self.components[TurnEnergyComponent] = TurnEnergyComponent(speed=self.speed)
         self.components[EconomyComponent] = EconomyComponent()
         self.components[LevelComponent] = LevelComponent()
+        self.components[FaithComponent] = FaithComponent()
         self.components[StatusEffectsComponent] = StatusEffectsComponent()
         self.components[HuskInventoryComponent] = HuskInventoryComponent()
+        self.components[SkillInventoryComponent] = SkillInventoryComponent()
 
         # 属性耐性 & 弱点 (Step 51, 53)
         self.base_resistances: dict[str, int] = {}
@@ -191,6 +191,180 @@ class Entity:
     def has_component(self, component_type: type) -> bool:
         """指定されたコンポーネントを所持しているか判定"""
         return component_type in self.components
+
+    # -------------------------------------------------------------
+    # プレイヤーフラグ プロパティ (is_player)
+    # -------------------------------------------------------------
+    @property
+    def is_player(self) -> bool:
+        return getattr(self, "_is_player", False)
+
+    @is_player.setter
+    def is_player(self, value: bool) -> None:
+        self._is_player = bool(value)
+
+    # -------------------------------------------------------------
+    # 信仰システム プロパティ (FaithComponent への委譲)
+    # -------------------------------------------------------------
+    @property
+    def god_id(self) -> str:
+        return self.get_component(FaithComponent).god_id
+
+    @god_id.setter
+    def god_id(self, val: str) -> None:
+        self.get_component(FaithComponent).god_id = val
+
+    @property
+    def piety(self) -> int:
+        return self.get_component(FaithComponent).piety
+
+    @piety.setter
+    def piety(self, val: int) -> None:
+        self.get_component(FaithComponent).piety = val
+
+    @property
+    def received_servant(self) -> bool:
+        return self.get_component(FaithComponent).received_servant
+
+    @received_servant.setter
+    def received_servant(self, val: bool) -> None:
+        self.get_component(FaithComponent).received_servant = val
+
+    @property
+    def received_artifact(self) -> bool:
+        return self.get_component(FaithComponent).received_artifact
+
+    @received_artifact.setter
+    def received_artifact(self, val: bool) -> None:
+        self.get_component(FaithComponent).received_artifact = val
+
+    # -------------------------------------------------------------
+    # レベル・経験値 プロパティ (LevelComponent への委譲)
+    # -------------------------------------------------------------
+    @property
+    def level(self) -> int:
+        return self.get_component(LevelComponent).level
+
+    @level.setter
+    def level(self, val: int) -> None:
+        self.get_component(LevelComponent).level = val
+
+    @property
+    def exp(self) -> int:
+        return self.get_component(LevelComponent).exp
+
+    @exp.setter
+    def exp(self, val: int) -> None:
+        self.get_component(LevelComponent).exp = val
+
+    @property
+    def exp_next(self) -> int:
+        return self.get_component(LevelComponent).exp_next
+
+    @exp_next.setter
+    def exp_next(self, val: int) -> None:
+        self.get_component(LevelComponent).exp_next = val
+
+    # -------------------------------------------------------------
+    # ターンエネルギー プロパティ (TurnEnergyComponent への委譲)
+    # -------------------------------------------------------------
+    @property
+    def energy(self) -> int:
+        return self.get_component(TurnEnergyComponent).energy
+
+    @energy.setter
+    def energy(self, val: int) -> None:
+        self.get_component(TurnEnergyComponent).energy = val
+
+    # -------------------------------------------------------------
+    # ペット・好感度・AI プロパティ (Affection/PetProfile/PetAI/Emote への委譲)
+    # -------------------------------------------------------------
+    @property
+    def affection(self) -> int:
+        return self.get_component(AffectionComponent).affection
+
+    @affection.setter
+    def affection(self, val: int) -> None:
+        self.get_component(AffectionComponent).affection = val
+
+    @property
+    def pet_type(self) -> str:
+        return self.get_component(PetProfileComponent).pet_type
+
+    @pet_type.setter
+    def pet_type(self, val: str) -> None:
+        self.get_component(PetProfileComponent).pet_type = val
+
+    @property
+    def is_mounted(self) -> bool:
+        return self.get_component(PetProfileComponent).is_mounted
+
+    @is_mounted.setter
+    def is_mounted(self, val: bool) -> None:
+        self.get_component(PetProfileComponent).is_mounted = val
+
+    @property
+    def gene_skills(self) -> list[str]:
+        return self.get_component(PetProfileComponent).gene_skills
+
+    @gene_skills.setter
+    def gene_skills(self, val: list[str]) -> None:
+        self.get_component(PetProfileComponent).gene_skills = val
+
+    @property
+    def pet_fusion_history(self) -> list[str]:
+        return self.get_component(PetProfileComponent).pet_fusion_history
+
+    @pet_fusion_history.setter
+    def pet_fusion_history(self, val: list[str]) -> None:
+        self.get_component(PetProfileComponent).pet_fusion_history = val
+
+    @property
+    def tactic(self) -> str:
+        return self.get_component(PetAIComponent).tactic
+
+    @tactic.setter
+    def tactic(self, val: str) -> None:
+        self.get_component(PetAIComponent).tactic = val
+
+    @property
+    def pet_ai(self) -> PetAIComponent:
+        return self.get_component(PetAIComponent)
+
+    @property
+    def emote_state(self) -> str | None:
+        return self.get_component(EmoteComponent).current_emote
+
+    @emote_state.setter
+    def emote_state(self, val: str | None) -> None:
+        self.get_component(EmoteComponent).current_emote = val
+
+    # -------------------------------------------------------------
+    # 戦闘意図・AIロール プロパティ (CombatIntentComponent への委譲)
+    # -------------------------------------------------------------
+    @property
+    def ai_role(self) -> str:
+        return self.get_component(CombatIntentComponent).ai_role
+
+    @ai_role.setter
+    def ai_role(self, val: str) -> None:
+        self.get_component(CombatIntentComponent).ai_role = val
+
+    @property
+    def preferred_range(self) -> int:
+        return self.get_component(CombatIntentComponent).preferred_range
+
+    @preferred_range.setter
+    def preferred_range(self, val: int) -> None:
+        self.get_component(CombatIntentComponent).preferred_range = val
+
+    @property
+    def next_intent(self) -> dict | None:
+        return self.get_component(CombatIntentComponent).next_intent
+
+    @next_intent.setter
+    def next_intent(self, val: dict | None) -> None:
+        self.get_component(CombatIntentComponent).next_intent = val
 
     # -------------------------------------------------------------
     # 状態異常プロパティ・メソッド (StatusEffectsComponent への委譲: Step 54)
@@ -1440,15 +1614,16 @@ class Entity:
                 data["components"][comp_name] = comp_dict
 
         # スキルのシリアライズ
-        if self._skills:
+        skills_dict = getattr(self, "skills", None)
+        if skills_dict:
             data["skills"] = {
                 k: {
-                    "name": s.name,
-                    "level": s.level,
-                    "experience": s.experience,
-                    "potential": s.potential,
+                    "name": getattr(s, "name", str(s)),
+                    "level": getattr(s, "level", 1),
+                    "experience": getattr(s, "experience", 0),
+                    "potential": getattr(s, "potential", 100),
                 }
-                for k, s in self._skills.items()
+                for k, s in skills_dict.items()
             }
         return data
 
@@ -1516,11 +1691,11 @@ class Entity:
                         setattr(comp, k, v)
 
         # スキルの復元
-        if "skills" in data and ent._skills is not None:
+        if "skills" in data and getattr(ent, "skills", None) is not None:
             for sk_key, sk_dict in data["skills"].items():
-                if sk_key in ent._skills:
-                    ent._skills[sk_key].level = sk_dict.get("level", 1)
-                    ent._skills[sk_key].experience = sk_dict.get("experience", 0)
-                    ent._skills[sk_key].potential = sk_dict.get("potential", 100)
+                if sk_key in ent.skills:
+                    ent.skills[sk_key].level = sk_dict.get("level", 1)
+                    ent.skills[sk_key].experience = sk_dict.get("experience", 0)
+                    ent.skills[sk_key].potential = sk_dict.get("potential", 100)
 
         return ent

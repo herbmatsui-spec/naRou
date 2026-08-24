@@ -225,7 +225,7 @@ def test_all_72_steps_reincarnation_system():
     print("[OK] Steps 50-52 (map_engine.py & game.py 転生ダンジョン連携)")
 
     # Steps 53-54: systems.py 転生戦闘スケーリング
-    sys_code = _read_source("systems_core.py" if os.path.exists("naRou/systems/systems_core.py") else "systems.py")
+    sys_code = _read_source("naRou/systems/combat_system.py")
     assert "# TODO: Reincarnation scaling" in sys_code, "Step 53, 54 Failed"
     print("[OK] Steps 53-54 (systems.py 戦闘スケーリング)")
 

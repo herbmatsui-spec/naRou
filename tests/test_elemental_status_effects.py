@@ -21,7 +21,7 @@ from naRou.constants import (
 from naRou.ecs.components import StatusEffectsComponent
 from naRou.ecs.entity import Attributes, Entity
 from naRou.item_system import Item, use_item
-from naRou.systems.systems_core import CombatSystem
+from naRou.systems import CombatSystem
 
 
 class TestElementalAndStatusEffects:

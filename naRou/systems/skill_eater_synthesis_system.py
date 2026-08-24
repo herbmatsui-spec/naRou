@@ -155,7 +155,7 @@ class SkillEaterSynthesisSystem:
 
             character.remove_skill(skill_id_a)
             character.remove_skill(skill_id_b)
-            character.add_skill(result_skill.id)
+            character.add_skill(result_skill.id, ignore_capacity=True)
 
             # Step 28: 合成成功
             evt_suc = self.presentation.add_event(

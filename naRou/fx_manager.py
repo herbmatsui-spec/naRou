@@ -11,6 +11,7 @@ from typing import Any
 
 from naRou.core.tiny_rogue_tiles import get_effect_tile_id
 from naRou.core_framework import EventBus
+from naRou.feature_flags import is_enabled
 from naRou.ui.ui_fx_systems import FloatingText, Particle, ScreenShake
 
 

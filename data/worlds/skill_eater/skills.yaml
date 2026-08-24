@@ -287,3 +287,31 @@ skills:
         summon_type: "TemplateEcho"
         duration: 30
         stats_multiplier: 1.5
+
+  - id: "com_magic_001"
+    name: "魔力感知"
+    tier: "Common"
+    type: "Passive"
+    mp_cost: 0
+    cooldown: 0
+    market_value: 1000
+    tags: ["Magic", "Passive", "Vision"]
+    flavor_text: "周囲の魔力の流れを大まかに感知する初級術士の基礎スキル。"
+    effects:
+      - type: "PassiveEffect"
+        target: "Self"
+        effect_name: "magic_sense"
+
+  - id: "rar_infrared_vision"
+    name: "赤外線視覚"
+    tier: "Rare"
+    type: "Passive"
+    mp_cost: 0
+    cooldown: 0
+    market_value: 5000
+    tags: ["Chimera", "Passive", "Vision"]
+    flavor_text: "暗闇でも熱源を視認できるキメラ合成の成果物。"
+    effects:
+      - type: "PassiveEffect"
+        target: "Self"
+        effect_name: "thermal_vision"

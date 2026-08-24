@@ -8,3 +8,248 @@ scenario_templates:
         name: "前哨戦"
       - chapter: 2
         name: "首領討伐"
+
+quest_generation:
+  archetypes:
+    slay:
+      id: "slay"
+      name: "討伐"
+      objective_type: "kill"
+      title_template: "{setting}の{enemy}討伐"
+      desc_template: "{setting}に現れた{enemy}を討伐せよ。"
+      reward_weight: 1.0
+      base_complexity: 1
+    gather:
+      id: "gather"
+      name: "採取"
+      objective_type: "collect"
+      title_template: "{setting}の素材採取"
+      desc_template: "{setting}で貴重な素材を採取せよ。"
+      reward_weight: 0.9
+      base_complexity: 1
+    escort:
+      id: "escort"
+      name: "護衛"
+      objective_type: "escort"
+      title_template: "{setting}への護衛任務"
+      desc_template: "{setting}まで依頼人を無事に護衛せよ。"
+      reward_weight: 1.3
+      base_complexity: 2
+    explore:
+      id: "explore"
+      name: "探索"
+      objective_type: "explore"
+      title_template: "{setting}の深部探索"
+      desc_template: "{setting}の未知のエリアを探索・マッピングせよ。"
+      reward_weight: 1.1
+      base_complexity: 2
+    boss_hunt:
+      id: "boss_hunt"
+      name: "ボス討伐"
+      objective_type: "kill"
+      title_template: "{setting}の強敵討伐"
+      desc_template: "{setting}の主たる強大な魔物を討伐せよ。"
+      reward_weight: 1.8
+      base_complexity: 3
+    rescue:
+      id: "rescue"
+      name: "救出"
+      objective_type: "rescue"
+      title_template: "{setting}での遭難者救出"
+      desc_template: "{setting}で消息を絶った仲間を救出せよ。"
+      reward_weight: 1.4
+      base_complexity: 2
+    delivery:
+      id: "delivery"
+      name: "配達"
+      objective_type: "delivery"
+      title_template: "{setting}への緊急物資配達"
+      desc_template: "{setting}の拠点へ物資を速やかに届けよ。"
+      reward_weight: 0.8
+      base_complexity: 1
+
+  difficulty_tiers:
+    tutorial:
+      id: "tutorial"
+      name: "序"
+      level_range: [1, 5]
+      enemy_multiplier: 1.0
+      objective_complexity: 1.0
+      recommended_power: 10
+    easy:
+      id: "easy"
+      name: "低"
+      level_range: [6, 15]
+      enemy_multiplier: 1.5
+      objective_complexity: 1.2
+      recommended_power: 30
+    normal:
+      id: "normal"
+      name: "中"
+      level_range: [16, 35]
+      enemy_multiplier: 2.6
+      objective_complexity: 1.6
+      recommended_power: 80
+    hard:
+      id: "hard"
+      name: "高"
+      level_range: [36, 60]
+      enemy_multiplier: 4.5
+      objective_complexity: 2.2
+      recommended_power: 180
+    extreme:
+      id: "extreme"
+      name: "極"
+      level_range: [61, 90]
+      enemy_multiplier: 8.0
+      objective_complexity: 3.0
+      recommended_power: 350
+    abyss:
+      id: "abyss"
+      name: "深淵"
+      level_range: [91, 100]
+      enemy_multiplier: 15.0
+      objective_complexity: 4.5
+      recommended_power: 600
+
+  reward_tables:
+    copper:
+      id: "copper"
+      name: "銅"
+      gold_range: [50, 150]
+      exp_range: [20, 60]
+      item_pool: ["herb", "bandage"]
+      bonus: {"fame": 1}
+    silver:
+      id: "silver"
+      name: "銀"
+      gold_range: [200, 500]
+      exp_range: [80, 200]
+      item_pool: ["potion", "antidote"]
+      bonus: {"fame": 3}
+    gold:
+      id: "gold"
+      name: "金"
+      gold_range: [600, 1500]
+      exp_range: [250, 600]
+      item_pool: ["high_potion", "elixir"]
+      bonus: {"fame": 8}
+    rainbow:
+      id: "rainbow"
+      name: "虹"
+      gold_range: [2000, 5000]
+      exp_range: [800, 2000]
+      item_pool: ["rare_gem", "master_scroll"]
+      bonus: {"fame": 20}
+    legendary:
+      id: "legendary"
+      name: "伝承"
+      gold_range: [8000, 20000]
+      exp_range: [3000, 8000]
+      item_pool: ["ancient_artifact", "god_tear"]
+      bonus: {"fame": 50}
+
+  stage_settings:
+    town:
+      id: "town"
+      name: "街・平野"
+      flavor: "のどかな平野と街道沿い"
+      enemy_pool: ["slime", "goblin"]
+      hazard: "なし"
+      depth_modifier: 1.0
+      environmental_modifier: 1.0
+    forest:
+      id: "forest"
+      name: "迷いの森"
+      flavor: "木々が生い茂る暗い原生林"
+      enemy_pool: ["wolf", "bandit"]
+      hazard: "視界不良"
+      depth_modifier: 1.2
+      environmental_modifier: 1.1
+    cave:
+      id: "cave"
+      name: "地下鍾乳洞"
+      flavor: "湿った空気と鍾乳石が立ち並ぶ洞窟"
+      enemy_pool: ["bat", "spider"]
+      hazard: "落石"
+      depth_modifier: 1.4
+      environmental_modifier: 1.2
+    ruins:
+      id: "ruins"
+      name: "古代遺跡"
+      flavor: "失われた文明の石造建築群"
+      enemy_pool: ["golem", "skeleton"]
+      hazard: "罠"
+      depth_modifier: 1.6
+      environmental_modifier: 1.3
+    volcano:
+      id: "volcano"
+      name: "灼熱火山"
+      flavor: "溶岩が煮えたぎる灼熱の山"
+      enemy_pool: ["fire_elemental", "salamander"]
+      hazard: "熱波"
+      depth_modifier: 1.8
+      environmental_modifier: 1.5
+    snowfield:
+      id: "snowfield"
+      name: "極寒雪原"
+      flavor: "吹き荒れる吹雪と凍てつく大地"
+      enemy_pool: ["ice_wolf", "yeti"]
+      hazard: "吹雪"
+      depth_modifier: 1.8
+      environmental_modifier: 1.5
+    swamp:
+      id: "swamp"
+      name: "毒霧湿地"
+      flavor: "有毒ガスが立ち込める泥濘"
+      enemy_pool: ["poison_toad", "hydra"]
+      hazard: "毒沼"
+      depth_modifier: 2.0
+      environmental_modifier: 1.6
+    abyss:
+      id: "abyss"
+      name: "次元の深淵"
+      flavor: "時空が歪み狂気が漂う奈落"
+      enemy_pool: ["abyss_fiend", "void_stalker"]
+      hazard: "次元断裂"
+      depth_modifier: 2.5
+      environmental_modifier: 2.0
+
+  npc_quest_themes:
+    villager:
+      npc_type: "villager"
+      quest_pool: ["gather", "rescue"]
+      relationship_gate: 1
+      flavor: "{npc}「村のために力を貸してください…」"
+    merchant:
+      npc_type: "merchant"
+      quest_pool: ["delivery", "escort"]
+      relationship_gate: 10
+      flavor: "{npc}「頼もしい護衛を探していたところです。」"
+    noble:
+      npc_type: "noble"
+      quest_pool: ["boss_hunt", "explore"]
+      relationship_gate: 30
+      flavor: "{npc}「我が領地の栄光のために働きなさい。」"
+    priest:
+      npc_type: "priest"
+      quest_pool: ["rescue", "slay"]
+      relationship_gate: 20
+      flavor: "{npc}「神の御心に従い、迷える魂を救ってください。」"
+    adventurer:
+      npc_type: "adventurer"
+      quest_pool: ["explore", "boss_hunt"]
+      relationship_gate: 15
+      flavor: "{npc}「おい、一緒に大きな山を踏破しないか？」"
+
+  request_board:
+    max_active: 8
+    refresh_cycle: 100
+    type_weights:
+      slay: 3
+      gather: 2
+      explore: 2
+      escort: 1
+      boss_hunt: 1
+      rescue: 1
+      delivery: 1

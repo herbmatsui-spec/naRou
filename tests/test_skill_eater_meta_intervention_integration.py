@@ -1,5 +1,7 @@
 """Integration test for full meta intervention loop: scan -> intervene -> reward -> reincarnate."""
 
+from typing import Any
+
 import pytest
 from naRou.systems.skill_eater_template_model import load_templates
 from naRou.systems.skill_eater_meta_intervention_system import (

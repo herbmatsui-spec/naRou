@@ -173,7 +173,7 @@ class WorldEventManager:
                 (255, 100, 100),
             )
             # イベント発生時に報酬を付与（基本実装）
-            REWARD_MANAGER.grant_event_rewards(player, edata)
+            REWARD_MANAGER.grant_event_rewards(player, edata, engine)
 
             # Phase 3 Step 12: 動的スケジュール注入
             if hasattr(engine, "quest_scheduler"):
