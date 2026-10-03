@@ -28,6 +28,15 @@ if TYPE_CHECKING:
 
 import tcod
 import tcod.event
+from naRou.systems import (
+    FACTION_GUARD,
+    AggroList,
+    CombatSystem,
+    Quest,
+    ResistanceSet,
+    StatusEffect,
+    SurvivalSystem,
+)
 
 from advanced_systems import ResourceNode, SaveSystem, WishParser
 from config_manager import get_config_manager
@@ -57,15 +66,6 @@ from item_system import Inventory, Item
 from localization_manager import LocalizationManager
 from logging_config import configure_logging
 from map_engine import GameMap
-from naRou.systems import (
-    FACTION_GUARD,
-    AggroList,
-    CombatSystem,
-    Quest,
-    ResistanceSet,
-    StatusEffect,
-    SurvivalSystem,
-)
 from renderer import Renderer, get_renderer, set_renderer
 from skill_tree_system import SkillTreeManager
 from sound_manager import SoundManager

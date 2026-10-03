@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from naRou.entity import Entity
-
     from naRou.game import Engine
 
 

@@ -8,9 +8,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from naRou.entity import Entity
-
     from naRou.ai_blackboard import AIBlackboard
+    from naRou.entity import Entity
 
 
 class PetTacticsCoordinator:

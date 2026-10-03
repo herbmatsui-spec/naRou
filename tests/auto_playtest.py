@@ -22,10 +22,9 @@ for p in [str(NAROU_DIR), str(PROJECT_ROOT)]:
 
 os.chdir(PROJECT_ROOT)
 
-from naRou.entity import Entity
-
 from naRou.constants import MAP_HEIGHT, MAP_WIDTH, TILE_STAIRS_DOWN
 from naRou.core_framework import AStar, Point
+from naRou.entity import Entity
 from naRou.game import Engine
 from naRou.item_system import Item
 
