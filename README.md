@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
   <img src="https://img.shields.io/badge/World-A:%20Skill%20Eater-purple.svg" alt="World A: Skill Eater">
   <img src="https://img.shields.io/badge/Audio-Foley%20SE%20%2B%20VFX-orange.svg" alt="Audio & VFX">
-  <img src="https://img.shields.io/badge/Tests-51%2F51%20Passing-brightgreen.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-628%20passed%20%2F%20643-yellow.svg" alt="Tests: 628 passed / 643 (15 known failures)">
 </p>
 
 **Elona風本格ローグライクRPG** (Python + tcod) ＋ **『異世界マルチバース構想：Aの世界（スキル喰い RPG）』**
@@ -121,20 +121,40 @@ python main.py
 # demos/demo_skill_eater_showcase.html をブラウザで直接開いてください
 ```
 
+起動経路は次の3つが同じゲームループに入ります。
+
+| コマンド | 用途 |
+| --- | --- |
+| `python main.py` | 統合システムメニュー（README 上の正規手順） |
+| `python -m game` | 同じ統合システムメニュー |
+| `narou` | `pip install -e .` 後に使えるコンソールスクリプト |
+
+GPU/SDL の無い環境（CI・コンテナ・SSH）では `NAROU_FORCE_TEXT=1` を設定すると
+テキストモードで起動します。`python run.py` はヘッドレスを自動判定します。
+
 ---
 
 ## 🧪 テストと品質検証
 
-本プロジェクトは `pytest` による自動テストを完備しており、全テストが 100% 合格しています。
+本プロジェクトは `pytest` による自動テストを備えています。`pytest tests/` の実測結果は
+**628 passed / 15 failed**（2026-10-04 時点）です。
 
 ```bash
-# 全ワールド統合テストの実行
-pytest tests/test_world_a_*.py test_skill_eater_*.py
+# 全テストの実行
+pytest tests/
+
+# 出荷経路の回帰テスト（起動・パッケージ・依存宣言）
+pytest tests/test_entrypoint.py
 ```
 
 ```text
-============================= 51 passed in 37.92s =============================
+============== 15 failed, 628 passed, 30 warnings in 124.39s (0:02:04) ==============
 ```
+
+残る 15 件は**既知の未実装由来**で、`jobs.yaml` / `skill_trees.yaml` / `skill_fusion.yaml` /
+`data/text/en.yaml` が未実装（0 バイト）であることが直接の原因です
+（`test_repositories.py::test_job_count` は `assert 0 > 0` で失敗）。
+ゲーム内容の実装とテスト体制の整備は roadmap の別項目で扱います。
 
 ---
 
