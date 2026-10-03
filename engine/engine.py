@@ -154,7 +154,10 @@ class Engine:
 
         # --- run 終了状態 (死亡判定と run summary) ---
         self.run_summary: RunSummary | None = None
+        # 死因とその観測時点の HP の対。HP を添えるのは観測点の間で起きた
+        # ダメージ (トラップなど) に死因の観測が無かったことを示すため。
         self._harm_cause: str = CAUSE_UNKNOWN
+        self._harm_cause_hp: int | None = None
 
         # --- エンティティマネージャーに初期エンティティを追加 ---
         self.entity_manager.add_entity(self.game_state_data.player)
@@ -1298,7 +1301,13 @@ class Engine:
         return self.entity_manager.get_entity_at(x, y)
 
     def player_act(self, dx: int, dy: int) -> bool:
-        """プレイヤー行動 (GameplayPackage 経由)"""
+        """プレイヤー行動 (GameplayPackage 経由)
+
+        GAME_OVER 後は行動を受け付けない。死亡画面を閉じたまま遺体が歩き回る
+        状態を作らないための門 ([S2.1] が求める world と turn の停止とは別物)。
+        """
+        if self.current_state is GameState.GAME_OVER:
+            return False
         return self.gameplay_loop(self.kernel, self).player_act(dx, dy)
 
     def _on_kill(self, entity: Entity) -> None:
@@ -1494,6 +1503,25 @@ class Engine:
         self._present_run_summary(self.run_summary)
         return True
 
+    def _record_harm_cause(self, cause: str) -> None:
+        """観測した死因を、その観測時点の HP と対で記録する"""
+        self._harm_cause = cause
+        self._harm_cause_hp = self.player.hp
+
+    def _observed_harm_cause(self) -> str:
+        """記録した死因を返す。記録後に原因不明のダメージを受けていれば CAUSE_UNKNOWN にする
+
+        死因の観測点は turn 進行中の `advance_world` と自分の行動の 2 か所だけ
+        ([S3] 細分類は対象外)。トラップのように `_harm_cause` を触らないダメージは
+        観測点の間で発生するため、前の turn の観測を死因として引きずると順序依存の
+        表示になる。記録した時点から HP が変わっていれば、致命的になるまでの間に
+        原因を観測できていないので、観測の無い死として扱う。
+        旧セーブは __init__ を通らず pickle 復元されるため getattr で読む。
+        """
+        if getattr(self, "_harm_cause_hp", None) != self.player.hp:
+            return CAUSE_UNKNOWN
+        return getattr(self, "_harm_cause", CAUSE_UNKNOWN)
+
     def _build_run_summary(self) -> RunSummary:
         """run summary を組み立てる。値は既存の state から引く ([S2.1] 追跡機構を増やさない)"""
         clock = self.time_system.world_clock
@@ -1502,8 +1530,7 @@ class Engine:
             kills=sum(self.player.kill_counts.values()),
             devoured_skills=len(self.game_state_data.world_a_data.get("skills", ())),
             turns=self.turns,
-            # 旧セーブは __init__ を通らず pickle 復元されるため getattr で読む
-            cause=getattr(self, "_harm_cause", CAUSE_UNKNOWN),
+            cause=self._observed_harm_cause(),
             elapsed_minutes=clock.total_ticks // clock.config.ticks_per_minute,
         )
 
@@ -1525,7 +1552,7 @@ class Engine:
         hp_before = self.player.hp
         self.gameplay_loop(self.kernel, self).advance_world()
         if self.player.hp < hp_before:
-            self._harm_cause = CAUSE_HUNGER if self.survival.hunger <= 0 else CAUSE_COMBAT
+            self._record_harm_cause(CAUSE_HUNGER if self.survival.hunger <= 0 else CAUSE_COMBAT)
 
         # 以下は Engine 固有の処理（自然回復、世界ニュース、オートセーブ等）
         # 自然回復(出血中は停止: ステップ45)
@@ -1546,6 +1573,10 @@ class Engine:
             self.player.mp = min(self.player.max_mp, self.player.mp + 1)
             if self.pet.hp > 0:
                 self.pet.hp = min(self.pet.max_hp, self.pet.hp + 1)
+        # 自然回復は生存者向けの処理であり、死亡した turn の観測を引きずって
+        # 「観測の無い死」に落とす理由にはならない (記録した HP を turn 末へ合わせる)
+        if self.player.hp <= 0:
+            self._harm_cause_hp = self.player.hp
 
         # 動的サウンドスケープ: 危機状態のBGM判定 (Step 7.3)
         if hasattr(self, "player") and self.player:
@@ -1771,7 +1802,7 @@ class Engine:
         success, backlash = CombatSystem.calc_spell_success(self.player, "fireball")
         if not success:
             self.player.hp -= backlash
-            self._harm_cause = CAUSE_SELF
+            self._record_harm_cause(CAUSE_SELF)
             SoundManager.play_se("hit")
             self.floating_texts.append(
                 FloatingText(f"-{backlash}", self.player.x, self.player.y - 0.2, (255, 80, 80))
@@ -1950,7 +1981,7 @@ class Engine:
                         (200, 100, 100),
                     )
                     self.player.hp -= 1
-                    self._harm_cause = CAUSE_SELF
+                    self._record_harm_cause(CAUSE_SELF)
         if total_tips > 0:
             self.survival.gold += total_tips
             self.log(f"★演奏の報酬合計: {total_tips}G！", COLOR_GOLD_YELLOW)
@@ -2650,10 +2681,14 @@ def main() -> None:
                 for event in tcod.event.get(timeout=0):
                     if isinstance(event, tcod.event.KeyDown):
                         if event.sym == tcod.event.KeySym.S:
-                            engine.game_state = "skill_tree"
+                            # GAME_OVER は解除しない (画面だけ消えると world が
+                            # 動かないまま操作を続けられる中途半端な状態になる)
+                            if engine.current_state is not GameState.GAME_OVER:
+                                engine.game_state = "skill_tree"
                             continue
                         elif event.sym == tcod.event.KeySym.J:
-                            engine.game_state = "job"
+                            if engine.current_state is not GameState.GAME_OVER:
+                                engine.game_state = "job"
                             continue
                         elif event.sym == tcod.event.KeySym.G:
                             # Toggle Tiny Rogue graphics
