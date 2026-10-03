@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
   <img src="https://img.shields.io/badge/World-A:%20Skill%20Eater-purple.svg" alt="World A: Skill Eater">
   <img src="https://img.shields.io/badge/Audio-Foley%20SE%20%2B%20VFX-orange.svg" alt="Audio & VFX">
-  <img src="https://img.shields.io/badge/Tests-628%20passed%20%2F%20643-yellow.svg" alt="Tests: 628 passed / 643 (15 known failures)">
+  <img src="https://img.shields.io/badge/Tests-636%20passed%20%2F%20651-yellow.svg" alt="Tests: 636 passed / 651 (15 known failures)">
 </p>
 
 **Elona風本格ローグライクRPG** (Python + tcod) ＋ **『異世界マルチバース構想：Aの世界（スキル喰い RPG）』**
@@ -106,7 +106,9 @@
 
 ### 1. 必要な環境
 * **Python 3.10 以上** (3.11〜3.14 推奨)
-* **依存パッケージ**: `tcod`, `pygame`, `pillow`, `pyyaml`, `scipy`
+* **依存パッケージ**: `tcod`, `pyyaml`, `cryptography`, `numpy`, `pydantic`,
+  `python-dotenv`, `pillow`, `scipy`（`requirements.txt` と同一）
+* **任意（未インストールでも起動する）**: `pygame`, `simpleaudio` — 音声再生のみが無効化されます
 
 ### 2. インストールと起動
 
@@ -137,18 +139,18 @@ GPU/SDL の無い環境（CI・コンテナ・SSH）では `NAROU_FORCE_TEXT=1` 
 ## 🧪 テストと品質検証
 
 本プロジェクトは `pytest` による自動テストを備えています。`pytest tests/` の実測結果は
-**628 passed / 15 failed**（2026-10-04 時点）です。
+**636 passed / 15 failed**（2026-10-04 時点）です。
 
 ```bash
 # 全テストの実行
 pytest tests/
 
 # 出荷経路の回帰テスト（起動・パッケージ・依存宣言）
-pytest tests/test_entrypoint.py
+pytest tests/test_entrypoint.py tests/test_narou_package_init.py
 ```
 
 ```text
-============== 15 failed, 628 passed, 30 warnings in 124.39s (0:02:04) ==============
+============== 15 failed, 636 passed, 30 warnings in 141.55s (0:02:21) ==============
 ```
 
 残る 15 件は**既知の未実装由来**で、`jobs.yaml` / `skill_trees.yaml` / `skill_fusion.yaml` /
