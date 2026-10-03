@@ -29,6 +29,24 @@ _ANSI = re.compile(r"\x1b\[[0-9;]*m")
 # stdout には出ない）。
 _TEXT_MODE_GUIDE = "q:終了"
 
+# メニュー 1 番を選んだときだけ出る文。0 番・3 番では出ない。
+_MENU_ONE_LAUNCH = "ゲーム本編を起動します"
+
+# engine.main() が SDL コンテキストを作れずテキストモードへ落としたときのログ。
+# 図形ループまで到達した証拠であり、メニュー 3 番（main_text 直叩き）には出ない。
+_SDL_TEXT_MODE_FALLBACK = "falling back to text mode"
+
+# MSDF アトラス生成に使う TTF の探索先。固定パスに依存せず辞書順で最初の一致を採る。
+_FONT_DIRS = (
+    "/usr/share/fonts",
+    "/usr/local/share/fonts",
+    "~/.fonts",
+    "~/.local/share/fonts",
+    "/Library/Fonts",
+    "/System/Library/Fonts",
+    "C:/Windows/Fonts",
+)
+
 # ディストリビューション名 -> インポート名
 _IMPORT_NAMES = {
     "tcod": "tcod",
@@ -87,30 +105,21 @@ def test_game_module_exposes_callable_main():
     assert callable(game.main), "game.main が存在しないため narou コマンドとメニュー 1 番が壊れる"
 
 
-def test_narou_dunder_path_stays_inside_package_when_installed():
-    """インストール済み wheel では site-packages 全体が naRou に露出してはいけない。"""
-    import naRou
-
-    for entry in naRou.__path__:
-        assert Path(entry).resolve() != REPO_ROOT.parent, (
-            "naRou.__path__ がリポジトリの外へ漏れている。インストール後に site-packages を"
-            "naRou の名前空間として公開してしまう"
-        )
+# naRou.__path__ がインストール時に site-packages を露出しないことの回帰試験は
+# tests/test_narou_package_init.py にある（ソースチェックアウトと導入済みレイアウトの両方）。
 
 
 def _distribution_names(requirements: list[str]) -> set[str]:
     """`tcod>=21.2.1` のような requirement 文字列から配布名だけを取り出す。"""
-    return {re.split(r"[<>=!~\[; ]", requirement, maxsplit=1)[0].strip() for requirement in requirements}
+    return {
+        re.split(r"[<>=!~\[; ]", requirement, maxsplit=1)[0].strip() for requirement in requirements
+    }
 
 
 def _parse_requirements_file(filename: str) -> set[str]:
     text = (REPO_ROOT / filename).read_text(encoding="utf-8")
     return _distribution_names(
-        [
-            line
-            for line in text.splitlines()
-            if line.strip() and not line.startswith("#")
-        ]
+        [line for line in text.splitlines() if line.strip() and not line.startswith("#")]
     )
 
 
@@ -137,19 +146,42 @@ def test_declared_dependencies_are_importable():
             pytest.fail(f"宣言済み依存 {dist_name} ({module_name}) を import できない: {exc}")
 
 
+def _ttf_fonts() -> list[Path]:
+    """探索先を辞書順に走査して TTF を安定した順序で列挙する。"""
+    found: dict[str, Path] = {}
+    for directory in _FONT_DIRS:
+        for candidate in sorted(Path(directory).expanduser().rglob("*.ttf")):
+            found.setdefault(str(candidate), candidate)
+    return list(found.values())
+
+
 def test_msdf_atlas_builds_without_missing_dependency():
     """フォントアトラス生成が宣言済み依存だけで完了する。"""
-    pytest.importorskip("scipy")
+    try:
+        import scipy
+    except ImportError as exc:
+        pytest.fail(f"宣言済み依存 scipy が import できない: {exc}")
+
     from core.msdf_atlas import MSDFAtlas
 
-    font = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
-    if not font.exists():
-        pytest.skip("システムに TTF フォントが無い")
+    fonts = _ttf_fonts()
+    if not fonts:
+        pytest.fail("TTF フォントが 1 つも無い: " + " / ".join(_FONT_DIRS) + " を導入する")
 
-    atlas = MSDFAtlas(64, 2)
-    atlas.generate_atlas(str(font), "Hello naRou", 16, 2)
-    assert atlas.glyphs, "アトラスにグリフが1つも登録されていない"
-    assert atlas.texture is not None, "アトラステクスチャが生成されていない"
+    rejected = []
+    for font in fonts:
+        atlas = MSDFAtlas(64, 2)
+        try:
+            atlas.generate_atlas(str(font), "Hello naRou", 16, 2)
+        except Exception as exc:  # 候補が実装に対応しないだけなので次へ回す
+            rejected.append(f"{font}: {type(exc).__name__}: {exc}")
+            continue
+        if not atlas.glyphs or atlas.texture is None:
+            rejected.append(f"{font}: グリフまたはテクスチャが空")
+            continue
+        return
+
+    pytest.fail("どの TTF からもアトラスを生成できなかった:\n" + "\n".join(rejected))
 
 
 def test_python_dash_m_game_opens_the_menu():
@@ -160,16 +192,60 @@ def test_python_dash_m_game_opens_the_menu():
 
 
 def test_menu_option_one_enters_the_game_in_text_mode():
-    """README の手順通り: メニュー 1 番でゲームループに入れる。"""
+    """README の手順通り: メニュー 1 番でゲームループに入れる。
+
+    1 番は `prompt_accessibility()` -> `game.main()` を呼び、`game.main()` は
+    `engine.main()` の図形ループへ入る。SDL を殺すと例外ハンドラが
+    `get_text_mode_enabled()` を見てテキストモードへ落とす。
+
+    `prompt_accessibility()` が触るのは色覚と難易度だけで `accessibility.text_mode` を
+    書かないため、テキストモードは `feature_flags.set_text_mode_enabled()`（
+    `get_text_mode_enabled()` が最初に見る方）で有効化してからメニューを起動する。
+    """
     result = _run(
-        ["main.py"],
-        stdin="1\n\n\nq\n",
-        env_overrides={"NAROU_FORCE_TEXT": "1"},
+        [
+            "-c",
+            "import feature_flags; feature_flags.set_text_mode_enabled(True); import main; main.main()",
+        ],
+        stdin="1\n\n\nq\n0\n",
+        env_overrides={"SDL_VIDEODRIVER": "__invalid__", "NAROU_FORCE_TEXT": ""},
     )
     combined = result.stdout + result.stderr
     assert result.returncode == 0, combined
     assert "重大なエラー" not in combined, combined
     assert "module 'game' has no attribute 'main'" not in combined, combined
+    assert _MENU_ONE_LAUNCH in combined, combined
+    assert _SDL_TEXT_MODE_FALLBACK in combined, combined
+    assert _TEXT_MODE_GUIDE in combined, combined
+
+
+def test_menu_other_choices_never_enter_the_game_loop():
+    """メニュー 0/3 番ではゲームループに入らないことの対照群。"""
+    for choice, stdin in (("3", "3\n\n\nq\n0\n"), ("0", "0\n")):
+        result = _run(
+            [
+                "-c",
+                "import feature_flags; feature_flags.set_text_mode_enabled(True); import main; main.main()",
+            ],
+            stdin=stdin,
+            env_overrides={"SDL_VIDEODRIVER": "__invalid__", "NAROU_FORCE_TEXT": ""},
+        )
+        combined = result.stdout + result.stderr
+        assert result.returncode == 0, combined
+        assert _MENU_ONE_LAUNCH not in combined, combined
+        assert _SDL_TEXT_MODE_FALLBACK not in combined, combined
+
+
+def test_game_main_text_mode_is_selected_by_command_line_flag():
+    """`narou --text` は main() を引数なしで呼ぶため sys.argv から判定される。"""
+    result = _run(
+        ["-c", "import game; game.main()", "--text"],
+        stdin="q\n",
+        env_overrides={"SDL_VIDEODRIVER": "__invalid__", "NAROU_FORCE_TEXT": ""},
+        timeout=45,
+    )
+    combined = result.stdout + result.stderr
+    assert result.returncode == 0, combined
     assert _TEXT_MODE_GUIDE in combined, combined
 
 

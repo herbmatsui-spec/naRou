@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import os
+import sys
 
 from naRou.engine import Engine
 
@@ -25,7 +26,11 @@ def _text_mode_requested(argv: list[str] | None) -> bool:
 
     `run.py` はヘッドレス Linux を検出した時点で `NAROU_FORCE_TEXT=1` を設定する。
     """
-    if argv is not None and "--text" in argv:
+    if argv is None:
+        # コンソールスクリプトは `main()` を引数なしで呼ぶので、自身は syscall の
+        # 引数を見ずに --text を受け 取れない。ここでは sys.argv へ委譲する。
+        argv = sys.argv[1:]
+    if "--text" in argv:
         return True
     return os.environ.get("NAROU_FORCE_TEXT", "").strip().lower() in _TRUTHY
 
