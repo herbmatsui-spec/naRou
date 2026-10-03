@@ -18,11 +18,13 @@
 
 from __future__ import annotations
 
+import ast
 import inspect
 import json
 import os
 import random
 import sys
+import textwrap
 
 import pytest
 
@@ -65,6 +67,13 @@ FAIR_MATCHUPS = (
 # 実装がどのシグネチャ／どのデータ形を取るかは実装次第なので、複数試す。
 OUT_OF_RANGE_HIGH = 99999
 OUT_OF_RANGE_LOW = 1
+
+# 「実戦ループ」であって「アリーナ近似」ではないことを判定するための目印。
+# 実エンジン側の呼び出し名 (engine/engine.py) と、
+# 両者が互いを直接叩いてしまう場合に現れる呼び出し名。
+PLAYER_ACTION_HOOKS = ("player_act",)
+WORLD_ADVANCE_HOOKS = ("advance_world", "process_ai")
+BARE_ARENA_CALL = "calculate_melee_attack"
 
 
 # ---------------------------------------------------------------------------
@@ -357,6 +366,49 @@ def test_committed_balance_report_is_not_stale(fresh_validation):
 # ---------------------------------------------------------------------------
 
 
+def _analyze_calls(cls: type) -> tuple[dict[str, set[str]], dict[str, set[str]]]:
+    """クラス内のメソッドが呼び出ている名前を集める (AST ベース)。
+
+    戻り値は ``(全メソッド→呼び出し名, ``self`` への呼び出し名)``。
+    コメントと docstring は AST に現れないので、ソース文字列の ``count`` と
+    違って「書いただけ」で判定を満たさない。
+    """
+    tree = ast.parse(textwrap.dedent(inspect.getsource(cls)))
+    calls: dict[str, set[str]] = {}
+    local: dict[str, set[str]] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef):
+            continue
+        called: set[str] = set()
+        on_self: set[str] = set()
+        for inner in ast.walk(node):
+            if not isinstance(inner, ast.Call):
+                continue
+            func = inner.func
+            if isinstance(func, ast.Attribute):
+                called.add(func.attr)
+                if isinstance(func.value, ast.Name) and func.value.id == "self":
+                    on_self.add(func.attr)
+            elif isinstance(func, ast.Name):
+                called.add(func.id)
+        calls[node.name] = called
+        local[node.name] = on_self
+    return calls, local
+
+
+def _reachable_methods(calls: dict[str, set[str]], root: str) -> set[str]:
+    """``root`` から呼び出し経由で到達できるメソッド名 (``root`` 自身を含む)。"""
+    seen: set[str] = set()
+    pending = [root]
+    while pending:
+        name = pending.pop()
+        if name in seen or name not in calls:
+            continue
+        seen.add(name)
+        pending.extend(calls[name])
+    return seen
+
+
 def test_simulate_battle_is_not_a_bare_arena():
     """``simulate_battle`` が敵 AI と turn ベース自然回復を含む実戦ループであること。
 
@@ -364,27 +416,40 @@ def test_simulate_battle_is_not_a_bare_arena():
     敵の AI 行動選択と、自然回復（S2.2 の turn ベース規則）を入れ…
     専用のアリーナ近似（両者が ``calculate_melee_attack`` を交互に呼ぶだけ）はやめる」
 
-    **これは弱めたバックストップである。**
-    ``simulate_battle`` の戻り値スキーマには回復量の計測欄が無く、
-    「自然回復が作用した」ことを数値として安定的に観測できる指標が現状存在しない
-    （回復量・総回復ターン数などが公開されていないため、テスト側で閾値を決めてしまうと
-    実装側の判定基準と二重に持つことになり、実装の都合に合わせて
-    テストが通ってしまう危険がある）。
-    そのため、既知の目印——両者が ``calculate_melee_attack`` を交互に呼ぶだけの
-    アリーナ実装——が消えていることをソースで検証するにとどめる。
-    実戦ループを別モジュールへ切り出した場合などには追随できない弱い保証である。
+    判定はソース文字列ではなく **AST の呼び出し位置** で行う。
+    ``inspect.getsource`` の ``str.count`` では、コメントや docstring に
+    メソッド名を書いておくだけで通ってしまう (``calculate_melee_attack`` の
+    出現回数が 0 でも ``< 2`` は成立する)。AST ならコメントは解析対象にならない。
+
+    さらに ``simulate_battle`` から**到達できる**メソッドだけを調べるので、
+    呼ばれていない残骸メソッドに呼び出しを追加しても通らない。
+    実戦ループの入口 (``player_act`` と世界進行) は ``self`` 以外への呼び出しを
+    要求するため、ローカルに同名メソッドを定義して凌ぐこともできない。
+
+    数値として観測できない指標 (自然回復の実効量など) は計測側で公開されていないため、
+    ここが構造の保証である。実戦ループの実挙動は
+    ``test_balance_simulator_execution`` (被与ダメージ比) が数値で押さえる。
     """
-    source = inspect.getsource(BalanceSimulator)
+    calls, local = _analyze_calls(BalanceSimulator)
+    reachable = _reachable_methods(calls, "simulate_battle")
 
-    arena_sites = source.count("calculate_melee_attack")
+    for label, hooks in (
+        ("プレイヤー行動", PLAYER_ACTION_HOOKS),
+        ("世界進行 (敵 AI と自然回復)", WORLD_ADVANCE_HOOKS),
+    ):
+        called = sorted(
+            hook for hook in hooks if any(hook in calls[name] - local[name] for name in reachable)
+        )
+        assert called, (
+            f"simulate_battle から到達できるコードが実戦ループの{label}の入口 "
+            f"({' / '.join(hooks)}) を誰も呼んでいない。"
+            " マップ・敵 AI・turn 進行を含まないアリーナ計算のままである。"
+        )
+
+    # 両者が直接 ``calculate_melee_attack`` を叩き合うアリーナ近似は禁止。
+    arena_sites = sum(1 for name in reachable if BARE_ARENA_CALL in calls[name])
     assert arena_sites < 2, (
-        f"simulate_battle 側に calculate_melee_attack の呼び出しが {arena_sites} 箇所ある。"
-        " 両者が互いを直接叩くアリーナ近似のままで、実戦ループ（敵 AI・自然回復）を含んでいない。"
-    )
-
-    real_loop_hooks = ("advance_world", "player_act", "process_ai")
-    assert any(hook in source for hook in real_loop_hooks), (
-        "BalanceSimulator に実戦ループの入口（"
-        f"{' / '.join(real_loop_hooks)} のいずれか）への呼び出しが無い。"
-        " マップ・敵 AI・turn 進行を含まないアリーナ計算のままである。"
+        f"simulate_battle から到達できるコードに {BARE_ARENA_CALL} の呼び出しが "
+        f"{arena_sites} 箇所ある。"
+        " 両者が互いを直接叩くアリーナ近似のままで、実戦ループを含んでいない。"
     )

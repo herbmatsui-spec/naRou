@@ -32,6 +32,12 @@ reincarnation:
 simulation:
   # これ以上のターンで終わらない戦闘は「膠着」とみなす ( Stall )。
   max_turns: 100
+  # 経済計測の実行条件。実ダンジョン1階をこのレベルのプレイヤーが全撃破するまでの
+  # 獲得ゴールドを「1 フロアあたりの獲得ゴールド」として実測する。
+  # 階と GOLD は計測ごとに初期状態へ戻すので、この値は試行回数に依存しない。
+  economy_floor_run:
+    player_level: 1
+    max_turns: 2000
 
 judgement:
   # 勝率が期待値から許容する乖離。

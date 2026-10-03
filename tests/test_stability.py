@@ -21,7 +21,7 @@ def test_balance_simulator_execution(tmp_path):
     assert "win_rate" in res
     assert "avg_turns" in res
     # 計測器は結果を PASS に固定してはならない。Lv1 スライムは現状 100% 勝利で、
-    # しかもプレイヤーに实质的なダメージが通らない (被与ダメージ比が下限未満) ため
+    # しかもプレイヤーに実質的なダメージが通らない (被与ダメージ比が下限未満) ため
     # 「バランス良好」ではない。以前はここが常に真だった。
     assert res["win_rate"] == 1.0
     assert not res["is_balanced"], res["unbalanced_reasons"]
