@@ -1,14 +1,41 @@
 ---
 feature: run-end-state
-status: designed
+status: delivered
 updated: 2026-10-04
 branch: feature/run-end
-commits:
+commits: 46ee71d..7c2ad69
 ---
 
 # 案A ゲームを「終わらせる」
 
 ## Report
+
+**What was built** — ゲームを「終わらせる」状態にした。`GameState.GAME_OVER` は定義のみで代入が 0 件で、死亡しても世界は動き続けていた。死の判定を turn 進行の入口 `Engine.advance_world` に集約し、攻撃元の種類に依存させずに GAME_OVER へ遷移させ、到達深度・撃破数・喰いスキル数・経過ターン・死因・経過時間を持つ run summary を提示する。集計は `dungeon_level`・`player.kill_counts`・`world_a_data["skills"]`・`turns` という既存 state から引き、死因のみを新たな状態とした。
+
+同時に、`self.turns += 1` が `advance_world` と `update()` の 2 箇所にあり、vsync が毎フレーム `update()` を呼ぶため `turns` はフレーム数で増えていた。これを直し、自然回復・オートセーブ・世界ニュース・派閥影響の各種 `turns % N` ゲートを実際のターン周期に戻した。副産物として、オートセーブは修正前 300 フレーム≒5 秒ごとだったのが 300 ターンごとになった。
+
+さらに、バランス計測が結果を PASS に固定していた問題を直した。`check_standards` は YAML をロードして一切参照せず常に PASS を返し、`simulate_battle` は両者が互いを叩くアリーナ近似だった。基準値の照合と実戦ループ（敵 AI・turn ベース自然回復）を入れ、判定基準を YAML に移した。
+
+**Verification** — 本ブランチで実行し、成功した。
+
+```
+pytest tests/test_run_end.py -q                 PASS — 10 passed in 2.56s
+pytest tests/test_balance_report_honesty.py     PASS — 6 passed
+pytest tests/test_stability.py -q               PASS — 5 passed in 24.17s
+pytest tests/ -q                                 PASS（既知の失敗 15 件）— 15 failed, 652 passed in 148.06s
+ruff check（変更 6 ファイル）                     PASS
+```
+
+ベースラインは 15 failed / 636 passed。636 に新規 16 件を加えて 652 passed で、失敗の 15 件はバイト単位で同一（プレースホルダデータ由来の既知の失敗）。再生成した `balance_report.json` は `summary: WARNINGS_DETECTED`、3 シナリオ全て `is_balanced: false` であり、基準違反 5 件を列挙する。うち経済は実測 6700 G（基準 5000 超過）で、測定方法はレポート内に `method` として記録されている。
+
+**Journey log**
+
+- 計測器が嘘をついていると、他のあらゆる調整が測定できない。`is_balanced` は偏っていたどころか無条件であり、プレイヤーが 100% 負ける Lv1 対 minotaur でも `true` を返していた。**まず直すべきはゲームではなく計測器** だった。
+- 蓄積された値を「1 フロアあたり」とラベル付けすると、値は測定努力の関数になる。`acquire_world()` が Engine をプロセス内でメモ化し、`_prepare_trial` が gold をリセットしないため、批次差分は 90 戦の累積だった。試料数を変えても値が動かないことを確認することが、捏造の検出条件になる。
+- 仕様書が「idle フレームで回復occurring」としていたのは不正確だった。実際は自然回復のブロックが `advance_world()` の中にあり、.inflate したカウンタによって回復が正しい呼び出しに乗らないという症状だった。実装中に判明したため仕様を訂正文に直した。
+- 死因ラベルの最小限の修正（turn ごとにリセット）は機能しなかった。死亡判定が `advance_world` の先頭にあるため、致命的ターンでは観測窓を開く前に死んでいる。リセットを死亡判定より前に置くと逆に全モンスター死因が「不明」になる。「観測された HP のままか」で有効性を判定する方法が正しく、包袋的に未計測のダメージ経路をすべてカバーした。
+- 自然回復ブロックに `hp > 0` ガードが無く、倒れたプレイヤーを同じ呼び出し内で回復していた。死因記録を乱す潜在バグとして併せて修正した。
+
 
 ## [S1] Problem
 
@@ -25,9 +52,9 @@ commits:
 - `engine/engine.py:1474` — `advance_world()` の中。処理済みで正しい。
 - `engine/engine.py:2114` — `Engine.update()` の中。vsync ループが入力を読む前に毎フレーム無条件に呼ぶため、これによって `turns` は 1 プレイヤーアクションあたり数フレームだけ増える。
 
-このため、自然回復の条件 `self.turns % NATURAL_REGEN_INTERVAL == 0` (`engine/engine.py:1483`) は、入力待ち時間を含めても概ね 10 フレームごとに成立する。待ち時間だけで全回復する。`).natural_regen` は毎戦前後に実質全快になり、消耗を設計できない。
+このため、自然回復の条件 `self.turns % NATURAL_REGEN_INTERVAL == 0` (`engine/engine.py:1483`) が正しいターン間隔ではなく成立する。自然回復のブロック自体は `advance_world()` の中にあり `update()` には無いので、idle フレームが回復を起こすのではなく、膨張したカウンタによって回復が正しい `advance_world` の呼び出しに乗らないことが症状である。`).natural_regen` は毎戦前後に実質全快になり、消耗を設計できない。
 
-同じ誤りは 50 ターンごとのオートセーブ (`engine/engine.py:1497` 付近) にも波及しており、実際には 50 フレームごとである。
+同じ誤りはオートセーブにも波及する。`AUTO_SAVE_INTERVAL = 300` (`constants.py:345`) はコメント上は秒だが比較対象は `engine.turns` のため設計上は 300 ターンであり、修正前は 300 フレーム≒5 秒ごとに発火していた。
 
 ### S1.3 バランス計測が測定結果を PASS に固定している
 
@@ -69,8 +96,9 @@ commits:
 - `simulate_battle` は実際の戦闘ループの要素を含める。敵の AI 行動選択と、自然回復（S2.2 の turn ベース規則）を入れ、毎フレーム全快する状況を再現できるようにする。専用のアリーナ近似（両者が `calculate_melee_attack` を交互に呼ぶだけ）はやめる。
 - 与被ダメージ比が想定を大きく下回る、もしくは勝率が 1.0 に張り付く場合は FAIL とする。「絶対勝利」を PASS と扱わない。
 - 判定基準（勝率の許容範囲、ダメージ比の下限、one-shot 率の上限）を YAML に置き、コードに埋めない。既存の `expected_win_rate` は既にシナリオ定義にあるため、その形式をそのまま拡張する。
+- 経済基準 `economy.max_gold_per_dungeon_floor` は「実ダンジョン1階を全撃破するまでの獲得ゴールド」を実測する。計測用エンジンはプロセス内でメモ化されるため、批次の差分を1フロアの値として使うことはできない。試料数に比例して増える値を基準違反として報告してはならない。1階がクリアできない場合は値を返さず、理由を記録する。
 
-契約: 現状の数値で走らせると PASS にならない / 明示的に偏った 상황을渡すと FAIL になる / `check_standards` が YAML の基準値への違反を `issues` に列挙する。
+契約: 現状の数値で走らせると PASS にならない / 明示的に偏った状況を渡すと FAIL になる / `check_standards` が YAML の基準値への違反を `issues` に列挙する。
 
 ### S2.4 リグレッション防止テスト
 
@@ -88,8 +116,8 @@ commits:
 
 ## Tasks
 
-- [ ] T1: 死の判定を `advance_world` に集約し、`GameState.GAME_OVER` 遷移と run summary を実装する — acceptance: プレイヤー HP を 0 にすると current_state が GAME_OVER になり、その後の advance_world で turn が増えず、summary に到達深度/撃破数/経過ターンが含まれる (covers: S2.1)
-- [ ] T2: `Engine.update()` の `turns += 1` を削除し、ターンカウントを `advance_world` のみに紐づける — acceptance: update() を何度呼んでも turn が増えず、advance_world() を 1 回呼ぶと 1 増え、自然回復が NATURAL_REGEN_INTERVAL ターンごとにのみ成立する (covers: S2.2)
-- [ ] T3: `BalanceChecker.check_standards` を `data/balance_standards.yaml` に対して実装し、`simulate_battle` に敵 AI と turn ベース自然回復を含めて判定基準を YAML 化する — acceptance: 現状の数値で PASS が返らず、意図的に偏った入力では FAIL が返り、YAML 違反が issues に列挙される (covers: S2.3)
-- [ ] T4: リグレッション防止テスト `tests/test_run_end.py` と `tests/test_balance_report_honesty.py` を追加する — acceptance: 各テストが S2.1〜S2.3 の不具合を再現する形で失敗し、T1〜T3 適用後は全て成功する (covers: S2.1, S2.2, S2.3)
-- [ ] T5: `balance_report.json` / `balance_report.html` を再生成し、値を実測に合わせる — acceptance: 再実行の結果が「PASS を返さない」結果を表しており、コミット済みレポートの summary が `run_full_validation` の戻り値と一致する (covers: S2.3)
+- [x] T1: 死の判定を `advance_world` に集約し、`GameState.GAME_OVER` 遷移と run summary を実装する — acceptance: プレイヤー HP を 0 にすると current_state が GAME_OVER になり、その後の advance_world で turn が増えず、summary に到達深度/撃破数/経過ターンが含まれる (covers: S2.1)
+- [x] T2: `Engine.update()` の `turns += 1` を削除し、ターンカウントを `advance_world` のみに紐づける — acceptance: update() を何度呼んでも turn が増えず、advance_world() を 1 回呼ぶと 1 増え、自然回復が NATURAL_REGEN_INTERVAL ターンごとにのみ成立する (covers: S2.2)
+- [x] T3: `BalanceChecker.check_standards` を `data/balance_standards.yaml` に対して実装し、`simulate_battle` に敵 AI と turn ベース自然回復を含めて判定基準を YAML 化する — acceptance: 現状の数値で PASS が返らず、意図的に偏った入力では FAIL が返り、YAML 違反が issues に列挙される (covers: S2.3)
+- [x] T4: リグレッション防止テスト `tests/test_run_end.py` と `tests/test_balance_report_honesty.py` を追加する — acceptance: 各テストが S2.1〜S2.3 の不具合を再現する形で失敗し、T1〜T3 適用後は全て成功する (covers: S2.1, S2.2, S2.3)
+- [x] T5: `balance_report.json` / `balance_report.html` を再生成し、値を実測に合わせる — acceptance: 再実行の結果が「PASS を返さない」結果を表しており、コミット済みレポートの summary が `run_full_validation` の戻り値と一致する (covers: S2.3)
