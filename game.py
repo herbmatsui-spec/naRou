@@ -28,7 +28,7 @@ def _text_mode_requested(argv: list[str] | None) -> bool:
     """
     if argv is None:
         # コンソールスクリプトは `main()` を引数なしで呼ぶので、自身は syscall の
-        # 引数を見ずに --text を受け 取れない。ここでは sys.argv へ委譲する。
+        # 引数を見ずに --text を受け取れない。ここでは sys.argv へ委譲する。
         argv = sys.argv[1:]
     if "--text" in argv:
         return True

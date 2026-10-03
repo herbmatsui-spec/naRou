@@ -12,14 +12,12 @@ fresh clone・wheel・worktree のいずれでも解決できなかった。`__p
 
 この内容は `<root>/naRou/__init__.py` と `<root>/__init__.py` の 2 か所に同一で存在する。
 `[tool.setuptools.package-dir] naRou = "."` により両者は wheel 上で同じ `naRou/__init__.py`
-に重なり、どちらが採用されるかは setuptools の走査順に依存する。内容を揃えることで採用順に
-依存しなくなるため、編集時は必ず両方を同期させること
-(`tests/test_narou_package_init.py` が一致を検証する)。
+に重なる。`package-dir` は配置先のリポジトリルートを指すため、実際に wheel に載るのは
+ルートのファイル側である。両者を同一に保ち、編集時に片方だけ直して乖離しないよう、
+その一致自体をテストで固定する (`tests/test_narou_package_init.py`)。
 
-パッケージの `__init__.py` として読まれれば `__path__` があるが、pytest はリポジトリの
-パッケージ階層の親としてルートの `__init__.py` を素のモジュール `__init__` として読み込む
-ため、`__path__` を持たないまま実行されることがある。名前空間を伸ばす対象が無いので、その
-場合は何もしない。
+パッケージの `__init__.py` として読まれれば `__path__` がある。素のモジュールとして読まれた
+場合は `__path__` が定義されておらず、伸ばす先の名前空間が存在しないため何もしない。
 """
 
 from __future__ import annotations

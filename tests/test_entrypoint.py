@@ -147,7 +147,7 @@ def test_declared_dependencies_are_importable():
 
 
 def _ttf_fonts() -> list[Path]:
-    """探索先を辞書順に走査して TTF を安定した順序で列挙する。"""
+    """探索先ディレクトリの順に走査し、各ディレクトリ内で辞書順に TTF を列挙する。"""
     found: dict[str, Path] = {}
     for directory in _FONT_DIRS:
         for candidate in sorted(Path(directory).expanduser().rglob("*.ttf")):
@@ -220,7 +220,12 @@ def test_menu_option_one_enters_the_game_in_text_mode():
 
 
 def test_menu_other_choices_never_enter_the_game_loop():
-    """メニュー 0/3 番ではゲームループに入らないことの対照群。"""
+    """メニュー 0/3 番ではゲームループに入らないことの対照群。
+
+    対照群が空振りしないよう、3 番が実際に `main_text` まで到達したことと、0 番が
+    何も起動しなかったことをを確認する。3 番も同じガイド文字列を出すため、ここでは
+    `falling back to text mode`（1 番だけの経路）が現れないことを対照の根拠にする。
+    """
     for choice, stdin in (("3", "3\n\n\nq\n0\n"), ("0", "0\n")):
         result = _run(
             [
@@ -234,6 +239,7 @@ def test_menu_other_choices_never_enter_the_game_loop():
         assert result.returncode == 0, combined
         assert _MENU_ONE_LAUNCH not in combined, combined
         assert _SDL_TEXT_MODE_FALLBACK not in combined, combined
+        assert (_TEXT_MODE_GUIDE in combined) is (choice == "3"), combined
 
 
 def test_game_main_text_mode_is_selected_by_command_line_flag():

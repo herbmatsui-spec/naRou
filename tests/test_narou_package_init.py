@@ -227,11 +227,9 @@ def test_candidate_inits_are_byte_identical() -> None:
 def test_guard_survives_import_as_a_plain_module(init_source: Path) -> None:
     """素のモジュールとして読んでも例外を出さない（`__path__` が無い実行を許容する）。
 
-    `tests/` がリポジトリの `__init__.py` を親パッケージに持つため、pytest は
-    `init_mod = importtestmodule(self.path / "__init__.py")` でルートの `__init__.py` を
-    素のモジュール `__init__` として読み込む（`_pytest/python.py` の Package.setup）。
-    このとき `__path__` は定義されておらず、ガードがそれに触れると `tests/` 配下の
-    全テストが collection error になる。
+    ルートの `__init__.py` はパッケージの `__init__.py` として之外の文脈（親パッケージを
+    持つ階層からの読み込みなど）で素のモジュールとして実行されることがある。そのとき
+    `__path__` は定義されておらず、ガードがそれに触れると collection error になる。
     """
     spec = importlib.util.spec_from_file_location(
         "narou_init_plain_module_probe",
