@@ -26,3 +26,20 @@ skills:
 
 reincarnation:
   max_stat_growth_factor_per_cycle: 1.5
+
+# --- 計測器が使う判定基準 (S2.3) ---
+# 閾値はコードに埋め込まず、ここだけを参照する。
+simulation:
+  # これ以上のターンで終わらない戦闘は「膠着」とみなす ( Stall )。
+  max_turns: 100
+
+judgement:
+  # 勝率が期待値から許容する乖離。
+  win_rate_tolerance: 0.3
+  # 期待勝率が 1.0 未満のシナリオで勝率がここに張り付いたら「絶対勝利」とみなして FAIL とする。
+  absolute_victory_win_rate: 1.0
+  # 被与ダメージ比 (与ダメージ / 被ダメージ) の下限。
+  # 相手の寄与がこれを下回る戦闘は「一方的な殴り合い」であって平衡の証拠ではない。
+  min_damage_taken_ratio: 0.1
+  # 一撃で倒し切る・一撃で倒される戦闘の割合の上限。
+  max_one_shot_rate: 0.1
