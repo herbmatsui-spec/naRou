@@ -67,6 +67,14 @@ from localization_manager import LocalizationManager
 from logging_config import configure_logging
 from map_engine import GameMap
 from renderer import Renderer, get_renderer, set_renderer
+from run_summary import (
+    CAUSE_COMBAT,
+    CAUSE_HUNGER,
+    CAUSE_SELF,
+    CAUSE_UNKNOWN,
+    GAME_OVER_TITLE,
+    RunSummary,
+)
 from skill_tree_system import SkillTreeManager
 from sound_manager import SoundManager
 from system_coordinator import SystemCoordinator
@@ -143,6 +151,10 @@ class Engine:
         # Stub registry for faction war to satisfy references in tests/benchmarks
         self.faction_war_registry = {}
         self.game_state_data = self.game_state_initializer.initialize_world_state()
+
+        # --- run 終了状態 (死亡判定と run summary) ---
+        self.run_summary: RunSummary | None = None
+        self._harm_cause: str = CAUSE_UNKNOWN
 
         # --- エンティティマネージャーに初期エンティティを追加 ---
         self.entity_manager.add_entity(self.game_state_data.player)
@@ -1465,9 +1477,55 @@ class Engine:
         for m in msgs:
             self.log(m, (255, 215, 0), level="SUCCESS")
 
+    def _end_run_if_player_dead(self) -> bool:
+        """死亡を判定して run を終了させる (docs/compose/spec/run-end-state.md [S2.1])
+
+        判定を turn 進行の入口に置くことで、攻撃元の種類に依存せず死を捕捉する。
+        既に GAME_OVER のときは何もせず True を返す (冪等)。
+        """
+        if self.current_state is GameState.GAME_OVER:
+            return True
+        if self.player.hp > 0:
+            return False
+
+        self.current_state = GameState.GAME_OVER
+        self.game_state = "game_over"  # 旧互換文字列 (render はこの文字列で分岐する)
+        self.run_summary = self._build_run_summary()
+        self._present_run_summary(self.run_summary)
+        return True
+
+    def _build_run_summary(self) -> RunSummary:
+        """run summary を組み立てる。値は既存の state から引く ([S2.1] 追跡機構を増やさない)"""
+        clock = self.time_system.world_clock
+        return RunSummary(
+            depth=self.dungeon_level,
+            kills=sum(self.player.kill_counts.values()),
+            devoured_skills=len(self.game_state_data.world_a_data.get("skills", ())),
+            turns=self.turns,
+            # 旧セーブは __init__ を通らず pickle 復元されるため getattr で読む
+            cause=getattr(self, "_harm_cause", CAUSE_UNKNOWN),
+            elapsed_minutes=clock.total_ticks // clock.config.ticks_per_minute,
+        )
+
+    def _present_run_summary(self, summary: RunSummary) -> None:
+        """run summary をログへ提示する (画面描画は render の game_over 分岐)"""
+        self.log(GAME_OVER_TITLE, (255, 50, 50), level="WARNING")
+        for line in summary.format_lines():
+            self.log(line, COLOR_GOLD_YELLOW, level="WARNING")
+
     def advance_world(self) -> None:
-        """速度Tick制による全NPCターン処理 (GameplayPackage 経由)"""
+        """速度Tick制による全NPCターン処理 (GameplayPackage 経由)
+
+        死亡判定を turn 進行の入口に集約する ([S2.1])。GAME_OVER 後は世界も turn も進めない。
+        """
+        if self._end_run_if_player_dead():
+            return
+
+        # 死因の区分は turn 進行中の観測点で行う ([S3] 細分類は対象外)
+        hp_before = self.player.hp
         self.gameplay_loop(self.kernel, self).advance_world()
+        if self.player.hp < hp_before:
+            self._harm_cause = CAUSE_HUNGER if self.survival.hunger <= 0 else CAUSE_COMBAT
 
         # 以下は Engine 固有の処理（自然回復、世界ニュース、オートセーブ等）
         # 自然回復(出血中は停止: ステップ45)
@@ -1623,14 +1681,12 @@ class Engine:
                 self.event_bus, dmg, target.x, target.y, is_crit, target.hp <= 0
             )
             self.log(msg, (255, 100, 100))
-            if target.hp <= 0:
-                if target == self.player:
-                    self.log("★あなたは力尽きた… 【GAME OVER】", (255, 50, 50))
-                elif target == self.pet:
-                    self.log("【悲痛】シエル「お兄ちゃん…ごめんね…」", (255, 80, 150))
-                    if hasattr(self.pet, "pet_ai"):
-                        self.pet.pet_ai.increase_bond(-50, "defeated")
-                    CombatSystem.publish_kill_event(self.event_bus, target.x, target.y)
+            # プレイヤーの死亡は advance_world 入口の判定に集約済み ([S2.1])
+            if target.hp <= 0 and target == self.pet:
+                self.log("【悲痛】シエル「お兄ちゃん…ごめんね…」", (255, 80, 150))
+                if hasattr(self.pet, "pet_ai"):
+                    self.pet.pet_ai.increase_bond(-50, "defeated")
+                CombatSystem.publish_kill_event(self.event_bus, target.x, target.y)
         elif dist <= 8 and can_see:
             blocked = self.get_blocked_positions()
             path = AStar.get_path(
@@ -1715,6 +1771,7 @@ class Engine:
         success, backlash = CombatSystem.calc_spell_success(self.player, "fireball")
         if not success:
             self.player.hp -= backlash
+            self._harm_cause = CAUSE_SELF
             SoundManager.play_se("hit")
             self.floating_texts.append(
                 FloatingText(f"-{backlash}", self.player.x, self.player.y - 0.2, (255, 80, 80))
@@ -1893,6 +1950,7 @@ class Engine:
                         (200, 100, 100),
                     )
                     self.player.hp -= 1
+                    self._harm_cause = CAUSE_SELF
         if total_tips > 0:
             self.survival.gold += total_tips
             self.log(f"★演奏の報酬合計: {total_tips}G！", COLOR_GOLD_YELLOW)
@@ -2111,7 +2169,7 @@ class Engine:
         if hasattr(self, "game_map"):
             self.game_map.update_animations(delta_time)
 
-        self.turns += 1
+        # turn counter は advance_world() のみで増やす (vsync の毎フレーム呼び出しでは進めない)
 
     def render(self, console: Any) -> None:
         """描画処理 (ゲームロジックを含まない)"""
@@ -2131,6 +2189,14 @@ class Engine:
             y = 1
             for line in job_text.splitlines():
                 console.print(x=1, y=y, string=line, fg=(255, 255, 255))
+                y += 1
+            return
+        if self.game_state_data.game_state == "game_over":
+            console.print(x=1, y=1, string=GAME_OVER_TITLE, fg=(255, 50, 50))
+            summary = getattr(self, "run_summary", None)
+            y = 2
+            for line in summary.format_lines() if summary else []:
+                console.print(x=1, y=y, string=line, fg=COLOR_GOLD_YELLOW)
                 y += 1
             return
 
