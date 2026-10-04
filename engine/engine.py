@@ -81,6 +81,8 @@ from sound_manager import SoundManager
 from system_coordinator import SystemCoordinator
 from ui_fx_systems import FloatingText, Particle, ScreenShake
 
+from .game_state import GameStateMachine
+
 configure_logging()
 
 
@@ -192,6 +194,8 @@ class Engine:
         self.game_state_data = self.game_state_initializer.initialize_world_state()
 
         # --- run 終了状態 (死亡判定と run summary) ---
+        # 文字列を素で持ち回さず、許可された遷移だけを通る状態機械にする (Step 10)
+        self.game_state_machine = GameStateMachine("playing")
         self.run_summary: RunSummary | None = None
         # 死因とその観測時点の HP の対。HP を添えるのは観測点の間で起きた
         # ダメージ (トラップなど) に死因の観測が無かったことを示すため。
