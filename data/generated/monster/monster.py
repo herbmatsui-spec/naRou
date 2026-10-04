@@ -55,6 +55,16 @@ class AiType(Enum):
     support = "support"
 
 
+class AiRole(Enum):
+    """
+    Formation AI role
+    """
+    brute = "brute"
+    kiter = "kiter"
+    flanker = "flanker"
+    support = "support"
+
+
 class MonsterDefinition(DataModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -140,6 +150,10 @@ class MonsterDefinition(DataModel):
     Faction ID for reputation/aggro
     """
     ai_type: AiType | None = None
+    ai_role: AiRole | None = None
+    """
+    Formation AI role. Overrides the name-derived default.
+    """
     resistances: dict[str, int] | None = {}
     """
     Element resistances (fire, cold, lightning, etc.)

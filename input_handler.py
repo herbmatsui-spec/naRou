@@ -42,15 +42,19 @@ from input_actions import (
     PickupAction,
     PlayMusicAction,
     PrayAction,
+    QuitAction,
     SaveAction,
     SkillTreeAction,
     SleepAction,
     StatusAction,
     TalkAction,
+    UseConsumableAction,
     WaitAction,
     WishRodAction,
+    consume_one,
+    read_scroll,
 )
-from item_system import CAT_FOOD, CAT_POTION, CAT_WEAPON
+from item_system import CAT_FOOD, CAT_POTION, CAT_SCROLL, CAT_WEAPON
 from render_system import RenderSystem
 from save_system import SaveSystem
 from sound_manager import SoundManager
@@ -58,6 +62,9 @@ from ui_fx_systems import HelpSystem
 
 if TYPE_CHECKING:
     from game import Engine
+
+# キー記号を変えないロックキー。バインド判定が無意味に失敗するのを防ぐ
+LOCK_MODIFIERS = tcod.event.Modifier.NUM | tcod.event.Modifier.CAPS
 
 
 class InputHandler:
@@ -107,14 +114,12 @@ class InputHandler:
         KS = tcod.event.KeySym
         SHIFT = tcod.event.Modifier.SHIFT
 
-        # 移動 (4方向 + viキー)
+        # 移動。viキーのはずだった [h]/[j] はヘルプ/ジャーナルに譲っている
         move_map = {
             KS.UP: (0, -1),
             KS.K: (0, -1),
             KS.DOWN: (0, 1),
-            KS.J: (0, 1),
             KS.LEFT: (-1, 0),
-            KS.H: (-1, 0),
             KS.RIGHT: (1, 0),
         }
         for key, (dx, dy) in move_map.items():
@@ -123,69 +128,66 @@ class InputHandler:
         # 基本アクション
         reg.register(
             "play",
-            KeyBinding(KS.SPACE, OpenContextMenuAction(), description="コンテキストメニュー"),
+            KeyBinding(KS.SPACE, OpenContextMenuAction, description="コンテキストメニュー"),
         )
-        reg.register("play", KeyBinding(KS.L, LookModeAction(), description="調査モード"))
-        reg.register("play", KeyBinding(KS.G, PickupAction(), description="拾う"))
-        reg.register("play", KeyBinding(KS.QUESTION, HelpAction(), description="ヘルプ"))
-        reg.register("play", KeyBinding(KS.H, HelpAction()))
-        reg.register("play", KeyBinding(KS.F1, HelpAction()))
-        reg.register("play", KeyBinding(KS.SLASH, HelpAction()))
+        reg.register("play", KeyBinding(KS.L, LookModeAction, description="調査モード"))
+        reg.register("play", KeyBinding(KS.G, PickupAction, description="拾う"))
+        reg.register("play", KeyBinding(KS.QUESTION, HelpAction, description="ヘルプ"))
+        reg.register("play", KeyBinding(KS.H, HelpAction, description="ヘルプ"))
+        reg.register("play", KeyBinding(KS.F1, HelpAction, description="ヘルプ"))
+        reg.register("play", KeyBinding(KS.SLASH, HelpAction, description="ヘルプ"))
+        reg.register("play", KeyBinding(KS.E, UseConsumableAction, description="使う (消耗品)"))
 
-        reg.register("play", KeyBinding(KS.PERIOD, WaitAction(), description="待機"))
-        reg.register("play", KeyBinding(KS.D, ActionDevour(), SHIFT, description="喰らう"))
-        reg.register("play", KeyBinding(KS.S, ActionScan(), SHIFT, description="解析"))
+        reg.register("play", KeyBinding(KS.D, ActionDevour, SHIFT, description="喰らう"))
 
-        reg.register(
-            "play",
-            KeyBinding(KS.I, InventoryAction("player"), description="インベントリ"),
-        )
+        reg.register("play", KeyBinding(KS.I, InventoryAction, description="インベントリ"))
         reg.register(
             "play",
             KeyBinding(KS.P, InventoryAction("pet"), SHIFT, description="ペットインベントリ"),
         )
-        reg.register("play", KeyBinding(KS.C, StatusAction(), SHIFT, description="ステータス"))
-        reg.register("play", KeyBinding(KS.J, JournalAction(), description="ジャーナル"))
-        reg.register("play", KeyBinding(KS.J, JobAction(), SHIFT, description="ジョブ"))
+        reg.register("play", KeyBinding(KS.C, StatusAction, SHIFT, description="ステータス"))
+        reg.register("play", KeyBinding(KS.J, JournalAction, description="ジャーナル"))
+        reg.register("play", KeyBinding(KS.J, JobAction, SHIFT, description="ジョブ"))
         reg.register(
             "play",
-            KeyBinding(KS.S, SkillTreeAction(), SHIFT, description="スキルツリー"),
+            KeyBinding(KS.S, SkillTreeAction, SHIFT, description="スキルツリー"),
         )
         reg.register(
             "play",
-            KeyBinding(KS.K, SkillTreeAction(), SHIFT, description="スキルツリー"),
+            KeyBinding(KS.K, SkillTreeAction, SHIFT, description="スキルツリー"),
         )
-        reg.register("play", KeyBinding(KS.G, GuildAction(), SHIFT, description="ギルド"))
-        reg.register("play", KeyBinding(KS.C, CastFireballAction(), description="ファイアボール"))
-        reg.register("play", KeyBinding(KS.B, MineWallAction(), description="壁採掘"))
-        reg.register("play", KeyBinding(KS.M, PlayMusicAction(), description="音楽"))
-        reg.register("play", KeyBinding(KS.P, PrayAction(), description="祈り"))
-        reg.register("play", KeyBinding(KS.O, OfferAltarAction(), description="祭壇捧げ物"))
-        reg.register("play", KeyBinding(KS.T, TalkAction(), description="会話"))
-        reg.register("play", KeyBinding(KS.Z, HarvestAction(), description="採取"))
-        reg.register("play", KeyBinding(KS.W, WishRodAction(), description="願いの杖"))
+        reg.register("play", KeyBinding(KS.G, GuildAction, SHIFT, description="ギルド"))
+        reg.register("play", KeyBinding(KS.C, CastFireballAction, description="ファイアボール"))
+        reg.register("play", KeyBinding(KS.B, MineWallAction, description="壁採掘"))
+        reg.register("play", KeyBinding(KS.M, PlayMusicAction, description="音楽"))
+        reg.register("play", KeyBinding(KS.P, PrayAction, description="祈り"))
+        reg.register("play", KeyBinding(KS.O, OfferAltarAction, description="祭壇捧げ物"))
+        reg.register("play", KeyBinding(KS.T, TalkAction, description="会話"))
+        reg.register("play", KeyBinding(KS.Z, HarvestAction, description="採取"))
+        reg.register("play", KeyBinding(KS.W, WishRodAction, description="願いの杖"))
         reg.register(
             "play",
-            KeyBinding(KS.PERIOD, DescendStairsAction(), SHIFT, description="階段を下りる"),
-        )
-        reg.register(
-            "play",
-            KeyBinding(KS.PERIOD, WaitAction(), description="待機 (1ターン経過)"),
+            KeyBinding(KS.PERIOD, DescendStairsAction, SHIFT, description="階段を下りる"),
         )
         reg.register(
             "play",
-            KeyBinding(KS.COMMA, SleepAction(), description="睡眠 (HP/MP全快 + 時間経過)"),
+            KeyBinding(KS.PERIOD, WaitAction, description="待機 (1ターン経過)"),
         )
-        reg.register("play", KeyBinding(KS.S, SaveAction(), description="セーブ"))
-        reg.register("play", KeyBinding(KS.R, LoadAction(), description="ロード"))
-        reg.register("play", KeyBinding(KS.GRAVE, DebugAction(), description="デバッグ"))
+        reg.register(
+            "play",
+            KeyBinding(KS.COMMA, SleepAction, description="睡眠 (HP/MP全快 + 時間経過)"),
+        )
+        reg.register("play", KeyBinding(KS.S, SaveAction, description="セーブ"))
+        reg.register("play", KeyBinding(KS.R, LoadAction, description="ロード"))
+        reg.register("play", KeyBinding(KS.GRAVE, DebugAction, description="デバッグ"))
+        reg.register("play", KeyBinding(KS.ESCAPE, QuitAction, description="終了"))
         # World A (Skill Eater) 専用アクション (Steps 16-18)
-        reg.register("play", KeyBinding(KS.V, ActionDevour(), description="《喰らい》"))
-        reg.register("play", KeyBinding(KS.X, ActionScan(), description="《解析》"))
+        reg.register("play", KeyBinding(KS.V, ActionDevour, description="《喰らい》"))
+        reg.register("play", KeyBinding(KS.X, ActionScan, description="《解析》"))
         reg.register(
-            "play", KeyBinding(KS.T, ActionSynthesisMenu(), SHIFT, description="《スキル合成》")
+            "play", KeyBinding(KS.T, ActionSynthesisMenu, SHIFT, description="《スキル合成》")
         )
-        reg.register("play", KeyBinding(KS.SEMICOLON, ActionSearch(), description="《秘密検索》"))
+        reg.register("play", KeyBinding(KS.SEMICOLON, ActionSearch, description="《秘密検索》"))
 
         cls._actions_registered = True
 
@@ -196,9 +198,11 @@ class InputHandler:
     def _is_key_match(cls, event: tcod.event.KeyDown, binding: KeyBinding) -> bool:
         if event.sym != binding.key:
             return False
+        # NumLock/CapsLock はキー記号に影響しないので、「無修飾」判定から除外する
+        pressed = event.mod & ~LOCK_MODIFIERS
         if binding.modifiers == 0:
-            return event.mod == 0
-        return (event.mod & binding.modifiers) == binding.modifiers
+            return pressed == 0
+        return (pressed & binding.modifiers) == binding.modifiers
 
     # ------------------------------------------------------------------
     # レジストリ優先の入力処理 (Step 6.3)
@@ -209,8 +213,11 @@ class InputHandler:
         state_name = getattr(engine, "game_state", "play") or "play"
 
         for binding in cls._action_registry.get_bindings(state_name):
-            if cls._is_key_match(event, binding) and binding.action.can_execute(engine):
-                binding.action.execute(engine, event)
+            if not cls._is_key_match(event, binding):
+                continue
+            action = binding.build()
+            if action.can_execute(engine):
+                action.execute(engine, event)
                 return
 
         # レジストリに該当なし → 従来のハンドラへ委譲
@@ -437,7 +444,7 @@ class InputHandler:
                             engine.log(l, (255, 200, 150))
                         if is_pet:
                             engine.log(f"シエルは{itm.name}をモグモグ食べた。", (255, 200, 150))
-                        target_inv.remove_item(itm, count=1)
+                        consume_one(target_inv, itm)
                     elif itm.category == CAT_POTION:
                         target_ent = engine.pet if is_pet else engine.player
                         target_ent.hp = min(target_ent.max_hp, target_ent.hp + itm.heal_amount)
@@ -445,7 +452,11 @@ class InputHandler:
                             f"{target_ent.name}は{itm.name}を飲んだ！ HP+{itm.heal_amount}",
                             (100, 255, 100),
                         )
-                        target_inv.remove_item(itm, count=1)
+                        consume_one(target_inv, itm)
+                    elif itm.category == CAT_SCROLL and not is_pet:
+                        if not read_scroll(engine, itm, target_inv):
+                            return
+                        consume_one(target_inv, itm)
                     engine.player.energy -= ENERGY_THRESHOLD
                     engine.advance_world()
                     engine.game_state = "play"

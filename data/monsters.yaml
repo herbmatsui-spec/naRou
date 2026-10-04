@@ -72,6 +72,7 @@ goblin:
   min_floor: 1
   max_floor: 5
   ai_type: "aggressive"
+  ai_role: "kiter"
   skills: ["throw_stone"]
   attributes:
     strength: 8
@@ -92,6 +93,7 @@ kobold:
   min_floor: 1
   max_floor: 5
   ai_type: "tactical"
+  ai_role: "flanker"
   attributes:
     strength: 7
     endurance: 6

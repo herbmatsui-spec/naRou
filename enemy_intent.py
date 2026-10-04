@@ -120,6 +120,7 @@ def _load_ai() -> None:
 
     _ACTION_GUARDS.update(
         {
+            mod.AbilityAction: _g_ability,
             mod.HealSelfAction: _g_heal,
             mod.FleeAction: _g_flee,
             mod.MeleeAttackAction: _g_melee,
@@ -256,6 +257,19 @@ class _Ctx:
 # ---------------------------------------------------------------------------
 # アクション別の意図予測 (各 execute() の成功条件を副作用なしで判定する)
 # ---------------------------------------------------------------------------
+
+
+def _g_ability(node: Any, ctx: _Ctx):
+    """AbilityAction: 宣言された能力がこのターンに成立するなら攻撃/回復を示す。"""
+    from skill_eater.ai.ai_system import ABILITY_HEAL, usable_ability
+
+    chosen = usable_ability(ctx.entity, ctx.engine)
+    if chosen is None:
+        return None
+    _, spec = chosen
+    if spec.kind == ABILITY_HEAL:
+        return (INTENT_HEAL, None)
+    return (INTENT_ATTACK, (ctx.px, ctx.py))
 
 
 def _g_heal(node: Any, ctx: _Ctx):

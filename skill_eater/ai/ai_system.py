@@ -9,7 +9,7 @@ import random
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from constants import ENERGY_THRESHOLD, Element
+from constants import ENERGY_THRESHOLD, HIT_RATE_BASE, Element
 from core_framework import AStar, BaseSystem, Point
 from systems import (
     STATUS_BLEEDING,
@@ -96,6 +96,15 @@ INTIMIDATE_TICKS = 10
 SUMMON_MINION_CAP = 2
 SUMMON_MINION_REACH = 2
 SUMMON_MINION_MAX_HP = 18
+SUMMON_MINION_NAME = "亡骸"
+# 状態異常の持続 (data/worlds/skill_eater/skills.yaml の duration: 3)
+STATUS_DURATION = 3
+# 投射系の能力は最低でもこの距離から放つ。隣接時は間合いを取る/殴る方に任せる。
+# `CastSpellAction` の射程下限と同じ規矩。
+ABILITY_MIN_RANGED_REACH = 2
+# 魔力吸引は索敵範囲 (= ChaseAction の視界) まで届く。近い相手は追いかけ
+# られるので射程内の魔力吸引は成立しにくい。遠方の相手だけが使える。
+DRAIN_MP_REACH = 8
 
 
 @dataclass(frozen=True)
@@ -103,8 +112,9 @@ class AbilitySpec:
     """モンスター固有能力の実行仕様
 
     reach は「対象が必要になる距離」。0 なら対象は不要 (自身技・召喚) 。
-    power は `CombatSystem.calculate_melee_attack` が解決したダメージに乗せる倍率で、
-    空振り判定・属性耐性・持久力軽減はすべて既存の戦闘計算に従う。
+    reach > 1 の投射系は ABILITY_MIN_RANGED_REACH 以上、reach 以下でだけ成立する。
+    power は近接攻撃の基準ダメージに乗せる倍率。属性耐性の軽減は
+    `CombatSystem.calc_element_damage` に委ねるので、power を先に掛ける。
     """
 
     kind: str
@@ -133,7 +143,7 @@ ABILITY_REGISTRY: dict[str, AbilitySpec] = {
     # --- 自身/対象操作 ---
     "heal_self": AbilitySpec(ABILITY_HEAL, reach=0),
     "steal_gold": AbilitySpec(ABILITY_STEAL_GOLD, reach=5),
-    "drain_mp": AbilitySpec(ABILITY_DRAIN_MP, reach=6),
+    "drain_mp": AbilitySpec(ABILITY_DRAIN_MP, reach=DRAIN_MP_REACH),
     "summon_undead": AbilitySpec(ABILITY_SUMMON, reach=0),
     "roar": AbilitySpec(ABILITY_ROAR, reach=0),
     "intimidate": AbilitySpec(ABILITY_INTIMIDATE, reach=0),
@@ -302,6 +312,273 @@ class CastSpellAction(BehaviorNode):
                 actor.energy -= ENERGY_THRESHOLD
                 return True
         return False
+
+
+def declared_ability_ids(actor) -> tuple[str, ...]:
+    """`data/monsters.yaml` の skills 宣言を、並び順どおりに返す。
+
+    `Entity.skills` は未設定の個体に対してプレイヤーの既定 17 種を生成し、触れた
+    時点で `_skills` にまで書き込む property なので、判定には生値を使う。
+    """
+    declared = getattr(actor, "_skills", None)
+    if declared is None:
+        return ()
+    if isinstance(declared, dict):
+        return tuple(str(key) for key in declared)
+    return tuple(str(getattr(s, "root", s)) for s in declared)
+
+
+def ability_display_name(engine: Engine, skill_id: str) -> str:
+    """宣言スキルの本番表示名。ログは本番データに揃える。"""
+    kernel = getattr(engine, "kernel", None)
+    if kernel is None or not kernel.has_system("data_manager"):
+        return skill_id
+    definition = kernel.get_system("data_manager").skills.get(skill_id)
+    return definition.name if definition is not None else skill_id
+
+
+def _ability_target(actor: Entity, engine: Engine):
+    """能力の相手になる実体 (生きたプレイヤー。無ければ None)"""
+    target = engine.player
+    if target is None or target.hp <= 0:
+        return None
+    if not _has_los(engine, actor, target):
+        return None
+    return target
+
+
+def _minions_in_reach(actor: Entity, engine: Engine) -> int:
+    """召喚先の周囲に既に並んでいる味方数。"""
+    count = 0
+    for e in getattr(engine, "entities", []):
+        if e is actor or getattr(e, "is_player", False) or getattr(e, "is_pet", False):
+            continue
+        if _cheb(actor.x, actor.y, e.x, e.y) <= SUMMON_MINION_REACH:
+            count += 1
+    return count
+
+
+def usable_ability(actor: Entity, engine: Engine) -> tuple[str, AbilitySpec] | None:
+    """このターンに出せる宣言能力の (id, 仕様) を返す。乱数は一切引かない。
+
+    `enemy_intent` も同じ関数で意図を予測するため、副作用を持たない。
+    宣言順に最初の成立だけを返す (=data/monsters.yaml の並びが優先順)。
+    """
+    player = engine.player
+    if player is None or player.hp <= 0:
+        return None
+    dist = _cheb(actor.x, actor.y, player.x, player.y)
+
+    for skill_id in declared_ability_ids(actor):
+        spec = ABILITY_REGISTRY.get(skill_id)
+        if spec is None:
+            continue
+        if spec.kind == ABILITY_HEAL:
+            if actor.hp < actor.max_hp:
+                return skill_id, spec
+            continue
+        if spec.kind == ABILITY_ROAR:
+            return skill_id, spec
+        if spec.kind == ABILITY_SUMMON:
+            if _minions_in_reach(actor, engine) < SUMMON_MINION_CAP:
+                return skill_id, spec
+            continue
+        if spec.kind == ABILITY_INTIMIDATE:
+            if _ability_target(actor, engine) is not None:
+                return skill_id, spec
+            continue
+        # 対象が必要な攻撃・窃盗・吸引: 射程内で視認できること
+        if spec.reach > 1 and dist < ABILITY_MIN_RANGED_REACH:
+            continue
+        if dist > spec.reach:
+            continue
+        target = _ability_target(actor, engine)
+        if target is None:
+            continue
+        if spec.kind == ABILITY_STEAL_GOLD and target.gold <= 0:
+            continue
+        if spec.kind == ABILITY_DRAIN_MP and target.mp <= 0:
+            continue
+        return skill_id, spec
+    return None
+
+
+class AbilityAction(BehaviorNode):
+    """宣言された固有能力を実行する (=data/monsters.yaml の skills を持つ個体だけ働く)
+
+    空振りしても 1 ターンは消費し、技名入りで必ずログに残す。
+    黙って 1 ターン溶けるより、プレイヤーは何を撃たれたか知るほうがよい。
+    """
+
+    def execute(self, actor: Entity, engine: Engine) -> bool:
+        chosen = usable_ability(actor, engine)
+        if chosen is None:
+            return False
+        skill_id, spec = chosen
+        name = ability_display_name(engine, skill_id)
+        handler = {
+            ABILITY_ATTACK: self._attack,
+            ABILITY_HEAL: self._heal,
+            ABILITY_STEAL_GOLD: self._steal,
+            ABILITY_DRAIN_MP: self._drain,
+            ABILITY_SUMMON: self._summon,
+            ABILITY_ROAR: self._roar,
+            ABILITY_INTIMIDATE: self._intimidate,
+        }[spec.kind]
+        handler(actor, engine, skill_id, spec, name)
+        actor.energy -= ENERGY_THRESHOLD
+        return True
+
+    # --- 種別ごとの実処理 ---
+
+    def _attack(
+        self, actor: Entity, engine: Engine, skill_id: str, spec: AbilitySpec, name: str
+    ) -> None:
+        target = _ability_target(actor, engine)
+        if target is None:
+            return
+        hit_rate = _ability_hit_rate(actor, target)
+        if random.random() * 100 >= hit_rate:
+            engine.log(
+                f"{actor.name} は【{name}】を放ったが {target.name} に外された！",
+                _ELEMENT_COLORS[spec.element],
+            )
+            return
+
+        base = random.randint(1, 4) + int(actor.attributes.strength / 3)
+        resistance = 0
+        res_set = getattr(target, "resistances", None)
+        if res_set is not None:
+            resistance = res_set.get(spec.element)
+        dmg = CombatSystem.calc_element_damage(int(base * spec.power), spec.element, resistance)
+        dmg = max(1, dmg - random.randint(0, max(1, int(target.attributes.endurance / 4))))
+        target.hp -= dmg
+
+        engine.log(
+            f"{actor.name} は【{name}】を放った！ ({target.name} に {dmg} ダメージ)",
+            _ELEMENT_COLORS[spec.element],
+        )
+        if spec.status is not None and random.random() * 100 < spec.status[1]:
+            _apply_status(target, spec.status[0], STATUS_DURATION)
+        if target.hp <= 0:
+            self._on_target_death(actor, engine, target)
+
+    def _heal(
+        self, actor: Entity, engine: Engine, skill_id: str, spec: AbilitySpec, name: str
+    ) -> None:
+        # heal_self の formula `int * 1.4 + 15`。int は engine/engine.py の橋渡し
+        # (intelligence=attributes.perception) と同じ読み方をする。
+        healed = int(actor.attributes.perception * HEAL_MAGIC_RATIO) + HEAL_FLAT_BONUS
+        before = actor.hp
+        actor.hp = min(actor.max_hp, actor.hp + healed)
+        engine.log(
+            f"{actor.name} は【{name}】で自身を癒した！ (+{actor.hp - before} HP)",
+            (100, 255, 150),
+        )
+
+    def _steal(
+        self, actor: Entity, engine: Engine, skill_id: str, spec: AbilitySpec, name: str
+    ) -> None:
+        target = _ability_target(actor, engine)
+        if target is None:
+            return
+        stolen = int(target.gold * STEAL_GOLD_RATIO)
+        target.gold -= stolen
+        actor.gold += stolen
+        engine.log(
+            f"{actor.name} は【{name}】で {target.name} から金 {stolen} を詐取した！",
+            (255, 215, 0),
+        )
+
+    def _drain(
+        self, actor: Entity, engine: Engine, skill_id: str, spec: AbilitySpec, name: str
+    ) -> None:
+        target = _ability_target(actor, engine)
+        if target is None:
+            return
+        taken = min(DRAIN_MP_TAKEN, target.mp)
+        target.mp -= taken
+        actor.mp += DRAIN_MP_GAINED
+        engine.log(
+            f"{actor.name} は【{name}】で {target.name} の魔力を {taken} 吸い上げた！",
+            (200, 100, 255),
+        )
+
+    def _summon(
+        self, actor: Entity, engine: Engine, skill_id: str, spec: AbilitySpec, name: str
+    ) -> None:
+        from constants import AI_ROLE_BRUTE
+        from ecs.entity import Entity
+
+        free = _free_neighbors(engine, actor)
+        if not free:
+            engine.log(f"{actor.name} は【{name}】を唱えたが 出す場所がない！", (160, 80, 255))
+            return
+        nx, ny = min(free, key=lambda t: _cheb(t[0], t[1], actor.x, actor.y))
+        minion = Entity(
+            x=nx,
+            y=ny,
+            char="💀",
+            color=(160, 80, 255),
+            name=SUMMON_MINION_NAME,
+            is_player=False,
+            is_pet=False,
+        )
+        minion.faction = "monster"
+        minion.ai_type = "aggressive"
+        minion.ai_role = AI_ROLE_BRUTE
+        minion.max_hp = SUMMON_MINION_MAX_HP
+        minion.hp = SUMMON_MINION_MAX_HP
+        minion.status_effects = []
+        engine.entity_manager.add_entity(minion)
+        engine.log(
+            f"{actor.name} は【{name}】を唱え、{SUMMON_MINION_NAME}を {nx},{ny} に召喚した！",
+            (160, 80, 255),
+        )
+
+    def _roar(
+        self, actor: Entity, engine: Engine, skill_id: str, spec: AbilitySpec, name: str
+    ) -> None:
+        actor.endurance += ROAR_DEFENSE_BONUS
+        engine.log(
+            f"{actor.name} は【{name}】を叫んだ！ (防御 +{ROAR_DEFENSE_BONUS})",
+            (255, 165, 0),
+        )
+
+    def _intimidate(
+        self, actor: Entity, engine: Engine, skill_id: str, spec: AbilitySpec, name: str
+    ) -> None:
+        target = _ability_target(actor, engine)
+        if target is None:
+            return
+        _apply_status(target, STATUS_PARALYSIS, INTIMIDATE_TICKS)
+        engine.log(
+            f"{actor.name} は【{name}】で {target.name} をひるがせ、動きを封じた！",
+            (200, 100, 255),
+        )
+
+    @staticmethod
+    def _on_target_death(actor: Entity, engine: Engine, target: Entity) -> None:
+        if target == engine.player:
+            engine.log(f"【死亡】{actor.name} に倒された……", (255, 30, 30), level="ERROR")
+        elif target == engine.pet:
+            engine.log(f"{target.name} は力尽きて倒れた！", (255, 100, 100))
+        else:
+            engine._on_kill(target)
+
+
+def _ability_hit_rate(actor: Entity, target: Entity) -> int:
+    """防御側の器用さを重みにした命中判定 (近接攻撃と同じ式)"""
+    return max(
+        10,
+        min(95, HIT_RATE_BASE + actor.attributes.dexterity - target.attributes.dexterity),
+    )
+
+
+def _apply_status(target: Entity, status: str, duration: int) -> None:
+    if any(s.name == status for s in target.status_effects):
+        return
+    target.status_effects.append(StatusEffect(status, duration))
 
 
 class ChaseAction(BehaviorNode):
@@ -566,6 +843,7 @@ class AdvancedAISystem(BaseSystem):
         self.trees: dict[str, BehaviorNode] = {
             "coward": SelectorNode(
                 [
+                    AbilityAction(),
                     SequenceNode([HealSelfAction(0.5), FleeAction()]),
                     MeleeAttackAction(),
                     FleeAction(),
@@ -573,10 +851,17 @@ class AdvancedAISystem(BaseSystem):
                 ]
             ),
             "aggressive": SelectorNode(
-                [SpreadAction(), MeleeAttackAction(), ChaseAction(), WanderAction()]
+                [
+                    AbilityAction(),
+                    SpreadAction(),
+                    MeleeAttackAction(),
+                    ChaseAction(),
+                    WanderAction(),
+                ]
             ),
             "caster": SelectorNode(
                 [
+                    AbilityAction(),
                     HealSelfAction(0.35),
                     CastSpellAction(),
                     MeleeAttackAction(),
@@ -586,6 +871,7 @@ class AdvancedAISystem(BaseSystem):
             ),
             "tactical": SelectorNode(
                 [
+                    AbilityAction(),
                     HealSelfAction(0.30),
                     SpreadAction(),
                     MeleeAttackAction(),
@@ -595,12 +881,26 @@ class AdvancedAISystem(BaseSystem):
                 ]
             ),
             "boss": SelectorNode(
-                [CastSpellAction(), MeleeAttackAction(), ChaseAction(), WanderAction()]
+                [
+                    AbilityAction(),
+                    CastSpellAction(),
+                    MeleeAttackAction(),
+                    ChaseAction(),
+                    WanderAction(),
+                ]
             ),
             # 提案4: 陣形AIロール用ツリー
-            "kiter": SelectorNode([KiteAction(), CastSpellAction(), ChaseAction(), WanderAction()]),
+            "kiter": SelectorNode(
+                [AbilityAction(), KiteAction(), CastSpellAction(), ChaseAction(), WanderAction()]
+            ),
             "flanker": SelectorNode(
-                [FlankAction(), MeleeAttackAction(), ChaseAction(), WanderAction()]
+                [
+                    AbilityAction(),
+                    FlankAction(),
+                    MeleeAttackAction(),
+                    ChaseAction(),
+                    WanderAction(),
+                ]
             ),
         }
 

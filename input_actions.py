@@ -5,8 +5,11 @@ Elona Roguelike - Input Action System (Step 6.1)
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any, Protocol
+
+logger = logging.getLogger(__name__)
 
 
 class InputAction(Protocol):
@@ -21,14 +24,37 @@ class InputAction(Protocol):
         ...
 
 
+class ActionMeta(type):
+    """Verb のメタクラス。
+
+    バインド表は「キー → Verb クラス」で持つので、レジストリをそのまま inspected した
+    側が Verb クラスに触っても isinstance が成立するようにしておく。
+    """
+
+    def __instancecheck__(cls, obj: Any) -> bool:
+        return obj is cls or super().__instancecheck__(obj)
+
+
+class Verb(metaclass=ActionMeta):
+    """全 Verb の基底。can_execute / execute を実装する"""
+
+
 @dataclass
 class KeyBinding:
-    """キーバインド定義"""
+    """キーバインド定義。
+
+    action には Verb クラス、または方向のようにバインド固有値を持つ Verb のインスタンス
+    を載せる。実行時は Verb.build() がクラスならインスタンスを組み立てる。
+    """
 
     key: int  # tcod.event.KeySym
-    action: InputAction
+    action: type[Verb] | Verb
     modifiers: int = 0  # tcod.event.Modifier
     description: str = ""
+
+    def build(self) -> Verb:
+        """実行する Verb のインスタンスを返す"""
+        return self.action() if isinstance(self.action, type) else self.action
 
 
 class ActionRegistry:
@@ -39,14 +65,43 @@ class ActionRegistry:
         self._global_bindings: list[KeyBinding] = []
 
     def register(self, state: str, binding: KeyBinding) -> None:
-        """ステート固有のキーバインドを登録"""
-        if state not in self._bindings:
-            self._bindings[state] = []
+        """ステート固有のキーバインドを登録
+
+        同じ (キー, 修飾子) は先勝ち。解決は常に表の先頭から最初の一致を返すため、
+        後から来た同キーの登録は決して到達しない。黙って影に隠れるのを防ぐ。
+        """
+        if self._claim(self._bindings.setdefault(state, []), binding):
+            return
         self._bindings[state].append(binding)
 
     def register_global(self, binding: KeyBinding) -> None:
         """全ステート共通のキーバインドを登録"""
+        if self._claim(self._global_bindings, binding):
+            return
         self._global_bindings.append(binding)
+
+    @staticmethod
+    def _claim(bindings: list[KeyBinding], binding: KeyBinding) -> bool:
+        """(キー, 修飾子) を先に確保していれば True を返す。"""
+        taken = next(
+            (
+                b
+                for b in bindings
+                if b.key == binding.key and b.modifiers == binding.modifiers
+            ),
+            None,
+        )
+        if taken is None:
+            return False
+        if taken.action is not binding.action:
+            logger.warning(
+                "キーバインドの重複を無視した: key=%s mod=%s 保持=%s 破棄=%s",
+                binding.key,
+                binding.modifiers,
+                getattr(taken.action, "__name__", taken.action),
+                getattr(binding.action, "__name__", binding.action),
+            )
+        return True
 
     def get_bindings(self, state: str) -> list[KeyBinding]:
         """指定ステートのキーバインドを取得（グローバル含む）"""
@@ -78,7 +133,7 @@ from sound_manager import SoundManager
 CONSUMABLE_CATEGORIES = (CAT_POTION, CAT_FOOD, CAT_SCROLL)
 
 
-class MovementAction:
+class MovementAction(Verb):
     """移動アクション"""
 
     def __init__(self, dx: int, dy: int):
@@ -98,7 +153,7 @@ class MovementAction:
         return True
 
 
-class OpenContextMenuAction:
+class OpenContextMenuAction(Verb):
     """コンテキストメニューを開く"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -113,7 +168,7 @@ class OpenContextMenuAction:
         return True
 
 
-class LookModeAction:
+class LookModeAction(Verb):
     """調査モードに入る"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -131,7 +186,7 @@ class LookModeAction:
         return True
 
 
-class PickupAction:
+class PickupAction(Verb):
     """足元のアイテムを拾う"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -155,7 +210,7 @@ class PickupAction:
         return True
 
 
-class HelpAction:
+class HelpAction(Verb):
     """ヘルプ画面を開く"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -171,7 +226,7 @@ class HelpAction:
         return True
 
 
-class InventoryAction:
+class InventoryAction(Verb):
     """インベントリを開く（プレイヤー/ペット切り替え対応）"""
 
     def __init__(self, target: str = "player"):
@@ -191,7 +246,7 @@ class InventoryAction:
         return True
 
 
-class UseConsumableAction:
+class UseConsumableAction(Verb):
     """所持の消耗品を使う (ポーション→食料→巻物 の順で1個だけ消費)"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -226,6 +281,15 @@ def find_consumable(inventory: Any, user: Any) -> Any | None:
     return fallback
 
 
+def consume_one(inventory: Any, item: Any) -> bool:
+    """スタックから1個だけ消費する。尽きたときはスタックごとインベントリから外す"""
+    if item.count > 1:
+        item.count -= 1
+        return True
+    item.count = 0
+    return inventory.remove_item(item, count=1) is not None
+
+
 def use_consumable(engine: Any, item: Any, user: Any, inventory: Any) -> bool:
     """消耗品を1個使い、効果を適用してスタックを減らす。通知は engine.log に出す"""
     if item.category == CAT_POTION:
@@ -241,7 +305,7 @@ def use_consumable(engine: Any, item: Any, user: Any, inventory: Any) -> bool:
     else:
         engine.log(f"{item.name}は使える消耗品ではない。", (200, 200, 200))
         return False
-    inventory.remove_item(item, count=1)
+    consume_one(inventory, item)
     return True
 
 
@@ -265,7 +329,7 @@ def read_scroll(engine: Any, item: Any, inventory: Any) -> bool:
     return True
 
 
-class StatusAction:
+class StatusAction(Verb):
     """ステータス画面を開く"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -280,7 +344,7 @@ class StatusAction:
         return True
 
 
-class JournalAction:
+class JournalAction(Verb):
     """ジャーナルを開く"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -295,7 +359,7 @@ class JournalAction:
         return True
 
 
-class SkillTreeAction:
+class SkillTreeAction(Verb):
     """スキルツリー画面を開く"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -310,7 +374,7 @@ class SkillTreeAction:
         return True
 
 
-class JobAction:
+class JobAction(Verb):
     """ジョブ画面を開く（Shift+Jでジョブ、Jでジャーナル）"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -329,7 +393,7 @@ class JobAction:
         return True
 
 
-class GuildAction:
+class GuildAction(Verb):
     """ギルド画面を開く"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -344,7 +408,7 @@ class GuildAction:
         return True
 
 
-class CastFireballAction:
+class CastFireballAction(Verb):
     """ファイアボール詠唱"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -359,7 +423,7 @@ class CastFireballAction:
         return True
 
 
-class MineWallAction:
+class MineWallAction(Verb):
     """壁採掘"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -374,7 +438,7 @@ class MineWallAction:
         return True
 
 
-class PlayMusicAction:
+class PlayMusicAction(Verb):
     """音楽再生"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -385,7 +449,7 @@ class PlayMusicAction:
         return True
 
 
-class PrayAction:
+class PrayAction(Verb):
     """祈り"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -400,7 +464,7 @@ class PrayAction:
         return True
 
 
-class OfferAltarAction:
+class OfferAltarAction(Verb):
     """祭壇への捧げ物"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -415,7 +479,7 @@ class OfferAltarAction:
         return True
 
 
-class TalkAction:
+class TalkAction(Verb):
     """会話"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -430,7 +494,7 @@ class TalkAction:
         return True
 
 
-class HarvestAction:
+class HarvestAction(Verb):
     """採取"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -445,7 +509,7 @@ class HarvestAction:
         return True
 
 
-class WishRodAction:
+class WishRodAction(Verb):
     """願いの杖使用"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -460,7 +524,7 @@ class WishRodAction:
         return True
 
 
-class DescendStairsAction:
+class DescendStairsAction(Verb):
     """階段を下りる"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -475,7 +539,7 @@ class DescendStairsAction:
         return True
 
 
-class SaveAction:
+class SaveAction(Verb):
     """セーブ"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -487,7 +551,7 @@ class SaveAction:
         return True
 
 
-class LoadAction:
+class LoadAction(Verb):
     """ロード"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -501,7 +565,7 @@ class LoadAction:
         return True
 
 
-class DebugAction:
+class DebugAction(Verb):
     """デバッグコンソールを開く"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -513,7 +577,7 @@ class DebugAction:
         return True
 
 
-class WaitAction:
+class WaitAction(Verb):
     """待機 (1ターン経過) - スケジューラ再評価トリガー (Phase 3 Step 11)"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -529,7 +593,7 @@ class WaitAction:
         return True
 
 
-class SleepAction:
+class SleepAction(Verb):
     """睡眠 (HP/MP全快 + 長時間経過) - スケジューラ再評価トリガー (Phase 3 Step 11)"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -549,7 +613,7 @@ class SleepAction:
         return True
 
 
-class ActionScan:
+class ActionScan(Verb):
     """《解析》アクション (Step 14, 20, 22)"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -634,7 +698,7 @@ class ActionScan:
         return True
 
 
-class ActionDevour:
+class ActionDevour(Verb):
     """《喰らい》アクション (Step 13, 19, 22, 23)"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -661,7 +725,7 @@ class ActionDevour:
         return True
 
 
-class ActionSynthesisMenu:
+class ActionSynthesisMenu(Verb):
     """スキル合成メニュー (Step 15, 21)"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -688,7 +752,7 @@ class ActionSynthesisMenu:
         return True
 
 
-class ActionSearch:
+class ActionSearch(Verb):
     """秘密検索アクション (SkillEaterSecretAccess Step 19)"""
 
     def can_execute(self, engine: Any) -> bool:
@@ -757,7 +821,7 @@ class ActionSearch:
         return True
 
 
-class QuitAction:
+class QuitAction(Verb):
     """終了"""
 
     def can_execute(self, engine: Any) -> bool:

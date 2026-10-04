@@ -540,6 +540,13 @@ class DataManager(BaseSystem):
         mob.hp = base_hp
         mob.faction = faction
         mob.ai_type = data.ai_type if data.ai_type else "aggressive"
+        if data.ai_role:
+            from constants import AI_ROLE_KITER, KITER_PREFERRED_RANGE
+
+            mob.ai_role = data.ai_role
+            mob.preferred_range = (
+                KITER_PREFERRED_RANGE if data.ai_role == AI_ROLE_KITER else 1
+            )
         mob.skills = [getattr(s, "root", s) for s in (data.skills or [])]
         mob.status_effects = []
         return mob

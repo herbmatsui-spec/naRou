@@ -128,6 +128,11 @@
     "ai_type": {
       "$ref": "#/$defs/ai_type"
     },
+    "ai_role": {
+      "type": "string",
+      "enum": ["brute", "kiter", "flanker", "support"],
+      "description": "Formation AI role. Overrides the name-derived default."
+    },
     "resistances": {
       "type": "object",
       "additionalProperties": {
