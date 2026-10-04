@@ -78,3 +78,69 @@ def test_rejects_unknown_initial_state():
         "main_menu",
         label="unknown initial state is rejected",
     )
+
+
+# --- Step 11: playing から終局へ到達できることと履歴の記録 ---
+
+
+def test_playing_to_game_over_is_allowed():
+    """`playing -> game_over` は許可され、状態と履歴の両方が動く。"""
+    sm = _machine()
+    sm.transition("game_over")
+
+    assert sm.current == "game_over"
+    assert sm.is_terminal is True
+    assert sm.is_playing is False
+    assert [h[:2] for h in sm.history] == [("playing", "game_over")]
+
+
+def test_victory_is_reachable_from_playing():
+    """`playing -> victory` も許可される。勝利条件が Step 19 で使われる入口。"""
+    sm = _machine()
+    sm.transition("victory")
+
+    assert sm.current == "victory"
+    assert sm.is_terminal is True
+
+
+def test_history_records_timestamps():
+    """履歴は (from, to, 時刻) の列で、時刻は単調増加する。"""
+    sm = _machine()
+    sm.transition("game_over")
+    sm.transition("title")
+
+    assert len(sm.history) == 2
+    first, second = sm.history
+    assert (first[0], first[1]) == ("playing", "game_over")
+    assert (second[0], second[1]) == ("game_over", "title")
+    assert first[2] <= second[2], "history timestamps must not go backwards"
+
+
+def test_game_over_is_a_dead_end_except_for_title():
+    """終局から別の終局へは遷移できない（死亡と勝利が同時に起きない）。"""
+    _assert_rejected(_terminal_machine(), "victory")
+    _assert_rejected(_terminal_machine(), "playing")
+
+
+def test_history_is_not_vacuous_for_the_victory_edge():
+    """`victory` が許可表から消えると緑が壊れることの証明。
+
+    `_assert_reachable` は `can_transition` の結果だけを，DISTINGUISHES の bad を
+    「table を 1 削った機械」に差し替えることで機構を示す。表が全部許可する
+    実装でも bad は落ちないため、このテストは空振りしない。
+    """
+    def _assert_reachable(sm: GameStateMachine, to: str) -> None:
+        assert sm.can_transition(to), f"{sm.current} -> {to} must be reachable"
+
+    def _table_without_victory() -> GameStateMachine:
+        """`playing` から到達できる終局が `game_over` だけの（表から victory を除いたもの）。"""
+        sm = _machine()
+        sm.transition("game_over")
+        return sm
+
+    assert_distinguishes(
+        lambda s: _assert_reachable(s, "victory"),
+        _machine(),
+        _table_without_victory(),
+        label="victory edge is present in the allowed table",
+    )
