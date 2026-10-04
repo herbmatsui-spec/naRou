@@ -25,7 +25,11 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AUDIO_DIR = os.path.join(REPO_ROOT, "assets", "audio")
 
 # OGG をデコードできるのは aplay 以外（aplay は ALSA 生鳴き = WAV 専用）。
-OGG_CAPABLE_PLAYERS = {"ffplay", "afplay", "paplay"}
+# ハードコードすると候補テーブルにプレイヤーを足した瞬間 silently に壊れるので、
+# 実装側の表から導出する。
+OGG_CAPABLE_PLAYERS = {
+    name for name, supported in sound_manager._PLAYER_CANDIDATES if ".ogg" in supported
+}
 
 
 class _FakeProcess:
@@ -120,13 +124,20 @@ def test_resolve_audio_player_returns_none_when_nothing_installed(monkeypatch):
     assert sound_manager.resolve_audio_player(".wav") is None
 
 
+def _player_takes_volume(player: str) -> bool:
+    """音量が argv に反映されるプレイヤーか。音量dependent なプレイヤー名を書かずに済む。"""
+    return sound_manager.build_player_command(
+        player, "x.wav", volume=0.1
+    ) != sound_manager.build_player_command(player, "x.wav", volume=0.9)
+
+
 def test_build_player_command_carries_player_source_and_volume():
     """コマンドは必ず「プレイヤー … 音源」の順で、音源が末尾に来る。"""
     player = sound_manager.resolve_audio_player(".wav")
     command = sound_manager.build_player_command(player, "/tmp/beep.wav", volume=0.5)
     assert command[0] == player
     assert command[-1] == "/tmp/beep.wav"
-    if os.path.basename(player) in {"paplay", "ffplay", "afplay"}:
+    if _player_takes_volume(player):
         assert any("--volume" in arg or arg in ("-volume", "-v") for arg in command[1:-1])
     else:
         # 音量に未対応のプレイヤーでも音源は渡る
