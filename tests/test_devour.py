@@ -106,7 +106,9 @@ def test_devour_steals_the_skill_of_the_defeated_monster(dm: DataManager) -> Non
     assert goblin_id != orc_id, (
         f"何を倒しても同じスキルが奪われる: goblin -> {goblin_id!r}, orc -> {orc_id!r}"
     )
-    assert goblin_id in goblin_skills, f"奪取 id はゴブリンの宣言スキルに含まれるべき: {goblin_id!r}"
+    assert goblin_id in goblin_skills, (
+        f"奪取 id はゴブリンの宣言スキルに含まれるべき: {goblin_id!r}"
+    )
     assert orc_id in orc_skills, f"奪取 id はオークの宣言スキルに含まれるべき: {orc_id!r}"
 
 
@@ -127,11 +129,20 @@ def test_devour_grants_nothing_from_a_skillless_monster(dm: DataManager) -> None
     )
 
 
-# --- S2.2: 奪取したスキルは唱えられる形で得る ---------------------------------------------------
+# --- S2.2: 奪取したスキルは「所有した」状態として既存システムから見えるようにする -----------------
+#
+# 注意: `player.skills` は詠唱可能な器ではない。詠唱は `CharacterState.skills` 上で起こり、本 feature は
+# そこへの接続を行わない（spec [S3]）。したがってここでは「唱えられる」ことを検証しない。
+# 検証するのは「奪った id が既存の所有者辞書に登録され、Skill インスタンスとして
+# gain_skill_exp が読む形になる」ことまでである。
 
 
-def test_devoured_skill_becomes_castable(dm: DataManager) -> None:
-    """契約 S2.2: 奪取成功後、プレイヤーの実行可能スキル集合に奪った id が含まれる"""
+def test_devoured_skill_is_registered_as_owned(dm: DataManager) -> None:
+    """契約 S2.2: 奪取成功後、奪った id が `player.skills` に Skill として登録される
+
+    「唱えられる」ことは検証しない。`player.skills` は所有権の入れ物であり、詠唱経路は
+    `CharacterState.skills` 側にあり本 feature では接続していない（spec [S3]）。
+    """
     engine, _ = _engine_with_adjacent_monster(dm, "goblin")
 
     engine.execute_devour()
@@ -143,16 +154,15 @@ def test_devoured_skill_becomes_castable(dm: DataManager) -> None:
     # ecs/entity.py の gain_skill_exp が読むのは Entity.skills（dict）である。
     player_skills = engine.player.skills
     assert stolen_id in player_skills, (
-        f"奪取した {stolen_id!r} が唱えられるスキル集合に入っていない: "
-        f"登録済み={sorted(player_skills)}"
+        f"奪取した {stolen_id!r} が所有スキルとして登録されていない: 登録済み={sorted(player_skills)}"
     )
     slot = player_skills[stolen_id]
     for attr in ("name", "level", "experience", "potential"):
-        assert hasattr(slot, attr), f"実行可能スキルの要素は {attr} を持つべき: {slot!r}"
+        assert hasattr(slot, attr), f"登録されたスキル要素は {attr} を持つべき: {slot!r}"
 
 
 def test_repeated_devour_does_not_duplicate_skills(dm: DataManager) -> None:
-    """契約 S2.2: 同じ敵を2回倒してもプレイヤーのスキル集合は増えない（重複排除）"""
+    """契約 S2.2: 同じ敵を2回倒しても所有スキルは増えない（重複排除）"""
     engine, _ = _engine_with_adjacent_monster(dm, "goblin")
     before = len(engine.player.skills)
 
@@ -164,10 +174,14 @@ def test_repeated_devour_does_not_duplicate_skills(dm: DataManager) -> None:
     stolen_id = recorded[0]
     owned = list(engine.player.skills)
 
-    assert stolen_id in owned, f"まず1体目の奪取が登録されていること: {stolen_id!r} not in {owned}"
-    assert owned.count(stolen_id) == 1, f"重複して獲得している: {stolen_id!r} x{owned.count(stolen_id)}"
+    assert stolen_id in owned, (
+        f"まず1体目の奪取が所有スキルとして登録されていること: {stolen_id!r} not in {owned}"
+    )
+    assert owned.count(stolen_id) == 1, (
+        f"重複して獲得している: {stolen_id!r} x{owned.count(stolen_id)}"
+    )
     assert len(engine.player.skills) == before + 1, (
-        f"スキル集合は1体目のときだけ増えるべき: {before} -> {len(engine.player.skills)}"
+        f"所有スキルは1体目のときだけ増えるべき: {before} -> {len(engine.player.skills)}"
     )
 
 
@@ -178,6 +192,16 @@ def test_data_manager_skill_repository_is_populated(dm: DataManager) -> None:
     """契約 S2.3: `DataManager().skills` が空でない"""
     registered = dm.skills.get_all()
     assert len(registered) > 0, "DataManager().skills が空リポジトリのままになっている"
+
+    # 単に非空だけでは world カタログの読み込み失敗を検出できない（exclusive_skills だけで
+    # 9 件あるため）。ワールド側の既存 id が実際に載っていることを確認する。
+    world_ids = {
+        skill.id for skill in registered if not str(getattr(skill, "id", "")).startswith(("sk_",))
+    }
+    assert "com_combat_001" in world_ids, (
+        "ワールドカタログ (data/worlds/skill_eater/skills.yaml) が読み込まれていない: "
+        f"読み込まれた id={sorted(world_ids)}"
+    )
 
 
 def test_every_monster_referenced_skill_resolves(dm: DataManager) -> None:

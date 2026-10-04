@@ -115,6 +115,9 @@ def _character_state_from_entity(entity: Entity, analysis_level: int = 1):
         intelligence=attributes.perception,
         speed=entity.speed,
         analysis_level=analysis_level,
+        # 奪取率は target.status_effects も読む（Paralyzed / Sleep で +0.20）。
+        # Entity には宣言フィールドがないため動的属性として付き、実データだけを写す。
+        status_effects=list(getattr(entity, "status_effects", None) or []),
     )
 
 
@@ -1011,7 +1014,8 @@ class Engine:
         target_state = _character_state_from_entity(target)
         declared_ids = _declared_skill_ids(target)
         for skill_id in declared_ids:
-            # 敵が宣言しているスキルはすべて奪取対象。メモリ容量で落とすのは敵の貧弱さではない
+            # 敵が宣言するスキルはすべて奪取候補として積む（実際に奪われるのは先頭の1つ）。
+            # メモリ容量で落とすのは敵の貧弱さではない
             target_state.add_skill(skill_id, ignore_capacity=True)
 
         rate = combat_sys.calculate_devour_rate(analyzer, target_state)
