@@ -53,4 +53,7 @@ main_quests:
     rewards:
       gold: 5000
       world_phase: "CONFRONTATION"
-    next_quest_id: "confrontation_01"
+    # 終端: `confrontation_01` は存在しないため、ここを境に物語は終わる。
+    # main_quest_system.py:311-312 のガードは未解決の id を黙って無視するので、
+    # 壊れた鎖ではなく「意図的にここで終わる鎖」を表す。
+    next_quest_id: null
