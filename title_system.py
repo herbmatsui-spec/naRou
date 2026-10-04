@@ -6,12 +6,26 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from ecs.entity import Entity
 
 import yaml
+
+
+# 定義ファイルは作業ディレクトリに依存させない。相対パスをそのまま使うと、
+# 起動場所が変わっただけで称号が 1 件も読まれず (= 永久に獲得できない) ため。
+_DATA_DIR = Path(__file__).resolve().parent / "data"
+
+
+def _resolve_data_path(path: str) -> Path:
+    """定義ファイルのパスを解決する。相対パスはリポジトリ内の data/ を指す"""
+    candidate = Path(path)
+    if candidate.is_absolute() or candidate.exists():
+        return candidate
+    return _DATA_DIR / candidate.name
 
 
 @dataclass
@@ -67,13 +81,15 @@ class TitleRegistry:
         """YAMLから称号定義を読み込み"""
         if self._loaded:
             return
-        with open(path, encoding="utf-8") as f:
+        with _resolve_data_path(path).open(encoding="utf-8") as f:
             data = yaml.safe_load(f)
         for t in data.get("titles", {}).values():
             cond = t["condition"]
             condition = TitleCondition(
                 type=cond["type"],
-                target=cond.get("target", ""),
+                # スキル条件は YAML が `skill` と書いている。`target` しか見ない loader では
+                # 対象が空になり、どのスキルのレベルも見ない称号となって永久に獲得できない。
+                target=cond.get("target", "") or cond.get("skill", ""),
                 count=cond.get("count", 0),
                 value=cond.get("value", 0),
                 level=cond.get("level", 0),
@@ -101,6 +117,15 @@ class TitleRegistry:
             )
             self._titles[title.id] = title
         self._loaded = True
+
+    def ensure_loaded(self, path: str = "data/titles.yaml") -> None:
+        """未ロードなら読み込む
+
+        engine と WorldNewsManager は `load()` を呼ばずに `check_all_titles` を呼ぶ。
+        ロードする者を呼び出し側に委ねると、レジストリが空のまま毎回空振りする。
+        """
+        if not self._loaded:
+            self.load(path)
 
     def get(self, title_id: str) -> TitleData | None:
         return self._titles.get(title_id)
@@ -240,6 +265,7 @@ class TitleManager:
     # === 全称号チェック（ターン終了時等に呼ぶ） ===
     def check_all_titles(self, player: Entity) -> list[str]:
         """未獲得称号を全チェック、新規獲得分を返す"""
+        self.registry.ensure_loaded()
         granted = []
         for title in self.registry.all():
             if title.id in player.titles:

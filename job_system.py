@@ -7,7 +7,8 @@ Manages jobs, job changes, stat modifiers, and unlock conditions.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+import os
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 import yaml
@@ -39,6 +40,163 @@ class JobData:
     unlock_conditions: dict[str, Any] = field(default_factory=dict)
 
 
+# ロード結果の分類。全部 {} に潰すと「空データが実装済み」に見えてしまうため、
+# 原因ごとに別々の名前を残す (読み込み前 / 欠損 / 空 / 読めない / 壊れた YAML /
+# 想定と違う形 / まだ未記入 / 成功)。
+OUTCOME_NOT_LOADED = "not_loaded"
+OUTCOME_MISSING = "missing"
+OUTCOME_EMPTY = "empty"
+OUTCOME_UNREADABLE = "unreadable"
+OUTCOME_UNPARSEABLE = "unparseable"
+OUTCOME_BAD_SHAPE = "bad_shape"
+OUTCOME_NO_ENTRIES = "no_entries"
+OUTCOME_OK = "ok"
+
+_OUTCOME_LEVELS = {
+    OUTCOME_NOT_LOADED: logging.DEBUG,
+    OUTCOME_MISSING: logging.WARNING,
+    OUTCOME_EMPTY: logging.WARNING,
+    OUTCOME_UNREADABLE: logging.ERROR,
+    OUTCOME_UNPARSEABLE: logging.ERROR,
+    OUTCOME_BAD_SHAPE: logging.WARNING,
+    OUTCOME_NO_ENTRIES: logging.INFO,
+    OUTCOME_OK: logging.INFO,
+}
+
+_EMPTY_IMPACT = "The job screen will list no jobs."
+
+
+@dataclass(frozen=True)
+class DataFileStatus:
+    """データファイル1件のロード結果。失敗を握り潰さず、原因ごとに区別して残す。"""
+
+    path: str
+    key: str
+    outcome: str
+    reason: str
+    byte_size: int | None = None
+    entry_count: int = 0
+
+    @property
+    def usable(self) -> bool:
+        """エントリが実際に読み込まれたか (画面が空なら False)。"""
+        return self.outcome == OUTCOME_OK
+
+
+def _read_data_entries(path: str, key: str) -> tuple[dict[str, Any] | None, DataFileStatus]:
+    """YAML を読んでエントリ辞書を取り出す。分類だけを返し、ログは出さない。"""
+    try:
+        with open(path, encoding="utf-8") as f:
+            text = f.read()
+    except FileNotFoundError:
+        return None, DataFileStatus(
+            path=path, key=key, outcome=OUTCOME_MISSING, reason="file does not exist"
+        )
+    except (OSError, UnicodeDecodeError) as exc:
+        return None, DataFileStatus(
+            path=path, key=key, outcome=OUTCOME_UNREADABLE, reason=f"file could not be read: {exc}"
+        )
+
+    byte_size = os.path.getsize(path)
+
+    try:
+        document = yaml.safe_load(text)
+    except yaml.YAMLError as exc:
+        return None, DataFileStatus(
+            path=path,
+            key=key,
+            outcome=OUTCOME_UNPARSEABLE,
+            reason=f"YAML parse error: {exc}",
+            byte_size=byte_size,
+        )
+
+    if document is None:
+        reason = (
+            "file is 0 bytes"
+            if byte_size == 0
+            else "file contains no YAML document (comments or whitespace only)"
+        )
+        return None, DataFileStatus(
+            path=path, key=key, outcome=OUTCOME_EMPTY, reason=reason, byte_size=byte_size
+        )
+
+    if not isinstance(document, dict):
+        return None, DataFileStatus(
+            path=path,
+            key=key,
+            outcome=OUTCOME_BAD_SHAPE,
+            reason=f"top level is {type(document).__name__}, expected a mapping",
+            byte_size=byte_size,
+        )
+
+    if key not in document:
+        return None, DataFileStatus(
+            path=path,
+            key=key,
+            outcome=OUTCOME_BAD_SHAPE,
+            reason=f"top level has no '{key}' key (found {sorted(map(str, document))})",
+            byte_size=byte_size,
+        )
+
+    raw_entries = document[key]
+    if raw_entries is None:
+        entries: dict[str, Any] = {}
+    elif isinstance(raw_entries, dict):
+        entries = raw_entries
+    else:
+        return None, DataFileStatus(
+            path=path,
+            key=key,
+            outcome=OUTCOME_BAD_SHAPE,
+            reason=f"'{key}' is {type(raw_entries).__name__}, expected a mapping",
+            byte_size=byte_size,
+        )
+
+    status = DataFileStatus(
+        path=path, key=key, outcome=OUTCOME_OK, reason="loaded", byte_size=byte_size
+    )
+    if not entries:
+        # キーはあるが中身が無い = コンテンツ未記入。異常扱いにしない。
+        status = replace(
+            status,
+            outcome=OUTCOME_NO_ENTRIES,
+            reason=f"'{key}' key is present but holds no entries",
+        )
+    return entries, status
+
+
+def _log_data_status(status: DataFileStatus) -> None:
+    """ロード結果を 1 度だけログに出す (ファイルパスとバイトサイズを必ず添える)。"""
+    level = _OUTCOME_LEVELS[status.outcome]
+    if status.outcome == OUTCOME_OK:
+        logger.log(
+            level,
+            "Loaded %d job entries from %s (%d bytes, key '%s')",
+            status.entry_count,
+            status.path,
+            status.byte_size,
+            status.key,
+        )
+        return
+
+    size_text = "n/a (file missing)" if status.byte_size is None else str(status.byte_size)
+    headline = (
+        "Job data has no entries yet"
+        if status.outcome == OUTCOME_NO_ENTRIES
+        else "Job data unusable"
+    )
+    logger.log(
+        level,
+        "%s: path=%s key='%s' bytes=%s — %s %s",
+        headline,
+        status.path,
+        status.key,
+        size_text,
+        status.reason,
+        _EMPTY_IMPACT,
+    )
+
+
 class JobRegistry:
     """Singleton registry for loading and accessing jobs."""
 
@@ -54,26 +212,22 @@ class JobRegistry:
         if self._initialized:
             return
         self._jobs: dict[str, JobData] = {}
+        self.load_status = DataFileStatus(
+            path="", key="jobs", outcome=OUTCOME_NOT_LOADED, reason="load() has not been called"
+        )
         self._initialized = True
 
     def load(self, path: str = "data/jobs.yaml") -> None:
         """Load jobs from YAML file."""
-        try:
-            with open(path, encoding="utf-8") as f:
-                data = yaml.safe_load(f)
-        except FileNotFoundError:
-            logger.warning(f"Job file not found: {path}")
-            return
-        except Exception as e:
-            logger.error(f"Failed to load jobs: {e}")
-            return
-
-        if not data or "jobs" not in data:
-            logger.warning("No jobs key found in YAML")
-            return
-
         self._jobs.clear()
-        for job_id, job_data in data["jobs"].items():
+
+        entries, status = _read_data_entries(path, "jobs")
+        if entries is None:
+            self.load_status = status
+            _log_data_status(status)
+            return
+
+        for job_id, job_data in entries.items():
             if not isinstance(job_data, dict):
                 continue
 
@@ -90,7 +244,8 @@ class JobRegistry:
             )
             self._jobs[job_id] = job
 
-        logger.info(f"Loaded {len(self._jobs)} jobs")
+        self.load_status = replace(status, entry_count=len(self._jobs))
+        _log_data_status(self.load_status)
 
     def all(self) -> dict[str, JobData]:
         """Return all loaded jobs."""
@@ -252,6 +407,7 @@ def get_job_manager() -> JobManager:
 
 
 __all__ = [
+    "DataFileStatus",
     "JobData",
     "JobEffect",
     "JobManager",

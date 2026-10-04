@@ -7,7 +7,9 @@ Manages skill fusion mechanics allowing combination of skills into new abilities
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+import os
+from dataclasses import dataclass, field, replace
+from typing import Any
 
 import yaml
 
@@ -36,6 +38,182 @@ class FusionData:
     bonus_effects: list[FusionEffect] = field(default_factory=list)
 
 
+# ロード結果の分類。全部 {} に潰すと「空データが実装済み」に見えてしまうため、
+# 原因ごとに別々の名前を残す (読み込み前 / 欠損 / 空 / 読めない / 壊れた YAML /
+# 想定と違う形 / まだ未記入 / 成功)。
+OUTCOME_NOT_LOADED = "not_loaded"
+OUTCOME_MISSING = "missing"
+OUTCOME_EMPTY = "empty"
+OUTCOME_UNREADABLE = "unreadable"
+OUTCOME_UNPARSEABLE = "unparseable"
+OUTCOME_BAD_SHAPE = "bad_shape"
+OUTCOME_NO_ENTRIES = "no_entries"
+OUTCOME_OK = "ok"
+
+_OUTCOME_LEVELS = {
+    OUTCOME_NOT_LOADED: logging.DEBUG,
+    OUTCOME_MISSING: logging.WARNING,
+    OUTCOME_EMPTY: logging.WARNING,
+    OUTCOME_UNREADABLE: logging.ERROR,
+    OUTCOME_UNPARSEABLE: logging.ERROR,
+    OUTCOME_BAD_SHAPE: logging.WARNING,
+    OUTCOME_NO_ENTRIES: logging.INFO,
+    OUTCOME_OK: logging.INFO,
+}
+
+_FUSION_IMPACT = "Skill fusion will offer no fusions."
+_RECIPE_IMPACT = "Fusion recipes will be unavailable."
+
+
+@dataclass(frozen=True)
+class DataFileStatus:
+    """データファイル1件のロード結果。失敗を握り潰さず、原因ごとに区別して残す。"""
+
+    path: str
+    key: str
+    outcome: str
+    reason: str
+    byte_size: int | None = None
+    entry_count: int = 0
+
+    @property
+    def usable(self) -> bool:
+        """エントリが実際に読み込まれたか (画面が空なら False)。"""
+        return self.outcome == OUTCOME_OK
+
+
+def _read_data_entries(
+    path: str, key: str, optional: bool = False
+) -> tuple[dict[str, Any] | None, DataFileStatus]:
+    """YAML を読んでエントリ辞書を取り出す。分類だけを返し、ログは出さない。
+
+    Args:
+        path: 読み込み先の YAML パス。
+        key: エントリを収めるトップレベルキー。
+        optional: True ならキー自体が未記入でも異常扱いしない
+            (別データセットの上に載る任意レイヤー用)。
+    """
+    try:
+        with open(path, encoding="utf-8") as f:
+            text = f.read()
+    except FileNotFoundError:
+        return None, DataFileStatus(
+            path=path, key=key, outcome=OUTCOME_MISSING, reason="file does not exist"
+        )
+    except (OSError, UnicodeDecodeError) as exc:
+        return None, DataFileStatus(
+            path=path, key=key, outcome=OUTCOME_UNREADABLE, reason=f"file could not be read: {exc}"
+        )
+
+    byte_size = os.path.getsize(path)
+
+    try:
+        document = yaml.safe_load(text)
+    except yaml.YAMLError as exc:
+        return None, DataFileStatus(
+            path=path,
+            key=key,
+            outcome=OUTCOME_UNPARSEABLE,
+            reason=f"YAML parse error: {exc}",
+            byte_size=byte_size,
+        )
+
+    if document is None:
+        reason = (
+            "file is 0 bytes"
+            if byte_size == 0
+            else "file contains no YAML document (comments or whitespace only)"
+        )
+        return None, DataFileStatus(
+            path=path, key=key, outcome=OUTCOME_EMPTY, reason=reason, byte_size=byte_size
+        )
+
+    if not isinstance(document, dict):
+        return None, DataFileStatus(
+            path=path,
+            key=key,
+            outcome=OUTCOME_BAD_SHAPE,
+            reason=f"top level is {type(document).__name__}, expected a mapping",
+            byte_size=byte_size,
+        )
+
+    if key not in document:
+        if optional:
+            return {}, DataFileStatus(
+                path=path,
+                key=key,
+                outcome=OUTCOME_NO_ENTRIES,
+                reason=f"optional '{key}' key is absent",
+                byte_size=byte_size,
+            )
+        return None, DataFileStatus(
+            path=path,
+            key=key,
+            outcome=OUTCOME_BAD_SHAPE,
+            reason=f"top level has no '{key}' key (found {sorted(map(str, document))})",
+            byte_size=byte_size,
+        )
+
+    raw_entries = document[key]
+    if raw_entries is None:
+        entries: dict[str, Any] = {}
+    elif isinstance(raw_entries, dict):
+        entries = raw_entries
+    else:
+        return None, DataFileStatus(
+            path=path,
+            key=key,
+            outcome=OUTCOME_BAD_SHAPE,
+            reason=f"'{key}' is {type(raw_entries).__name__}, expected a mapping",
+            byte_size=byte_size,
+        )
+
+    status = DataFileStatus(
+        path=path, key=key, outcome=OUTCOME_OK, reason="loaded", byte_size=byte_size
+    )
+    if not entries:
+        # キーはあるが中身が無い = コンテンツ未記入。異常扱いにしない。
+        status = replace(
+            status,
+            outcome=OUTCOME_NO_ENTRIES,
+            reason=f"'{key}' key is present but holds no entries",
+        )
+    return entries, status
+
+
+def _log_data_status(status: DataFileStatus, label: str, subject: str, impact: str) -> None:
+    """ロード結果を 1 度だけログに出す (ファイルパスとバイトサイズを必ず添える)。"""
+    level = _OUTCOME_LEVELS[status.outcome]
+    if status.outcome == OUTCOME_OK:
+        logger.log(
+            level,
+            "Loaded %d %s entries from %s (%d bytes, key '%s')",
+            status.entry_count,
+            label,
+            status.path,
+            status.byte_size,
+            status.key,
+        )
+        return
+
+    size_text = "n/a (file missing)" if status.byte_size is None else str(status.byte_size)
+    headline = (
+        f"{subject} has no entries yet"
+        if status.outcome == OUTCOME_NO_ENTRIES
+        else f"{subject} unusable"
+    )
+    logger.log(
+        level,
+        "%s: path=%s key='%s' bytes=%s — %s %s",
+        headline,
+        status.path,
+        status.key,
+        size_text,
+        status.reason,
+        impact,
+    )
+
+
 class FusionRegistry:
     """Singleton registry for loading and accessing skill fusions."""
 
@@ -51,26 +229,22 @@ class FusionRegistry:
         if self._initialized:
             return
         self._fusions: dict[str, FusionData] = {}
+        self.load_status = DataFileStatus(
+            path="", key="fusions", outcome=OUTCOME_NOT_LOADED, reason="load() has not been called"
+        )
         self._initialized = True
 
     def load(self, path: str = "data/skill_fusion.yaml") -> None:
         """Load skill fusions from YAML file."""
-        try:
-            with open(path, encoding="utf-8") as f:
-                data = yaml.safe_load(f)
-        except FileNotFoundError:
-            logger.warning(f"Skill fusion file not found: {path}")
-            return
-        except Exception as e:
-            logger.error(f"Failed to load skill fusions: {e}")
-            return
-
-        if not data or "fusions" not in data:
-            logger.warning("No fusions key found in YAML")
-            return
-
         self._fusions.clear()
-        for fusion_id, fusion_data in data["fusions"].items():
+
+        entries, status = _read_data_entries(path, "fusions")
+        if entries is None:
+            self.load_status = status
+            _log_data_status(status, "fusion", "Fusion data", _FUSION_IMPACT)
+            return
+
+        for fusion_id, fusion_data in entries.items():
             if not isinstance(fusion_data, dict):
                 continue
 
@@ -92,7 +266,8 @@ class FusionRegistry:
             )
             self._fusions[fusion_id] = fusion
 
-        logger.info(f"Loaded {len(self._fusions)} skill fusions")
+        self.load_status = replace(status, entry_count=len(self._fusions))
+        _log_data_status(self.load_status, "fusion", "Fusion data", _FUSION_IMPACT)
 
     def all(self) -> dict[str, FusionData]:
         """Return all loaded skill fusions."""
@@ -227,27 +402,44 @@ class SkillFusionRegistry(FusionRegistry):
     def __init__(self):
         super().__init__()
         self._recipes: dict[str, SkillFusionRecipe] = {}
+        self.recipe_load_status = DataFileStatus(
+            path="",
+            key="fusion_recipes",
+            outcome=OUTCOME_NOT_LOADED,
+            reason="load() has not been called",
+        )
 
     def load(self, path: str = "data/skill_fusion.yaml") -> None:
         super().load(path)
+
+        # 融合定義とレシピは別々のキーで、同じファイルの異常でも内容が異なる。
+        # どちらも握り潰さないが、1 データセットにつき診断は 1 件だけ出す。
+        # レシピは融合定義の上に載る任意レイヤーなので、キー未記入は異常にしない。
         self._recipes.clear()
-        try:
-            with open(path, encoding="utf-8") as f:
-                data = yaml.safe_load(f) or {}
-            for rid, rdata in data.get("fusion_recipes", {}).items():
-                self._recipes[rid] = SkillFusionRecipe(
-                    id=rid,
-                    name=rdata.get("name", rid),
-                    description=rdata.get("description", ""),
-                    base_skill=rdata.get("base_skill", ""),
-                    materials=rdata.get("materials", {}),
-                    output=rdata.get("output", ""),
-                    required_level=rdata.get("required_level", 1),
-                    success_rate=rdata.get("success_rate", 1.0),
-                )
-        except Exception:
-            # Load failure, ignore and keep recipe dict empty
-            pass
+        entries, status = _read_data_entries(path, "fusion_recipes", optional=True)
+        if entries is None:
+            self.recipe_load_status = status
+            _log_data_status(status, "fusion recipe", "Fusion recipe data", _RECIPE_IMPACT)
+            return
+
+        for rid, rdata in entries.items():
+            if not isinstance(rdata, dict):
+                continue
+            self._recipes[rid] = SkillFusionRecipe(
+                id=rid,
+                name=rdata.get("name", rid),
+                description=rdata.get("description", ""),
+                base_skill=rdata.get("base_skill", ""),
+                materials=rdata.get("materials", {}),
+                output=rdata.get("output", ""),
+                required_level=rdata.get("required_level", 1),
+                success_rate=rdata.get("success_rate", 1.0),
+            )
+
+        self.recipe_load_status = replace(status, entry_count=len(self._recipes))
+        _log_data_status(
+            self.recipe_load_status, "fusion recipe", "Fusion recipe data", _RECIPE_IMPACT
+        )
 
     def get_recipe(self, recipe_id: str) -> SkillFusionRecipe | None:
         return self._recipes.get(recipe_id)
@@ -326,6 +518,7 @@ def get_fusion_manager() -> SkillFusionManager:
 
 __all__ = [
     "REGISTRY",
+    "DataFileStatus",
     "FusionData",
     "FusionEffect",
     "FusionManager",

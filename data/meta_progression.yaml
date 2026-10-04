@@ -1,4 +1,12 @@
 # メタ進行システム 定義データ (Steps 4-5)
+#
+# [S2.2] 永続報酬トークンは「実装されて実読される」か「未実装のため保留」の二択で、
+# 定義だけある無言の状態を残さない。ここでは保留を選ぶ。
+#
+# 理由: damage_boost_* / gold_gain_* を参照する本番コードは 0 件で、効果を確認できない。
+# 戦闘バランス ([S2.3]) が決まる前の倍率を「獲得すれば強化される」として読ませるのは嘘になる。
+# したがって各 milestone に `reserved: <トークン>` を記す。これは保留の宣言であって
+# 報酬の支給ではない。実装に動くときは本コメントを削除し、値を読む側を明記すること。
 
 meta_progression:
   total_monsters_slain:
@@ -9,12 +17,15 @@ meta_progression:
       - count: 10
         reward_gold: 500
         reward_bonus: "damage_boost_1"
+        reserved: "damage_boost_1"
       - count: 50
         reward_gold: 2500
         reward_bonus: "damage_boost_2"
+        reserved: "damage_boost_2"
       - count: 200
         reward_gold: 10000
         reward_bonus: "damage_boost_3"
+        reserved: "damage_boost_3"
 
   total_gold_accumulated:
     name: "総獲得ゴールド"
@@ -24,9 +35,11 @@ meta_progression:
       - count: 10000
         reward_gold: 1000
         reward_bonus: "gold_gain_5"
+        reserved: "gold_gain_5"
       - count: 100000
         reward_gold: 10000
         reward_bonus: "gold_gain_10"
+        reserved: "gold_gain_10"
 
   total_dungeon_depth:
     name: "最深到達階層"

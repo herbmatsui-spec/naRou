@@ -30,6 +30,10 @@ class RunSummary:
     turns: int
     cause: str
     elapsed_minutes: int
+    # 喰い得たスキルの id。件数の `devoured_skills` と同じ World A の state から
+    # 同時に引くので、両者は必ず一致する（別系統の集計を持たない）。
+    # run 履歴 ([S2.1]) は件数ではなく id を残すため必要になる。
+    devoured_skill_ids: tuple[str, ...] = ()
 
     def format_lines(self) -> list[str]:
         """ログと画面へ提示する行を返す"""

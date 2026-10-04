@@ -64,9 +64,18 @@ class ActionRegistry:
 
 import tcod.event
 
-from constants import GameState
+from constants import (
+    CAT_FOOD,
+    CAT_POTION,
+    CAT_SCROLL,
+    ENERGY_THRESHOLD,
+    GameState,
+)
 from save_system import SaveSystem
 from sound_manager import SoundManager
+
+# 「使う」動詞が対象にするカテゴリ。並び順はそのまま優先順になる。
+CONSUMABLE_CATEGORIES = (CAT_POTION, CAT_FOOD, CAT_SCROLL)
 
 
 class MovementAction:
@@ -180,6 +189,80 @@ class InventoryAction:
         engine.inventory_target = self.target
         engine.inventory_cursor = 0
         return True
+
+
+class UseConsumableAction:
+    """所持の消耗品を使う (ポーション→食料→巻物 の順で1個だけ消費)"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        item = find_consumable(engine.inventory, engine.player)
+        if item is None:
+            engine.log("使える消耗品がない。", (200, 200, 200))
+            return True
+        if not use_consumable(engine, item, engine.player, engine.inventory):
+            return True
+        # 消費は1ターン分の行動として数える
+        engine.player.energy -= ENERGY_THRESHOLD
+        engine.advance_world()
+        return True
+
+
+def find_consumable(inventory: Any, user: Any) -> Any | None:
+    """所持品から「次に使う消耗品」を1つ選ぶ (負傷中は回復ポーションを優先)"""
+    fallback = None
+    for item in inventory.items:
+        if item.category == CAT_POTION:
+            if user.hp < user.max_hp:
+                return item
+        elif item.category in CONSUMABLE_CATEGORIES:
+            fallback = fallback or item
+    return fallback
+
+
+def use_consumable(engine: Any, item: Any, user: Any, inventory: Any) -> bool:
+    """消耗品を1個使い、効果を適用してスタックを減らす。通知は engine.log に出す"""
+    if item.category == CAT_POTION:
+        user.hp = min(user.max_hp, user.hp + item.heal_amount)
+        SoundManager.play_se("heal")
+        engine.log(f"{user.name}は{item.name}を飲んだ！ HP+{item.heal_amount}", (100, 255, 100))
+    elif item.category == CAT_FOOD:
+        for message in engine.survival.eat(user, item):
+            engine.log(message, (255, 200, 150))
+    elif item.category == CAT_SCROLL:
+        if not read_scroll(engine, item, inventory):
+            return False
+    else:
+        engine.log(f"{item.name}は使える消耗品ではない。", (200, 200, 200))
+        return False
+    inventory.remove_item(item, count=1)
+    return True
+
+
+def read_scroll(engine: Any, item: Any, inventory: Any) -> bool:
+    """巻物の効果を適用する。効果がなかったとき（＝消費しない）False を返す"""
+    if item.spell_id != "identify":
+        # 効果が動かない巻物を黙って消費すると手持ちだけが消えるので読めなかったことにする
+        spell = item.spell_id or "名も無き術"
+        engine.log(
+            f"{item.name}の巻物を開いたが、{spell} の術式は読み取れなかった。",
+            (200, 200, 200),
+        )
+        return False
+    revealed = 0
+    for carried in inventory.items:
+        if not carried.identified:
+            carried.identified = True
+            revealed += 1
+    detail = f"{revealed}個の品の正体を見抜いた。" if revealed else "隠されていた品はなかった。"
+    engine.log(f"{item.name}を読み、{detail}", (255, 230, 150))
+    return True
 
 
 class StatusAction:

@@ -7,8 +7,14 @@ meta_goals:
     target_metric: "cumulative_depth"
     target_value: 1000
     permanent_bonus:
+      # 【予約】未実装。Entity.recalculate_stats() が max_hp を属性から毎回作り直すため、
+      # 固定加算はレベルアップ・ジョブ・称号の処理時に消える。
+      # 実装には ecs/entity.py 側で permanent_bonuses を max_hp 計算に読み込む処理が要る。
       max_hp: 25
+      # 【予約】未実装。max_hp と同じ理由で calculate_max_mp() の再計算で消える。
       max_mp: 15
+      # 【実装】recalculate_and_apply_bonuses が Entity.speed に加算し、
+      # TurnQueue.step_next_actor の行動順計算に使われる。
       speed: 2
   fragment_collector_10:
     id: "fragment_collector_10"
@@ -17,7 +23,11 @@ meta_goals:
     target_metric: "collected_fragments_count"
     target_value: 10
     permanent_bonus:
+      # 【予約】未実装。経験値の加算は Entity.gain_exp()（ecs/entity.py）内にあり、
+      # そこに倍率を適用する読み取り口が無い。
       exp_bonus: 0.15
+      # 【予約】未実装。スキル成長は Entity.gain_skill_exp() の
+      # int(amount * (skill.potential / 100.0)) が根拠で、ボーナスの読み取り口が無い。
       potential_bonus: 10
   reincarnation_master:
     id: "reincarnation_master"
@@ -26,7 +36,11 @@ meta_goals:
     target_metric: "reincarnation_count"
     target_value: 5
     permanent_bonus:
+      # 【実装】recalculate_and_apply_bonuses が全8主能力に加算する。
+      # 再計算の復元元 _base_attributes にも加算するためレベルアップでも消えない。
       all_attributes: 5
+      # 【予約】未実装。カルマは karma_system.py の update_karma() が
+      # karma_law_chaos / karma_good_evil を直接加算しており、倍率を掛ける口が無い。
       karma_gain_multiplier: 1.2
   elemental_mastery:
     id: "elemental_mastery"
@@ -35,7 +49,11 @@ meta_goals:
     target_metric: "unique_fragment_categories"
     target_value: 4
     permanent_bonus:
+      # 【予約】未実装。独立した「魔法威力」統計が存在せず、呪文ダメージは
+      # systems.py が attributes.magic を直接参照するため all_attributes と経路が重複する。
       magic_power: 10
+      # 【予約】未実装。属性耐性 ResistanceSet は初期化時に書き込まれるだけで、
+      # ダメージ計算から参照されていない。
       resistance_all: 5
 
 cycle_modifier_pool:

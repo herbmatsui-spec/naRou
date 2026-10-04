@@ -1,8 +1,14 @@
 from __future__ import annotations
 
+import io
 import logging
 import os
+import shutil
+import subprocess
+import tempfile
 import threading
+import wave
+from array import array
 from typing import Any
 
 import yaml
@@ -25,6 +31,201 @@ except ImportError:
     HAS_AUDIO_BACKEND = False
 
 from feature_flags import is_enabled
+
+# ---------------------------------------------------------------- 効果音フォールバック
+
+AUDIO_ASSET_DIR = "assets/audio"
+
+# 外部プレイヤー探索テーブル (実行ファイル名, 対応拡張子)。
+# 優先度順に並べ、PATH に存在するものを選ぶ。
+# aplay だけは ALSA 生鳴きなので WAV 専用 —— OGG を渡すと黙って死ぬため末尾に置く。
+# pw-play を paplay より前に置く理由: PipeWire 環境では PulseAudio 互換サーバ側の
+# 接続に失敗することが実測で確認されたが、ネイティブの pw-play は通る。
+_PLAYER_CANDIDATES: tuple[tuple[str, frozenset[str]], ...] = (
+    ("ffplay", frozenset({".ogg", ".wav", ".mp3", ".flac", ".m4a", ".opus"})),
+    ("afplay", frozenset({".ogg", ".wav", ".mp3", ".flac", ".m4a", ".aiff"})),
+    ("pw-play", frozenset({".ogg", ".wav", ".mp3", ".flac"})),
+    ("paplay", frozenset({".ogg", ".wav", ".mp3", ".flac"})),
+    ("aplay", frozenset({".wav"})),
+)
+
+# 診断ログは一度だけ。効果音のたびに同じエラーを吐かないための制御。
+_missing_backend_reported = False
+_player_errors_reported: set[str] = set()
+
+# 起動に失敗したプレイヤー。以後の効果音では候補から外す。
+_player_failures: set[str] = set()
+
+
+def resolve_audio_player(suffix: str) -> str | None:
+    """拡張子を再生できる外部プレイヤーの実体パスを返す。無ければ None。"""
+    for name, supported in _PLAYER_CANDIDATES:
+        if suffix and suffix not in supported:
+            continue
+        if name in _player_failures:
+            continue
+        found = shutil.which(name)
+        if found:
+            return found
+    return None
+
+
+def build_player_command(player: str, source: str, volume: float = 1.0) -> list[str]:
+    """外部プレイヤーの実行コマンドを組み立てる（音量対応はプレイヤー次第）。"""
+    level = max(0.0, min(1.0, volume))
+    name = os.path.basename(player)
+    if name == "pw-play":
+        return [player, f"--volume={level}", source]
+    if name == "paplay":
+        return [player, f"--volume={int(level * 65536)}", source]
+    if name == "ffplay":
+        return [
+            player,
+            "-nodisp",
+            "-autoexit",
+            "-loglevel",
+            "quiet",
+            "-volume",
+            str(int(level * 100)),
+            source,
+        ]
+    if name == "afplay":
+        return [player, "-v", f"{level:.2f}", source]
+    if name == "aplay":
+        return [player, "-q", source]
+    return [player, source]
+
+
+def resolve_audio_asset(filename: str) -> str | None:
+    """設定で指定された効果音名を assets/audio 配下の実ファイルへ解決する。"""
+    if not filename:
+        return None
+    stem = filename if "." in filename else f"{filename}.ogg"
+    for candidate in (stem, f"{stem}.ogg", f"{stem}.wav"):
+        path = os.path.join(AUDIO_ASSET_DIR, candidate)
+        if os.path.isfile(path):
+            return path
+    return None
+
+
+def report_missing_audio_backend() -> None:
+    """再生手段が無いことを一度だけ大声で報告する（効果音ごとに黙って捨てるな）。"""
+    global _missing_backend_reported
+    if _missing_backend_reported:
+        return
+    _missing_backend_reported = True
+    tried = " / ".join(
+        f"{name}({'失敗' if name in _player_failures else '無し/未対応拡張子'})"
+        for name, _ in _PLAYER_CANDIDATES
+    )
+    logger.error(
+        "効果音を再生できるバックエンドが無い。試行=%s, winsound=%s。"
+        " 対処: `pip install pygame` で OGG 再生を有効にするか、"
+        " PipeWire(pw-play) / PulseAudio(paplay) / ALSA(aplay) / ffplay / afplay"
+        " のいずれかをインストール・復旧する。",
+        tried,
+        HAS_WINSOUND,
+    )
+
+
+def _report_player_error(name: str, returncode: int, detail: str) -> None:
+    """プレイヤー側の失敗をプレイヤーごとに一度だけ報告する。"""
+    if name in _player_errors_reported:
+        return
+    _player_errors_reported.add(name)
+    logger.error("効果音の再生に失敗した (player=%s, rc=%s): %s", name, returncode, detail)
+
+
+def _spawn_player(
+    command: list[str],
+    cleanup: str | None = None,
+    on_failure: Callable[[], None] | None = None,
+) -> None:
+    """外部プレイヤーを非同期で起動し、終了後に一時ファイルを片付ける。"""
+    try:
+        process = subprocess.Popen(
+            command,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+    except OSError as exc:
+        _report_player_error(os.path.basename(command[0]), -1, str(exc))
+        if on_failure:
+            on_failure()
+        return
+
+    def _reap() -> None:
+        _, stderr = process.communicate()
+        if process.returncode:
+            _report_player_error(
+                os.path.basename(command[0]),
+                process.returncode,
+                stderr.decode("utf-8", "replace").strip(),
+            )
+            if on_failure:
+                on_failure()
+        if cleanup:
+            try:
+                os.unlink(cleanup)
+            except OSError:
+                pass
+
+    threading.Thread(target=_reap, daemon=True).start()
+
+
+def _play_path(path: str, volume: float, cleanup: str | None, retry: bool) -> bool:
+    """path を再生できるプレイヤーへ渡す。失敗したら次の候補で一度だけ再試行する。"""
+    player = resolve_audio_player(os.path.splitext(path)[1])
+    if player is None:
+        report_missing_audio_backend()
+        return False
+
+    def _retry() -> None:
+        # PATH に存在してもMach デバイスを開けたり接続できなかったりする。
+        # 失敗したプレイヤーは候補から外し、次の一手（初回のみ）を試す。
+        _player_failures.add(os.path.basename(player))
+        if retry:
+            _play_path(path, volume, cleanup, retry=False)
+
+    _spawn_player(
+        build_player_command(player, path, volume),
+        cleanup=cleanup,
+        on_failure=_retry if retry else None,
+    )
+    return True
+
+
+def play_audio_file(path: str | None, volume: float = 1.0) -> bool:
+    """実ファイル（OGG/WAV）を外部プレイヤーへ渡して再生する。失敗なら False。"""
+    if not path:
+        return False
+    return _play_path(path, volume, None, retry=True)
+
+
+def render_tone_wav(frequency: int, duration_ms: int, sample_rate: int = 22050) -> bytes:
+    """winsound.Beep の代わりに、矩形波 beep を WAV バイト列として合成する。
+
+    winsound は Windows 専用なので、Linux/macOS では外部プレイヤーへ
+    流せる形に自前変換する。依存は標準ライブラリのみ。
+    """
+    total = max(1, sample_rate * duration_ms // 1000)
+    half_period = max(1, sample_rate // (2 * max(1, frequency)))
+    attack = max(1, total // 8)
+    samples = array("h", bytes(2 * total))
+    for index in range(total):
+        # 立ち上がり/立ち下がりを線形に伸ばしてクリックノイズを抑える
+        level = 6000 if index % (2 * half_period) < half_period else -6000
+        fade = min(index, total - 1 - index, attack)
+        samples[index] = level * fade // attack
+
+    buffer = io.BytesIO()
+    with wave.open(buffer, "wb") as handle:
+        handle.setnchannels(1)
+        handle.setsampwidth(2)
+        handle.setframerate(sample_rate)
+        handle.writeframes(samples.tobytes())
+    return buffer.getvalue()
 
 
 class BGMManager:
@@ -113,12 +314,32 @@ class SoundManager:
 
     @classmethod
     def _play_tone(cls, frequency: int, duration_ms: int):
-        if not cls._enabled or not HAS_WINSOUND:
+        if not cls._enabled:
             return
+        if HAS_WINSOUND:
+            try:
+                winsound.Beep(frequency, duration_ms)
+                return
+            except Exception:
+                logger.exception("ロード失敗")
+        # winsound が無い環境では合成 WAV を外部プレイヤーへ流す
+        cls._play_wav_bytes(render_tone_wav(frequency, duration_ms))
+
+    @classmethod
+    def _play_wav_bytes(cls, payload: bytes):
+        """合成した WAV を一時ファイル経由で外部プレイヤーへ流す。"""
+        player = resolve_audio_player(".wav")
+        if player is None:
+            report_missing_audio_backend()
+            return
+        handle, temp_path = tempfile.mkstemp(prefix="narou_tone_", suffix=".wav")
         try:
-            winsound.Beep(frequency, duration_ms)
-        except Exception:
+            with os.fdopen(handle, "wb") as stream:
+                stream.write(payload)
+        except OSError:
             logger.exception("ロード失敗")
+            return
+        _spawn_player(build_player_command(player, temp_path), cleanup=temp_path)
 
     @classmethod
     def play_se(cls, se_type: str):
@@ -169,7 +390,9 @@ class SoundManager:
 
     _audio_initialized = False
     _se_cache: dict[str, str] = {}  # se_type -> suggested_id mapping
+    _se_files: dict[str, str] = {}  # se_type -> ファイル名 mapping
     _terrain_footstep_map: dict[str, str] = {}
+    _terrain_footstep_files: dict[str, str] = {}
 
     @classmethod
     def _init_audio_pack(cls):
@@ -179,12 +402,12 @@ class SoundManager:
         if not is_enabled("ENABLE_AUDIO_PACK"):
             return
 
+        # Load SE mappings from config（backend 不在でも raw ファイル再生で必要）
+        cls._load_se_mappings()
+
         backend = get_audio_backend()
         if not backend.is_available:
             return
-
-        # Load SE mappings from config
-        cls._load_se_mappings()
 
         # Preload all audio
         loaded = preload_all_audio("assets/audio/manifest.csv")
@@ -204,14 +427,29 @@ class SoundManager:
                     # Convert filename to suggested_id (e.g., metalClick.ogg -> se_metal_click)
                     suggested_id = "se_" + filename.replace(".ogg", "").replace(".", "_").lower()
                     cls._se_cache[se_type] = suggested_id
+                    cls._se_files[se_type] = filename
 
                 # Load terrain footstep mapping
                 footstep_keys = [k for k in se_map if k.startswith("footstep_")]
                 for key in footstep_keys:
                     terrain = key.replace("footstep_", "")
                     cls._terrain_footstep_map[terrain] = cls._se_cache.get(key, "")
+                    cls._terrain_footstep_files[terrain] = cls._se_files.get(key, "")
         except Exception:
             logger.exception("ロード失敗")
+
+    @classmethod
+    def _play_mapped_asset(cls, se_type: str, volume: float = 1.0) -> bool:
+        """audio.backend が無い環境で、設定が指す OGG をそのまま再生する。"""
+        return play_audio_file(resolve_audio_asset(cls._se_files.get(se_type, "")), volume)
+
+    @classmethod
+    def _play_footstep_asset(cls, terrain: str, volume: float = 1.0) -> bool:
+        """地形別の足音アセットを外部プレイヤーで再生する。"""
+        filename = cls._terrain_footstep_files.get(terrain, "")
+        if not filename:
+            return False
+        return play_audio_file(resolve_audio_asset(filename), volume)
 
     @classmethod
     def play_se_ogg(cls, se_type: str, volume: float = 1.0):
@@ -231,7 +469,8 @@ class SoundManager:
 
         backend = get_audio_backend()
         if not backend.is_available:
-            cls.play_se(se_type)
+            if not cls._play_mapped_asset(se_type, volume):
+                cls.play_se(se_type)
             return
 
         suggested_id = cls._se_cache.get(se_type)
@@ -264,7 +503,8 @@ class SoundManager:
 
         backend = get_audio_backend()
         if not backend.is_available:
-            cls.play_se("step")
+            if not cls._play_footstep_asset(terrain, volume):
+                cls.play_se("step")
             return
 
         se_type = cls._terrain_footstep_map.get(terrain, "footstep_stone")

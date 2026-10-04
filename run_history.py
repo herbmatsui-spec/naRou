@@ -41,7 +41,11 @@ class RunHistory:
 
     @classmethod
     def from_summary(cls, summary) -> RunHistory:
-        """`RunSummary` から履歴の 1 レコードを作る。"""
+        """`RunSummary` から履歴の 1 レコードを作る。
+
+        喰いスキルは件数を残さず id を残す。run をまたいで同じスキルを得ても
+        1 件として数えるため、順序を保って積むだけでよい。
+        """
         return cls(
             runs=1,
             last_depth=summary.depth,
@@ -50,7 +54,7 @@ class RunHistory:
             last_cause=summary.cause,
             best_depth=summary.depth,
             best_kills=summary.kills,
-            devoured_skills=tuple(getattr(summary, "devoured_skill_ids", ()) or ()),
+            devoured_skills=tuple(summary.devoured_skill_ids),
         )
 
     def merged_with(self, previous: RunHistory | None) -> RunHistory:

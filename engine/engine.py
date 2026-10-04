@@ -67,6 +67,7 @@ from localization_manager import LocalizationManager
 from logging_config import configure_logging
 from map_engine import GameMap
 from renderer import Renderer, get_renderer, set_renderer
+from run_history import RunHistoryStore
 from run_summary import (
     CAUSE_COMBAT,
     CAUSE_HUNGER,
@@ -286,6 +287,7 @@ class Engine:
             (100, 255, 200),
             level="INFO",
         )
+        self._present_run_history()
 
         self.game_map.compute_fov(self.player.x, self.player.y, radius=8)
         self.check_tutorial_triggers("game_start")
@@ -1545,6 +1547,7 @@ class Engine:
         self.game_state = "game_over"  # 旧互換文字列 (render はこの文字列で分岐する)
         self.run_summary = self._build_run_summary()
         self._present_run_summary(self.run_summary)
+        self._record_run_history(self.run_summary)
         return True
 
     def _record_harm_cause(self, cause: str) -> None:
@@ -1569,13 +1572,17 @@ class Engine:
     def _build_run_summary(self) -> RunSummary:
         """run summary を組み立てる。値は既存の state から引く ([S2.1] 追跡機構を増やさない)"""
         clock = self.time_system.world_clock
+        # 件数と id は同じ state から同時に引く。別々に数えると必ずずれる。
+        skills = self.game_state_data.world_a_data.get("skills", ())
+        devoured = tuple(str(skill_id) for skill_id in skills)
         return RunSummary(
             depth=self.dungeon_level,
             kills=sum(self.player.kill_counts.values()),
-            devoured_skills=len(self.game_state_data.world_a_data.get("skills", ())),
+            devoured_skills=len(devoured),
             turns=self.turns,
             cause=self._observed_harm_cause(),
             elapsed_minutes=clock.total_ticks // clock.config.ticks_per_minute,
+            devoured_skill_ids=devoured,
         )
 
     def _present_run_summary(self, summary: RunSummary) -> None:
@@ -1583,6 +1590,29 @@ class Engine:
         self.log(GAME_OVER_TITLE, (255, 50, 50), level="WARNING")
         for line in summary.format_lines():
             self.log(line, COLOR_GOLD_YELLOW, level="WARNING")
+
+    def _record_run_history(self, summary: RunSummary) -> None:
+        """終了した run を履歴へ書き出す ([S2.1] 次回起動で提示する)
+
+        死亡の処理を止めないため、書けなかった旨をログに留めて飲み込む。
+        履歴は補助情報であり、run の終了そのものを失敗させない。
+        """
+        try:
+            RunHistoryStore().record(summary)
+        except Exception:
+            logger.exception("Failed to record run history: %s", summary)
+            self.log(
+                "【記録失敗】今回の戦績を履歴に残せませんでした", (255, 160, 80), level="WARNING"
+            )
+
+    def _present_run_history(self) -> None:
+        """前回の run の記録を起動時のログへ提示する ([S2.1])
+
+        新しい UI は作らず、起動時に既に流れているログへ並べる。
+        履歴が無い (初回起動) / 読めない (破損) 場合も store 側が理由を文面にする。
+        """
+        for line in RunHistoryStore().startup_lines():
+            self.log(line, COLOR_GOLD_YELLOW, level="INFO")
 
     def advance_world(self) -> None:
         """速度Tick制による全NPCターン処理 (GameplayPackage 経由)

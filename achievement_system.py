@@ -4,9 +4,9 @@ Achievement and Trophy System Module (Steps 18-24, 35, 40, 44, 47, 50, 54, 58, 6
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import yaml
@@ -14,6 +14,19 @@ from typing_extensions import Self
 
 if TYPE_CHECKING:
     from ecs.entity import Entity
+    from run_history import RunHistory
+
+# 定義ファイルは作業ディレクトリに依存させない。相対パスのままだと、起動場所が
+# 変わっただけで既定のファイルを見失い、実績が 1 件も読まれない。
+_DATA_DIR = Path(__file__).resolve().parent / "data"
+
+
+def _resolve_data_path(file_path: str) -> Path:
+    """定義ファイルのパスを解決する。相対パスはリポジトリ内の data/ を指す"""
+    candidate = Path(file_path)
+    if candidate.is_absolute() or candidate.exists():
+        return candidate
+    return _DATA_DIR / candidate.name
 
 
 # Step 19: AchievementData クラス定義
@@ -58,7 +71,8 @@ class AchievementRegistry:
     def load(self, file_path: str = "data/achievements.yaml") -> None:
         """YAMLから全実績データを読み込む (Step 21)"""
         self._achievements = {}
-        if not os.path.exists(file_path):
+        resolved = _resolve_data_path(file_path)
+        if not resolved.exists():
             # デフォルト実績作成
             self._achievements["first_blood"] = AchievementData(
                 id="first_blood",
@@ -69,7 +83,7 @@ class AchievementRegistry:
             )
             return
 
-        with open(file_path, encoding="utf-8") as f:
+        with resolved.open(encoding="utf-8") as f:
             raw = yaml.safe_load(f) or {}
 
         ach_dict = raw.get("achievements", {})
@@ -96,6 +110,16 @@ class AchievementRegistry:
                 meta_progression_based=data.get("meta_progression_based", False),
                 requirement=data.get("requirement", {}),
             )
+
+    def ensure_loaded(self, file_path: str = "data/achievements.yaml") -> None:
+        """未ロードなら読み込む
+
+        `REGISTRY` は import しただけでは空で、`AchievementManager()` の既定値も
+        それを指す。ロードを调用側に委ねると、判定する実体が 1 件も無く
+        `check_all_achievements` が常に空振りする。
+        """
+        if not self._achievements:
+            self.load(file_path)
 
     def get(self, achievement_id: str) -> AchievementData | None:
         return self._achievements.get(achievement_id)
@@ -255,10 +279,43 @@ class AchievementManager:
 
     def check_all_achievements(self, player: Entity, engine: Any | None = None) -> list[str]:
         """全未達成実績を一括チェックして付与"""
+        self.registry.ensure_loaded()
         granted = []
         for ach_id in self.registry.all():
             if ach_id not in player.achievements:
                 if self.check_achievement(player, ach_id, engine):
                     if self.grant_achievement(player, ach_id, engine):
                         granted.append(ach_id)
+        return granted
+
+    # === run 終了時の判定 ===
+    def apply_run_history(self, player: Entity, history: RunHistory) -> None:
+        """run 履歴が持つ確定値を、実績判定が見る state に取り込む
+
+        履歴は「run をまたいで確定した値」なので、実行中のイベントでは得られない。
+        取り込むのは単調増加する自己最高値だけで、既に大きい値を下げない。
+        撃破数と喰いスキルは turn ごとに可直接に集計されているので、ここでは
+        積み直さない（二重計上を避ける）。
+        """
+        if history.best_depth > player.max_dungeon_depth:
+            player.max_dungeon_depth = history.best_depth
+        if history.last_turns > player.total_turns:
+            player.total_turns = history.last_turns
+
+    def check_run_end(
+        self, player: Entity, history: RunHistory, engine: Any | None = None
+    ) -> list[str]:
+        """run が終わった時点で実績を判定し、獲得した id を返す
+
+        engine の死亡判定 (`_end_run_if_player_dead`) が run summary を組み立てた
+        直後に呼ぶ想定の入口。深さや経過ターンの条件は、降り楼的瞬間ではなく
+        ここで初めて確定値として評価される。
+        """
+        self.apply_run_history(player, history)
+        granted = self.check_all_achievements(player, engine)
+
+        # 称号も同じ run 終了の確定値で判定する（深さ条件即是ここで成立する）
+        from title_system import MANAGER as title_manager
+
+        title_manager.check_all_titles(player)
         return granted

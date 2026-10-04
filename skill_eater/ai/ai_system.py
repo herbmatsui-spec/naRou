@@ -6,10 +6,18 @@ Implements rich AI decision-making for monsters, pets, and neutral NPCs.
 from __future__ import annotations
 
 import random
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from constants import ENERGY_THRESHOLD
+from constants import ENERGY_THRESHOLD, Element
 from core_framework import AStar, BaseSystem, Point
+from systems import (
+    STATUS_BLEEDING,
+    STATUS_PARALYSIS,
+    STATUS_POISON,
+    CombatSystem,
+    StatusEffect,
+)
 
 if TYPE_CHECKING:
     from ecs.entity import Entity
@@ -55,6 +63,89 @@ class SequenceNode(BehaviorNode):
             if not child.execute(actor, engine):
                 return False
         return True
+
+
+# ==================== モンスター固有能力 ====================
+# `data/monsters.yaml` の `skills` が宣言する、モンスターごとの固有行動。
+# 効果量 (formula / element) はスキーマ変換で落ちるため、実行仕様はここに持つ。
+
+# 能力の種別
+ABILITY_ATTACK = "attack"  # 命中判定つきの打撃 (近接/远程/属性)
+ABILITY_HEAL = "heal"  # 自身の回復
+ABILITY_STEAL_GOLD = "steal_gold"  # 開場から金を奪う
+ABILITY_DRAIN_MP = "drain_mp"  # 相手の魔力を吸い上げる
+ABILITY_SUMMON = "summon"  # 周囲に屍体を出す
+ABILITY_ROAR = "roar"  # 己の防御を上げる戦吼
+ABILITY_INTIMIDATE = "intimidate"  # 相手ひるがせ、動きを止める威嚇
+
+# 己の癒し: heal_self の formula `int * 1.4 + 15`
+HEAL_MAGIC_RATIO = 1.4
+HEAL_FLAT_BONUS = 15
+# 金の窃盗: steal_gold の formula `*0.35`
+STEAL_GOLD_RATIO = 0.35
+# 魔力吸引: drain_mp の formula (敵 mp -40 / 己 mp +25)
+DRAIN_MP_TAKEN = 40
+DRAIN_MP_GAINED = 25
+# 戦吼: roar の formula (defense +3)
+ROAR_DEFENSE_BONUS = 3
+# 一時強化の持続ターン
+BUFF_DURATION = 6
+# 威嚇の持続。CombatSystem.process_status_effects は1tick あたり 10 減らす
+INTIMIDATE_TICKS = 10
+# 召喚は周囲に屍体が揃うまで繰り返さない (データ側の count: 2 相当)
+SUMMON_MINION_CAP = 2
+SUMMON_MINION_REACH = 2
+SUMMON_MINION_MAX_HP = 18
+
+
+@dataclass(frozen=True)
+class AbilitySpec:
+    """モンスター固有能力の実行仕様
+
+    reach は「対象が必要になる距離」。0 なら対象は不要 (自身技・召喚) 。
+    power は `CombatSystem.calculate_melee_attack` が解決したダメージに乗せる倍率で、
+    空振り判定・属性耐性・持久力軽減はすべて既存の戦闘計算に従う。
+    """
+
+    kind: str
+    reach: int
+    element: Element = Element.PHYSICAL
+    power: float = 1.0
+    status: tuple[str, int] | None = None  # (状態異常名, 付与確率 %)
+
+
+ABILITY_REGISTRY: dict[str, AbilitySpec] = {
+    # --- 物理打撃 ---
+    "throw_stone": AbilitySpec(ABILITY_ATTACK, reach=5, power=1.0),
+    "power_bash": AbilitySpec(ABILITY_ATTACK, reach=1, power=1.3),
+    "backstab": AbilitySpec(ABILITY_ATTACK, reach=1, power=1.5),
+    "heavy_cleave": AbilitySpec(
+        ABILITY_ATTACK, reach=1, power=1.6, status=(STATUS_BLEEDING, 40)
+    ),
+    "tail_swipe": AbilitySpec(ABILITY_ATTACK, reach=1, power=1.3),
+    # --- 远程/属性 ---
+    "cast_dart": AbilitySpec(
+        ABILITY_ATTACK, reach=5, element=Element.MAGIC, power=1.2, status=(STATUS_POISON, 35)
+    ),
+    "fire_breath": AbilitySpec(ABILITY_ATTACK, reach=4, element=Element.FIRE, power=1.5),
+    "cast_fireball": AbilitySpec(ABILITY_ATTACK, reach=6, element=Element.FIRE, power=1.8),
+    "inferno_breath": AbilitySpec(ABILITY_ATTACK, reach=6, element=Element.FIRE, power=2.2),
+    # --- 自身/対象操作 ---
+    "heal_self": AbilitySpec(ABILITY_HEAL, reach=0),
+    "steal_gold": AbilitySpec(ABILITY_STEAL_GOLD, reach=5),
+    "drain_mp": AbilitySpec(ABILITY_DRAIN_MP, reach=6),
+    "summon_undead": AbilitySpec(ABILITY_SUMMON, reach=0),
+    "roar": AbilitySpec(ABILITY_ROAR, reach=0),
+    "intimidate": AbilitySpec(ABILITY_INTIMIDATE, reach=0),
+}
+
+# 属性別のメッセージ色 (プレイヤーが何が来たか即座に分かるように)
+_ELEMENT_COLORS: dict[Element, tuple[int, int, int]] = {
+    Element.FIRE: (255, 140, 60),
+    Element.MAGIC: (200, 100, 255),
+    Element.POISON: (140, 220, 90),
+    Element.PHYSICAL: (220, 220, 220),
+}
 
 
 # ==================== ACTIONS ====================
