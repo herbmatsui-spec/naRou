@@ -1,14 +1,40 @@
 ---
 feature: devour-wiring
-status: designed
+status: delivered
 updated: 2026-10-04
 branch: feature/devour
-commits:
+commits: 4d37233..60d7403
 ---
 
 # 案B 「喰う」を成立させる
 
 ## Report
+
+**What was built** — 「喰う」が敵によって結果を変えるようになった。devour は固定値から組み立てた `CharacterState` に空のスキルを入れ、その空振りで `com_combat_001` を毎回差し込んでいたため、12 体のモンスターすべてから同じ id を奪っていた。敵 Entity の実データから状態を構築し、宣言されたスキルの先頭夺得取対象にした。スキルのない 4 体では奪取が成立しないのが正しい挙動なので、既定値の差し入れを廃止した。
+
+`data_manager.py` の `SkillRepository({})` はハードコードされた空リポジトリで、`data/monsters.yaml` が参照する 15 個の id が全て解決なかった。ワールドカタログと `exclusive_skills.yaml` を読み込むようにし、未定義の 14 個に実データとしての定義を与えた。未知 id はロード時ログと `validate_all_data` の両方で可視になる。
+
+**契約の訂正** — 初稿の S2.2 は「奪ったスキルは唱えられる形で得る」としていたが、レビューでこれが実装を満たしているのに実態 обознаでないことが判明した。`player.skills` は詠唱可能な器ではない。読み手は `gain_skill_exp` と数箇所の真偽判定のみで、汎用詠唱動詞 `cast_skill` はリポジトリに存在せず、実質的な詠唱は `CharacterState.skills` 上で起こる。devour はプレイヤーの `CharacterState` を触らないため、取得した id は**所有権にしかならない**。仕様をこの実態に書き換え、「唱えられる」ことを主張する文言を仕様・テスト・コメントから除去した。詠唱への接続は S3 の別 feature として明記した。
+
+**Verification** — 本ブランチで実行し、成功した。
+
+```
+pytest tests/test_devour.py -q        PASS — 6 passed in 6.88s
+pytest tests/ -q                       16 failed, 657 passed in 156.67s
+ruff check                             clean
+```
+
+16 件のうち 15 件はプレースホルダデータ由来の既知の失敗で、ベースラインと同一。残る 1 件 `tests/performance/test_latency.py::test_latency_consistency` は本変更と無関係の負荷依存フレークである（`sum(range(100))` を 50 回計測して `max < avg*10` を断定する純時刻判定で、単独実行でも 5 回中 2 回失敗する。対象ファイルは本差分に含まれない）。
+
+**Journey log**
+
+- 「仕様を満たしているのに嘘になっている」類は、原始的な文面のまま検証を通ってしまう。契約の語彙ひとつが、読む人に「動いている」という錯覚を与える。本 feature の初稿がまさにそれだった。
+- `Entity.skills` は**暗黙に値を作る** property である。読むだけで `_skills` に既定 17 件を書き込む。宣言されたスキルを集計するには `_skills` を直接読む必要がある。`.skills` の真偽で分岐するコードは偽陽性を得る。
+- 「スキル」は 3 層に割れている。`Entity.skills`（所有・成長用の袋）、`CharacterState.skills`（本当に詠唱される呪術書）、`SkillEaterRegistry`（定義）。どれか 1 つだけを直しても機械は動かない。**契約を書く前に、どの層なのかを先に実測すべき**。
+- `SkillDefinition.id` は `^sk_[a-z_]...` に固定されており `extra="forbid"` のため、実世界のスキル id は `model_validate` を必ず落とす。既存コードの `model_construct` を使う流儀が正解で、これは装飾ではない。
+- 計測器を信用しないことの再做である。`_floor_gold` が 97400 を出したのは 90 戦の累積を「1 フロアあたり」とラベルしたからで、試料数に比例して増える値は測定である。
+- 回復ポーションは 8 個渡されるのに `use` 動詞が存在せず、チュートリアルは「`[i]` で回復ポーションを使いましょう」と指示するが、そのキー操作は何もしない。**チュートリアルは、押せるボタンを前提に書かれてはいない。**
+
 
 ## [S1] Problem
 
@@ -89,7 +115,7 @@ commits:
 
 ## Tasks
 
-- [ ] T1: devour が倒した敵の実データから奪取対象を選ぶようにする。固定値の `CharacterState` と `add_skill("com_combat_001")` の既定差し入れを廃止する — acceptance: `skills` が異なる 2 体から異なるスキル id が記録され、`skills` が空の敵では奪取が成立しない (covers: S2.1)
-- [ ] T2: 奪取成功時に奪った id を `player.skills` へ「所有権」として登録する。詠唱可能なのは `CharacterState.skills` であり本次は接続しない — acceptance: 奪取後に `player.skills` にその id が `Skill` インスタンスとともに登録され、同じ敵を 2 回倒しても増えない。画面・ログに「唱えられる」語を使わない (covers: S2.2)
-- [ ] T3: `data_manager.py` の空 `SkillRepository({})` を実データで埋め、`data/monsters.yaml` が参照する 15 id を全て解決できるようにする — acceptance: `DataManager().skills` が空でなく、モンスター参照 id が全て解決し、未知 id は握り潰さずログに残る (covers: S2.3)
-- [ ] T4: リグレッション防止テスト `tests/test_devour.py` を追加する — acceptance: 各テストが S2.1〜S2.3 の不具合を再現する形で失敗し、T1〜T3 適用後は全て成功する (covers: S2.1, S2.2, S2.3)
+- [x] T1: devour が倒した敵の実データから奪取対象を選ぶようにする。固定値の `CharacterState` と `add_skill("com_combat_001")` の既定差し入れを廃止する — acceptance: `skills` が異なる 2 体から異なるスキル id が記録され、`skills` が空の敵では奪取が成立しない (covers: S2.1)
+- [x] T2: 奪取成功時に奪った id を `player.skills` へ「所有権」として登録する。詠唱可能なのは `CharacterState.skills` であり本次は接続しない — acceptance: 奪取後に `player.skills` にその id が `Skill` インスタンスとともに登録され、同じ敵を 2 回倒しても増えない。画面・ログに「唱えられる」語を使わない (covers: S2.2)
+- [x] T3: `data_manager.py` の空 `SkillRepository({})` を実データで埋め、`data/monsters.yaml` が参照する 15 id を全て解決できるようにする — acceptance: `DataManager().skills` が空でなく、モンスター参照 id が全て解決し、未知 id は握り潰さずログに残る (covers: S2.3)
+- [x] T4: リグレッション防止テスト `tests/test_devour.py` を追加する — acceptance: 各テストが S2.1〜S2.3 の不具合を再現する形で失敗し、T1〜T3 適用後は全て成功する (covers: S2.1, S2.2, S2.3)
