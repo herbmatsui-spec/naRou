@@ -68,8 +68,18 @@ strict xfail を最初に使ったことで 1 コマンドで検出できた。
 
 ## フェーズ別記入欄
 
-### Phase 0（Step 1–9）
-（Step 9 で記入）
+### Phase 0（Step 1–9）— 完了
+
+高速ゲート実測: **14 passed, 3 xfailed in 4.43s**（コミット `33b6ef1`）
+
+| テスト | 件数 | 結果 |
+|---|---|---|
+| `test_non_vacuity.py` | 7 | passed |
+| `test_data_integrity.py` | 2 | xfailed（strict） |
+| `test_reachability.py` | 3 | 2 passed / 1 xfailed |
+| `test_balance_snapshot.py` | 5 | passed |
+
+既存の敵系スイートは **8 failed / 93 passed** のまま（Phase 0 では変化なし）。
 
 ### Phase 1（Step 10–32, エージェント A）
 （Step 31 で記入）
@@ -79,3 +89,24 @@ strict xfail を最初に使ったことで 1 コマンドで検出できた。
 
 ### Phase 3（Step 57–72, エージェント C）
 （Step 64 / Step 71 で記入）
+
+---
+
+## 3サブエージェントへの割当（Phase 0 完了後に起動）
+
+| エージェント | ブランチ（`feature/design-v2` から分岐） | worktree | Step |
+|---|---|---|---|
+| A | `feature/v2-phase1` | `.worktrees/v2-a` | 10–32 |
+| B | `feature/v2-phase2` | `.worktrees/v2-b` | 33–56 |
+| C | `feature/v2-phase3` | `.worktrees/v2-c` | 57–72 |
+
+**所有権**（同時編集の禁止ファイル）:
+
+| エージェント | 独占編集 | 読み取りのみ |
+|---|---|---|
+| A | `engine/engine.py` `ecs/entity.py` `ecs/components/components.py` `managers/combat_manager.py` `config.yaml` `save_system.py` `main_quest_system.py` `constants.py` `reincarnation_system.py` | 他全部 |
+| B | `systems.py` `input_actions.py` `input_handler.py` `skill_eater/ai/**` `enemy_intent.py` `turn_manager.py` `data/monsters.yaml` `data/spells.yaml` `data/schemas/monster/**` `data/generated/monster/**` | `engine/engine.py` `ecs/entity.py` |
+| C | `item_system.py` `data/items.yaml` `data/item_affixes.yaml` `data/text/**` `localization_manager.py` `README.md` `COMMERCIAL_EVALUATION_REPORT.md` `NAROU_9_WORLDS_DESIGN.md` | 他全部 |
+
+各エージェントは自分の Step 終了時に `git diff main --name-only` で
+**他エージェントの所有ファイルを1件も触っていないこと**を報告書に書く。
