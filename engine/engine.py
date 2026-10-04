@@ -83,6 +83,41 @@ from ui_fx_systems import FloatingText, Particle, ScreenShake
 configure_logging()
 
 
+def _declared_skill_ids(entity: Entity) -> list[str]:
+    """Entity が宣言しているスキル id を、並び順どおりに返す。
+
+    `Entity.skills` は未設定の個体に対してプレイヤーの既定 17 種を生成し、触れた時点で
+    `_skills` にまで書き込む property なので、判定には生値を使う。
+    data_manager.create_monster は id 文字列のリスト、プレイヤーは Skill 辞書を保持する。
+    """
+    declared = getattr(entity, "_skills", None)
+    if declared is None:
+        return []
+    if isinstance(declared, dict):
+        return [str(key) for key in declared]
+    return [str(s) for s in declared]
+
+
+def _character_state_from_entity(entity: Entity, analysis_level: int = 1):
+    """Entity が保持する実データから、喰らい判定用の `CharacterState` を構成する。"""
+    from skill_eater_system import CharacterState
+
+    attributes = entity.attributes
+    return CharacterState(
+        id=str(getattr(entity, "id", entity.name)),
+        name=entity.name,
+        hp=entity.hp,
+        max_hp=entity.max_hp,
+        mp=entity.mp,
+        max_mp=entity.max_mp,
+        atk=attributes.strength,
+        defense=attributes.endurance,
+        intelligence=attributes.perception,
+        speed=entity.speed,
+        analysis_level=analysis_level,
+    )
+
+
 class Engine:
     """計画書1〜72ステップ完全統合エンジン (商用疎結合アーキテクチャ)"""
 
@@ -967,43 +1002,27 @@ class Engine:
             )
             return True
 
-        from skill_eater_system import CharacterState, SkillEaterRegistry
+        from skill_eater_system import SkillEaterRegistry
 
-        analyzer = CharacterState(
-            id="player",
-            name=self.player.name,
-            hp=self.player.hp,
-            max_hp=self.player.max_hp,
-            mp=self.player.mp,
-            max_mp=self.player.max_mp,
-            atk=15,
-            defense=10,
-            intelligence=15,
-            speed=100,
+        analyzer = _character_state_from_entity(
+            self.player,
             analysis_level=getattr(self.player, "analysis_level", 1),
         )
-        target_state = CharacterState(
-            id=str(getattr(target, "id", "enemy")),
-            name=target.name,
-            hp=target.hp,
-            max_hp=target.max_hp,
-            mp=10,
-            max_mp=10,
-            atk=getattr(target, "atk", 10),
-            defense=getattr(target, "defense", 5),
-            intelligence=5,
-            speed=getattr(target, "speed", 80),
-        )
-        if not target_state.skills:
-            target_state.add_skill("com_combat_001")
+        target_state = _character_state_from_entity(target)
+        declared_ids = _declared_skill_ids(target)
+        for skill_id in declared_ids:
+            # 敵が宣言しているスキルはすべて奪取対象。メモリ容量で落とすのは敵の貧弱さではない
+            target_state.add_skill(skill_id, ignore_capacity=True)
 
         rate = combat_sys.calculate_devour_rate(analyzer, target_state)
         roll = random.random()
-        if roll <= rate:
-            stolen_slot = target_state.remove_skill("com_combat_001") or (
-                next(iter(target_state.skills.values()), None) if target_state.skills else None
-            )
-            stolen_id = stolen_slot.skill_id if stolen_slot else "com_combat_001"
+        # 複数保有時は宣言順の先頭。抽選は行わない
+        stolen_id = next(iter(target_state.skills), None)
+
+        if stolen_id is None:
+            self.log(f"{target.name} の身体には、喰うべきスキルが棲んでいない。", (200, 200, 200))
+        elif roll <= rate:
+            target_state.remove_skill(stolen_id)
             reg = SkillEaterRegistry.get_instance()
             sk_def = reg.get_skill(stolen_id)
             sk_name = sk_def.name if sk_def else stolen_id
@@ -1011,6 +1030,8 @@ class Engine:
             if "skills" not in self.game_state_data.world_a_data:
                 self.game_state_data.world_a_data["skills"] = []
             self.game_state_data.world_a_data["skills"].append(stolen_id)
+
+            self._register_devoured_skill(stolen_id, sk_def)
 
             self.log(
                 f"【捕食成功！】{target.name} から 《{sk_name}》 を喰らい尽くした！",
@@ -1037,6 +1058,25 @@ class Engine:
         self.player.energy -= ENERGY_THRESHOLD
         self.advance_world()
         return True
+
+    def _register_devoured_skill(self, skill_id: str, sk_def) -> None:
+        """奪ったスキルを唱えられるスキル (`player.skills`) へ登録する。
+
+        `world_a_data["skills"]` は HUD と fusion 炉の記録であり、別枠の配列なので残す。
+        定義が引けなかった場合は、黙って捨てずに理由をログと画面に残す。
+        """
+        from ecs.entity import Skill
+
+        skills = self.player.skills
+        if skill_id in skills:
+            return
+
+        if sk_def is None:
+            logger.warning("Devoured skill %r could not be registered: no definition found", skill_id)
+            self.log(f"【記録のみ】《{skill_id}》の定義が見つからないため、唱えられるスキルには登録できない", (255, 160, 80))
+            return
+
+        skills[skill_id] = Skill(sk_def.name, level=1)
 
     def execute_synthesis(self, skill_a: str | None = None, skill_b: str | None = None) -> bool:
         """スキル合成を実行する (Steps 43-47)"""

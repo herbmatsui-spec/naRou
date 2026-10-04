@@ -20,6 +20,7 @@ except ImportError:
     if str(stubs_dir) not in sys.path:
         sys.path.insert(0, str(stubs_dir))
 
+import logging
 import random
 from typing import TYPE_CHECKING, Any
 
@@ -38,6 +39,7 @@ from data.generated.meta.achievements import Achievement
 from data.generated.meta.titles import Title
 from data.generated.monster.monster import MonsterDefinition
 from data.generated.quest.quest import QuestDefinition
+from data.generated.skill.skill import Effect, SkillCategory, SkillDefinition
 from data.generated.skill.skill_fusion import SkillFusion
 from data.generated.skill.skill_trees import SkillTree
 from data.generated.skill.spells import Spell
@@ -66,6 +68,11 @@ from systems import MonsterPreset
 
 if TYPE_CHECKING:
     from game import Engine
+
+logger = logging.getLogger(__name__)
+
+# world スキルの tier (文字列) を SkillDefinition の tier (技能木上の段位) に読み替えるための順位表
+_SKILL_TIER_RANK = {"Common": 0, "Rare": 1, "Unique": 2, "Concept": 3, "Eater": 4}
 
 
 class DataManager(BaseSystem):
@@ -120,8 +127,8 @@ class DataManager(BaseSystem):
             {k: MonsterDefinition.model_validate(v) for k, v in monsters_raw.items()}
         )
 
-        # スキル (スタンドアロン skills.yaml は未定義のため空リポジトリ)
-        self.skills = SkillRepository({})
+        # スキル (ワールドのスキルカタログと职业技能。記法が異なるため tolerant ロード)
+        self.skills = SkillRepository(self._build_skills_tolerant())
 
         # スキルツリー (ラッパー key: skill_trees)
         skill_trees_raw = self._load_yaml("skill_trees.yaml") or {}
@@ -224,6 +231,10 @@ class DataManager(BaseSystem):
         # ローカライゼーション読み込み
         self._load_localization()
 
+        # モンスターが参照する未知のスキル id は握り潰さずログに出す
+        for error in self._unresolved_monster_skills():
+            logger.warning("%s", error)
+
     def _build_quests_tolerant(self) -> dict[str, QuestDefinition]:
         """main_quests.yaml は QuestDefinition スキーマと構造が異なるため、
         スキーマを迂回してモデルを構築する (必須フィールドは既定値で補完)。"""
@@ -265,6 +276,90 @@ class DataManager(BaseSystem):
                 max_level=None,
             )
         return out
+
+    def _build_skills_tolerant(self) -> dict[str, SkillDefinition]:
+        """スキル定義は `data/worlds/skill_eater/skills.yaml` と `data/exclusive_skills.yaml` に
+        あり、どちらも SkillDefinition スキーマとは記法・id 規約が異なる。
+        スキーマを迂回してモデルを構築する (world のカタログを先に読み、id が重複しないもののみ追加)。"""
+        entries: list[tuple[str, dict[str, Any]]] = []
+        world_raw = self._load_yaml("worlds/skill_eater/skills.yaml") or {}
+        entries.extend(
+            (str(e["id"]), e)
+            for e in (world_raw.get("skills") or [])
+            if isinstance(e, dict) and e.get("id")
+        )
+
+        # exclusive_skills.yaml は id を辞書キーに持つため、キーを id として読む
+        exclusive_raw = self._load_yaml("exclusive_skills.yaml") or {}
+        entries.extend(
+            (str(skill_id), e)
+            for skill_id, e in (exclusive_raw.get("exclusive_skills") or {}).items()
+            if isinstance(e, dict)
+        )
+
+        out: dict[str, SkillDefinition] = {}
+        for skill_id, entry in entries:
+            out.setdefault(skill_id, self._build_skill_tolerant(skill_id, entry))
+        return out
+
+    @staticmethod
+    def _build_skill_tolerant(skill_id: str, entry: dict[str, Any]) -> SkillDefinition:
+        """1 件のスキル定義を SkillDefinition に写す。
+
+        world の tier は文字列、スキーマの tier はスキル木上の整数段位なので順位に読み替える。
+        cost (技能ポイント) はスキーマの必須だが、奪取は技能ポイントを経由しないため最低値 1 に固定する。
+        """
+        tags = {str(t).lower() for t in entry.get("tags") or []}
+        category = SkillCategory.combat
+        for tag, mapped in (
+            ("magic", SkillCategory.magic),
+            ("labor", SkillCategory.craft),
+            ("craft", SkillCategory.craft),
+            ("social", SkillCategory.social),
+            ("economy", SkillCategory.social),
+        ):
+            if tag in tags:
+                category = mapped
+                break
+
+        effects = [
+            Effect.model_construct(
+                type=eff.get("type", "Unknown"),
+                value=eff.get("value", 0.0),
+                target=eff.get("target", "self"),
+                condition=eff.get("condition"),
+                duration=eff.get("duration", 0),
+            )
+            for eff in entry.get("effects") or []
+            if isinstance(eff, dict)
+        ]
+
+        return SkillDefinition.model_construct(
+            id=skill_id,
+            name=entry.get("name", skill_id),
+            description=entry.get("flavor_text") or entry.get("description"),
+            category=category,
+            icon=entry.get("icon"),
+            cost=1,
+            prerequisites=[],
+            effects=effects,
+            tree_id=None,
+            tier=_SKILL_TIER_RANK.get(str(entry.get("tier", "Common")), 0),
+            max_level=1,
+            cooldown=int(entry.get("cooldown", 0) or 0),
+            mp_cost=int(entry.get("mp_cost", 0) or 0),
+            range=1,
+            target_type=None,
+        )
+
+    def _unresolved_monster_skills(self) -> list[str]:
+        """`data/monsters.yaml` が参照するスキルのうち SkillRepository で解決しないものを列挙する。"""
+        return [
+            f"Monster '{m_id}' references unknown skill '{skill_id}'"
+            for m_id, monster in self.monsters._data.items()
+            for skill_id in (getattr(s, "root", s) for s in (monster.skills or []))
+            if self.skills.get(str(skill_id)) is None
+        ]
 
     def validate_all(self) -> None:
         """全リポジトリの整合性チェック (参照整合性等は将来拡張)"""
@@ -484,6 +579,9 @@ class DataManager(BaseSystem):
                 errors.append(f"Monster '{m_id}' missing 'name'")
             if m_val.max_hp <= 0:
                 errors.append(f"Monster '{m_id}' missing 'max_hp'")
+
+        # モンスターが参照するスキル id の解決チェック
+        errors.extend(self._unresolved_monster_skills())
 
         return errors
 
