@@ -27,6 +27,80 @@ from ecs.components import (
     TitleComponent,
 )
 
+# ---------------------------------------------------------------------------
+# メタゴール permanent_bonus のキー分類
+#
+# data/meta_goals.yaml の permanent_bonus は「定義するだけ」で終わらせない。
+# 各キーは必ず次のどちらかに属すること:
+#   (A) 実装済み … 下記 recalculate_and_apply_bonuses がゲームが実際に参照する
+#                   値（Entity のspeed / attributes）へ反映する
+#   (B) 予約済み … 反映しないキー。理由（何が欠けているか）を添える
+# 未分類のまま残すキーは「定義されたが誰も読まない嘘」になるため許容しない。
+# tests/test_meta_goals.py が全キーの分類と実効果を検証する。
+# ---------------------------------------------------------------------------
+
+# (A) 実装済み: 実際にプレイヤーへ反映されるメタゴール由来ボーナス
+APPLIED_PERMANENT_BONUS_KEYS: frozenset[str] = frozenset({"speed", "all_attributes"})
+
+# (B) 予約済み: 反映しないキーと「何が欠けているか」の理由
+RESERVED_PERMANENT_BONUSES: dict[str, str] = {
+    "max_hp": (
+        "実装には ecs/entity.py の Entity.recalculate_stats() が "
+        "AchievementComponent.permanent_bonuses を読み、"
+        "calculate_max_hp() に固定加算を足す処理が必要。"
+        "現状は max_hp を属性から毎回作り直すため、"
+        "レベルアップ・ジョブ・称号で加算が消える。"
+    ),
+    "max_mp": (
+        "max_hp と同じ。Entity.recalculate_stats() が "
+        "calculate_max_mp() で上書きするため加算が保持されない。"
+    ),
+    "exp_bonus": (
+        "経験値の付与は Entity.gain_exp()（ecs/entity.py）内の "
+        "self.exp += amount で行われている。"
+        "この加算に倍率を適用する読み取り口が無いため未実装。"
+    ),
+    "potential_bonus": (
+        "スキル成長率の根拠は Entity.gain_skill_exp()（ecs/entity.py）内の "
+        "int(amount * (skill.potential / 100.0)) で、"
+        "この地点にボーナスを読み取る仕組みが無いため未実装。"
+    ),
+    "karma_gain_multiplier": (
+        "カルマの増減は karma_system.py の KarmaManager.update_karma() が "
+        "player.karma_law_chaos / karma_good_evil を直接加算しており、"
+        "その加算に倍率を掛ける読み取り口が無いため未実装。"
+    ),
+    "magic_power": (
+        "独立した「魔法威力」統計が存在しない。"
+        "呪文ダメージは systems.py が caster.attributes.magic を直接参照するため、"
+        "all_attributes と経路が重複して二重計上になるため。"
+        "実装には独立した統計と systems.py のダメージ式への加算が必要。"
+    ),
+    "resistance_all": (
+        "属性耐性 ResistanceSet（systems.py）は初期化時に書き込まれるだけで、"
+        "ダメージ計算から参照されていない。"
+        "実装には systems.py 側に全属性加算の反射処理が必要。"
+    ),
+}
+
+# all_attributes が加算する全主能力
+_ALL_ATTRIBUTE_FIELDS: tuple[str, ...] = (
+    "strength",
+    "endurance",
+    "dexterity",
+    "perception",
+    "learning",
+    "will",
+    "magic",
+    "charisma",
+)
+
+
+def _shift_all_attributes(target: Any, delta: int) -> None:
+    """全主能力を一括で増減する"""
+    for field_name in _ALL_ATTRIBUTE_FIELDS:
+        setattr(target, field_name, getattr(target, field_name) + delta)
+
 
 @dataclass
 class MemoryFragmentData:
@@ -404,82 +478,82 @@ class MetaProgressionManager:
         ach_comp = player.get_component(AchievementComponent)
         reinc_comp = player.get_component(ReincarnationComponent)
         attrs = getattr(player, "attributes", None)
+        base_attrs = getattr(player, "_base_attributes", None)
 
         # 0. 前回適用済みのボーナスがあればロールバック（二重適用防止）
         prev_bonuses = getattr(ach_comp, "permanent_bonuses", {}) or {}
+        # 予約済みキーは適用していないため、ここでも引かない
+        prev_applied = {k: v for k, v in prev_bonuses.items() if k in APPLIED_PERMANENT_BONUS_KEYS}
         if prev_bonuses:
             if attrs:
                 if "str_bonus" in prev_bonuses:
                     attrs.strength -= int(prev_bonuses["str_bonus"])
-                if "all_attributes" in prev_bonuses:
-                    bonus = int(prev_bonuses["all_attributes"])
-                    attrs.strength -= bonus
-                    attrs.endurance -= bonus
-                    attrs.dexterity -= bonus
-                    attrs.perception -= bonus
-                    attrs.learning -= bonus
-                    attrs.will -= bonus
-                    attrs.magic -= bonus
-                    attrs.charisma -= bonus
+                if "all_attributes" in prev_applied:
+                    _shift_all_attributes(attrs, -int(prev_applied["all_attributes"]))
+            if "all_attributes" in prev_applied and base_attrs is not None:
+                _shift_all_attributes(base_attrs, -int(prev_applied["all_attributes"]))
             if "speed_bonus" in prev_bonuses and hasattr(player, "speed"):
                 player.speed -= int(prev_bonuses["speed_bonus"])
-            if "speed" in prev_bonuses and hasattr(player, "speed"):
-                player.speed -= int(prev_bonuses["speed"])
+            if "speed" in prev_applied and hasattr(player, "speed"):
+                player.speed -= int(prev_applied["speed"])
 
-        total_bonuses: dict[str, float] = {}
-
-        # 1. メタゴール達成によるボーナス
+        # 1. メタゴール達成によるボーナス（permanent_bonus）
+        goal_bonuses: dict[str, float] = {}
         for gid, gdata in self.registry.meta_goals.items():
             if ach_comp.meta_progression.get(gid, 0) >= 1:
                 for bkey, bval in gdata.permanent_bonus.items():
-                    total_bonuses[bkey] = total_bonuses.get(bkey, 0.0) + float(bval)
+                    goal_bonuses[bkey] = goal_bonuses.get(bkey, 0.0) + float(bval)
 
-        # 2. 収集した記憶の欠片によるボーナス
+        # 2. 収集した記憶の欠片によるボーナス（buff_traits）
+        frag_bonuses: dict[str, float] = {}
         for frag in reinc_comp.collected_fragments:
             if isinstance(frag, dict):
                 traits = frag.get("buff_traits", {})
                 for tkey, tval in traits.items():
-                    total_bonuses[tkey] = total_bonuses.get(tkey, 0.0) + float(tval)
+                    frag_bonuses[tkey] = frag_bonuses.get(tkey, 0.0) + float(tval)
 
-        # 3. プレイヤーへの実数値適用
+        total_bonuses: dict[str, float] = {**goal_bonuses, **frag_bonuses}
+
+        # 付与されたボーナスである事実は記録として残す（予約済みキーも集計に含める）
         ach_comp.permanent_bonuses = {
             k: int(v) if isinstance(v, (int, float)) and float(v).is_integer() else v
             for k, v in total_bonuses.items()
         }
 
-        # 主能力・HP/MP等のステータス反映
-        if attrs:
-            if "str_bonus" in total_bonuses:
-                attrs.strength += int(total_bonuses["str_bonus"])
-            if "all_attributes" in total_bonuses:
-                bonus = int(total_bonuses["all_attributes"])
-                attrs.strength += bonus
-                attrs.endurance += bonus
-                attrs.dexterity += bonus
-                attrs.perception += bonus
-                attrs.learning += bonus
-                attrs.will += bonus
-                attrs.magic += bonus
-                attrs.charisma += bonus
+        # 3. プレイヤーへの実数値適用
+        # 予約済みキーはここで切り落とす。permanent_bonuses に記録されるだけで、
+        # ゲームの数値には一切影響させない。
+        applied_goal_bonuses = {
+            k: v for k, v in goal_bonuses.items() if k in APPLIED_PERMANENT_BONUS_KEYS
+        }
 
-        if "speed_bonus" in total_bonuses and hasattr(player, "speed"):
-            player.speed += int(total_bonuses["speed_bonus"])
-        if "speed" in total_bonuses and hasattr(player, "speed"):
-            player.speed += int(total_bonuses["speed"])
+        # 主能力の反映
+        if attrs:
+            if "str_bonus" in frag_bonuses:
+                attrs.strength += int(frag_bonuses["str_bonus"])
+            if "all_attributes" in applied_goal_bonuses:
+                bonus = int(applied_goal_bonuses["all_attributes"])
+                _shift_all_attributes(attrs, bonus)
+                # Entity.recalculate_stats() は _base_attributes から属性を復元するため、
+                # 復元元にも同じだけ足さないとレベルアップ等の再計算で消える
+                if base_attrs is not None:
+                    _shift_all_attributes(base_attrs, bonus)
+
+        # 移動速度の反映（行動順 TurnQueue.step_next_actor が参照する値）
+        if hasattr(player, "speed"):
+            if "speed" in applied_goal_bonuses:
+                player.speed += int(applied_goal_bonuses["speed"])
+            if "speed_bonus" in frag_bonuses:
+                player.speed += int(frag_bonuses["speed_bonus"])
 
         # HP / MP の再計算と現在値の調整
+        # max_hp / max_mp は予約済みのため、メタゴール由来の固定加算は加えない
         if hasattr(player, "calculate_max_hp"):
-            hp_bonus = int(total_bonuses.get("max_hp", 0)) + int(
-                total_bonuses.get("hp_max_bonus", 0)
-            )
-            player.max_hp = player.calculate_max_hp() + hp_bonus
+            player.max_hp = player.calculate_max_hp() + int(frag_bonuses.get("hp_max_bonus", 0))
             player.hp = min(player.hp, player.max_hp)
 
         if hasattr(player, "calculate_max_mp"):
-            mp_bonus = int(total_bonuses.get("max_mp", 0)) + int(
-                total_bonuses.get("mp_max_bonus", 0)
-            )
-            player.max_mp = player.calculate_max_mp() + mp_bonus
+            player.max_mp = player.calculate_max_mp() + int(frag_bonuses.get("mp_max_bonus", 0))
             player.mp = min(player.mp, player.max_mp)
 
         return total_bonuses

@@ -204,3 +204,247 @@ skills:
         target: "Self"
         element: "Fire"
         multiplier: 4.0
+  - id: "throw_stone"
+    name: "石投げ"
+    tier: "Common"
+    type: "Active"
+    mp_cost: 3
+    cooldown: 1
+    market_value: 800
+    tags: ["Ranged", "Thrown", "Goblin", "Active"]
+    flavor_text: "足元の石を投げ捨てるだけ。ゴブリンにとってはそれで十分だ。"
+    effects:
+      - type: "Damage"
+        target: "Enemy"
+        formula: "dex * 1.2"
+
+  - id: "power_bash"
+    name: "力強打"
+    tier: "Common"
+    type: "Active"
+    mp_cost: 5
+    cooldown: 2
+    market_value: 1200
+    tags: ["Combat", "Blunt", "Orc", "Active"]
+    flavor_text: "力には理屈が要らない。オークの周到さとは無縁の一撃。"
+    effects:
+      - type: "Damage"
+        target: "Enemy"
+        formula: "str * 1.6"
+      - type: "DamageMod"
+        target: "Self"
+        weapon_type: "Blunt"
+        formula: "*1.15"
+
+  - id: "fire_breath"
+    name: "炎の息吹"
+    tier: "Rare"
+    type: "Active"
+    mp_cost: 12
+    cooldown: 4
+    market_value: 4000
+    tags: ["Magic", "Fire", "Breath", "Active"]
+    flavor_text: "犬が一言も発さずに火を吹く。尻尾の毛まで焦げる。"
+    effects:
+      - type: "Damage"
+        target: "Enemy"
+        element: "Fire"
+        formula: "int * 1.8"
+
+  - id: "steal_gold"
+    name: "金の窃盗"
+    tier: "Common"
+    type: "Active"
+    mp_cost: 8
+    cooldown: 5
+    market_value: 3500
+    tags: ["Stealth", "Economy", "Thief", "Active"]
+    flavor_text: "手癖が悪い。盗んだ金は翌朝には別の名前になっている。"
+    effects:
+      - type: "EconomyMod"
+        target: "Enemy"
+        stat: "gold"
+        formula: "*0.35"
+
+  - id: "cast_dart"
+    name: "呪毒弾"
+    tier: "Common"
+    type: "Active"
+    mp_cost: 4
+    cooldown: 1
+    market_value: 600
+    tags: ["Magic", "Ranged", "Poison", "Active"]
+    flavor_text: "見習いの魔法。毒は薄いが、刺されれば多少は効く。"
+    effects:
+      - type: "Damage"
+        target: "Enemy"
+        formula: "int * 0.8"
+      - type: "ApplyStatus"
+        target: "Enemy"
+        status: "Poison"
+        chance: 35
+        duration: 3
+
+  - id: "heal_self"
+    name: "己の癒し"
+    tier: "Common"
+    type: "Active"
+    mp_cost: 10
+    cooldown: 6
+    market_value: 2000
+    tags: ["Magic", "Heal", "Self", "Active"]
+    flavor_text: "仲間はいない。だから自分自身しか癒せない。"
+    effects:
+      - type: "Heal"
+        target: "Self"
+        formula: "int * 1.4 + 15"
+
+  - id: "heavy_cleave"
+    name: "豪快な大袈裟"
+    tier: "Rare"
+    type: "Active"
+    mp_cost: 8
+    cooldown: 3
+    market_value: 3500
+    tags: ["Combat", "Axe", "Minotaur", "Active"]
+    flavor_text: "斧を振り回して自分の体も回す。見舞いは泥と汗で終わる。"
+    effects:
+      - type: "Damage"
+        target: "Enemy"
+        formula: "str * 2.1"
+      - type: "ApplyStatus"
+        target: "Enemy"
+        status: "Bleeding"
+        chance: 40
+        duration: 3
+
+  - id: "roar"
+    name: "戦吼"
+    tier: "Rare"
+    type: "Passive"
+    mp_cost: 0
+    cooldown: 8
+    market_value: 2500
+    tags: ["Combat", "Intimidate", "Passive"]
+    flavor_text: "牛の肺はデカい。叫んだ相手はその一音で足が止まる。"
+    effects:
+      - type: "AggroMod"
+        target: "Self"
+        formula: "*1.8"
+      - type: "StatMod"
+        target: "Self"
+        stat: "defense"
+        formula: "+3"
+
+  - id: "cast_fireball"
+    name: "火球術"
+    tier: "Unique"
+    type: "Active"
+    mp_cost: 25
+    cooldown: 5
+    market_value: 12000
+    tags: ["Magic", "Fire", "Lich", "Active"]
+    flavor_text: "賢者の得意。詠唱の途中で骨が鳴るが、代わりに相手は燃える。"
+    effects:
+      - type: "Damage"
+        target: "Enemy"
+        element: "Fire"
+        formula: "int * 2.6 + 30"
+      - type: "ApplyStatus"
+        target: "Enemy"
+        status: "Burning"
+        chance: 50
+        duration: 3
+
+  - id: "summon_undead"
+    name: "亡者の召喚"
+    tier: "Unique"
+    type: "Active"
+    mp_cost: 40
+    cooldown: 10
+    market_value: 20000
+    tags: ["Summon", "Undead", "Lich", "Active"]
+    flavor_text: "墓を開く。召喚された者は、何も知らなくても従う。"
+    effects:
+      - type: "PassiveEffect"
+        target: "Self"
+        effect_name: "summon_minion"
+        count: 2
+      - type: "AggroMod"
+        target: "Enemy"
+        formula: "*1.5"
+
+  - id: "drain_mp"
+    name: "魔力吸引"
+    tier: "Unique"
+    type: "Active"
+    mp_cost: 0
+    cooldown: 4
+    market_value: 15000
+    tags: ["Magic", "Drain", "Lich", "Active"]
+    flavor_text: "相手の魔力を自分の壺に注ぎ込む。魔力がない相手は怖い。"
+    effects:
+      - type: "StatMod"
+        target: "Enemy"
+        stat: "mp"
+        formula: "-40"
+      - type: "StatMod"
+        target: "Self"
+        stat: "mp"
+        formula: "+25"
+
+  - id: "inferno_breath"
+    name: "煉獄の息吹"
+    tier: "Unique"
+    type: "Active"
+    mp_cost: 35
+    cooldown: 7
+    market_value: 25000
+    tags: ["Magic", "Fire", "Dragon", "Active"]
+    flavor_text: "火炎の吐息。城壁の石も数秒で灰になる。"
+    effects:
+      - type: "Damage"
+        target: "Enemy"
+        element: "Fire"
+        formula: "int * 3.4 + 40"
+      - type: "DamageReduction"
+        target: "Self"
+        element: "Fire"
+        formula: "*0.9"
+
+  - id: "tail_swipe"
+    name: "尾払い"
+    tier: "Rare"
+    type: "Active"
+    mp_cost: 5
+    cooldown: 2
+    market_value: 3000
+    tags: ["Combat", "Dragon", "Physical", "Active"]
+    flavor_text: "首より速い。竜は剣を持たなくても勝てる理由がある。"
+    effects:
+      - type: "Damage"
+        target: "Enemy"
+        formula: "str * 1.4"
+      - type: "SpeedBuff"
+        target: "Self"
+        stat: "evasion"
+        multiplier: 1.5
+
+  - id: "intimidate"
+    name: "威嚇"
+    tier: "Unique"
+    type: "Passive"
+    mp_cost: 0
+    cooldown: 6
+    market_value: 18000
+    tags: ["Combat", "Intimidate", "Dragon", "Passive"]
+    flavor_text: "視線を合わせただけで膝をつく。竜の威嚇は戦闘ではなく交渉である。"
+    effects:
+      - type: "StatMod"
+        target: "Enemy"
+        stat: "atk"
+        formula: "*0.7"
+      - type: "ResistanceMod"
+        target: "Enemy"
+        element: "Fear"
+        formula: "+0.3"

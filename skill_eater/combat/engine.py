@@ -8,12 +8,18 @@ Phase 1 Tactical Combat Manager (Phase1CombatManager)
 from __future__ import annotations
 
 import random
+import re
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Sequence
 
 from skill_eater_audio_system import SkillEaterAudioSystem
 from skill_eater_presentation_system import PresentationEvent, SkillEaterPresentationSystem
-from skill_eater_system import CharacterState, SkillEaterRegistry, SkillTier
+from skill_eater_system import (
+    CharacterState,
+    SkillEffect,
+    SkillEaterRegistry,
+    SkillTier,
+)
 
 # 属性シナジー＆消化不良の定義
 SYNERGY_COMBOS: dict[tuple[str, str], tuple[str, int]] = {
@@ -29,6 +35,158 @@ INDIGESTION_COMBOS: dict[tuple[str, str], tuple[str, int]] = {
     ),
     ("Ice", "Fire"): ("【熱狂ショック】急激な温度変化により拒絶反応！", 20),
 }
+
+# 効果式（`formula`）のトークン。数値・`*` `+` `-` だけを受け、eval を使わない。
+_FORMULA_TOKENS = re.compile(r"[A-Za-z_][A-Za-z_0-9]*|\d+(?:\.\d+)?|[*+\-]")
+
+# 効果式の能力名が指す CharacterState のフィールド。
+# `engine/engine.py` の橋渡しが strength→atk / endurance→defense / perception→intelligence で
+# 写すのと同じ写し方に揃える。`dex`（器用）に相当する能力は CharacterState に無いため speed を充てる。
+_FORMULA_STAT_FIELDS: dict[str, str] = {
+    "str": "atk",
+    "strength": "atk",
+    "atk": "atk",
+    "attack": "atk",
+    "def": "defense",
+    "defense": "defense",
+    "defence": "defense",
+    "endurance": "defense",
+    "int": "intelligence",
+    "intelligence": "intelligence",
+    "perception": "intelligence",
+    "magic": "intelligence",
+    "dex": "speed",
+    "dexterity": "speed",
+    "agility": "speed",
+    "speed": "speed",
+    "hp": "hp",
+    "mp": "mp",
+    "max_hp": "max_hp",
+    "max_mp": "max_mp",
+}
+
+# 即座に実体へ当てられる効果。恒久補正（DamageMod / ResistanceMod / AggroMod など）や、
+# 経済・小計・召喚など別システムに依存する効果だけは含めない。
+# 含めないものは「実行経路が無い」として拒否またはスキップとして必ず明示する。
+EXECUTABLE_EFFECT_TYPES: frozenset[str] = frozenset(
+    {"Damage", "Heal", "ApplyStatus", "StatMod"}
+)
+
+# 効果の `target` の解釈。World A の戦闘は単独なので `Ally`（味方全体）は唱えた本人に寄せる。
+_EFFECT_TARGET_KINDS: dict[str, str] = {
+    "self": "self",
+    "ally": "self",
+    "enemy": "enemy",
+    "enemyaoe": "enemy_aoe",
+}
+
+
+def _formula_value(
+    formula: str | None, subject: CharacterState, base: float = 0.0
+) -> float | None:
+    """`"int * 1.8 + 30"` 形式の効果式を `subject` の能力で評価する。
+
+    対応する書式は `<能力> * <係数> [± <定数>]`、`<能力> ± <定数>`、そして先頭が演算子の
+    `<係数>` / `±<定数>`（StatMod のように「対象の現在値を*''」に使う形）。
+    未知の能力名や空の式は «None» を返し、「実行できない」判定に回す。
+    """
+    if not formula:
+        return None
+    tokens = _FORMULA_TOKENS.findall(str(formula))
+    if not tokens:
+        return None
+
+    acc = float(base)
+    pending = "+"  # 先頭に立つ能力名は base への加算として扱う
+    for token in tokens:
+        if token in {"*", "+", "-"}:
+            pending = token
+            continue
+        try:
+            operand = float(token)
+        except ValueError:
+            field = _FORMULA_STAT_FIELDS.get(token.lower())
+            if field is None:
+                return None
+            operand = float(getattr(subject, field, 0))
+        if pending == "*":
+            acc *= operand
+        elif pending == "+":
+            acc += operand
+        else:
+            acc -= operand
+        pending = "+"
+    return acc
+
+
+def _stat_mod_field(effect: SkillEffect) -> str | None:
+    """`StatMod` の `stat` が指す CharacterState のフィールド。
+
+    `max_carry_weight` のように CharacterState に無い能力は «None»（実行不可）。
+    """
+    stat = str(effect.params.get("stat") or "").strip().lower()
+    return _FORMULA_STAT_FIELDS.get(stat)
+
+
+def _resolve_effect_targets(
+    effect: SkillEffect, caster: CharacterState, targets: Sequence[CharacterState]
+) -> list[CharacterState]:
+    """効果の `target` を実際の `CharacterState` へ解決する（空なら実行不可）。"""
+    kind = _EFFECT_TARGET_KINDS.get(str(effect.target or "Self").strip().lower())
+    if kind == "self":
+        return [caster]
+    if kind == "enemy":
+        return list(targets[:1])
+    if kind == "enemy_aoe":
+        return list(targets)
+    return []
+
+
+def _clamp_field(character: CharacterState, field: str, value: float) -> int:
+    """能力値の変更を World A の既存慣習の範囲へ丸める（HP/MP は上限内、能力値は 1  以上）。"""
+    value = int(value)
+    if field == "hp":
+        return max(0, min(value, character.max_hp))
+    if field == "mp":
+        return max(0, min(value, character.max_mp))
+    if field in {"max_hp", "max_mp"}:
+        return max(0, value)
+    return max(1, value)
+
+
+def _character_state_of(entity: Any) -> CharacterState:
+    """実体（`ecs.entity.Entity`）を World A の戦闘状態へ写す。
+
+    `engine/engine.py` の `_character_state_from_entity` と同じ写し方だが、同ファイルは
+    他作業者の編集対象であり、この戦闘システム側はエンジンに依存せずに自前で持つ。
+    """
+    attributes = entity.attributes
+    return CharacterState(
+        id=str(getattr(entity, "id", entity.name)),
+        name=entity.name,
+        hp=entity.hp,
+        max_hp=entity.max_hp,
+        mp=entity.mp,
+        max_mp=entity.max_mp,
+        atk=attributes.strength,
+        defense=attributes.endurance,
+        intelligence=attributes.perception,
+        speed=entity.speed,
+        analysis_level=getattr(entity, "analysis_level", 1),
+        status_effects=list(getattr(entity, "status_effects", None) or []),
+    )
+
+
+@dataclass
+class _CastTally:
+    """1 回の詠唱で出た結果。`BattleActionResult` へ移すまで貯めておく。"""
+
+    damage: int = 0
+    heal: int = 0
+    statuses: list[str] = field(default_factory=list)
+    logs: list[str] = field(default_factory=list)
+    sounds: list[str] = field(default_factory=list)
+    events: list[PresentationEvent] = field(default_factory=list)
 
 
 @dataclass
@@ -86,6 +244,9 @@ class SkillEaterCombatSystem:
         self.registry = registry or SkillEaterRegistry.get_instance()
         self.audio = audio or SkillEaterAudioSystem.get_instance()
         self.presentation = presentation or SkillEaterPresentationSystem.get_instance()
+        # プレイヤーの永続呪術帳。kernel に登録されたこのインスタンスがラン中 1 個なので、
+        # ここに置いた CharacterState はそのまま「跨ぎ越える呪術帳」になる。
+        self._spellbook: CharacterState | None = None
 
     def calculate_devour_rate(self, analyzer: CharacterState, target: CharacterState) -> float:
         base_rate = 0.60
@@ -600,6 +761,319 @@ class SkillEaterCombatSystem:
             presentation_events=events,
         )
 
+    # --- 詠唱（喰らいで得た技を使う） ---
+    def player_spellbook(self, entity: Any) -> CharacterState:
+        """プレイヤーの永続呪術帳。ラン中 1 個だけ持ち続ける `CharacterState`。
+
+        `Engine.execute_devour()` は奪取した id を `player.skills`（ECS 側の所有辞書）へ書く。
+        そちらは所有者の入れ物で詠唱の経路を持たないため、初回参照時に id を
+        `CharacterState.skills`（World A が実際に唱える場所）へ載せ替え、以降は同じ
+        インスタンスを返し続ける。HP / MP / 能力値は毎回 Entity から取り直す。
+        """
+        spellbook = self._spellbook
+        if spellbook is None:
+            attributes = entity.attributes
+            spellbook = CharacterState(
+                id="player",
+                name=entity.name,
+                hp=entity.hp,
+                max_hp=entity.max_hp,
+                mp=entity.mp,
+                max_mp=entity.max_mp,
+                atk=attributes.strength,
+                defense=attributes.endurance,
+                intelligence=attributes.perception,
+                speed=entity.speed,
+            )
+            self._spellbook = spellbook
+
+        attributes = entity.attributes
+        spellbook.name = entity.name
+        spellbook.hp = entity.hp
+        spellbook.max_hp = entity.max_hp
+        spellbook.mp = entity.mp
+        spellbook.max_mp = entity.max_mp
+        spellbook.atk = attributes.strength
+        spellbook.defense = attributes.endurance
+        spellbook.intelligence = attributes.perception
+        spellbook.speed = entity.speed
+        spellbook.analysis_level = getattr(entity, "analysis_level", 1)
+
+        for owned_id in getattr(entity, "skills", None) or {}:
+            skill_id = str(owned_id)
+            if skill_id in spellbook.skills:
+                continue
+            if self.registry.get_skill(skill_id) is None:
+                # 主人公既定の格闘・短剣など World A カタログに無い id は唱えられない。
+                # `Engine._register_devoured_skill` も同じ理由でこのような id を記録しない。
+                # 載せれば記憶容量を消費するだけなので、呪術帳には入れない。
+                continue
+            # 記憶容量の可否は execute_devour 側が判断済み。ここでは使用メモリ(MB)を
+            # 反映させ、overclock_level として process_turn_end の脳焼きに載せる。
+            spellbook.add_skill(skill_id, ignore_capacity=True)
+        return spellbook
+
+    def cast_skill(
+        self,
+        caster: CharacterState,
+        skill_id: str,
+        targets: Sequence[CharacterState] = (),
+    ) -> BattleActionResult:
+        """`caster` が `skill_id` を唱える。魔力とクールダウンを払い、効果を実体へ当てる。
+
+        唱えられない場合は魔力もクールダウンも消費しない。効果のうち実行経路が無いものは
+        黙って捨てず、「何が Didn't run」をログに必ず残す。
+        """
+        target_list = list(targets)
+        target_name = target_list[0].name if target_list else caster.name
+        s_def = self.registry.get_skill(skill_id)
+
+        if s_def is None:
+            return self._cast_refusal(
+                caster, target_name, f"《{skill_id}》の定義が無く唱えられない。"
+            )
+
+        skill_name = s_def.name
+
+        if not caster.has_skill(skill_id):
+            return self._cast_refusal(
+                caster, target_name, f"《{skill_name}》は呪術帳に載っていない。"
+            )
+
+        slot = caster.skills[skill_id]
+
+        if slot.is_encrypted:
+            return self._cast_refusal(
+                caster,
+                target_name,
+                f"《{skill_name}》は暗号化ステップで解読されていない。",
+                emote="emote_question.png",
+                audio="metalClick.ogg",
+            )
+
+        if slot.current_cooldown > 0:
+            return self._cast_refusal(
+                caster,
+                target_name,
+                f"《{skill_name}》はクールダウン中（残り {slot.current_cooldown} ターン）。",
+            )
+
+        if not any(self._can_apply(e, caster, target_list) for e in s_def.effects):
+            unsupported = ", ".join(dict.fromkeys(e.effect_type for e in s_def.effects))
+            return self._cast_refusal(
+                caster,
+                target_name,
+                f"《{skill_name}》を唱える実行経路が無い（未対応の効果: {unsupported or '(効果宣言なし)'}）。",
+                emote="emote_question.png",
+            )
+
+        if caster.mp < s_def.mp_cost:
+            return self._cast_refusal(
+                caster,
+                target_name,
+                f"《{skill_name}》を唱える魔力が足りない（必要 {s_def.mp_cost} / 所持 {caster.mp}）。",
+            )
+
+        caster.mp -= s_def.mp_cost
+        slot.current_cooldown = s_def.cooldown
+
+        tally = _CastTally()
+        self.audio.play_sound("cast.ogg")
+        tally.sounds.append("cast.ogg")
+        tally.events.append(
+            self.presentation.add_event(
+                emote_file="emote_alert.png",
+                audio_file="metalLatch.ogg",
+                message=f"《{skill_name}》を唱える！",
+            )
+        )
+        tally.logs.append(
+            f"{caster.name}は《{skill_name}》を唱えた！"
+            f"（魔力 -{s_def.mp_cost} / クールダウン {s_def.cooldown}）"
+        )
+
+        skipped: list[str] = []
+        for effect in s_def.effects:
+            if not self._apply_effect(effect, caster, target_list, tally):
+                skipped.append(effect.effect_type)
+
+        if skipped:
+            tally.logs.append(
+                "※未実行の効果（実行経路が無い）: " + ", ".join(dict.fromkeys(skipped))
+            )
+
+        if tally.damage:
+            tally.events.append(
+                self.presentation.add_event(
+                    emote_file="emote_heartBroken.png",
+                    message=f"{target_name}に {tally.damage} ダメージ！",
+                )
+            )
+        if tally.heal:
+            tally.events.append(
+                self.presentation.add_event(
+                    emote_file="emote_idea.png",
+                    message=f"{caster.name}の体力が {tally.heal} 回復した！",
+                )
+            )
+        if tally.statuses:
+            tally.sounds.append("metalLatch.ogg")
+
+        return BattleActionResult(
+            action_type="SKILL",
+            actor_name=caster.name,
+            target_name=target_name,
+            success=True,
+            damage_dealt=tally.damage,
+            heal_amount=tally.heal,
+            status_applied=tally.statuses,
+            log_messages=tally.logs,
+            played_sounds=tally.sounds,
+            presentation_events=tally.events,
+        )
+
+    def cast_devoured_skill(
+        self, entity: Any, skill_id: str, target_entity: Any | None = None
+    ) -> BattleActionResult:
+        """プレイヤーの実体に《喰らい》した技を1回歌わせ、結果を実体へ書き戻す。
+
+        World A の戦闘状態は実体の写しに過ぎないので、HP / MP / 状態異常はここでもどす。
+        「唱えるにはどれほど近くにいるか」等の入力層の判断はこの関数の外側にある。
+        """
+        spellbook = self.player_spellbook(entity)
+        target_states = (
+            [_character_state_of(target_entity)] if target_entity is not None else []
+        )
+
+        result = self.cast_skill(spellbook, skill_id, target_states)
+
+        entity.hp = spellbook.hp
+        entity.mp = spellbook.mp
+        if spellbook.status_effects:
+            entity.status_effects = list(spellbook.status_effects)
+
+        if target_states:
+            target_state = target_states[0]
+            target_entity.hp = target_state.hp
+            target_entity.mp = target_state.mp
+            if target_state.status_effects:
+                target_entity.status_effects = list(target_state.status_effects)
+
+        return result
+
+    def _cast_refusal(
+        self,
+        caster: CharacterState,
+        target_name: str,
+        message: str,
+        emote: str = "emote_swirl.png",
+        audio: str = "creak1.ogg",
+    ) -> BattleActionResult:
+        """唱えられなかった旨を演出とログにして返す（魔力・クールダウンは消費しない）。"""
+        self.audio.play_sound(audio)
+        event = self.presentation.add_event(
+            emote_file=emote, audio_file=audio, message=message
+        )
+        return BattleActionResult(
+            action_type="SKILL",
+            actor_name=caster.name,
+            target_name=target_name,
+            success=False,
+            log_messages=[message],
+            played_sounds=[audio],
+            presentation_events=[event],
+        )
+
+    def _can_apply(
+        self, effect: SkillEffect, caster: CharacterState, targets: Sequence[CharacterState]
+    ) -> bool:
+        """その場で効果当てられるかを、実体に触れずに判定する。"""
+        if effect.effect_type not in EXECUTABLE_EFFECT_TYPES:
+            return False
+        if not _resolve_effect_targets(effect, caster, targets):
+            return False
+        if effect.effect_type in {"Damage", "Heal"}:
+            return _formula_value(effect.params.get("formula"), caster) is not None
+        if effect.effect_type == "ApplyStatus":
+            return bool(str(effect.params.get("status") or "").strip())
+        if _stat_mod_field(effect) is None:
+            return False
+        return bool(str(effect.params.get("formula") or "").strip())
+
+    def _apply_effect(
+        self,
+        effect: SkillEffect,
+        caster: CharacterState,
+        targets: Sequence[CharacterState],
+        tally: _CastTally,
+    ) -> bool:
+        """1 件の効果を実体へ当てる。実行できなかった場合は False。"""
+        resolved = _resolve_effect_targets(effect, caster, targets)
+        if not resolved:
+            return False
+
+        kind = effect.effect_type
+        params = effect.params
+        names = "、".join(t.name for t in resolved)
+
+        if kind in {"Damage", "Heal"}:
+            amount = _formula_value(params.get("formula"), caster)
+            if amount is None or amount <= 0:
+                return False
+            element = str(params.get("element") or "")
+            if kind == "Damage":
+                dealt = 0
+                for target in resolved:
+                    damage = min(int(amount), target.hp)
+                    target.hp = max(0, target.hp - int(amount))
+                    dealt += damage
+                tally.damage += dealt
+                tally.logs.append(
+                    f"{names}に {int(amount)} のダメージ！（{element}）"
+                    if element
+                    else f"{names}に {int(amount)} のダメージ！"
+                )
+                return True
+            restored = 0
+            for target in resolved:
+                recovered = min(int(amount), max(0, target.max_hp - target.hp))
+                target.hp += recovered
+                restored += recovered
+            tally.heal += restored
+            tally.logs.append(f"{names}の体力が {restored} 回復した。")
+            return True
+
+        if kind == "ApplyStatus":
+            status = str(params.get("status") or "").strip()
+            if not status:
+                return False
+            chance = params.get("chance")
+            if chance is not None and random.random() * 100.0 >= float(chance):
+                tally.logs.append(f"《{status}》は確率 {int(float(chance))}% に当たらなかった。")
+                return True
+            for target in resolved:
+                if status not in target.status_effects:
+                    target.status_effects.append(status)
+            tally.statuses.append(status)
+            tally.logs.append(f"{names}に状態異常【{status}】が付いた！")
+            return True
+
+        if kind == "StatMod":
+            field = _stat_mod_field(effect)
+            if field is None:
+                return False
+            stat = str(params.get("stat"))
+            for target in resolved:
+                before = getattr(target, field)
+                after = _clamp_field(target, field, _formula_value(
+                    params.get("formula"), target, float(before)
+                ) or float(before))
+                setattr(target, field, after)
+                tally.logs.append(f"{target.name}の{stat}が {before} → {after} に変わった。")
+            return True
+
+        return False
+
     # Step 20〜22: 喰らいコマンド（Emote: alert, star, cross）
     def execute_devour(
         self,
@@ -831,6 +1305,12 @@ class SkillEaterCombatSystem:
         logs = []
         sounds = []
         events = []
+
+        # 0. スキルのクールダウンを1ターン進める
+        #    ここが World A のターン終了の入口なので、唱えた技の再使用可能性はここで戻る。
+        for slot in character.skills.values():
+            if slot.current_cooldown > 0:
+                slot.current_cooldown -= 1
 
         # 1. オーバークロック脳焼きダメージ
         dmg, oc_logs, oc_evts = self.apply_overclock_damage(character)

@@ -11,12 +11,12 @@ th { background: #3b82f6; color: white; }
 </style>
 </head>
 <body>
-<h1>⚔️ Elona Commercial Battle Balance Report: <span class='pass'>PASS</span></h1>
+<h1>⚔️ Elona Commercial Battle Balance Report: <span class='warn'>WARNINGS_DETECTED</span></h1>
 <table>
-<tr><th>シナリオ</th><th>プレイヤーLv</th><th>対象モンスター</th><th>勝率</th><th>平均ターン</th><th>判定</th></tr>
-<tr><td>lvl1_vs_slime</td><td>1</td><td>slime</td><td>1.0</td><td>3.3</td><td class='pass'>BALANCED</td></tr>
-<tr><td>lvl3_vs_goblin</td><td>3</td><td>goblin</td><td>1.0</td><td>4.74</td><td class='pass'>BALANCED</td></tr>
-<tr><td>lvl5_vs_orc</td><td>5</td><td>orc</td><td>1.0</td><td>7.12</td><td class='pass'>BALANCED</td></tr>
+<tr><th>シナリオ</th><th>プレイヤーLv</th><th>対象モンスター</th><th>勝率</th><th>期待勝率</th><th>平均ターン</th><th>与/被</th><th>判定理由</th><th>判定</th></tr>
+<tr><td>lvl1_vs_slime</td><td>1</td><td>slime</td><td>1.0</td><td>0.95</td><td>2.93</td><td>0.006</td><td>一撃決着の割合 0.50 が上限 0.1 を超えた / 被与ダメージ比 0.01 が下限 0.1 を下回った / 期待勝率 0.95 に対し勝率 1.0 (絶対勝利) となった</td><td class='warn'>WARNING</td></tr>
+<tr><td>lvl3_vs_goblin</td><td>3</td><td>goblin</td><td>1.0</td><td>0.85</td><td>3.53</td><td>0.096</td><td>被与ダメージ比 0.10 が下限 0.1 を下回った / 期待勝率 0.85 に対し勝率 1.0 (絶対勝利) となった</td><td class='warn'>WARNING</td></tr>
+<tr><td>lvl5_vs_orc</td><td>5</td><td>orc</td><td>1.0</td><td>0.7</td><td>8.5</td><td>0.261</td><td>期待勝率 0.7 に対し勝率 1.0 (絶対勝利) となった</td><td class='warn'>WARNING</td></tr>
 </table>
 </body>
 </html>

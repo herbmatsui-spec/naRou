@@ -67,12 +67,61 @@ from localization_manager import LocalizationManager
 from logging_config import configure_logging
 from map_engine import GameMap
 from renderer import Renderer, get_renderer, set_renderer
+from run_history import RunHistoryStore
+from run_summary import (
+    CAUSE_COMBAT,
+    CAUSE_HUNGER,
+    CAUSE_SELF,
+    CAUSE_UNKNOWN,
+    GAME_OVER_TITLE,
+    RunSummary,
+)
 from skill_tree_system import SkillTreeManager
 from sound_manager import SoundManager
 from system_coordinator import SystemCoordinator
 from ui_fx_systems import FloatingText, Particle, ScreenShake
 
+from .game_state import GameStateMachine
+
 configure_logging()
+
+
+def _declared_skill_ids(entity: Entity) -> list[str]:
+    """Entity が宣言しているスキル id を、並び順どおりに返す。
+
+    `Entity.skills` は未設定の個体に対してプレイヤーの既定 17 種を生成し、触れた時点で
+    `_skills` にまで書き込む property なので、判定には生値を使う。
+    data_manager.create_monster は id 文字列のリスト、プレイヤーは Skill 辞書を保持する。
+    """
+    declared = getattr(entity, "_skills", None)
+    if declared is None:
+        return []
+    if isinstance(declared, dict):
+        return [str(key) for key in declared]
+    return [str(s) for s in declared]
+
+
+def _character_state_from_entity(entity: Entity, analysis_level: int = 1):
+    """Entity が保持する実データから、喰らい判定用の `CharacterState` を構成する。"""
+    from skill_eater_system import CharacterState
+
+    attributes = entity.attributes
+    return CharacterState(
+        id=str(getattr(entity, "id", entity.name)),
+        name=entity.name,
+        hp=entity.hp,
+        max_hp=entity.max_hp,
+        mp=entity.mp,
+        max_mp=entity.max_mp,
+        atk=attributes.strength,
+        defense=attributes.endurance,
+        intelligence=attributes.perception,
+        speed=entity.speed,
+        analysis_level=analysis_level,
+        # 奪取率は target.status_effects も読む（Paralyzed / Sleep で +0.20）。
+        # Entity には宣言フィールドがないため動的属性として付き、実データだけを写す。
+        status_effects=list(getattr(entity, "status_effects", None) or []),
+    )
 
 
 class Engine:
@@ -143,6 +192,15 @@ class Engine:
         # Stub registry for faction war to satisfy references in tests/benchmarks
         self.faction_war_registry = {}
         self.game_state_data = self.game_state_initializer.initialize_world_state()
+
+        # --- run 終了状態 (死亡判定と run summary) ---
+        # 文字列を素で持ち回さず、許可された遷移だけを通る状態機械にする (Step 10)
+        self.game_state_machine = GameStateMachine("playing")
+        self.run_summary: RunSummary | None = None
+        # 死因とその観測時点の HP の対。HP を添えるのは観測点の間で起きた
+        # ダメージ (トラップなど) に死因の観測が無かったことを示すため。
+        self._harm_cause: str = CAUSE_UNKNOWN
+        self._harm_cause_hp: int | None = None
 
         # --- エンティティマネージャーに初期エンティティを追加 ---
         self.entity_manager.add_entity(self.game_state_data.player)
@@ -233,6 +291,7 @@ class Engine:
             (100, 255, 200),
             level="INFO",
         )
+        self._present_run_history()
 
         self.game_map.compute_fov(self.player.x, self.player.y, radius=8)
         self.check_tutorial_triggers("game_start")
@@ -952,43 +1011,28 @@ class Engine:
             )
             return True
 
-        from skill_eater_system import CharacterState, SkillEaterRegistry
+        from skill_eater_system import SkillEaterRegistry
 
-        analyzer = CharacterState(
-            id="player",
-            name=self.player.name,
-            hp=self.player.hp,
-            max_hp=self.player.max_hp,
-            mp=self.player.mp,
-            max_mp=self.player.max_mp,
-            atk=15,
-            defense=10,
-            intelligence=15,
-            speed=100,
+        analyzer = _character_state_from_entity(
+            self.player,
             analysis_level=getattr(self.player, "analysis_level", 1),
         )
-        target_state = CharacterState(
-            id=str(getattr(target, "id", "enemy")),
-            name=target.name,
-            hp=target.hp,
-            max_hp=target.max_hp,
-            mp=10,
-            max_mp=10,
-            atk=getattr(target, "atk", 10),
-            defense=getattr(target, "defense", 5),
-            intelligence=5,
-            speed=getattr(target, "speed", 80),
-        )
-        if not target_state.skills:
-            target_state.add_skill("com_combat_001")
+        target_state = _character_state_from_entity(target)
+        declared_ids = _declared_skill_ids(target)
+        for skill_id in declared_ids:
+            # 敵が宣言するスキルはすべて奪取候補として積む（実際に奪われるのは先頭の1つ）。
+            # メモリ容量で落とすのは敵の貧弱さではない
+            target_state.add_skill(skill_id, ignore_capacity=True)
 
         rate = combat_sys.calculate_devour_rate(analyzer, target_state)
         roll = random.random()
-        if roll <= rate:
-            stolen_slot = target_state.remove_skill("com_combat_001") or (
-                next(iter(target_state.skills.values()), None) if target_state.skills else None
-            )
-            stolen_id = stolen_slot.skill_id if stolen_slot else "com_combat_001"
+        # 複数保有時は宣言順の先頭。抽選は行わない
+        stolen_id = next(iter(target_state.skills), None)
+
+        if stolen_id is None:
+            self.log(f"{target.name} の身体には、喰うべきスキルが棲んでいない。", (200, 200, 200))
+        elif roll <= rate:
+            target_state.remove_skill(stolen_id)
             reg = SkillEaterRegistry.get_instance()
             sk_def = reg.get_skill(stolen_id)
             sk_name = sk_def.name if sk_def else stolen_id
@@ -996,6 +1040,8 @@ class Engine:
             if "skills" not in self.game_state_data.world_a_data:
                 self.game_state_data.world_a_data["skills"] = []
             self.game_state_data.world_a_data["skills"].append(stolen_id)
+
+            self._register_devoured_skill(stolen_id, sk_def)
 
             self.log(
                 f"【捕食成功！】{target.name} から 《{sk_name}》 を喰らい尽くした！",
@@ -1022,6 +1068,25 @@ class Engine:
         self.player.energy -= ENERGY_THRESHOLD
         self.advance_world()
         return True
+
+    def _register_devoured_skill(self, skill_id: str, sk_def) -> None:
+        """奪ったスキルを唱えられるスキル (`player.skills`) へ登録する。
+
+        `world_a_data["skills"]` は HUD と fusion 炉の記録であり、別枠の配列なので残す。
+        定義が引けなかった場合は、黙って捨てずに理由をログと画面に残す。
+        """
+        from ecs.entity import Skill
+
+        skills = self.player.skills
+        if skill_id in skills:
+            return
+
+        if sk_def is None:
+            logger.warning("Devoured skill %r could not be registered: no definition found", skill_id)
+            self.log(f"【記録のみ】《{skill_id}》の定義が見つからないため、唱えられるスキルには登録できない", (255, 160, 80))
+            return
+
+        skills[skill_id] = Skill(sk_def.name, level=1)
 
     def execute_synthesis(self, skill_a: str | None = None, skill_b: str | None = None) -> bool:
         """スキル合成を実行する (Steps 43-47)"""
@@ -1286,7 +1351,13 @@ class Engine:
         return self.entity_manager.get_entity_at(x, y)
 
     def player_act(self, dx: int, dy: int) -> bool:
-        """プレイヤー行動 (GameplayPackage 経由)"""
+        """プレイヤー行動 (GameplayPackage 経由)
+
+        GAME_OVER 後は行動を受け付けない。死亡画面を閉じたまま遺体が歩き回る
+        状態を作らないための門 ([S2.1] が求める world と turn の停止とは別物)。
+        """
+        if self.current_state is GameState.GAME_OVER:
+            return False
         return self.gameplay_loop(self.kernel, self).player_act(dx, dy)
 
     def _on_kill(self, entity: Entity) -> None:
@@ -1465,9 +1536,101 @@ class Engine:
         for m in msgs:
             self.log(m, (255, 215, 0), level="SUCCESS")
 
+    def _end_run_if_player_dead(self) -> bool:
+        """死亡を判定して run を終了させる (docs/compose/spec/run-end-state.md [S2.1])
+
+        判定を turn 進行の入口に置くことで、攻撃元の種類に依存せず死を捕捉する。
+        既に GAME_OVER のときは何もせず True を返す (冪等)。
+        """
+        if self.current_state is GameState.GAME_OVER:
+            return True
+        if self.player.hp > 0:
+            return False
+
+        self.current_state = GameState.GAME_OVER
+        self.game_state = "game_over"  # 旧互換文字列 (render はこの文字列で分岐する)
+        self.run_summary = self._build_run_summary()
+        self._present_run_summary(self.run_summary)
+        self._record_run_history(self.run_summary)
+        return True
+
+    def _record_harm_cause(self, cause: str) -> None:
+        """観測した死因を、その観測時点の HP と対で記録する"""
+        self._harm_cause = cause
+        self._harm_cause_hp = self.player.hp
+
+    def _observed_harm_cause(self) -> str:
+        """記録した死因を返す。記録後に原因不明のダメージを受けていれば CAUSE_UNKNOWN にする
+
+        死因の観測点は turn 進行中の `advance_world` と自分の行動の 2 か所だけ
+        ([S3] 細分類は対象外)。トラップのように `_harm_cause` を触らないダメージは
+        観測点の間で発生するため、前の turn の観測を死因として引きずると順序依存の
+        表示になる。記録した時点から HP が変わっていれば、致命的になるまでの間に
+        原因を観測できていないので、観測の無い死として扱う。
+        旧セーブは __init__ を通らず pickle 復元されるため getattr で読む。
+        """
+        if getattr(self, "_harm_cause_hp", None) != self.player.hp:
+            return CAUSE_UNKNOWN
+        return getattr(self, "_harm_cause", CAUSE_UNKNOWN)
+
+    def _build_run_summary(self) -> RunSummary:
+        """run summary を組み立てる。値は既存の state から引く ([S2.1] 追跡機構を増やさない)"""
+        clock = self.time_system.world_clock
+        # 件数と id は同じ state から同時に引く。別々に数えると必ずずれる。
+        skills = self.game_state_data.world_a_data.get("skills", ())
+        devoured = tuple(str(skill_id) for skill_id in skills)
+        return RunSummary(
+            depth=self.dungeon_level,
+            kills=sum(self.player.kill_counts.values()),
+            devoured_skills=len(devoured),
+            turns=self.turns,
+            cause=self._observed_harm_cause(),
+            elapsed_minutes=clock.total_ticks // clock.config.ticks_per_minute,
+            devoured_skill_ids=devoured,
+        )
+
+    def _present_run_summary(self, summary: RunSummary) -> None:
+        """run summary をログへ提示する (画面描画は render の game_over 分岐)"""
+        self.log(GAME_OVER_TITLE, (255, 50, 50), level="WARNING")
+        for line in summary.format_lines():
+            self.log(line, COLOR_GOLD_YELLOW, level="WARNING")
+
+    def _record_run_history(self, summary: RunSummary) -> None:
+        """終了した run を履歴へ書き出す ([S2.1] 次回起動で提示する)
+
+        死亡の処理を止めないため、書けなかった旨をログに留めて飲み込む。
+        履歴は補助情報であり、run の終了そのものを失敗させない。
+        """
+        try:
+            RunHistoryStore().record(summary)
+        except Exception:
+            logger.exception("Failed to record run history: %s", summary)
+            self.log(
+                "【記録失敗】今回の戦績を履歴に残せませんでした", (255, 160, 80), level="WARNING"
+            )
+
+    def _present_run_history(self) -> None:
+        """前回の run の記録を起動時のログへ提示する ([S2.1])
+
+        新しい UI は作らず、起動時に既に流れているログへ並べる。
+        履歴が無い (初回起動) / 読めない (破損) 場合も store 側が理由を文面にする。
+        """
+        for line in RunHistoryStore().startup_lines():
+            self.log(line, COLOR_GOLD_YELLOW, level="INFO")
+
     def advance_world(self) -> None:
-        """速度Tick制による全NPCターン処理 (GameplayPackage 経由)"""
+        """速度Tick制による全NPCターン処理 (GameplayPackage 経由)
+
+        死亡判定を turn 進行の入口に集約する ([S2.1])。GAME_OVER 後は世界も turn も進めない。
+        """
+        if self._end_run_if_player_dead():
+            return
+
+        # 死因の区分は turn 進行中の観測点で行う ([S3] 細分類は対象外)
+        hp_before = self.player.hp
         self.gameplay_loop(self.kernel, self).advance_world()
+        if self.player.hp < hp_before:
+            self._record_harm_cause(CAUSE_HUNGER if self.survival.hunger <= 0 else CAUSE_COMBAT)
 
         # 以下は Engine 固有の処理（自然回復、世界ニュース、オートセーブ等）
         # 自然回復(出血中は停止: ステップ45)
@@ -1488,6 +1651,10 @@ class Engine:
             self.player.mp = min(self.player.max_mp, self.player.mp + 1)
             if self.pet.hp > 0:
                 self.pet.hp = min(self.pet.max_hp, self.pet.hp + 1)
+        # 自然回復は生存者向けの処理であり、死亡した turn の観測を引きずって
+        # 「観測の無い死」に落とす理由にはならない (記録した HP を turn 末へ合わせる)
+        if self.player.hp <= 0:
+            self._harm_cause_hp = self.player.hp
 
         # 動的サウンドスケープ: 危機状態のBGM判定 (Step 7.3)
         if hasattr(self, "player") and self.player:
@@ -1623,14 +1790,12 @@ class Engine:
                 self.event_bus, dmg, target.x, target.y, is_crit, target.hp <= 0
             )
             self.log(msg, (255, 100, 100))
-            if target.hp <= 0:
-                if target == self.player:
-                    self.log("★あなたは力尽きた… 【GAME OVER】", (255, 50, 50))
-                elif target == self.pet:
-                    self.log("【悲痛】シエル「お兄ちゃん…ごめんね…」", (255, 80, 150))
-                    if hasattr(self.pet, "pet_ai"):
-                        self.pet.pet_ai.increase_bond(-50, "defeated")
-                    CombatSystem.publish_kill_event(self.event_bus, target.x, target.y)
+            # プレイヤーの死亡は advance_world 入口の判定に集約済み ([S2.1])
+            if target.hp <= 0 and target == self.pet:
+                self.log("【悲痛】シエル「お兄ちゃん…ごめんね…」", (255, 80, 150))
+                if hasattr(self.pet, "pet_ai"):
+                    self.pet.pet_ai.increase_bond(-50, "defeated")
+                CombatSystem.publish_kill_event(self.event_bus, target.x, target.y)
         elif dist <= 8 and can_see:
             blocked = self.get_blocked_positions()
             path = AStar.get_path(
@@ -1715,6 +1880,7 @@ class Engine:
         success, backlash = CombatSystem.calc_spell_success(self.player, "fireball")
         if not success:
             self.player.hp -= backlash
+            self._record_harm_cause(CAUSE_SELF)
             SoundManager.play_se("hit")
             self.floating_texts.append(
                 FloatingText(f"-{backlash}", self.player.x, self.player.y - 0.2, (255, 80, 80))
@@ -1893,6 +2059,7 @@ class Engine:
                         (200, 100, 100),
                     )
                     self.player.hp -= 1
+                    self._record_harm_cause(CAUSE_SELF)
         if total_tips > 0:
             self.survival.gold += total_tips
             self.log(f"★演奏の報酬合計: {total_tips}G！", COLOR_GOLD_YELLOW)
@@ -2111,7 +2278,7 @@ class Engine:
         if hasattr(self, "game_map"):
             self.game_map.update_animations(delta_time)
 
-        self.turns += 1
+        # turn counter は advance_world() のみで増やす (vsync の毎フレーム呼び出しでは進めない)
 
     def render(self, console: Any) -> None:
         """描画処理 (ゲームロジックを含まない)"""
@@ -2131,6 +2298,14 @@ class Engine:
             y = 1
             for line in job_text.splitlines():
                 console.print(x=1, y=y, string=line, fg=(255, 255, 255))
+                y += 1
+            return
+        if self.game_state_data.game_state == "game_over":
+            console.print(x=1, y=1, string=GAME_OVER_TITLE, fg=(255, 50, 50))
+            summary = getattr(self, "run_summary", None)
+            y = 2
+            for line in summary.format_lines() if summary else []:
+                console.print(x=1, y=y, string=line, fg=COLOR_GOLD_YELLOW)
                 y += 1
             return
 
@@ -2584,10 +2759,14 @@ def main() -> None:
                 for event in tcod.event.get(timeout=0):
                     if isinstance(event, tcod.event.KeyDown):
                         if event.sym == tcod.event.KeySym.S:
-                            engine.game_state = "skill_tree"
+                            # GAME_OVER は解除しない (画面だけ消えると world が
+                            # 動かないまま操作を続けられる中途半端な状態になる)
+                            if engine.current_state is not GameState.GAME_OVER:
+                                engine.game_state = "skill_tree"
                             continue
                         elif event.sym == tcod.event.KeySym.J:
-                            engine.game_state = "job"
+                            if engine.current_state is not GameState.GAME_OVER:
+                                engine.game_state = "job"
                             continue
                         elif event.sym == tcod.event.KeySym.G:
                             # Toggle Tiny Rogue graphics
