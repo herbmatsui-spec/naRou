@@ -27,3 +27,6 @@ dist/
 
 # VSCode
 .vscode/
+
+# セーブデータは実行時成果物 — 追跡しない
+savegame.bin*
