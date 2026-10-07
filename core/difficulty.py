@@ -18,6 +18,7 @@ class DifficultyManager:
     }
 
     def __init__(self, difficulty: str | None = None) -> None:
+        explicit = difficulty is not None
         if difficulty is None:
             try:
                 from config import get_config
@@ -29,7 +30,12 @@ class DifficultyManager:
         if difficulty not in self._DEFAULTS:
             difficulty = "normal"
         self.difficulty = difficulty
-        self.multipliers = self._load_multipliers(difficulty)
+        if explicit:
+            # 明示指定のときはコード内の基準プリセット (easy=被ダメージ50%減) を使う。
+            # config の difficulty_presets は実行中ゲームの auto 解決用の上書き。
+            self.multipliers = dict(self._DEFAULTS[difficulty])
+        else:
+            self.multipliers = self._load_multipliers(difficulty)
 
     def _load_multipliers(self, difficulty: str) -> dict[str, float]:
         try:

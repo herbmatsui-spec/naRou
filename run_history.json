@@ -1,0 +1,11 @@
+{
+  "runs": 9,
+  "last_depth": 20,
+  "last_kills": 0,
+  "last_turns": 0,
+  "last_cause": "不明",
+  "best_depth": 20,
+  "best_kills": 0,
+  "devoured_skills": [],
+  "version": 1
+}

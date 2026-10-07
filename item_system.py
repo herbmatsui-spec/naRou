@@ -115,6 +115,7 @@ class Item:
         sp_stock: int = 0,
         cursed: bool = False,  # 呪いフラグ (ステップ32)
         enchants: tuple[str, ...] = (),  # エンチャント (スタック判定用: ステップ29)
+        sell_price: int | None = None,  # 売却価格 (ステップ26)
     ):
         self.item_id: str = str(uuid.uuid4())  # 固有ID (ステップ28)
         self.name = name
@@ -141,6 +142,7 @@ class Item:
         self.sp_stock = sp_stock
         self.cursed = cursed
         self.enchants = enchants
+        self.sell_price = sell_price if sell_price is not None else int(base_value * 0.3)
 
         # 食料腐敗システム (ステップ35, 36)
         self.rot_progress: int = 0
@@ -207,6 +209,7 @@ class Item:
             "y": self.y,
             "base_weight": self.base_weight,
             "base_value": self.base_value,
+            "sell_price": self.sell_price,
             "count": self.count,
             "material": self.material,
             "quality": self.quality,
@@ -255,6 +258,7 @@ class Item:
             sp_stock=data.get("sp_stock", 0),
             cursed=data.get("cursed", False),
             enchants=tuple(data.get("enchants", ())),
+            sell_price=data.get("sell_price"),
         )
         item.item_id = data.get("item_id", item.item_id)
         item.rot_progress = data.get("rot_progress", 0)
@@ -394,6 +398,7 @@ def create_sample_item(name: str, x: int = 0, y: int = 0) -> Item:
             y=y,
             base_weight=float(d.get("base_weight", 1.0)),
             base_value=int(d.get("base_value", 10)),
+            sell_price=d.get("sell_price"),
             material=d.get("material", "iron"),
             dice_num=int(d.get("dice_num", 1)),
             dice_side=int(d.get("dice_side", 6)),
@@ -512,6 +517,35 @@ def create_sample_item(name: str, x: int = 0, y: int = 0) -> Item:
         ),
     }
     return presets.get(name, presets["longsword"])
+
+
+def sell(item: Item, gold_holder: Any) -> int:
+    """アイテムを売却し、ゴールドを受け取り手に加算する。
+
+    Args:
+        item: 売却するアイテム
+        gold_holder: gold属性を持つオブジェクト (player, survival_system等)
+
+    Returns:
+        獲得したゴールド額
+    """
+    # YAMLデータからsell_priceを取得、なければbase_valueの30%を使用
+    sell_price = getattr(item, 'sell_price', None)
+    if sell_price is None:
+        sell_price = int(item.base_value * 0.3)
+
+    # スタック数を考慮
+    total_gold = sell_price * item.count
+
+    # ゴールドホルダーに加算
+    if hasattr(gold_holder, 'gold'):
+        gold_holder.gold += total_gold
+    elif hasattr(gold_holder, 'add_gold'):
+        gold_holder.add_gold(total_gold)
+    else:
+        raise ValueError("gold_holder must have 'gold' attribute or 'add_gold' method")
+
+    return total_gold
 
 
 def calculate_reincarnation_drop_rate(base_rate: float, player_reinc_count: int) -> float:

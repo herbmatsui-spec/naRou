@@ -18,6 +18,25 @@ from naRou.engine import Engine
 
 __all__ = ["Engine", "main"]
 
+# TODO: Achievement check - achievement_manager.check_all_achievements to be integrated in naRou.engine.engine
+
+def use_pet_evolution_stone(player, stone_id):
+    """ペット進化石を使用するフック (Step 46)"""
+    # Actual implementation in naRou.engine.engine
+    pass
+
+
+def use_alchemy_lab(player, recipe_id):
+    """錬金術実験室を使用するフック (Step 68)"""
+    # Actual implementation in naRou.engine.engine
+    pass
+
+
+# TODO: Reincarnation option - reincarnation_system.start_reincarnation to be integrated in naRou.engine.engine
+
+# TODO: Reincarnation dungeon manager - reincarnation_dungeon_manager to be integrated in naRou.engine.engine
+
+# TODO: Reincarnation XP penalty - reincarnation_system.apply_xp_penalty to be integrated in naRou.engine.engine
 _TRUTHY = ("1", "true", "yes", "on")
 
 

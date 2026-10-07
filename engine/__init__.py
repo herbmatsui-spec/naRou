@@ -3,7 +3,13 @@
 import atexit
 import logging
 
-from ..localization_manager import LocalizationManager
+try:
+    from ..localization_manager import LocalizationManager
+except ImportError:
+    # トップレベルの `import engine.systems.*` では親パッケージが存在せず
+    # 相対 import が通らないため、フラット配置の同名モジュールへフォールバックする。
+    from localization_manager import LocalizationManager
+
 from .engine import Engine
 
 

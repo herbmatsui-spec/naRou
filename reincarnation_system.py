@@ -423,8 +423,6 @@ class ReincarnationManager:
         # レベルをリセット（初期レベル1に戻る）
         player.level = 1
         player.exp = 0
-        if hasattr(player, "exp_next"):
-            player.exp_next = 100
 
         # 4. 永続ボーナスの再計算とステータス初期化
         try:

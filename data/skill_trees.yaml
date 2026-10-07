@@ -1,1 +1,132 @@
-# placeholder
+# Skill Tree Definitions for naRou
+# Structure: skill_trees: { tree_id: { name, icon, tiers: [ { id, name, description, cost, prerequisites, effects } ] } }
+
+skill_trees:
+  sword:
+    name: "剣術"
+    icon: "⚔"
+    tiers:
+      - id: "basic_sword"
+        name: "剣の基礎"
+        description: "剣を振るう基本を身につける"
+        cost: 5
+        prerequisites: []
+        effects:
+          - type: "damage_bonus"
+            value: 5
+            target: "melee"
+
+      - id: "sword_mastery"
+        name: "剣術の達人"
+        description: "剣の扱いに磨きがかかる"
+        cost: 10
+        prerequisites: ["basic_sword"]
+        effects:
+          - type: "damage_bonus"
+            value: 10
+            target: "melee"
+          - type: "crit_chance"
+            value: 5
+            target: "melee"
+
+      - id: "sword_essence"
+        name: "剣の極意"
+        description: "剣と一体化し、真の剣聖となる"
+        cost: 20
+        prerequisites: ["sword_mastery"]
+        effects:
+          - type: "damage_bonus"
+            value: 20
+            target: "melee"
+          - type: "crit_chance"
+            value: 15
+            target: "melee"
+          - type: "unlock_skill"
+            value: "iaijutsu"
+            target: "self"
+
+  magic:
+    name: "魔法"
+    icon: "🔮"
+    tiers:
+      - id: "basic_magic"
+        name: "魔法の基礎"
+        description: "魔力を操る基礎を学ぶ"
+        cost: 5
+        prerequisites: []
+        effects:
+          - type: "magic_power"
+            value: 5
+            target: "self"
+
+      - id: "magic_mastery"
+        name: "魔法の達人"
+        description: "より強力な呪文を扱えるようになる"
+        cost: 10
+        prerequisites: ["basic_magic"]
+        effects:
+          - type: "magic_power"
+            value: 15
+            target: "self"
+          - type: "mp_cost_reduction"
+            value: 10
+            target: "self"
+
+      - id: "magic_essence"
+        name: "魔法の極意"
+        description: "魔力の本質に触れ、大魔導師への道を開く"
+        cost: 20
+        prerequisites: ["magic_mastery"]
+        effects:
+          - type: "magic_power"
+            value: 30
+            target: "self"
+          - type: "mp_cost_reduction"
+            value: 25
+            target: "self"
+          - type: "unlock_skill"
+            value: "meteor"
+            target: "self"
+
+  martial_arts:
+    name: "武術"
+    icon: "👊"
+    tiers:
+      - id: "basic_martial"
+        name: "武術の基礎"
+        description: "素手で戦う基本を身につける"
+        cost: 5
+        prerequisites: []
+        effects:
+          - type: "damage_bonus"
+            value: 3
+            target: "unarmed"
+
+      - id: "martial_mastery"
+        name: "武術の達人"
+        description: "拳法の極みを目指す"
+        cost: 10
+        prerequisites: ["basic_martial"]
+        effects:
+          - type: "damage_bonus"
+            value: 10
+            target: "unarmed"
+          - type: "crit_chance"
+            value: 10
+            target: "unarmed"
+
+      - id: "martial_essence"
+        name: "武術の極意"
+        description: "心技体一体、拳聖となる"
+        cost: 20
+        prerequisites: ["martial_mastery"]
+        effects:
+          - type: "damage_bonus"
+            value: 25
+            target: "unarmed"
+          - type: "crit_chance"
+            value: 20
+            target: "unarmed"
+          - type: "unlock_skill"
+            value: "divine_fist"
+            target: "self"

@@ -286,6 +286,12 @@ class BalanceSimulator:
         engine.entity_manager.entities = [player]
         engine.entity_manager.items_on_ground.clear()
         engine.turns = 0
+        # 前試行の死亡/勝利で game_over に遷移した状態機械を playing に戻す。
+        # これを忘れると player_act が以後ずっと False を返し、全試行がスタールする。
+        from naRou.engine.game_state import GameStateMachine
+
+        engine.game_state_machine = GameStateMachine("playing")
+        engine.game_state_data.game_state = "play"
         return engine, player
 
     def _spawn_monster(self, engine: Any, monster_type: str) -> Any | None:

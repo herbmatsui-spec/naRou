@@ -248,7 +248,7 @@ class MeleeAttackAction(BehaviorNode):
 
         if target.hp <= 0:
             if target == engine.player:
-                engine.log(f"【死亡】{actor.name} に倒された……", (255, 30, 30), level="ERROR")
+                engine._on_player_death()
             elif target == engine.pet:
                 engine.log(f"{target.name} は力尽きて倒れた！", (255, 100, 100))
             else:
@@ -309,6 +309,8 @@ class CastSpellAction(BehaviorNode):
                     engine.floating_texts.append(
                         FloatingText(f"-{dmg}", target.x, target.y - 0.2, (200, 100, 255))
                     )
+                if target == engine.player and target.hp <= 0:
+                    engine._on_player_death()
                 actor.energy -= ENERGY_THRESHOLD
                 return True
         return False
@@ -560,7 +562,7 @@ class AbilityAction(BehaviorNode):
     @staticmethod
     def _on_target_death(actor: Entity, engine: Engine, target: Entity) -> None:
         if target == engine.player:
-            engine.log(f"【死亡】{actor.name} に倒された……", (255, 30, 30), level="ERROR")
+            engine._on_player_death()
         elif target == engine.pet:
             engine.log(f"{target.name} は力尽きて倒れた！", (255, 100, 100))
         else:

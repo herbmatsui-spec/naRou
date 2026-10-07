@@ -40,6 +40,14 @@ class Type(Enum):
     heal_on_hit = "heal_on_hit"
     undead_bane = "undead_bane"
     backstab_multiplier = "backstab_multiplier"
+    spell_crit_chance = "spell_crit_chance"
+    holy_damage = "holy_damage"
+    dark_damage = "dark_damage"
+    magic_damage = "magic_damage"
+    stealth_bonus = "stealth_bonus"
+    homing = "homing"
+    spell_power = "spell_power"
+    melee_magic_bonus = "melee_magic_bonus"
 
 
 class Target(Enum):

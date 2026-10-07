@@ -12,12 +12,12 @@ assets:
   tiny_rogue_atlas_meta: assets/tiles/tiny_rogue_atlas_16x16.json
   tiny_rogue_tiles: assets/tiles/tiny_rogue/tiles
 game:
-  difficulty: easy
+  difficulty: normal
   difficulty_presets:
     easy:
       enemy_hp: 0.8
-      player_damage_taken: 0.5
-      player_regen: 1.5
+      player_damage_taken: 0.75
+      player_regen: 1.2
     hard:
       enemy_hp: 1.2
       player_damage_taken: 1.5
@@ -26,6 +26,9 @@ game:
       enemy_hp: 1.0
       player_damage_taken: 1.0
       player_regen: 1.0
+  dungeon:
+    max_depth: 30
+    win_depth: 20
 pet:
   attributes:
     charisma: 18

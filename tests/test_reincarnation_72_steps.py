@@ -90,7 +90,7 @@ def test_all_72_steps_reincarnation_system():
     # Steps 11-20: Entity 転生関連フィールド (ReincarnationComponent へ委譲)
     from ecs.entity import Entity
 
-    comp_code = open("components.py", encoding="utf-8").read()
+    comp_code = open("ecs/components/components.py", encoding="utf-8").read()
     assert (
         "class ReincarnationComponent" in comp_code
     ), "Step 11 Failed: ReincarnationComponent missing"

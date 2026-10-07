@@ -1,1 +1,159 @@
-# placeholder
+# Job Definitions for naRou
+# Structure: jobs: { job_id: { name, tier, description, stat_modifiers, equipment_restrictions, exclusive_skills, unlock_conditions } }
+
+jobs:
+  novice:
+    name: "初心者"
+    tier: 0
+    description: "冒険を始めたばかりの見習い"
+    stat_modifiers: {}
+    equipment_restrictions: {}
+    exclusive_skills: []
+    unlock_conditions: {}
+
+  warrior:
+    name: "戦士"
+    tier: 1
+    description: "剣と盾を駆使する前衛の達人"
+    stat_modifiers:
+      strength: 10
+      vitality: 5
+      defense: 3
+    equipment_restrictions:
+      heavy_armor: true
+      shields: true
+    exclusive_skills:
+      - "shield_bash"
+    unlock_conditions:
+      level: 5
+
+  swordmaster:
+    name: "剣聖"
+    tier: 2
+    description: "剣の極みに達した真の剣士"
+    stat_modifiers:
+      strength: 20
+      dexterity: 15
+      speed: 10
+    equipment_restrictions:
+      heavy_armor: true
+      shields: false
+    exclusive_skills:
+      - "iaijutsu"
+    unlock_conditions:
+      level: 15
+      job: "warrior"
+      skills:
+        basic_sword: 35
+
+  mage:
+    name: "魔導師"
+    tier: 1
+    description: "魔力を操る後衛のスペシャリスト"
+    stat_modifiers:
+      magic: 12
+      intelligence: 10
+      will: 5
+    equipment_restrictions:
+      heavy_armor: false
+      shields: false
+      staves: true
+    exclusive_skills:
+      - "fireball"
+    unlock_conditions:
+      level: 5
+
+  archmage:
+    name: "大魔導師"
+    tier: 2
+    description: "魔法の真理に触れた賢者"
+    stat_modifiers:
+      magic: 25
+      intelligence: 20
+      will: 15
+    equipment_restrictions:
+      heavy_armor: false
+      shields: false
+      staves: true
+    exclusive_skills:
+      - "meteor"
+    unlock_conditions:
+      level: 15
+      job: "mage"
+      skills:
+        basic_magic: 35
+
+  rogue:
+    name: "ローグ"
+    tier: 1
+    description: "影に潜み、敵の急所を突く暗殺者"
+    stat_modifiers:
+      dexterity: 12
+      speed: 10
+      perception: 5
+    equipment_restrictions:
+      heavy_armor: false
+      shields: false
+      daggers: true
+    exclusive_skills:
+      - "backstab"
+      - "shadow_step"
+    unlock_conditions:
+      level: 5
+
+  assassin:
+    name: "アサシン"
+    tier: 2
+    description: "死の影、瞬時に命を刈り取る者"
+    stat_modifiers:
+      dexterity: 25
+      speed: 20
+      critical: 15
+    equipment_restrictions:
+      heavy_armor: false
+      shields: false
+      daggers: true
+    exclusive_skills:
+      - "death_strike"
+    unlock_conditions:
+      level: 15
+      job: "rogue"
+      skills:
+        basic_martial: 35
+
+  cleric:
+    name: "クレリック"
+    tier: 1
+    description: "神の加護で味方を支える聖職者"
+    stat_modifiers:
+      will: 10
+      magic: 5
+      healing: 8
+    equipment_restrictions:
+      heavy_armor: true
+      shields: true
+      maces: true
+    exclusive_skills:
+      - "divine_heal"
+    unlock_conditions:
+      level: 5
+
+  archbishop:
+    name: "大司教"
+    tier: 2
+    description: "神の声を直接聴く最高位の聖職者"
+    stat_modifiers:
+      will: 20
+      magic: 15
+      healing: 20
+    equipment_restrictions:
+      heavy_armor: true
+      shields: true
+      maces: true
+    exclusive_skills:
+      - "resurrection"
+    unlock_conditions:
+      level: 15
+      job: "cleric"
+      skills:
+        basic_magic: 35

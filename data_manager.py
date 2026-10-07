@@ -565,7 +565,21 @@ class DataManager(BaseSystem):
                 tier_pool.append(m_id)
 
         if not tier_pool:
-            tier_pool = list(self.monsters._data.keys())
+            # Fallback: pick closest 3 monsters by depth distance (Step 24)
+            candidates = []
+            for m_id, m_val in self.monsters._data.items():
+                min_floor = m_val.min_floor or 1
+                max_floor = m_val.max_floor or 999
+                # Calculate distance from requested floor
+                if floor_level < min_floor:
+                    dist = min_floor - floor_level
+                elif floor_level > max_floor:
+                    dist = floor_level - max_floor
+                else:
+                    dist = 0
+                candidates.append((dist, m_id))
+            candidates.sort(key=lambda x: x[0])
+            tier_pool = [m_id for _, m_id in candidates[:3]]
 
         chosen_id = random.choice(tier_pool)
         return self.create_monster(chosen_id, x, y, level_scale=floor_level)

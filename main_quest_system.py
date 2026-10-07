@@ -290,8 +290,9 @@ class MainQuestSystem:
         rewards = quest.rewards
         if "gold" in rewards:
             # SurvivalSystem経由でゴールド追加（実際の実装に合わせて調整）
-            if hasattr(engine, "survival_system"):
-                engine.survival_system.gold += rewards["gold"]
+            # engine.survival は game_state_data.survival を返す（engine.survival_system とは別オブジェクト）
+            if hasattr(engine, "survival"):
+                engine.survival.gold += rewards["gold"]
 
         if "world_phase" in rewards:
             # ワールドフェーズの更新

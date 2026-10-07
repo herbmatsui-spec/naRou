@@ -53,13 +53,14 @@ class CombatManager:
                 q.current_count += 1
                 if q.current_count >= q.target_count:
                     q.completed = True
-            engine.survival.gold += q.reward_gold
-            engine.survival.platinum += q.reward_platinum
-            from sound_manager import SoundManager
+                    # Quest rewards only on completion (Step 25: fix gold bug)
+                    engine.survival.gold += q.reward_gold
+                    engine.survival.platinum += q.reward_platinum
+                    from sound_manager import SoundManager
 
-            SoundManager.play_se("level_up")
-            engine.log(
-                f"★依頼達成！ {q.reward_gold}G + {q.reward_platinum}P 獲得！",
-                COLOR_GOLD_YELLOW,
-            )
-            engine.entity_manager.remove_entity(entity)
+                    SoundManager.play_se("level_up")
+                    engine.log(
+                        f"★依頼達成！ {q.reward_gold}G + {q.reward_platinum}P 獲得！",
+                        COLOR_GOLD_YELLOW,
+                    )
+                    engine.entity_manager.remove_entity(entity)

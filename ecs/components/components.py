@@ -268,11 +268,10 @@ class EconomyComponent:
 
 @dataclass
 class LevelComponent:
-    """レベル・経験値・スキルポイント用ECSコンポーネント"""
+    """レベル・経験値・スキルポイント用ECSコンポーネント (Step 21: exp_next は動的計算)"""
 
     level: int = 1
     exp: int = 0
-    exp_next: int = 100
     skill_points: int = 0
     total_skill_points_earned: int = 0
 

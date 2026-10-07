@@ -1,1 +1,134 @@
-# placeholder
+# Skill Fusion Definitions for naRou
+# Structure: fusions: { fusion_id: { name, description, required_skills, required_job, required_god, result_skills, bonus_effects } }
+
+fusions:
+  spellblade:
+    name: "スペルブレード"
+    description: "剣と魔法を融合させ、魔剣を操る二刀流の達人"
+    required_skills:
+      - "basic_sword"
+      - "basic_magic"
+    required_job: "swordmaster"
+    required_god: null
+    result_skills:
+      - "spellblade_strike"
+      - "magic_sword_mastery"
+    bonus_effects:
+      - type: "elemental_damage"
+        value: 20
+      - type: "spell_crit_chance"
+        value: 15
+
+  holy_knight:
+    name: "ホーリーナイト"
+    description: "神聖な力と剣技を兼ね備えた正義の騎士"
+    required_skills:
+      - "basic_sword"
+      - "shield_bash"
+    required_job: "warrior"
+    required_god: "jure"
+    result_skills:
+      - "holy_sword"
+      - "divine_shield"
+    bonus_effects:
+      - type: "holy_damage"
+        value: 25
+      - type: "heal_on_hit"
+        value: 5
+
+  shadow_assassin:
+    name: "シャドウアサシン"
+    description: "闇の力を纏い、音もなく敵を葬る暗殺者"
+    required_skills:
+      - "backstab"
+      - "shadow_step"
+    required_job: "rogue"
+    required_god: "lulwy"
+    result_skills:
+      - "shadow_blade"
+      - "death_whisper"
+    bonus_effects:
+      - type: "dark_damage"
+        value: 30
+      - type: "stealth_bonus"
+        value: 20
+
+  arcane_archer:
+    name: "アーケインアーチャー"
+    description: "魔力を矢に込め、遠距離から魔法の矢を放つ弓使い"
+    required_skills:
+      - "basic_magic"
+      - "archery"
+    required_job: "ranger"
+    required_god: null
+    result_skills:
+      - "magic_arrow"
+      - "seeking_shot"
+    bonus_effects:
+      - type: "magic_damage"
+        value: 20
+      - type: "homing"
+        value: true
+
+  battlemage:
+    name: "バトルメイジ"
+    description: "接近戦と魔法を両立する魔戦士"
+    required_skills:
+      - "basic_sword"
+      - "basic_magic"
+      - "martial_mastery"
+    required_job: "warrior"
+    required_god: null
+    result_skills:
+      - "spell_strike"
+      - "arcane_armor"
+    bonus_effects:
+      - type: "spell_power"
+        value: 15
+      - type: "melee_magic_bonus"
+        value: 10
+
+fusion_recipes:
+  spellblade_recipe:
+    name: "スペルブレードの秘伝書"
+    description: "剣と魔法を融合させる禁断の技法"
+    base_skill: "basic_sword"
+    materials:
+      magic_essence: 5
+      sword_essence: 3
+    output: "spellblade_strike"
+    required_level: 20
+    success_rate: 0.8
+
+  holy_knight_recipe:
+    name: "ホーリーナイトの証"
+    description: "神聖な騎士となるための儀式"
+    base_skill: "shield_bash"
+    materials:
+      holy_water: 10
+      blessed_ore: 5
+    output: "holy_sword"
+    required_level: 25
+    success_rate: 0.7
+
+  shadow_assassin_recipe:
+    name: "影の暗殺者の書"
+    description: "闇に溶け込む究極の暗殺術"
+    base_skill: "shadow_step"
+    materials:
+      shadow_essence: 8
+      poison_herb: 5
+    output: "shadow_blade"
+    required_level: 30
+    success_rate: 0.6
+
+  fireball_fusion:
+    name: "火炎爆砕合成"
+    description: "ファイアボールと魔力の欠片を融合させ、メガファイアボールを生成する"
+    base_skill: "magic_cast"
+    materials:
+      fire_essence: 1
+      magic_dart: 1
+    output: "mega_fireball"
+    required_level: 15
+    success_rate: 0.8

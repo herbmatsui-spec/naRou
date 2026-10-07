@@ -185,6 +185,25 @@ class Engine:
         self.systems_coordinator = SystemCoordinator(self)
         self.setup_systems()
 
+        # --- 分離済みシステムハンドラ (P0 refactor: engine.py 分割) ---
+        from engine.systems.combat_system import CombatSystem
+        from engine.systems.entity_system import EntitySystem
+        from engine.systems.game_loop import GameLoopHandler
+        from engine.systems.pet_system import PetSystemHandler
+        from engine.systems.render_system import RenderSystemHandler
+        from engine.systems.skill_eater_system import SkillEaterSystemHandler
+        from engine.systems.ui_system import UISystemHandler
+        from engine.systems.world_system import WorldSystem
+
+        self.combat_handler = CombatSystem(self)
+        self.world_handler = WorldSystem(self)
+        self.entity_handler = EntitySystem(self)
+        self.skill_eater_handler = SkillEaterSystemHandler(self)
+        self.pet_handler = PetSystemHandler(self)
+        self.game_loop_handler = GameLoopHandler(self)
+        self.render_handler = RenderSystemHandler(self)
+        self.ui_handler = UISystemHandler(self)
+
         # --- GameStateInitializer によるゲーム状態データの初期化 (Phase 4) ---
         from core.world_state_manager import GameStateInitializer
 
@@ -192,6 +211,9 @@ class Engine:
         # Stub registry for faction war to satisfy references in tests/benchmarks
         self.faction_war_registry = {}
         self.game_state_data = self.game_state_initializer.initialize_world_state()
+
+        # Step 27: Unify survival and survival_system to be the same object
+        self.kernel.register_system("survival_system", self.game_state_data.survival)
 
         # --- run 終了状態 (死亡判定と run summary) ---
         # 文字列を素で持ち回さず、許可された遷移だけを通る状態機械にする (Step 10)
@@ -933,294 +955,44 @@ class Engine:
             else None
         )
 
+    # --- スキルイーターシステム (SkillEaterSystemHandler へ委譲) ---
     def execute_scan(self) -> bool:
         """周囲の対象をスキャン・解析する (Step 14, 20, 38, 39)"""
-        combat_sys = self.skill_eater_combat_system
-        if not combat_sys:
-            self.log("解析システムが見つかりません。", (255, 100, 100))
-            return False
-
-        nearest = None
-        min_dist = 999.0
-        for entity in self.entity_manager.get_living_entities():
-            if entity != self.player and not getattr(entity, "is_pet", False):
-                dist = ((entity.x - self.player.x) ** 2 + (entity.y - self.player.y) ** 2) ** 0.5
-                if dist < min_dist:
-                    min_dist = dist
-                    nearest = entity
-
-        if not nearest:
-            self.log("周囲に解析可能な対象が見つかりません。", (200, 200, 200))
-            return True
-
-        from skill_eater_system import CharacterState
-
-        analyzer = CharacterState(
-            id="player",
-            name=self.player.name,
-            hp=self.player.hp,
-            max_hp=self.player.max_hp,
-            mp=self.player.mp,
-            max_mp=self.player.max_mp,
-            atk=15,
-            defense=10,
-            intelligence=15,
-            speed=100,
-            analysis_level=getattr(self.player, "analysis_level", 1),
-        )
-        target_state = CharacterState(
-            id=str(getattr(nearest, "id", "enemy")),
-            name=nearest.name,
-            hp=nearest.hp,
-            max_hp=nearest.max_hp,
-            mp=10,
-            max_mp=10,
-            atk=getattr(nearest, "atk", 10),
-            defense=getattr(nearest, "defense", 5),
-            intelligence=5,
-            speed=getattr(nearest, "speed", 80),
-        )
-        res = combat_sys.analyze_target(analyzer, target_state)
-        self.last_scan_result = res
-        self.log(
-            f"【深度解析】{res.target_name} (HP: {int(res.target_hp_ratio * 100)}% / 喰らい成功率: {int(res.devour_success_rate * 100)}%)",
-            (100, 255, 200),
-        )
-        for sk in res.revealed_skills:
-            self.log(f" - [{sk.tier}] {sk.name} (タグ: {', '.join(sk.tags)})", (255, 215, 0))
-        return True
+        return self.skill_eater_handler.execute_scan()
 
     def execute_devour(self) -> bool:
         """隣接する敵からスキルを強奪する《喰らい》 (Steps 25-36)"""
-        combat_sys = self.skill_eater_combat_system
-        if not combat_sys:
-            self.log("喰らいシステムが見つかりません。", (255, 100, 100))
-            return False
-
-        target = None
-        for entity in self.entity_manager.get_living_entities():
-            if entity != self.player and not getattr(entity, "is_pet", False):
-                dist = ((entity.x - self.player.x) ** 2 + (entity.y - self.player.y) ** 2) ** 0.5
-                if dist <= 1.5:
-                    target = entity
-                    break
-
-        if not target:
-            self.log(
-                "隣接する捕食対象がいません。（敵に隣接して発動してください）", (200, 200, 200)
-            )
-            return True
-
-        from skill_eater_system import SkillEaterRegistry
-
-        analyzer = _character_state_from_entity(
-            self.player,
-            analysis_level=getattr(self.player, "analysis_level", 1),
-        )
-        target_state = _character_state_from_entity(target)
-        declared_ids = _declared_skill_ids(target)
-        for skill_id in declared_ids:
-            # 敵が宣言するスキルはすべて奪取候補として積む（実際に奪われるのは先頭の1つ）。
-            # メモリ容量で落とすのは敵の貧弱さではない
-            target_state.add_skill(skill_id, ignore_capacity=True)
-
-        rate = combat_sys.calculate_devour_rate(analyzer, target_state)
-        roll = random.random()
-        # 複数保有時は宣言順の先頭。抽選は行わない
-        stolen_id = next(iter(target_state.skills), None)
-
-        if stolen_id is None:
-            self.log(f"{target.name} の身体には、喰うべきスキルが棲んでいない。", (200, 200, 200))
-        elif roll <= rate:
-            target_state.remove_skill(stolen_id)
-            reg = SkillEaterRegistry.get_instance()
-            sk_def = reg.get_skill(stolen_id)
-            sk_name = sk_def.name if sk_def else stolen_id
-
-            if "skills" not in self.game_state_data.world_a_data:
-                self.game_state_data.world_a_data["skills"] = []
-            self.game_state_data.world_a_data["skills"].append(stolen_id)
-
-            self._register_devoured_skill(stolen_id, sk_def)
-
-            self.log(
-                f"【捕食成功！】{target.name} から 《{sk_name}》 を喰らい尽くした！",
-                (255, 100, 255),
-            )
-            if hasattr(self, "sound_manager") and self.sound_manager:
-                self.sound_manager.play_se("eat")
-
-            target.hp = max(1, target.hp - 15)
-            if target_state.is_husk or len(target_state.skills) == 0:
-                target.is_husk = True
-                self.log(
-                    f"{target.name} はスキルを奪われ、抜け殻（Husk）と化した！", (180, 180, 180)
-                )
-        else:
-            backlash = random.randint(3, 8)
-            self.player.hp = max(1, self.player.hp - backlash)
-            self.log(
-                f"【捕食失敗】拒絶反応！ 胃袋から激痛が走る！（-{backlash} HP）", (255, 80, 80)
-            )
-            if hasattr(self, "screen_shake") and self.screen_shake:
-                self.screen_shake.trigger(intensity=1.5, duration=4)
-
-        self.player.energy -= ENERGY_THRESHOLD
-        self.advance_world()
-        return True
+        return self.skill_eater_handler.execute_devour()
 
     def _register_devoured_skill(self, skill_id: str, sk_def) -> None:
-        """奪ったスキルを唱えられるスキル (`player.skills`) へ登録する。
-
-        `world_a_data["skills"]` は HUD と fusion 炉の記録であり、別枠の配列なので残す。
-        定義が引けなかった場合は、黙って捨てずに理由をログと画面に残す。
-        """
-        from ecs.entity import Skill
-
-        skills = self.player.skills
-        if skill_id in skills:
-            return
-
-        if sk_def is None:
-            logger.warning("Devoured skill %r could not be registered: no definition found", skill_id)
-            self.log(f"【記録のみ】《{skill_id}》の定義が見つからないため、唱えられるスキルには登録できない", (255, 160, 80))
-            return
-
-        skills[skill_id] = Skill(sk_def.name, level=1)
+        """奪ったスキルを唱えられるスキル (`player.skills`) へ登録する。"""
+        self.skill_eater_handler._register_devoured_skill(skill_id, sk_def)
 
     def execute_synthesis(self, skill_a: str | None = None, skill_b: str | None = None) -> bool:
         """スキル合成を実行する (Steps 43-47)"""
-        synth_sys = self.skill_eater_synthesis_system
-        if not synth_sys:
-            self.log("合成システムが見つかりません。", (255, 100, 100))
-            return False
-
-        if "skills" not in self.game_state_data.world_a_data:
-            self.game_state_data.world_a_data["skills"] = []
-
-        skills = self.game_state_data.world_a_data["skills"]
-        if len(skills) < 2:
-            self.log(
-                f"【キメラ合成炉】合成には少なくとも2つのスキルが必要です。（現在所持: {len(skills)}個）",
-                (200, 200, 200),
-            )
-            return True
-
-        id_a = skill_a or skills[0]
-        id_b = skill_b or skills[1]
-
-        from skill_eater_system import CharacterState
-
-        char_state = CharacterState(
-            id="player",
-            name=self.player.name,
-            hp=self.player.hp,
-            max_hp=self.player.max_hp,
-            mp=self.player.mp,
-            max_mp=self.player.max_mp,
-            atk=15,
-            defense=10,
-            intelligence=15,
-            speed=100,
-        )
-        for s in skills:
-            char_state.add_skill(s)
-
-        res = synth_sys.synthesize(char_state, id_a, id_b)
-        if res.success and res.result_skill:
-            if id_a in skills:
-                skills.remove(id_a)
-            if id_b in skills:
-                skills.remove(id_b)
-            skills.append(res.result_skill.id)
-            self.log(
-                f"【合成成功！】《{res.result_skill.name}》[{res.result_skill.tier.value}] が誕生した！",
-                (255, 215, 0),
-            )
-            if hasattr(self, "sound_manager") and self.sound_manager:
-                self.sound_manager.play_se("cast")
-        else:
-            self.log("【合成失敗】魔力が反発し、合成に失敗した...", (255, 100, 100))
-        return True
+        return self.skill_eater_handler.execute_synthesis(skill_a, skill_b)
 
     def execute_pet_dispatch(
         self, mission_name: str, duration_turns: int = 10, reward_gold: int = 500
     ) -> bool:
         """ペットをスラム街の探索・調達任務に派遣する (Step 54-56)"""
-        if "pet_dispatches" not in self.game_state_data.world_a_data:
-            self.game_state_data.world_a_data["pet_dispatches"] = []
-
-        self.game_state_data.world_a_data["pet_dispatches"].append(
-            {
-                "mission_name": mission_name,
-                "remaining_turns": duration_turns,
-                "reward_gold": reward_gold,
-            }
-        )
-        self.log(
-            f"【ペット派遣】『{mission_name}』へ派遣を開始しました（所要: {duration_turns}ターン）。",
-            (100, 255, 200),
-        )
-        return True
+        return self.skill_eater_handler.execute_pet_dispatch(mission_name, duration_turns, reward_gold)
 
     def execute_base_upgrade(self, facility_id: str, cost_aldo: int = 1000) -> bool:
         """スラム街の拠点を拡張・改修する (Step 54)"""
-        if "facilities" not in self.game_state_data.world_a_data:
-            self.game_state_data.world_a_data["facilities"] = {}
-
-        facs = self.game_state_data.world_a_data["facilities"]
-        current_lv = facs.get(facility_id, 1)
-        facs[facility_id] = current_lv + 1
-        self.log(
-            f"【拠点改修完了】施設『{facility_id}』が Lv.{facs[facility_id]} にアップグレードされました！",
-            (255, 215, 0),
-        )
-        return True
+        return self.skill_eater_handler.execute_base_upgrade(facility_id, cost_aldo)
 
     def execute_solve_puzzle(self, puzzle_type: str, used_skill_tag: str) -> bool:
         """環境パズルを所持スキルで解除する (Step 57-59)"""
-        match = (
-            (puzzle_type == "ice_barrier" and "Fire" in used_skill_tag)
-            or (puzzle_type == "dark_gate" and "Light" in used_skill_tag)
-            or (puzzle_type == "iron_lock" and "Labor" in used_skill_tag)
-        )
-        if match:
-            self.log(
-                f"【ギミック解除！】スキル特性[{used_skill_tag}]により『{puzzle_type}』の封鎖を突破した！",
-                (100, 255, 100),
-            )
-            return True
-        else:
-            self.log(
-                f"【解除失敗】『{puzzle_type}』に対して[{used_skill_tag}]は効果が薄いようだ...",
-                (255, 100, 100),
-            )
-            return False
+        return self.skill_eater_handler.execute_solve_puzzle(puzzle_type, used_skill_tag)
 
     def switch_world(self, world_id: str) -> bool:
         """ワールド間遷移（Aの世界 / 本編ワールドの切り替え） (Step 61-62)"""
-        self.game_state_data.current_world = world_id
-        if world_id == "skill_eater":
-            self.log(
-                "【次元遷移】Aの世界（スキル喰い）へ転移しました！ 《解析(X)》と《喰らい(V)》が解放されます。",
-                (150, 255, 150),
-            )
-            if hasattr(self, "sound_manager") and self.sound_manager:
-                self.sound_manager.play_se("warp")
-        else:
-            self.log(f"【次元遷移】ワールド『{world_id}』へ帰還しました。", (180, 200, 255))
-        return True
+        return self.skill_eater_handler.switch_world(world_id)
 
     def execute_epilogue_world_transition(self) -> bool:
         """Aの世界エピローグ＆次元ゲート開放 (Step 69-70)"""
-        self.log(
-            "【次元ゲート開放】Aの世界の境界線が溶解し、概念の残滓がプレイヤーに宿る！",
-            (255, 215, 0),
-        )
-        if "meta_artifacts" not in self.game_state_data.world_a_data:
-            self.game_state_data.world_a_data["meta_artifacts"] = []
-        self.game_state_data.world_a_data["meta_artifacts"].append("concept_eater_mark")
-        return self.switch_world("main")
+        return self.skill_eater_handler.execute_epilogue_world_transition()
 
     @property
     def input_handler(self):
@@ -1356,176 +1128,22 @@ class Engine:
         GAME_OVER 後は行動を受け付けない。死亡画面を閉じたまま遺体が歩き回る
         状態を作らないための門 ([S2.1] が求める world と turn の停止とは別物)。
         """
-        if self.current_state is GameState.GAME_OVER:
+        if self.game_state_machine.current != "playing":
             return False
         return self.gameplay_loop(self.kernel, self).player_act(dx, dy)
 
+    # -------------------------------------------------------------
+    # P0 リファクタ: 分離済みシステムハンドラへの委譲
+    # 実装は engine/systems/{combat,world,entity,skill_eater,pet,game_loop,ui,render}_system.py
+    # -------------------------------------------------------------
+
+    def _on_player_death(self) -> None:
+        """プレイヤー死亡時の統一ハンドラ (GameLoopHandler へ委譲)"""
+        self.game_loop_handler._on_player_death()
+
     def _on_kill(self, entity: Entity) -> None:
-        # メインクエストの進行を更新
-        if hasattr(self, "main_quest_system"):
-            logs = self.main_quest_system.update_progress(self.player, "kill", entity.name, 1, self)
-            for log in logs:
-                self.message_log.add(log, level="SUCCESS")
-        # プロシージャル・クエスト（依頼ボード/ダンジョン/NPC）の討伐進捗を通知
-        self._progress_generated_quests("kill", entity.name, 1)
-        self.log(f"★{entity.name}を撃破！", (255, 215, 0), level="SUCCESS")
-        SoundManager.play_se("kill")
-        if hasattr(self, "screen_shake"):
-            self.screen_shake.trigger(intensity=1.2, duration=3)
-        # 爆発パーティクル (Phase 7)
-        for _ in range(3):
-            self.particles.append(
-                Particle(
-                    "💥",
-                    entity.x,
-                    entity.y,
-                    (255, 180, 50),
-                    life=3,
-                    vx=random.uniform(-0.4, 0.4),
-                    vy=random.uniform(-0.4, 0.4),
-                )
-            )
-
-        # === 戦闘報酬決済 (CombatManager に委譲) ===
-        from managers.combat_manager import CombatManager
-
-        CombatManager().handle_kill_rewards(self, entity)
-
-        # SkillEaterSecretAccess - モンスターからのキーアイテムドロップ (Step 26)
-        try:
-            from secret_area_system import SECRET_REGISTRY
-
-            SECRET_REGISTRY.load_from_yaml()
-
-            # モンスターレア度に基づくドロップ判定
-            drop_chance = 0.05  # 基本5%
-            # ボスモンスターなら確率アップ
-            if getattr(entity, "is_boss", False) or getattr(entity, "unique_boss", False):
-                drop_chance = 0.3  # 30%
-            elif "unique" in entity.name.lower() or "ボス" in entity.name:
-                drop_chance = 0.2
-
-            if random.random() < drop_chance:
-                # ダンジョン深度に応じたキーレベル決定
-                dungeon_level = getattr(self, "dungeon_level", 1)
-                keycard_level = min(5, max(1, (dungeon_level // 5) + 1))
-
-                # 利用可能なキーから選択
-                available_keys = []
-                for key in SECRET_REGISTRY.get_all_key_items():
-                    if key.key_type == "keycard" and key.level <= keycard_level:
-                        available_keys.append(key.id)
-                    elif key.key_type == "biometric" and key.level <= (keycard_level // 2 + 1):
-                        available_keys.append(key.id)
-                    elif key.key_type == "decryption" and key.level <= (keycard_level // 2 + 1):
-                        available_keys.append(key.id)
-
-                if available_keys:
-                    key_id = random.choice(available_keys)
-                    key_def = SECRET_REGISTRY.get_key_item(key_id)
-                    if key_def:
-                        from item_system import Item
-
-                        key_item = Item(
-                            key_def.name,
-                            "tool",
-                            "🗝️",
-                            (255, 215, 0),
-                            base_weight=0.1,
-                            base_value=key_def.market_value,
-                        )
-                        key_item.x, key_item.y = entity.x, entity.y
-                        key_item.key_data = {
-                            "key_id": key_id,
-                            "key_type": key_def.key_type,
-                            "level": key_def.level,
-                        }
-                        self.items_on_ground.append(key_item)
-                        self.log(f"{entity.name}が『{key_def.name}』を落とした！", (255, 215, 0))
-        except Exception:
-            pass
-
-        # === 称号システム: キルカウント記録 ===
-        if self.player and hasattr(self.player, "kill_counts"):
-            # モンスター名正規化（小文字・スペース→アンダースコア）
-            key = entity.name.lower().replace(" ", "_")
-            self.player.kill_counts[key] = self.player.kill_counts.get(key, 0) + 1
-
-            # モンスターキルタイプ更新 (Step 46)
-            m_type = getattr(entity, "char", "monster")
-            if "goblin" in key or "ゴブリン" in entity.name:
-                m_type = "goblin"
-            elif "slime" in key or "ぷち" in entity.name:
-                m_type = "slime"
-            self.player.monster_killed_types[m_type] = (
-                self.player.monster_killed_types.get(m_type, 0) + 1
-            )
-
-            # 称号チェック（即時）
-            from title_system import MANAGER
-
-            granted = MANAGER.check_all_titles(self.player)
-            for tid in granted:
-                pass
-
-            # 実績チェック (Steps 26, 27)
-            if hasattr(self, "achievement_manager"):
-                self.achievement_manager.check_all_achievements(self.player, self)
-
-        # === スキルポイント付与 (SkillRewardManager に委譲) ===
-        from managers.skill_reward_manager import SkillRewardManager
-
-        SkillRewardManager().grant_kill_skill_points(self, entity)
-
-        # === ペット共闘時の絆度増加 (PetBondManager に委譲) ===
-        from managers.pet_bond_manager import PetBondManager
-
-        PetBondManager().update_combat_bond(self, entity)
-
-        # === ギルドクエスト進捗更新 (Step 40) ===
-        if self.player and getattr(self.player, "guild_id", None):
-            mon_name = entity.name.lower()
-            if "ゴブリン" in mon_name or "goblin" in mon_name:
-                done = self.guild_quest_manager.update_quest_progress(
-                    self.player, "slay_goblins", amount=20
-                )
-                self.log("【ギルドクエスト】ゴブリン討伐進捗を記録！", (100, 255, 200))
-                if done:
-                    ok, qmsg, _ = self.guild_quest_manager.complete_quest(
-                        self.player, "slay_goblins"
-                    )
-                    if ok:
-                        self.log(qmsg, (255, 215, 0))
-            elif "ぷち" in mon_name or "slime" in mon_name:
-                done = self.guild_quest_manager.update_quest_progress(
-                    self.player, "slay_slimes", amount=34
-                )
-                self.log("【ギルドクエスト】ぷち駆除進捗を記録！", (100, 255, 200))
-                if done:
-                    ok, qmsg, _ = self.guild_quest_manager.complete_quest(
-                        self.player, "slay_slimes"
-                    )
-                    if ok:
-                        self.log(qmsg, (255, 215, 0))
-
-        # === 派閥評判更新 (FactionManager に委譲) ===
-        from managers.faction_manager import FactionManager
-
-        FactionManager().update_kill_reputation(self, entity)
-
-        # === 動的記憶の欠片のドロップ判定 (強敵討伐 / 稀な確率) ===
-        if random.random() < 0.08 and hasattr(self, "meta_progression_manager"):
-            from meta_progression_system import MemoryFragmentGenerator
-
-            frag = MemoryFragmentGenerator.generate(
-                self.player,
-                trigger_type="boss_kill",
-                context={
-                    "enemy_name": entity.name,
-                    "dungeon_level": self.dungeon_level,
-                },
-            )
-            self.meta_progression_manager.add_memory_fragment(self.player, frag, self)
+        """撃破処理 (CombatSystem へ委譲)"""
+        self.combat_handler.handle_kill(entity)
 
     def _progress_generated_quests(self, event_type: str, target_id: str, amount: int = 1) -> None:
         """プロシージャル生成クエストの進捗をゲームイベントから通知 (Steps 34, 36)"""
@@ -1537,997 +1155,144 @@ class Engine:
             self.log(m, (255, 215, 0), level="SUCCESS")
 
     def _end_run_if_player_dead(self) -> bool:
-        """死亡を判定して run を終了させる (docs/compose/spec/run-end-state.md [S2.1])
-
-        判定を turn 進行の入口に置くことで、攻撃元の種類に依存せず死を捕捉する。
-        既に GAME_OVER のときは何もせず True を返す (冪等)。
-        """
-        if self.current_state is GameState.GAME_OVER:
-            return True
-        if self.player.hp > 0:
-            return False
-
-        self.current_state = GameState.GAME_OVER
-        self.game_state = "game_over"  # 旧互換文字列 (render はこの文字列で分岐する)
-        self.run_summary = self._build_run_summary()
-        self._present_run_summary(self.run_summary)
-        self._record_run_history(self.run_summary)
-        return True
+        """死亡判定と run 終了 (GameLoopHandler へ委譲)"""
+        return self.game_loop_handler._end_run_if_player_dead()
 
     def _record_harm_cause(self, cause: str) -> None:
-        """観測した死因を、その観測時点の HP と対で記録する"""
-        self._harm_cause = cause
-        self._harm_cause_hp = self.player.hp
+        """死因記録 (GameLoopHandler へ委譲)"""
+        self.game_loop_handler._record_harm_cause(cause)
 
     def _observed_harm_cause(self) -> str:
-        """記録した死因を返す。記録後に原因不明のダメージを受けていれば CAUSE_UNKNOWN にする
-
-        死因の観測点は turn 進行中の `advance_world` と自分の行動の 2 か所だけ
-        ([S3] 細分類は対象外)。トラップのように `_harm_cause` を触らないダメージは
-        観測点の間で発生するため、前の turn の観測を死因として引きずると順序依存の
-        表示になる。記録した時点から HP が変わっていれば、致命的になるまでの間に
-        原因を観測できていないので、観測の無い死として扱う。
-        旧セーブは __init__ を通らず pickle 復元されるため getattr で読む。
-        """
-        if getattr(self, "_harm_cause_hp", None) != self.player.hp:
-            return CAUSE_UNKNOWN
-        return getattr(self, "_harm_cause", CAUSE_UNKNOWN)
+        """死因観測 (GameLoopHandler へ委譲)"""
+        return self.game_loop_handler._observed_harm_cause()
 
     def _build_run_summary(self) -> RunSummary:
-        """run summary を組み立てる。値は既存の state から引く ([S2.1] 追跡機構を増やさない)"""
-        clock = self.time_system.world_clock
-        # 件数と id は同じ state から同時に引く。別々に数えると必ずずれる。
-        skills = self.game_state_data.world_a_data.get("skills", ())
-        devoured = tuple(str(skill_id) for skill_id in skills)
-        return RunSummary(
-            depth=self.dungeon_level,
-            kills=sum(self.player.kill_counts.values()),
-            devoured_skills=len(devoured),
-            turns=self.turns,
-            cause=self._observed_harm_cause(),
-            elapsed_minutes=clock.total_ticks // clock.config.ticks_per_minute,
-            devoured_skill_ids=devoured,
-        )
+        """run summary 組み立て (GameLoopHandler へ委譲)"""
+        return self.game_loop_handler._build_run_summary()
 
     def _present_run_summary(self, summary: RunSummary) -> None:
-        """run summary をログへ提示する (画面描画は render の game_over 分岐)"""
-        self.log(GAME_OVER_TITLE, (255, 50, 50), level="WARNING")
-        for line in summary.format_lines():
-            self.log(line, COLOR_GOLD_YELLOW, level="WARNING")
+        """run summary 提示 (GameLoopHandler へ委譲)"""
+        self.game_loop_handler._present_run_summary(summary)
 
     def _record_run_history(self, summary: RunSummary) -> None:
-        """終了した run を履歴へ書き出す ([S2.1] 次回起動で提示する)
-
-        死亡の処理を止めないため、書けなかった旨をログに留めて飲み込む。
-        履歴は補助情報であり、run の終了そのものを失敗させない。
-        """
-        try:
-            RunHistoryStore().record(summary)
-        except Exception:
-            logger.exception("Failed to record run history: %s", summary)
-            self.log(
-                "【記録失敗】今回の戦績を履歴に残せませんでした", (255, 160, 80), level="WARNING"
-            )
+        """run 履歴記録 (GameLoopHandler へ委譲)"""
+        self.game_loop_handler._record_run_history(summary)
 
     def _present_run_history(self) -> None:
-        """前回の run の記録を起動時のログへ提示する ([S2.1])
+        """前回 run 記録提示 (GameLoopHandler へ委譲)"""
+        self.game_loop_handler._present_run_history()
 
-        新しい UI は作らず、起動時に既に流れているログへ並べる。
-        履歴が無い (初回起動) / 読めない (破損) 場合も store 側が理由を文面にする。
-        """
-        for line in RunHistoryStore().startup_lines():
-            self.log(line, COLOR_GOLD_YELLOW, level="INFO")
+    def check_win_condition(self) -> bool:
+        """勝利条件判定 (WorldSystem へ委譲)"""
+        return self.world_handler.check_win_condition()
 
     def advance_world(self) -> None:
-        """速度Tick制による全NPCターン処理 (GameplayPackage 経由)
-
-        死亡判定を turn 進行の入口に集約する ([S2.1])。GAME_OVER 後は世界も turn も進めない。
-        """
-        if self._end_run_if_player_dead():
-            return
-
-        # 死因の区分は turn 進行中の観測点で行う ([S3] 細分類は対象外)
-        hp_before = self.player.hp
-        self.gameplay_loop(self.kernel, self).advance_world()
-        if self.player.hp < hp_before:
-            self._record_harm_cause(CAUSE_HUNGER if self.survival.hunger <= 0 else CAUSE_COMBAT)
-
-        # 以下は Engine 固有の処理（自然回復、世界ニュース、オートセーブ等）
-        # 自然回復(出血中は停止: ステップ45)
-        self.turns += 1
-        # プレイヤー出血状態をチェック
-        player_bleeding = any(
-            getattr(e, "effect_type", getattr(e, "type", getattr(e, "name", ""))) == "bleeding"
-            for e in self.player.status_effects
-        )
-        from constants import NATURAL_REGEN_HUNGER_THRESHOLD, NATURAL_REGEN_INTERVAL
-
-        if (
-            self.turns % NATURAL_REGEN_INTERVAL == 0
-            and self.survival.hunger > NATURAL_REGEN_HUNGER_THRESHOLD
-            and not player_bleeding
-        ):
-            self.player.hp = min(self.player.max_hp, self.player.hp + 1)
-            self.player.mp = min(self.player.max_mp, self.player.mp + 1)
-            if self.pet.hp > 0:
-                self.pet.hp = min(self.pet.max_hp, self.pet.hp + 1)
-        # 自然回復は生存者向けの処理であり、死亡した turn の観測を引きずって
-        # 「観測の無い死」に落とす理由にはならない (記録した HP を turn 末へ合わせる)
-        if self.player.hp <= 0:
-            self._harm_cause_hp = self.player.hp
-
-        # 動的サウンドスケープ: 危機状態のBGM判定 (Step 7.3)
-        if hasattr(self, "player") and self.player:
-            SoundManager.bgm_manager.check_crisis_trigger(self.player.hp, self.player.max_hp)
-
-        # オートセーブ: 50ターンごと (ステップ71) — PersistenceManager に委譲
-        from managers.persistence_manager import PersistenceManager
-
-        PersistenceManager().autosave_if_due(self)
-
-        # === 世界ニュース・称号・ジョブ・スキルツリー・ギルド (WorldNewsManager に委譲) ===
-        from managers.world_news_manager import WorldNewsManager
-
-        WorldNewsManager().advance(self)
-
-        # === 派閥影響力定期変動 (FactionManager に委譲) ===
-        from managers.faction_manager import FactionManager
-
-        FactionManager().update_influence(self)
-
-        # === ペット絆度 & 進化チェック (PetBondManager に委譲) ===
-        from managers.pet_bond_manager import PetBondManager
-
-        PetBondManager().update_turn_bond(self)
-
-        # 浮遊テキスト & パーティクル & 通知 & 画面シェイクの更新 (Phase 6, 7, UX強化)
-        self.floating_texts = [ft for ft in self.floating_texts if ft.update()]
-        self.particles = [pt for pt in self.particles if pt.update()]
-        if hasattr(self, "notification_manager"):
-            self.notification_manager.update()
-        if hasattr(self, "screen_shake"):
-            self.screen_shake.update()
-
-        self.game_map.compute_fov(self.player.x, self.player.y, radius=8)
+        """速度Tick制による全NPCターン処理 (GameLoopHandler へ委譲)"""
+        self.game_loop_handler.advance_world()
 
     def _pet_ai(self) -> None:
-        """ビヘイビアツリー及びA*による高度なペットAI"""
-        if self.pet.hp <= 0 or self.pet.energy < ENERGY_THRESHOLD:
-            return
-        if hasattr(self, "ai_system"):
-            self.ai_system.process_ai(self.pet, self)
-            return
-
-        blocked = self.get_blocked_positions()
-        retreat = self.pet.hp < self.pet.max_hp * PET_RETREAT_HP_RATIO
-
-        if not retreat:
-            nearest = None
-            min_dist = 99
-            for e in self.entity_manager.get_living_entities():
-                if e not in (self.player, self.pet) and "グウェン" not in e.name and e.hp > 0:
-                    d = Point(self.pet.x, self.pet.y).chebyshev_distance(Point(e.x, e.y))
-                    if d < min_dist and self.has_los(
-                        Point(self.pet.x, self.pet.y), Point(e.x, e.y)
-                    ):
-                        min_dist = d
-                        nearest = e
-
-            if nearest and min_dist <= 6:
-                if min_dist == 1:
-                    weapon = (
-                        self.pet_inventory.equipment.get("main_hand")
-                        if hasattr(self, "pet_inventory")
-                        else None
-                    )
-                    dmg, is_crit, _msg = CombatSystem.calculate_melee_attack(
-                        self.pet, nearest, weapon=weapon
-                    )
-                    nearest.hp -= dmg
-                    CombatSystem.publish_damage_event(
-                        self.event_bus,
-                        dmg,
-                        nearest.x,
-                        nearest.y,
-                        is_crit,
-                        nearest.hp <= 0,
-                    )
-                    self.log(
-                        f"【シエル】「えいっ！」-> {nearest.name}に{dmg}ダメージ！",
-                        COLOR_PET_PINK,
-                    )
-                    if nearest.hp <= 0:
-                        CombatSystem.publish_kill_event(self.event_bus, nearest.x, nearest.y)
-                        self.log(f"【シエル】が{nearest.name}を倒した！", (255, 200, 220))
-                        for l in self.pet.gain_exp(40):
-                            self.log(l, COLOR_PET_PINK)
-                        self.entity_manager.remove_entity(nearest)
-                else:
-                    path = AStar.get_path(
-                        Point(self.pet.x, self.pet.y),
-                        Point(nearest.x, nearest.y),
-                        lambda x, y: self.is_tile_free(x, y, blocked),
-                    )
-                    if path:
-                        self.pet.x, self.pet.y = path[0].x, path[0].y
-                    self.pet.energy -= ENERGY_THRESHOLD
-                    return
-
-        goal = Point(self.player.x, self.player.y)
-        path = AStar.get_path(
-            Point(self.pet.x, self.pet.y),
-            goal,
-            lambda x, y: self.is_tile_free(x, y, blocked),
-        )
-        if path and len(path) > PET_PATH_LENGTH_CHECK:
-            nxt = path[0]
-            if (nxt.x, nxt.y) != (self.player.x, self.player.y):
-                self.pet.x, self.pet.y = nxt.x, nxt.y
-        self.pet.energy -= ENERGY_THRESHOLD
+        """ペットAI (EntitySystem へ委譲)"""
+        self.entity_handler.pet_ai()
 
     def _npc_ai(self, npc: Entity) -> None:
-        """ビヘイビアツリー及び戦術アーキタイプによるNPC AI"""
-        if npc in (self.player, self.pet) or "グウェン" in npc.name or npc.hp <= 0:
-            return
-
-        if hasattr(self, "ai_system"):
-            self.ai_system.process_ai(npc, self)
-            return
-
-        # ガードはカルマが低いプレイヤーを追跡 (ステップ43)
-        target = self.player
-        if getattr(npc, "faction", None) == FACTION_GUARD and self.survival.karma > -30:
-            npc.energy -= ENERGY_THRESHOLD
-            return
-
-        dist = Point(npc.x, npc.y).chebyshev_distance(Point(target.x, target.y))
-        can_see = self.has_los(Point(npc.x, npc.y), Point(target.x, target.y))
-
-        if dist == 1:
-            dmg, is_crit, msg = CombatSystem.calculate_melee_attack(npc, target)
-            target.hp -= dmg
-            CombatSystem.publish_damage_event(
-                self.event_bus, dmg, target.x, target.y, is_crit, target.hp <= 0
-            )
-            self.log(msg, (255, 100, 100))
-            # プレイヤーの死亡は advance_world 入口の判定に集約済み ([S2.1])
-            if target.hp <= 0 and target == self.pet:
-                self.log("【悲痛】シエル「お兄ちゃん…ごめんね…」", (255, 80, 150))
-                if hasattr(self.pet, "pet_ai"):
-                    self.pet.pet_ai.increase_bond(-50, "defeated")
-                CombatSystem.publish_kill_event(self.event_bus, target.x, target.y)
-        elif dist <= 8 and can_see:
-            blocked = self.get_blocked_positions()
-            path = AStar.get_path(
-                Point(npc.x, npc.y),
-                Point(target.x, target.y),
-                lambda x, y: self.is_tile_free(x, y, blocked),
-            )
-            if path:
-                nxt = path[0]
-                if self.is_tile_free(nxt.x, nxt.y, blocked):
-                    npc.x, npc.y = nxt.x, nxt.y
-        npc.energy -= ENERGY_THRESHOLD
+        """NPC AI (EntitySystem へ委譲)"""
+        self.entity_handler.npc_ai(npc)
 
     def talk_to_neighbor(self) -> None:
-        # 近隣のエンティティを取得
-        neighbor = self.get_entity_at(
-            self.player.x + self.player.dx, self.player.y + self.player.dy
-        )
-        if not neighbor:
-            self.message_log.add("誰もいません。")
-            return
-
-        # メインクエストの進行を更新 (visitイベント)
-        if hasattr(self, "main_quest_system"):
-            logs = self.main_quest_system.update_progress(
-                self.player, "visit", neighbor.name, 1, self
-            )
-            for log in logs:
-                self.message_log.add(log)
-        for dx, dy in [
-            (0, -1),
-            (0, 1),
-            (-1, 0),
-            (1, 0),
-            (-1, -1),
-            (1, 1),
-            (-1, 1),
-            (1, -1),
-        ]:
-            t = self.get_entity_at(self.player.x + dx, self.player.y + dy)
-            if t and t != self.player:
-                # DialogueManagerによる対話テキスト生成 (リファクタリング適用)
-                self.active_dialogue = DialogueManager.get_dialogue(t, self.player, self)
-
-                # キャラクター関係性更新 (Step 72)
-                if hasattr(self, "relationship_manager"):
-                    self.relationship_manager.update_relationship(
-                        self.player, t.name, action="talk"
-                    )
-
-                return
-        self.log("周囲に話しかけられる相手がいない。")
+        """近隣住民との会話 (EntitySystem へ委譲)"""
+        self.entity_handler.talk_to_neighbor()
 
     def harvest_resource(self) -> None:
-        """採取ポイントの検索と採取 (ステップ46)"""
-        for node in self.entity_manager.resource_nodes:
-            d = abs(node.x - self.player.x) + abs(node.y - self.player.y)
-            if d <= 1 and not node.depleted:
-                itm, msg = node.harvest(self.player)
-                self.log(msg, (180, 255, 180))
-                SoundManager.play_se("get_item")
-                if itm:
-                    _ok, add_msg = self.inventory.add_item(itm)
-                    self.log(add_msg, (200, 255, 200))
-                    self.floating_texts.append(
-                        FloatingText(
-                            f"+{itm.name}",
-                            self.player.x,
-                            self.player.y - 0.3,
-                            (100, 255, 150),
-                        )
-                    )
-                    # プロシージャル・クエスト: 採取進捗を通知
-                    self._progress_generated_quests("collect", itm.name, 1)
-                self.player.energy -= ENERGY_THRESHOLD
-                self.advance_world()
-                return
-        self.log("周囲に採取できるものがない。")
+        """採取 (EntitySystem へ委譲)"""
+        self.entity_handler.harvest_resource()
 
     def cast_fireball(self) -> None:
-        """ファイアボール詠唱 - 詠唱失敗率・フレンドリーファイア (ステップ39, 40, 41)"""
-        success, backlash = CombatSystem.calc_spell_success(self.player, "fireball")
-        if not success:
-            self.player.hp -= backlash
-            self._record_harm_cause(CAUSE_SELF)
-            SoundManager.play_se("hit")
-            self.floating_texts.append(
-                FloatingText(f"-{backlash}", self.player.x, self.player.y - 0.2, (255, 80, 80))
-            )
-            self.log(
-                f"魔法の詠唱に失敗！ 魔力が暴走し {backlash} ダメージを受けた！",
-                (255, 80, 80),
-            )
-            self.player.energy -= ENERGY_THRESHOLD
-            self.advance_world()
-            return
-
-        mp_cost = 10
-        if self.player.mp < mp_cost:
-            self.log("MPが足りない！", (255, 100, 100))
-            return
-
-        SoundManager.play_se("cast")
-        self.player.mp -= mp_cost
-        tx, ty = self.player.x + 3, self.player.y
-        # 軌跡パーティクル (Phase 7)
-        for i in range(1, 4):
-            self.particles.append(
-                Particle("🔥", self.player.x + i, self.player.y, (255, 120, 30), life=2)
-            )
-
-        coords = CombatSystem.aoe_radius(tx, ty, radius=1)
-        karma_ref = {"value": self.survival.karma}
-        logs = CombatSystem.apply_aoe(
-            self.player,
-            coords,
-            (18, 35),
-            Element.FIRE,
-            self.entity_manager.get_living_entities(),
-            karma_ref,
-        )
-        self.survival.karma = karma_ref["value"]
-        for l in logs:
-            self.log(l, (255, 140, 60))
-        # 死亡チェック
-        for e in list(self.entity_manager.get_living_entities()):
-            if e not in (self.player, self.pet) and e.hp <= 0:
-                self._on_kill(e)
-        self.player.energy -= ENERGY_THRESHOLD
-        self.advance_world()
+        """ファイアボール詠唱 (CombatSystem へ委譲)"""
+        self.combat_handler.cast_fireball()
 
     def mine_wall(self) -> None:
-        for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
-            nx, ny = self.player.x + dx, self.player.y + dy
-            if self.game_map.is_in_bounds(nx, ny) and self.game_map.tiles[nx][ny] == TILE_WALL:
-                self.game_map.tiles[nx][ny] = TILE_FLOOR
-                self.player.gain_skill_exp("mining", 25)
-                roll = random.random()
-                if roll < 0.25:
-                    ore = Item(
-                        "鉄鉱石",
-                        "ore",
-                        "🪨",
-                        (160, 160, 160),
-                        nx,
-                        ny,
-                        base_weight=1.5,
-                        base_value=50,
-                    )
-                    self.entity_manager.add_item(ore)
-                    self.log("壁を掘り崩した！ 鉄鉱石を発見！", (200, 200, 255))
-                elif roll < 0.40:
-                    g = random.randint(50, 200)
-                    self.survival.gold += g
-                    self.log(f"壁から金貨が飛び散った！ (+{g}G)", COLOR_GOLD_YELLOW)
-                else:
-                    self.log("壁を掘り崩した。", (180, 180, 180))
-                self.player.energy -= ENERGY_THRESHOLD
-                self.advance_world()
-                return
-        self.log("近くに掘れる壁がない。")
+        """壁掘り (UISystemHandler へ委譲)"""
+        self.ui_handler.mine_wall()
 
     def excavate(self) -> None:
-        """考古学メタゲーム: 現在の深度で遺跡を発掘する (Steps 25, 26)"""
-        mgr = getattr(self, "archaeology_manager", None)
-        if mgr is None:
-            self.log("考古学システムが利用できない。")
-            return
-        depth = getattr(self, "dungeon_level", 1)
-        site_id = mgr.registry.pick_site_for_excavation(depth)
-        if not site_id:
-            self.log(f"地下{depth}階には発掘できる遺跡がない。", (180, 180, 180))
-            return
-        if site_id not in self.player.archaeology.excavated_sites:
-            self.player.archaeology.excavated_sites.append(site_id)
-        frag_id, key_id = mgr.resolve_excavation(site_id)
-        if frag_id:
-            mgr.collect_fragment(self.player, frag_id, self)
-        if key_id:
-            mgr.acquire_key(self.player, key_id, self)
-        # 入手直後に解読を試みる（鍵があれば解読される）
-        if frag_id:
-            mgr.decode_fragment(self.player, frag_id, self)
-        self.player.energy -= ENERGY_THRESHOLD
-        self.advance_world()
+        """考古学発掘 (UISystemHandler へ委譲)"""
+        self.ui_handler.excavate()
 
-    # ---- 改善②: 解釈選択プロンプト（ジャーナル内インタラクティブ） ----
     def _arch_interpret_groups(self) -> list[dict[str, Any]]:
-        """到達真理ごとに候補エンディングをグループ化"""
-        mgr = getattr(self, "archaeology_manager", None)
-        if mgr is None:
-            return []
-        groups: dict[str, dict[str, Any]] = {}
-        for tid, eid in mgr.suggest_endings(self.player):
-            g = groups.setdefault(tid, {"tid": tid, "name": "", "endings": []})
-            g["endings"].append(eid)
-        # 名称付与
-        for tid, g in groups.items():
-            t = mgr.registry.get_truth(tid)
-            g["name"] = t.get("name", tid) if t else tid
-        return list(groups.values())
+        """解釈候補グループ化 (UISystemHandler へ委譲)"""
+        return self.ui_handler._arch_interpret_groups()
 
     def open_interpret_prompt(self) -> None:
-        """ジャーナル内で解釈プロンプトを開始（[e]）"""
-        groups = self._arch_interpret_groups()
-        if not groups:
-            self.log("まだ真理に到達していないので、解釈を記録できない。", (200, 160, 120))
-            return
-        self.arch_interpret_active = True
-        self.arch_interpret_groups_cache = groups
-        self.arch_interpret_truth_idx = 0
-        self.arch_interpret_ending_idx = 0
-        self.log(
-            "💭 解釈プロンプト: ↑↓で真理、←→でエンディング、Enterで決定、Escで取消。",
-            (220, 200, 255),
-        )
+        """解釈プロンプト開始 (UISystemHandler へ委譲)"""
+        self.ui_handler.open_interpret_prompt()
 
     def interpret_move_truth(self, delta: int) -> None:
-        if not getattr(self, "arch_interpret_active", False):
-            return
-        n = len(self.arch_interpret_groups_cache)
-        self.arch_interpret_truth_idx = (self.arch_interpret_truth_idx + delta) % max(n, 1)
-        self.arch_interpret_ending_idx = 0
+        """解釈真理移動 (UISystemHandler へ委譲)"""
+        self.ui_handler.interpret_move_truth(delta)
 
     def interpret_move(self, delta: int) -> None:
-        if not getattr(self, "arch_interpret_active", False):
-            return
-        g = self.arch_interpret_groups_cache[self.arch_interpret_truth_idx]
-        n = len(g["endings"])
-        self.arch_interpret_ending_idx = (self.arch_interpret_ending_idx + delta) % max(n, 1)
+        """解釈エンディング移動 (UISystemHandler へ委譲)"""
+        self.ui_handler.interpret_move(delta)
 
     def confirm_interpret(self) -> None:
-        if not getattr(self, "arch_interpret_active", False):
-            return
-        g = self.arch_interpret_groups_cache[self.arch_interpret_truth_idx]
-        eid = g["endings"][self.arch_interpret_ending_idx]
-        mgr = self.archaeology_manager
-        mgr.interpret_truth(self.player, g["tid"], eid, engine=self)
-        self.arch_interpret_active = False
+        """解釈決定 (UISystemHandler へ委譲)"""
+        self.ui_handler.confirm_interpret()
 
     def cancel_interpret(self) -> None:
-        self.arch_interpret_active = False
+        """解釈取消 (UISystemHandler へ委譲)"""
+        self.ui_handler.cancel_interpret()
 
     def play_music(self) -> None:
-        """演奏 - 視界内のNPCのみおひねり (ステップ52)"""
-        perf_lv = self.player.skills.get("performance")
-        lv = perf_lv.level if perf_lv else 1
-        lv += self.player.attributes.charisma // 3
-        self.player.gain_skill_exp("performance", 35)
-        total_tips = 0
-        for e in self.entity_manager.get_living_entities():
-            if e not in (self.player, self.pet) and e.hp > 0:
-                success_rate = min(95, max(10, lv * 8 + self.player.attributes.charisma))
-                if random.randint(1, 100) <= success_rate:
-                    tip = random.randint(5, 10 + lv * 3)
-                    total_tips += tip
-                    self.log(f"{e.name}が拍手を送った！ (+{tip}G)", (255, 220, 100))
-                else:
-                    self.log(
-                        f"{e.name}は不満げに石を投げた！(演奏失敗 -1 HP)",
-                        (200, 100, 100),
-                    )
-                    self.player.hp -= 1
-                    self._record_harm_cause(CAUSE_SELF)
-        if total_tips > 0:
-            self.survival.gold += total_tips
-            self.log(f"★演奏の報酬合計: {total_tips}G！", COLOR_GOLD_YELLOW)
-        self.player.energy -= ENERGY_THRESHOLD
-        self.advance_world()
+        """演奏 (PetSystemHandler へ委譲)"""
+        self.pet_handler.play_music()
 
     def pray(self) -> None:
-        success, msg = self.player.pray_to_god()
-        self.log(msg, (255, 215, 0) if success else (200, 200, 200))
-        if success:
-            self.player.energy -= ENERGY_THRESHOLD
-            self.advance_world()
+        """祈り (PetSystemHandler へ委譲)"""
+        self.pet_handler.pray()
 
     def offer_altar(self) -> None:
-        if (self.player.x, self.player.y) != self.altar_pos:
-            self.log("祭壇の上に立っていない。")
-            return
-        for itm in list(self.inventory.items):
-            if any(kw in itm.name for kw in ["肉", "鉱石", "パン", "ハーブ"]):
-                self.inventory.remove_item(itm, count=1)
-                self.player.piety += 30
-                self.log(f"{itm.name} を捧げた！ 信仰度: {self.player.piety}", (255, 215, 0))
-                self.player.energy -= ENERGY_THRESHOLD
-                self.advance_world()
-                return
-        self.log("捧げる供物がない（肉・鉱石・パン・ハーブなど）。")
+        """祭壇への供物 (PetSystemHandler へ委譲)"""
+        self.pet_handler.offer_altar()
 
     def use_wish_rod(self) -> None:
-        for itm in self.inventory.items:
-            if "願いの杖" in itm.name:
-                self.game_state = "wish"
-                self.wish_input = ""
-                self.log(
-                    "★願いの杖を振った！ 何を望む？（テキストを入力してEnter）",
-                    (100, 255, 255),
-                )
-                return
-        self.log("願いの杖を持っていない。")
+        """願いの杖 (PetSystemHandler へ委譲)"""
+        self.pet_handler.use_wish_rod()
 
     def use_pet_evolution_stone(self) -> None:
-        """特別アイテムによるペット進化トリガー (Step 46)"""
-        if not self.pet or self.pet.hp <= 0:
-            self.log("進化させられるペットがいません。")
-            return
-        p_type = getattr(self.pet, "pet_type", "puppy")
-        evos = self.pet_evolution_manager.get_available_evolutions(
-            p_type, self.pet.pet_ai, self.pet
-        )
-        if evos:
-            target_evo = evos[0]
-            ok = self.pet_evolution_manager.apply_evolution(self.pet.pet_ai, target_evo, self.pet)
-            if ok:
-                self.log(
-                    f"★進化の秘石が輝き、【{self.pet.name}】へと劇的進化した！",
-                    (255, 215, 0),
-                )
-                SoundManager.play_se("level_up")
-        else:
-            self.log("ペットの絆度またはレベルが進化条件に達していません。")
+        """ペット進化石 (PetSystemHandler へ委譲)"""
+        self.pet_handler.use_pet_evolution_stone()
 
     def use_alchemy_lab(self) -> None:
-        """アルケミーラボでのペット融合施設利用トリガー (Steps 67, 68)"""
-        # プレイヤーのペットと従えているペット群
-        pets = [self.pet] + getattr(self.player, "pets", [])
-        if len(pets) < 2:
-            self.log("融合には2体以上のペットが必要です。")
-            return
-
-        res_id = self.pet_fusion_manager.can_fuse(pets[:2], self.player)
-        if not res_id:
-            self.log("融合条件（種族・絆度・レベル等）を満たしていません。")
-            return
-
-        p1_name, p2_name = pets[0].name, pets[1].name
-        fused = self.pet_fusion_manager.execute_fusion(pets[:2], self.player, res_id)
-        if fused:
-            self.pet = fused
-            from ui_fx_systems import play_pet_fusion_fx
-
-            play_pet_fusion_fx(self, p1_name, p2_name, fused.name)
+        """アルケミーラボ (PetSystemHandler へ委譲)"""
+        self.pet_handler.use_alchemy_lab()
 
     def confirm_wish(self) -> None:
-        result = WishParser.parse(self.wish_input, self.player, self.inventory, self.survival)
-        self.log(f"★願い「{self.wish_input}」: {result}", (100, 255, 255))
-        self.game_state = "play"
-        self.wish_input = ""
+        """願い確定 (PetSystemHandler へ委譲)"""
+        self.pet_handler.confirm_wish()
 
     def descend_stairs(self) -> None:
-        on_stairs = (
-            self.game_map.tiles[self.player.x][self.player.y] in (TILE_STAIRS_DOWN, "TILE_STAIRS_DOWN", ">")
-            or (self.player.x, self.player.y) == getattr(self.game_map, "stairs_down_pos", None)
-        )
-        if on_stairs:
-            # 転生ダンジョン入場制限チェック (Step 52)
-            if hasattr(self, "reincarnation_dungeon_manager") and self.dungeon_level >= 10:
-                # 階層が深い場合などの制限チェックフック
-                pass
-
-            self.dungeon_level += 1
-            self.log(f"★ダンジョン地下{self.dungeon_level}階へ降り立った！", (255, 200, 100))
-            # プロシージャル・クエスト: 探索(深度到達)進捗を通知
-            self._progress_generated_quests("explore", "depth", 1)
-            self.game_map = GameMap(MAP_WIDTH, MAP_HEIGHT, floor_level=self.dungeon_level)
-            self.game_map.generate_dungeon()
-            self.player.x, self.player.y = self.game_map.start_pos
-            self.pet.x = self.player.x + 1
-            self.pet.y = self.player.y
-            # エンティティマネージャーをリセットしてプレイヤーとペットのみを設定
-            self.entity_manager.clear()
-            self.entity_manager.add_entity(self.player)
-            self.entity_manager.add_entity(self.pet)
-            self.entity_manager.items_on_ground.clear()
-            self.entity_manager.resource_nodes.clear()
-            self._spawn_dungeon()
-            # 祭壇
-            rx, ry = self.game_map.rooms[0].center
-            self.altar_pos = (rx + 2, ry)
-            self.game_map.compute_fov(self.player.x, self.player.y, radius=8)
-
-            # ダンジョン訪問フロア記録 (Step 34)
-            if hasattr(self.player, "dungeon_floors_visited"):
-                self.player.dungeon_floors_visited.add((1, self.dungeon_level))
-            if hasattr(self.player, "max_dungeon_depth"):
-                self.player.max_dungeon_depth = max(
-                    self.player.max_dungeon_depth, self.dungeon_level
-                )
-
-            # メタ進行用の通算階層カウント
-            if hasattr(self.player, "meta_progression"):
-                self.player.meta_progression["cumulative_depth_stat"] = (
-                    self.player.meta_progression.get("cumulative_depth_stat", 0) + 1
-                )
-
-            if hasattr(self, "achievement_manager"):
-                self.achievement_manager.check_all_achievements(self.player, self)
-            if hasattr(self, "meta_progression_manager"):
-                self.meta_progression_manager.check_meta_goals(self.player, self)
-
-            # 階層到達チュートリアル (Step 1.2)
-            if self.dungeon_level >= 10:
-                self.check_tutorial_triggers("reach_depth_10")
-
-            # オートセーブ
-            msg = SaveSystem.save(self)
-            self.log(f"[Auto] {msg}", (80, 200, 80))
-        else:
-            self.log("ここには下り階段はない。")
+        """階段降下 (WorldSystem へ委譲)"""
+        self.world_handler.descend_stairs()
 
     def check_reincarnation_option(self) -> bool:
-        """転生オプション表示・判定 (Steps 29, 30)"""
-        # TODO: Reincarnation option
-        if hasattr(self, "reincarnation_manager"):
-            can_reinc = self.reincarnation_manager.can_reincarnate(self.player)
-            if can_reinc:
-                self.check_tutorial_triggers("reincarnate_ready")
-            return can_reinc
-        return False
+        """転生オプション判定 (UISystemHandler へ委譲)"""
+        return self.ui_handler.check_reincarnation_option()
 
     def reincarnate(self) -> None:
-        """転生処理 (Steps 27, 28, 60, 61, 71)"""
-        if not self.player:
-            return
-        if hasattr(self, "reincarnation_manager"):
-            self.reincarnation_manager.reincarnate(self.player, self)
-        else:
-            self.player.reincarnation_count += 1
-            self.player.total_level_earned += self.player.level
-            self.player.level = 1
-            self.player.exp = 0
-            self.player.exp_next = 100
-            self.log(
-                f"★転生を実行した！ (転生回数: {self.player.reincarnation_count}, 累計レベル: {self.player.total_level_earned})",
-                (255, 215, 0),
-            )
-        self.check_tutorial_triggers("reincarnate_ready")
+        """転生処理 (UISystemHandler へ委譲)"""
+        self.ui_handler.reincarnate()
 
     def help_friend(self) -> None:
-        """フレンド救援処理 (Step 57)"""
-        if not self.player:
-            return
-        self.player.friend_helps += 1
-        self.player.social_points += 10
-        self.log(
-            f"★フレンドを救援した！ (救援回数: {self.player.friend_helps})",
-            (100, 255, 200),
-        )
-        if hasattr(self, "achievement_manager"):
-            self.achievement_manager.check_all_achievements(self.player, self)
+        """フレンド救援 (UISystemHandler へ委譲)"""
+        self.ui_handler.help_friend()
 
-    # -------------------------------------------------------------
-    # ゲームループ分離: 更新と描画 (Step 5)
-    # -------------------------------------------------------------
     def update(self, delta_time: float = 1.0) -> None:
-        """ゲームロジック更新 (描画を行わない)"""
-        # ターン処理
-        if hasattr(self, "turn_queue") and self.turn_queue:
-            self.turn_queue.process(self, delta_time)
-
-        # システム更新
-        if hasattr(self, "systems_coordinator"):
-            self.systems_coordinator.update_all(self, delta_time)
-
-        # FX更新
-        if hasattr(self, "fx_manager"):
-            self.fx_manager.update(delta_time)
-
-        # チュートリアル更新
-        if hasattr(self, "tutorial_manager"):
-            self.tutorial_manager.update(delta_time)
-
-        # 通知更新
-        if hasattr(self, "notification_manager"):
-            self.notification_manager.update(delta_time)
-
-        # アニメーションタイル更新
-        if hasattr(self, "game_map"):
-            self.game_map.update_animations(delta_time)
-
-        # turn counter は advance_world() のみで増やす (vsync の毎フレーム呼び出しでは進めない)
+        """ゲームロジック更新 (GameLoopHandler へ委譲)"""
+        self.game_loop_handler.update(delta_time)
 
     def render(self, console: Any) -> None:
-        """描画処理 (ゲームロジックを含まない)"""
-        if self.game_state_data.game_state == "skill_tree":
-            from ui_fx_systems import format_skill_tree_display
-
-            skill_tree_text = format_skill_tree_display(self.skill_tree_registry)
-            y = 1
-            for line in skill_tree_text.splitlines():
-                console.print(x=1, y=y, string=line, fg=(255, 255, 255))
-                y += 1
-            return
-        if self.game_state_data.game_state == "job":
-            from ui_fx_systems import format_job_display
-
-            job_text = format_job_display(self.job_registry, self.player)
-            y = 1
-            for line in job_text.splitlines():
-                console.print(x=1, y=y, string=line, fg=(255, 255, 255))
-                y += 1
-            return
-        if self.game_state_data.game_state == "game_over":
-            console.print(x=1, y=1, string=GAME_OVER_TITLE, fg=(255, 50, 50))
-            summary = getattr(self, "run_summary", None)
-            y = 2
-            for line in summary.format_lines() if summary else []:
-                console.print(x=1, y=y, string=line, fg=COLOR_GOLD_YELLOW)
-                y += 1
-            return
-
-        # Use new TCODRenderer with lighting and particle systems
-        from core.tcod_renderer import TCODRenderer
-
-        # Create or reuse renderer
-        if not hasattr(self, "_tcod_renderer") or self._tcod_renderer is None:
-            self._tcod_renderer = TCODRenderer(console.width, console.height)
-            # Use the existing console
-            self._tcod_renderer.console = console
-            self._tcod_renderer.context = None  # Will use console directly
-
-        renderer = self._tcod_renderer
-
-        # Frame time for lighting/particles
-        if hasattr(self, "_last_render_time"):
-            import time
-
-            time.time() - self._last_render_time
-        self._last_render_time = time.time() if "time" in dir() else 0
-
-        renderer.begin_frame()
-
-        # Camera
-        cam_x = max(
-            0,
-            min(MAP_WIDTH - VIEW_WIDTH, self.game_state_data.player.x - VIEW_WIDTH // 2),
-        )
-        cam_y = max(
-            0,
-            min(
-                MAP_HEIGHT - VIEW_HEIGHT,
-                self.game_state_data.player.y - VIEW_HEIGHT // 2,
-            ),
-        )
-
-        # Prepare lighting data
-        import math
-
-        from core.lighting import EnemyCone, LightMap, LightSource
-
-        # Light map from game_map
-        light_map = None
-        if hasattr(self.game_state_data, "game_map"):
-            gm = self.game_state_data.game_map
-            # Build light map from visible/explored
-            intensity_grid = []
-            color_grid = []
-            for y in range(VIEW_HEIGHT):
-                my = cam_y + y
-                intensity_row = []
-                color_row = []
-                for x in range(VIEW_WIDTH):
-                    mx = cam_x + x
-                    if 0 <= mx < MAP_WIDTH and 0 <= my < MAP_HEIGHT:
-                        if gm.visible[my][mx]:
-                            intensity_row.append(1.0)
-                            color_row.append((255, 240, 210))
-                        elif gm.explored[my][mx]:
-                            intensity_row.append(0.0)
-                            color_row.append((40, 42, 55))
-                        else:
-                            intensity_row.append(-1.0)
-                            color_row.append((0, 0, 0))
-                    else:
-                        intensity_row.append(-1.0)
-                        color_row.append((0, 0, 0))
-                intensity_grid.append(intensity_row)
-                color_grid.append(color_row)
-
-            light_map = LightMap(intensity=intensity_grid, color=color_grid)
-
-        # Light sources (player lantern, torches, altar)
-        light_sources = []
-        p = self.game_state_data.player
-        # Player lantern
-        light_sources.append(
-            LightSource(x=p.x, y=p.y, radius=7.5, intensity=1.0, color=(255, 240, 210))
-        )
-        # Torches on map
-        if hasattr(self, "game_map") and hasattr(self.game_map, "torches"):
-            for tx, ty in self.game_map.torches:
-                light_sources.append(
-                    LightSource(x=tx, y=ty, radius=7.5, intensity=0.8, color=(255, 180, 100))
-                )
-        # Altar
-        if hasattr(self.game_state_data, "altar_pos"):
-            ax, ay = self.game_state_data.altar_pos
-            if 0 <= ax < MAP_WIDTH and 0 <= ay < MAP_HEIGHT:
-                light_sources.append(
-                    LightSource(x=ax, y=ay, radius=4.0, intensity=0.8, color=(100, 200, 255))
-                )
-
-        # Enemy cones
-        enemy_cones = []
-        for ent in self.entity_manager.get_entities():
-            if (
-                not ent.is_player
-                and ent.hp > 0
-                and self.game_state_data.game_map.visible[ent.x][ent.y]
-            ):
-                ang = math.atan2(p.y - ent.y, p.x - ent.x)
-                enemy_cones.append(
-                    EnemyCone(
-                        x=ent.x,
-                        y=ent.y,
-                        angle=ang,
-                        half_angle=0.6,
-                        range=6.0,
-                        color=(255, 60, 60),
-                    )
-                )
-
-        # Particles from fx_manager
-        particles = []
-        if hasattr(self, "fx_manager") and hasattr(self.fx_manager, "particles"):
-            for pt in self.fx_manager.particles:
-                particles.append(
-                    type(
-                        "Particle",
-                        (),
-                        {
-                            "type": "dust",  # default
-                            "x": float(pt.x),
-                            "y": float(pt.y),
-                            "life": getattr(pt, "life", 5),
-                            "max_life": getattr(pt, "life", 5),
-                            "color": pt.color,
-                            "char": pt.char,
-                        },
-                    )()
-                )
-
-        # Send lighting/particle data to renderer
-        from core.renderer_base import LightingDrawCall, ParticleDrawCall
-
-        renderer.draw_lighting(
-            LightingDrawCall(
-                light_map=light_map,
-                light_sources=light_sources,
-                enemy_cones=enemy_cones,
-                ambient_light=0.08,
-                time=getattr(self, "_render_time", 0.0),
-            )
-        )
-        renderer.draw_particles(ParticleDrawCall(particles=particles))
-
-        # Update render time
-        if not hasattr(self, "_render_time"):
-            self._render_time = 0.0
-        self._render_time += 1.0 / 60.0
-
-        # Execute render passes in correct order:
-        # 1. Lighting pass (base + additive) - BEFORE tile/entity rendering
-        renderer.render_lighting_pass(
-            cam_x,
-            cam_y,
-            VIEW_WIDTH,
-            VIEW_HEIGHT,
-            visible=self.game_state_data.game_map.visible,
-            explored=self.game_state_data.game_map.explored,
-            time=self._render_time,
-        )
-
-        # 2. Delegate to RenderSystem for map/items/entities (they will draw on top of lit background)
-        from render_context import RenderContext
-        from render_system import RenderSystem
-
-        render_context = RenderContext(
-            game_map=self.game_state_data.game_map,
-            player=self.game_state_data.player,
-            pet=self.game_state_data.pet,
-            entities=self.entity_manager.get_entities(),
-            items_on_ground=self.entity_manager.items_on_ground,
-            resource_nodes=self.entity_manager.resource_nodes,
-            survival=self.game_state_data.survival,
-            floating_texts=self.fx_manager.floating_texts,
-            particles=self.fx_manager.particles,
-            look_cursor=self.look_cursor,
-            game_state=self.game_state_data.game_state,
-            time_system=self.time_system,
-            dungeon_level=self.game_state_data.dungeon_level,
-            msg_log=self.msg_log,
-            fx_manager=self.fx_manager,
-            notification_manager=self.notification_manager,
-            achievement_notifications=getattr(
-                self.game_state_data.player, "achievement_notifications", []
-            ),
-            current_weather=getattr(self, "current_weather", "fog"),
-            casting_spell=getattr(self, "casting_spell", None),
-            frame_count=getattr(self, "frame_count", 0),
-            inventory_target=self.inventory_target,
-            inventory_tab=self.inventory_tab,
-            inventory_cursor=self.inventory_cursor,
-            pet_inventory=self.game_state_data.pet_inventory,
-            altar_pos=self.game_state_data.altar_pos,
-            localization_manager=self.localization_manager,
-            world_a_data=self.game_state_data.world_a_data,
-            toxicity_manager=self.skill_eater_toxicity_manager,
-            skill_eater_combat_system=self.skill_eater_combat_system,
-            color_vision_mode=self.config_mgr.get("accessibility.color_vision") or "none",
-            last_scan_result=getattr(self, "last_scan_result", None),
-        )
-        RenderSystem.render_all(console, render_context)
-
-        # 3. Particle pass (topmost layer)
-        renderer.render_particles_pass(cam_x, cam_y)
-
-        # End frame
-        renderer.end_frame(1 / 60)
-
-    # --- テキスト(ASCII)モード描画 (Step 12-16) ---
-    _TILE_DISPLAY = {
-        "TILE_WALL": ("#", (140, 140, 140)),
-        "TILE_FLOOR": (".", (90, 90, 90)),
-        "TILE_STAIRS_DOWN": (">", (255, 215, 0)),
-        "TILE_STAIRS_UP": ("<", (255, 215, 0)),
-        "TILE_WATER": ("~", (40, 120, 220)),
-        "TILE_TRAP": ("^", (220, 80, 80)),
-    }
-
+        """描画処理 (RenderSystemHandler へ委譲)"""
+        self.render_handler.render(console)
     def render_to_text(self, tr: Any) -> None:
         """Step 12-16: TextRenderer へマップ/エンティティ/HUD/ログを描画。"""
         from constants import MAP_HEIGHT, MAP_WIDTH, VIEW_HEIGHT, VIEW_WIDTH

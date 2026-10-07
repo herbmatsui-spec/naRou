@@ -1,8 +1,3 @@
-# ==============================================================================
-# Elona Masterpiece Edition - Complete Monsters Catalog (data/monsters.yaml)
-# AI Types: aggressive, coward, tactical, caster, support, boss
-# ==============================================================================
-
 # --- 初級モンスター (Tier 1: Floor 1-3) ---
 slime:
   name: "ぷち"
@@ -11,7 +6,7 @@ slime:
   speed: 50
   max_hp: 14
   min_floor: 1
-  max_floor: 4
+  max_floor: 30
   ai_type: "coward"
   skills: []
   attributes:
@@ -31,7 +26,7 @@ red_slime:
   speed: 60
   max_hp: 22
   min_floor: 2
-  max_floor: 6
+  max_floor: 30
   ai_type: "aggressive"
   skills: []
   attributes:
@@ -51,7 +46,7 @@ snail:
   speed: 35
   max_hp: 10
   min_floor: 1
-  max_floor: 3
+  max_floor: 30
   ai_type: "coward"
   attributes:
     strength: 3
@@ -70,7 +65,7 @@ goblin:
   speed: 70
   max_hp: 24
   min_floor: 1
-  max_floor: 5
+  max_floor: 30
   ai_type: "aggressive"
   ai_role: "kiter"
   skills: ["throw_stone"]
@@ -91,7 +86,7 @@ kobold:
   speed: 80
   max_hp: 20
   min_floor: 1
-  max_floor: 5
+  max_floor: 30
   ai_type: "tactical"
   ai_role: "flanker"
   attributes:
@@ -112,7 +107,7 @@ orc:
   speed: 65
   max_hp: 45
   min_floor: 3
-  max_floor: 9
+  max_floor: 30
   ai_type: "aggressive"
   skills: ["power_bash"]
   attributes:
@@ -132,7 +127,7 @@ hound_fire:
   speed: 95
   max_hp: 36
   min_floor: 4
-  max_floor: 10
+  max_floor: 30
   ai_type: "tactical"
   skills: ["fire_breath"]
   attributes:
@@ -152,7 +147,7 @@ rogue_thief:
   speed: 85
   max_hp: 40
   min_floor: 4
-  max_floor: 12
+  max_floor: 30
   ai_type: "tactical"
   skills: ["steal_gold", "backstab"]
   attributes:
@@ -172,7 +167,7 @@ novice_wizard:
   speed: 70
   max_hp: 28
   min_floor: 3
-  max_floor: 9
+  max_floor: 30
   ai_type: "caster"
   skills: ["cast_dart", "heal_self"]
   attributes:
@@ -193,7 +188,7 @@ minotaur:
   speed: 80
   max_hp: 95
   min_floor: 7
-  max_floor: 20
+  max_floor: 30
   ai_type: "aggressive"
   skills: ["heavy_cleave", "roar"]
   attributes:
@@ -233,7 +228,7 @@ dragon_red:
   speed: 90
   max_hp: 220
   min_floor: 12
-  max_floor: 50
+  max_floor: 30
   ai_type: "boss"
   skills: ["inferno_breath", "tail_swipe", "intimidate"]
   attributes:

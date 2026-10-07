@@ -977,45 +977,39 @@ class GameMap:
         return None
 
     def _calculate_target_layer_down(self, world_manager: WorldMapManager) -> WorldLayer | None:
-        """下り階段でのターゲットレイヤーを計算"""
+        """下り階段でのターゲットレイヤーを計算 (Step 23: linear depth with max_depth from config)"""
         if not self.world_layer:
             return None
+
+        from pathlib import Path
+
+        import yaml
+
+        config_path = Path(__file__).resolve().parents[1] / "config.yaml"
+        max_depth = 30  # default
+        if config_path.exists():
+            with open(config_path, encoding="utf-8") as f:
+                config = yaml.safe_load(f) or {}
+            max_depth = config.get("game", {}).get("dungeon", {}).get("max_depth", 30)
 
         current_zone = self.world_layer.zone
         current_biome = self.world_layer.biome
         current_depth = self.world_layer.depth
         current_dimension = self.world_layer.dimension
 
-        # 同じゾーン内での深度増加が基本
+        # 単純な線形深度増加 (Step 23: four-zone logic removed)
         new_depth = current_depth + 1
 
-        # ゾーン境界チェック
-        if current_zone == "surface" and new_depth > 10:
-            # 地上界の上限を超えたら地下界へ
-            new_zone = "underground"
-            new_depth = max(11, new_depth)  # 地下界は11階から開始
-        elif current_zone == "underground" and new_depth > 50:
-            # 地下界の上限を超えたら異界へ
-            new_zone = "otherworld"
-            new_depth = max(51, new_depth)  # 異界は51階から開始
-        elif current_zone == "otherworld" and new_depth > 100:
-            # 異界の上限を超えたら天界へ
-            new_zone = "heaven"
-            new_depth = max(101, new_depth)  # 天界は101階から開始
-        else:
-            # 同じゾーン内での移動
-            new_zone = current_zone
-
-        # 深度上限チェック
-        if new_depth > 200:
-            return None
+        # 深度上限チェック (config.yaml の max_depth を参照)
+        if new_depth > max_depth:
+            return None  # これ以上潜れない
 
         return world_manager.get_or_create_layer(
-            new_zone, current_biome, new_depth, current_dimension
+            current_zone, current_biome, new_depth, current_dimension
         )
 
     def _calculate_target_layer_up(self, world_manager: WorldMapManager) -> WorldLayer | None:
-        """上り階段でのターゲットレイヤーを計算"""
+        """上り階段でのターゲットレイヤーを計算 (Step 23: linear depth)"""
         if not self.world_layer:
             return None
 
@@ -1024,30 +1018,13 @@ class GameMap:
         current_depth = self.world_layer.depth
         current_dimension = self.world_layer.dimension
 
-        # 同じゾーン内での深度減少が基本
+        # 単純な線形深度減少 (Step 23: four-zone logic removed)
         new_depth = current_depth - 1
 
         # 深度下限チェック
-        if new_depth < 0:
-            return None
-
-        # ゾーン境界チェック（逆方向）
-        if current_zone == "underground" and new_depth < 11:
-            # 地下界の下限を下回ったら地上界へ
-            new_zone = "surface"
-            new_depth = min(10, new_depth)  # 地上界は0-10階
-        elif current_zone == "otherworld" and new_depth < 51:
-            # 異界の下限を下回ったら地下界へ
-            new_zone = "underground"
-            new_depth = max(11, new_depth)  # 地下界は11階から開始
-        elif current_zone == "heaven" and new_depth < 101:
-            # 天界の下限を下回ったら異界へ
-            new_zone = "otherworld"
-            new_depth = max(51, new_depth)  # 異界は51階から開始
-        else:
-            # 同じゾーン内での移動
-            new_zone = current_zone
+        if new_depth < 1:
+            return None  # 地上に戻る
 
         return world_manager.get_or_create_layer(
-            new_zone, current_biome, new_depth, current_dimension
+            current_zone, current_biome, new_depth, current_dimension
         )

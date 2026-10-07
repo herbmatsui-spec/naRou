@@ -91,7 +91,7 @@ class Entity:
         # レベルと経験値 (LevelComponentへの委譲プロパティ)
         self.level = 1
         self.exp = 0
-        self.exp_next = 100
+        # exp_next はプロパティで動的計算 (Step 21)
 
         # ペット関連 (ステップ73, 74, 80) — AffectionComponent/PetProfileComponent に委譲
         self.tactic: str = PetAI.TACTIC_ASSAULT
@@ -102,6 +102,7 @@ class Entity:
         else:
             self._skills: dict[str, Skill] | None = None
 
+        # TODO: Story/world state fields
         # 信仰システム (ステップ84, 86)
         self.god_id: str = DEFAULT_GOD_ID
         self.piety: int = 0  # 信仰深度
@@ -310,11 +311,27 @@ class Entity:
 
     @property
     def exp_next(self) -> int:
-        return self.get_component(LevelComponent).exp_next
+        """次のレベルに必要な経験値を計算 (Step 21: balance_standards.yaml から読込)"""
+        # 遅延インポートで循環参照を避ける
+        from pathlib import Path
 
-    @exp_next.setter
-    def exp_next(self, val: int):
-        self.get_component(LevelComponent).exp_next = val
+        import yaml
+
+        config_path = Path(__file__).resolve().parents[2] / "data" / "balance_standards.yaml"
+        if config_path.exists():
+            with open(config_path, encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+            exp_curve = data.get("exp_curve", {"base": 120, "growth": 1.35})
+            base = exp_curve.get("base", 120)
+            growth = exp_curve.get("growth", 1.35)
+        else:
+            base = 120
+            growth = 1.35
+
+        # level 1 -> 2 には base、level n -> n+1 には base * growth^(n-1)
+        return int(base * (growth ** (self.level - 1)))
+
+    # exp_next setter は不要 (計算値のため)
 
     @property
     def skill_points(self) -> int:
@@ -478,6 +495,7 @@ class Entity:
 
     # -------------------------------------------------------------
     # 実績・メタ進行プロパティ (AchievementComponent への委譲)
+    # TODO: Achievement fields - delegated to AchievementComponent
     # -------------------------------------------------------------
     @property
     def achievements(self) -> list[str]:
@@ -1373,7 +1391,7 @@ class Entity:
         ent.preferred_range = data.get("preferred_range", 1)
         ent.level = data.get("level", 1)
         ent.exp = data.get("exp", 0)
-        ent.exp_next = data.get("exp_next", 100)
+        # exp_next は計算プロパティなので設定不要 (Step 21)
         ent.affection = data.get("affection", 50)
         ent.tactic = data.get("tactic", "assault")
         ent.is_mounted = data.get("is_mounted", False)

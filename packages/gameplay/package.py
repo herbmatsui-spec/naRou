@@ -275,6 +275,8 @@ class GameplayLoop:
                     (255, 80, 80),
                     level="WARNING",
                 )
+                if self.engine.player.hp <= 0:
+                    self.engine._on_player_death()
 
             # アイテム拾得チェック（キーアイテム含む）
             for item in list(self.engine.entity_manager.items_on_ground):
@@ -376,12 +378,14 @@ class GameplayLoop:
             toxicity = w_data.get("toxicity", 0) + 1
             w_data["toxicity"] = min(100, toxicity)
             if w_data["toxicity"] >= 80:
-                self.engine.player.hp = max(1, self.engine.player.hp - 2)
+                self.engine.player.hp -= 2
                 if w_data["toxicity"] == 80 or w_data["toxicity"] % 10 == 0:
                     self.engine.log(
                         f"【毒性侵食警報】スキル拒絶反応により体力が蝕まれる！（毒性: {w_data['toxicity']}%）",
                         (255, 80, 80),
                     )
+                if self.engine.player.hp <= 0:
+                    self.engine._on_player_death()
 
             dispatches = w_data.get("pet_dispatches", [])
             for disp in list(dispatches):
@@ -440,7 +444,7 @@ class GameplayPackage(IPackage):
         from systems import CombatSystem, SurvivalSystem
 
         kernel.register_system("combat_system", CombatSystem())
-        kernel.register_system("survival_system", SurvivalSystem())
+        # kernel.register_system("survival_system", SurvivalSystem())  # Step 27: unified in engine.py
         kernel.register_system("inventory_system", Inventory)
         kernel.register_system("item_factory", Item)
         kernel.register_system("starter_items_factory", _create_starter_items)

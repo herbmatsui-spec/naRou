@@ -1,4 +1,9 @@
 # 想定HP/攻撃力/コスト対効果の基準値 (Step 43)
+# 経験値曲線設定 (Step 21)
+exp_curve:
+  base: 120
+  growth: 1.35
+
 standards:
   levels:
     1:

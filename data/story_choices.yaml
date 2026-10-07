@@ -53,3 +53,21 @@ choice_consequences:
         value: 0.20
     world_state_changes:
       corrupted_power_unlocked: true
+
+world_state_template:
+  default:
+    goblin_morale: 0
+    vernis_safety_index: 100
+    rescued_villagers_count: 0
+    altar_purified_flag: false
+    corrupted_power_unlocked: false
+  chapter_progression:
+    - chapter: 1
+      required_state: {}
+      unlock_state:
+        goblin_scout_active: true
+    - chapter: 2
+      required_state:
+        goblin_scout_defeated: true
+      unlock_state:
+        goblin_chieftain_active: true

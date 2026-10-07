@@ -118,3 +118,7 @@ class ItemDefinition(DataModel):
     """
     Whether item is identified
     """
+    sell_price: int | None = 0
+    """
+    Sell price in gold pieces (overrides base_value if set)
+    """

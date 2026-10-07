@@ -38,6 +38,15 @@ class GameStateMachine:
         self.current: str = current
         self.history: list[tuple[str, str, float]] = []
 
+    def __copy__(self) -> "GameStateMachine":
+        """テストフィクスチャのスナップショット/リストア用に浅いコピーを作る。
+
+        `_flat` 関数が `copy.copy()` を呼ぶため、履歴も含めて独立したインスタンスを返す。
+        """
+        new = self.__class__(self.current)
+        new.history = list(self.history)
+        return new
+
     @property
     def is_playing(self) -> bool:
         return self.current == PLAYING

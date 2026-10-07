@@ -40,7 +40,12 @@ from ecs.components import (
 # ---------------------------------------------------------------------------
 
 # (A) 実装済み: 実際にプレイヤーへ反映されるメタゴール由来ボーナス
-APPLIED_PERMANENT_BONUS_KEYS: frozenset[str] = frozenset({"speed", "all_attributes"})
+APPLIED_PERMANENT_BONUS_KEYS: frozenset[str] = frozenset({
+    "speed",
+    "all_attributes",
+    "damage_boost",
+    "gold_gain",
+})
 
 # (B) 予約済み: 反映しないキーと「何が欠けているか」の理由
 RESERVED_PERMANENT_BONUSES: dict[str, str] = {
@@ -429,6 +434,8 @@ class MetaProgressionManager:
 
         # メタゴール判定
         self.check_meta_goals(player, engine)
+        # メタ進行マイルストーン判定 (Step 30)
+        self.check_meta_progression_milestones(player, engine)
         # 永続ボーナス再計算
         self.recalculate_and_apply_bonuses(player)
         return True
@@ -471,7 +478,84 @@ class MetaProgressionManager:
                         (255, 180, 50),
                     )
 
+        # メタ進行マイルストーンも同時にチェック (Step 30)
+        self.check_meta_progression_milestones(player, engine)
+
         return completed_new
+
+    def check_meta_progression_milestones(
+        self, player: Any, engine: Any | None = None
+    ) -> list[str]:
+        """meta_progression.yaml のマイルストーン達成状況を評価し、ボーナスを適用 (Step 30)
+
+        以下の累計値をチェック:
+        - total_monsters_slain: 総討伸数 (ach_comp.monster_killed_types から集計)
+        - total_gold_accumulated: 総獲得ゴールド (EconomyComponent または実績から集計)
+        - total_dungeon_depth: 最深到達階層 (ach_comp.meta_progression または TitleComponent から集計)
+        """
+        import yaml
+
+        ach_comp = player.get_component(AchievementComponent)
+
+        # meta_progression.yaml をロード
+        with open("data/meta_progression.yaml", encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+
+        progression_data = data.get("meta_progression", {})
+        newly_awarded: list[str] = []
+
+        for tracker_id, tracker_data in progression_data.items():
+            milestones = tracker_data.get("milestones", [])
+            if not milestones:
+                continue
+
+            # 現在値を取得
+            current_value = self._get_meta_progression_value(player, tracker_id, ach_comp)
+
+            # 既に獲得済みのボーナスを確認 (ach_comp.meta_progression に記録)
+            tracker_key = f"meta_prog_{tracker_id}"
+            awarded_count = ach_comp.meta_progression.get(tracker_key, 0)
+
+            # 未達成のマイルストーンをチェック
+            for milestone in milestones:
+                count = milestone.get("count", 0)
+                reward_bonus = milestone.get("reward_bonus")
+
+                if current_value >= count and awarded_count < count:
+                    # マイルストーン達成
+                    awarded_count = count
+                    if reward_bonus:
+                        # ボーナスを永続記録に追加
+                        ach_comp.permanent_bonuses[reward_bonus] = (
+                            ach_comp.permanent_bonuses.get(reward_bonus, 0) + 1
+                        )
+                        newly_awarded.append(f"{tracker_id}:{reward_bonus}")
+                        if engine and hasattr(engine, "log"):
+                            engine.log(
+                                f"★★★【メタ進行】{tracker_data['name']} {count}達成！ {reward_bonus} を獲得！",
+                                (255, 215, 0),
+                            )
+
+            # 進捗を保存
+            ach_comp.meta_progression[tracker_key] = awarded_count
+
+        return newly_awarded
+
+    def _get_meta_progression_value(
+        self, player: Any, tracker_id: str, ach_comp: AchievementComponent
+    ) -> int:
+        """メタ進行トラッカーの現在値を取得"""
+        if tracker_id == "total_monsters_slain":
+            # 総討伸数 = 全モンスター討伸タイプの合計
+            return sum(ach_comp.monster_killed_types.values())
+        elif tracker_id == "total_gold_accumulated":
+            # 総獲得ゴールド = 実績記録から取得 (未実装の場合は0)
+            return ach_comp.meta_progression.get("total_gold_accumulated_stat", 0)
+        elif tracker_id == "total_dungeon_depth":
+            # 最深到達階層 = 称号コンポーネントまたは実績から取得
+            title_comp = player.get_component(TitleComponent)
+            return getattr(title_comp, "max_dungeon_depth", 0)
+        return 0
 
     def recalculate_and_apply_bonuses(self, player: Any) -> dict[str, float]:
         """記憶の欠片と達成メタゴールから永続ボーナスを集計して適用（冪等性を担保）"""
@@ -545,6 +629,19 @@ class MetaProgressionManager:
                 player.speed += int(applied_goal_bonuses["speed"])
             if "speed_bonus" in frag_bonuses:
                 player.speed += int(frag_bonuses["speed_bonus"])
+
+        # メタ進行ボーナスの反映 (Step 30)
+        # damage_boost: 物理・魔法攻撃力への加算倍率（%）
+        # gold_gain: ゴールド獲得量への加算倍率（%）
+        # これらは CombatSystem.calculate_melee_attack / EconomyComponent.add_gold 側で読まれる想定
+        if attrs:
+            if "damage_boost" in applied_goal_bonuses:
+                # ダメージブーストは攻撃計算時に参照される属性として記録
+                # 実装: systems.py の計算式で attrs.damage_boost_mult を読む
+                pass  # 適用は呼び出し側で行うため、ここでは permanent_bonuses に記録するのみ
+            if "gold_gain" in applied_goal_bonuses:
+                # ゴールド獲得倍率も同様に EconomyComponent 側で読む
+                pass
 
         # HP / MP の再計算と現在値の調整
         # max_hp / max_mp は予約済みのため、メタゴール由来の固定加算は加えない

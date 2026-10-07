@@ -145,7 +145,7 @@ def test_all_72_steps_storyteller_system():
     # Steps 19-32: entity.py ストーリー関連フィールド追加
     from ecs.entity import Entity
 
-    ent_code = open("entity.py", encoding="utf-8").read()
+    ent_code = open("ecs/entity.py", encoding="utf-8").read()
     assert (
         "# TODO: Story/world state fields" in ent_code
     ), "Step 19 Failed: placeholder comment missing"

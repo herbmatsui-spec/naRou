@@ -821,6 +821,26 @@ class ActionSearch(Verb):
         return True
 
 
+class SellAction(Verb):
+    """インベントリからアイテムを売却する (ステップ26)"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        # インベントリ画面を開いて売却モードにする
+        engine.game_state = "inventory"
+        engine.inventory_target = "player"
+        engine.inventory_cursor = 0
+        engine.inventory_sell_mode = True
+        engine.log("【売却モード】売りたいアイテムを選んで [E] で売却、[Esc] でキャンセル", (255, 215, 0))
+        return True
+
+
 class QuitAction(Verb):
     """終了"""
 

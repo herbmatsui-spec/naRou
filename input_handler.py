@@ -44,6 +44,7 @@ from input_actions import (
     PrayAction,
     QuitAction,
     SaveAction,
+    SellAction,
     SkillTreeAction,
     SleepAction,
     StatusAction,
@@ -175,7 +176,11 @@ class InputHandler:
         )
         reg.register(
             "play",
-            KeyBinding(KS.COMMA, SleepAction, description="睡眠 (HP/MP全快 + 時間経過)"),
+            KeyBinding(KS.COMMA, SellAction, description="売却"),
+        )
+        reg.register(
+            "play",
+            KeyBinding(KS.N, SleepAction, description="睡眠 (HP/MP全快 + 時間経過)"),
         )
         reg.register("play", KeyBinding(KS.S, SaveAction, description="セーブ"))
         reg.register("play", KeyBinding(KS.R, LoadAction, description="ロード"))
@@ -210,6 +215,9 @@ class InputHandler:
     @classmethod
     def _handle_keydown(cls, event: tcod.event.KeyDown, engine: Engine) -> None:
         """キー入力の処理 - ActionRegistry を優先し、未登録は従来処理へ。"""
+        # 死亡/勝利後は入力を受け付けない (Step 14)
+        if engine.game_state_machine.current != "playing":
+            return
         state_name = getattr(engine, "game_state", "play") or "play"
 
         for binding in cls._action_registry.get_bindings(state_name):
@@ -229,6 +237,10 @@ class InputHandler:
     @classmethod
     def _handle_keydown_legacy(cls, event: tcod.event.KeyDown, engine: Engine) -> None:
         from constants import GameState
+
+        # 死亡/勝利後は入力を受け付けない (Step 14)
+        if engine.game_state_machine.current != "playing":
+            return
 
         # 会話ウィンドウ (GameState.DIALOGUE)
         if engine.active_dialogue or (
@@ -418,6 +430,7 @@ class InputHandler:
             is_pet = engine.inventory_target == "pet"
             target_inv = engine.pet_inventory if is_pet else engine.inventory
             other_inv = engine.inventory if is_pet else engine.pet_inventory
+            sell_mode = getattr(engine, "inventory_sell_mode", False)
 
             if event.sym in (
                 tcod.event.KeySym.ESCAPE,
@@ -425,6 +438,7 @@ class InputHandler:
                 tcod.event.KeySym.P,
             ):
                 engine.game_state = "play"
+                engine.inventory_sell_mode = False
             elif event.sym == tcod.event.KeySym.LEFT:
                 engine.inventory_tab = (engine.inventory_tab - 1) % 5
                 engine.inventory_cursor = 0
@@ -438,7 +452,18 @@ class InputHandler:
             elif event.sym == tcod.event.KeySym.E:
                 if 0 <= engine.inventory_cursor < len(filtered):
                     itm = filtered[engine.inventory_cursor]
-                    if itm.category == CAT_FOOD:
+                    if sell_mode:
+                        # 売却処理
+                        from item_system import sell
+
+                        gold = sell(itm, engine.survival)
+                        engine.log(f"{itm.name}を{gold}ゴールドで売却した。", (255, 215, 0))
+                        target_inv.remove_item(itm, count=itm.count)
+                        engine.player.energy -= ENERGY_THRESHOLD
+                        engine.advance_world()
+                        engine.game_state = "play"
+                        engine.inventory_sell_mode = False
+                    elif itm.category == CAT_FOOD:
                         logs = engine.survival.eat(engine.player, itm) if not is_pet else []
                         for l in logs:
                             engine.log(l, (255, 200, 150))
@@ -446,6 +471,9 @@ class InputHandler:
                             engine.log(f"シエルは{itm.name}をモグモグ食べた。", (255, 200, 150))
                         consume_one(target_inv, itm)
                     elif itm.category == CAT_POTION:
+                        # 死亡後は回復できない (Step 15)
+                        if engine.game_state_machine.current != "playing":
+                            return
                         target_ent = engine.pet if is_pet else engine.player
                         target_ent.hp = min(target_ent.max_hp, target_ent.hp + itm.heal_amount)
                         engine.log(

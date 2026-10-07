@@ -17,6 +17,7 @@ from migration_pipeline import DEFAULT_FIELD_FACTORIES, MigrationPipeline
 
 
 class SaveSystem:
+# This save system handles achievements via the Entity component system
     """gzip+pickleによる完全なセーブシステム（ECSコンポーネント完全対応・SHA256チェックサム・自動バックアップ・世代管理）"""
 
     SAVE_PATH = "savegame.bin"
@@ -214,6 +215,8 @@ class SaveSystem:
                     "hunger": getattr(engine.survival, "hunger", 8000),
                     "sleepiness": getattr(engine.survival, "sleepiness", 0),
                     "karma": getattr(engine.survival, "karma", 20),
+                    "karma_law_chaos": getattr(engine.survival, "karma_law_chaos", 0),
+                    "legacy_skills": getattr(engine.survival, "legacy_skills", []),
                 }
                 if hasattr(engine, "survival") and engine.survival
                 else {}
@@ -265,6 +268,8 @@ class SaveSystem:
             engine.survival.hunger = surv_data.get("hunger", 100)
             engine.survival.thirst = surv_data.get("thirst", 100)
             engine.survival.sleep = surv_data.get("sleep", 100)
+            engine.survival.karma_law_chaos = surv_data.get("karma_law_chaos", 0)
+            engine.survival.legacy_skills = surv_data.get("legacy_skills", [])
 
         # Inventories
         if hasattr(engine, "inventory") and engine.inventory and "inventory" in migrated_data:
@@ -342,6 +347,72 @@ class SaveSystem:
         if loaded is None:
             return f"変換失敗: {msg}"
         return cls.save_json(loaded)
+
+    @classmethod
+    def clear_run(cls, engine: "game.Engine") -> None:
+        """ラン状態をリセットし、新しい GameStateMachine("playing") を作成する (Step 20)。
+
+        死亡/勝利後のリスタート用。プレイヤーのメタ進行データは保持する。
+        """
+        from naRou.engine.game_state import GameStateMachine
+
+        # ラン固有の状態をリセット
+        engine.game_state_machine = GameStateMachine("playing")
+        engine.run_summary = None
+        engine._harm_cause = "unknown"
+        engine._harm_cause_hp = None
+        engine.turns = 0
+        engine.dungeon_level = 1
+        
+        # プレイヤーのHP/MPを全回復
+        engine.player.hp = engine.player.max_hp
+        engine.player.mp = engine.player.max_mp
+        engine.player.status_effects = []
+        
+        # ペットも全回復
+        if engine.pet:
+            engine.pet.hp = engine.pet.max_hp
+            engine.pet.mp = engine.pet.max_mp
+            engine.pet.status_effects = []
+        
+        # インベントリは保持（メタ進行の一部として）
+        # ダンジョン再生成
+        from map_engine import GameMap
+        from constants import MAP_WIDTH, MAP_HEIGHT
+
+        engine.game_map = GameMap(MAP_WIDTH, MAP_HEIGHT, floor_level=1)
+        engine.game_map.generate_dungeon()
+        engine.player.x, engine.player.y = engine.game_map.start_pos
+        engine.pet.x = engine.player.x + 1
+        engine.pet.y = engine.player.y
+        
+        # エンティティマネージャーをリセット
+        engine.entity_manager.clear()
+        engine.entity_manager.add_entity(engine.player)
+        engine.entity_manager.add_entity(engine.pet)
+        engine.entity_manager.items_on_ground.clear()
+        engine.entity_manager.resource_nodes.clear()
+        
+        # ダンジョンスポーン
+        engine._spawn_dungeon()
+        
+        # 祭壇位置リセット
+        rx, ry = engine.game_map.rooms[0].center
+        engine.altar_pos = (rx + 2, ry)
+        
+        # FOV 再計算
+        engine.game_map.compute_fov(engine.player.x, engine.player.y, radius=8)
+        
+        # サバイバルシステムのリセット（空腹度など）
+        engine.survival.hunger = 8000
+        engine.survival.sleepiness = 0
+        
+        # ログクリア
+        engine.msg_log.history.clear()
+        
+        engine.log(
+            "★新しい冒険が始まる……！", (255, 215, 0), level="SUCCESS"
+        )
 
 
 # Backwards compatibility alias

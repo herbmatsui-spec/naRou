@@ -59,7 +59,7 @@ def test_all_72_steps_achievement_trophy_system():
     # Steps 6-17, 33, 38, 42, 56, 67: entity.py フィールド追加
     from ecs.entity import Entity
 
-    entity_code = open("entity.py", encoding="utf-8").read()
+    entity_code = open("ecs/entity.py", encoding="utf-8").read()
     assert "# TODO: Achievement fields" in entity_code, "Step 6 Failed: placeholder comment missing"
 
     e = Entity()

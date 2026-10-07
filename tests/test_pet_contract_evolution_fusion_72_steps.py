@@ -59,7 +59,7 @@ def test_all_72_steps_pet_contract_evolution_fusion():
     # Step 14 - 18, 65, 66, 69: Entity pet_ai component & Entity fields
     from ecs.entity import Entity
 
-    tree = ast.parse(open("components.py", encoding="utf-8").read())
+    tree = ast.parse(open("ecs/components/components.py", encoding="utf-8").read())
     petai_class = next(
         n for n in ast.walk(tree) if isinstance(n, ast.ClassDef) and n.name == "PetAIComponent"
     )

@@ -37,6 +37,7 @@ class Type(Enum):
     mp_on_hit = "mp_on_hit"
     undead_damage_bonus = "undead_damage_bonus"
     heal_on_kill = "heal_on_kill"
+    magic_power = "magic_power"
 
 
 class Target(Enum):

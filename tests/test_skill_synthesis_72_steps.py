@@ -146,7 +146,7 @@ def test_all_72_steps_skill_synthesis_system():
     # Steps 19-28: Entity スキル合成関連フィールド (SkillFusionComponent へ委譲)
     from ecs.entity import Entity, Skill
 
-    comp_code = open("components.py", encoding="utf-8").read()
+    comp_code = open("ecs/components/components.py", encoding="utf-8").read()
     assert "class SkillFusionComponent" in comp_code, "Step 19 Failed: SkillFusionComponent missing"
 
     e = Entity()
