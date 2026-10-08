@@ -509,10 +509,14 @@ class SkillFusionManager(FusionManager):
 
         # 出力スキル獲得
         from ecs.entity import Skill
+        from skill_bridge import bridge_skill_to_spellbook
 
         if not hasattr(player, "skills"):
             player.skills = {}
         player.skills[recipe.output] = Skill(recipe.output, level=1)
+
+        # Bridge to spellbook (CharacterState) for World A usability
+        bridge_skill_to_spellbook(player, recipe.output, level=1)
 
         return True, f"スキル【{recipe.name}】が完成しました！"
 

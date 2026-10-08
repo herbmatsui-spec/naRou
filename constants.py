@@ -235,6 +235,17 @@ class Element(Enum):
     PHYSICAL = "physical"
 
 
+# Status Effects (moved from systems.py for centralized constants)
+STATUS_POISON = "毒"
+STATUS_PARALYSIS = "麻痺"
+STATUS_CONFUSION = "混乱"
+STATUS_BLIND = "盲目"
+STATUS_BLEEDING = "出血"
+STATUS_HASTE = "加速"
+STATUS_SLOW = "鈍足"
+STATUS_RETURN = "帰還待機"
+
+
 # Game States
 class GameState(Enum):
     TITLE = "title"

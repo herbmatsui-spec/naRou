@@ -10,10 +10,9 @@ class TestDifficultyPresetMatchesConfig:
 
     def test_difficulty_preset_matches_config(self) -> None:
         """Code presets in DifficultyManager._DEFAULTS must match config.yaml difficulty_presets."""
-        from core.difficulty import DifficultyManager
-
         # Load config values
         from config import get_config
+        from core.difficulty import DifficultyManager
 
         config_easy = get_config("game.difficulty_presets.easy")
         config_normal = get_config("game.difficulty_presets.normal")
@@ -45,10 +44,10 @@ class TestDifficultyPresetMatchesConfig:
         assert win_depth == 20, f"config win_depth = {win_depth}, expected 20"
 
         # Verify the actual check uses config (will fail until implementation)
-        from engine.systems.world_system import WorldSystem
-
         # Check source code doesn't have hardcoded 20
         import inspect
+
+        from engine.systems.world_system import WorldSystem
 
         source = inspect.getsource(WorldSystem.check_win_condition)
         assert ">= 20" not in source or "win_depth" in source, \

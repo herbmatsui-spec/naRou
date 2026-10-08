@@ -123,8 +123,10 @@ class SkillAwakeningManager:
 
         player.awakened_skills.append(awakening_id)
         from ecs.entity import Skill
+        from skill_bridge import bridge_skill_to_spellbook
 
         player.skills[data.awakened_skill] = Skill(data.awakened_skill, level=1)
+        bridge_skill_to_spellbook(player, data.awakened_skill, level=1)
 
         if engine:
             from sound_manager import SoundManager
