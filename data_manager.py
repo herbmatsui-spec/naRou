@@ -5,6 +5,7 @@ Centralized loading, caching, schema validation, and repository pattern for all 
 
 from __future__ import annotations
 
+import functools
 import sys
 from pathlib import Path
 
@@ -25,6 +26,25 @@ import random
 from typing import TYPE_CHECKING, Any
 
 import yaml
+
+# Module-level YAML cache (shared across all DataManager instances)
+_YAML_CACHE: dict[str, dict[str, Any]] = {}
+
+
+def _cached_load_yaml(path: Path) -> dict[str, Any]:
+    """Cached YAML loading - module-level cache shared across instances."""
+    path_str = str(path)
+    if path_str in _YAML_CACHE:
+        return _YAML_CACHE[path_str]
+    with open(path, encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+    _YAML_CACHE[path_str] = data
+    return data
+
+
+def clear_yaml_cache() -> None:
+    """Clear the global YAML load cache (for testing)."""
+    _YAML_CACHE.clear()
 
 from constants import QUALITY_BAD, QUALITY_GOD, QUALITY_GOOD, QUALITY_MIRACLE, QUALITY_NORMAL
 from core_framework import BaseSystem
@@ -368,8 +388,11 @@ class DataManager(BaseSystem):
         path = self.data_dir / filename
         if not path.exists():
             return {}
-        with open(path, encoding="utf-8") as f:
-            return yaml.safe_load(f) or {}
+        return _cached_load_yaml(path)
+
+    def clear_cache(self) -> None:
+        """Clear the YAML load cache (for testing)."""
+        clear_yaml_cache()
 
     def _load_localization(self) -> None:
         text_dir = self.data_dir / "text"

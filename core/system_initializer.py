@@ -5,6 +5,7 @@ Encapsulates UI managers, background web server, and visual FX system instantiat
 
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING
 
 from ui_fx_systems import ContextMenu, LookCursor, NotificationManager, TutorialManager
@@ -26,7 +27,10 @@ class SystemInitializer:
         context_menu = ContextMenu()
         tutorial_manager = TutorialManager()
         notification_manager = NotificationManager()
-        web_server = start_web_server(engine, port=8080)
+
+        # Skip web server in headless mode (tests, CI)
+        headless = os.environ.get("NAROU_HEADLESS") == "1" or getattr(engine, "headless", False)
+        web_server = None if headless else start_web_server(engine, port=8080)
 
         return (
             look_cursor,

@@ -11,7 +11,7 @@ def main() -> None:
     import game
     from core.text_renderer import TextRenderer
 
-    engine = game.Engine()
+    engine = game.Engine(headless=True)
     tr = TextRenderer(80, 50)
     # 初回描画
     engine.render_to_text(tr)

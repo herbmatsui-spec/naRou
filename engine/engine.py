@@ -31,7 +31,6 @@ import tcod.event
 from naRou.systems import (
     FACTION_GUARD,
     AggroList,
-    CombatSystem,
     Quest,
     ResistanceSet,
     StatusEffect,
@@ -129,7 +128,8 @@ class Engine:
 
     skill_tree_manager: SkillTreeManager
 
-    def __init__(self, renderer: Renderer | None = None, kernel: "Kernel | None" = None):
+    def __init__(self, renderer: Renderer | None = None, kernel: "Kernel | None" = None, headless: bool = False):
+        self.headless = headless
         # --- Kernel 初期化 & CorePackage ロード ---
         from exceptions import SystemInitError
 
@@ -1295,7 +1295,6 @@ class Engine:
         self.render_handler.render(console)
     def render_to_text(self, tr: Any) -> None:
         """Step 12-16: TextRenderer へマップ/エンティティ/HUD/ログを描画。"""
-        from constants import MAP_HEIGHT, MAP_WIDTH, VIEW_HEIGHT, VIEW_WIDTH
 
         tr.clear()
 

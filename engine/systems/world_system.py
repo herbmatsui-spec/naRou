@@ -7,7 +7,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from constants import TILE_STAIRS_DOWN, MAP_WIDTH, MAP_HEIGHT, GameState
+from constants import MAP_HEIGHT, MAP_WIDTH, TILE_STAIRS_DOWN, GameState
 from map_engine import GameMap
 
 if TYPE_CHECKING:
@@ -105,7 +105,15 @@ class WorldSystem:
         if engine.game_state_machine.current != "playing":
             return False
 
-        if engine.dungeon_level >= 20:
+        # Read win_depth from config instead of hardcoding
+        try:
+            from config import get_config
+
+            win_depth = get_config("game.dungeon.win_depth", 20)
+        except ImportError:
+            win_depth = 20
+
+        if engine.dungeon_level >= win_depth:
             # void_boss defeated check (future: boss-specific flag)
             engine.game_state_machine.transition("victory")
             engine.game_state_data.current_state = GameState.VICTORY
@@ -120,8 +128,9 @@ class WorldSystem:
     def _spawn_dungeon(self) -> None:
         """Spawn dungeon entities."""
         try:
-            engine.dungeon_spawner(engine.kernel, engine)
+            self.engine.dungeon_spawner(self.engine.kernel, self.engine)
         except Exception as e:
             logger.exception("Failed to spawn dungeon entities: %s", e)
             from exceptions import ResourceLoadError
+
             raise ResourceLoadError(f"Dungeon spawn failure: {e}") from e

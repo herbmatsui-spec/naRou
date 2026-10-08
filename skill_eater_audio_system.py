@@ -8,10 +8,11 @@ Phase 6: 音響リソース統合・フォールバック・音量カテゴリ (
 from __future__ import annotations
 
 import logging
-
-logger = logging.getLogger(__name__)
+import os
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 # Step 2: 物理パス定数の定義
 AUDIO_DIR = Path(__file__).parents[0] / "assets/audio"
@@ -80,21 +81,36 @@ class SkillEaterAudioSystem:
         self.is_muted: bool = False
         self.has_pygame: bool = False
         self._sound_cache: dict[str, Any] = {}
+        self._pygame: Any = None
 
         # Phase 6 Step 64: カテゴリ別音量
         self.category_volumes: dict[str, float] = VOLUME_CATEGORIES.copy()
 
-        # Step 5: pygame.mixerの安全な初期化試行
-        if enable_real_audio:
-            try:
-                import pygame
+        # Check headless mode early
+        headless = os.environ.get("NAROU_HEADLESS") == "1"
 
-                pygame.mixer.init()
-                self.has_pygame = True
-            except Exception:
-                # If pygame not available, disable audio playback
-                logger.exception("Unhandled exception")
-                self.has_pygame = False
+        # Step 5: pygame.mixerの安全な初期化試行 (lazy, headless-aware)
+        if enable_real_audio and not headless:
+            self._init_pygame()
+
+    def _init_pygame(self) -> None:
+        """Lazy pygame initialization."""
+        try:
+            import pygame
+
+            pygame.mixer.init()
+            self._pygame = pygame
+            self.has_pygame = True
+        except Exception:
+            # If pygame not available, disable audio playback
+            logger.exception("Unhandled exception")
+            self.has_pygame = False
+
+    def _get_pygame(self) -> Any:
+        """Get pygame module, initializing if needed."""
+        if self._pygame is None and self.has_pygame is False and os.environ.get("NAROU_HEADLESS") != "1":
+            self._init_pygame()
+        return self._pygame
 
     @classmethod
     def get_instance(cls) -> SkillEaterAudioSystem:

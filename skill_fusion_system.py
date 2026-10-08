@@ -15,6 +15,26 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
+# Module-level YAML cache for fusion data
+_FUSION_YAML_CACHE: dict[str, tuple[dict[str, Any] | None, Any]] = {}
+
+
+def _cached_read_data_entries(
+    path: str, key: str, optional: bool = False
+) -> tuple[dict[str, Any] | None, Any]:
+    """Cached wrapper around _read_data_entries."""
+    cache_key = f"{path}:{key}:{optional}"
+    if cache_key in _FUSION_YAML_CACHE:
+        return _FUSION_YAML_CACHE[cache_key]
+    result = _read_data_entries(path, key, optional)
+    _FUSION_YAML_CACHE[cache_key] = result
+    return result
+
+
+def clear_fusion_yaml_cache() -> None:
+    """Clear the fusion YAML cache (for testing)."""
+    _FUSION_YAML_CACHE.clear()
+
 
 @dataclass
 class FusionEffect:
@@ -238,7 +258,7 @@ class FusionRegistry:
         """Load skill fusions from YAML file."""
         self._fusions.clear()
 
-        entries, status = _read_data_entries(path, "fusions")
+        entries, status = _cached_read_data_entries(path, "fusions")
         if entries is None:
             self.load_status = status
             _log_data_status(status, "fusion", "Fusion data", _FUSION_IMPACT)
@@ -416,7 +436,7 @@ class SkillFusionRegistry(FusionRegistry):
         # どちらも握り潰さないが、1 データセットにつき診断は 1 件だけ出す。
         # レシピは融合定義の上に載る任意レイヤーなので、キー未記入は異常にしない。
         self._recipes.clear()
-        entries, status = _read_data_entries(path, "fusion_recipes", optional=True)
+        entries, status = _cached_read_data_entries(path, "fusion_recipes", optional=True)
         if entries is None:
             self.recipe_load_status = status
             _log_data_status(status, "fusion recipe", "Fusion recipe data", _RECIPE_IMPACT)

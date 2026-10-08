@@ -77,7 +77,10 @@ class WorldAPackage(IPackage):
         kernel.register_system("skill_eater_registry", registry)
 
         # Audio & Presentation
-        audio_sys = SkillEaterAudioSystem()
+        import os
+
+        enable_audio = os.environ.get("NAROU_HEADLESS") != "1"
+        audio_sys = SkillEaterAudioSystem(enable_real_audio=enable_audio)
         kernel.register_system("skill_eater_audio_system", audio_sys)
 
         pres_sys = SkillEaterPresentationSystem(audio_system=audio_sys)
