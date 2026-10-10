@@ -37,7 +37,7 @@ def configure(key, value, config_path="config.yaml"):
     print(f"Set {key} = {value}")
 
 
-def get_config(key, config_path="config.yaml"):
+def get_config(key, default=None, config_path="config.yaml"):
     """Get a configuration value."""
     config = load_config(config_path)
     keys = key.split(".")
@@ -46,7 +46,7 @@ def get_config(key, config_path="config.yaml"):
         if isinstance(current, dict) and k in current:
             current = current[k]
         else:
-            return None
+            return default
     return current
 
 

@@ -1,12 +1,13 @@
 """Data integrity: the repo must not ship placeholders, and declarations must resolve.
 
-Both tests here are expected to FAIL on `c7def04` and are marked
+The first test is expected to FAIL on `c7def04` and is marked
 ``xfail(strict=True)``: strict so that resolving the defect turns into a test
 failure we have to notice, rather than a silently-green test.
 
 Placeholders are 13-byte ``# placeholder`` files that parse to ``None``.
-Fourteen of the fifteen skill ids declared by monsters are declared and nothing
-else — they resolve nowhere.
+
+The second test verifies that all monster ability IDs declared in monsters.yaml
+resolve to actual definitions in monster_abilities.yaml.
 """
 
 from __future__ import annotations
@@ -44,26 +45,29 @@ def _placeholder_files() -> list[tuple[str, int]]:
     return out
 
 
-def _declared_skill_ids() -> dict[str, list[str]]:
+def _declared_ability_ids() -> dict[str, list[str]]:
     monsters = yaml.safe_load((DATA_DIR / "monsters.yaml").read_text(encoding="utf-8"))
     declared: dict[str, list[str]] = {}
     for monster_id, body in (monsters or {}).items():
-        skills = body.get("skills") or []
-        if skills:
-            declared[monster_id] = list(skills)
+        abilities = body.get("abilities") or body.get("skills") or []
+        if abilities:
+            declared[monster_id] = list(abilities)
     return declared
 
 
-def _all_declared_ids() -> set[str]:
+def _all_defined_ability_ids() -> set[str]:
     ids: set[str] = set()
-    for path in _data_files():
-        if path.name == "monsters.yaml":
-            continue  # the declaration site itself does not count as a definition
+    # Check monster_abilities.yaml for definitions
+    abilities_path = DATA_DIR / "monster_abilities.yaml"
+    if abilities_path.exists():
         try:
-            parsed = yaml.safe_load(path.read_text(encoding="utf-8"))
+            parsed = yaml.safe_load(abilities_path.read_text(encoding="utf-8"))
+            if parsed:
+                # The YAML uses keys as ability IDs (e.g., throw_stone: {name: ...})
+                for key in parsed.keys():
+                    ids.add(key)
         except yaml.YAMLError:
-            continue
-        ids |= _collect_keys(parsed)
+            pass
     return ids
 
 
@@ -81,24 +85,18 @@ def _collect_keys(node: object) -> set[str]:
     return set()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="6 data files are 13-byte '# placeholder' stubs (D8: retire the empty growth axes)",
-)
 def test_no_placeholder_data_files():
+    """13バイト '# placeholder' スタブの残存を禁じる (Phase 3 で全置換)"""
     offenders = _placeholder_files()
     assert offenders == [], f"placeholder data files: {offenders}"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="14 of 15 monster skill ids resolve nowhere; Phase 2 Step 47 authors them",
-)
-def test_every_monster_skill_id_resolves():
-    defined = _all_declared_ids()
+def test_every_monster_ability_id_resolves():
+    """全モンスターの宣言能力が monster_abilities.yaml で定義されていることを確認"""
+    defined = _all_defined_ability_ids()
     unresolved: dict[str, list[str]] = {}
-    for monster_id, skills in _declared_skill_ids().items():
-        missing = [s for s in skills if s not in defined]
+    for monster_id, abilities in _declared_ability_ids().items():
+        missing = [a for a in abilities if a not in defined]
         if missing:
             unresolved[monster_id] = missing
-    assert unresolved == {}, f"skill ids declared but never defined: {unresolved}"
+    assert unresolved == {}, f"ability ids declared but never defined: {unresolved}"

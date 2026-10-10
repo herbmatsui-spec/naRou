@@ -116,6 +116,9 @@ class Entity:
         # ペット一覧
         self.pets: list[Entity] = []
 
+        # 状態異常リスト (Step 70: HUD 表示のため全 Entity で常時存在)
+        self.status_effects: list = []
+
         # チュートリアル完了履歴 (Step 1.2)
         self.completed_tutorials: set[str] = set()
         self.pending_tutorial_popup: dict[str, Any] | None = None
@@ -283,6 +286,51 @@ class Entity:
     @max_mp.setter
     def max_mp(self, val: int):
         self.get_component(BaseStatsComponent).max_mp = val
+
+    # -------------------------------------------------------------
+    # APプロパティ (BaseStatsComponent への委譲) — Phase 2 Step 34
+    # -------------------------------------------------------------
+    @property
+    def ap(self) -> int:
+        return self.get_component(BaseStatsComponent).ap
+
+    @ap.setter
+    def ap(self, val: int):
+        self.get_component(BaseStatsComponent).ap = val
+
+    @property
+    def max_ap(self) -> int:
+        return self.get_component(BaseStatsComponent).max_ap
+
+    @max_ap.setter
+    def max_ap(self, val: int):
+        self.get_component(BaseStatsComponent).max_ap = val
+
+    def reset_ap(self) -> None:
+        """ターン開始時にAPを最大値まで回復"""
+        self.ap = self.max_ap
+
+    def can_act(self, cost: int = 1) -> bool:
+        """指定コスト分のAPがあるか判定"""
+        return self.ap >= cost
+
+    def spend_ap(self, cost: int = 1) -> bool:
+        """APを消費する。足りなければFalseを返し消費しない"""
+        if self.ap >= cost:
+            self.ap -= cost
+            return True
+        return False
+
+    # -------------------------------------------------------------
+    # 向きプロパティ (BaseStatsComponent への委譲) — Step 3A
+    # -------------------------------------------------------------
+    @property
+    def facing(self) -> str:
+        return self.get_component(BaseStatsComponent).facing
+
+    @facing.setter
+    def facing(self, val: str):
+        self.get_component(BaseStatsComponent).facing = val
 
     # -------------------------------------------------------------
     # 経済プロパティ (EconomyComponent への委譲) — delegate_utils 使用 (Step 41)

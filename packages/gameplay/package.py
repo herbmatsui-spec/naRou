@@ -356,7 +356,7 @@ class GameplayLoop:
         for item in self.engine.entity_manager.items_on_ground:
             item.tick_rot(ticks=5)
 
-        for l in self.engine.survival.pass_turn(self.engine.player):
+        for l in self.engine.survival.pass_turn(self.engine.player, self.engine):
             self.engine.log(l, (255, 180, 100))
 
         if hasattr(self.engine, "quest_scheduler"):

@@ -430,6 +430,9 @@ def compute_intent(entity: Any, engine: Any) -> dict | None:
     # モンスター以外（中立NPC等）には意図を表示しない
     if getattr(entity, "faction", None) != "monster":
         return None
+    # 死亡した個体には意図を表示しない (Step 53.2)
+    if getattr(entity, "hp", 0) <= 0:
+        return None
     if engine is None:
         return None
 

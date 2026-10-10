@@ -24,6 +24,60 @@ if TYPE_CHECKING:
     from game import Engine
 
 
+# ==================== Facing Direction Helpers ====================
+
+DIRS8 = [
+    (0, -1),  # N
+    (0, 1),   # S
+    (1, 0),   # E
+    (-1, 0),  # W
+    (1, -1),  # NE
+    (-1, 1),  # SW
+    (1, 1),   # SE
+    (-1, -1), # NW
+]
+
+DIR_TO_FACING = {
+    (0, -1): "N",
+    (0, 1): "S",
+    (1, 0): "E",
+    (-1, 0): "W",
+    (1, -1): "N",
+    (-1, 1): "S",
+    (1, 1): "S",
+    (-1, -1): "N",
+}
+
+
+def set_facing_toward(actor: Entity, target_x: int, target_y: int) -> None:
+    """Update actor's facing direction toward target coordinates."""
+    dx = target_x - actor.x
+    dy = target_y - actor.y
+    # Normalize to 8-direction
+    if dx != 0:
+        dx = 1 if dx > 0 else -1
+    if dy != 0:
+        dy = 1 if dy > 0 else -1
+    facing = DIR_TO_FACING.get((dx, dy), "S")
+    actor.facing = facing
+
+
+def set_facing_from_move(actor: Entity, old_x: int, old_y: int) -> None:
+    """Update actor's facing direction based on movement delta."""
+    dx = actor.x - old_x
+    dy = actor.y - old_y
+    if dx != 0:
+        dx = 1 if dx > 0 else -1
+    if dy != 0:
+        dy = 1 if dy > 0 else -1
+    facing = DIR_TO_FACING.get((dx, dy), "S")
+    actor.facing = facing
+
+
+def _cheb(ax: int, ay: int, bx: int, by: int) -> int:
+    return max(abs(ax - bx), abs(ay - by))
+
+
 # ペット戦術コマンド
 TACTIC_BALANCED = "balanced"  # バランス (通常追従・迎撃)
 TACTIC_AGGRESSIVE = "aggressive"  # 積極迎撃 (視界内の敵を索敵・撃滅)
@@ -173,7 +227,8 @@ class HealSelfAction(BehaviorNode):
         # 治癒ポーション所持または治癒魔法
         heal_val = int(actor.max_hp * 0.4)
         actor.hp = min(actor.max_hp, actor.hp + heal_val)
-        actor.energy -= ENERGY_THRESHOLD
+        if not actor.spend_ap(1):
+            return False
         engine.log(
             f"{actor.name} は傷口を手当てし、体力を回復した！ (+{heal_val} HP)",
             (100, 255, 150),
@@ -211,8 +266,11 @@ class FleeAction(BehaviorNode):
                     best_move = (nx, ny)
 
         if best_move:
+            old_x, old_y = actor.x, actor.y
             actor.x, actor.y = best_move
-            actor.energy -= ENERGY_THRESHOLD
+            set_facing_from_move(actor, old_x, old_y)
+            if not actor.spend_ap(1):
+                return False
             return True
         return False
 
@@ -228,6 +286,9 @@ class MeleeAttackAction(BehaviorNode):
         from sound_manager import SoundManager
         from systems import CombatSystem
         from ui_fx_systems import FloatingText
+
+        # Face the target before attacking
+        set_facing_toward(actor, target.x, target.y)
 
         dmg, is_crit, msg = CombatSystem.calculate_melee_attack(actor, target, None)
         target.hp -= dmg
@@ -256,7 +317,8 @@ class MeleeAttackAction(BehaviorNode):
                 # Publish kill event for FX
                 CombatSystem.publish_kill_event(engine.event_bus, target.x, target.y)
 
-        actor.energy -= ENERGY_THRESHOLD
+        if not actor.spend_ap(1):
+            return False
         return True
 
     def _find_adjacent_enemy(self, actor: Entity, engine: Engine) -> Entity | None:
@@ -297,7 +359,15 @@ class CastSpellAction(BehaviorNode):
         dist = Point(actor.x, actor.y).chebyshev_distance(Point(target.x, target.y))
         if 2 <= dist <= 5 and engine.has_los(Point(actor.x, actor.y), Point(target.x, target.y)):
             if random.random() < 0.40:
+                # Face the target before casting
+                set_facing_toward(actor, target.x, target.y)
+
+                # Step 50.1: 敵の呪文ダメージも DifficultyManager を通す (プレイヤーと同一補正)
+                from core.difficulty import DifficultyManager
+
                 dmg = random.randint(8, 16)
+                if target.is_player:
+                    dmg = int(DifficultyManager().player_damage_taken(dmg))
                 target.hp -= dmg
                 engine.log(
                     f"⚡ {actor.name} は魔力の矢を放った！ ({target.name} に {dmg} ダメージ)",
@@ -311,31 +381,29 @@ class CastSpellAction(BehaviorNode):
                     )
                 if target == engine.player and target.hp <= 0:
                     engine._on_player_death()
-                actor.energy -= ENERGY_THRESHOLD
+                if not actor.spend_ap(1):
+                    return False
                 return True
         return False
 
 
 def declared_ability_ids(actor) -> tuple[str, ...]:
-    """`data/monsters.yaml` の skills 宣言を、並び順どおりに返す。
+    """`data/monsters.yaml` の abilities 宣言を、並び順どおりに返す。
 
-    `Entity.skills` は未設定の個体に対してプレイヤーの既定 17 種を生成し、触れた
-    時点で `_skills` にまで書き込む property なので、判定には生値を使う。
+    `Entity.abilities` は配列で、各要素は MonsterAbility オブジェクト。
     """
-    declared = getattr(actor, "_skills", None)
-    if declared is None:
+    abilities = getattr(actor, "abilities", None)
+    if abilities is None:
         return ()
-    if isinstance(declared, dict):
-        return tuple(str(key) for key in declared)
-    return tuple(str(getattr(s, "root", s)) for s in declared)
+    return tuple(getattr(a, "id", str(a)) for a in abilities)
 
 
 def ability_display_name(engine: Engine, skill_id: str) -> str:
-    """宣言スキルの本番表示名。ログは本番データに揃える。"""
+    """宣言能力の本番表示名。ログは本番データに揃える。"""
     kernel = getattr(engine, "kernel", None)
     if kernel is None or not kernel.has_system("data_manager"):
         return skill_id
-    definition = kernel.get_system("data_manager").skills.get(skill_id)
+    definition = kernel.get_system("data_manager").monster_abilities.get(skill_id)
     return definition.name if definition is not None else skill_id
 
 
@@ -428,6 +496,10 @@ class AbilityAction(BehaviorNode):
             ABILITY_INTIMIDATE: self._intimidate,
         }[spec.kind]
         handler(actor, engine, skill_id, spec, name)
+        # AP制 (Phase 2) + 旧エネルギー制の二重消費 (移行期間: legacy_bump 相当)。
+        # energy はターンスケジューラ (entity_system) が参照するため、AP と並行して減らす。
+        if not actor.spend_ap(1):
+            return False
         actor.energy -= ENERGY_THRESHOLD
         return True
 
@@ -601,8 +673,11 @@ class ChaseAction(BehaviorNode):
         if path and len(path) > 1:
             next_pt = path[1]
             if engine.is_tile_free(next_pt.x, next_pt.y):
+                old_x, old_y = actor.x, actor.y
                 actor.x, actor.y = next_pt.x, next_pt.y
-                actor.energy -= ENERGY_THRESHOLD
+                set_facing_from_move(actor, old_x, old_y)
+                if not actor.spend_ap(1):
+                    return False
                 return True
         return False
 
@@ -642,7 +717,8 @@ class PetFollowAction(BehaviorNode):
         dist = Point(actor.x, actor.y).chebyshev_distance(Point(p.x, p.y))
         if dist <= 1:
             # すでに隣接
-            actor.energy -= ENERGY_THRESHOLD // 2
+            if not actor.spend_ap(1):
+                return False
             return True
 
         path = AStar.find_path(
@@ -654,8 +730,11 @@ class PetFollowAction(BehaviorNode):
         if path and len(path) > 1:
             next_pt = path[1]
             if engine.is_tile_free(next_pt.x, next_pt.y):
+                old_x, old_y = actor.x, actor.y
                 actor.x, actor.y = next_pt.x, next_pt.y
-                actor.energy -= ENERGY_THRESHOLD
+                set_facing_from_move(actor, old_x, old_y)
+                if not actor.spend_ap(1):
+                    return False
                 return True
         return False
 
@@ -667,8 +746,12 @@ class WanderAction(BehaviorNode):
         dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0), (0, 0)])
         nx, ny = actor.x + dx, actor.y + dy
         if engine.is_tile_free(nx, ny):
+            old_x, old_y = actor.x, actor.y
             actor.x, actor.y = nx, ny
-        actor.energy -= ENERGY_THRESHOLD
+            if dx != 0 or dy != 0:
+                set_facing_from_move(actor, old_x, old_y)
+        if not actor.spend_ap(1):
+            return False
         return True
 
 
@@ -676,21 +759,6 @@ class WanderAction(BehaviorNode):
 
 
 # ==================== 提案4: 陣形・連携タクティクス用ヘルパ ====================
-
-DIRS8 = [
-    (0, 1),
-    (0, -1),
-    (1, 0),
-    (-1, 0),
-    (1, 1),
-    (-1, -1),
-    (1, -1),
-    (-1, 1),
-]
-
-
-def _cheb(ax: int, ay: int, bx: int, by: int) -> int:
-    return max(abs(ax - bx), abs(ay - by))
 
 
 def _entity_at_tile(engine, x: int, y: int):
@@ -764,9 +832,12 @@ class SpreadAction(BehaviorNode):
         crowded = any(_is_monster_at(engine, actor.x + dx, actor.y + dy, actor) for dx, dy in DIRS8)
         if not crowded:
             return False
+        old_x, old_y = actor.x, actor.y
         best = min(neighbors, key=lambda t: _ally_density(engine, t[0], t[1], actor))
         actor.x, actor.y = best
-        actor.energy -= ENERGY_THRESHOLD
+        set_facing_from_move(actor, old_x, old_y)
+        if not actor.spend_ap(1):
+            return False
         return True
 
 
@@ -786,6 +857,8 @@ class KiteAction(BehaviorNode):
 
         # 射程内なら撃ってその場維持
         if _is_ranged_role(actor) and 2 <= dist <= 5 and _has_los(engine, actor, player):
+            # Face the target when casting
+            set_facing_toward(actor, player.x, player.y)
             CastSpellAction().execute(actor, engine)
             return True
 
@@ -794,8 +867,11 @@ class KiteAction(BehaviorNode):
             if not neighbors:
                 return False
             nx, ny = max(neighbors, key=lambda t: _cheb(t[0], t[1], player.x, player.y))
+            old_x, old_y = actor.x, actor.y
             actor.x, actor.y = nx, ny
-            actor.energy -= ENERGY_THRESHOLD
+            set_facing_from_move(actor, old_x, old_y)
+            if not actor.spend_ap(1):
+                return False
             return True
 
         if dist > pref:
@@ -806,8 +882,11 @@ class KiteAction(BehaviorNode):
             if not cand:
                 cand = neighbors
             nx, ny = min(cand, key=lambda t: _cheb(t[0], t[1], player.x, player.y))
+            old_x, old_y = actor.x, actor.y
             actor.x, actor.y = nx, ny
-            actor.energy -= ENERGY_THRESHOLD
+            set_facing_from_move(actor, old_x, old_y)
+            if not actor.spend_ap(1):
+                return False
             return True
 
         return False
@@ -831,8 +910,11 @@ class FlankAction(BehaviorNode):
         if not neighbors:
             return False
         nx, ny = min(neighbors, key=lambda t: _cheb(t[0], t[1], rx, ry))
+        old_x, old_y = actor.x, actor.y
         actor.x, actor.y = nx, ny
-        actor.energy -= ENERGY_THRESHOLD
+        set_facing_from_move(actor, old_x, old_y)
+        if not actor.spend_ap(1):
+            return False
         return True
 
 

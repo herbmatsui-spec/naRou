@@ -24,6 +24,7 @@ from input_actions import (
     ActionSearch,
     ActionSynthesisMenu,
     CastFireballAction,
+    CastSpellAction,
     DebugAction,
     DescendStairsAction,
     GuildAction,
@@ -43,6 +44,7 @@ from input_actions import (
     PlayMusicAction,
     PrayAction,
     QuitAction,
+    RangedAttackAction,
     SaveAction,
     SellAction,
     SkillTreeAction,
@@ -159,7 +161,24 @@ class InputHandler:
         )
         reg.register("play", KeyBinding(KS.G, GuildAction, SHIFT, description="ギルド"))
         reg.register("play", KeyBinding(KS.C, CastFireballAction, description="ファイアボール"))
+        reg.register("play", KeyBinding(KS.F, RangedAttackAction, description="射程攻撃"))
         reg.register("play", KeyBinding(KS.B, MineWallAction, description="壁採掘"))
+        # 呪文キー (Phase 2 Step 40)
+        from systems import get_spell_data, get_spell_ids
+        spell_keys = {
+            KS.N1: "magic_dart",
+            KS.N2: "fireball",
+            KS.N3: "ice_bolt",
+            KS.N4: "lightning_bolt",
+            KS.N5: "heal_light",
+            KS.N6: "heal_heavy",
+            KS.N7: "teleport",
+            KS.N8: "haste",
+        }
+        for key, spell_id in spell_keys.items():
+            if spell_id in get_spell_ids():
+                spell_name = get_spell_data().get(spell_id, {}).get("name", spell_id)
+                reg.register("play", KeyBinding(key, CastSpellAction(spell_id), description=f"呪文: {spell_name}"))
         reg.register("play", KeyBinding(KS.M, PlayMusicAction, description="音楽"))
         reg.register("play", KeyBinding(KS.P, PrayAction, description="祈り"))
         reg.register("play", KeyBinding(KS.O, OfferAltarAction, description="祭壇捧げ物"))

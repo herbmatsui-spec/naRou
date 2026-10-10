@@ -20,13 +20,14 @@ class LocalizationManager:
     Supports 6 languages: en, ja, ko, zh-cn, zh-tw, (and others as needed)
     """
 
-    def __init__(self, text_dir: str = "data/text", default_language: str = "en"):
+    def __init__(self, text_dir: str = "data/text", default_language: str = "ja"):
         """
         Initialize the LocalizationManager.
 
         Args:
             text_dir: Directory containing language YAML files
-            default_language: Default language code (fallback)
+            default_language: Default language code (fallback)。
+                Step 65.4: 日本語が主言語のため既定は ja (en は完全翻訳済みのフォールバック先)。
         """
         self.text_dir = Path(text_dir)
         self.default_language = default_language

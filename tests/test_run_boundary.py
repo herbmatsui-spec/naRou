@@ -16,10 +16,10 @@ class TestRunRestart:
         engine.player.hp = 0
         engine._on_player_death()
         assert engine.game_state_machine.current == "game_over"
-        
+
         # Clear run
         SaveSystem.clear_run(engine)
-        
+
         # Verify reset state
         assert engine.game_state_machine.current == "playing"
         assert engine.game_state_machine.is_playing
@@ -35,10 +35,10 @@ class TestRunRestart:
         engine.dungeon_level = 20
         engine.check_win_condition()
         assert engine.game_state_machine.current == "victory"
-        
+
         # Clear run
         SaveSystem.clear_run(engine)
-        
+
         # Verify reset state
         assert engine.game_state_machine.current == "playing"
         assert engine.game_state_machine.is_playing
@@ -53,14 +53,14 @@ class TestRunRestart:
         engine.player.hp = 0
         engine._on_player_death()
         assert engine.game_state_machine.current == "game_over"
-        
+
         # Manually reset without clear_run (simulating removed call)
         engine.game_state_machine = engine.__class__.__module__
         # This would fail - but we prove that clear_run is necessary by checking
         # that after clear_run, the state is properly reset
         SaveSystem.clear_run(engine)
         assert engine.game_state_machine.current == "playing"
-        
+
         # Verify that a new GameStateMachine was created (not reused)
         # by checking history is empty
         assert len(engine.game_state_machine.history) == 0

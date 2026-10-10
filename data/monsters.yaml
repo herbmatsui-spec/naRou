@@ -8,6 +8,7 @@ slime:
   min_floor: 1
   max_floor: 30
   ai_type: "coward"
+  ai_role: "brute"
   skills: []
   attributes:
     strength: 5
@@ -28,6 +29,7 @@ red_slime:
   min_floor: 2
   max_floor: 30
   ai_type: "aggressive"
+  ai_role: "brute"
   skills: []
   attributes:
     strength: 8
@@ -48,6 +50,7 @@ snail:
   min_floor: 1
   max_floor: 30
   ai_type: "coward"
+  ai_role: "brute"
   attributes:
     strength: 3
     endurance: 4
@@ -109,6 +112,7 @@ orc:
   min_floor: 3
   max_floor: 30
   ai_type: "aggressive"
+  ai_role: "brute"
   skills: ["power_bash"]
   attributes:
     strength: 14
@@ -129,7 +133,9 @@ hound_fire:
   min_floor: 4
   max_floor: 30
   ai_type: "tactical"
+  ai_role: "kiter"
   skills: ["fire_breath"]
+  resistances: {fire: 80, cold: -20}
   attributes:
     strength: 10
     endurance: 9
@@ -149,6 +155,7 @@ rogue_thief:
   min_floor: 4
   max_floor: 30
   ai_type: "tactical"
+  ai_role: "flanker"
   skills: ["steal_gold", "backstab"]
   attributes:
     strength: 11
@@ -190,6 +197,7 @@ minotaur:
   min_floor: 7
   max_floor: 30
   ai_type: "aggressive"
+  ai_role: "brute"
   skills: ["heavy_cleave", "roar"]
   attributes:
     strength: 22
@@ -210,7 +218,9 @@ lich:
   min_floor: 9
   max_floor: 30
   ai_type: "caster"
+  ai_role: "caster"
   skills: ["cast_fireball", "summon_undead", "drain_mp"]
+  resistances: {cold: 50, darkness: 60, fire: -10}
   attributes:
     strength: 8
     endurance: 10
@@ -230,6 +240,7 @@ dragon_red:
   min_floor: 12
   max_floor: 30
   ai_type: "boss"
+  ai_role: "boss"
   skills: ["inferno_breath", "tail_swipe", "intimidate"]
   attributes:
     strength: 30
@@ -240,3 +251,24 @@ dragon_red:
     will: 20
     magic: 18
     charisma: 16
+
+void_boss:
+  name: "ヴォイド・ボス"
+  char: "👁️"
+  color: [100, 20, 180]
+  speed: 100
+  max_hp: 500
+  min_floor: 20
+  max_floor: 30
+  ai_type: "boss"
+  ai_role: "boss"
+  skills: ["inferno_breath", "tail_swipe", "intimidate", "cast_fireball", "drain_mp"]
+  attributes:
+    strength: 35
+    endurance: 40
+    dexterity: 20
+    perception: 25
+    learning: 30
+    will: 35
+    magic: 40
+    charisma: 20

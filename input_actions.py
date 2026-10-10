@@ -128,6 +128,7 @@ from constants import (
 )
 from save_system import SaveSystem
 from sound_manager import SoundManager
+from systems import CombatSystem, cast, get_spell_ids
 
 # 「使う」動詞が対象にするカテゴリ。並び順はそのまま優先順になる。
 CONSUMABLE_CATEGORIES = (CAT_POTION, CAT_FOOD, CAT_SCROLL)
@@ -423,6 +424,57 @@ class CastFireballAction(Verb):
         return True
 
 
+class CastSpellAction(Verb):
+    """統一呪文詠唱アクション (Phase 2 Step 40)"""
+
+    def __init__(self, spell_id: str):
+        self.spell_id = spell_id
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+
+        # APチェック
+        from systems import CombatSystem
+        if not engine.player.can_act(CombatSystem.AP_COST["spell"]):
+            engine.log("AP不足: 呪文詠唱には1AP必要", (255, 100, 100))
+            return False
+
+        # 照準: 最寄りの敵を自動標的 (self-target以外)
+        from systems import get_spell_data
+        spell_data = get_spell_data().get(self.spell_id)
+        target = None
+
+        if spell_data and spell_data.get("target_type") != "self":
+            # 最寄りの敵を探索
+            from systems import find_nearest_visible_target
+            result = find_nearest_visible_target(engine.player, spell_data.get("range", 6), engine)
+            if result:
+                target, _ = result
+            if target is None:
+                engine.log("射程内に標的が見当たらない", (200, 200, 200))
+                return False
+        else:
+            # self-target
+            target = engine.player
+
+        # AP消費
+        engine.player.spend_ap(CombatSystem.AP_COST["spell"])
+
+        # 呪文実行
+        success, msg = cast(self.spell_id, engine.player, target, engine)
+        engine.log(msg, (255, 200, 100) if success else (255, 100, 100))
+
+        if success:
+            engine.advance_world()
+        return True
+
+
 class MineWallAction(Verb):
     """壁採掘"""
 
@@ -589,6 +641,57 @@ class WaitAction(Verb):
         if not self.can_execute(engine):
             return False
         engine.log("待機した。", (200, 200, 200))
+        engine.pass_turn()
+        return True
+
+
+class RangedAttackAction(Verb):
+    """射程攻撃アクション (Phase 2 Step 36)
+
+    視線が通る最も近い敵を自動標的とする。
+    APコスト: 1 (CombatSystem.AP_COST["attack"])
+    """
+
+    def __init__(self, max_range: int = 6):
+        self.max_range = max_range
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+
+        # APチェック
+        if not engine.player.can_act(CombatSystem.AP_COST["attack"]):
+            engine.log("AP不足: 射程攻撃には1AP必要", (255, 100, 100))
+            return False
+
+        # 照準計算: find_nearest_visible_target を使用
+        from systems import find_nearest_visible_target
+
+        result = find_nearest_visible_target(engine.player, self.max_range, engine)
+        if result is None:
+            engine.log("射程内に敵が見当たらない。", (200, 200, 200))
+            return False
+
+        target, target_point = result
+
+        # AP消費
+        engine.player.spend_ap(CombatSystem.AP_COST["attack"])
+
+        # 攻撃実行
+        from engine.systems.combat_system import CombatSystem as NewCombatSystem
+        dmg, is_crit, msg = NewCombatSystem.calculate_melee_attack(engine.player, target)
+        if dmg > 0:
+            target.hp -= dmg
+            if target.hp <= 0:
+                target.hp = 0
+        engine.log(f"射程攻撃！ {msg}", (255, 200, 100))
+
+        # 世界進行
         engine.advance_world()
         return True
 

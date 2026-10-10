@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import pytest
-import game
 from naRou.engine.game_state import GameStateMachine
+
+import game
 
 
 class TestPlayerDeath:
@@ -159,16 +160,16 @@ class TestNaturalRegen:
         engine = game.Engine()
         engine.player.hp = engine.player.max_hp - 20
         initial_hp = engine.player.hp
-        
+
         # Simulate 9 turns - should NOT regen yet
         for _ in range(9):
             engine.advance_world()
         assert engine.player.hp == initial_hp, "Regen should not trigger before 10 turns"
-        
+
         # 10th turn - should regen
         engine.advance_world()
         assert engine.player.hp == initial_hp + 1, "Regen should trigger on 10th turn"
-        
+
         # Another 10 turns
         for _ in range(10):
             engine.advance_world()

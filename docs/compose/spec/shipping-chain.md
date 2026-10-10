@@ -138,3 +138,12 @@ E   ModuleNotFoundError: No module named 'naRou'
 - [x] T4: `[tool.setuptools.package-dir]` で `naRou = "."` を宣言し、`[tool.setuptools] packages` に `naRou` と実行に到達する全サブパッケージ（55個）を明示列挙する。巨大 `exclude` は削除し、`[project.scripts]` を `naRou.game:main` にする — acceptance: wheel が `naRou/game.py` と `naRou/engine/__init__.py` を含み、`tests/` を含まず、隔離 prefix へのインストールで 8 依存が解決され `narou` スクリプトが `from naRou.game import main` として生成される (covers: S2.4)
 - [x] T5: リグレッション防止テスト `tests/test_entrypoint.py` を追加する。`game.main` の存在と可変性、`NAROU_FORCE_TEXT` によるテキストモード選択、`python -m game` の起動、`naRou` がシンボリックリンクでないこと、MSDF アトラス生成成功を各ケースとして固定する — acceptance: 本テストがこれらの不具合を再現する形で失敗し、T1〜T4 適用後は全て成功する (covers: S2.1, S2.2, S2.3)
 - [x] T6: README の起動手順を実装に合わせて更新する。テスト数のバッジは「全件成功」を意味(fake)_buffせず、`pytest tests/` の実測値（合格数と既知の失敗数）を明記する。既知の失敗は案2・案3由来であり、本 feature の残件ではない — acceptance: README の手順がそのまま再現でき、バッジの数値が `pytest tests/` の出力と一致する (covers: S2.2)
+
+## 関連仕様書
+
+- [combat-resolution.md](combat-resolution.md) — AP制戦闘解決モデル仕様 (Phase 2 Step 33)
+- [win-condition.md](win-condition.md) — 勝利条件仕様 (Phase 1 Step 19)
+- [run-end-state.md](run-end-state.md) — 死亡/勝利時の状態遷移 (Phase 1 Steps 12-20)
+- [survival-balance.md](survival-balance.md) — 空腹/回復/毒性バランス (Phase 1 Step 29)
+- [run-carrying.md](run-carrying.md) — ラン引継ぎ仕様 (Phase 1 Step 20)
+- [devour-wiring.md](devour-wiring.md) — Devourシステム配線 (Phase 3+)

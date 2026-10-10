@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import game
 from naRou.engine.game_state import GameStateMachine
+
+import game
 
 
 class TestWinCondition:

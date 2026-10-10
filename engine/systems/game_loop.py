@@ -156,29 +156,12 @@ class GameLoopHandler:
             self._record_harm_cause(CAUSE_HUNGER if engine.survival.hunger <= 0 else CAUSE_COMBAT)
 
         # 以下は Engine 固有の処理（自然回復、世界ニュース、オートセーブ等）
-        # 自然回復(出血中は停止: ステップ45)
-        engine.turns += 1
+        # 自然回復は SurvivalSystem.pass_turn で実行済み（ステップ18）
         # プレイヤー出血状態をチェック
         player_bleeding = any(
             getattr(e, "effect_type", getattr(e, "type", getattr(e, "name", ""))) == "bleeding"
             for e in engine.player.status_effects
         )
-        from constants import NATURAL_REGEN_HUNGER_THRESHOLD, NATURAL_REGEN_INTERVAL
-
-        if (
-            engine.turns % NATURAL_REGEN_INTERVAL == 0
-            and engine.survival.hunger > NATURAL_REGEN_HUNGER_THRESHOLD
-            and not player_bleeding
-            and engine.game_state_machine.current == "playing"
-        ):
-            engine.player.hp = min(engine.player.max_hp, engine.player.hp + 1)
-            engine.player.mp = min(engine.player.max_mp, engine.player.mp + 1)
-            if engine.pet.hp > 0:
-                engine.pet.hp = min(engine.pet.max_hp, engine.pet.hp + 1)
-        # 自然回復は生存者向けの処理であり、死亡した turn の観測を引きずって
-        # 「観測の無い死」に落とす理由にはならない (記録した HP を turn 末へ合わせる)
-        if engine.player.hp <= 0:
-            engine._harm_cause_hp = engine.player.hp
 
         # 勝利条件チェック (Step 19)
         if engine.check_win_condition():

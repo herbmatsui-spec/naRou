@@ -202,12 +202,15 @@ class ArchaeologyComponent:
 
 @dataclass
 class BaseStatsComponent:
-    """HP/MPの基本ステータス用ECSコンポーネント"""
+    """HP/MP/APの基本ステータス用ECSコンポーネント"""
 
     hp: int = 50
     max_hp: int = 50
     mp: int = 20
     max_mp: int = 20
+    ap: int = 2
+    max_ap: int = 2
+    facing: str = "S"  # 向き: N, S, E, W
 
 
 @dataclass

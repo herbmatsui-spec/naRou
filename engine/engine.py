@@ -364,7 +364,16 @@ class Engine:
 
     @property
     def survival(self) -> SurvivalSystem:
-        """サバイバルシステム"""
+        """サバイバルシステム (Step 27: kernel 登録と同一オブジェクトを返す)
+
+        kernel に "survival_system" として登録されたオブジェクトが正本。
+        main_quest_system の報酬書き込み (kernel 経由) と engine.survival の読み出しが
+        同一オブジェクトに向くことで、6100金の不活性を防ぐ。
+        旧セーブ/未初期化 Engine では game_state_data.survival にフォールバック。
+        """
+        kernel_survival = self.kernel.get_system("survival_system")
+        if kernel_survival is not None:
+            return kernel_survival
         return self.game_state_data.survival
 
     @survival.setter
@@ -1189,6 +1198,15 @@ class Engine:
     def advance_world(self) -> None:
         """速度Tick制による全NPCターン処理 (GameLoopHandler へ委譲)"""
         self.game_loop_handler.advance_world()
+
+    def pass_turn(self) -> list[str]:
+        """待機アクション: 生存システムのターン処理のみ実行し、世界を1tick進める"""
+        logs = []
+        if hasattr(self, "survival") and self.survival:
+            logs.extend(self.survival.pass_turn(self.player, self))
+        # 世界進行 (NPCのターン処理など)
+        self.advance_world()
+        return logs
 
     def _pet_ai(self) -> None:
         """ペットAI (EntitySystem へ委譲)"""

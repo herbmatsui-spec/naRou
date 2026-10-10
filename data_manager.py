@@ -57,7 +57,7 @@ from data.generated.faction.factions import Faction
 from data.generated.item.item import ItemDefinition
 from data.generated.meta.achievements import Achievement
 from data.generated.meta.titles import Title
-from data.generated.monster.monster import MonsterDefinition
+from data.generated.monster.monster import MonsterAbility, MonsterDefinition
 from data.generated.quest.quest import QuestDefinition
 from data.generated.skill.skill import Effect, SkillCategory, SkillDefinition
 from data.generated.skill.skill_fusion import SkillFusion
@@ -110,6 +110,7 @@ class DataManager(BaseSystem):
         self.skill_trees: SkillTreeRepository
         self.spells: SpellRepository
         self.skill_fusions: SkillFusionRepository
+        self.monster_abilities: dict[str, Any]  # MonsterAbility dict
         self.quests: QuestRepository
         self.factions: FactionRepository
         self.achievements: AchievementRepository
@@ -143,6 +144,9 @@ class DataManager(BaseSystem):
 
         # モンスター (フラット辞書)
         monsters_raw = self._load_yaml("monsters.yaml") or {}
+        # モデル再構築 (forward refs 解決用) - pytest 経由の import では module level で失敗するためここで実行
+        if hasattr(MonsterDefinition, "model_rebuild"):
+            MonsterDefinition.model_rebuild()
         self.monsters = MonsterRepository(
             {k: MonsterDefinition.model_validate(v) for k, v in monsters_raw.items()}
         )
@@ -171,15 +175,11 @@ class DataManager(BaseSystem):
             }
         )
 
-        # スキル融合 (ラッパー key: fusions)
-        fusion_raw = self._load_yaml("skill_fusion.yaml") or {}
-        fu_data = fusion_raw.get("fusions", {}) if isinstance(fusion_raw, dict) else {}
-        self.skill_fusions = SkillFusionRepository(
-            {
-                k: (SkillFusion.model_validate(v) if not isinstance(v, SkillFusion) else v)
-                for k, v in fu_data.items()
-            }
-        )
+        # モンスター能力 (Phase 2 Step 46-47)
+        abilities_raw = self._load_yaml("monster_abilities.yaml") or {}
+        self.monster_abilities = {
+            k: MonsterAbility.model_validate({**v, "id": k}) for k, v in abilities_raw.items()
+        }
 
         # クエスト (ラッパー key: main_quests, リスト形式)
         # main_quests.yaml はスキーマと構造が異なるため tolerant ロード
@@ -514,7 +514,15 @@ class DataManager(BaseSystem):
             else None
         )
         cursed = (quality == QUALITY_BAD) or (random.random() < 0.05)
-        return self.create_item(item_id, x, y, material=mat, quality=quality, cursed=cursed)
+        item = self.create_item(item_id, x, y, material=mat, quality=quality, cursed=cursed)
+        # Step 58.1: 接尾辞ロール (品質連動: GOD必ず2個 / NORMAL 0.3 / BAD禁止)
+        try:
+            from item_system import roll_affixes
+
+            roll_affixes(item, quality=quality)
+        except Exception:
+            pass  # 接尾辞システム不在でも生成を止めない
+        return item
 
     # ==================== MONSTER GENERATION ====================
 
@@ -570,6 +578,25 @@ class DataManager(BaseSystem):
             mob.preferred_range = (
                 KITER_PREFERRED_RANGE if data.ai_role == AI_ROLE_KITER else 1
             )
+        mob.abilities = [
+            self.monster_abilities.get(getattr(s, "root", getattr(s, "id", s)))
+            for s in (data.abilities or data.skills or [])
+            if self.monster_abilities.get(getattr(s, "root", getattr(s, "id", s)))
+        ]
+        # Step 51: 属性耐性をデータ定義から Entity へ流し込む
+        res_data = data.resistances or {}
+        if res_data:
+            from systems import ResistanceSet
+
+            res_set = ResistanceSet()
+            res_set.fire = int(res_data.get("fire", 0))
+            res_set.cold = int(res_data.get("cold", 0))
+            res_set.lightning = int(res_data.get("lightning", 0))
+            res_set.darkness = int(res_data.get("darkness", 0))
+            res_set.chaos = int(res_data.get("chaos", 0))
+            res_set.magic = int(res_data.get("magic", 0))
+            mob.resistances = res_set
+        # 後方互換: skills も設定
         mob.skills = [getattr(s, "root", s) for s in (data.skills or [])]
         mob.status_effects = []
         return mob

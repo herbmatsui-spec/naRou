@@ -130,7 +130,7 @@ def test_goblin_fires_declared_throw_stone(dm: DataManager):
     AdvancedAISystem().process_ai(mob, engine)
 
     assert engine.player.hp < before, "投石が命中してもダメージが入っていない"
-    assert any(_skill_name(dm, "throw_stone") in t for t in _logs(engine)), (
+    assert any("投石" in t for t in _logs(engine)), (
         "技名がログに出ない = プレイヤーに挙動が見えない"
     )
 
@@ -144,7 +144,7 @@ def test_orc_fires_declared_power_bash(dm: DataManager):
     AdvancedAISystem().process_ai(mob, engine)
 
     assert engine.player.hp < before
-    assert any(_skill_name(dm, "power_bash") in t for t in _logs(engine))
+    assert any("力強打" in t for t in _logs(engine))
 
 
 def test_rogue_thief_backstabs_a_broke_player(dm: DataManager):
@@ -157,7 +157,7 @@ def test_rogue_thief_backstabs_a_broke_player(dm: DataManager):
     AdvancedAISystem().process_ai(mob, engine)
 
     assert engine.player.hp < before
-    assert any(_skill_name(dm, "backstab") in t for t in _logs(engine))
+    assert any("背面攻撃" in t for t in _logs(engine))
 
 
 # ==================== S1.2 空振りでもターンを消費し、プレイヤーに見える ====================
@@ -182,7 +182,7 @@ def test_missed_ability_still_costs_turn_and_is_legible(dm: DataManager):
     assert mob.energy == before_energy - ENERGY_THRESHOLD, "空振りしても行動は1ターン分消費される"
     assert (mob.x, mob.y) == before_pos, "空振りしたターンが移動に使われてはいない"
     logs = _logs(engine)
-    assert any(_skill_name(dm, "throw_stone") in t for t in logs), (
+    assert any("投石" in t for t in logs), (
         f"空振りログが無い = プレイヤーに見えない。{logs}"
     )
 
@@ -249,7 +249,7 @@ def test_steal_gold_moves_gold(dm: DataManager):
     assert engine.player.gold < before_player, "プレイヤーの金が減っていない"
     assert mob.gold > before_thief, "奪った金がモンスター側に無い"
     assert engine.player.gold + mob.gold == before_player + before_thief, "金が凭空で生滅している"
-    assert any(_skill_name(dm, "steal_gold") in t for t in _logs(engine))
+    assert any("金の窃盗" in t for t in _logs(engine))
 
 
 def test_heal_self_restores_hp(dm: DataManager):
@@ -262,7 +262,7 @@ def test_heal_self_restores_hp(dm: DataManager):
 
     assert mob.hp > before, "HP が回復していない"
     assert mob.hp <= mob.max_hp
-    assert any(_skill_name(dm, "heal_self") in t for t in _logs(engine))
+    assert any("己の癒し" in t for t in _logs(engine))
 
 
 def test_summon_undead_adds_an_entity(dm: DataManager):
@@ -274,7 +274,7 @@ def test_summon_undead_adds_an_entity(dm: DataManager):
     AdvancedAISystem().process_ai(mob, engine)
 
     assert len(engine.entity_manager.get_living_entities()) > before, "召喚体が居ない"
-    assert any(_skill_name(dm, "summon_undead") in t for t in _logs(engine))
+    assert any("亡者の召喚" in t for t in _logs(engine))
 
 
 def test_drain_mp_moves_mana(dm: DataManager):
@@ -289,7 +289,7 @@ def test_drain_mp_moves_mana(dm: DataManager):
 
     assert engine.player.mp < before_player_mp, "相手の魔力を持ち去っていない"
     assert mob.mp > before_mob_mp, "吸い上げた魔力が要塞に無い"
-    assert any(_skill_name(dm, "drain_mp") in t for t in _logs(engine))
+    assert any("魔力吸引" in t for t in _logs(engine))
 
 
 def test_cast_fireball_burns_at_range(dm: DataManager):
@@ -303,7 +303,7 @@ def test_cast_fireball_burns_at_range(dm: DataManager):
     AdvancedAISystem().process_ai(mob, engine)
 
     assert engine.player.hp < before
-    assert any(_skill_name(dm, "cast_fireball") in t for t in _logs(engine))
+    assert any("火球術" in t for t in _logs(engine))
 
 
 def test_roar_is_player_facing_and_bolsters_self(dm: DataManager):
@@ -314,7 +314,7 @@ def test_roar_is_player_facing_and_bolsters_self(dm: DataManager):
     AdvancedAISystem().process_ai(mob, engine)
 
     assert mob.endurance > before_end, "自分の防御が上がっていない"
-    assert any(_skill_name(dm, "roar") in t for t in _logs(engine))
+    assert any("戦吼" in t for t in _logs(engine))
 
 
 def test_intimidate_staggers_the_player(dm: DataManager):
@@ -326,7 +326,7 @@ def test_intimidate_staggers_the_player(dm: DataManager):
     assert any(s.name == STATUS_PARALYSIS for s in engine.player.status_effects), (
         "威嚇してもプレイヤーに何も起こらない"
     )
-    assert any(_skill_name(dm, "intimidate") in t for t in _logs(engine))
+    assert any("威嚇" in t for t in _logs(engine))
 
 
 @pytest.mark.parametrize(

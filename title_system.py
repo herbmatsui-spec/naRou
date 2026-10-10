@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 
 import yaml
 
-
 # 定義ファイルは作業ディレクトリに依存させない。相対パスをそのまま使うと、
 # 起動場所が変わっただけで称号が 1 件も読まれず (= 永久に獲得できない) ため。
 _DATA_DIR = Path(__file__).resolve().parent / "data"

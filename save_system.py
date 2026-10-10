@@ -363,53 +363,53 @@ class SaveSystem:
         engine._harm_cause_hp = None
         engine.turns = 0
         engine.dungeon_level = 1
-        
+
         # プレイヤーのHP/MPを全回復
         engine.player.hp = engine.player.max_hp
         engine.player.mp = engine.player.max_mp
         engine.player.status_effects = []
-        
+
         # ペットも全回復
         if engine.pet:
             engine.pet.hp = engine.pet.max_hp
             engine.pet.mp = engine.pet.max_mp
             engine.pet.status_effects = []
-        
+
         # インベントリは保持（メタ進行の一部として）
         # ダンジョン再生成
+        from constants import MAP_HEIGHT, MAP_WIDTH
         from map_engine import GameMap
-        from constants import MAP_WIDTH, MAP_HEIGHT
 
         engine.game_map = GameMap(MAP_WIDTH, MAP_HEIGHT, floor_level=1)
         engine.game_map.generate_dungeon()
         engine.player.x, engine.player.y = engine.game_map.start_pos
         engine.pet.x = engine.player.x + 1
         engine.pet.y = engine.player.y
-        
+
         # エンティティマネージャーをリセット
         engine.entity_manager.clear()
         engine.entity_manager.add_entity(engine.player)
         engine.entity_manager.add_entity(engine.pet)
         engine.entity_manager.items_on_ground.clear()
         engine.entity_manager.resource_nodes.clear()
-        
+
         # ダンジョンスポーン
         engine._spawn_dungeon()
-        
+
         # 祭壇位置リセット
         rx, ry = engine.game_map.rooms[0].center
         engine.altar_pos = (rx + 2, ry)
-        
+
         # FOV 再計算
         engine.game_map.compute_fov(engine.player.x, engine.player.y, radius=8)
-        
+
         # サバイバルシステムのリセット（空腹度など）
         engine.survival.hunger = 8000
         engine.survival.sleepiness = 0
-        
+
         # ログクリア
         engine.msg_log.history.clear()
-        
+
         engine.log(
             "★新しい冒険が始まる……！", (255, 215, 0), level="SUCCESS"
         )

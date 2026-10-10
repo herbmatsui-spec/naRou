@@ -6,11 +6,14 @@ Steps 28-36: UUID, 呪いアイテム, 食料腐敗, 厳密スタック判定, �
 from __future__ import annotations
 
 import copy
+import random
 import uuid
 from dataclasses import dataclass
 from typing import Any
 
-from constants import QUALITY_NORMAL
+import yaml
+
+from constants import QUALITY_BAD, QUALITY_GOD, QUALITY_GOOD, QUALITY_MIRACLE, QUALITY_NORMAL
 
 # 素材定義
 MATERIALS: dict[str, dict[str, Any]] = {
@@ -553,3 +556,184 @@ def calculate_reincarnation_drop_rate(base_rate: float, player_reinc_count: int)
     # TODO: Reincarnation drop scaling
     bonus_mult = min(3.0, 1.0 + player_reinc_count * 0.10)
     return base_rate * bonus_mult
+
+
+# ============================================================
+# 接尾辞 (Affix) システム (Phase 3 Step 57-58)
+# ============================================================
+
+AFFIXES_YAML_PATH = "data/item_affixes.yaml"
+
+
+@dataclass(frozen=True)
+class Affix:
+    """接尾辞定義 (Step 57)
+
+    すべての戦闘系接尾辞は利得と代償の両方を持つ (test_affixes_trade_off_two_ways が強制)。
+    呪い系 (cursed=true) は例外で純代償。
+    """
+
+    id: str
+    name: str
+    slot: str  # weapon / armor / any
+    weight: int  # 0 = ロール対象外 (呪い)
+    tier: int  # 0=呪い, 1=通常, 2=良品, 3=奇跡
+    mods: dict[str, int]
+    cursed: bool = False
+
+    @property
+    def is_curse(self) -> bool:
+        return self.cursed
+
+
+_AFFIX_CACHE: dict[str, Affix] | None = None
+
+
+def load_affixes(path: str = AFFIXES_YAML_PATH) -> dict[str, Affix]:
+    """data/item_affixes.yaml から接尾辞定義を読み込む (キャッシュ付き)"""
+    global _AFFIX_CACHE
+    if _AFFIX_CACHE is not None:
+        return _AFFIX_CACHE
+    try:
+        with open(path, encoding="utf-8") as f:
+            raw = yaml.safe_load(f) or {}
+    except OSError:
+        raw = {}
+    cache: dict[str, Affix] = {}
+    for affix_id, body in raw.items():
+        if not isinstance(body, dict):
+            continue
+        cache[affix_id] = Affix(
+            id=affix_id,
+            name=body.get("name", affix_id),
+            slot=body.get("slot", "any"),
+            weight=int(body.get("weight", 0)),
+            tier=int(body.get("tier", 1)),
+            mods=dict(body.get("mods") or {}),
+            cursed=bool(body.get("cursed", False)),
+        )
+    _AFFIX_CACHE = cache
+    return cache
+
+
+def clear_affix_cache() -> None:
+    """テスト用: 接尾辞キャッシュをクリア"""
+    global _AFFIX_CACHE
+    _AFFIX_CACHE = None
+
+
+def _affix_roll_count(quality: str, rand: Any = None) -> int:
+    """品質に応じた接尾辞ロール数 (Step 58.2)
+
+    QUALITY_GOD は必ず2個、QUALITY_NORMAL は確率0.3、QUALITY_BAD は禁止。
+    """
+    r = rand if rand is not None else random
+    if quality == QUALITY_GOD:
+        return 2
+    if quality in (QUALITY_MIRACLE, QUALITY_GOOD):
+        return 1
+    if quality == QUALITY_NORMAL:
+        return 1 if r.random() < 0.3 else 0
+    return 0  # QUALITY_BAD は接尾辞禁止
+
+
+def roll_affixes(item: Item, rng: Any = None, quality: str | None = None) -> Item:
+    """アイテムに接尾辞をロールして付与する (Step 57.3, 58.1)
+
+    Args:
+        item: 対象アイテム (破壊的に修正され、返り値でもある)
+        rng: 乱数生成器 (None なら random モジュール)
+        quality: アイテム品質 (None なら item.quality)
+
+    Returns:
+        接尾辞が付与されたアイテム
+    """
+    r = rng if rng is not None else random
+    q = quality if quality is not None else getattr(item, "quality", QUALITY_NORMAL)
+
+    affixes = load_affixes()
+    # 呪いはロール対象外 (weight=0)。呪い品は既存 cursed フラグ経路で扱う
+    pool = [a for a in affixes.values() if a.weight > 0 and not a.is_curse]
+    if not pool:
+        return item
+
+    count = _affix_roll_count(q, r)
+    applied: list[str] = []
+    for _ in range(count):
+        candidates = [a for a in pool if a.id not in applied]
+        if not candidates:
+            break
+        total = sum(a.weight for a in candidates)
+        pick = r.uniform(0, total)
+        acc = 0.0
+        chosen = candidates[-1]
+        for a in candidates:
+            acc += a.weight
+            if pick <= acc:
+                chosen = a
+                break
+        applied.append(chosen.id)
+        _apply_affix(item, chosen)
+
+    if applied:
+        item.affix_ids = tuple(applied)
+        suffix_names = "/".join(affixes[a].name for a in applied)
+        item.name = f"{item.name} [{suffix_names}]"
+    else:
+        item.affix_ids = ()
+    return item
+
+
+def _apply_affix(item: Item, affix: Affix) -> None:
+    """接尾辞の mods を Item のフィールドへ適用する"""
+    mods = affix.mods
+    # 数値フィールドへの直接適用 (Item に存在するものだけ)
+    field_map = {
+        "dmg_bonus": "dmg_bonus",
+        "hit_bonus": "hit_bonus",
+        "pv": "pv",
+        "dv": "dv",
+    }
+    for key, field in field_map.items():
+        if key in mods:
+            setattr(item, field, getattr(item, field, 0) + int(mods[key]))
+
+    # 属性系は動的属性として保持 (戦闘解決が参照する)
+    dynamic_keys = (
+        "str", "endurance", "dexterity", "perception", "learning",
+        "will", "magic", "charisma", "speed",
+        "hp_regen", "mp_regen", "life_steal", "thorns", "stealth",
+        "fire_resist", "cold_resist", "fire_damage", "ice_damage",
+        "equip_hp_penalty", "max_hp",
+    )
+    if getattr(item, "affix_mods", None) is None:
+        item.affix_mods = {}
+    for key in dynamic_keys:
+        if key in mods:
+            item.affix_mods[key] = item.affix_mods.get(key, 0) + int(mods[key])
+
+
+def can_identify(item: Item) -> bool:
+    """アイテムが鑑定可能か (Step 60.3)"""
+    return not getattr(item, "identified", True)
+
+
+def identify(item: Item, cost: int, gold_holder: Any = None) -> Item:
+    """アイテムを鑑定する (Step 60.2)
+
+    Args:
+        item: 鑑定対象
+        cost: 鑑定費用 (ゴールド)
+        gold_holder: 費用を支払う者 (None なら費用チェック省略)
+
+    Returns:
+        鑑定済みアイテム
+    """
+    if not can_identify(item):
+        return item
+    if gold_holder is not None:
+        if gold_holder.gold < cost:
+            return item  # 費用不足: 鑑定されない
+        gold_holder.gold -= cost
+    item.identified = True
+    return item

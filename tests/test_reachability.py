@@ -80,14 +80,12 @@ def test_meta_progression_bonuses_are_read_or_explicitly_reserved():
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "main_quest_system writes to engine.survival_system (kernel) while the engine "
-        "reads engine.survival (world_state_manager) — two different objects (Step 27)"
-    ),
-)
 def test_main_quest_rewards_reach_the_player(test_engine):
+    """Step 27: 主線報酬が engine.survival (kernel 正本) に届くこと
+
+    main_quest_system の書き込み (kernel 経由) と engine.survival の読み出しが
+    同一オブジェクトであることを固定する (Step 27.2 で解消済み)。
+    """
     sentinel = SurvivalSystem()
     test_engine.kernel._systems["survival_system"] = sentinel
     assert test_engine.survival_system is sentinel

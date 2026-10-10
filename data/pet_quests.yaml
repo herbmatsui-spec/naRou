@@ -1,1 +1,58 @@
-# placeholder
+# ペット関連クエストテンプレート (Phase 3: 13バイトプレースホルダを実データに置換)
+# procedural_quest_generator.generate_pet_quest() と pet_quest_analyzer で使用
+#
+# テンプレートフィールド:
+#   id: テンプレートID
+#   pet_species: 対象ペット種族 ("*" = ワイルドカード)
+#   pet_contract_type: 対象契約タイプ ("*" = ワイルドカード)
+#   objective_type: 目的タイプ (explore/hunt/protect/train)
+#   title_template: クエストタイトルテンプレート
+#   desc_template: 説明テンプレート
+#   min_affinity: 発生に必要な絆度
+#   reward_weight: 報酬重み
+
+pet_quest_templates:
+  - id: "pet_explore_wild"
+    pet_species: "*"
+    pet_contract_type: "*"
+    objective_type: "explore"
+    title_template: "{pet}との探索: 未踏の領域"
+    desc_template: "{pet}と共に未踏の階層を探索し、新たな発見をもたらせ。"
+    min_affinity: 0
+    reward_weight: 1.0
+
+  - id: "pet_hunt_loyal"
+    pet_species: "*"
+    pet_contract_type: "loyalty"
+    objective_type: "hunt"
+    title_template: "{pet}との狩猟訓練"
+    desc_template: "忠誠契約の{pet}と共に狩猟を行い、絆を深めよ。"
+    min_affinity: 20
+    reward_weight: 1.2
+
+  - id: "pet_protect_symbiosis"
+    pet_species: "*"
+    pet_contract_type: "symbiosis"
+    objective_type: "protect"
+    title_template: "共生の証: {pet}の護衛"
+    desc_template: "共生契約の{pet}を危険から守り抜け。"
+    min_affinity: 30
+    reward_weight: 1.4
+
+  - id: "pet_train_wolf"
+    pet_species: "ウルフ"
+    pet_contract_type: "*"
+    objective_type: "train"
+    title_template: "狼の調教: 闘争本能"
+    desc_template: "ウルフ種の闘争本能を磨き、戦闘能力を高めよ。"
+    min_affinity: 10
+    reward_weight: 1.1
+
+  - id: "pet_train_phoenix"
+    pet_species: "フェニックス"
+    pet_contract_type: "*"
+    objective_type: "train"
+    title_template: "不死鳥の羽ばたき"
+    desc_template: "フェニックスの再生力を試し、焔を纏わせよ。"
+    min_affinity: 10
+    reward_weight: 1.1

@@ -49,9 +49,19 @@ class FakeEngine:
     def __init__(self, player, los=True):
         self.player = player
         self._los = los
+        self.entities = [player]
 
     def has_los(self, a, b):
         return self._los
+
+    def is_tile_free(self, x, y):
+        return True
+
+    def get_entity_at(self, x, y):
+        for e in self.entities:
+            if e.x == x and e.y == y and getattr(e, "hp", 0) > 0:
+                return e
+        return None
 
 
 def _player(x=5, y=5, hp=100):
