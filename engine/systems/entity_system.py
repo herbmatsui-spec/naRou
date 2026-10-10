@@ -8,15 +8,16 @@ import logging
 import random
 from typing import TYPE_CHECKING
 
+from naRou.systems import FACTION_GUARD
+
 from constants import (
+    AI_ROLE_KITER,
     COLOR_PET_PINK,
     ENERGY_THRESHOLD,
-    PET_RETREAT_HP_RATIO,
-    PET_PATH_LENGTH_CHECK,
-    AI_ROLE_KITER,
     KITER_PREFERRED_RANGE,
+    PET_PATH_LENGTH_CHECK,
+    PET_RETREAT_HP_RATIO,
 )
-from naRou.systems import FACTION_GUARD
 from core_framework import AStar, Point, bresenham_line
 
 if TYPE_CHECKING:

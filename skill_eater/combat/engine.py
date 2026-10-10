@@ -16,8 +16,8 @@ from skill_eater_audio_system import SkillEaterAudioSystem
 from skill_eater_presentation_system import PresentationEvent, SkillEaterPresentationSystem
 from skill_eater_system import (
     CharacterState,
-    SkillEffect,
     SkillEaterRegistry,
+    SkillEffect,
     SkillTier,
 )
 
