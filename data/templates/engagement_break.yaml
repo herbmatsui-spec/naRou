@@ -1,0 +1,19 @@
+id: engagement_break
+archetype: engagement_break
+contexts: [noble_quarter, royal_court]
+faction_weight:
+  noble: 0.5
+  guard: 0.3
+  merchant: 0.2
+route_steps:
+  - { flag: public_announcement, turn: 1, actor: noble, on_fail: humiliated }
+  - { flag: heroine_protests, turn: 3, actor: heroine, on_fail: silenced }
+  - { flag: duke_revealed, turn: 5, actor: duke, on_fail: escaped }
+exploit_windows:
+  - { id: preemptive_evidence, tier: 1, req_gold: 300, base_success: 0.8 }
+  - { id: heroine_initiative, tier: 2, req_skill: [negotiation, insight], base_success: 0.5 }
+  - { id: duke_exposure, tier: 3, req_skill: [investigation, authority], base_success: 0.3 }
+reward:
+  karma_t1: 150
+  karma_t2: 800
+  stealable_skill: noble_bloodline_protection

@@ -1,0 +1,19 @@
+id: servant_conversion
+archetype: servant_conversion
+contexts: [noble_quarter, dungeon_entrance, royal_court]
+faction_weight:
+  noble: 0.5
+  guard: 0.3
+  merchant: 0.2
+route_steps:
+  - { flag: ritual_preparation, turn: 1, actor: master, on_fail: interrupted }
+  - { flag: contract_signed, turn: 3, actor: target, on_fail: resisted }
+  - { flag: complete_submission, turn: 5, actor: target, on_fail: freed }
+exploit_windows:
+  - { id: disrupt_ritual, tier: 1, req_gold: 400, base_success: 0.8 }
+  - { id: reverse_contract, tier: 2, req_skill: [law_mastery, negotiation], base_success: 0.45 }
+  - { id: master_bind, tier: 3, req_skill: [authority, soul_dominance], base_success: 0.2 }
+reward:
+  karma_t1: 180
+  karma_t2: 900
+  stealable_skill: contract_dominance

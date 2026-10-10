@@ -1,0 +1,19 @@
+id: credit_steal
+archetype: credit_steal
+contexts: [noble_quarter, guild_hall, royal_court]
+faction_weight:
+  noble: 0.4
+  merchant: 0.3
+  guild: 0.3
+route_steps:
+  - { flag: achievement_claimed, turn: 1, actor: thief, on_fail: stolen }
+  - { flag: evidence_hidden, turn: 3, actor: thief, on_fail: discovered }
+  - { flag: victim_silenced, turn: 5, actor: thief, on_fail: exposed }
+exploit_windows:
+  - { id: preemptive_submission, tier: 1, req_gold: 200, base_success: 0.85 }
+  - { id: trap_thief, tier: 2, req_skill: [insight, stealth], base_success: 0.55 }
+  - { id: legal_consumption, tier: 3, req_skill: [law_mastery, authority], base_success: 0.25 }
+reward:
+  karma_t1: 120
+  karma_t2: 700
+  stealable_skill: credit_redistribution

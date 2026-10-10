@@ -171,7 +171,7 @@ def test_all_72_steps_reincarnation_system():
     KARMA_REG.load()
     assert KARMA_REG.get() is not None, "Step 39 Failed: registry load"
     kmgr = KarmaManager(KARMA_REG)
-    nlc, nge = kmgr.update_karma(eng.player, "help_innocent")
+    nlc, nge, _exp = kmgr.update_karma(eng.player, "help_innocent")
     assert nlc == 5 and nge == 10, "Step 41 Failed: update_karma"
     bonuses = kmgr.get_karma_bonuses(eng.player)
     assert isinstance(bonuses, dict), "Step 42 Failed: get_karma_bonuses"
