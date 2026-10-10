@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
   <img src="https://img.shields.io/badge/World-A:%20Skill%20Eater-purple.svg" alt="World A: Skill Eater">
   <img src="https://img.shields.io/badge/Audio-Foley%20SE%20%2B%20VFX-orange.svg" alt="Audio & VFX">
-  <img src="https://img.shields.io/badge/Tests-636%20passed%20%2F%20651-yellow.svg" alt="Tests: 636 passed / 651 (15 known failures)">
+  <img src="https://img.shields.io/badge/Tests-230%20passed%20(core%20suites)-yellow.svg" alt="Tests: 230 passed (core suites)">
 </p>
 
 **Elona風本格ローグライクRPG** (Python + tcod) ＋ **『異世界マルチバース構想：Aの世界（スキル喰い RPG）』**
@@ -84,12 +84,42 @@
 | :--- | :--- | :--- |
 | **`X`** | **《深度解析（Scan）》** | 視界内の敵をスキャンし、弱点・所持スキル・捕食成功率をHUDに表示 |
 | **`V`** | **《喰らい（Devour）》** | 隣接する弱体化モンスターを捕食し、スキルを強奪してHusk化させる |
+| **`F`** | **《射程攻撃》** | 視線が通る最も近い敵を自動標的として射程攻撃 (AP 1消費) |
+| **`1`〜`8`** | **《呪文詠唱》** | data/spells.yaml の8呪文を選択詠唱 (魔矢/火炎球/氷矢/雷撃/軽傷治癒/重傷治癒/テレポート/加速) |
 | **（敵頭上アイコン）** | **《意図予測》** | 敵の次回行動を⚔突撃 / ✷詠唱 / ➛逃走 / ✚回復で頭上表示し、読み合い可能 |
 | **（敵の挙動）** | **《陣形AI》** | 弓術系は間合いを維持して牽制、騎士系は裏を取る、複数敵は挟撃連携し、固まりを避ける |
 | **`Shift + T`** | **《キメラ合成炉》** | 所持スキル2種を融合し、新たな上位・キメラスキルを錬成 |
 | **`I`** | **インベントリ** | アイテム、装備品、ポーション等の管理 |
 | **`C`** | **ステータス** | キャラクター詳細・スキル一覧・毒性蓄積度の確認 |
 | **`Space` / `.`** | **ターン経過（待機）** | 1ターン待機（毒性侵食・ペット派遣カウントダウン等が進む） |
+
+---
+
+## ⚔️ 戦闘システム (Phase 2: AP制戦闘解決)
+
+- **AP (アクションポイント) 制**: 全キャラクターが1手2AP。攻撃/移動/呪文は各1AP、待機は0AP。
+  AP が尽きると行動不能 — 戦術的な手番管理が生まれる。
+- **向きと背後攻撃**: 全 Entity が `facing` (N/S/E/W) を持つ。背後からの攻撃は **×1.5 ダメージ**
+  (会心の一撃とは別系統)。敵は移動・攻撃時に向きを追従させる。
+- **8呪文の完全実装**: 魔矢 (単体必中)、火炎球 (範囲AoE)、氷の矢/雷撃 (直線貫通ビーム)、
+  軽傷/重傷治癒 (回復)、テレポート (安全マスへ移動)、加速 (速度バフ)。
+  詠唱には MP コストと成功率判定があり、失敗すると魔力暴走ダメージを受ける。
+- **敵の個体化**: 12種+ボス2種が `data/monster_abilities.yaml` の15能力を実装。
+  投石/力強打/背面攻撃/炎の息吹/亡者の召喚/魔力吸引/威嚇など、各個体が固有の行動を持つ。
+  敵詠唱ダメージは難易度補正 (`DifficultyManager`) を通る。敵も属性耐性を持つ
+  (ファイアハウンド: 炎耐性80、リッチ: 冷気50/闇60)。
+- **意図テレグラフの真実性**: 敵の頭上表示は AI ビヘイビアツリーを実際に読んで予測する。
+  回復できない個体が「回復」と表示することはない — 12体 × HP帯3通り = 36ケースでテストが強制。
+
+---
+
+## 💎 戦利品と鑑定 (Phase 3)
+
+- **接尾辞 (Affix) システム**: 23種の接尾辞が `data/item_affixes.yaml` に定義済み。
+  すべての戦闘系接尾辞は「利得と代償の両方」を持つ (例: 《秃鷹の》 筋力+3/回避-2)。
+  品質に連動してロールされ (GOD品は必ず2個、BAD品は禁止)、アイテム名に `[接尾辞]` として表示される。
+- **鑑定システム**: 未鑑定アイテムは接尾辞情報を隠す。鑑定にはゴールドがかかる。
+- **呪い**: 4種の呪い接尾辞 (薄れ/硝子/衰弱/怠惰) が名前付きの数値ペナルティを持つ。
 
 ---
 
@@ -138,25 +168,35 @@ GPU/SDL の無い環境（CI・コンテナ・SSH）では `NAROU_FORCE_TEXT=1` 
 
 ## 🧪 テストと品質検証
 
-本プロジェクトは `pytest` による自動テストを備えています。`pytest tests/` の実測結果は
-**636 passed / 15 failed**（2026-10-04 時点）です。
+本プロジェクトは `pytest` による自動テストを備えています。**コアスイート 230 passed / xfail 0**
+(2026-10-09 時点、`GAME_DESIGN_V2` 計画の全テストファイル + Phase 1/2/3 検証済みスイート)。
+全 1125 テスト (124ファイル) のうち、レガシーの重いシミュレーション系テストは実行に
+9分以上かかるため、コアスイートの実測値を基準としています。
 
 ```bash
-# 全テストの実行
-pytest tests/
+# コアスイート (GAME_DESIGN_V2 の全検証スイート)
+pytest tests/test_player_death.py tests/test_win_condition.py tests/test_ap_system.py \
+       tests/test_ranged_attack.py tests/test_backstab.py tests/test_spells.py \
+       tests/test_enemy_ap.py tests/test_intent_truthfulness.py tests/test_affix_system.py \
+       tests/test_identification.py tests/test_curses.py tests/test_loot_decision.py \
+       tests/test_i18n.py tests/test_data_integrity.py tests/test_reachability.py
 
 # 出荷経路の回帰テスト（起動・パッケージ・依存宣言）
 pytest tests/test_entrypoint.py tests/test_narou_package_init.py
 ```
 
 ```text
-============== 15 failed, 636 passed, 30 warnings in 141.55s (0:02:21) ==============
+============== 230 passed, 1 skipped in 57.66s ==============
 ```
 
-残る 15 件は**既知の未実装由来**で、`jobs.yaml` / `skill_trees.yaml` / `skill_fusion.yaml` /
-`data/text/en.yaml` が未実装（0 バイト）であることが直接の原因です
-（`test_repositories.py::test_job_count` は `assert 0 > 0` で失敗）。
-ゲーム内容の実装とテスト体制の整備は roadmap の別項目で扱います。
+`GAME_DESIGN_V2` 計画の詳細は `plans/GAME_DESIGN_V2_RESULT.md` (9方向の「測った前 → 測った後」) と
+`plans/GAME_DESIGN_V2_PHASE2_REPORT.md` (Phase 2 完了報告) を参照してください。
+
+既知の残存:
+- `test_enemy_intent_formation.py` の2件 — 旧閾値表示仕様を固定するテストで、
+  意図テレグラフの真実性設計 (AIツリーに実在しない行動は表示しない) と矛盾します。
+  正しい仕様は `test_intent_truthfulness.py` (46テスト) が強制しています。
+- インベントリ容量制限 — 未実装 (Step 63.1 skip)。
 
 ---
 
