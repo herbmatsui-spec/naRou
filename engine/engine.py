@@ -128,6 +128,16 @@ class Engine:
 
     skill_tree_manager: SkillTreeManager
 
+    # --- テキスト(ASCII)モード描画用タイル表示定義 (Step 12-16) ---
+    _TILE_DISPLAY = {
+        "TILE_WALL": ("#", (140, 140, 140)),
+        "TILE_FLOOR": (".", (90, 90, 90)),
+        "TILE_STAIRS_DOWN": (">", (255, 215, 0)),
+        "TILE_STAIRS_UP": ("<", (255, 215, 0)),
+        "TILE_WATER": ("~", (40, 120, 220)),
+        "TILE_TRAP": ("^", (220, 80, 80)),
+    }
+
     def __init__(self, renderer: Renderer | None = None, kernel: "Kernel | None" = None, headless: bool = False):
         self.headless = headless
         # --- Kernel 初期化 & CorePackage ロード ---

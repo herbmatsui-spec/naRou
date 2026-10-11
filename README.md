@@ -15,11 +15,57 @@
 
 ---
 
-## 🎬 Aの世界：シネマティック・ストーリー & ゲームフロー
+## 🎮 ゲーム画面・スクリーンショット
 
+### メイン ゲームプレイ（タイルベース / テキストモード）
 <p align="center">
-  <img src="assets/demo_skill_eater_story.gif" alt="Aの世界 スキル喰い 全5フェーズ シネマティックGIF" width="760">
+  <img src="assets/demo_gameplay.gif" alt="メイン ゲームプレイ" width="760">
 </p>
+*プロシージャル生成ダンジョンでの探索、戦闘、UI表示の実機動作*
+
+### スキル喰い（Skill Eater）システム全5フェーズ
+<p align="center">
+  <img src="assets/demo_skill_eater_story.gif" alt="スキル喰い ストーリー 全5フェーズ" width="760">
+</p>
+*Phase 0〜5: 転落覚醒 → 喰らい/抜け殻 → キメラ合成 → 神格化 → 次元跳躍*
+
+### 戦闘・捕食（Devour）システム
+<p align="center">
+  <img src="assets/demo_combat_devour.gif" alt="戦闘とスキル捕食システム" width="760">
+</p>
+*敵を弱らせて「喰らい(V)」でスキルを強奪、敵を抜け殻（Husk）化させる様子*
+
+### 抜け殻（Husk）と召使い化
+<p align="center">
+  <img src="assets/demo_husk_servant.gif" alt="抜け殻化と召使いシステム" width="760">
+</p>
+*スキルを奪われた敵は Husk へ退化、一部はペット/召使いとして配下にできる*
+
+### キメラ合成炉と経済システム
+<p align="center">
+  <img src="assets/demo_synthesis_economy.gif" alt="キメラ合成炉とスラム経済" width="760">
+</p>
+*スキル同士を合成して上位キメラスキルを錬成、スラム拠点拡張と闇市場アンロック*
+
+### スキルツリーと転職
+<p align="center">
+  <img src="assets/demo_skill_tree.gif" alt="スキルツリーとジョブシステム" width="760">
+</p>
+*70種以上のスキルと15種のジョブクラス、スキル覚醒・継承・共鳴システム*
+
+### ペット育成とWeb版デモ
+<p align="center">
+  <img src="assets/demo_pet_web.gif" alt="ペット育成とWebブラウザ版" width="760">
+</p>
+*契約・進化・融合による相棒育成、WebGL/Canvas対応のブラウザプレイ*
+
+### メタ転生・輪廻システム
+<p align="center">
+  <img src="assets/demo_meta_reincarnation.gif" alt="メタ転生と次元跳躍" width="760">
+</p>
+*概念結晶化、時空金庫、永続の証を携えてマルチバース（Bの世界等）へ跳躍*
+
+---
 
 ### 🕹️ インタラクティブ Web ショーケース
 ブラウザ上で「スキル喰い」システムの5大フェーズ（解析、捕食、キメラ合成、星座共鳴、次元跳躍）を今すぐインタラクティブに体験できます！

@@ -1,0 +1,638 @@
+<h1>naRou: Masterpiece Edition - 完全マニュアル</h1>
+<hr />
+<h2>目次</h2>
+<ol>
+<li><a href="#はじめに">はじめに</a></li>
+<li><a href="#インストールと起動">インストールと起動</a></li>
+<li><a href="#基本操作">基本操作</a></li>
+<li><a href="#ゲームシステム詳細">ゲームシステム詳細</a></li>
+<li><a href="#aの世界スキル喰い-完全ガイド">Aの世界：スキル喰い 完全ガイド</a></li>
+<li><a href="#クラシック機能narou-core">クラシック機能（naRou Core）</a></li>
+<li><a href="#設定とカスタマイズ">設定とカスタマイズ</a></li>
+<li><a href="#トラブルシューティング">トラブルシューティング</a></li>
+<li><a href="#開発者向け情報">開発者向け情報</a></li>
+</ol>
+<hr />
+<h2>はじめに</h2>
+<h3>naRou: Masterpiece Edition とは</h3>
+<p><strong>naRou: Masterpiece Edition</strong> は、Python + tcod で実装された本格ローグライクRPGです。Elona（エロナ）にインスパイアされたシステムを現代的なアーキテクチャで再構築し、独自の「異世界マルチバース構想」を実装しています。</p>
+<h3>2つのゲームモード</h3>
+<p>| モード | 説明 |
+|--------|------|
+| <strong>グラフィカルモード</strong> | SDL/tcod によるタイルベース描画（デフォルト） |
+| <strong>テキストモード</strong> | GPU/SDL不要、ASCII/ANSIカラー描画（CI・SSH・コンテナ対応） |</p>
+<h3>ワールド構成</h3>
+<ul>
+<li><strong>Aの世界：スキル喰い（Skill Eater RPG）</strong> - 本編メインストーリー</li>
+<li><strong>Bの世界：錬金術の深淵</strong> - Phase 5 以降で解放予定</li>
+<li><strong>naRou Core</strong> - クラシックなローグライク機能（ダンジョン探索、スキルツリー、ペット育成）</li>
+</ul>
+<hr />
+<h2>インストールと起動</h2>
+<h3>必要環境</h3>
+<ul>
+<li><strong>Python 3.10 以上</strong> (3.11〜3.14 推奨)</li>
+<li>依存パッケージ: <code>tcod</code>, <code>pyyaml</code>, <code>cryptography</code>, <code>numpy</code>, <code>pydantic</code>, <code>python-dotenv</code>, <code>pillow</code>, <code>scipy</code></li>
+<li>オプション: <code>pygame</code>, <code>simpleaudio</code> (音声再生用、未インストールでも起動可能)</li>
+</ul>
+<h3>インストール手順</h3>
+<p>```bash</p>
+<h1>リポジトリクローン</h1>
+<p>git clone <repository-url>
+cd narou</p>
+<h1>依存ライブラリインストール</h1>
+<p>pip install -r requirements.txt</p>
+<h1>オプション: 音声ライブラリ</h1>
+<p>pip install pygame simpleaudio
+```</p>
+<h3>起動方法</h3>
+<h4>通常起動（グラフィカルモード）</h4>
+<p>```bash</p>
+<h1>方法1: 統合システムメニューから起動</h1>
+<p>python main.py</p>
+<h1>方法2: 直接ゲームモジュール起動</h1>
+<p>python -m game</p>
+<h1>方法3: インストール後、コンソールスクリプトで起動</h1>
+<p>pip install -e .
+narou
+```</p>
+<h4>テキストモード起動</h4>
+<p>```bash</p>
+<h1>環境変数指定</h1>
+<p>NAROU_FORCE_TEXT=1 python main.py</p>
+<h1>またはメニューから「3. テキストモードで起動」を選択</h1>
+<p>python main.py</p>
+<h1>→ 3 を入力</h1>
+<p>```</p>
+<h4>ヘッドレス自動判定</h4>
+<p>```bash</p>
+<h1>run.py は環境を自動判定して適切なモードで起動</h1>
+<p>python run.py
+```</p>
+<h4>Webブラウザ版デモ</h4>
+<p>```bash</p>
+<h1>ブラウザで直接開く（サーバー不要）</h1>
+<h1>demos/demo_skill_eater_showcase.html</h1>
+<h1>またはWebバックエンド付きで起動</h1>
+<p>python main.py --open</p>
+<h1>ブラウザで http://localhost:8080 を開く</h1>
+<p>```</p>
+<hr />
+<h2>基本操作</h2>
+<h3>キーボード操作一覧</h3>
+<h4>移動・基本操作</h4>
+<p>| キー | アクション | 説明 |
+|------|-----------|------|
+| <code>w</code> / <code>↑</code> / <code>k</code> | 北へ移動 | グリッド上で1マス北へ |
+| <code>s</code> / <code>↓</code> / <code>j</code> | 南へ移動 | グリッド上で1マス南へ |
+| <code>a</code> / <code>←</code> / <code>h</code> | 西へ移動 | グリッド上で1マス西へ |
+| <code>d</code> / <code>→</code> / <code>l</code> | 東へ移動 | グリッド上で1マス東へ |
+| <code>.</code> / <code>Space</code> | 待機（ターン経過） | 1ターン消費、毒性侵食・ペットカウント進行 |
+| <code>&gt;</code> | 階段降下 | 下層へ移動（ダンジョン深度+1） |
+| <code>&lt;</code> | 階段上昇 | 上層へ移動（ダンジョン深度-1） |</p>
+<h4>戦闘・スキル</h4>
+<p>| キー | アクション | 説明 |
+|------|-----------|------|
+| <code>X</code> | <strong>《深度解析（Scan）》</strong> | 視界内の敵をスキャン、弱点・所持スキル・捕食成功率をHUD表示 |
+| <code>V</code> | <strong>《喰らい（Devour）》</strong> | 隣接する弱体化敵を捕食、スキル強奪・Husk化 |
+| <code>F</code> | <strong>《射程攻撃》</strong> | 視線が通る最も近い敵を自動標的とし射程攻撃 (AP 1消費) |
+| <code>1</code>〜<code>8</code> | <strong>《呪文詠唱》</strong> | 8種類の呪文から選択詠唱 (魔矢/火炎球/氷矢/雷撃/軽傷治癒/重傷治癒/テレポート/加速) |</p>
+<h4>メニュー・システム</h4>
+<p>| キー | アクション | 説明 |
+|------|-----------|------|
+| <code>I</code> | インベントリ | アイテム、装備品、ポーション等の管理 |
+| <code>C</code> | ステータス画面 | キャラクター詳細・スキル一覧・毒性蓄積度確認 |
+| <code>Shift + T</code> | <strong>《キメラ合成炉》</strong> | 所持スキル2種を融合、上位キメラスキル錬成 |
+| <code>?</code> / <code>h</code> | ヘルプ表示 | ゲーム内ヘルプ・キーバインド一覧表示 |
+| <code>Esc</code> | メニュー/キャンセル | 現在のメニューを閉じる、またはメインメニュー表示 |</p>
+<h4>テキストモード専用</h4>
+<p>| キー | アクション |
+|------|-----------|
+| <code>w/a/s/d</code> | 移動 (WASD) |
+| <code>.</code> | 待機 |
+| <code>?</code> | ガイド表示トグル |
+| <code>q</code> | 終了 |</p>
+<h3>マウス操作（グラフィカルモードのみ）</h3>
+<ul>
+<li><strong>左クリック</strong>: 対象選択、メニュー操作</li>
+<li><strong>右クリック</strong>: 詳細情報表示、キャンセル</li>
+<li><strong>ホイール</strong>: ログスクロール、リストスクロール</li>
+</ul>
+<h3>画面構成（グラフィカルモード）</h3>
+<p><code>┌─────────────────────────────────────────────────────────────┐
+│  ヘッダー: HP/MP/レベル/深度/ゴールド/毒性                   │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│              メインマップビュー (タイル描画)                  │
+│              @ = プレイヤー  m = 敵/モンスター                │
+│              # = 壁  . = 床  &gt; = 階段降下  &lt; = 階段上昇       │
+│              アイテム/トラップ/水/扉など                      │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│  メッセージログ (最新3件、色分け: システム/戦闘/成功/警告)   │
+├─────────────────────────────────────────────────────────────┤
+│  操作ガイド / ホットバー / インテント表示 (敵頭上アイコン)   │
+└─────────────────────────────────────────────────────────────┘</code></p>
+<hr />
+<h2>ゲームシステム詳細</h2>
+<h3>1. AP (アクションポイント) 制戦闘</h3>
+<p>全キャラクター（プレイヤー・敵・ペット）は <strong>1ターン 2AP</strong> を持ちます。</p>
+<p>| アクション | APコスト | 備考 |
+|-----------|---------|------|
+| 移動 (1マス) | 1 | 対角移動も1AP |
+| 近接攻撃 | 1 | 向きが自動更新される |
+| 射程攻撃 (F) | 1 | 視線必須、最寄り敵を自動標的 |
+| 呪文詠唱 (1-8) | 1 | MP消費、成功率判定あり |
+| 待機 (./Space) | 0 | APを消費せずターン経過 |
+| 喰らい (V) | 1 | 隣接弱体化敵が対象 |
+| 解析 (X) | 0 | 無料アクション |</p>
+<p><strong>戦術のポイント:</strong>
+- AP管理が生死を分ける。無駄な移動を避け、背後を取る
+- 敵も同じAP制。敵のAP枯渇を狙って安全に接近可能
+- 背後攻撃は <strong>ダメージ ×1.5</strong>（会心とは別乗算）</p>
+<h3>2. 向きシステム (Facing)</h3>
+<p>全エンティティは <code>facing</code> (N/S/E/W) を持ちます。</p>
+<ul>
+<li>移動時: 移動方向を向く</li>
+<li>攻撃時: 攻撃対象の方を向く</li>
+<li>待機時: 向き維持</li>
+<li><strong>背後判定</strong>: 攻撃者が対象の背後（向きの反対側）にいる場合 ×1.5倍</li>
+</ul>
+<h3>3. 呪文システム (8種完全実装)</h3>
+<p>| # | 呪文名 | 効果 | MP | 射程 | 特記事項 |
+|---|-------|------|----|------|---------|
+| 1 | <strong>魔矢</strong> | 単体必中ダメージ | 5 | 8 | 外れない、貫通なし |
+| 2 | <strong>火炎球</strong> | 範囲AoEダメージ | 12 | 6 | 半径2、味方巻き込み注意 |
+| 3 | <strong>氷の矢</strong> | 直線貫通ビーム | 8 | 10 | 凍結付与確率、壁貫通不可 |
+| 4 | <strong>雷撃</strong> | 直線貫通ビーム | 10 | 8 | 麻痺付与確率、水上で威力上昇 |
+| 5 | <strong>軽傷治癒</strong> | HP回復 (小) | 6 | 自身 | 戦闘中使用可 |
+| 6 | <strong>重傷治癒</strong> | HP回復 (大) | 15 | 自身 | 状態異常も一部回復 |
+| 7 | <strong>テレポート</strong> | 安全マスへ移動 | 20 | 全域 | 敵から離れた場所優先 |
+| 8 | <strong>加速</strong> | 速度バフ (3ターン) | 10 | 自身 | 次3ターン AP+1 |</p>
+<p><strong>詠唱失敗時:</strong> 魔力暴走ダメージを受ける（MPの10〜30%）</p>
+<h3>4. 敵AI・意図テレグラフ</h3>
+<ul>
+<li><strong>12種の通常敵 + 2種のボス</strong> が個別実装</li>
+<li><code>data/monster_abilities.yaml</code> の15能力を組み合わせ</li>
+<li><strong>意図表示</strong>: 敵頭上に ⚔突撃 / ✷詠唱 / ➛逃走 / ✚回復 アイコン表示</li>
+<li><strong>真実性保証</strong>: AIビヘイビアツリーに実在しない行動は表示されない（テスト強制）</li>
+</ul>
+<h3>5. アイテム・接尾辞システム</h3>
+<h4>接尾辞 (Affix) - 23種定義済み</h4>
+<ul>
+<li>全戦闘系接尾辞は <strong>利得と代償の両方</strong> を持つ</li>
+<li>例: 《秃鷹の》 筋力+3 / 回避-2</li>
+<li>品質連動ロール: GOD品=必ず2個、BAD品=接尾辞なし</li>
+<li>アイテム名に <code>[接尾辞]</code> 形式で表示</li>
+</ul>
+<h4>呪い接尾辞 (4種)</h4>
+<p>| 呪い名 | ペナルティ |
+|-------|-----------|
+| 薄れ | 全ステータス -10% |
+| 硝子 | 被ダメージ +50% |
+| 衰弱 | 最大HP -30% |
+| 怠惰 | AP回復 -1/ターン |</p>
+<h4>鑑定システム</h4>
+<ul>
+<li>未鑑定アイテムは接尾辞情報が <code>???</code> 表示</li>
+<li>鑑定にはゴールド消費（品質×レベル×基本コスト）</li>
+</ul>
+<hr />
+<h2>Aの世界：スキル喰い 完全ガイド</h2>
+<h3>Phase 0: 転落と覚醒</h3>
+<p><strong>開始条件</strong>: ゲーム開始時自動</p>
+<p><strong>ストーリー</strong>: バベルタワー監査官→不正暴露→権限剥奪→深度700m廃棄スラム投棄</p>
+<p><strong>初期スキル</strong>:
+- 《基礎解析》 (Scan): 敵情報表示
+- 《喰らい (Devour)》: スキル捕食の核心スキル</p>
+<p><strong>攻略のコツ</strong>:
+- まずは生存最優先。戦闘は避け、解析で情報収集
+- 《基礎解析》は頻繁に使って敵の弱点把握
+- セーフハウス（安全エリア）を見つけたらそこで休息</p>
+<h3>Phase 1: 禁忌の《喰らい》と抜け殻</h3>
+<h4>Devour (喰らい) システム</h4>
+<p><strong>発動条件</strong>: 隣接敵が <strong>HP 50%以下</strong> または <strong>状態異常中</strong></p>
+<p><strong>手順</strong>:
+1. <code>X</code> で解析し、対象の弱点・スキル・成功率確認
+2. 攻撃/呪文で敵を弱体化（HP50%以下に）
+3. 隣接して <code>V</code> で《喰らい》発動
+4. 成功時: 敵スキル取得、敵は <strong>Husk (抜け殻)</strong> 化</p>
+<p><strong>成功率計算</strong>:
+<code>基本成功率 = 50% + (解析Lv × 5%) + (対象HP割合 × -30%) + (状態異常ボーナス)
+麻痺/睡眠: +20%  毒/出血: +10%</code></p>
+<p><strong>Husk (抜け殻) の特徴</strong>:
+- 意志なし、行動不能、経験値なし
+- 一部は《召使い化》でペット/配下に可能 (Phase 2以降)</p>
+<h4>Toxicity (毒性) 管理</h4>
+<ul>
+<li>捕食ごとに毒性蓄積 (スキルレアリティ×基本値)</li>
+<li><strong>80%超過</strong>: 毎ターン HP 減少 + スキル使用失敗率上昇</li>
+<li><strong>100%到達</strong>: 《暴走》発動、大ダメージ + ランダムスキル喪失</li>
+<li><strong>デトックス</strong>: セーフハウスで休息 (1ターン -5%)、専用アイテム使用</li>
+</ul>
+<h3>Phase 2: キメラ合成炉とスラム拠点</h3>
+<h4>キメラ合成炉 (<code>Shift + T</code>)</h4>
+<p><strong>合成ルール</strong>:
+- スキル2種を選択 → 合成実行
+- 同系統: 強化版生成 (Lv+1、威力上昇)
+- 異系統: <strong>キメラスキル</strong> 生成 (複合効果、新規スキルID)</p>
+<p><strong>合成例</strong>:
+<code>《初級火炎》 (Fire Lv1) + 《思考加速》 (Mind Lv1)
+    ↓
+《変異融合：業火の超思考》 (Fire+Mind Lv2)
+    効果: 火炎ダメージ + 詠唱速度上昇 + MP効率化</code></p>
+<p><strong>合成コスト</strong>: ゴールド + 素材スキル消費 (元スキルは失われる)</p>
+<p><strong>失敗時</strong>: 毒性急上昇 + 素材スキルのみ消失</p>
+<h4>スラム解放戦線拠点</h4>
+<p><strong>施設とアンロック条件</strong>:</p>
+<p>| 施設 | 必要投資 | 効果 |
+|------|---------|------|
+| セーフハウス | 初期解放 | 休息・デトックス・セーブ |
+| 地下闇市場 | 廃品50 + スキル3 | 希少アイテム購入、スキル売却 |
+| 医療ステーション | 廃品100 + スキル5 | 状態異常全回復、毒性-20% |
+| ペット訓練所 | 廃品150 + スキル7 | ペット進化石購入、融合解放 |
+| 合成炉強化 | 廃品200 + スキル10 | 合成成功率+15%、キメラ枠拡張 |</p>
+<p><strong>投資素材</strong>:
+- <strong>廃品</strong>: ダンジョン探索・敵ドロップ・Husk分解で入手
+- <strong>余剰スキル</strong>: 使わないスキルを「投資」コマンドで変換</p>
+<h4>ペット自動派遣 &amp; 環境パズル</h4>
+<ul>
+<li><strong>ハスクハウンド</strong> を廃品処分場へ派遣 (リアルタイム数時間で完了)</li>
+<li>戻り時に廃品・レア素材・スキル断片を持参</li>
+<li>属性スキルで環境ギミック解除: 氷壁(火炎)、電子隔壁(雷)、毒沼(浄化)等</li>
+</ul>
+<h3>Phase 3: 神格化アセンションと因果律ボス</h3>
+<h4>神格化星座盤 (Ascension Board)</h4>
+<ul>
+<li><strong>グリッド配置</strong>: 5×5 または 7×7 マスにマスタースキル装着</li>
+<li><strong>属性リンク</strong>: 隣接する同属性スキルでシナジーパッシブ発動</li>
+<li><strong>属性</strong>: Void / Flame / Light / Ice / Lightning / Shadow / Holy / Chaos</li>
+</ul>
+<p><strong>シナジー例</strong>:
+<code>Flame × Flame 隣接 → 《業火の加護》: 火炎耐性+50、火炎威力+30%
+Void × Light 隣接 → 《虚光の均衡》: MP自然回復+5/ターン、全属性耐性+10</code></p>
+<h4>地下闘技場 &amp; 指名手配ハイスト</h4>
+<ul>
+<li><strong>闘技場</strong>: 段階的ボスラッシュ、勝利ごとにユニーク報酬</li>
+<li><strong>指名手配</strong>: ミダス商会幹部10名、各々固有の弱点・行動パターン</li>
+<li>弱点突破で《支配者の断片》入手、星座盤解放スロット拡張</li>
+</ul>
+<h4>因果律執行神『クロノス・ミダス』 戦</h4>
+<p><strong>フェーズ構成</strong>:
+1. <strong>物理フェーズ</strong>: 高火力近接、背後取り必須
+2. <strong>因果律フェーズ</strong>: 行動予測無効化、確率操作攻撃
+3. <strong>概念フェーズ</strong>: 《概念喰らい》必須、通常攻撃無効</p>
+<p><strong>攻略ポイント</strong>:
+- Phase 1: 氷/雷で足止め、背後から連撃
+- Phase 2: 意図表示が嘘になる → 解析(X)で真実確認
+- Phase 3: 《概念喰らい》発動まで生存、毒性管理徹底</p>
+<h3>Phase 4-5: 概念結晶化とマルチバース跳躍</h3>
+<h4>概念結晶化</h4>
+<p><strong>条件</strong>: 同系統スキル <strong>3種以上</strong> 所持</p>
+<p><strong>手順</strong>:
+1. 星座盤または専用メニューから「結晶化」選択
+2. 対象スキル3つを選択 → 1つの「概念結晶」に圧縮
+3. 元スキルは消失、結晶はスロット1枠で3スキル分の効果</p>
+<p><strong>結晶の種類</strong>:
+| 系統 | 概念結晶名 | 効果 |
+|------|-----------|------|
+| 火炎 | 《焔の概念》 | 全火炎スキル効果内包、火炎無効貫通 |
+| 氷結 | 《氷の概念》 | 全氷結スキル効果、凍結無効化 |
+| 精神 | 《心の概念》 | 全精神スキル効果、MPコスト-50% |
+| 虚無 | 《虚の概念》 | 全虚無スキル効果、概念攻撃耐性 |</p>
+<h4>時空金庫 (Temporal Vault)</h4>
+<ul>
+<li><strong>スロット</strong>: 最大 3〜5 枠 (拠点投資で拡張)</li>
+<li><strong>保存対象</strong>: 概念結晶、ユニーク装備、永続パッシブ</li>
+<li><strong>持ち越し</strong>: 次回プレイ/次ワールド (Bの世界) へ引き継ぎ</li>
+</ul>
+<h4>次元ゲート開放 &amp; エピローグ</h4>
+<p><strong>解放条件</strong>:
+1. クロノス・ミダス撃破
+2. スラム解放戦線拠点フルアンロック
+3. 概念結晶 3つ以上作成
+4. 時空金庫に引き継ぎアイテム確定</p>
+<p><strong>エピローグ</strong>: スラム住民の独立を見届け、<code>concept_eater_mark</code> を刻印され、次元ゲートへ。</p>
+<hr />
+<h2>クラシック機能（naRou Core）</h2>
+<h3>プロシージャル・ダンジョン</h3>
+<ul>
+<li><strong>アルゴリズム</strong>: BSP分割 + 部屋配置 + 通路接続 + テーマ適用</li>
+<li><strong>テーマ</strong>: 通常/スラム/工業/地下水路/遺跡/ボスフロア 等</li>
+<li><strong>深度</strong>: 無制限 (実質 50〜100 階層でボス到達)</li>
+<li><strong>特殊フロア</strong>: 宝物庫、モンスターハウス、秘密の部屋、ショップ</li>
+</ul>
+<h3>スキルツリー＆転職</h3>
+<h4>スキルカテゴリ (70種以上)</h4>
+<p>| カテゴリ | 代表スキル |
+|---------|-----------|
+| 剣技 | 斬撃、連撃、居合、剣風、剣聖 |
+| 魔術 | 魔矢、火炎球、氷結、雷撃、メテオ |
+| 精神 | テレパシー、念動、予知、精神支配 |
+| 影術 | 隠密、毒針、暗殺、影分身、闇歩き |
+| 召喚 | 使い魔、ゴーレム、精霊召喚、契約召喚 |
+| 生産 | 鍛冶、調合、エンチャント、分解、鑑定 |
+| 汎用 | 解析、鑑定、交渉、採掘、釣り、料理 |</p>
+<h4>転職システム (15ジョブ)</h4>
+<p>| ジョブ | 解放条件 | 特徴 |
+|--------|---------|------|
+| 剣士 | 初期 | 物理特化、会心率上昇 |
+| 魔導師 | 魔術Lv3 | MP最大値+50%、詠唱成功率上昇 |
+| 影狩人 | 影術Lv3 | 隠密+回避、背後攻撃威力上昇 |
+| 召喚士 | 召喚Lv3 | ペット枠+2、ペット強化 |
+| 錬金術師 | 生産Lv3 | アイテム効果2倍、合成成功率上昇 |
+| 賢者 | 魔術+精神Lv5 | 全属性耐性、スキルコスト軽減 |
+| 等... | | |</p>
+<p><strong>スキル継承</strong>: 転職時、前職スキルの一部を継承可能 (レベルダウンと引き換え)</p>
+<h3>ペット育成システム</h3>
+<h4>契約</h4>
+<ul>
+<li>敵を弱体化 → <code>C</code> キーで会話/交渉 → 契約成立</li>
+<li>契約条件: レベル差、性格相性、贈り物アイテム</li>
+</ul>
+<h4>進化</h4>
+<ul>
+<li>レベル上限到達 + 進化石/特定アイテム使用</li>
+<li>分岐進化: 種族ごとに 2〜3 ルート</li>
+<li>例: スライム → (火炎石) → フレイムスライム / (氷結石) → アイススライム</li>
+</ul>
+<h4>融合</h4>
+<ul>
+<li>ペット2体 + 融合触媒 → 新種族生成</li>
+<li>親のスキル/ステータスを確率継承</li>
+<li>稀に <strong>突然変異</strong> でレア種族誕生</li>
+</ul>
+<h4>ペットAI指示</h4>
+<p>| 指示 | 動作 |
+|------|------|
+| 付き従う | プレイヤー後方維持、自動戦闘 |
+| 待機 | 現在地で待機、敵接近で自動戦闘 |
+| 探索 | 周囲自動探索、アイテム回収 |
+| 撤退 | HP低下時自動離脱、安全地帯へ |</p>
+<hr />
+<h2>設定とカスタマイズ</h2>
+<h3>設定ファイル: <code>config.yaml</code></h3>
+<p>```yaml</p>
+<h1>代表的な設定項目</h1>
+<p>game:
+  difficulty: normal        # easy / normal / hard
+  permadeath: true          # 永久死設定
+  auto_save: true           # 階段移動時自動セーブ</p>
+<p>accessibility:
+  color_vision: none        # none / deutan / protan / tritan
+  high_contrast: false      # 高コントラストモード
+  reduce_motion: false      # アニメーション軽減</p>
+<p>audio:
+  master_volume: 0.8
+  sfx_volume: 1.0
+  bgm_volume: 0.6
+  enabled: true</p>
+<p>graphics:
+  tile_size: 32             # 16 / 32 / 64
+  vsync: true
+  fullscreen: false
+  fps_limit: 60</p>
+<p>controls:
+  key_bindings: default     # カスタムキーバインド対応予定
+```</p>
+<h3>アクセシビリティ設定</h3>
+<p>起動時メニュー「色覚対応と難易度」から選択可能:
+- <strong>色覚対応</strong>: none / deutan (緑弱) / protan (赤弱) / tritan (青弱)
+- <strong>難易度</strong>: easy / normal / hard
+- 設定は <code>config.yaml</code> に永続化</p>
+<h3>カラーテーマ</h3>
+<p><code>design_tokens.json</code> と派生ファイルで管理:
+- <code>design_tokens.json</code> (標準)
+- <code>design_tokens.deutan.json</code>
+- <code>design_tokens.protan.json</code>
+- <code>design_tokens.tritan.json</code>
+- <code>design_tokens.high_contrast.json</code></p>
+<hr />
+<h2>トラブルシューティング</h2>
+<h3>よくある問題と解決</h3>
+<p>| 症状 | 原因 | 解決方法 |
+|------|------|----------|
+| <code>ModuleNotFoundError: tcod</code> | 依存未インストール | <code>pip install -r requirements.txt</code> |
+| <code>ModuleNotFoundError: pygame</code> | 音声ライブラリ不足 | <code>pip install pygame</code> または音声なしで起動 |
+| 画面が真っ黒/描画されない | GPU/ドライバ問題 | <code>NAROU_FORCE_TEXT=1</code> でテキストモード起動 |
+| キー入力が効かない | フォーカス/端末設定 | ターミナルをアクティブに、raw mode確認 |
+| セーブデータ破損 | 強制終了/バージョン不整合 | <code>savegame.bin.bak*</code> から復元、またはニューゲーム |
+| Web版が動かない | ブラウザ互換性 | Chrome/Edge/Firefox 最新版で、ローカルファイル許可 |</p>
+<h3>エラーログ確認</h3>
+<p>```bash</p>
+<h1>実行時ログ</h1>
+<p>tail -f logs/latest.log</p>
+<h1>クラッシュレポート</h1>
+<p>cat logs/crash_*.log
+```</p>
+<h3>パフォーマンス改善</h3>
+<ul>
+<li><strong>テキストモード</strong>: <code>NAROU_FORCE_TEXT=1</code> で大幅軽量化</li>
+<li><strong>描画設定</strong>: <code>config.yaml</code> で <code>tile_size: 16</code>, <code>fps_limit: 30</code></li>
+<li><strong>パーティクル/エフェクト</strong>: <code>graphics.effects_quality: low</code></li>
+</ul>
+<hr />
+<h2>開発者向け情報</h2>
+<h3>プロジェクト構造</h3>
+<p><code>narou/
+├── main.py                 # エントリーポイント (統合メニュー)
+├── game.py                 # ゲーム本体エントリー (console script)
+├── run.py                  # ヘッドレス自動判定起動
+├── main_text.py            # テキストモード専用エントリー
+├── engine/
+│   ├── __init__.py
+│   ├── engine.py           # メインエンジンクラス (1591行)
+│   ├── game_state.py       # ゲーム状態機械
+│   └── systems/            # 分離済みシステムハンドラ
+│       ├── combat_system.py
+│       ├── entity_system.py
+│       ├── game_loop.py
+│       ├── pet_system.py
+│       ├── render_system.py
+│       ├── skill_eater_system.py
+│       ├── ui_system.py
+│       └── world_system.py
+├── naRou/                  # パッケージ本体
+│   ├── engine/             # エンジン内部モジュール
+│   └── *.py                # 各種システム実装
+├── data/                   # ゲームデータ (YAML)
+│   ├── spells.yaml
+│   ├── monster_abilities.yaml
+│   ├── item_affixes.yaml
+│   ├── skill_fusion.yaml
+│   └── ...
+├── assets/                 # 画像/音声/フォント
+│   ├── tiles/
+│   ├── audio/
+│   ├── emote/
+│   └── *.gif               # デモ動画
+├── demos/                  # Webデモ
+│   ├── demo_skill_eater_showcase.html
+│   └── lib/                # PixiJSベース描画ライブラリ
+├── tests/                  # pytestテスト (124ファイル, 1125テスト)
+├── plans/                  # 設計ドキュメント
+├── docs/                   # 技術ドキュメント
+└── tools/                  # 開発ツール</code></p>
+<h3>テスト実行</h3>
+<p>```bash</p>
+<h1>コアスイート (高速、CI用)</h1>
+<p>pytest tests/test_player_death.py tests/test_win_condition.py \
+       tests/test_ap_system.py tests/test_ranged_attack.py \
+       tests/test_backstab.py tests/test_spells.py \
+       tests/test_enemy_ap.py tests/test_intent_truthfulness.py \
+       tests/test_affix_system.py tests/test_identification.py \
+       tests/test_curses.py tests/test_loot_decision.py \
+       tests/test_i18n.py tests/test_data_integrity.py tests/test_reachability.py</p>
+<h1>全テスト (時間がかかる)</h1>
+<p>pytest tests/</p>
+<h1>カバレッジ付き</h1>
+<p>pytest --cov=narou --cov-report=html tests/
+```</p>
+<h3>主要モジュール説明</h3>
+<p>| モジュール | 責務 |
+|-----------|------|
+| <code>engine/engine.py</code> | ゲームループ、システム統合、レンダリング委譲 |
+| <code>engine/systems/combat_system.py</code> | AP制戦闘、向き、背後判定、呪文処理 |
+| <code>engine/systems/skill_eater_system.py</code> | Devour、Husk、Toxicity、合成、星座盤 |
+| <code>engine/systems/entity_system.py</code> | エンティティ生成、AI、フェクション、ペット |
+| <code>engine/systems/world_system.py</code> | ダンジョン生成、マップ管理、階層移動 |
+| <code>engine/systems/render_system.py</code> | タイル描画、パーティクル、UI、エフェクト |
+| <code>engine/systems/ui_system.py</code> | メニュー、インベントリ、ステータス、ヘルプ |
+| <code>skill_eater_*.py</code> | Aの世界固有システム (20+ ファイル) |
+| <code>item_system.py</code> / <code>item_generator.py</code> | アイテム、接尾辞、鑑定、呪い |
+| <code>skill_tree_system.py</code> / <code>job_system.py</code> | スキルツリー、転職、継承、融合 |
+| <code>pet_*.py</code> | ペット契約、進化、融合、AI、派遣 |</p>
+<h3>デバッグコンソール (グラフィカルモード)</h3>
+<p><code>F1</code> キーで開発者コンソール開閉:
+- エンティティ検査/操作
+- マップ表示/編集
+- スキル/アイテム付与
+- 時間操作/デバッグフラグ切替</p>
+<h3>新規コンテンツ追加ガイド</h3>
+<h4>新スキル追加</h4>
+<ol>
+<li><code>data/skills.yaml</code> に定義追加</li>
+<li><code>skill_tree_system.py</code> でツリー位置指定</li>
+<li><code>skill_fusion.yaml</code> で合成レシピ追加 (必要なら)</li>
+<li>テストケース作成: <code>tests/test_skills.py</code></li>
+</ol>
+<h4>新敵追加</h4>
+<ol>
+<li><code>data/monster_abilities.yaml</code> で能力定義</li>
+<li><code>data/monsters.yaml</code> で個体定義 (HP, MP, スキル, AIタイプ)</li>
+<li><code>entity_system.py</code> のファクトリに登録</li>
+<li>意図テレグラフテスト: <code>tests/test_intent_truthfulness.py</code></li>
+</ol>
+<h4>新アイテム/接尾辞追加</h4>
+<ol>
+<li><code>data/items.yaml</code> / <code>data/item_affixes.yaml</code> に定義</li>
+<li><code>item_generator.py</code> のロールテーブル調整</li>
+<li>鑑定・呪いテスト: <code>tests/test_identification.py</code>, <code>tests/test_curses.py</code></li>
+</ol>
+<h3>ビルド・配布</h3>
+<p>```bash</p>
+<h1>パッケージビルド</h1>
+<p>pip install build
+python -m build</p>
+<h1>実行ファイル作成 (PyInstaller)</h1>
+<p>pip install pyinstaller
+pyinstaller --onefile --windowed --add-data "assets:assets" --add-data "data:data" game.py</p>
+<h1>Docker イメージ</h1>
+<p>docker build -t narou:latest .
+docker run -it --rm narou:latest
+```</p>
+<h3>継続的インテグレーション (GitHub Actions)</h3>
+<p><code>.github/workflows/</code> に定義:
+- <code>ci.yml</code>: テスト・リンター・型チェック
+- <code>cd.yml</code>: タグプッシュで PyPI 公開、Docker Hub 公開
+- <code>validate.yml</code>: PR 検証
+- <code>data-pipeline.yml</code>: データ整合性検証
+- <code>test_artifacts.yml</code>: テスト成果物アップロード</p>
+<hr />
+<h2>付録: キーバインド完全一覧 (デフォルト)</h2>
+<h3>グローバル</h3>
+<p>| キー | アクション |
+|------|-----------|
+| <code>F1</code> | デバッグコンソール |
+| <code>F2</code> | スクリーンショット保存 |
+| <code>F3</code> | パフォーマンス統計表示 |
+| <code>F11</code> | フルスクリーン切替 |
+| <code>Alt+Enter</code> | フルスクリーン切替 |
+| <code>Ctrl+S</code> | クイックセーブ |
+| <code>Ctrl+Q</code> | 終了確認 |</p>
+<h3>マップビュー</h3>
+<p>| キー | アクション |
+|------|-----------|
+| <code>Tab</code> | ターゲット切替 (最寄り敵) |
+| <code>Shift+Tab</code> | ターゲット逆順切替 |
+| <code>Space</code> | 待機 |
+| <code>,</code> | アイテム拾得 |
+| <code>g</code> | アイテム拾得 (別キー) |
+| <code>i</code> | インベントリ |
+| <code>c</code> | キャラクター画面 |
+| <code>m</code> | マップ全体表示 |
+| <code>l</code> / <code>L</code> | 視線確認 / 視線詳細 |
+| <code>x</code> / <code>X</code> | 解析 / 深度解析 |</p>
+<h3>インベントリ操作</h3>
+<p>| キー | アクション |
+|------|-----------|
+| <code>↑↓</code> / <code>j/k</code> | アイテム選択 |
+| <code>Enter</code> / <code>Space</code> | 使用/装備/詳細 |
+| <code>d</code> / <code>D</code> | 落とす / 全て落とす |
+| <code>u</code> | 装備解除 |
+| <code>r</code> | 読む (巻物/本) |
+| <code>q</code> / <code>Q</code> | 飲む (ポーション) / 全て飲む |
+| <code>a</code> / <code>A</code> | 付ける (装備) / 全て付ける |
+| <code>t</code> | 投げる |
+| <code>s</code> / <code>S</code> | 鑑定 / 一括鑑定 |
+| <code>x</code> / <code>X</code> | 破棄 / 全て破棄 |
+| <code>?</code> | アイテムヘルプ |</p>
+<h3>ターゲッティングモード</h3>
+<p>| キー | アクション |
+|------|-----------|
+| <code>↑↓←→</code> / <code>hjkl</code> | カーソル移動 |
+| <code>Enter</code> / <code>Space</code> | 確定 |
+| <code>Esc</code> / <code>q</code> | キャンセル |
+| <code>Tab</code> | 次の対象 |
+| <code>.</code> | セルフターゲット |</p>
+<hr />
+<h2>更新履歴</h2>
+<p>| バージョン | 日付 | 主な変更 |
+|-----------|------|---------|
+| 1.0.0 | 2026-10-09 | 初版リリース (GAME_DESIGN_V2 完了) |
+| 0.9.0 | 2026-09-15 | Phase 3 実装完了、ボス戦実装 |
+| 0.8.0 | 2026-08-20 | Phase 2 実装完了、合成炉・拠点システム |
+| 0.7.0 | 2026-07-10 | Phase 1 実装完了、Devour/Husk/Toxicity |
+| 0.6.0 | 2026-06-01 | Phase 0 実装、テキストモード対応 |
+| 0.5.0 | 2026-05-01 | naRou Core 基盤完成、ダンジョン/スキル/ペット |</p>
+<hr />
+<h2>ライセンス・クレジット</h2>
+<h3>ライセンス</h3>
+<p>MIT License - 詳細は <code>LICENSE</code> ファイル参照</p>
+<h3>使用ライブラリ・アセット</h3>
+<p>| ライブラリ | ライセンス | 用途 |
+|-----------|-----------|------|
+| python-tcod | BSD-3-Clause | ローグライクエンジン、FOV、パスファインディング |
+| PyYAML | MIT | データファイル読み込み |
+| cryptography | Apache-2.0 | セーブデータ暗号化 |
+| numpy | BSD-3-Clause | 数値計算、プロシージャル生成 |
+| pydantic | MIT | 設定・データバリデーション |
+| pillow | HPND | 画像処理、アトラス生成 |
+| scipy | BSD-3-Clause | 科学計算、確率分布 |
+| pygame | LGPL | 音声再生 (オプション) |
+| simpleaudio | MIT | 低レイテンシ音声 (オプション) |
+| PixiJS | MIT | Web版レンダラー (demos/lib) |</p>
+<h3>タイルセット・アセット</h3>
+<ul>
+<li><strong>Tiny Rogue</strong> (パブリックドメイン / CC0) - ベースタイルセット</li>
+<li><strong>自作拡張</strong> - naRou 独実装タイル、エモート、エフェクト</li>
+</ul>
+<h3>インスピレーション・参考</h3>
+<ul>
+<li><strong>Elona</strong> (Noa) - ゲームデザイン、システム設計のベース</li>
+<li><strong>Caves of Qud</strong> - 複雑なシミュレーション、派生システム</li>
+<li><strong>Cogmind</strong> - ASCII/タイルハイブリッドUI、パーティクル表現</li>
+<li><strong>NetHack</strong> - 識別システム、アイテム相互作用の深さ</li>
+</ul>
+<hr />
+<p><em>最終更新: 2026-10-12 | バージョン 1.0.0 | naRou: Masterpiece Edition</em></p>
