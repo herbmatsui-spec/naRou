@@ -22,7 +22,17 @@ from migration_pipeline import DEFAULT_FIELD_FACTORIES, MigrationPipeline
 
 class SaveSystem:
 # This save system handles achievements via the Entity component system
-    """gzip+pickleによる完全なセーブシステム（ECSコンポーネント完全対応・SHA256チェックサム・自動バックアップ・世代管理）"""
+    """gzip+pickleによる完全なセーブシステム（ECSコンポーネント完全対応・SHA256チェックサム・自動バックアップ・世代管理）
+
+    永続化の既知制約 (設計上の意図, 改善案2で実測・文書化):
+    - pickle 本線は Engine 全体を直列化するが、``Engine.__getstate__`` が
+      kernel / entity_manager / 各ハンドラを除外する。ロード後は
+      ``engine.__dict__.update(loaded.__dict__)`` によりライブ側の kernel が
+      維持されるため、kernel 保持の skill_eater システム実行状態と
+      敵エンティティはセーブ対象外 (ローグライクの世界再生成に相当)。
+    - player/pet Entity 上の状態 (ECS コンポーネント、pet 性格系属性) と
+      Item.enchants は両パスで保持される (tests/test_entity_personality_persistence.py)。
+    """
 
     SAVE_PATH = "savegame.bin"
     CURRENT_VERSION = "2.0.0"

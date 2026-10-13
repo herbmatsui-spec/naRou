@@ -34,4 +34,10 @@ verified implemented and their stale markers removed.
 - `archaeology_decoder_system.py` — `# TODO: Connect decoder to world exploration flow` (decoder works standalone, world hooks missing)
 - Broad `# TODO: handle exception properly` — `# TODO: Replace with structured error handling` (27 files; schedule dedicated pass)
 - `game.py` — `# TODO: Reincarnation option` (line ~1627): wire reincarnation menu option.
-- `save_system.py` — `# TODO: Persist new components` (HuskComponent, MetaInterventionState, PetPersonalityComponent, EnchantmentComponent)
+- `save_system.py` — 新コンポーネントの永続化は **実測済み (2026-10-13)**: pickle 本線は
+  Husk (player の HuskInventoryComponent) / pet 性格 (personality/bond/favorite_food_tags) /
+  Item.enchants を保持。JSON 副線の pet 性格欠落は `ecs/entity.py` の to_dict/from_dict
+  条件付き出力で修復 (`tests/test_entity_personality_persistence.py`)。
+  **既知制約**: `Engine.__getstate__` は kernel/entity_manager を意図的に除外するため、
+  kernel 保持の skill_eater システム実行状態と敵エンティティは非永続化
+  (ロード後はライブの kernel を維持する `engine.__dict__.update()` 方式)。
