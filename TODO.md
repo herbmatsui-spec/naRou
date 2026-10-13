@@ -33,6 +33,17 @@ verified implemented and their stale markers removed.
 - `item_generator.py` / `item_system.py` — `# TODO: Full enchantment integration in item generation` (enchantments defined, generator wiring incomplete)
 - `archaeology_decoder_system.py` — `# TODO: Connect decoder to world exploration flow` (decoder works standalone, world hooks missing)
 - Broad `# TODO: handle exception properly` — `# TODO: Replace with structured error handling` (27 files; schedule dedicated pass)
+- カバレッジ推進テスト (2026-10-13, 案9バッチ1) で発見した未修正バグ:
+  - `skill_eater_synthesis_system.py:156-158` — 最後の2スキルを合成に消費すると
+    `remove_skill` の `is_husk=True` が `add_skill` 後も解除されず、
+    スキル所持のまま Husk 状態が残る
+  - `skill_eater_synthesis_system.py:154,222` — 合成結果を `registry._skills`
+    私有 dict に直接書き込み (API 境界違反)
+  - `skill_eater_system.py` の `CharacterState.add_skill` / `current_memory_usage` —
+    注入された registry を無視して `SkillEaterRegistry.get_instance()` を参照
+    (非シングルトン運用でメモリ容量計算が破綻し得る)
+  - `skill_eater_slum_map.py:102` — 記憶抽出前に `discovered_secrets` 4989
+    フォールバックで金庫が開く (意図的か要確認)
 - `game.py` — `# TODO: Reincarnation option` (line ~1627): wire reincarnation menu option.
 - `save_system.py` — 新コンポーネントの永続化は **実測済み (2026-10-13)**: pickle 本線は
   Husk (player の HuskInventoryComponent) / pet 性格 (personality/bond/favorite_food_tags) /
