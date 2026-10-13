@@ -6,20 +6,20 @@ Manages pet personalities, favorite foods, feeding/bond growth, equipment restri
 from __future__ import annotations
 
 import random
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from naRou.constants import (
-    PERSONALITY_BRAVE,
-    PERSONALITY_COWARDLY,
-    PERSONALITY_CALM,
-    PERSONALITY_GLUTTONOUS,
-    PERSONALITY_AGGRESSIVE,
-    PERSONALITY_LABELS,
-    FOOD_TAG_MEAT,
-    FOOD_TAG_VEGETABLE,
-    FOOD_TAG_SWEET,
     FOOD_TAG_FISH,
     FOOD_TAG_HERB,
+    FOOD_TAG_MEAT,
+    FOOD_TAG_SWEET,
+    FOOD_TAG_VEGETABLE,
+    PERSONALITY_AGGRESSIVE,
+    PERSONALITY_BRAVE,
+    PERSONALITY_CALM,
+    PERSONALITY_COWARDLY,
+    PERSONALITY_GLUTTONOUS,
+    PERSONALITY_LABELS,
 )
 
 if TYPE_CHECKING:

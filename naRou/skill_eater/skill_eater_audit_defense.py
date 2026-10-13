@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
 from naRou.skill_eater_audio_system import SkillEaterAudioSystem
 from naRou.skill_eater_base_defense import (
     BaseDefenseManager,
@@ -677,7 +676,7 @@ class AuditDefenseManager(BaseDefenseManager):
 
     def place_husk_barricade(self, husk: Any, cell: tuple[int, int]) -> HuskBarricade:
         """Huskをバリケードに変換"""
-        from naRou.systems.skill_eater_husk_system import create_husk
+        from naRou.skill_eater.skill_eater_husk_system import create_husk
 
         # HuskComponent からステータス取得想定
         hp = getattr(husk, "hp", 120)
@@ -832,7 +831,7 @@ class AuditDefenseManager(BaseDefenseManager):
             }
         else:
             # 失敗: 反撃 + 毒性
-            from naRou.systems.skill_eater_toxicity_system import SkillToxicityManager
+            from naRou.skill_eater_toxicity_system import SkillToxicityManager
             tox = SkillToxicityManager()
             tox.add_toxicity(15)
 
@@ -889,13 +888,13 @@ class AuditDefenseManager(BaseDefenseManager):
             # 属性タレットかチェック
             if fac.facility_type == DefenseFacilityType.AUTO_TURRET and fac.element != "none":
                 target = min(alive_enemies, key=lambda e: e.speed)
-                
+
                 # 壁裏DPSボーナス (隣接するHusk壁がある場合)
                 bonus = 1.0
                 if self.husk_barricades:
                     # 簡易: 壁があれば全タレットにボーナス
                     bonus = 1.25
-                
+
                 damage = int(fac.damage * fac.efficiency * bonus)
                 target.take_damage(damage)
 
@@ -969,11 +968,11 @@ class AuditDefenseManager(BaseDefenseManager):
         """EMP地雷の起動チェック"""
         results = []
         alive_enemies = [e for e in self.raid_enemies if not e.is_dead]
-        
+
         for mine in list(self.emp_mines.values()):
             if mine.is_triggered:
                 continue
-            
+
             # 敵が範囲内にいるかチェック
             for enemy in alive_enemies:
                 if hasattr(enemy, 'cell'):
@@ -981,11 +980,11 @@ class AuditDefenseManager(BaseDefenseManager):
                 else:
                     # 簡易: 敵のインデックスをセル位置として扱う
                     enemy_cell = (0, self.raid_enemies.index(enemy))
-                
+
                 dx = abs(enemy_cell[0] - mine.cell[0])
                 dy = abs(enemy_cell[1] - mine.cell[1])
                 distance = max(dx, dy)  # チェビシェフ距離
-                
+
                 if distance <= mine.trigger_radius:
                     # 起動!
                     mine.is_triggered = True
@@ -999,7 +998,7 @@ class AuditDefenseManager(BaseDefenseManager):
                         edy = abs(e_cell[1] - mine.cell[1])
                         if max(edx, edy) <= mine.trigger_radius:
                             self._apply_status_to_enemy(e, "stun", mine.stun_turns)
-                    
+
                     results.append({
                         "mine_id": mine.id,
                         "cell": mine.cell,
@@ -1008,7 +1007,7 @@ class AuditDefenseManager(BaseDefenseManager):
                     })
                     self.audio.play_sound("explosion_debris.ogg")
                     break
-        
+
         return results
 
     def process_breach_phase(self) -> dict[str, Any]:
@@ -1071,7 +1070,7 @@ class AuditDefenseManager(BaseDefenseManager):
         results = []
         alive_enemies = [e for e in self.raid_enemies if not e.is_dead]
         operational_facilities = [f for f in self.defense_facilities.values() if f.is_operational]
-        
+
         # 壁と地雷もターゲット候補に
         operational_barricades = [b for b in self.husk_barricades.values() if not b.is_debris]
         active_mines = [m for m in self.emp_mines.values() if not m.is_triggered]
@@ -1085,7 +1084,7 @@ class AuditDefenseManager(BaseDefenseManager):
             # ターゲット選択 (優先度: 壁 > 地雷 > 売店 > タレット > 拠点)
             target = None
             target_type = None
-            
+
             # 壁があれば最優先で狙う (物理的障害物)
             if operational_barricades:
                 target = operational_barricades[0]
@@ -1265,13 +1264,13 @@ class AuditDefenseManager(BaseDefenseManager):
         for k, v in data.items():
             if hasattr(mgr, k) and k not in ("triggers", "raid_enemies", "subordinates", "facility_cooldowns", "combat_log", "raid_history"):
                 setattr(mgr, k, v)
-        
+
         # defense_facilities 復元 (親のto_dict形式で保存されている)
         if "defense_facilities" in data:
             mgr.defense_facilities = {}
             for fid, fdata in data["defense_facilities"].items():
                 mgr.defense_facilities[fid] = DefenseFacility.from_dict(fdata)
-        
+
         # 子固有
         mgr.threat_level = data.get("threat_level", 0)
         mgr.audit_tier = AuditTier(data.get("audit_tier", "T1"))

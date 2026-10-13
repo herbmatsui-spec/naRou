@@ -8,6 +8,7 @@ _feature_flags: dict[str, bool] = {
     "ENABLE_TINY_ROGUE_GFX": True,
     "ENABLE_AUDIO_PACK": False,  # Enable real OGG audio playback
     "ENABLE_TEXT_MODE": False,  # GPU/SDL なしでも遊べるテキストモード
+    "ENABLE_HUSK_PUPPET_HACKING": False,  # 傀儡ハッキングシステム（Husk使役）
 }
 
 
@@ -29,6 +30,20 @@ def get_text_mode_enabled() -> bool:
         from config import get_config
 
         if get_config("accessibility.text_mode") is True:
+            return True
+    except (ImportError, KeyError):
+        pass
+    return False
+
+
+def get_husk_enabled() -> bool:
+    """Step 3: 傀儡ハッキングが有効かをフラグまたは config から判定。"""
+    if _feature_flags.get("ENABLE_HUSK_PUPPET_HACKING", False):
+        return True
+    try:
+        from narou.config import get_config
+
+        if get_config("husk.enabled") is True:
             return True
     except (ImportError, KeyError):
         pass

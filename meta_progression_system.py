@@ -43,8 +43,6 @@ from ecs.components import (
 APPLIED_PERMANENT_BONUS_KEYS: frozenset[str] = frozenset({
     "speed",
     "all_attributes",
-    "damage_boost",
-    "gold_gain",
 })
 
 # (B) 予約済み: 反映しないキーと「何が欠けているか」の理由

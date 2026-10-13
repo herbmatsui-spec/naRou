@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from data.generated.item.item import ItemDefinition
 from data.repositories.base import CachedRepository
 
@@ -53,4 +55,29 @@ class ItemRepository(CachedRepository[ItemDefinition, str]):
         self._build_indexes()
 
 
-__all__ = ["ItemRepository"]
+class RecipeRepository(CachedRepository[Any, str]):
+    """クラフトレシピリポジトリ (PR #8 integration: origin/main より移植)"""
+
+    def __init__(self, recipes: dict[str, Any]):
+        super().__init__(recipes)
+        self._by_category: dict[str, list[Any]] = {}
+        self._by_result_item: dict[str, list[Any]] = {}
+        self._build_indexes()
+
+    def _build_indexes(self):
+        for recipe in self._data.values():
+            cat = getattr(recipe, "category", "")
+            if cat:
+                self._by_category.setdefault(cat, []).append(recipe)
+            res_id = getattr(recipe, "result_item_id", "")
+            if res_id:
+                self._by_result_item.setdefault(res_id, []).append(recipe)
+
+    def get_by_category(self, category: str) -> list[Any]:
+        return self._by_category.get(category, [])
+
+    def get_by_result_item(self, result_item_id: str) -> list[Any]:
+        return self._by_result_item.get(result_item_id, [])
+
+
+__all__ = ["ItemRepository", "RecipeRepository"]

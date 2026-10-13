@@ -1,0 +1,189 @@
+ench_str:
+  id: "ench_str"
+  name: "剛力"
+  description: "筋力を上昇させる"
+  type: "stat_bonus"
+  target_stat: "strength"
+  power_range: [1, 5]
+  applicable_categories: ["weapon", "armor", "shield", "helm", "ring"]
+  min_quality: "good"
+
+ench_dex:
+  id: "ench_dex"
+  name: "器用"
+  description: "器用さを上昇させる"
+  type: "stat_bonus"
+  target_stat: "dexterity"
+  power_range: [1, 5]
+  applicable_categories: ["weapon", "armor", "shield", "helm", "ring"]
+  min_quality: "good"
+
+ench_end:
+  id: "ench_end"
+  name: "耐久"
+  description: "耐久力を上昇させる"
+  type: "stat_bonus"
+  target_stat: "endurance"
+  power_range: [1, 5]
+  applicable_categories: ["armor", "shield", "helm", "ring"]
+  min_quality: "good"
+
+ench_per:
+  id: "ench_per"
+  name: "感覚"
+  description: "感覚を上昇させる"
+  type: "stat_bonus"
+  target_stat: "perception"
+  power_range: [1, 5]
+  applicable_categories: ["weapon", "armor", "helm", "ring"]
+  min_quality: "good"
+
+ench_lea:
+  id: "ench_lea"
+  name: "習得"
+  description: "習得力を上昇させる"
+  type: "stat_bonus"
+  target_stat: "learning"
+  power_range: [1, 5]
+  applicable_categories: ["ring"]
+  min_quality: "good"
+
+ench_wil:
+  id: "ench_wil"
+  name: "意志"
+  description: "意志を上昇させる"
+  type: "stat_bonus"
+  target_stat: "will"
+  power_range: [1, 5]
+  applicable_categories: ["armor", "helm", "ring"]
+  min_quality: "good"
+
+ench_mag:
+  id: "ench_mag"
+  name: "魔力"
+  description: "魔力を上昇させる"
+  type: "stat_bonus"
+  target_stat: "magic"
+  power_range: [1, 5]
+  applicable_categories: ["weapon", "ring"]
+  min_quality: "good"
+
+ench_cha:
+  id: "ench_cha"
+  name: "魅力"
+  description: "魅力を上昇させる"
+  type: "stat_bonus"
+  target_stat: "charisma"
+  power_range: [1, 5]
+  applicable_categories: ["ring"]
+  min_quality: "good"
+
+ench_fire_dmg:
+  id: "ench_fire_dmg"
+  name: "紅蓮"
+  description: "火炎属性ダメージを付与"
+  type: "element_damage"
+  element: "fire"
+  power_range: [2, 8]
+  applicable_categories: ["weapon"]
+  min_quality: "good"
+
+ench_ice_dmg:
+  id: "ench_ice_dmg"
+  name: "氷結"
+  description: "氷結属性ダメージを付与"
+  type: "element_damage"
+  element: "ice"
+  power_range: [2, 8]
+  applicable_categories: ["weapon"]
+  min_quality: "good"
+
+ench_lightning_dmg:
+  id: "ench_lightning_dmg"
+  name: "電撃"
+  description: "電撃属性ダメージを付与"
+  type: "element_damage"
+  element: "lightning"
+  power_range: [2, 8]
+  applicable_categories: ["weapon"]
+  min_quality: "good"
+
+ench_poison_dmg:
+  id: "ench_poison_dmg"
+  name: "毒"
+  description: "毒属性ダメージを付与"
+  type: "element_damage"
+  element: "poison"
+  power_range: [2, 8]
+  applicable_categories: ["weapon"]
+  min_quality: "good"
+
+ench_fire_resist:
+  id: "ench_fire_resist"
+  name: "耐火"
+  description: "火炎耐性を上昇させる"
+  type: "resistance"
+  element: "fire"
+  power_range: [5, 20]
+  applicable_categories: ["armor", "shield", "helm", "ring"]
+  min_quality: "good"
+
+ench_ice_resist:
+  id: "ench_ice_resist"
+  name: "耐冷"
+  description: "氷結耐性を上昇させる"
+  type: "resistance"
+  element: "ice"
+  power_range: [5, 20]
+  applicable_categories: ["armor", "shield", "helm", "ring"]
+  min_quality: "good"
+
+ench_pv:
+  id: "ench_pv"
+  name: "硬化"
+  description: "PVを上昇させる"
+  type: "combat_bonus"
+  target_stat: "pv"
+  power_range: [1, 5]
+  applicable_categories: ["armor", "shield", "helm"]
+  min_quality: "good"
+
+ench_dv:
+  id: "ench_dv"
+  name: "回避"
+  description: "DVを上昇させる"
+  type: "combat_bonus"
+  target_stat: "dv"
+  power_range: [1, 5]
+  applicable_categories: ["armor", "shield", "helm", "ring"]
+  min_quality: "good"
+
+ench_hit:
+  id: "ench_hit"
+  name: "命中"
+  description: "命中率を上昇させる"
+  type: "combat_bonus"
+  target_stat: "hit_bonus"
+  power_range: [1, 5]
+  applicable_categories: ["weapon"]
+  min_quality: "good"
+
+ench_dmg:
+  id: "ench_dmg"
+  name: "破壊"
+  description: "ダメージを上昇させる"
+  type: "combat_bonus"
+  target_stat: "dmg_bonus"
+  power_range: [1, 5]
+  applicable_categories: ["weapon"]
+  min_quality: "good"
+
+ench_life_steal:
+  id: "ench_life_steal"
+  name: "吸血"
+  description: "与えたダメージの一部を吸収"
+  type: "special"
+  target_stat: "life_steal"
+  power_range: [5, 15]
+  applicable_categories: ["weapon"]
+  min_quality: "miracle"

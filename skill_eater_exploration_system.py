@@ -2,6 +2,7 @@
 skill_eater_exploration_system.py
 Aの世界（スキル喰い） 探索・移動・環境音システム
 提案7: ダンジョン探索・足音・扉・トラップのEmote & Audio演出 (Steps 49〜56)
+メタ介入統合 (Phase C): テンプレートイベント生成・介入UI・報酬適用
 """
 
 from __future__ import annotations
@@ -10,11 +11,20 @@ import random
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from naRou.skill_eater.skill_eater_meta_intervention_system import (
+    InterventionAction,
+    InterventionEngine,
+    TemplateEvent,
+    TemplateEventGenerator,
+)
+
 from skill_eater_audio_system import SkillEaterAudioSystem
 from skill_eater_presentation_system import PresentationEvent, SkillEaterPresentationSystem
 from skill_eater_system import CharacterState
 
 if TYPE_CHECKING:
+    from naRou.skill_eater.skill_eater_template_model import TemplateData
+
     from skill_eater_procedural_dungeon import SkillEaterProceduralDungeon
 
 
@@ -88,6 +98,8 @@ class SkillEaterExplorationSystem:
         self,
         audio: SkillEaterAudioSystem | None = None,
         presentation: SkillEaterPresentationSystem | None = None,
+        template_generator: TemplateEventGenerator | None = None,
+        intervention_engine: InterventionEngine | None = None,
     ):
         self.audio = audio or SkillEaterAudioSystem.get_instance()
         self.presentation = presentation or SkillEaterPresentationSystem.get_instance()
@@ -117,12 +129,17 @@ class SkillEaterExplorationSystem:
         self.current_room_id: str = "slum_alley"
         self._procedural_dungeon: SkillEaterProceduralDungeon | None = None
         self._use_procedural: bool = False
+        self.active_template_events: list[TemplateEvent] = []
 
         # Phase 1 Step 2: 探索ランキング・初見判定用セット
         self.exploration_rank: ExplorationRank = ExplorationRank()
         self._visited_rooms: set[str] = set()
         self._visited_floors: set[int] = set()
         self._visited_secret_rooms: set[str] = set()
+
+        # Template intervention (Phase C)
+        self.template_generator: TemplateEventGenerator | None = template_generator
+        self.intervention_engine: InterventionEngine | None = intervention_engine
 
     @classmethod
     def get_instance(cls) -> SkillEaterExplorationSystem:
@@ -228,6 +245,9 @@ class SkillEaterExplorationSystem:
 
         # Phase 2 Step 19: 部屋移動時のアセンションノードチェック
         self._check_and_unlock_ascension_nodes()
+
+        # Template intervention: check for template events on room enter
+        self._check_template_event(target_room_id)
 
         return ExplorationResult(
             action_type="MOVE_ROOM",
@@ -474,6 +494,26 @@ class SkillEaterExplorationSystem:
             "visited_floors": list(self._visited_floors),
             "visited_secret_rooms": list(self._visited_secret_rooms),
             "current_room_id": self.current_room_id,
+            "active_template_events": [
+                {
+                    "template_id": evt.template_id,
+                    "archetype": evt.archetype,
+                    "context": evt.context,
+                    "faction": evt.faction,
+                    "difficulty": evt.difficulty,
+                    "route_steps": [
+                        {"flag": rs.flag, "turn": rs.turn, "actor": rs.actor, "on_fail": rs.on_fail}
+                        for rs in evt.route_steps
+                    ],
+                    "exploit_windows": [
+                        {"id": w.id, "tier": w.tier, "req_gold": w.req_gold,
+                         "req_skill": w.req_skill, "base_success": w.base_success}
+                        for w in evt.exploit_windows
+                    ],
+                    "turn_spawned": evt.turn_spawned,
+                }
+                for evt in self.active_template_events
+            ],
         }
 
     # Phase 2 Step 18/19/20/21: アセンションボード連動ノードチェック
@@ -500,12 +540,69 @@ class SkillEaterExplorationSystem:
             # 循環インポートや未初期化時はスキップ
             pass
 
+    # Template intervention hook (Phase C)
+    def _check_template_event(self, room_id: str) -> None:
+        """Check for template events when entering a room."""
+        if not self.template_generator:
+            return
+        # Map room to context
+        context_map = {
+            "slum_alley": "slum",
+            "underground_market": "slum",
+            "midas_tower_entrance": "noble_quarter",
+            "vault_chamber": "dungeon_entrance",
+        }
+        context = context_map.get(room_id, "slum")
+        # Use exploration rank as loop proxy
+        loop_count = max(1, self.exploration_rank.rank // 3)
+        event = self.template_generator.maybe_spawn(context, self.exploration_rank.rooms_visited, loop_count)
+        if event:
+            self.active_template_events.append(event)
+            self.presentation.add_event(
+                emote_file="emote_exclamations.png",
+                audio_file="bookFlip3.ogg",
+                message=f"《原典閲覧》{event.archetype} テンプレ発生: {room_id}",
+                duration_ms=2000,
+                event_type="secret_discover",
+            )
+
+    def trigger_intervention(self, event: TemplateEvent, action: InterventionAction, player: Any) -> Any | None:
+        """Execute intervention against a template event and apply rewards."""
+        if not self.intervention_engine:
+            return None
+        result = self.intervention_engine.execute(event, action, player)
+        if result.success:
+            self.intervention_engine.apply_rewards(player, result, event)
+            # Remove completed event
+            if event in self.active_template_events:
+                self.active_template_events.remove(event)
+        return result
+
     @classmethod
-    def from_dict(cls, data: dict, audio=None, presentation=None) -> "SkillEaterExplorationSystem":
-        instance = cls(audio=audio, presentation=presentation)
+    def from_dict(cls, data: dict, audio=None, presentation=None, template_generator=None, intervention_engine=None) -> "SkillEaterExplorationSystem":
+        instance = cls(audio=audio, presentation=presentation, template_generator=template_generator, intervention_engine=intervention_engine)
         instance.exploration_rank = ExplorationRank.from_dict(data.get("exploration_rank", {}))
         instance._visited_rooms = set(data.get("visited_rooms", []))
         instance._visited_floors = set(data.get("visited_floors", []))
         instance._visited_secret_rooms = set(data.get("visited_secret_rooms", []))
         instance.current_room_id = data.get("current_room_id", "slum_alley")
+
+        # Restore active template events
+        from naRou.skill_eater.skill_eater_template_model import ExploitWindow, RouteStep
+        events_data = data.get("active_template_events", [])
+        for evt_data in events_data:
+            route_steps = [RouteStep(**rs) for rs in evt_data.get("route_steps", [])]
+            exploit_windows = [ExploitWindow(**ew) for ew in evt_data.get("exploit_windows", [])]
+            event = TemplateEvent(
+                template_id=evt_data["template_id"],
+                archetype=evt_data["archetype"],
+                context=evt_data["context"],
+                faction=evt_data["faction"],
+                difficulty=evt_data["difficulty"],
+                route_steps=route_steps,
+                exploit_windows=exploit_windows,
+                turn_spawned=evt_data["turn_spawned"],
+            )
+            instance.active_template_events.append(event)
+
         return instance

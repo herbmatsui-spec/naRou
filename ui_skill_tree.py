@@ -33,7 +33,8 @@ class SkillTreeRenderer:
             nodes = []
             for tier in tree.tiers:
                 learned = tier.id in player.skill_tree_progress.get(tree_id, [])
-                available = (not learned) and self.manager.check_prerequisites(player, tier)
+                prereq_check_result = self.manager.check_prerequisites(player, tier)
+                available = (not learned) and prereq_check_result
                 pct = (
                     100
                     if learned

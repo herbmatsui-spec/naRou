@@ -54,7 +54,9 @@ from data.generated.dungeon.dungeon import DungeonThemeDefinition
 from data.generated.faction.factions import Faction
 
 # 生成されたPydanticモデル（スキーマバリデーション用）
+from data.generated.item.enchantment import EnchantmentDefinition
 from data.generated.item.item import ItemDefinition
+from data.generated.item.recipe import RecipeDefinition
 from data.generated.meta.achievements import Achievement
 from data.generated.meta.titles import Title
 from data.generated.monster.monster import MonsterAbility, MonsterDefinition
@@ -69,6 +71,7 @@ from data.generated.social.guilds import Guild
 from data.repositories import (
     AchievementRepository,
     DungeonThemeRepository,
+    EnchantmentRepository,
     FactionRepository,
     GodRepository,
     GuildRepository,
@@ -76,6 +79,7 @@ from data.repositories import (
     JobRepository,
     MonsterRepository,
     QuestRepository,
+    RecipeRepository,
     SkillFusionRepository,
     SkillRepository,
     SkillTreeRepository,
@@ -105,6 +109,7 @@ class DataManager(BaseSystem):
 
         # リポジトリ
         self.items: ItemRepository
+        self.recipes: RecipeRepository  # PR#8 統合 (origin/main 同様のクラフトレシピ)
         self.monsters: MonsterRepository
         self.skills: SkillRepository
         self.skill_trees: SkillTreeRepository
@@ -119,6 +124,7 @@ class DataManager(BaseSystem):
         self.gods: GodRepository
         self.dungeon_themes: DungeonThemeRepository
         self.guilds: GuildRepository
+        self.enchantments: EnchantmentRepository
 
         # ローカライゼーション
         self.localization: dict[str, dict[str, str]] = {}
@@ -140,6 +146,18 @@ class DataManager(BaseSystem):
         items_raw = self._load_yaml("items.yaml") or {}
         self.items = ItemRepository(
             {k: ItemDefinition.model_validate(v) for k, v in items_raw.items()}
+        )
+
+        # クラフトレシピ (フラット辞書) (PR#8 統合: origin/main と同様のロード)
+        recipes_raw = self._load_yaml("recipes.yaml") or {}
+        self.recipes = RecipeRepository(
+            {k: RecipeDefinition.model_validate(v) for k, v in recipes_raw.items()}
+        )
+
+        # エンチャント (フラット辞書)
+        enchantments_raw = self._load_yaml("item_enchantments.yaml") or {}
+        self.enchantments = EnchantmentRepository(
+            {k: EnchantmentDefinition.model_validate(v) for k, v in enchantments_raw.items()}
         )
 
         # モンスター (フラット辞書)
@@ -245,6 +263,16 @@ class DataManager(BaseSystem):
             {
                 k: (Guild.model_validate(v) if not isinstance(v, Guild) else v)
                 for k, v in gui_data.items()
+            }
+        )
+
+        # スキル融合 (ラッパー key: fusions)
+        skill_fusion_raw = self._load_yaml("skill_fusion.yaml") or {}
+        sf_data = skill_fusion_raw.get("fusions", {}) if isinstance(skill_fusion_raw, dict) else {}
+        self.skill_fusions = SkillFusionRepository(
+            {
+                k: (SkillFusion.model_validate(v) if not isinstance(v, SkillFusion) else v)
+                for k, v in sf_data.items()
             }
         )
 

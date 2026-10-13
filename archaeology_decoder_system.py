@@ -8,9 +8,9 @@ from __future__ import annotations
 import hashlib
 import os
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
-import yaml
+from typing import TYPE_CHECKING, Any
 
+import yaml
 from naRou.data_manager import DataManager
 
 if TYPE_CHECKING:

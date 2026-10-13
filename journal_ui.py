@@ -333,20 +333,22 @@ class JournalUI:
                     current_y += 1
 
             # 蓄積された手がかり（改善③: 気づき）
-            if comp.decoder_hints_seen and current_y < start_y + self.window_height - 2:
-                current_y += 1
-                console.print(
-                    start_x + 2,
-                    current_y,
-                    "【手がかり（未解読ヒント）】",
-                    fg=self.highlight_color,
-                )
-                current_y += 1
-                for h in comp.decoder_hints_seen:
-                    if current_y >= start_y + self.window_height - 2:
-                        break
-                    console.print(start_x + 4, current_y, f"💡 {h}", fg=self.text_color)
+            if comp.decoder_hints_seen:
+                # Check space for header
+                if current_y < start_y + self.window_height - 2:
+                    console.print(
+                        start_x + 2,
+                        current_y,
+                        "【手がかり（未解読ヒント）】",
+                        fg=self.highlight_color,
+                    )
                     current_y += 1
+                    # Print each hint
+                    for h in comp.decoder_hints_seen:
+                        if current_y >= start_y + self.window_height - 2:
+                            break
+                        console.print(start_x + 4, current_y, f"💡 {h}", fg=self.text_color)
+                        current_y += 1
         else:
             console.print(start_x + 4, current_y, "（考古学システム未登録）", fg=self.text_color)
             current_y += 1

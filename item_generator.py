@@ -22,9 +22,10 @@ from naRou.constants import (
     QUALITY_NORMAL,
 )
 from naRou.data_manager import DataManager
+
 from data.generated.item.enchantment import EnchantmentDefinition, ItemEnchantmentInstance
 from data.generated.item.item import ItemDefinition
-from naRou.item_system import Item
+from item_system import Item
 
 
 class ItemGenerator:

@@ -37,6 +37,48 @@ except ImportError:
     _HAS_QUEST_SCHEDULER = False
 
 
+from enum import Enum, auto
+
+
+class WorldEventType(Enum):
+    WAR = auto()
+    PLAGUE = auto()
+    COMET = auto()
+    INHERITANCE = auto()
+    FESTIVAL = auto()
+    ECLIPSE = auto()
+    GENERAL = auto()
+
+
+@dataclass
+class WorldEvent:
+    id: str
+    name: str = ""
+    description: str = ""
+    type: WorldEventType = WorldEventType.GENERAL
+    is_active: bool = True
+    duration: int = 100
+    effects: dict[str, Any] = field(default_factory=dict)
+    rewards: dict[str, Any] = field(default_factory=dict)
+
+
+class WorldEventSystem:
+    _instance: WorldEventSystem | None = None
+
+    def __new__(cls) -> Self:
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance.active_events = {}
+        return cls._instance
+
+    def __init__(self):
+        if not hasattr(self, "active_events"):
+            self.active_events = {}
+
+
+WORLD_EVENT_SYSTEM = WorldEventSystem()
+
+
 # Step 68: WorldEventData
 @dataclass
 class WorldEventData:

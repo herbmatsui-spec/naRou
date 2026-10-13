@@ -1,12 +1,16 @@
 """Skill Eater Crafting and Patchwork Synthesis System.
 
-Handles SkillScraps and temporary/unstable patchwork skill synthesis.
+Handles SkillScraps, temporary/unstable patchwork skill synthesis,
+and Husk Forge for creating Puppet Units.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+
+from naRou.ecs.components.components import HuskComponent, PuppetUnitComponent
+from naRou.skill_eater.skill_eater_husk_forge import PuppetForgeSystem
 
 
 @dataclass
@@ -48,6 +52,115 @@ class PatchworkCraftingUI:
             "preview": self.preview_skill_name or "破片を2つ以上セットしてください",
             "warning": "【不安定合成】生成されるスキルには使用回数制限があります",
         }
+
+
+@dataclass
+class HuskForgeUI:
+    """UI layout representing the Husk Forge with husk selection and unit preview."""
+
+    selected_husk_index: int = -1
+    protocol_rank: int = 0
+    preview_unit: Optional[Dict[str, Any]] = None
+    show_confirmation: bool = False
+
+    def render(self) -> Dict[str, Any]:
+        return {
+            "ui_name": "HUSK_FORGE",
+            "selected_husk": self.selected_husk_index,
+            "protocol_rank": self.protocol_rank,
+            "preview": self.preview_unit,
+            "show_confirmation": self.show_confirmation,
+            "warning": "【傀儡鍛冶】注入スキルとプロトコルランクでユニット性能が決まります",
+        }
+
+
+@dataclass
+class CreatedUnitInfo:
+    """Information about a created puppet unit."""
+
+    unit_id: str
+    role: str
+    hp: int
+    max_hp: int
+    injected_skills: List[str]
+    injected_codes: List[str]
+    rebellion_risk: float
+    effective_power: float
+
+
+class HuskForgeEngine:
+    """Engine for creating puppet units from husks at the forge."""
+
+    def __init__(self) -> None:
+        self.forge = PuppetForgeSystem()
+        self.created_units: List[CreatedUnitInfo] = []
+
+    def preview_unit(self, husk: HuskComponent, protocol_rank: int = 0) -> Dict[str, Any]:
+        """Preview what unit would be created from a husk."""
+        role = self.forge.role_of(husk)
+        control_load = self.forge.calc_control_load(husk)
+        rebellion_risk = self.forge.rebellion_risk(husk)
+        effective_power = self.forge.effective_power(husk, protocol_rank)
+        base_hp = int(effective_power * 10)
+
+        return {
+            "role": role,
+            "hp": base_hp,
+            "max_hp": base_hp,
+            "injected_skills": husk.injected_skills.copy(),
+            "injected_codes": husk.injected_codes.copy(),
+            "control_load": control_load,
+            "rebellion_risk": rebellion_risk,
+            "effective_power": effective_power,
+            "protocol_rank": protocol_rank,
+        }
+
+    def create_unit(
+        self,
+        husk: HuskComponent,
+        protocol_rank: int = 0,
+        player: Any = None,
+    ) -> Dict[str, Any]:
+        """Create a puppet unit from a husk."""
+        try:
+            unit = self.forge.create_unit(husk, protocol_rank, player)
+        except ValueError as e:
+            return {"success": False, "error": str(e)}
+
+        # Create info object for display
+        unit_info = CreatedUnitInfo(
+            unit_id=unit.unit_id,
+            role=unit.role,
+            hp=unit.hp,
+            max_hp=unit.max_hp,
+            injected_skills=unit.injected_skills.copy(),
+            injected_codes=unit.injected_codes.copy(),
+            rebellion_risk=self.forge.rebellion_risk(husk),
+            effective_power=self.forge.effective_power(husk, protocol_rank),
+        )
+        self.created_units.append(unit_info)
+
+        return {
+            "success": True,
+            "unit": unit,
+            "unit_info": unit_info,
+            "message": f"【傀儡鍛冶完了】{unit.role} 《{unit.unit_id}》 を創造！ HP: {unit.hp}, 反逆リスク: {unit_info.rebellion_risk:.2f}",
+        }
+
+    def get_created_units_summary(self) -> List[Dict[str, Any]]:
+        """Get summary of all created units."""
+        return [
+            {
+                "unit_id": u.unit_id,
+                "role": u.role,
+                "hp": f"{u.hp}/{u.max_hp}",
+                "skills": u.injected_skills,
+                "codes": u.injected_codes,
+                "rebellion_risk": f"{u.rebellion_risk:.2f}",
+                "effective_power": f"{u.effective_power:.2f}",
+            }
+            for u in self.created_units
+        ]
 
 
 class PatchworkCraftingEngine:
@@ -119,3 +232,75 @@ class PatchworkCraftingEngine:
             "sound": "se_patchwork_craft_success.ogg",
             "particles": "SPARKLE_GLITCH_YELLOW",
         }
+
+
+@dataclass
+class SkillEaterCraftingUI:
+    """Unified crafting UI with tabs for Patchwork Crafting and Husk Forge."""
+
+    active_tab: str = "patchwork"  # "patchwork" or "forge"
+    patchwork_ui: PatchworkCraftingUI = field(default_factory=PatchworkCraftingUI)
+    forge_ui: HuskForgeUI = field(default_factory=HuskForgeUI)
+
+    def render(self) -> Dict[str, Any]:
+        if self.active_tab == "patchwork":
+            return self.patchwork_ui.render()
+        else:
+            return self.forge_ui.render()
+
+    def switch_tab(self, tab: str) -> None:
+        """Switch between crafting tabs."""
+        if tab in ("patchwork", "forge"):
+            self.active_tab = tab
+
+
+class SkillEaterCraftingSystem:
+    """Unified crafting system combining patchwork synthesis and husk forge."""
+
+    def __init__(self) -> None:
+        self.patchwork_engine = PatchworkCraftingEngine()
+        self.forge_engine = HuskForgeEngine()
+        self.ui = SkillEaterCraftingUI()
+
+    def get_patchwork_ui(self) -> Dict[str, Any]:
+        """Get patchwork crafting UI."""
+        self.ui.switch_tab("patchwork")
+        return self.ui.render()
+
+    def get_forge_ui(self, husks: List[HuskComponent]) -> Dict[str, Any]:
+        """Get husk forge UI with available husks."""
+        self.ui.switch_tab("forge")
+        ui_data = self.ui.render()
+        ui_data["available_husks"] = [
+            {
+                "index": i,
+                "husk_id": h.husk_id,
+                "source_monster": h.source_monster,
+                "tier": h.tier,
+                "slots": h.slots,
+                "injected_skills": h.injected_skills,
+                "injected_codes": h.injected_codes,
+                "loyalty": h.loyalty,
+            }
+            for i, h in enumerate(husks)
+        ]
+        return ui_data
+
+    def preview_forge_unit(self, husk: HuskComponent, protocol_rank: int = 0) -> Dict[str, Any]:
+        """Preview unit creation from husk."""
+        preview = self.forge_engine.preview_unit(husk, protocol_rank)
+        self.ui.forge_ui.preview_unit = preview
+        self.ui.forge_ui.protocol_rank = protocol_rank
+        return preview
+
+    def confirm_forge_unit(self, husk: HuskComponent, protocol_rank: int = 0, player: Any = None) -> Dict[str, Any]:
+        """Confirm and create unit from husk."""
+        result = self.forge_engine.create_unit(husk, protocol_rank, player)
+        if result["success"]:
+            self.ui.forge_ui.show_confirmation = False
+            self.ui.forge_ui.preview_unit = None
+        return result
+
+    def get_created_units_summary(self) -> List[Dict[str, Any]]:
+        """Get summary of all created puppet units."""
+        return self.forge_engine.get_created_units_summary()

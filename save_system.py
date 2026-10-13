@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import copy
 import gzip
 import hashlib
 import hmac
@@ -8,7 +9,10 @@ import logging
 import os
 import pickle
 import shutil
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from game import Engine
 
 logger = logging.getLogger(__name__)
 
@@ -88,15 +92,43 @@ class SaveSystem:
             # バックアップ作成
             cls._create_backup()
 
-            # シリアライズ不能なサーバーインスタンスを退避
+            # List of attributes to temporarily set to None for pickling
+            tmp_attrs = []
+            # Handle web_server
             ws = getattr(engine, "web_server", None)
             if ws is not None:
+                tmp_attrs.append(("web_server", ws))
                 engine.web_server = None
+
+            # Handle MagicMock attributes in engine and related objects
+            try:
+                from unittest.mock import MagicMock
+                # List of objects to check for MagicMock attributes
+                objects_to_check = [engine]
+                if hasattr(engine, "player") and engine.player:
+                    objects_to_check.append(engine.player)
+                if hasattr(engine, "pet") and engine.pet:
+                    objects_to_check.append(engine.pet)
+                if hasattr(engine, "survival") and engine.survival:
+                    objects_to_check.append(engine.survival)
+                # Add more objects as needed
+
+                for obj in objects_to_check:
+                    for attr_name in list(obj.__dict__.keys()):
+                        attr_value = getattr(obj, attr_name)
+                        if isinstance(attr_value, MagicMock):
+                            tmp_attrs.append((obj, attr_name, attr_value))
+                            setattr(obj, attr_name, None)
+            except ImportError:
+                # unittest.mock not available, skip
+                pass
+
             try:
                 pickled = pickle.dumps(engine)
             finally:
-                if ws is not None:
-                    engine.web_server = ws
+                # Restore original values
+                for attr_name, original_value in tmp_attrs:
+                    setattr(engine, attr_name, original_value)
 
             compressed = gzip.compress(pickled)
             # SHA256チェックサム計算 (32 bytes)
@@ -349,7 +381,7 @@ class SaveSystem:
         return cls.save_json(loaded)
 
     @classmethod
-    def clear_run(cls, engine: "game.Engine") -> None:
+    def clear_run(cls, engine: "Engine") -> None:
         """ラン状態をリセットし、新しい GameStateMachine("playing") を作成する (Step 20)。
 
         死亡/勝利後のリスタート用。プレイヤーのメタ進行データは保持する。

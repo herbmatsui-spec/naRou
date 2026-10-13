@@ -9,7 +9,7 @@ import tempfile
 import threading
 import wave
 from array import array
-from typing import Any
+from typing import Any, Callable
 
 import yaml
 
@@ -252,6 +252,9 @@ class BGMManager:
         """指定テーマのBGMを再生/クロスフェード切り替え (Step 7.1)"""
         bgm_conf = (self.config or {}).get("bgm", {}).get(theme, {})
         track_id = bgm_conf.get("track", f"bgm_{theme}")
+        # Save previous theme before switching (unless already in crisis)
+        if theme != "crisis" and not self.is_crisis:
+            self._previous_theme = self.current_theme
         self.current_theme = theme
         self.current_track = track_id
         self.volume = bgm_conf.get("volume", 0.8)
@@ -266,7 +269,9 @@ class BGMManager:
         else:
             if self.is_crisis:
                 self.is_crisis = False
-                return self.play_bgm(self.current_theme or "dungeon")
+                # Restore the theme that was playing before crisis
+                restore_theme = getattr(self, "_previous_theme", None) or "dungeon"
+                return self.play_bgm(restore_theme)
         return None
 
 

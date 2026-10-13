@@ -94,6 +94,10 @@ class ItemDefinition(DataModel):
     """
     Material name (affects properties)
     """
+    salvage_materials: dict[str, int] | None = {}
+    """
+    Materials returned when item is salvaged / broken down (PR #8 integration)
+    """
     heal_amount: int | None = 0
     """
     Healing amount for potions/food

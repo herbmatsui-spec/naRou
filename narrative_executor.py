@@ -106,6 +106,19 @@ class NarrativeExecutor:
         self._active_states: dict[str, NarrativeState] = {}  # player_id -> state
         self.load_all()
 
+    def generate_sub_objective(self, player: Entity) -> str:
+        """Generate a sub-objective description based on the current narrative state."""
+        state = self.get_active_state(player)
+        if not state:
+            return ""
+        dag = self.get_dag(state.dag_id)
+        if not dag:
+            return ""
+        node = dag.get_node(state.current_node_id)
+        if not node:
+            return ""
+        return node.description
+
     def load_all(self) -> None:
         """全データ読み込み"""
         self.load_dags()

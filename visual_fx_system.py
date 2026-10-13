@@ -170,6 +170,10 @@ class FootprintDecal:
     lifetime: int = 180  # stays for ~3 seconds at 60fps
     max_lifetime: int = 180
 
+    def __post_init__(self):
+        # Set max_lifetime to the initial lifetime value so alpha starts at 1.0
+        self.max_lifetime = self.lifetime
+
     def update(self) -> bool:
         self.lifetime -= 1
         return self.lifetime > 0
@@ -218,11 +222,6 @@ class EnvironmentFXManager:
 # Step 66: Time-of-Day Visual Effects
 # ==========================================
 from time_system import TimePhase
-
-try:
-    from naRou.time_system import TimePhase
-except ImportError:
-    from time_system import TimePhase
 
 
 class TimeOfDayFXManager:

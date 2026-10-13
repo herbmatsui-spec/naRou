@@ -52,6 +52,8 @@ katana:
   dv: 1
   material: steel
   sell_price: 84
+  salvage_materials:
+    item_steel_ingot: 2
 claymore:
   name: 大剣
   category: weapon
@@ -529,3 +531,90 @@ mythril_ore:
   base_weight: 1.5
   base_value: 300
   sell_price: 90
+
+# Material items for crafting (PR #8 integration)
+item_iron_ingot:
+  name: 鉄インゴット
+  category: ore
+  char: 🧱
+  color:
+  - 180
+  - 180
+  - 200
+  base_weight: 2.0
+  base_value: 50
+  material: iron
+  sell_price: 15
+item_steel_ingot:
+  name: 鋼鉄インゴット
+  category: ore
+  char: 🧱
+  color:
+  - 200
+  - 200
+  - 220
+  base_weight: 2.5
+  base_value: 120
+  material: steel
+  sell_price: 36
+item_wood_log:
+  name: 木材
+  category: ore
+  char: 🪵
+  color:
+  - 140
+  - 100
+  - 60
+  base_weight: 1.5
+  base_value: 20
+  material: wood
+  sell_price: 6
+item_herb:
+  name: 薬草
+  category: ore
+  char: 🌿
+  color:
+  - 80
+  - 200
+  - 80
+  base_weight: 0.2
+  base_value: 10
+  material: herb
+  sell_price: 3
+item_leather:
+  name: 革
+  category: ore
+  char: 🧱
+  color:
+  - 160
+  - 110
+  - 60
+  base_weight: 1.0
+  base_value: 30
+  material: leather
+  sell_price: 9
+item_cloth:
+  name: 布
+  category: ore
+  char: 🧱
+  color:
+  - 200
+  - 200
+  - 200
+  base_weight: 0.5
+  base_value: 15
+  material: cloth
+  sell_price: 4
+item_rubinus_ore:
+  name: ルビナス原石
+  category: ore
+  char: 💎
+  color:
+  - 255
+  - 80
+  - 80
+  base_weight: 1.8
+  base_value: 500
+  material: rubinus
+  sell_price: 150
+

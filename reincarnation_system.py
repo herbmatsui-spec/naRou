@@ -44,6 +44,7 @@ class NewGamePlusData:
     completed_bounties: int = 0
     reincarnation_count: int = 0
     total_level_earned: int = 0
+    truth_pieces: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -58,6 +59,7 @@ class NewGamePlusData:
             "completed_bounties": self.completed_bounties,
             "reincarnation_count": self.reincarnation_count,
             "total_level_earned": self.total_level_earned,
+            "truth_pieces": self.truth_pieces,
         }
 
     @classmethod
@@ -74,6 +76,7 @@ class NewGamePlusData:
             completed_bounties=data.get("completed_bounties", 0),
             reincarnation_count=data.get("reincarnation_count", 0),
             total_level_earned=data.get("total_level_earned", 0),
+            truth_pieces=data.get("truth_pieces", []),
         )
 
 
@@ -269,6 +272,15 @@ class ReincarnationManager:
         # 転生回数・累計レベル
         ng_data.reincarnation_count = getattr(player, "reincarnation_count", 0)
         ng_data.total_level_earned = getattr(player, "total_level_earned", 0)
+
+        # 真実の一片
+        try:
+            from ecs.components import ArchaeologyComponent
+            archaeology = player.get_component(ArchaeologyComponent)
+            if archaeology:
+                ng_data.truth_pieces = list(archaeology.truth_pieces)
+        except Exception:
+            pass
 
         return ng_data
 

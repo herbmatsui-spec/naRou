@@ -330,10 +330,20 @@ class CombatSystem:
         except ImportError:
             pass
 
+        # 属性耐性 & 弱点判定 (PR #8 integration: origin/main より移植, Steps 55, 56)
+        elem_name = element.value if hasattr(element, "value") else str(element)
+        is_weak = False
+        if hasattr(defender, "is_weak_to") and defender.is_weak_to(elem_name):
+            is_weak = True
+            roll_dmg = int(roll_dmg * 1.5)
+
         from naRou.systems import ResistanceSet
 
-        res = getattr(defender, "resistances", ResistanceSet())
-        res_val = res.get(element) if hasattr(res, "get") else 0
+        if hasattr(defender, "get_elemental_resistance"):
+            res_val = defender.get_elemental_resistance(elem_name)
+        else:
+            res = getattr(defender, "resistances", ResistanceSet())
+            res_val = res.get(element) if hasattr(res, "get") else 0
         final_dmg = CombatSystem.calc_element_damage(roll_dmg, element, res_val)
         final_dmg = max(
             1,
@@ -366,7 +376,8 @@ class CombatSystem:
 
         crit_msg = "★会心の一撃！ " if is_crit else ""
         backstab_msg = "【背後攻撃】" if is_backstab else ""
-        msg = f"{attacker.name}は{defender.name}に{final_dmg}ダメージ！ {crit_msg}{backstab_msg}"
+        weak_msg = "【効果はばつぐんだ！】" if is_weak else ""
+        msg = f"{attacker.name}は{defender.name}に{final_dmg}ダメージ！ {crit_msg}{backstab_msg}{weak_msg}"
         return final_dmg, is_crit, msg
 
     @staticmethod
@@ -401,11 +412,52 @@ class CombatSystem:
     @staticmethod
     def process_status_effects(entity: Entity) -> list[str]:
         """状態異常のTick処理 (ステップ16, 45, Phase 4 Steps 27-31)"""
+        logs = []
+        is_bleeding = False
+
+        # 1. ECS StatusEffectsComponent 処理 (PR #8 integration: origin/main より移植, Step 54, 58-61)
+        if hasattr(entity, "get_component"):
+            try:
+                from ecs.components import StatusEffectsComponent
+
+                sec = entity.get_component(StatusEffectsComponent)
+                expired = []
+                for eff_type, eff in list(sec.effects.items()):
+                    eff.duration -= 1
+
+                    if eff_type in ("poison", "毒"):
+                        dmg = max(1, eff.power)
+                        entity.hp -= dmg
+                        logs.append(f"{entity.name}は毒で{dmg}ダメージを受けた！")
+                    elif eff_type in ("burn", "炎上"):
+                        dmg = max(1, eff.power * 2)
+                        entity.hp -= dmg
+                        logs.append(f"{entity.name}は炎上で{dmg}ダメージを受けた！")
+                    elif eff_type in ("freeze", "凍結", "paralyze", "麻痺", "sleep", "睡眠"):
+                        entity.energy = min(entity.energy, 0)
+                        eff_label = "凍結" if "freeze" in eff_type else ("麻痺" if "paralyze" in eff_type else "睡眠")
+                        logs.append(f"{entity.name}は{eff_label}で動けない！")
+                    elif eff_type in ("bleeding", "出血"):
+                        is_bleeding = True
+                        dmg = max(1, eff.power)
+                        entity.hp -= dmg
+                        logs.append(f"{entity.name}は出血で{dmg}ダメージを受けた！")
+
+                    if eff.duration <= 0:
+                        expired.append(eff_type)
+                        logs.append(f"{entity.name}の{eff_type}状態が治まった。")
+
+                for exp_type in expired:
+                    sec.remove_effect(exp_type)
+            except Exception:
+                pass
+
+        # 2. 後方互換リスト型 status_effects 処理 (従来ロジック)
         if not hasattr(entity, "status_effects"):
             entity.status_effects = []
-        logs = []
+        legacy_list = isinstance(entity.status_effects, list)
         remaining = []
-        for eff in entity.status_effects:
+        for eff in (entity.status_effects if legacy_list else []):
             if not getattr(eff, "is_infinite", False):
                 eff.remaining_ticks -= 10
 
@@ -440,9 +492,9 @@ class CombatSystem:
                 if eff.name == STATUS_BLEEDING:
                     logs.append(f"{entity.name}の出血が止まった。")
 
-        entity.status_effects = remaining
-
-        is_bleeding = any(e.name == STATUS_BLEEDING for e in entity.status_effects)
+        if legacy_list:
+            entity.status_effects = remaining
+            is_bleeding = any(e.name == STATUS_BLEEDING for e in entity.status_effects)
         return logs, is_bleeding
 
     @staticmethod

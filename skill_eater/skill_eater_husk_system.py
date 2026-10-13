@@ -1,16 +1,16 @@
 """Husk generation system for the Puppet Hacking feature."""
 
-from naRou.ecs.components.components import HuskComponent
 from naRou.config import get_config
+from naRou.ecs.components.components import HuskComponent
 
 
 def create_husk(source_monster: str, tier: int) -> HuskComponent:
     """Create a HuskComponent from a defeated monster.
-    
+
     Args:
         source_monster: The name of the monster that was devoured
         tier: The tier/level of the monster
-        
+
     Returns:
         A new HuskComponent instance
     """
@@ -28,7 +28,7 @@ def create_husk(source_monster: str, tier: int) -> HuskComponent:
 
 def tick_husk_decay(player) -> None:
     """Update decay for all husks in player's inventory.
-    
+
     Args:
         player: The player entity
     """

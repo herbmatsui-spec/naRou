@@ -32,6 +32,7 @@ from ecs.components import (
     Skill,
     SkillFusionComponent,
     SkillTreeJobComponent,
+    StatusEffectsComponent,
     StorytellerComponent,
     TitleComponent,
 )
@@ -119,6 +120,13 @@ class Entity:
         # 状態異常リスト (Step 70: HUD 表示のため全 Entity で常時存在)
         self.status_effects: list = []
 
+        # 属性耐性 & 弱点 (PR #8 integration: origin/main より移植, Step 51, 53)
+        self.base_resistances: dict[str, int] = {}
+        self.weaknesses: list[str] = []
+        # ECS 状態異常 API (add_status 等) が一度でも使われたら True になり、
+        # status_effects プロパティの返却先がリストからコンポーネントへ切り替わる。
+        self._status_effects_ecs: bool = False
+
         # チュートリアル完了履歴 (Step 1.2)
         self.completed_tutorials: set[str] = set()
         self.pending_tutorial_popup: dict[str, Any] | None = None
@@ -174,16 +182,29 @@ class Entity:
         self.components[BaseStatsComponent] = BaseStatsComponent()
         self.components[EconomyComponent] = EconomyComponent()
         self.components[LevelComponent] = LevelComponent()
+        self.components[StatusEffectsComponent] = StatusEffectsComponent()
 
     def get_component(self, component_type: type[T]) -> T:
         """指定されたコンポーネントを取得（存在しなければ初期化して登録）"""
-        if component_type not in self.components:
-            self.components[component_type] = component_type()
+        # First try exact class match
+        if component_type in self.components:
+            return self.components[component_type]
+        # Then try by class name (handles naRou vs ecs namespace differences)
+        type_name = component_type.__name__
+        for comp_class, comp_instance in self.components.items():
+            if comp_class.__name__ == type_name:
+                return comp_instance
+        # Not found, create new
+        self.components[component_type] = component_type()
         return self.components[component_type]
 
     def has_component(self, component_type: type) -> bool:
         """指定されたコンポーネントを所持しているか判定"""
-        return component_type in self.components
+        if component_type in self.components:
+            return True
+        # Check by class name
+        type_name = component_type.__name__
+        return any(comp_class.__name__ == type_name for comp_class in self.components)
 
     # -------------------------------------------------------------
     # 称号・統計プロパティ (TitleComponent への委譲)
@@ -1058,6 +1079,10 @@ class Entity:
     def archaeology(self) -> ArchaeologyComponent:
         return self.get_component(ArchaeologyComponent)
 
+    @archaeology.setter
+    def archaeology(self, val: ArchaeologyComponent):
+        self.components[ArchaeologyComponent] = val
+
     @property
     def excavated_sites(self) -> list[str]:
         return self.get_component(ArchaeologyComponent).excavated_sites
@@ -1384,7 +1409,10 @@ class Entity:
         # コンポーネントのシリアライズ (JSONシリアライズ可能に変換: Step 21)
         for comp_type, comp in self.components.items():
             comp_name = comp_type.__name__
-            if hasattr(comp, "__dict__"):
+            # Use component's to_dict() method if available
+            if hasattr(comp, "to_dict") and callable(comp.to_dict):
+                data["components"][comp_name] = comp.to_dict()
+            elif hasattr(comp, "__dict__"):
                 comp_dict = {}
                 for k, v in comp.__dict__.items():
                     if callable(v):
@@ -1462,11 +1490,35 @@ class Entity:
 
         # コンポーネントの復元
         comp_data_dict = data.get("components", {})
-        for comp_type, comp in ent.components.items():
+        # First, restore existing components
+        for comp_type, comp in list(ent.components.items()):
             comp_name = comp_type.__name__
             if comp_name in comp_data_dict:
-                for k, v in comp_data_dict[comp_name].items():
-                    setattr(comp, k, v)
+                comp_data = comp_data_dict[comp_name]
+                # Use component's from_dict() classmethod if available
+                if hasattr(comp_type, "from_dict") and callable(comp_type.from_dict):
+                    new_comp = comp_type.from_dict(comp_data)
+                    # Replace the component in the entity
+                    ent.components[comp_type] = new_comp
+                else:
+                    for k, v in comp_data.items():
+                        setattr(comp, k, v)
+
+        # Then, create any components that were serialized but don't exist in the default entity
+        for comp_name, comp_data in comp_data_dict.items():
+            # Check if this component type is already handled
+            already_handled = any(comp_type.__name__ == comp_name for comp_type in ent.components)
+            if not already_handled:
+                # Try to find the component class by name
+                # We need to import the components module
+                try:
+                    from ecs.components import components as components_module
+                    comp_type = getattr(components_module, comp_name, None)
+                    if comp_type and hasattr(comp_type, "from_dict") and callable(comp_type.from_dict):
+                        new_comp = comp_type.from_dict(comp_data)
+                        ent.components[comp_type] = new_comp
+                except (ImportError, AttributeError):
+                    pass  # Component type not found, skip
 
         # スキルの復元
         if "skills" in data and ent._skills is not None:
@@ -1477,3 +1529,63 @@ class Entity:
                     ent._skills[sk_key].potential = sk_dict.get("potential", 100)
 
         return ent
+
+    # -------------------------------------------------------------
+    # 状態異常プロパティ・メソッド (PR #8 integration: origin/main より移植, Step 54)
+    # -------------------------------------------------------------
+    @property
+    def status_effects(self):
+        """ECS API 使用時は StatusEffectsComponent、レガシーコードはリストを返す。"""
+        if getattr(self, "_status_effects_ecs", False):
+            return self.get_component(StatusEffectsComponent)
+        return self._status_effects_list
+
+    @status_effects.setter
+    def status_effects(self, value) -> None:
+        if getattr(self, "_status_effects_ecs", False):
+            # ECS モード: レガシー call site のリセット操作 ([] 代入) をクリアに変換
+            if isinstance(value, list) and not value:
+                self.get_component(StatusEffectsComponent).clear_all()
+            return
+        self._status_effects_list = value
+
+    def has_status(self, effect_type: str) -> bool:
+        self._status_effects_ecs = True
+        return self.get_component(StatusEffectsComponent).has_effect(effect_type)
+
+    def add_status(
+        self,
+        effect_type: str,
+        duration: int,
+        power: int = 1,
+        source_name: str = "",
+    ) -> bool:
+        self._status_effects_ecs = True
+        return self.get_component(StatusEffectsComponent).add_effect(
+            effect_type, duration, power, source_name
+        )
+
+    def remove_status(self, effect_type: str) -> bool:
+        self._status_effects_ecs = True
+        return self.get_component(StatusEffectsComponent).remove_effect(effect_type)
+
+    def clear_statuses(self) -> None:
+        self._status_effects_ecs = True
+        self.get_component(StatusEffectsComponent).clear_all()
+
+    # -------------------------------------------------------------
+    # 属性耐性計算 (PR #8 integration: origin/main より移植, Step 53, 56)
+    # -------------------------------------------------------------
+    def get_elemental_resistance(self, element: str) -> int:
+        """基礎耐性 + 装備エンチャント耐性の合算"""
+        base = self.base_resistances.get(element, 0)
+        equip_res = 0
+        inventory = getattr(self, "inventory", None)
+        get_res = getattr(inventory, "get_elemental_resistances", None) if inventory else None
+        if callable(get_res):
+            equip_res = get_res().get(element, 0)
+        return base + equip_res
+
+    def is_weak_to(self, element: str) -> bool:
+        """指定属性が弱点かどうか判定"""
+        return element in self.weaknesses

@@ -1,17 +1,17 @@
 """UI functions for the Husk Puppet System."""
 
 from naRou.config import get_config
+from naRou.ecs.components.components import HuskComponent, PuppetUnitComponent
 from naRou.skill_eater.skill_eater_husk_forge import PuppetForgeSystem
 from naRou.skill_eater.skill_eater_husk_units import set_order
-from naRou.ecs.components.components import PuppetUnitComponent, HuskComponent
 
 
 def open_forge_ui(player) -> str:
     """Open the puppet forge UI.
-    
+
     Args:
         player: The player entity
-        
+
     Returns:
         String identifier for the forge menu
     """
@@ -20,16 +20,16 @@ def open_forge_ui(player) -> str:
 
 def list_husks(player) -> list[str]:
     """List all husks in the player's inventory.
-    
+
     Args:
         player: The player entity with husk_inventory component
-        
+
     Returns:
         List of strings representing husks in format "husk_id(source_monster)"
     """
     if not hasattr(player, 'husk_inventory') or not player.husk_inventory:
         return []
-    
+
     husks = []
     for husk in player.husk_inventory.husks:
         husks.append(f"{husk.husk_id}({husk.source_monster})")
@@ -38,10 +38,10 @@ def list_husks(player) -> list[str]:
 
 def list_injectable_skills(player) -> list[str]:
     """List skills available for injection into husks.
-    
+
     Args:
         player: The player entity
-        
+
     Returns:
         List of skill names available for injection
     """
@@ -53,7 +53,7 @@ def list_injectable_skills(player) -> list[str]:
 
 def ui_inject(player, husk_id: str, skill: str) -> None:
     """Handle UI injection request for a husk.
-    
+
     Args:
         player: The player entity
         husk_id: The ID of the husk to inject into
@@ -61,17 +61,17 @@ def ui_inject(player, husk_id: str, skill: str) -> None:
     """
     if not hasattr(player, 'husk_inventory') or not player.husk_inventory:
         return
-    
+
     # Find the husk with the matching ID
     target_husk = None
     for husk in player.husk_inventory.husks:
         if husk.husk_id == husk_id:
             target_husk = husk
             break
-    
+
     if target_husk is None:
         return
-    
+
     # Use the forge system to inject the skill
     forge = PuppetForgeSystem()
     try:
@@ -83,10 +83,10 @@ def ui_inject(player, husk_id: str, skill: str) -> None:
 
 def forge_status(husk) -> str:
     """Get status string for display in forge UI.
-    
+
     Args:
         husk: The husk to get status for
-        
+
     Returns:
         Formatted string with control load and rebellion risk
     """
@@ -98,7 +98,7 @@ def forge_status(husk) -> str:
 
 def dispatch(player, husk_id: str, role: str) -> None:
     """Dispatch a husk to become a puppet unit with the specified role.
-    
+
     Args:
         player: The player entity
         husk_id: The ID of the husk to dispatch
@@ -107,7 +107,7 @@ def dispatch(player, husk_id: str, role: str) -> None:
     # Validate role
     if role not in ['escort', 'turret', 'drone']:
         raise ValueError(f"Invalid role: {role}. Valid roles: 'escort', 'turret', 'drone'")
-    
+
     # Find the husk with the matching ID
     target_husk = None
     if hasattr(player, 'husk_inventory') and player.husk_inventory:
@@ -115,17 +115,17 @@ def dispatch(player, husk_id: str, role: str) -> None:
             if husk.husk_id == husk_id:
                 target_husk = husk
                 break
-    
+
     if target_husk is None:
         return  # Husk not found
-    
+
     # Create the forge system
     forge = PuppetForgeSystem()
-    
+
     # Create unit from husk (using default protocol rank 0 for now)
     # In a full implementation, we might want to allow specifying protocol rank
     unit = forge.create_unit(target_husk, protocol_rank=0)
-    
+
     # Add unit to player's units list
     if not hasattr(player, 'units'):
         player.units = []

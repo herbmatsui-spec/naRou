@@ -740,6 +740,7 @@ class SurvivalSystem:
         self.fatigue = 0
         self.karma = 0
         self.gold = 0
+        self.platinum = 0
         self.fame = 0
         self.turns = 0
 

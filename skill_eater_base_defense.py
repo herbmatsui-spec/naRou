@@ -36,6 +36,7 @@ class RaidTriggerType(str, Enum):
     HEAT_LEVEL = "HeatLevel"
     ELAPSED_TURNS = "ElapsedTurns"
     META_QUEST = "MetaQuest"
+    AUDIT_THREAT = "AuditThreat"
 
 
 class DefenseFacilityType(str, Enum):
@@ -106,6 +107,10 @@ class DefenseFacility:
     effect_description: str = ""
     special_ability: str = ""
     is_built: bool = False
+    # 監査拡張用フィールド (PR #8 Audit Defense 連携, 2026-10-10)
+    element: str = "none"
+    blueprint_id: str = ""
+    status_effect: str = "none"
 
     @property
     def max_hp(self) -> int:

@@ -599,7 +599,8 @@ class ScreenShake:
     def update(self) -> bool:
         if self.duration > 0:
             self.duration -= 1
-            return True
+            self.intensity = 0.0  # Reset intensity when done
+            return self.duration > 0  # Return True if still active after update
         self.intensity = 0.0
         return False
 
@@ -1221,7 +1222,7 @@ class CinematicLogVisualizer:
         """ログの振動・重要度発光・文字別パルスを伴う映画的描画"""
         recent = msg_log.get_recent(count) if hasattr(msg_log, "get_recent") else []
         for i, lmsg in enumerate(recent):
-            tag = "[!]" if lmsg.level == "WARNING" else ("★" if lmsg.level == "SUCCESS" else " ")
+            tag = "[!]" if lmsg.level == "WARNING" else ("★" if lmsg.level == "SUCCESS" else "")
             text = f"{tag} {lmsg.text}"[:74]
             base_col = lmsg.color
 
@@ -1252,6 +1253,183 @@ class CinematicLogVisualizer:
                 )
             else:
                 console.print(x=start_x, y=y_pos, string=text, fg=base_col)
+
+
+class DynamicLighting:
+    """動的ライティング・色ブレンドユーティリティ (Step 66関連)"""
+
+    @staticmethod
+    def calculate_distance_intensity(
+        x1: float, y1: float, x2: float, y2: float, radius: float = 7.0
+    ) -> float:
+        """距離に基づく光強度計算 (0.0-1.0)"""
+        import math
+
+        dist = math.hypot(x2 - x1, y2 - y1)
+        if dist >= radius:
+            return 0.0
+        # Linear falloff
+        return 1.0 - (dist / radius)
+
+    @staticmethod
+    def blend_color(color: tuple[int, int, int], factor: float) -> tuple[int, int, int]:
+        """色を factor でブレンド (0.0-1.0)"""
+        return (
+            int(color[0] * factor),
+            int(color[1] * factor),
+            int(color[2] * factor),
+        )
+
+    @staticmethod
+    def calculate_tile_lighting(
+        tx: int,
+        ty: int,
+        base_color: tuple[int, int, int],
+        light_sources: list,
+    ) -> tuple[tuple[int, int, int], float]:
+        """タイルのライティング計算 - 複数光源の加算ブレンド"""
+        total_r = total_g = total_b = 0
+        total_intensity = 0.0
+
+        for src in light_sources:
+            intensity = DynamicLighting.calculate_distance_intensity(
+                tx, ty, src.x, src.y, src.radius
+            )
+            if intensity > 0:
+                total_r += int(src.color[0] * intensity)
+                total_g += int(src.color[1] * intensity)
+                total_b += int(src.color[2] * intensity)
+                total_intensity += intensity
+
+        # Clamp to base color range
+        r = min(255, base_color[0] + total_r)
+        g = min(255, base_color[1] + total_g)
+        b = min(255, base_color[2] + total_b)
+
+        return (r, g, b), min(1.0, total_intensity)
+
+    @staticmethod
+    def get_tile_lighting_properties(tile_id: str) -> dict:
+        """タイルIDからライティングプロパティ取得"""
+        # Emissive tiles (light sources)
+        emissive_tiles = {
+            "TR_DECOR_01": {"emissive": True, "emissive_radius": 5.0, "material": "fire"},
+            "TR_DECOR_02": {"emissive": True, "emissive_radius": 3.0, "material": "magic"},
+            "TR_EFFECT_01": {"emissive": True, "emissive_radius": 2.0, "material": "magic"},
+        }
+
+        if tile_id in emissive_tiles:
+            return emissive_tiles[tile_id]
+
+        # Material-based properties
+        material_props = {
+            "TR_FLOOR_01": {"emissive": False, "material": "stone", "reflective": False},
+            "TR_WALL_01": {"emissive": False, "material": "stone", "reflective": False},
+            "TR_MONSTER_01": {"emissive": False, "material": "flesh", "reflective": False},
+            "TR_ITEM_04_01": {"emissive": False, "material": "metal", "reflective": True},
+        }
+
+        if tile_id in material_props:
+            return material_props[tile_id]
+
+        # Default
+        return {"emissive": False, "material": "default", "reflective": False}
+
+    @staticmethod
+    def get_light_sources_for_engine(engine) -> list:
+        """エンジンから光源リスト取得"""
+        if not engine or not hasattr(engine, "player") or engine.player is None:
+            return []
+
+        light_sources = []
+        # Player torch
+        if hasattr(engine, "player"):
+            px, py = engine.player.x, engine.player.y
+            light_sources.append(
+                type("LightSource", (), {
+                    "x": px,
+                    "y": py,
+                    "radius": 7.0,
+                    "color": (255, 240, 200),
+                    "intensity": 1.0,
+                    "source_type": "player",
+                })()
+            )
+
+        # Add pet light if available
+        if hasattr(engine, "pet") and engine.pet:
+            light_sources.append(
+                type("LightSource", (), {
+                    "x": engine.pet.x,
+                    "y": engine.pet.y,
+                    "radius": 5.0,
+                    "color": (255, 200, 255),
+                    "intensity": 0.8,
+                    "source_type": "pet",
+                })()
+            )
+
+        # Add altar light if available
+        if hasattr(engine, "altar_pos") and engine.altar_pos:
+            light_sources.append(
+                type("LightSource", (), {
+                    "x": engine.altar_pos[0],
+                    "y": engine.altar_pos[1],
+                    "radius": 8.0,
+                    "color": (255, 215, 0),
+                    "intensity": 1.2,
+                    "source_type": "altar",
+                })()
+            )
+
+        # Add portal light if available
+        if hasattr(engine, "game_map") and hasattr(engine.game_map, "stairs_down_pos") and engine.game_map.stairs_down_pos:
+            light_sources.append(
+                type("LightSource", (), {
+                    "x": engine.game_map.stairs_down_pos[0],
+                    "y": engine.game_map.stairs_down_pos[1],
+                    "radius": 6.0,
+                    "color": (100, 200, 255),
+                    "intensity": 1.0,
+                    "source_type": "portal",
+                })()
+            )
+
+        # Add resource node lights if available
+        if hasattr(engine, "resource_nodes"):
+            for node in engine.resource_nodes:
+                if not getattr(node, "depleted", False):
+                    light_sources.append(
+                        type("LightSource", (), {
+                            "x": node.x,
+                            "y": node.y,
+                            "radius": 3.0,
+                            "color": (100, 255, 100),
+                            "intensity": 0.5,
+                            "source_type": "resource",
+                        })()
+                    )
+
+        # Add particle lights if available
+        if hasattr(engine, "particles"):
+            for p in engine.particles:
+                if hasattr(p, "color"):
+                    light_sources.append(
+                        type("LightSource", (), {
+                            "x": int(p.x),
+                            "y": int(p.y),
+                            "radius": 2.0,
+                            "color": p.color,
+                            "intensity": 0.3,
+                            "source_type": "magic",
+                        })()
+                    )
+
+        # Add other light sources from engine if available
+        if hasattr(engine, "light_sources"):
+            light_sources.extend(engine.light_sources)
+
+        return light_sources
 
 
 def format_skill_tree_display(registry: SkillTreeRegistry) -> str:

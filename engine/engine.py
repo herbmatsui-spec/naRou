@@ -258,6 +258,40 @@ class Engine:
             self.web_server,
         ) = SystemInitializer.initialize_ui_and_services(self)
 
+    def __getstate__(self) -> dict:
+        """Return state for pickling, excluding unpicklable attributes."""
+        state = self.__dict__.copy()
+        # Remove unpicklable attributes
+        unpicklable = [
+            "renderer",  # tcod renderer
+            "kernel",  # Kernel with modules
+            "systems_coordinator",  # SystemCoordinator
+            "combat_handler",  # CombatSystem
+            "world_handler",  # WorldSystem
+            "entity_handler",  # EntitySystem
+            "skill_eater_handler",  # SkillEaterSystemHandler
+            "pet_handler",  # PetSystemHandler
+            "game_loop_handler",  # GameLoopHandler
+            "render_handler",  # RenderSystemHandler
+            "ui_handler",  # UISystemHandler
+            "game_state_initializer",  # GameStateInitializer
+            "web_server",  # HTTPServer
+            "localization_manager",  # LocalizationManager
+            "config_mgr",  # ConfigManager
+            "entity_manager",  # EntityManager
+            "player_pet_initializer",  # function
+            "_shutdown_hook",  # function
+        ]
+        for key in unpicklable:
+            state.pop(key, None)
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        """Restore state after unpickling."""
+        self.__dict__.update(state)
+        # Don't set unpicklable properties (they have setters that require kernel)
+        # These will be None since they were removed in __getstate__
+
     def _initialize_player_and_pet(self) -> None:
         """プレイヤーとペットの初期化処理"""
         from exceptions import DataParseError
@@ -971,6 +1005,30 @@ class Engine:
         return (
             self.kernel.get_system("skill_eater_epilogue_manager")
             if self.kernel.has_system("skill_eater_epilogue_manager")
+            else None
+        )
+
+    @property
+    def skill_eater_meta_intervention(self):
+        return (
+            self.kernel.get_system("skill_eater_meta_intervention")
+            if self.kernel.has_system("skill_eater_meta_intervention")
+            else None
+        )
+
+    @property
+    def skill_eater_intervention_engine(self):
+        return (
+            self.kernel.get_system("skill_eater_intervention_engine")
+            if self.kernel.has_system("skill_eater_intervention_engine")
+            else None
+        )
+
+    @property
+    def skill_eater_exploration_system(self):
+        return (
+            self.kernel.get_system("skill_eater_exploration_system")
+            if self.kernel.has_system("skill_eater_exploration_system")
             else None
         )
 

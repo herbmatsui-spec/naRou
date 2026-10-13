@@ -95,9 +95,9 @@ class Item:
     def __init__(
         self,
         name: str,
-        category: str,
-        char: str,
-        color: tuple[int, int, int],
+        category: str = CAT_TOOL,
+        char: str = '?',
+        color: tuple[int, int, int] = (255, 255, 255),
         x: int = 0,
         y: int = 0,
         base_weight: float = 1.0,
@@ -119,6 +119,8 @@ class Item:
         cursed: bool = False,  # 呪いフラグ (ステップ32)
         enchants: tuple[str, ...] = (),  # エンチャント (スタック判定用: ステップ29)
         sell_price: int | None = None,  # 売却価格 (ステップ26)
+        locked: bool = False,  # お気に入りロック (フェーズ2 Step 37)
+        description: str = "",  # 説明文 (テスト用追加)
     ):
         self.item_id: str = str(uuid.uuid4())  # 固有ID (ステップ28)
         self.name = name
@@ -146,6 +148,8 @@ class Item:
         self.cursed = cursed
         self.enchants = enchants
         self.sell_price = sell_price if sell_price is not None else int(base_value * 0.3)
+        self.locked = locked  # お気に入りロック
+        self.description = description  # 説明文
 
         # 食料腐敗システム (ステップ35, 36)
         self.rot_progress: int = 0
@@ -173,6 +177,7 @@ class Item:
             and self.cursed == other.cursed
             and self.enchants == other.enchants
             and self.identified == other.identified
+            and self.locked == other.locked
             and self.category in (CAT_POTION, CAT_SCROLL, CAT_FOOD)
         )
 
@@ -184,7 +189,26 @@ class Item:
     @property
     def value(self) -> int:
         mat = MATERIALS.get(self.material, {})
-        return int(self.base_value * mat.get("value_mult", 1.0) * self.count)
+        base = int(self.base_value * mat.get("value_mult", 1.0) * self.count)
+        # Quality multiplier
+        quality_mult = {
+            QUALITY_BAD: 0.5,
+            QUALITY_NORMAL: 1.0,
+            QUALITY_GOOD: 1.5,
+            QUALITY_MIRACLE: 2.5,
+            QUALITY_GOD: 4.0,
+        }.get(self.quality, 1.0)
+        return int(base * quality_mult)
+
+    @property
+    def enchantments(self):
+        """互換性のためのエイリアス (enchants -> enchantments)"""
+        return list(self.enchants)
+
+    @enchantments.setter
+    def enchantments(self, value):
+        """互換性のためのセッター"""
+        self.enchants = tuple(value)
 
     @property
     def display_name(self) -> str:
@@ -231,6 +255,8 @@ class Item:
             "enchants": list(self.enchants),
             "rot_progress": self.rot_progress,
             "is_cooling": self.is_cooling,
+            "locked": self.locked,
+            "description": self.description,
         }
 
     @classmethod
@@ -262,6 +288,7 @@ class Item:
             cursed=data.get("cursed", False),
             enchants=tuple(data.get("enchants", ())),
             sell_price=data.get("sell_price"),
+            locked=data.get("locked", False),
         )
         item.item_id = data.get("item_id", item.item_id)
         item.rot_progress = data.get("rot_progress", 0)
@@ -382,6 +409,118 @@ class Inventory:
             if msg:
                 logs.append(msg)
         return logs
+
+    # ==================== Filter / Sort / Lock (Phase 2 Steps 37-40) ====================
+
+    def filter_items(self, category_filter: str) -> list[Item]:
+        """カテゴリ別フィルタリング
+
+        Args:
+            category_filter: "weapon", "armor", "shield", "equipment" (weapon+armor+shield+ring+helm),
+                           "consumable" (potion+scroll+food+spellbook), "tool", "rod", "ore", "gold"
+        """
+        # Equipment categories
+        equipment_cats = {CAT_WEAPON, CAT_SHIELD, CAT_ARMOR, CAT_HELM, CAT_RING}
+        consumable_cats = {CAT_POTION, CAT_SCROLL, CAT_FOOD, CAT_SPELLBOOK}
+
+        if category_filter == "equipment":
+            return [item for item in self.items if item.category in equipment_cats]
+        elif category_filter == "consumable":
+            return [item for item in self.items if item.category in consumable_cats]
+        else:
+            # Single category match
+            return [item for item in self.items if item.category == category_filter]
+
+    def sort_items(self, key: str = "name", reverse: bool = False) -> list[Item]:
+        """各種キーによるソート
+
+        Args:
+            key: "name", "value", "weight", "quality"
+            reverse: True for descending, False for ascending
+        """
+        quality_order = {
+            QUALITY_GOD: 5,
+            QUALITY_MIRACLE: 4,
+            QUALITY_GOOD: 3,
+            QUALITY_NORMAL: 2,
+            QUALITY_BAD: 1,
+        }
+
+        def sort_key(item: Item):
+            if key == "name":
+                return item.name
+            elif key == "value":
+                return item.value
+            elif key == "weight":
+                return item.weight
+            elif key == "quality":
+                return quality_order.get(item.quality, 0)
+            else:
+                return item.name
+
+        # Locked items always come first
+        locked_items = [item for item in self.items if item.locked]
+        unlocked_items = [item for item in self.items if not item.locked]
+
+        locked_sorted = sorted(locked_items, key=sort_key, reverse=reverse)
+        unlocked_sorted = sorted(unlocked_items, key=sort_key, reverse=reverse)
+
+        return locked_sorted + unlocked_sorted
+
+    def can_sell(self, item: Item) -> tuple[bool, str]:
+        """売却可能かチェック（ロック・呪い・装備中は不可）"""
+        if item.locked:
+            return False, "ロックされているため売却できません（保護中）。"
+        if item.cursed:
+            return False, "呪われているため売却できません。"
+        # Check if equipped
+        for slot in self.slots:
+            if slot.item is item:
+                return False, "装備中のため売却できません。"
+        return True, ""
+
+    def can_destroy(self, item: Item) -> tuple[bool, str]:
+        """破棄可能かチェック（ロックは不可、呪いは可能）"""
+        if item.locked:
+            return False, "ロックされているため破棄できません（保護中）。"
+        # Check if equipped
+        for slot in self.slots:
+            if slot.item is item:
+                return False, "装備中のため破棄できません。"
+        return True, ""
+
+    def toggle_lock(self, item: Item) -> bool:
+        """ロック切り替え - 戻り値はロック後の状態"""
+        if item in self.items:
+            item.locked = not item.locked
+            return item.locked
+        return False
+
+    def get_stat_bonuses(self) -> dict[str, int]:
+        """装備中のアイテムからステータスボーナスを集計（エンチャント含む）"""
+        bonuses: dict[str, int] = {}
+        for slot in self.slots:
+            item = slot.item
+            if item:
+                # エンチャントからステータスボーナスを集計 (enchants と enchantments の両方に対応)
+                for ench in getattr(item, "enchants", ()) or getattr(item, "enchantments", ()):
+                    if ench.type == "stat_bonus" and ench.target_stat:
+                        bonuses[ench.target_stat] = bonuses.get(ench.target_stat, 0) + ench.power
+                    elif ench.type == "combat_bonus" and ench.target_stat:
+                        # combat_bonusもステータスとして扱う
+                        bonuses[ench.target_stat] = bonuses.get(ench.target_stat, 0) + ench.power
+        return bonuses
+
+    def get_weapon_element_damages(self) -> list[tuple[str, int]]:
+        """メインハンド武器の属性ダメージを取得"""
+        result: list[tuple[str, int]] = []
+        main_hand_slot = self.get_slot("main_hand")
+        if main_hand_slot and main_hand_slot.item:
+            weapon = main_hand_slot.item
+            for ench in getattr(weapon, "enchants", ()) or getattr(weapon, "enchantments", ()):
+                if ench.type == "element_damage" and ench.element:
+                    result.append((ench.element, ench.power))
+        return result
 
 
 def create_sample_item(name: str, x: int = 0, y: int = 0) -> Item:
@@ -737,3 +876,27 @@ def identify(item: Item, cost: int, gold_holder: Any = None) -> Item:
         gold_holder.gold -= cost
     item.identified = True
     return item
+
+
+def use_item(user: Any, item: Item) -> tuple[bool, str]:
+    """アイテム使用処理 (ポーション、巻物、食料等) (Step 64)"""
+    if item.category == CAT_POTION:
+        if item.heal_amount > 0:
+            user.hp = min(getattr(user, "max_hp", 9999), user.hp + item.heal_amount)
+            return True, f"{user.name}は{item.name}を飲み、HPが{item.heal_amount}回復した！"
+        elif "毒消し" in item.name or "cure_poison" in getattr(item, "item_id", "") or item.name == "毒消しのポーション":
+            cured = False
+            if hasattr(user, "remove_status"):
+                # Handle both English (ECS) and Japanese (legacy) status keys
+                c1 = user.remove_status("poison") or user.remove_status("毒")
+                c2 = user.remove_status("burn") or user.remove_status("炎上")
+                cured = c1 or c2
+            return True, f"{user.name}は毒消しのポーションを飲み、毒と炎上が治まった！" if cured else f"{user.name}は毒消しのポーションを飲んだ。"
+        elif "魔力回復" in item.name or "mana" in getattr(item, "item_id", ""):
+            user.mp = min(getattr(user, "max_mp", 9999), getattr(user, "mp", 0) + 40)
+            return True, f"{user.name}は魔力回復のポーションを飲み、MPが回復した！"
+    elif item.category == CAT_FOOD:
+        if hasattr(user, "hunger"):
+            user.hunger = min(10000, user.hunger + item.nutrition)
+        return True, f"{user.name}は{item.name}を食べた。"
+    return False, "使用できないアイテムです。"

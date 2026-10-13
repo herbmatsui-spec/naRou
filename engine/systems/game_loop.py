@@ -149,6 +149,9 @@ class GameLoopHandler:
         if self._end_run_if_player_dead():
             return
 
+        # turn counter を進める ([S2.2] advance_world のみで turn を進める)
+        engine.turns += 1
+
         # 死因の区分は turn 進行中の観測点で行う ([S3] 細分類は対象外)
         hp_before = engine.player.hp
         engine.gameplay_loop(engine.kernel, engine).advance_world()

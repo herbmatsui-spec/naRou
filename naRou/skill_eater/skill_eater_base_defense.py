@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
 from naRou.skill_eater_audio_system import SkillEaterAudioSystem
 from naRou.skill_eater_economy_system import SkillEaterEconomySystem
 from naRou.skill_eater_presentation_system import SkillEaterPresentationSystem

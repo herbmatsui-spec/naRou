@@ -114,6 +114,36 @@ filterwarnings = [
     "ignore::PendingDeprecationWarning"
 ]
 
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "*/tests/**",
+    "*/tools/**",
+    "*/venv/**",
+    "*/__pycache__/**",
+    "*/.tmp_main_check/**",
+    "*/.worktrees/**",
+    "*/build/**",
+    "*/dist/**",
+    "*/.git/**",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if DEBUG",
+    "if settings.DEBUG",
+    "if settings.TESTING",
+]
+ignore_errors = true
+fail_under = 80
+show_missing = true
+skip_covered = false
+
 [tool.ruff]
 line-length = 100
 target-version = "py310"
