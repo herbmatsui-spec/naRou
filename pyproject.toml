@@ -95,7 +95,6 @@ packages = [
     "naRou.stubs.psutil",
     "naRou.stubs.pydantic",
     "naRou.stubs.pygame",
-    "naRou.systems",
 ]
 include-package-data = true
 
