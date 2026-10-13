@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
   <img src="https://img.shields.io/badge/World-A:%20Skill%20Eater-purple.svg" alt="World A: Skill Eater">
   <img src="https://img.shields.io/badge/Audio-Foley%20SE%20%2B%20VFX-orange.svg" alt="Audio & VFX">
-  <img src="https://img.shields.io/badge/Tests-230%20passed%20(core%20suites)-yellow.svg" alt="Tests: 230 passed (core suites)">
+  <img src="https://img.shields.io/badge/Tests-160%20passed%20(core%20suites)-yellow.svg" alt="Tests: 160 passed (core suites)">
 </p>
 
 **Elona風本格ローグライクRPG** (Python + tcod) ＋ **『異世界マルチバース構想：Aの世界（スキル喰い RPG）』**
@@ -19,7 +19,7 @@
 
 ### メイン ゲームプレイ（タイルベース / テキストモード）
 <p align="center">
-  <img src="assets/demo_gameplay.gif" alt="メイン ゲームプレイ" width="760">
+  <img src="demo_gameplay.gif" alt="メイン ゲームプレイ" width="760">
 </p>
 *プロシージャル生成ダンジョンでの探索、戦闘、UI表示の実機動作*
 
@@ -49,13 +49,13 @@
 
 ### スキルツリーと転職
 <p align="center">
-  <img src="assets/demo_skill_tree.gif" alt="スキルツリーとジョブシステム" width="760">
+  <img src="demo_skill_tree.gif" alt="スキルツリーとジョブシステム" width="760">
 </p>
 *70種以上のスキルと15種のジョブクラス、スキル覚醒・継承・共鳴システム*
 
 ### ペット育成とWeb版デモ
 <p align="center">
-  <img src="assets/demo_pet_web.gif" alt="ペット育成とWebブラウザ版" width="760">
+  <img src="demo_pet_web.gif" alt="ペット育成とWebブラウザ版" width="760">
 </p>
 *契約・進化・融合による相棒育成、WebGL/Canvas対応のブラウザプレイ*
 
@@ -214,9 +214,9 @@ GPU/SDL の無い環境（CI・コンテナ・SSH）では `NAROU_FORCE_TEXT=1` 
 
 ## 🧪 テストと品質検証
 
-本プロジェクトは `pytest` による自動テストを備えています。**コアスイート 230 passed / xfail 0**
-(2026-10-09 時点、`GAME_DESIGN_V2` 計画の全テストファイル + Phase 1/2/3 検証済みスイート)。
-全 1125 テスト (124ファイル) のうち、レガシーの重いシミュレーション系テストは実行に
+本プロジェクトは `pytest` による自動テストを備えています。**コアスイート 160 passed / 1 skipped / xfail 0**
+(2026-10-13 実測、`GAME_DESIGN_V2` 計画の全テストファイル + Phase 1/2/3 検証済みスイート)。
+全 2819 テストのうち、レガシーの重いシミュレーション系テストは実行に
 9分以上かかるため、コアスイートの実測値を基準としています。
 
 ```bash
@@ -232,16 +232,16 @@ pytest tests/test_entrypoint.py tests/test_narou_package_init.py
 ```
 
 ```text
-============== 230 passed, 1 skipped in 57.66s ==============
+============== 160 passed, 1 skipped in 44.91s ==============  (2026-10-13 実測)
 ```
 
 `GAME_DESIGN_V2` 計画の詳細は `plans/GAME_DESIGN_V2_RESULT.md` (9方向の「測った前 → 測った後」) と
 `plans/GAME_DESIGN_V2_PHASE2_REPORT.md` (Phase 2 完了報告) を参照してください。
 
 既知の残存:
-- `test_enemy_intent_formation.py` の2件 — 旧閾値表示仕様を固定するテストで、
+- `tests/test_enemy_intent_formation.py` の2件 — 旧閾値表示仕様を固定するテストで、
   意図テレグラフの真実性設計 (AIツリーに実在しない行動は表示しない) と矛盾します。
-  正しい仕様は `test_intent_truthfulness.py` (46テスト) が強制しています。
+  正しい仕様は `tests/test_intent_truthfulness.py` (46テスト) が強制しています。
 - インベントリ容量制限 — 未実装 (Step 63.1 skip)。
 
 ---

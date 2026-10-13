@@ -36,7 +36,7 @@ main.py / main_text.py
 | narrative | storyteller, choice, dialogue, main_quest, journal_ui |
 | platform | web_server_factory, input_handler |
 
-## Key refactors (see REFACTOR_PLAN.md)
+## Key refactors (see docs/archive/REFACTOR_PLAN.md)
 
 - **Engine god-class** split into 9 manager modules under `managers/`.
 - **Entity** componentized: `affection`, `is_mounted`, `gene_skills`, `pet_type`,
