@@ -263,7 +263,7 @@ class TestEntitySerialization:
         assert attrs.dexterity == 15
 
 
-class TestEntitySkills:
+class TestEntitySkillsVariant:
     """Tests for skill management."""
 
     def test_skills_initialized(self):
@@ -446,29 +446,12 @@ class TestEntityPetFusion:
         assert hasattr(entity, "pet_type")
 
 
-class TestEntityPetFusion:
-    """Tests for pet fusion history."""
-
-    def test_pet_fusion_history(self):
-        """Pet fusion history stored as list."""
-        entity = TestEntityBuilder(is_pet=True).build()
-
-        assert hasattr(entity, "pet_fusion_history")
-        assert isinstance(entity.pet_fusion_history, list)
-
-    def test_pet_type(self):
-        """Pet type property exists."""
-        entity = TestEntityBuilder(is_pet=True).build()
-
-        assert hasattr(entity, "pet_type")
-
-
 # =============================================================================
 # Priority 1: Core Gameplay Logic Tests
 # =============================================================================
 
 
-class TestEntityGainExp:
+class TestEntityGainExpVariant:
     """Tests for gain_exp - core leveling logic."""
 
     def test_gain_exp_single_level_up(self):

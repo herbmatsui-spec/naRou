@@ -45,7 +45,7 @@ class MetaAwarenessSystem:
 
     def get_reading_depth(self) -> int:
         """Calculate reading depth based on awareness level.
-        
+
         Depth tiers:
         - Level 1-2: Depth 1
         - Level 3-5: Depth 2
@@ -63,11 +63,11 @@ class MetaAwarenessSystem:
         presentation: Optional[Any] = None
     ) -> List[Dict[str, Any]]:
         """Scan target for template flags above threshold.
-        
+
         Args:
             target: Object with scenario_flags dict mapping archetype -> probability
             presentation: Optional presentation system to emit events
-            
+
         Returns:
             List of detected archetypes with probability >= 0.5
         """
@@ -90,11 +90,11 @@ class MetaAwarenessSystem:
 
     def get_exploit_windows(self, template: Any, depth: int) -> List[Any]:
         """Get exploit windows filtered by reading depth.
-        
+
         Args:
             template: Template object with exploit_windows list
             depth: Reading depth (1-3)
-            
+
         Returns:
             List of exploit windows up to the given depth
         """
@@ -103,7 +103,7 @@ class MetaAwarenessSystem:
 
     def apply_deep_read_cost(self, player: Any, depth: int) -> None:
         """Apply karma and exposure cost for deep reading.
-        
+
         Args:
             player: Player entity with karma_law_chaos and template_exposure attributes
             depth: Reading depth (cost only applied for depth >= 3)

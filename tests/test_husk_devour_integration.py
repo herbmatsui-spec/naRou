@@ -32,7 +32,7 @@ def test_husk_creation_on_full_devour():
 
         # Check if monster should be considered a husk (skills empty)
         is_husk = len(monster.skills) == 0
-        assert is_husk == True
+        assert is_husk
 
         # Create player entity
         player = Entity(name='Test Player', is_player=True)
@@ -89,7 +89,7 @@ def test_husk_not_created_when_skills_remain():
 
         # Check if monster should be considered a husk (skills empty)
         is_husk = len(monster.skills) == 0
-        assert is_husk == False  # Should still be False
+        assert not is_husk  # Should still be False
 
         # Create player entity
         player = Entity(name='Test Player', is_player=True)
