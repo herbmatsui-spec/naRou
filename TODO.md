@@ -25,3 +25,13 @@ verified implemented and their stale markers removed.
   world_event_system.py.
   These should be replaced with structured error handling in a later pass.
 - `entity.py` — `# TODO: Reincarnation XP penalty` removed (moved to `CombatManager`, now uses `REINCARNATION_XP_PENALTY_*` constants).
+
+## New (from recent work: Skill Eater, Pet Personality, Enchantments, Archaeology)
+- `skill_eater/meta_intervention_system.py` — `# TODO: Wire meta-intervention triggers into game loop` (systems exist, need integration)
+- `skill_eater/husk_forge.py` — `# TODO: Integrate husk forge into crafting UI` (forge logic complete, UI entry missing)
+- `pet_personality_system.py` — `# TODO: Implement trait gameplay effects` (traits defined, effects on stats/behavior pending)
+- `item_generator.py` / `item_system.py` — `# TODO: Full enchantment integration in item generation` (enchantments defined, generator wiring incomplete)
+- `archaeology_decoder_system.py` — `# TODO: Connect decoder to world exploration flow` (decoder works standalone, world hooks missing)
+- Broad `# TODO: handle exception properly` — `# TODO: Replace with structured error handling` (27 files; schedule dedicated pass)
+- `game.py` — `# TODO: Reincarnation option` (line ~1627): wire reincarnation menu option.
+- `save_system.py` — `# TODO: Persist new components` (HuskComponent, MetaInterventionState, PetPersonalityComponent, EnchantmentComponent)
