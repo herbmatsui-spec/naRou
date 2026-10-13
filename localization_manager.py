@@ -343,7 +343,8 @@ class LocalizationManager:
             # Test get_text_with_fallback
             assert self.get_text_with_fallback("ui.menu.new_game", "en") == "New Game"
             # Test get_current_language
-            assert self.get_current_language() == "en"
+            # Step 65.4: 既定言語はハードコードせず default_language に従う
+            assert self.get_current_language() == self.default_language
             # Test set_language
             self.set_language("ja")
             assert self.get_current_language() == "ja"

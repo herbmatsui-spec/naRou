@@ -41,6 +41,12 @@ class WorldAPackage(IPackage):
         )
 
     def setup(self, kernel: Kernel) -> None:
+        from naRou.skill_eater.skill_eater_meta_intervention_system import (
+            InterventionEngine,
+            TemplateEventGenerator,
+        )
+        from naRou.skill_eater.skill_eater_template_model import load_templates
+
         from skill_eater_ascension_board import AscensionBoard
         from skill_eater_audio_system import SkillEaterAudioSystem
         from skill_eater_base_expansion import SlumBaseExpansionManager
@@ -112,7 +118,27 @@ class WorldAPackage(IPackage):
         meta_sys = SkillEaterQuestSystem(registry=registry, audio=audio_sys, presentation=pres_sys)
         kernel.register_system("skill_eater_meta_quest_system", meta_sys)
 
-        explore_sys = SkillEaterExplorationSystem(audio=audio_sys, presentation=pres_sys)
+        # Template event generator for meta intervention
+        template_gen = TemplateEventGenerator(load_templates("data/templates"))
+        kernel.register_system("skill_eater_meta_intervention", template_gen)
+
+        # Intervention engine for meta intervention
+        from skill_eater_system import SkillEaterRegistry
+        registry = kernel.get_system("skill_eater_registry")
+        intervention_engine = InterventionEngine(
+            registry=registry,
+            presentation=pres_sys,
+            rule_engine=None,
+            meta_state=None,
+            templates=load_templates("data/templates"),
+        )
+        kernel.register_system("skill_eater_intervention_engine", intervention_engine)
+
+        explore_sys = SkillEaterExplorationSystem(
+            audio=audio_sys, presentation=pres_sys,
+            template_generator=template_gen,
+            intervention_engine=intervention_engine,
+        )
         kernel.register_system("skill_eater_exploration_system", explore_sys)
 
         # Phase 2-5 Advanced Subsystems
