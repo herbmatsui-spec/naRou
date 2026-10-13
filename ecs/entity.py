@@ -1406,6 +1406,14 @@ class Entity:
             "max_stamina": self.max_stamina,
             "components": {},
         }
+        # ペット性格系属性 (改善案2): PetPersonalitySystem が付与した場合のみ出力。
+        # 未付与の Entity (敵など) にはキーを出さず、from_dict も触らない。
+        if hasattr(self, "personality"):
+            data["personality"] = self.personality
+        if hasattr(self, "bond"):
+            data["bond"] = self.bond
+        if hasattr(self, "favorite_food_tags"):
+            data["favorite_food_tags"] = list(self.favorite_food_tags)
         # コンポーネントのシリアライズ (JSONシリアライズ可能に変換: Step 21)
         for comp_type, comp in self.components.items():
             comp_name = comp_type.__name__
@@ -1487,6 +1495,15 @@ class Entity:
         ent.max_mp = data.get("max_mp", ent.calculate_max_mp())
         ent.stamina = data.get("stamina", ent.calculate_max_stamina())
         ent.max_stamina = data.get("max_stamina", ent.calculate_max_stamina())
+
+        # ペット性格系属性の復元 (改善案2): キーが存在する場合のみ設定
+        # (未付与 Entity の既定動作を変えない)
+        if "personality" in data:
+            ent.personality = data["personality"]
+        if "bond" in data:
+            ent.bond = data["bond"]
+        if "favorite_food_tags" in data:
+            ent.favorite_food_tags = list(data["favorite_food_tags"])
 
         # コンポーネントの復元
         comp_data_dict = data.get("components", {})
