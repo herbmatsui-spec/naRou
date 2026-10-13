@@ -11,14 +11,20 @@ Provides:
 
 from __future__ import annotations
 
+import os
 import random
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from types import SimpleNamespace
-from typing import Any, Callable, Generator
+from typing import TYPE_CHECKING, Any, Callable, Generator
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+
+if TYPE_CHECKING:
+    from ecs.entity import Entity
+    from game import Engine
+    from item_system import Inventory, Item
 
 # =============================================================================
 # Test Configuration & Markers
