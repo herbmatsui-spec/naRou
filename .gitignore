@@ -30,3 +30,16 @@ dist/
 
 # セーブデータは実行時成果物 — 追跡しない
 savegame.bin*
+
+# MiMoCode agent state
+.mimocode/
+
+# Runtime pid files
+*.pid
+
+# Temp repo snapshots
+.tmp_*/
+
+# Coverage.py comma-form artifact
+*.py,cover
+
