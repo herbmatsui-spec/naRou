@@ -6,7 +6,6 @@ if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
 import pytest
-
 from naRou.constants import (
     ALL_QUALITIES,
     QUALITY_BAD,
@@ -16,9 +15,10 @@ from naRou.constants import (
     QUALITY_NORMAL,
 )
 from naRou.data_manager import DataManager
+
 from data.generated.item.enchantment import ItemEnchantmentInstance
 from item_generator import ItemGenerator, generate_random_item
-from naRou.systems.item_system import Inventory, Item
+from item_system import Inventory, Item
 
 
 class TestItemQualityAndEnchantments:

@@ -1,13 +1,13 @@
 """Tests for meta intervention template event generator."""
 
 import pytest
-from naRou.skill_eater.skill_eater_template_model import load_templates
+from naRou.packages.core.kernel.kernel import Kernel
+from naRou.packages.world_a.package import WorldAPackage
 from naRou.skill_eater.skill_eater_meta_intervention_system import TemplateEventGenerator
+from naRou.skill_eater.skill_eater_template_model import load_templates
+from naRou.skill_eater_audio_system import SkillEaterAudioSystem
 from naRou.skill_eater_exploration_system import SkillEaterExplorationSystem
 from naRou.skill_eater_presentation_system import SkillEaterPresentationSystem
-from naRou.skill_eater_audio_system import SkillEaterAudioSystem
-from naRou.packages.world_a.package import WorldAPackage
-from naRou.packages.core.kernel.kernel import Kernel
 
 
 def test_generator_deterministic():

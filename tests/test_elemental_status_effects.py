@@ -11,17 +11,17 @@ if str(_root) not in sys.path:
 
 import pytest
 
-from naRou.constants import (
-    Element,
+from constants import (
     STATUS_BURN,
     STATUS_FREEZE,
     STATUS_PARALYZE,
     STATUS_POISON,
+    Element,
 )
-from naRou.ecs.components import StatusEffectsComponent
-from naRou.ecs.entity import Attributes, Entity
-from naRou.item_system import Item, use_item
-from naRou.systems import CombatSystem
+from ecs.components import StatusEffectsComponent
+from ecs.entity import Attributes, Entity
+from item_system import Item, use_item
+from systems import CombatSystem
 
 
 class TestElementalAndStatusEffects:

@@ -1,0 +1,4 @@
+# Test exp curve for level/exp testing
+exp_curve:
+  base: 120
+  growth: 1.35

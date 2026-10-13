@@ -10,7 +10,6 @@ if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
 import pytest
-
 from naRou.constants import (
     CAT_ARMOR,
     CAT_ORE,
@@ -22,7 +21,8 @@ from naRou.constants import (
     QUALITY_MIRACLE,
     QUALITY_NORMAL,
 )
-from naRou.systems.item_system import Inventory, Item
+
+from item_system import Inventory, Item
 
 
 class TestInventoryFilterSortLock:

@@ -244,9 +244,17 @@ def test_world_event_schedule_injection():
     mgr = WorldEventManager()
     scheduler = QuestScheduler()
 
-    player = Mock()
-    player.active_world_events = []
+    # Properly mock player with required attributes
+    class MockPlayer:
+        def __init__(self):
+            self.active_world_events = []
+            self.gold = 0
+            self.platinum = 0
+            self.exp = 0
+            self.piety = 0
+            self.components = {}
 
+    player = MockPlayer()
     engine = Mock()
     engine.quest_scheduler = scheduler
     engine.log = Mock()
@@ -281,8 +289,16 @@ def test_world_event_moon_eclipse():
     mgr = WorldEventManager()
     scheduler = QuestScheduler()
 
-    player = Mock()
-    player.active_world_events = []
+    class MockPlayer:
+        def __init__(self):
+            self.active_world_events = []
+            self.gold = 0
+            self.platinum = 0
+            self.exp = 0
+            self.piety = 0
+            self.components = {}
+
+    player = MockPlayer()
     engine = Mock()
     engine.quest_scheduler = scheduler
     engine.log = Mock()
@@ -315,8 +331,16 @@ def test_world_event_meteor():
     mgr = WorldEventManager()
     scheduler = QuestScheduler()
 
-    player = Mock()
-    player.active_world_events = []
+    class MockPlayer:
+        def __init__(self):
+            self.active_world_events = []
+            self.gold = 0
+            self.platinum = 0
+            self.exp = 0
+            self.piety = 0
+            self.components = {}
+
+    player = MockPlayer()
     engine = Mock()
     engine.quest_scheduler = scheduler
     engine.log = Mock()

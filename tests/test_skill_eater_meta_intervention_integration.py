@@ -3,22 +3,22 @@
 from typing import Any
 
 import pytest
-from naRou.skill_eater.skill_eater_template_model import load_templates
+from naRou.meta_awareness_system import MetaAwarenessSystem
 from naRou.skill_eater.skill_eater_meta_intervention_system import (
-    TemplateEventGenerator,
-    InterventionEngine,
     InterventionAction,
+    InterventionEngine,
     TemplateEvent,
+    TemplateEventGenerator,
 )
-from naRou.skill_eater_presentation_system import SkillEaterPresentationSystem
+from naRou.skill_eater.skill_eater_template_model import load_templates
 from naRou.skill_eater_audio_system import SkillEaterAudioSystem
 from naRou.skill_eater_meta_quest_system import (
-    SkillEaterReincarnationSystem,
-    SkillEaterQuestSystem,
     GlobalRuleEngine,
     ReincarnationMetaState,
+    SkillEaterQuestSystem,
+    SkillEaterReincarnationSystem,
 )
-from naRou.meta_awareness_system import MetaAwarenessSystem
+from naRou.skill_eater_presentation_system import SkillEaterPresentationSystem
 
 
 class MockPlayer:
@@ -105,7 +105,6 @@ def test_full_intervention_loop():
     assert player.karma_good_evil < 0  # T2 reduces good_evil
 
     # 7. Reincarnation with template count carry-over
-    from naRou.skill_eater_meta_quest_system import SkillEaterReincarnationSystem
     reincarnation_sys = SkillEaterReincarnationSystem()
     reincarnation_sys.meta_state = meta_state
     reincarnation_sys.registry = None

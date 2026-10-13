@@ -1,0 +1,76 @@
+# Test item definitions for unit testing
+items:
+  test_sword:
+    id: "test_sword"
+    name: "Test Sword"
+    category: "weapon"
+    char: ")"
+    color: [200, 100, 100]
+    base_weight: 3.0
+    base_value: 100
+    material: "iron"
+    quality: "normal"
+    hit_bonus: 5
+    dmg_bonus: 10
+    dice_num: 1
+    dice_side: 8
+  
+  test_potion:
+    id: "test_potion"
+    name: "Test Potion"
+    category: "potion"
+    char: "!"
+    color: [100, 200, 100]
+    base_weight: 0.5
+    base_value: 50
+    material: "glass"
+    quality: "normal"
+    heal_amount: 50
+  
+  test_food:
+    id: "test_food"
+    name: "Test Bread"
+    category: "food"
+    char: "%"
+    color: [200, 180, 100]
+    base_weight: 0.3
+    base_value: 10
+    material: "wheat"
+    quality: "normal"
+    nutrition: 100
+  
+  test_cursed_sword:
+    id: "test_cursed_sword"
+    name: "Cursed Sword"
+    category: "weapon"
+    char: ")"
+    color: [100, 50, 50]
+    base_weight: 3.0
+    base_value: 100
+    material: "iron"
+    quality: "normal"
+    cursed: true
+    hit_bonus: 0
+    dmg_bonus: 5
+  
+  test_enchanted_armor:
+    id: "test_enchanted_armor"
+    name: "Enchanted Armor"
+    category: "armor"
+    char: "["
+    color: [150, 150, 200]
+    base_weight: 5.0
+    base_value: 200
+    material: "steel"
+    quality: "good"
+    pv: 5
+    enchants: ["fire_resist", "ac"]
+
+# Test equipment slot definitions
+equipment_slots:
+  - "main_hand"
+  - "off_hand"
+  - "head"
+  - "body"
+  - "ring_left"
+  - "ring_right"

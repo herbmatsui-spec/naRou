@@ -1,11 +1,12 @@
 """Tests for meta intervention awareness system."""
 
-import pytest
-from naRou.meta_awareness_system import MetaAwarenessSystem
-from naRou.karma_system import REGISTRY
-from naRou.skill_eater_presentation_system import SkillEaterPresentationSystem
-from naRou.skill_eater.skill_eater_template_model import load_templates
 from dataclasses import dataclass
+
+import pytest
+from naRou.karma_system import REGISTRY
+from naRou.meta_awareness_system import MetaAwarenessSystem
+from naRou.skill_eater.skill_eater_template_model import load_templates
+from naRou.skill_eater_presentation_system import SkillEaterPresentationSystem
 
 
 @dataclass

@@ -1,0 +1,129 @@
+# Test affix definitions for unit testing
+affixes:
+  prefix_quality:
+    common:
+      name: "Quality"
+      weight: 100
+      tiers:
+        - name: "Shoddy"
+          quality: "bad"
+          weight: 30
+          mods:
+            - stat: "dmg_bonus"
+              value: -2
+            - stat: "hit_bonus"
+              value: -1
+        - name: "Average"
+          quality: "normal"
+          weight: 50
+          mods: []
+        - name: "Fine"
+          quality: "good"
+          weight: 20
+          mods:
+            - stat: "dmg_bonus"
+              value: 2
+            - stat: "hit_bonus"
+              value: 1
+    
+    rare:
+      name: "Masterwork"
+      quality: "god"
+      weight: 5
+      mods:
+        - stat: "dmg_bonus"
+          value: 5
+        - stat: "hit_bonus"
+          value: 3
+        - stat: "pv"
+          value: 2
+
+  suffix_elemental:
+    fire:
+      name: "of Fire"
+      weight: 20
+      mods:
+        - stat: "fire_damage"
+          value: 3
+        - stat: "fire_resist"
+          value: 5
+    
+    ice:
+      name: "of Ice"
+      weight: 20
+      mods:
+        - stat: "cold_damage"
+          value: 3
+        - stat: "cold_resist"
+          value: 5
+    
+    lightning:
+      name: "of Lightning"
+      weight: 15
+      mods:
+        - stat: "lightning_damage"
+          value: 4
+        - stat: "lightning_resist"
+          value: 3
+
+  suffix_stat:
+    strength:
+      name: "of Strength"
+      weight: 30
+      mods:
+        - stat: "strength"
+          value: 2
+    
+    vitality:
+      name: "of Vitality"
+      weight: 30
+      mods:
+        - stat: "endurance"
+          value: 2
+    
+    agility:
+      name: "of Agility"
+      weight: 25
+      mods:
+        - stat: "dexterity"
+          value: 2
+
+  suffix_defense:
+    protection:
+      name: "of Protection"
+      weight: 20
+      mods:
+        - stat: "pv"
+          value: 2
+        - stat: "dv"
+          value: 1
+    
+    dodging:
+      name: "of Dodging"
+      weight: 15
+      mods:
+        - stat: "dv"
+          value: 3
+
+# Quality-based roll counts (higher quality = more affixes)
+affix_roll_counts:
+  bad: 1
+  normal: 2
+  good: 3
+  miracle: 4
+  god: 5
+
+# Affix category compatibility (which slots can get which affix types)
+affix_compatibility:
+  weapon:
+    prefixes: ["quality"]
+    suffixes: ["elemental", "stat", "defense"]
+  armor:
+    prefixes: ["quality"]
+    suffixes: ["stat", "defense"]
+  shield:
+    prefixes: ["quality"]
+    suffixes: ["defense"]
+  ring:
+    prefixes: ["quality"]
+    suffixes: ["stat", "defense", "elemental"]

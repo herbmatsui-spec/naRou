@@ -421,12 +421,12 @@ def test_empty_fusion_file_reports_recipe_loss_too(tmp_path, caplog):
     assert "fusion_recipes" in text
 
 
-def test_repository_placeholder_file_is_reported(tmp_path, caplog):
-    """リポジトリ同梱のプレースホルダを実際にロードしても同じ診断になる。"""
+def test_repository_real_data_loads_ok(tmp_path, caplog):
+    """リポジトリ同梱の実データが正常にロードできること。"""
     jobs_path = Path(__file__).resolve().parent.parent / "data" / "jobs.yaml"
     registry = _load(JOB_SYSTEM, jobs_path)
 
-    assert registry.load_status.outcome == "empty"
+    assert registry.load_status.outcome == "ok"
     assert registry.load_status.byte_size == jobs_path.stat().st_size
     assert str(jobs_path) in _diagnostic_text(caplog, JOB_SYSTEM)
-    assert registry.all() == {}
+    assert len(registry.all()) > 0

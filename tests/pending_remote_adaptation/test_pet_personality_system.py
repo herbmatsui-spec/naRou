@@ -1,19 +1,19 @@
 """Unit tests for Pet Personality & Bonding System (Phase 6, Steps 49-72)"""
 
 import pytest
-
-from naRou.constants import (
-    PERSONALITY_BRAVE,
-    PERSONALITY_COWARDLY,
-    PERSONALITY_CALM,
-    PERSONALITY_GLUTTONOUS,
-    PERSONALITY_AGGRESSIVE,
-    FOOD_TAG_MEAT,
+from narou.constants import (
     FOOD_TAG_FISH,
+    FOOD_TAG_MEAT,
     FOOD_TAG_SWEET,
+    PERSONALITY_AGGRESSIVE,
+    PERSONALITY_BRAVE,
+    PERSONALITY_CALM,
+    PERSONALITY_COWARDLY,
+    PERSONALITY_GLUTTONOUS,
 )
-from naRou.ecs.entity import Entity
-from naRou.systems.item_system import Item
+from narou.ecs.entity import Entity
+from narou.item_system import Item
+
 from pet_personality_system import PetPersonalitySystem
 
 

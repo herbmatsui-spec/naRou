@@ -14,6 +14,7 @@ class TestFinalValidation(unittest.TestCase):
         # Integration-level checks across supported languages
         supported = lm.get_supported_languages()
         self.assertIn("en", supported)
+        self.assertIn("ja", supported)  # ja is the default language
         for lang in supported:
             self.assertTrue(lm.get_language_data(lang).get("hello"))
 

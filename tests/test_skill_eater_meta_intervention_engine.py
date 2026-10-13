@@ -1,14 +1,23 @@
 """Tests for meta intervention engine."""
 
-import pytest
 from typing import Any
-from naRou.skill_eater.skill_eater_template_model import load_templates
+
+import pytest
 from naRou.skill_eater.skill_eater_meta_intervention_system import (
-    TemplateEventGenerator, InterventionEngine, InterventionAction, TemplateEvent, InterventionResult
+    InterventionAction,
+    InterventionEngine,
+    InterventionResult,
+    TemplateEvent,
+    TemplateEventGenerator,
+)
+from naRou.skill_eater.skill_eater_template_model import load_templates
+from naRou.skill_eater_audio_system import SkillEaterAudioSystem
+from naRou.skill_eater_meta_quest_system import (
+    GlobalRuleEngine,
+    SkillEaterQuestSystem,
+    SkillEaterReincarnationSystem,
 )
 from naRou.skill_eater_presentation_system import SkillEaterPresentationSystem
-from naRou.skill_eater_audio_system import SkillEaterAudioSystem
-from naRou.skill_eater_meta_quest_system import SkillEaterReincarnationSystem, SkillEaterQuestSystem, GlobalRuleEngine
 
 
 class MockPlayer:
@@ -390,7 +399,6 @@ def test_reincarnation_carry():
     meta_state.devoured_template_counts["expel"] = 6  # Will decay to 3, triggering message
     meta_state.devoured_template_counts["credit_steal"] = 4  # Will decay to 2
 
-    from naRou.skill_eater_meta_quest_system import SkillEaterReincarnationSystem
     reincarnation_sys = SkillEaterReincarnationSystem()
     reincarnation_sys.meta_state = meta_state
     reincarnation_sys.registry = None  # Not needed for this test

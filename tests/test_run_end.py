@@ -35,13 +35,17 @@ RUN_TURNS_BEFORE_DEATH = 7
 def _flat(obj: Any) -> dict[str, Any]:
     """オブジェクトの状態を dict で撮る。
 
-    dict / list / set だけは 1 階層コピーを残す。テスト中の破壊（自然回復による
-    hp 変化、`world_a_data["skills"]` への追加など）を戻せるようにするため。
+    copy.copy() をサポートするオブジェクトは浅いコピーを残す。
+    これにより GameStateMachine のような内部状態を持つオブジェクトも正しく復元できる。
     """
-    return {
-        name: copy.copy(value) if isinstance(value, (dict, list, set)) else value
-        for name, value in vars(obj).items()
-    }
+    result = {}
+    for name, value in vars(obj).items():
+        try:
+            result[name] = copy.copy(value)
+        except (TypeError, AttributeError):
+            # copy.copy() をサポートしないオブジェクト (関数、モジュール等) は参照のまま
+            result[name] = value
+    return result
 
 
 def _replay(obj: Any, snapshot: dict[str, Any]) -> None:

@@ -1,4 +1,5 @@
 import pytest
+
 from narou.engine.engine import Engine
 
 

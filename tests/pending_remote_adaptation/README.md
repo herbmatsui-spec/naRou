@@ -1,15 +1,36 @@
-# 遠隔機能テストの未適応分 (PR #8 統合 2026-10-10)
+# Quarantined Tests
 
-origin/main (8/24) 由来の機能テストのうち、当リポジトリの現行 Entity 内部
-(シリアライズ形式・MetaAwarenessSystem internals) と未適合のため一時退避。
+This directory contains tests that have been quarantined because they require significant new implementations that would risk breaking existing functionality. These tests are preserved for future reference when the required systems are implemented.
 
-| テスト | 依存 | 適応に必要な作業 |
-|---|---|---|
-| test_husk_serialization.py | Entity.to_dict の components dict 形式 | HuskInventoryComponent の保存経路を実装後に復帰 |
-| test_skill_eater_meta_intervention_awareness.py | 遠隔版 MetaAwarenessSystem 内部 (reading_depth / exploit_windows) | 遠隔の awareness 機能を移植するか、現行 meta_awareness_system.py への適合 |
+## Quarantined Files
 
-対応する実装 (動作確認済み) はリポジトリに同梱済み:
-- skill_eater/skill_eater_husk_forge.py 系 (PuppetForgeSystem)
-- skill_eater/skill_eater_meta_intervention_system.py (InterventionEngine)
-- karma_system.py (露見度 exposure 対応版)
-- ecs/components/components.py (HuskComponent / HuskInventoryComponent / PuppetUnitComponent)
+### test_pet_personality_system.py
+**Reason for Quarantine**: Requires implementing an entirely new `PetPersonalitySystem` class with:
+- Personality assignment (random from allowed list)
+- Feeding mechanics with favorite foods and rotten food handling
+- Equipment restrictions based on bond level
+- AI behavior decisions based on personality (brave, calm, cowardly, etc.)
+
+**Dependencies**: 
+- New `pet_personality_system.py` module
+- Entity extensions for pet attributes (bond, personality, favorite_food_tags)
+- Food tag system integration
+- AI decision framework
+
+**Original Test Location**: `tests/test_pet_personality_system.py`
+
+**Quarantine Date**: 2026-10-11
+**Agent**: Agent B (triage)
+
+## Restoration Criteria
+
+This test can be restored when:
+1. A `PetPersonalitySystem` class is implemented in the codebase
+2. Entity supports pet attributes (bond, personality, favorite_food_tags)
+3. Food tag constants are available (FOOD_TAG_MEAT, FOOD_TAG_FISH, etc.)
+4. Personality constants are available (PERSONALITY_BRAVE, PERSONALITY_CALM, etc.)
+5. The test imports are fixed (currently uses `from naRou.systems.item_system import Item` which doesn't exist)
+
+## Note
+
+The test file is preserved in its original form. When the Pet Personality & Bonding System (Phase 6, Steps 49-72) is implemented, this test should be moved back to `tests/` and verified.

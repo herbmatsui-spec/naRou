@@ -3,24 +3,25 @@ Unit tests for AuditDefenseManager - Phase 0
 Tests for compute_threat and YAML loader
 """
 
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, MagicMock, patch
 
 from naRou.skill_eater.skill_eater_audit_defense import (
-    AuditDefenseManager,
-    AuditTier,
-    AuditElement,
-    AuditRole,
-    AuditUnitType,
-    AuditUnit,
-    AuditCaptain,
-    DistillBlueprint,
-    HuskBarricade,
-    EmpMine,
-    SeizedSkill,
-    SpecialAuditType,
     AUDIT_TIER_CONFIG,
     THREAT_TIER_THRESHOLDS,
+    AuditCaptain,
+    AuditDefenseManager,
+    AuditElement,
+    AuditRole,
+    AuditTier,
+    AuditUnit,
+    AuditUnitType,
+    DistillBlueprint,
+    EmpMine,
+    HuskBarricade,
+    SeizedSkill,
+    SpecialAuditType,
     load_audit_units,
 )
 from naRou.skill_eater.skill_eater_base_defense import RaidPhase
@@ -404,37 +405,6 @@ def test_blueprint_registry():
     assert bp.element == AuditElement.FIRE
 
 
-def test_blueprint_registry():
-    """設計図レジストリテスト (Step 27)"""
-    mgr = create_test_manager()
-    mgr.storage_junk = 1000
-
-    # 複数錬成
-    for i, (name, elem) in enumerate([
-        ("Inferno Breath", AuditElement.FIRE),
-        ("Frost Lance", AuditElement.ICE),
-        ("Thunder Bolt", AuditElement.THUNDER),
-    ]):
-        skill = MockSkill(name, rank="common", level=1, tags=["attack"])
-        mgr.registry.owned_skills[f"skill{i}"] = skill
-        bp = mgr.distill_skill(f"skill{i}")
-        assert bp is not None
-        assert bp.element == elem
-
-    # 一覧取得
-    blueprints = mgr.list_blueprints()
-    assert len(blueprints) == 3
-
-    # 個別取得
-    bp = mgr.get_blueprint(blueprints[0].id)
-    assert bp is not None
-    assert bp.element == AuditElement.FIRE
-
-
-# ============================================================
-# Phase 3: 属性防衛タレットテスト (Steps 28-36)
-# ============================================================
-
 def test_defense_facility_element_fields():
     """DefenseFacility element/blueprint_id フィールドテスト (Step 28)"""
     from naRou.skill_eater.skill_eater_base_defense import DefenseFacility, DefenseFacilityType
@@ -596,12 +566,12 @@ def test_integration_build_and_tick():
 def test_husk_barricade_creation():
     """Husk壁生成テスト (Step 39)"""
     mgr = create_test_manager()
-    
+
     class MockHusk:
         hp = 150
-    
+
     barricade = mgr.place_husk_barricade(MockHusk(), (5, 5))
-    
+
     assert barricade.hp == 150
     assert barricade.max_hp == 150
     assert barricade.cell == (5, 5)
@@ -612,17 +582,17 @@ def test_husk_barricade_creation():
 def test_husk_barricade_damage():
     """Husk壁被弾テスト (Step 40)"""
     mgr = create_test_manager()
-    
+
     class MockHusk:
         hp = 100
-    
+
     barricade = mgr.place_husk_barricade(MockHusk(), (3, 3))
-    
+
     # ダメージ
     is_debris = barricade.take_damage(30)
     assert not is_debris
     assert barricade.hp == 70
-    
+
     # 破壊
     is_debris = barricade.take_damage(80)
     assert is_debris
@@ -633,9 +603,9 @@ def test_husk_barricade_damage():
 def test_emp_mine_plant():
     """EMP地雷設置テスト (Step 41)"""
     mgr = create_test_manager()
-    
+
     mine = mgr.plant_emp_mine((2, 2))
-    
+
     assert mine.cell == (2, 2)
     assert mine.trigger_radius == 1
     assert mine.stun_turns == 3
@@ -648,10 +618,10 @@ def test_emp_mine_trigger():
     mgr = create_test_manager()
     mgr.load_audit_units_data("data/worlds/skill_eater/audit_units.yaml")
     mgr.storage_junk = 1000
-    
+
     # 地雷設置
     mgr.plant_emp_mine((0, 0))
-    
+
     # 敵生成
     mgr.audit_tier = AuditTier.T1
     mgr.raid_enemies = mgr._generate_audit_enemies()
@@ -659,18 +629,18 @@ def test_emp_mine_trigger():
     mgr.phase_timer = 120
     mgr.facility_cooldowns = {fid: 0 for fid in mgr.defense_facilities}
     mgr.active_raid = True
-    
+
     # 敵を地雷位置に配置 (簡易: インデックス0を位置(0,0)とする)
     # _check_emp_triggers は敵のインデックスをセル位置として扱う
     # インデックス0の敵が位置(0,0)にいるとみなされる
-    
+
     # EMPチェック実行
     emp_results = mgr._check_emp_triggers()
-    
+
     assert len(emp_results) == 1
     assert emp_results[0]["mine_id"] in mgr.emp_mines
     assert emp_results[0]["stun_turns"] == 3
-    
+
     # 範囲内の敵(インデックス0)がスタン状態になっている
     stunned_enemies = [e for e in mgr.raid_enemies if hasattr(e, 'status_effects') and any(s["type"] == "stun" for s in e.status_effects)]
     assert len(stunned_enemies) >= 1
@@ -680,24 +650,24 @@ def test_emp_mine_trigger():
 def test_traps_persistence():
     """罠の永続化テスト (Step 44)"""
     mgr = create_test_manager()
-    
+
     class MockHusk:
         hp = 120
-    
+
     barricade = mgr.place_husk_barricade(MockHusk(), (1, 1))
     mine = mgr.plant_emp_mine((2, 2))
-    
+
     # シリアライズ
     data = mgr.to_dict()
-    
+
     assert "husk_barricades" in data
     assert "emp_mines" in data
     assert barricade.id in data["husk_barricades"]
     assert mine.id in data["emp_mines"]
-    
+
     # 復元
     mgr2 = AuditDefenseManager.from_dict(data)
-    
+
     assert barricade.id in mgr2.husk_barricades
     assert mine.id in mgr2.emp_mines
     assert mgr2.husk_barricades[barricade.id].hp == 120
@@ -709,22 +679,22 @@ def test_enemy_attacks_barricade():
     mgr = create_test_manager()
     mgr.load_audit_units_data("data/worlds/skill_eater/audit_units.yaml")
     mgr.storage_junk = 1000
-    
+
     class MockHusk:
         hp = 100
-    
+
     mgr.place_husk_barricade(MockHusk(), (3, 3))
-    
+
     mgr.audit_tier = AuditTier.T1
     mgr.raid_enemies = mgr._generate_audit_enemies()
     mgr.current_phase = RaidPhase.BREACH
     mgr.phase_timer = 120
     mgr.facility_cooldowns = {fid: 0 for fid in mgr.defense_facilities}
     mgr.active_raid = True
-    
+
     # 敵攻撃実行
     results = mgr._enemy_attack_facilities_with_traps()
-    
+
     # 壁が攻撃されている
     barricade_attacks = [r for r in results if r.get("target_type") == "barricade"]
     assert len(barricade_attacks) > 0
@@ -739,16 +709,16 @@ def test_audit_wave_generation():
     """監査ウェーブ生成テスト (Step 47)"""
     mgr = create_test_manager()
     mgr.load_audit_units_data("data/worlds/skill_eater/audit_units.yaml")
-    
+
     for tier in [AuditTier.T1, AuditTier.T2, AuditTier.T3, AuditTier.T4, AuditTier.T5]:
         mgr.audit_tier = tier
         enemies = mgr._generate_audit_enemies()
-        
+
         config = AUDIT_TIER_CONFIG[int(tier.value[1])]
         # ユニット数 + 部隊長1体
         expected_count = config["unit_count"] + 1
         assert len(enemies) == expected_count, f"Tier {tier.value}: expected {expected_count}, got {len(enemies)}"
-        
+
         # 部隊長が含まれる
         captains = [e for e in enemies if isinstance(e, AuditCaptain)]
         assert len(captains) == 1
@@ -761,10 +731,10 @@ def test_captain_morale_buff():
     mgr.load_audit_units_data("data/worlds/skill_eater/audit_units.yaml")
     mgr.audit_tier = AuditTier.T3
     enemies = mgr._generate_audit_enemies()
-    
+
     captain = next(e for e in enemies if isinstance(e, AuditCaptain))
     units = [e for e in enemies if not isinstance(e, AuditCaptain)]
-    
+
     # 部隊長生存時はバフあり
     assert captain.morale_bonus == 0.15
     # TODO: 実際のバフ適用ロジックのテスト (現状はフラグのみ)
@@ -776,14 +746,14 @@ def test_captain_death_retreat():
     mgr.load_audit_units_data("data/worlds/skill_eater/audit_units.yaml")
     mgr.audit_tier = AuditTier.T1
     enemies = mgr._generate_audit_enemies()
-    
+
     captain = next(e for e in enemies if isinstance(e, AuditCaptain))
     units_before = len([e for e in enemies if not isinstance(e, AuditCaptain)])
-    
+
     # 部隊長を撃破
     captain.take_damage(captain.max_hp)
     assert captain.is_dead
-    
+
     # 撤退フラグが設定される (process_breach_phaseでチェック)
     # ここではフラグの存在確認のみ
     assert hasattr(mgr, 'squad_retreat') or True  # 実装時にフラグ追加
@@ -792,30 +762,30 @@ def test_captain_death_retreat():
 def test_can_seize_prerequisites():
     """強奪前提デバフテスト (Step 53, 54)"""
     mgr = create_test_manager()
-    
+
     captain = AuditCaptain(
         id="cap1", name="Test Captain", tier=AuditTier.T3,
         hp=1800, max_hp=1800, atk=180, defense=40, speed=7,
         special_skill_id="purification_field",
         weakness_element=AuditElement.THUNDER
     )
-    
+
     # HP50%では不可
     captain.hp = 900  # 50%
     assert not mgr.can_seize(captain)
-    
+
     # HP30%以下かつ状態異常なしでは不可
     captain.hp = 500  # ~28%
     assert not mgr.can_seize(captain)
-    
+
     # HP30%以下かつ状態異常ありで可
     captain.status_effects = [{"type": "freeze", "duration": 2}]
     assert mgr.can_seize(captain)
-    
+
     # 毒でも可
     captain.status_effects = [{"type": "poison", "duration": 3}]
     assert mgr.can_seize(captain)
-    
+
     # スタンでも可
     captain.status_effects = [{"type": "stun", "duration": 1}]
     assert mgr.can_seize(captain)
@@ -829,7 +799,7 @@ def test_seize_captain_success():
     """強奪成功パステスト (Step 57)"""
     mgr = create_test_manager()
     mgr.load_audit_units_data("data/worlds/skill_eater/audit_units.yaml")
-    
+
     captain = AuditCaptain(
         id="cap1", name="Test Captain", tier=AuditTier.T3,
         hp=500, max_hp=1800, atk=180, defense=40, speed=7,
@@ -837,15 +807,15 @@ def test_seize_captain_success():
         weakness_element=AuditElement.THUNDER
     )
     captain.status_effects = [{"type": "freeze", "duration": 2}]
-    
+
     # 成功率100%でモック (random.random をパッチ)
     import random
     original_random = random.random
     random.random = lambda: 0.0  # 常に成功
-    
+
     try:
         result = mgr.seize_captain(captain)
-        
+
         assert result["success"] is True
         assert "skill_id" in result
         assert result["skill_id"] == "purification_field"
@@ -859,7 +829,7 @@ def test_seize_captain_fail():
     """強奪失敗パステスト (Step 58)"""
     mgr = create_test_manager()
     mgr.load_audit_units_data("data/worlds/skill_eater/audit_units.yaml")
-    
+
     captain = AuditCaptain(
         id="cap1", name="Test Captain", tier=AuditTier.T3,
         hp=500, max_hp=1800, atk=180, defense=40, speed=7,
@@ -867,15 +837,15 @@ def test_seize_captain_fail():
         weakness_element=AuditElement.THUNDER
     )
     captain.status_effects = [{"type": "freeze", "duration": 2}]
-    
+
     # 成功率0%でモック
     import random
     original_random = random.random
     random.random = lambda: 1.0  # 常に失敗
-    
+
     try:
         result = mgr.seize_captain(captain)
-        
+
         assert result["success"] is False
         assert "counter_damage" in result
         assert result["toxicity_added"] == 15
@@ -886,7 +856,7 @@ def test_seize_captain_fail():
 def test_execute_death_immunity():
     """《執行権限：即死無効化》効果テスト (Step 59, 60)"""
     mgr = create_test_manager()
-    
+
     # スキル付与前: 即死で死亡
     # ここではフラグの存在確認のみ
     mgr.seized_skills["execute_death_immunity"] = SeizedSkill(
@@ -895,10 +865,10 @@ def test_execute_death_immunity():
         description="即死無効化",
         source_tier=AuditTier.T4
     )
-    
+
     # スキル所持チェック
     assert "execute_death_immunity" in mgr.seized_skills
-    
+
     # TODO: 実際の即死無効化ロジックはプレイヤー側のダメージ処理で実装
 
 
@@ -911,18 +881,18 @@ def test_freeze_thunder_combo():
     mgr = create_test_manager()
     mgr.load_audit_units_data("data/worlds/skill_eater/audit_units.yaml")
     mgr.storage_junk = 1000
-    
+
     # 氷・雷タレット建設
     for name in ["Frost Lance", "Thunder Bolt"]:
         skill = MockSkill(name, rank="common", level=1, tags=["attack"])
         mgr.registry.owned_skills[name.lower().replace(" ", "_")] = skill
         bp = mgr.distill_skill(name.lower().replace(" ", "_"))
         mgr.build_distilled_turret(bp.id)
-    
+
     # シナジーフラグ確認
     mgr.update_synergy_flags()
     assert mgr.has_freeze_thunder_combo is True
-    
+
     # 敵生成・凍結状態付与
     mgr.audit_tier = AuditTier.T1
     mgr.raid_enemies = mgr._generate_audit_enemies()
@@ -930,14 +900,14 @@ def test_freeze_thunder_combo():
     mgr.phase_timer = 120
     mgr.facility_cooldowns = {fid: 0 for fid in mgr.defense_facilities}
     mgr.active_raid = True
-    
+
     # 最初の敵を凍結
     mgr.raid_enemies[0].status_effects = [{"type": "freeze", "duration": 2}]
     mgr.raid_enemies[1].status_effects = [{"type": "freeze", "duration": 2}]
-    
+
     # 雷タレット攻撃 (最速の敵をターゲット)
     results = mgr._facility_attack_enemies()
-    
+
     # シナジー効果で凍結敵にもダメージ
     synergy_results = [r for r in results if r.get("synergy") == "freeze_thunder_spread"]
     assert len(synergy_results) >= 1
@@ -948,30 +918,30 @@ def test_poison_fire_combo():
     mgr = create_test_manager()
     mgr.load_audit_units_data("data/worlds/skill_eater/audit_units.yaml")
     mgr.storage_junk = 1000
-    
+
     # 毒・炎タレット建設
     for name in ["Venom Coat", "Inferno Breath"]:
         skill = MockSkill(name, rank="common", level=1, tags=["attack"])
         mgr.registry.owned_skills[name.lower().replace(" ", "_")] = skill
         bp = mgr.distill_skill(name.lower().replace(" ", "_"))
         mgr.build_distilled_turret(bp.id)
-    
+
     mgr.update_synergy_flags()
     assert mgr.has_poison_fire_combo is True
-    
+
     mgr.audit_tier = AuditTier.T1
     mgr.raid_enemies = mgr._generate_audit_enemies()
     mgr.current_phase = RaidPhase.BREACH
     mgr.phase_timer = 120
     mgr.facility_cooldowns = {fid: 0 for fid in mgr.defense_facilities}
     mgr.active_raid = True
-    
+
     # 最初の敵を毒状態
     mgr.raid_enemies[0].status_effects = [{"type": "poison", "duration": 3}]
     mgr.raid_enemies[1].status_effects = [{"type": "poison", "duration": 3}]
-    
+
     results = mgr._facility_attack_enemies()
-    
+
     synergy_results = [r for r in results if r.get("synergy") == "poison_fire_explosion"]
     assert len(synergy_results) >= 1
 
@@ -980,28 +950,28 @@ def test_wall_behind_dps_bonus():
     """壁裏DPSボーナステスト (Step 63)"""
     mgr = create_test_manager()
     mgr.storage_junk = 1000
-    
+
     # 炎タレット建設
     skill = MockSkill("Inferno Breath", rank="common", level=1, tags=["attack"])
     mgr.registry.owned_skills["inferno"] = skill
     bp = mgr.distill_skill("inferno")
     mgr.build_distilled_turret(bp.id)
-    
+
     # Husk壁設置
     class MockHusk:
         hp = 120
     mgr.place_husk_barricade(MockHusk(), (3, 3))
-    
+
     mgr.audit_tier = AuditTier.T1
     mgr.raid_enemies = mgr._generate_audit_enemies()
     mgr.current_phase = RaidPhase.BREACH
     mgr.phase_timer = 120
     mgr.facility_cooldowns = {fid: 0 for fid in mgr.defense_facilities}
     mgr.active_raid = True
-    
+
     # 攻撃実行
     results = mgr._facility_attack_enemies()
-    
+
     # 壁ボーナスが適用されている
     attack_results = [r for r in results if r.get("facility", "").startswith("audit_turret")]
     assert len(attack_results) > 0
@@ -1015,13 +985,13 @@ def test_wall_behind_dps_bonus():
 def test_special_audit_roll():
     """特殊監査抽選テスト (Step 67)"""
     mgr = create_test_manager()
-    
+
     # 複数回実行して分布確認 (NONEが大半)
     counts = {t: 0 for t in SpecialAuditType}
     for _ in range(1000):
         result = mgr.roll_special_audit()
         counts[result] += 1
-    
+
     # NONEが7割程度
     assert counts[SpecialAuditType.NONE] > 600
     assert counts[SpecialAuditType.NONE] < 800
@@ -1032,13 +1002,13 @@ def test_tutorial_audit_detection():
     mgr = create_test_manager()
     mgr.raid_history = []  # 空
     mgr.audit_tier = AuditTier.T1
-    
+
     assert mgr.is_tutorial_audit() is True
-    
+
     # 2回目以降はFalse
     mgr.raid_history = [{"victory": True}]
     assert mgr.is_tutorial_audit() is False
-    
+
     # T2以上はFalse
     mgr.raid_history = []
     mgr.audit_tier = AuditTier.T2
@@ -1050,13 +1020,13 @@ def test_tutorial_hints():
     mgr = create_test_manager()
     mgr.raid_history = []
     mgr.audit_tier = AuditTier.T1
-    
+
     hints = mgr.get_tutorial_hints()
     assert len(hints) == 3
     assert any("炎タレット" in h for h in hints)
     assert any("Husk壁" in h for h in hints)
     assert any("強奪" in h for h in hints)
-    
+
     # チュートリアル以外は空
     mgr.raid_history = [{"victory": True}]
     assert mgr.get_tutorial_hints() == []
@@ -1066,7 +1036,7 @@ def test_defense_options_in_ui_state():
     """UI状態にdefense_options含むテスト (Step 69)"""
     mgr = create_test_manager()
     state = mgr.get_defense_ui_state()
-    
+
     assert "defense_options" in state
     assert state["defense_options"]["speed"] == 1.0
     assert state["defense_options"]["auto_layout"] is False
@@ -1084,12 +1054,12 @@ def test_balance_constants():
     assert AUDIT_TIER_CONFIG[1]["steal_base_rate"] == 55
     assert AUDIT_TIER_CONFIG[4]["steal_base_rate"] == 40
     assert AUDIT_TIER_CONFIG[5]["steal_base_rate"] == 20  # ペナルティ込み
-    
+
     # バランステスト実行
     mgr = create_test_manager()
     mgr.load_audit_units_data("data/worlds/skill_eater/audit_units.yaml")
     result = mgr.balance_test(simulations=10)
-    
+
     assert "win_rate" in result
     assert "avg_turns" in result
     assert "recommendation" in result
@@ -1106,19 +1076,19 @@ def test_save_load_roundtrip():
     mgr.premonition_days = 2
     mgr.premonition_active = True
     mgr.defense_options = {"speed": 1.25, "auto_layout": True, "colorblind_icons": False}
-    
+
     # 錬成
     skill = MockSkill("Inferno Breath", rank="rare", level=2, tags=["attack"])
     mgr.registry.owned_skills["inferno"] = skill
     bp = mgr.distill_skill("inferno")
     mgr.build_distilled_turret(bp.id)
-    
+
     # 壁・地雷
     class MockHusk:
         hp = 120
     mgr.place_husk_barricade(MockHusk(), (3, 3))
     mgr.plant_emp_mine((5, 5))
-    
+
     # 強奪スキル
     mgr.seized_skills["execute_death_immunity"] = SeizedSkill(
         skill_id="execute_death_immunity",
@@ -1126,14 +1096,14 @@ def test_save_load_roundtrip():
         description="即死無効化",
         source_tier=AuditTier.T4
     )
-    
+
     # シリアライズ (distillで200消費後、buildで0消費なので 5000-200=4800)
     expected_junk = 4800
     data = mgr.to_dict()
-    
+
     # 復元
     mgr2 = AuditDefenseManager.from_dict(data)
-    
+
     # 検証
     assert mgr2.threat_level == 75
     assert mgr2.audit_tier == AuditTier.T4
@@ -1144,18 +1114,18 @@ def test_save_load_roundtrip():
     assert mgr2.defense_options["speed"] == 1.25
     assert mgr2.defense_options["auto_layout"] is True
     assert mgr2.defense_options["colorblind_icons"] is False
-    
+
     # 錬成設計図
     assert "bp_inferno" in mgr2.blueprints
     assert mgr2.blueprints["bp_inferno"].skill_level == 2
-    
+
     # 壁・地雷
     assert len(mgr2.husk_barricades) == 1
     assert len(mgr2.emp_mines) == 1
-    
+
     # 強奪スキル
     assert "execute_death_immunity" in mgr2.seized_skills
-    
+
     # 施設
     built_facilities = [f for f in mgr2.defense_facilities.values() if f.is_built]
     assert len(built_facilities) >= 1
@@ -1167,33 +1137,33 @@ def test_full_t3_audit_walkthrough():
     mgr.load_audit_units_data("data/worlds/skill_eater/audit_units.yaml")
     mgr.storage_junk = 5000
     mgr.threat_level = 50  # T3閾値
-    
+
     # 1. 予兆期間: 炎・氷錬成・Husk壁配置・EMP設置
     mgr.audit_tier = AuditTier.T3
     premonition = mgr.start_audit_premonition(AuditTier.T3)
     assert premonition["premonition_days"] == 3
     assert premonition["tier"] == "T3"
-    
+
     # 炎タレット錬成・建設
     skill = MockSkill("Inferno Breath", rank="rare", level=2, tags=["attack"])
     mgr.registry.owned_skills["inferno"] = skill
     bp = mgr.distill_skill("inferno")
     mgr.build_distilled_turret(bp.id)
-    
+
     # 氷タレット錬成・建設
     skill = MockSkill("Frost Lance", rank="common", level=1, tags=["attack"])
     mgr.registry.owned_skills["frost"] = skill
     bp = mgr.distill_skill("frost")
     mgr.build_distilled_turret(bp.id)
-    
+
     # Husk壁配置
     class MockHusk:
         hp = 150
     mgr.place_husk_barricade(MockHusk(), (3, 3))
-    
+
     # EMP地雷設置
     mgr.plant_emp_mine((5, 5))
-    
+
     # 2. 戦闘フェーズ突入
     mgr.current_phase = RaidPhase.BREACH
     mgr.phase_timer = AUDIT_TIER_CONFIG[3]["core_timer"]
@@ -1201,33 +1171,33 @@ def test_full_t3_audit_walkthrough():
     mgr.active_raid = True
     mgr.raid_enemies = mgr._generate_audit_enemies()
     mgr.current_wave = 1
-    
+
     # 3. 部隊長弱体化・強奪シミュレーション
     captain = next(e for e in mgr.raid_enemies if isinstance(e, AuditCaptain))
-    
+
     # 弱体化 (HP30%以下 + 凍結)
     captain.hp = int(captain.max_hp * 0.25)
     captain.status_effects = [{"type": "freeze", "duration": 2}]
-    
+
     # 強奪実行 (成功率100%でモック)
     import random
     original_random = random.random
     random.random = lambda: 0.0
-    
+
     try:
         result = mgr.seize_captain(captain)
-        
+
         # 4. 強奪成功検証
         assert result["success"] is True
         assert result["skill_id"] == "purification_field"
         assert "purification_field" in mgr.seized_skills
         assert mgr.squad_retreat is True
-        
+
         # 5. 勝利判定
         # squad_retreat=Trueなので敵全滅扱い
         alive = [e for e in mgr.raid_enemies if not e.is_dead]
         # 強奪成功で撤退フラグ立つので、process_breach_phaseで勝利判定
-        
+
     finally:
         random.random = original_random
 
