@@ -928,7 +928,7 @@ class AdvancedAISystem(BaseSystem):
             "coward": SelectorNode(
                 [
                     AbilityAction(),
-                    SequenceNode([HealSelfAction(0.1), FleeAction()]),
+                    SequenceNode([HealSelfAction(0.5), FleeAction()]),
                     MeleeAttackAction(),
                     FleeAction(),
                     WanderAction(),
