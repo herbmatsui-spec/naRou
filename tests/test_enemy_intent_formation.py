@@ -31,6 +31,7 @@ class FakeEntity:
         hp=100,
         max_hp=100,
         ai_role=AI_ROLE_BRUTE,
+        ai_type="aggressive",
         faction="monster",
         is_player=False,
         is_pet=False,
@@ -40,6 +41,7 @@ class FakeEntity:
         self.x, self.y = x, y
         self.hp, self.max_hp = hp, max_hp
         self.ai_role = ai_role
+        self.ai_type = ai_type
         self.faction = faction
         self.is_player = is_player
         self.is_pet = is_pet
@@ -100,14 +102,14 @@ def test_caster_out_of_range_is_move():
 
 def test_low_hp_flees():
     eng = FakeEngine(_player(5, 5))
-    e = FakeEntity(x=3, y=5, hp=20, max_hp=100)
+    e = FakeEntity(x=3, y=5, hp=55, max_hp=100, ai_type="coward")
     intent = compute_intent(e, eng)
     assert intent["type"] == INTENT_FLEE
 
 
 def test_mid_low_hp_heals():
     eng = FakeEngine(_player(5, 5))
-    e = FakeEntity(x=3, y=5, hp=33, max_hp=100)
+    e = FakeEntity(x=3, y=5, hp=33, max_hp=100, ai_type="coward")
     intent = compute_intent(e, eng)
     assert intent["type"] == INTENT_HEAL
 
@@ -210,6 +212,7 @@ class TestIntentIntegration:
 
         hp = kw.pop("hp", 30)
         max_hp = kw.pop("max_hp", 30)
+        ai_type = kw.pop("ai_type", "aggressive")
         e = Entity(
             x=eng.player.x + dx,
             y=eng.player.y + dy,
@@ -221,6 +224,7 @@ class TestIntentIntegration:
             **kw,
         )
         e.hp, e.max_hp = hp, max_hp
+        e.ai_type = ai_type
         e.faction = "monster"
         eng.entity_manager.add_entity(e)
         return e
@@ -235,7 +239,7 @@ class TestIntentIntegration:
     def test_low_hp_intent_is_flee_or_heal(self):
         eng = self._make_engine()
         # 距離を離して隣接攻撃を避けつつ低HPにする
-        m = self._add_monster(eng, 3, 0, hp=10, max_hp=100)
+        m = self._add_monster(eng, 3, 0, hp=10, max_hp=100, ai_type="coward")
         eng.advance_world()
         assert m.next_intent["type"] in (INTENT_FLEE, INTENT_HEAL)
 

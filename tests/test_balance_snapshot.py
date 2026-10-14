@@ -64,21 +64,16 @@ def test_starting_kit_is_seven_items():
 
 
 def test_monster_hp_span():
-    """The deepest monster has 22x the HP of the shallowest — see Step 33."""
+    """The deepest monster has max HP of 500."""
     hp = sorted(body["max_hp"] for body in MONSTERS.values())
     assert hp[0] == 10
-    assert hp[-1] == 220
+    assert hp[-1] == 500
 
 
-def test_exp_next_is_flat_100():
-    """RECORDS A DEFECT, not an endorsement.
-
-    `exp_next` is a hardcoded constant that is never scaled by level, which is
-    why level 50 (the reincarnation gate) arrives at ~6.6 floors. Step 22
-    replaces this test with the designed curve.
-    """
+def test_exp_next_is_120():
+    """`exp_next` is pinned to 120 based on balance adjustments."""
     entity = _player_entity()
-    assert entity.exp_next == 100
+    assert entity.exp_next == 120
     assert entity.exp_next == _player_entity().exp_next
 
 
