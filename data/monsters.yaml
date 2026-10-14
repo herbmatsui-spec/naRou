@@ -4,10 +4,10 @@ slime:
   char: "🍮"
   color: [100, 255, 100]
   speed: 50
-  max_hp: 14
+  max_hp: 1
   min_floor: 1
   max_floor: 30
-  ai_type: "coward"
+  ai_type: "neutral"
   ai_role: "brute"
   skills: []
   attributes:

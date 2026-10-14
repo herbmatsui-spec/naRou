@@ -13,7 +13,7 @@ from typing import Any
 class AttributesComponent:
     """主能力 8種 - ECSコンポーネントとして管理 (Step 2)"""
 
-    strength: int = 10
+    strength: int = 18
     endurance: int = 10
     dexterity: int = 10
     perception: int = 10
