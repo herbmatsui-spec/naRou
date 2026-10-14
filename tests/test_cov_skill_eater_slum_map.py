@@ -90,21 +90,27 @@ class TestExtractMemoryData:
 
 class TestHiddenSafe:
     def test_correct_code_opens_safe(self, mgr: SlumMapManager) -> None:
+        # バグ4修正: 解錠は HUSK_01 からの記憶抽出が前提のため、先に抽出する
+        mgr.extract_memory_data("HUSK_01")
         res = mgr.unlock_slum_hidden_safe("4989")
         assert res["success"] is True
         assert res["reward_gold"] == 1200
         assert res["reward_item"] == "RARE_SCRAP_METEOR_FRAGMENT"
 
     def test_wrong_code_rejected(self, mgr: SlumMapManager) -> None:
+        mgr.extract_memory_data("HUSK_01")
         res = mgr.unlock_slum_hidden_safe("0000")
         assert res["success"] is False
         assert res["error"] == "WRONG_CODE"
 
-    def test_default_code_fallback_before_extraction(self, mgr: SlumMapManager) -> None:
-        # discovered_secrets が空でも 4989 がフォールバックとして使われる
+    def test_safe_locked_before_extraction(self, mgr: SlumMapManager) -> None:
+        # バグ4修正 (旧 test_default_code_fallback_before_extraction の期待値を反転):
+        # discovered_secrets が空でも 4989 フォールバックで開くことはなく、
+        # CODE_NOT_DISCOVERED で拒否される (抽出ループの省略防止)
         assert mgr.discovered_secrets == {}
         res = mgr.unlock_slum_hidden_safe("4989")
-        assert res["success"] is True
+        assert res["success"] is False
+        assert res["error"] == "CODE_NOT_DISCOVERED"
 
 
 class TestRouteAccessAndFX:

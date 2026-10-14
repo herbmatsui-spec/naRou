@@ -25,6 +25,9 @@ from naRou.constants import (
 if TYPE_CHECKING:
     from naRou.ecs.entity import Entity
 
+# initialize_pet_personality が抽選する好物タグ候補
+_CANDIDATE_FOOD_TAGS = (FOOD_TAG_MEAT, FOOD_TAG_FISH, FOOD_TAG_SWEET, FOOD_TAG_HERB, FOOD_TAG_VEGETABLE)
+
 
 class PetPersonalitySystem:
     """ペットの性格・好物・絆・育成管理システム"""
@@ -42,6 +45,48 @@ class PetPersonalitySystem:
         chosen = random.choice(candidates)
         pet.personality = chosen
         return chosen
+
+    @staticmethod
+    def initialize_pet_personality(pet: Entity) -> str:
+        """新規ペットへ性格と好物を付与する (未付与の属性のみ)。
+
+        旧セーブや既存の付与値を尊重し、上書きはしない。
+        戻り値は最終的な性格。
+        """
+        if not getattr(pet, "personality", None):
+            PetPersonalitySystem.assign_random_personality(pet)
+        if not getattr(pet, "favorite_food_tags", None):
+            pet.favorite_food_tags = [random.choice(_CANDIDATE_FOOD_TAGS)]
+        return getattr(pet, "personality", PERSONALITY_BRAVE)
+
+    @staticmethod
+    def get_effective_bond_percent(pet: Entity) -> int:
+        """0-100 に正規化した実効絆度を返す。
+
+        - entity 属性 bond (0-100 スケール、feed_pet 系が管理) があればそれを優先
+        - 無ければ pet.pet_ai.bond (契約の max_bond スケール) を百分率へ正規化
+        - どちらも無ければ旧デフォルトの 50
+        """
+        entity_bond = getattr(pet, "bond", None)
+        if entity_bond is not None:
+            return max(0, min(100, int(entity_bond)))
+
+        pet_ai = getattr(pet, "pet_ai", None)
+        if pet_ai is not None:
+            bond = int(getattr(pet_ai, "bond", 0))
+            max_bond = 1000
+            try:
+                from pet_contract_system import REGISTRY as CONTRACT_REG
+
+                CONTRACT_REG.load()
+                contract = CONTRACT_REG.get(getattr(pet_ai, "contract_id", "default"))
+                if contract is not None:
+                    max_bond = int(getattr(contract, "max_bond", max_bond))
+            except Exception:
+                pass  # 契約データ不在時は既定スケール (0-1000) を使う
+            return max(0, min(100, bond * 100 // max(1, max_bond)))
+
+        return 50
 
     @staticmethod
     def feed_pet(pet: Entity, food_item: Any) -> tuple[bool, int, str]:
@@ -116,7 +161,7 @@ class PetPersonalitySystem:
         """
         絆レベルに応じたステータス・戦闘補正 (Step 67)
         """
-        bond = getattr(pet, "bond", 50)
+        bond = PetPersonalitySystem.get_effective_bond_percent(pet)
         return {
             "hp_bonus": int(bond * 0.4),  # 最大 +40 HP
             "hit_bonus": int(bond * 0.1),  # 最大 +10 命中
@@ -187,3 +232,30 @@ class PetPersonalitySystem:
             "target": enemies[0],
             "reason": "敵と交戦中",
         }
+
+    @staticmethod
+    def apply_bond_gameplay_effects(engine: Any) -> None:
+        """turn 進行から呼ばれる絆の実ゲーム効果適用 (改善案6 機能3)。
+
+        絆に応じた最大HPボーナスをペットへ反映する。ボーナスは前回適用分を
+        記憶して差分計算するため冪等で、レベルアップ等の外部による max_hp
+        変更も打ち消さない。自動回復は行わない (控えめな初期値)。
+        """
+        pet = getattr(engine, "pet", None)
+        if pet is None or getattr(pet, "hp", 0) <= 0:
+            return
+
+        try:
+            mods = PetPersonalitySystem.get_bond_stat_modifiers(pet)
+            hp_bonus = int(mods.get("hp_bonus", 0))
+        except Exception:
+            return
+
+        last = int(getattr(pet, "_bond_applied_hp", 0))
+        base_max_hp = int(getattr(pet, "max_hp", 0)) - last
+        pet._bond_applied_hp = hp_bonus
+        new_max = base_max_hp + hp_bonus
+        if new_max > 0:
+            pet.max_hp = new_max
+        if int(getattr(pet, "hp", 0)) > int(getattr(pet, "max_hp", 0)):
+            pet.hp = pet.max_hp

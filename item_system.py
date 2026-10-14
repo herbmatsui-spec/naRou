@@ -503,10 +503,12 @@ class Inventory:
             item = slot.item
             if item:
                 # エンチャントからステータスボーナスを集計 (enchants と enchantments の両方に対応)
+                # 旧セーブの文字列エンチャントは type を持たないためスキップする
                 for ench in getattr(item, "enchants", ()) or getattr(item, "enchantments", ()):
-                    if ench.type == "stat_bonus" and ench.target_stat:
+                    ench_type = getattr(ench, "type", None)
+                    if ench_type == "stat_bonus" and ench.target_stat:
                         bonuses[ench.target_stat] = bonuses.get(ench.target_stat, 0) + ench.power
-                    elif ench.type == "combat_bonus" and ench.target_stat:
+                    elif ench_type == "combat_bonus" and ench.target_stat:
                         # combat_bonusもステータスとして扱う
                         bonuses[ench.target_stat] = bonuses.get(ench.target_stat, 0) + ench.power
         return bonuses
@@ -517,10 +519,28 @@ class Inventory:
         main_hand_slot = self.get_slot("main_hand")
         if main_hand_slot and main_hand_slot.item:
             weapon = main_hand_slot.item
+            # 旧セーブの文字列エンチャントは type を持たないためスキップする
             for ench in getattr(weapon, "enchants", ()) or getattr(weapon, "enchantments", ()):
-                if ench.type == "element_damage" and ench.element:
+                if getattr(ench, "type", None) == "element_damage" and ench.element:
                     result.append((ench.element, ench.power))
         return result
+
+
+def _roll_sample_enchants(category: str) -> tuple:
+    """create_sample_item 用の控えめなエンチャント抽選。
+
+    ItemGenerator と同じ品質カーブを共有する (遅延 import: item_generator は
+    本モジュールに依存するため循環を避ける)。NORMAL 品質の曲線では
+    10% の確率で 1 件付くだけの控えめな初期値。
+    """
+    if category not in (CAT_WEAPON, CAT_SHIELD, CAT_HELM, CAT_ARMOR, CAT_RING):
+        return ()
+    try:
+        from item_generator import roll_enchantments
+
+        return roll_enchantments(category, QUALITY_NORMAL)
+    except Exception:
+        return ()
 
 
 def create_sample_item(name: str, x: int = 0, y: int = 0) -> Item:
@@ -531,9 +551,10 @@ def create_sample_item(name: str, x: int = 0, y: int = 0) -> Item:
 
     if items_data and name in items_data:
         d = items_data[name]
+        category = d.get("category", CAT_WEAPON)
         return Item(
             name=d.get("name", name),
-            category=d.get("category", CAT_WEAPON),
+            category=category,
             char=d.get("char", "🗡️"),
             color=tuple(d.get("color", [200, 200, 200])),
             x=x,
@@ -553,6 +574,7 @@ def create_sample_item(name: str, x: int = 0, y: int = 0) -> Item:
             spell_id=d.get("spell_id", ""),
             sp_stock=int(d.get("sp_stock", 0)),
             identified=d.get("identified", True),
+            enchants=_roll_sample_enchants(category),
         )
 
     # フォールバック
@@ -658,7 +680,9 @@ def create_sample_item(name: str, x: int = 0, y: int = 0) -> Item:
             sp_stock=50,
         ),
     }
-    return presets.get(name, presets["longsword"])
+    item = presets.get(name, presets["longsword"])
+    item.enchants = _roll_sample_enchants(item.category)
+    return item
 
 
 def sell(item: Item, gold_holder: Any) -> int:

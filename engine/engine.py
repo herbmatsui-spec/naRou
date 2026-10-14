@@ -317,6 +317,10 @@ class Engine:
         self.game_state_data.pet.status_effects = []
         self.game_state_data.pet.resistances = ResistanceSet()
         self.game_state_data.pet.faction = "player"
+        # ペット性格・好物の付与 (改善案6 機能3)
+        from pet_personality_system import PetPersonalitySystem
+
+        PetPersonalitySystem.initialize_pet_personality(self.game_state_data.pet)
 
     def _setup_initial_inventory(self) -> None:
         """初期インベントリアイテムの設定 (GameplayPackage 経由)"""

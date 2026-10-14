@@ -150,6 +150,10 @@ class SkillEaterRegistry:
             skill = SkillDef.from_dict(skill_data)
             self._skills[skill.id] = skill
 
+    def register_skill(self, skill: SkillDef) -> None:
+        """スキル定義を登録・差し替えする公開 API (合成結果等の動的登録用)"""
+        self._skills[skill.id] = skill
+
     def get_skill(self, skill_id: str) -> SkillDef | None:
         return self._skills.get(skill_id)
 
@@ -220,9 +224,18 @@ class CharacterState:
     last_search_turn: int = 0  # 最後のサーチ実行ターン
     failed_search_count: int = 0  # 連続検知失敗回数
 
+    # スキル定義を解決する registry。非シングルトン運用では構築時に注入する。
+    # None の場合は従来どおりシングルトン (SkillEaterRegistry.get_instance()) にフォールバック。
+    registry: SkillEaterRegistry | None = field(default=None, compare=False, repr=False)
+
+    def _resolve_registry(self) -> SkillEaterRegistry:
+        if self.registry is not None:
+            return self.registry
+        return SkillEaterRegistry.get_instance()
+
     def calculate_memory_usage(self) -> int:
         """装備中スキルの合計MBおよびオーバークロック率(%)を計算して更新する"""
-        registry = SkillEaterRegistry.get_instance()
+        registry = self._resolve_registry()
         total_mb = 0
         for s_id in self.skills:
             s_def = registry.get_skill(s_id)
@@ -240,7 +253,7 @@ class CharacterState:
 
     @property
     def current_memory_usage(self) -> int:
-        registry = SkillEaterRegistry.get_instance()
+        registry = self._resolve_registry()
         total = 0
         for s_id in self.skills:
             s_def = registry.get_skill(s_id)
@@ -253,7 +266,7 @@ class CharacterState:
     def add_skill(self, skill_id: str, level: int = 1, ignore_capacity: bool = False) -> bool:
         if skill_id in self.skills:
             return True
-        registry = SkillEaterRegistry.get_instance()
+        registry = self._resolve_registry()
         s_def = registry.get_skill(skill_id)
         cost = s_def.memory_usage if s_def else DEFAULT_SKILL_MEMORY_USAGE
         if not ignore_capacity and self.current_memory_usage + cost > self.max_memory_capacity:
@@ -291,7 +304,7 @@ class CharacterState:
         """保管庫からスキルを通常メモリにロード（装備）する"""
         if skill_id not in self.archived_skills:
             return False
-        registry = SkillEaterRegistry.get_instance()
+        registry = self._resolve_registry()
         s_def = registry.get_skill(skill_id)
         cost = s_def.memory_usage if s_def else DEFAULT_SKILL_MEMORY_USAGE
         if self.current_memory_usage + cost > self.max_memory_capacity:

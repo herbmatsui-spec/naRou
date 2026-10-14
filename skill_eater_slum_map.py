@@ -98,8 +98,19 @@ class SlumMapManager:
         return {"success": False, "error": "NPC_NOT_FOUND"}
 
     def unlock_slum_hidden_safe(self, entered_code: str) -> Dict[str, Any]:
-        """Attempts to open Midas Slum stash using the extracted safe code."""
-        correct_code = self.discovered_secrets.get("SAFE_PASSWORD_MIDAS_SLUM", "4989")
+        """Attempts to open Midas Slum stash using the extracted safe code.
+
+        暗証コードは HUSK_01 の記憶抽出 (extract_memory_data) でのみ入手できる。
+        抽出前に入力されたコードは、たとえ正解値と一致しても開かない
+        (抽出 → 解錠というシークレット探索ループの省略を防ぐ仕様)。
+        """
+        correct_code = self.discovered_secrets.get("SAFE_PASSWORD_MIDAS_SLUM")
+        if correct_code is None:
+            return {
+                "success": False,
+                "error": "CODE_NOT_DISCOVERED",
+                "message": "暗証コードを知らない。まずHuskの記憶を抽出する必要がある。",
+            }
         if entered_code == correct_code:
             return {
                 "success": True,

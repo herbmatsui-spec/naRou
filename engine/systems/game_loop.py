@@ -27,8 +27,14 @@ logger = logging.getLogger(__name__)
 class GameLoopHandler:
     """Handles world advancement, death/run-end state, and run summary/history."""
 
+    # Aの世界テンプレートイベントのループ側進行パラメータ (改善案6 機能1)
+    _template_event_cadence_turns = 20  # 発生判定の間隔 (turn)
+    _template_event_lifetime_turns = 40  # 介入されなければ完遂までの turn 数
+    _template_spawn_chance = 0.15  # 判定ごとの発生確率 (控えめな初期値)
+
     def __init__(self, engine: "Engine"):
         self.engine = engine
+        self._loop_template_events: list = []
 
     def _end_run_if_player_dead(self) -> bool:
         """死亡を判定して run を終了させる (docs/compose/spec/run-end-state.md [S2.1])
@@ -194,6 +200,14 @@ class GameLoopHandler:
 
         PetBondManager().update_turn_bond(engine)
 
+        # === Aの世界テンプレートイベント進行 (改善案6 機能1) ===
+        self._tick_skill_eater_template_events()
+
+        # === ペット絆の実ゲーム効果 (性格システムへ委譲: 改善案6 機能3) ===
+        from pet_personality_system import PetPersonalitySystem
+
+        PetPersonalitySystem.apply_bond_gameplay_effects(engine)
+
         # 浮遊テキスト & パーティクル & 通知 & 画面シェイクの更新 (Phase 6, 7, UX強化)
         engine.floating_texts = [ft for ft in engine.floating_texts if ft.update()]
         engine.particles = [pt for pt in engine.particles if pt.update()]
@@ -203,6 +217,87 @@ class GameLoopHandler:
             engine.screen_shake.update()
 
         engine.game_map.compute_fov(engine.player.x, engine.player.y, radius=8)
+
+    def _tick_skill_eater_template_events(self) -> None:
+        """Aの世界でテンプレートイベントを時間進行させる (改善案6 機能1)。
+
+        探索システムの部屋移動起点とは別に、ループ側で一定間隔の発生判定と
+        期限切れ完遂を行う。発生したイベントはループ側で管理し、探索システムの
+        active_template_events とは時計 (engine.turns) も責務も分離する。
+        """
+        engine = self.engine
+        world = getattr(getattr(engine, "game_state_data", None), "current_world", "main")
+        if world != "skill_eater":
+            return
+        kernel = getattr(engine, "kernel", None)
+        if kernel is None or not kernel.has_system("skill_eater_meta_intervention"):
+            return
+        generator = kernel.get_system("skill_eater_meta_intervention")
+        if generator is None:
+            return
+
+        turn = engine.turns
+
+        # 期限切れイベントの完遂処理 (介入は探索システム経由で実行される)
+        still_active = []
+        for event in self._loop_template_events:
+            if turn - event.turn_spawned >= self._template_event_lifetime_turns:
+                engine.log(
+                    f"《原典閲覧》{event.archetype} テンプレは介入されぬまま定形通り完遂した……",
+                    (180, 140, 200),
+                    level="INFO",
+                )
+            else:
+                still_active.append(event)
+        self._loop_template_events = still_active
+
+        # 一定間隔での新規発生判定
+        if turn % self._template_event_cadence_turns != 0:
+            return
+        context, loop_count = self._template_event_context()
+        event = generator.maybe_spawn(
+            context, turn, loop_count=loop_count, spawn_chance=self._template_spawn_chance
+        )
+        if event is None:
+            return
+        self._loop_template_events.append(event)
+        engine.log(
+            f"《原典閲覧》{event.archetype} テンプレの気配を感じる…… (context: {context})",
+            (200, 160, 255),
+            level="INFO",
+        )
+        presentation = (
+            kernel.get_system("skill_eater_presentation_system")
+            if kernel.has_system("skill_eater_presentation_system")
+            else None
+        )
+        if presentation is not None:
+            presentation.add_event(
+                emote_file="emote_exclamations.png",
+                audio_file="bookFlip3.ogg",
+                message=f"《原典閲覧》{event.archetype} テンプレ発生",
+                duration_ms=2000,
+                event_type="secret_discover",
+            )
+
+    def _template_event_context(self) -> tuple[str, int]:
+        """現在部屋からテンプレートの context と loop_count を導く。"""
+        engine = self.engine
+        context = "slum"
+        loop_count = 1
+        kernel = getattr(engine, "kernel", None)
+        if kernel is not None and kernel.has_system("skill_eater_exploration_system"):
+            explore = kernel.get_system("skill_eater_exploration_system")
+            room = getattr(explore, "current_room_id", "")
+            context = {
+                "slum_alley": "slum",
+                "underground_market": "slum",
+                "midas_tower_entrance": "noble_quarter",
+                "vault_chamber": "dungeon_entrance",
+            }.get(room, "slum")
+            rank = getattr(getattr(explore, "exploration_rank", None), "rank", 1)
+            loop_count = max(1, rank // 3)
+        return context, loop_count
 
     def update(self, delta_time: float = 1.0) -> None:
         """ゲームロジック更新 (描画を行わない)"""

@@ -151,11 +151,15 @@ class SkillEaterSynthesisSystem:
                     type=SkillType.ACTIVE,
                     flavor_text="静的レシピによって生み出された特異スキル。",
                 )
-                self.registry._skills[res_id] = result_skill
+                self.registry.register_skill(result_skill)
 
             character.remove_skill(skill_id_a)
             character.remove_skill(skill_id_b)
             character.add_skill(result_skill.id)
+            # remove_skill が最後の素材消費で立てた is_husk を、
+            # 結果スキルの装備に成功していれば解除する (容量不足で空のままなら husk のまま)
+            if character.skills:
+                character.is_husk = False
 
             # Step 28: 合成成功
             evt_suc = self.presentation.add_event(
@@ -219,10 +223,13 @@ class SkillEaterSynthesisSystem:
             is_illegal=True,
         )
 
-        self.registry._skills[new_id] = procedural_skill
+        self.registry.register_skill(procedural_skill)
         character.remove_skill(skill_id_a)
         character.remove_skill(skill_id_b)
         character.add_skill(new_id)
+        # 静的合成パスと同様、結果の装備に成功したら husk 状態を解除する
+        if character.skills:
+            character.is_husk = False
 
         # Step 28: 合成成功
         evt_suc2 = self.presentation.add_event(

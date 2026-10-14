@@ -278,6 +278,49 @@ class ItemGenerator:
 # グローバルファクトリ関数
 _global_item_generator: ItemGenerator | None = None
 
+# item_enchantments.yaml の軽量リポジトリキャッシュ (起動一括ロードを避ける)
+_lightweight_enchant_repo: "EnchantmentRepository | None" = None
+
+
+def _get_lightweight_enchant_repository() -> "EnchantmentRepository":
+    """item_enchantments.yaml を DataCache 経由で読んだ EnchantmentRepository を返す。
+
+    DataManager() の全データ一括ロードを避けるための軽量経路。初回呼び出し時に
+    構築してキャッシュする。
+    """
+    global _lightweight_enchant_repo
+    if _lightweight_enchant_repo is None:
+        from data.repositories.enchantment import EnchantmentRepository
+
+        from config_manager import DataCache
+
+        raw = DataCache.get_data("data/item_enchantments.yaml") or {}
+        _lightweight_enchant_repo = EnchantmentRepository(
+            {k: EnchantmentDefinition.model_validate(v) for k, v in raw.items()}
+        )
+    return _lightweight_enchant_repo
+
+
+class _EnchantOnlyDataManager:
+    """エンチャント供給だけを持つ最小アダプタ (ItemGenerator からの参照用)"""
+
+    def __init__(self) -> None:
+        self.enchantments = _get_lightweight_enchant_repository()
+
+
+def roll_enchantments(category: str, quality: str) -> tuple[ItemEnchantmentInstance, ...]:
+    """軽量ファクトリ (create_sample_item 等) 向けのエンチャント抽選。
+
+    ItemGenerator と同じ選定ロジック・品質カーブ・威力計算を共有し、
+    DataManager の全体ロードを行わない。
+    """
+    gen = ItemGenerator.__new__(ItemGenerator)
+    gen.data_manager = _EnchantOnlyDataManager()  # type: ignore[assignment]
+    count = gen.get_enchant_count(quality)
+    if count <= 0:
+        return ()
+    return tuple(gen.generate_enchantments_for_item(category, quality, count=count))
+
 
 def get_item_generator() -> ItemGenerator:
     global _global_item_generator

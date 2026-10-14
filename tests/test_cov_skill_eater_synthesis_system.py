@@ -71,13 +71,14 @@ def make_char(char_id: str = "p1", name: str = "喰らい手") -> CharacterState
 def registry() -> SkillEaterRegistry:
     SkillEaterRegistry.reset_instance()
     reg = SkillEaterRegistry.get_instance()
-    reg._skills["com_magic_001"] = make_skill("com_magic_001", "ファイアボルト", tags=["Fire"])
-    reg._skills["com_labor_002"] = make_skill("com_labor_002", "掘削", tags=["Earth"])
-    reg._skills["rar_infrared_vision"] = make_skill(
-        "rar_infrared_vision", "赤外線視覚", tier=SkillTier.RARE, tags=["Fire", "Earth"]
+    # バグ2修正 (register_skill 公開 API 追加) に伴い、_skills 直接書き込みから移行
+    reg.register_skill(make_skill("com_magic_001", "ファイアボルト", tags=["Fire"]))
+    reg.register_skill(make_skill("com_labor_002", "掘削", tags=["Earth"]))
+    reg.register_skill(
+        make_skill("rar_infrared_vision", "赤外線視覚", tier=SkillTier.RARE, tags=["Fire", "Earth"])
     )
-    reg._skills["rar_combat_012"] = make_skill("rar_combat_012", "黄金の一撃", tier=SkillTier.RARE)
-    reg._skills["uni_midas_001"] = make_skill("uni_midas_001", "ミダスの手", tier=SkillTier.UNIQUE)
+    reg.register_skill(make_skill("rar_combat_012", "黄金の一撃", tier=SkillTier.RARE))
+    reg.register_skill(make_skill("uni_midas_001", "ミダスの手", tier=SkillTier.UNIQUE))
     yield reg
     SkillEaterRegistry.reset_instance()
 
@@ -179,6 +180,8 @@ class TestStaticSynthesis:
         assert char.has_skill("com_magic_001") is False
         assert char.has_skill("com_labor_002") is False
         assert char.has_skill("rar_infrared_vision") is True
+        # バグ1修正: 最後の2スキルを消費しても合成結果の装備に成功した時点で husk は解除される
+        assert char.is_husk is False
         # 演出: 調合 → 秘伝 → 完成 の順
         messages = [e.message for e in res.presentation_events]
         assert "合成炉に投入" in messages[0]
@@ -220,13 +223,17 @@ class TestStaticSynthesis:
 class TestProceduralSynthesis:
     def test_unknown_pair_creates_chimera(self, system) -> None:
         registry = system.registry
-        registry._skills["s_fire"] = make_skill(
-            "s_fire", "炎撃", tier=SkillTier.RARE, skill_type=SkillType.ACTIVE,
-            tags=["Fire"], mp_cost=10, cooldown=3, market_value=200,
+        registry.register_skill(
+            make_skill(
+                "s_fire", "炎撃", tier=SkillTier.RARE, skill_type=SkillType.ACTIVE,
+                tags=["Fire"], mp_cost=10, cooldown=3, market_value=200,
+            )
         )
-        registry._skills["s_ice"] = make_skill(
-            "s_ice", "氷撃", tier=SkillTier.UNIQUE, skill_type=SkillType.PASSIVE,
-            tags=["Ice"], mp_cost=7, cooldown=5, market_value=300,
+        registry.register_skill(
+            make_skill(
+                "s_ice", "氷撃", tier=SkillTier.UNIQUE, skill_type=SkillType.PASSIVE,
+                tags=["Ice"], mp_cost=7, cooldown=5, market_value=300,
+            )
         )
         char = make_char()
         char.add_skill("s_fire")
@@ -261,8 +268,8 @@ class TestProceduralSynthesis:
 
     def test_both_passive_yield_passive_chimera(self, system) -> None:
         registry = system.registry
-        registry._skills["ps1"] = make_skill("ps1", "耐性1", skill_type=SkillType.PASSIVE)
-        registry._skills["ps2"] = make_skill("ps2", "耐性2", skill_type=SkillType.PASSIVE)
+        registry.register_skill(make_skill("ps1", "耐性1", skill_type=SkillType.PASSIVE))
+        registry.register_skill(make_skill("ps2", "耐性2", skill_type=SkillType.PASSIVE))
         char = make_char()
         char.add_skill("ps1")
         char.add_skill("ps2")
@@ -272,8 +279,8 @@ class TestProceduralSynthesis:
 
     def test_duplicate_tags_deduplicated(self, system) -> None:
         registry = system.registry
-        registry._skills["t1"] = make_skill("t1", "a", tags=["Fire", "Wind"])
-        registry._skills["t2"] = make_skill("t2", "b", tags=["Fire"])
+        registry.register_skill(make_skill("t1", "a", tags=["Fire", "Wind"]))
+        registry.register_skill(make_skill("t2", "b", tags=["Fire"]))
         char = make_char()
         char.add_skill("t1")
         char.add_skill("t2")
@@ -294,8 +301,8 @@ class TestDynamicTree:
         char.add_skill("com_magic_001")
         char.add_skill("rar_infrared_vision")
         # proc 接頭辞の疑似的な合成スキル
-        system.registry._skills["proc_syn_abc"] = make_skill(
-            "proc_syn_abc", "キメラ", tier=SkillTier.UNIQUE
+        system.registry.register_skill(
+            make_skill("proc_syn_abc", "キメラ", tier=SkillTier.UNIQUE)
         )
         char.add_skill("proc_syn_abc")
 

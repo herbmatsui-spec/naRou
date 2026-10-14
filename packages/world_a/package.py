@@ -25,6 +25,7 @@ class WorldAPackage(IPackage):
                 "skill_eater_economy_system",
                 "skill_eater_servant_system",
                 "skill_eater_meta_quest_system",
+                "skill_eater_meta_state",
                 "skill_eater_exploration_system",
                 "skill_eater_toxicity_manager",
                 "slum_base_expansion_manager",
@@ -123,13 +124,19 @@ class WorldAPackage(IPackage):
         kernel.register_system("skill_eater_meta_intervention", template_gen)
 
         # Intervention engine for meta intervention
+        # rule_engine / meta_state を実体で束縛しないと、介入成功時の
+        # apply_rewards (meta_state.total_karma_points) が AttributeError になる。
+        from skill_eater_meta_quest_system import GlobalRuleEngine, ReincarnationMetaState
         from skill_eater_system import SkillEaterRegistry
+
         registry = kernel.get_system("skill_eater_registry")
+        meta_state = ReincarnationMetaState()
+        kernel.register_system("skill_eater_meta_state", meta_state)
         intervention_engine = InterventionEngine(
             registry=registry,
             presentation=pres_sys,
-            rule_engine=None,
-            meta_state=None,
+            rule_engine=GlobalRuleEngine.get_instance(),
+            meta_state=meta_state,
             templates=load_templates("data/templates"),
         )
         kernel.register_system("skill_eater_intervention_engine", intervention_engine)
