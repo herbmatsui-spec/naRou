@@ -26,11 +26,14 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
+    "pytest-xdist>=3.0.0",   # 改善案8: テスト並列実行
     "mypy>=1.10.0",
     "ruff>=0.5.0",
     "black>=24.0.0",
     "isort>=5.13",
     "watchdog>=2.0",
+    "coverage>=7.0.0",       # 改善案8: カバレッジ計測
+    "pip-audit>=2.0.0",      # 改善案9: 依存関係脆弱性スキャン
 ]
 
 [project.scripts]

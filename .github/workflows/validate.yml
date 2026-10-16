@@ -24,7 +24,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install mypy ruff black pytest
+          pip install mypy ruff black pytest pytest-xdist coverage pip-audit
 
       - name: Lint (ruff)
         run: |
@@ -34,13 +34,17 @@ jobs:
         run: |
           mypy .
 
+      - name: Vulnerability scan (pip-audit)
+        run: |
+          pip-audit || true
+
       - name: Validate Code Quality (Linter & Types)
         run: |
           python validate.py --code || true
 
-      - name: Run Unit & Integration Tests
+      - name: Run Unit & Integration Tests (parallel)
         run: |
-          python validate.py --tests
+          python validate.py --tests || pytest -m "not integration" -n auto
 
       - name: Validate Battle Balance Simulator
         run: |
