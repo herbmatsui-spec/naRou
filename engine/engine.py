@@ -1283,6 +1283,25 @@ class Engine:
             logs.extend(self.survival.pass_turn(self.player, self))
         # 世界進行 (NPCのターン処理など)
         self.advance_world()
+        # スキル喰い: メタ介入イベントトリガー (改善案6)
+        logs.extend(self._check_meta_intervention())
+        return logs
+
+    def _check_meta_intervention(self) -> list[str]:
+        """スキル喰い: メタ介入イベントのトリガーチェック (改善案6)。
+
+        カーネルに登録済みの skill_eater_meta_intervention システムがあれば、
+        ターン経過によるイベント発生をチェックする。システム未登録時は
+        何もしない（後方互換）。
+        """
+        logs = []
+        intervention = self.skill_eater_meta_intervention
+        if intervention is None:
+            return logs
+        if hasattr(intervention, "check_event"):
+            result = intervention.check_event(self.player, self.turns)
+            if result:
+                logs.append(str(result))
         return logs
 
     def _pet_ai(self) -> None:
@@ -1368,6 +1387,30 @@ class Engine:
     def descend_stairs(self) -> None:
         """階段降下 (WorldSystem へ委譲)"""
         self.world_handler.descend_stairs()
+        # スキル喰い: 考古学デコーダーによる記憶フラグメント発見チェック (改善案6)
+        self._check_archaeology_discovery()
+
+    def _check_archaeology_discovery(self) -> None:
+        """スキル喰い: 考古学デコーダーによる記憶フラグメント発見チェック (改善案6)。
+
+        プレイヤーに考古学コンポーネントがあり、カーネルに
+        archaeology_decoder システムが登録されていれば、フラグメント状態を
+        スキャンする。システム未登録時は何もしない（後方互換）。
+        """
+        player = getattr(self, "player", None)
+        if player is None:
+            return
+        arch = getattr(player, "archaeology", None)
+        if arch is None:
+            return
+        decoder = self.kernel.get_system("archaeology_decoder") if hasattr(self, "kernel") and self.kernel else None
+        if decoder is None or not hasattr(decoder, "get_all_fragments_state"):
+            return
+        try:
+            decoder.get_all_fragments_state(player)
+        except Exception:
+            # デコーダーエラーはゲームループを停止させない
+            pass
 
     def check_reincarnation_option(self) -> bool:
         """転生オプション判定 (UISystemHandler へ委譲)"""
@@ -1375,6 +1418,15 @@ class Engine:
 
     def reincarnate(self) -> None:
         """転生処理 (UISystemHandler へ委譲)"""
+        # スキル喰い: カーネルの reincarnation_manager から転生を実行 (改善案6)
+        reinc_mgr = self.reincarnation_manager
+        if reinc_mgr is not None and hasattr(reinc_mgr, "reincarnate"):
+            try:
+                reinc_mgr.reincarnate(self.player, self)
+                return
+            except Exception:
+                # reincarnation_manager で失敗した場合は UI ハンドラにフォールバック
+                pass
         self.ui_handler.reincarnate()
 
     def help_friend(self) -> None:
