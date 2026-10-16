@@ -255,6 +255,8 @@ class SaveSystem:
                     "gold": getattr(engine.survival, "gold", 0),
                     "platinum": getattr(engine.survival, "platinum", 0),
                     "hunger": getattr(engine.survival, "hunger", 8000),
+                    "thirst": getattr(engine.survival, "thirst", 100),
+                    "sleep": getattr(engine.survival, "sleep", 100),
                     "sleepiness": getattr(engine.survival, "sleepiness", 0),
                     "karma": getattr(engine.survival, "karma", 20),
                     "karma_law_chaos": getattr(engine.survival, "karma_law_chaos", 0),
@@ -307,9 +309,11 @@ class SaveSystem:
         if hasattr(engine, "survival") and engine.survival:
             engine.survival.gold = surv_data.get("gold", 0)
             engine.survival.platinum = surv_data.get("platinum", 0)
-            engine.survival.hunger = surv_data.get("hunger", 100)
+            engine.survival.hunger = surv_data.get("hunger", 8000)
             engine.survival.thirst = surv_data.get("thirst", 100)
             engine.survival.sleep = surv_data.get("sleep", 100)
+            engine.survival.sleepiness = surv_data.get("sleepiness", 0)
+            engine.survival.karma = surv_data.get("karma", 20)
             engine.survival.karma_law_chaos = surv_data.get("karma_law_chaos", 0)
             engine.survival.legacy_skills = surv_data.get("legacy_skills", [])
 
