@@ -16,7 +16,7 @@ import yaml
 try:
     from ecs.components import SkillTreeJobComponent
 except Exception:
-    # TODO: handle exception properly
+    # オプショナル依存: ECSコンポーネントが未導入の環境では None
     # pragma: no cover - optional dependency
     SkillTreeJobComponent = None
 

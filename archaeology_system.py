@@ -21,11 +21,9 @@ from core_framework import BaseSystem
 try:
     from ecs.components import ReincarnationComponent
 except Exception:
-    # TODO: handle exception properly
-    # 循環防止（通常は存在）
+    # 循環インポート防止のためオプショナル依存 (通常は存在)
     ReincarnationComponent = None
-
-    logger.exception("Unhandled exception")
+    logger.exception("Failed to import ReincarnationComponent (optional dependency)")
 DATA_DIR = "data"
 
 
@@ -195,9 +193,8 @@ class ArchaeologyManager(BaseSystem):
                         }
                     )
             except Exception:
-                # TODO: handle exception properly
-                pass
-                logger.exception("Unhandled exception")
+                logger.exception("Failed to add collected fragment: %s", fragment_id)
+                return False
         if engine and hasattr(engine, "log"):
             engine.log(
                 f"⛏【発掘】記憶の欠片『{frag.get('name', fragment_id) if frag else fragment_id}』を出土した！",
@@ -244,9 +241,7 @@ class ArchaeologyManager(BaseSystem):
 
             SoundManager.play_se(name)
         except Exception:
-            # TODO: handle exception properly
-            logger.exception("Unhandled exception")
-            pass
+            logger.exception("Failed to play SE: %s", name)
 
     # ---------- Step 19: 解読 ----------
     def decode_fragment(self, player: Any, fragment_id: str, engine: Any | None = None) -> bool:
@@ -344,9 +339,7 @@ class ArchaeologyManager(BaseSystem):
                 int(player.ending_progress.get(ending_id, 0)), 1
             )
         except Exception:
-            logger.exception("Unhandled exception")
-            # TODO: handle exception properly
-            pass
+            logger.exception("Failed to update ending progress: %s", ending_id)
         if engine and hasattr(engine, "log"):
             scene = ending.get("ending_scene", "") if ending else ""
             engine.log(

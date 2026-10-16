@@ -36,8 +36,7 @@ def check_health(endpoint="http://localhost:8080/health"):
         response = requests.get(endpoint, timeout=5)
         return response.status_code == 200
     except Exception:
-        # TODO: handle exception properly
-        logger.exception("Unhandled exception")
+        logger.exception("Health check failed for %s", endpoint)
         return False
 
 
