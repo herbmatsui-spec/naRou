@@ -32,7 +32,7 @@ jobs:
 
       - name: Type check (mypy)
         run: |
-          mypy . || true
+          mypy .
 
       - name: Validate Code Quality (Linter & Types)
         run: |
