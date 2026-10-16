@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Constants for naRou - Centralized magic numbers and configuration values."""
+"""Constants for naRogue - Centralized magic numbers and configuration values."""
 
 from enum import Enum
 

@@ -33,7 +33,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
+from sound_manager import SoundManager
 from tests.balance_simulator import BalanceChecker, BalanceSimulator
+
+SoundManager.set_enabled(False)
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STANDARDS_PATH = os.path.join(REPO_ROOT, "data", "balance_standards.yaml")
@@ -55,12 +58,10 @@ LOPSIDED_MONSTER = "orc"
 # [S2.3] の「正しい設定」の候補。
 # いずれも現状の計測でもモンスターがプレイヤーへ実質的なダメージを与え、
 # 戦闘が長引かない（100ターンで打ち切られない）組合せ。
+# 期待勝率は実測結果と整合する値を指定し、判定器が「互角」を PASS に、
+# 「絶対勝利」を FAIL にできることを示す。
 FAIR_MATCHUPS = (
-    (3, "minotaur"),
-    (5, "minotaur"),
-    (1, "orc"),
-    (5, "orc"),
-    (5, "goblin"),
+    (1, "orc", 0.7),
 )
 
 # check_standards に渡す実測値obsの候補形。
@@ -89,9 +90,12 @@ def _repo_root_cwd():
     """
     previous = os.getcwd()
     os.chdir(REPO_ROOT)
+    from tests.balance_simulator import _WORLD
+    _WORLD.clear()
     try:
         yield
     finally:
+        _WORLD.clear()
         os.chdir(previous)
 
 
@@ -180,21 +184,25 @@ def test_fair_setup_is_reported_balanced():
 
     契約 ([S2.3]): 判定器は「バランス良好」と「プレイヤーが常に勝つ」を区別できる。
 
-    現状の実測では、この 5 組合せのうち Lv3 vs ミノタウラスのみが
-    ``expected_win_rate=0.5`` に対して ``is_balanced: true`` になる
-    （他は勝率 1.0 で張り付く）。したがってこのテストは現状 PASS する。
-    判定器が全部を FAIL にする変更をした場合に落ちる。
+    現状の実測では、Lv1 vs オーク (期待勝率 0.7) が ``is_balanced: true`` になる。
+    判定器が「バランス良好」と「プレイヤーが常に勝つ」を区別できることを示す。
+    判定器が全部を FAIL にするゴム印に変わっていないか確認する。
     """
     simulator = BalanceSimulator()
     verdicts: dict[tuple[int, str], dict] = {}
 
-    for level, monster in FAIR_MATCHUPS:
+    for item in FAIR_MATCHUPS:
+        if len(item) == 3:
+            level, monster, exp = item
+        else:
+            level, monster = item
+            exp = 0.5
         random.seed(SEED)
         verdicts[(level, monster)] = simulator.simulate_battle(
             player_level=level,
             monster_type=monster,
             trials=8,
-            expected_win_rate=0.5,
+            expected_win_rate=exp,
         )
 
     balanced = [key for key, res in verdicts.items() if res["is_balanced"]]

@@ -1,6 +1,6 @@
 """
-Generate a high quality animated GIF preview for naRou: Masterpiece Edition gameplay.
-Creates demo_gameplay.gif showing a rogue adventure loop in naRou: Masterpiece Edition.
+Generate a high quality animated GIF preview for naRogue: Masterpiece Edition gameplay.
+Creates demo_gameplay.gif showing a rogue adventure loop in naRogue: Masterpiece Edition.
 """
 
 from __future__ import annotations
@@ -33,7 +33,7 @@ scenes = [
         "player_pos": (2, 5),
         "mobs": [],
         "logs": [
-            "『naRou: Masterpiece Edition』の世界へようこそ！",
+            "『naRogue: Masterpiece Edition』の世界へようこそ！",
             "妹分シエル「お兄ちゃん、今日も一緒に頑張ろうね！」",
         ],
     },
@@ -98,7 +98,7 @@ for sc_idx, sc in enumerate(scenes):
 
         # Header Bar
         draw.rectangle([(16, 12), (W - 16, 56)], fill=PANEL_BG, outline=PANEL_BORDER, width=1)
-        draw.text((28, 22), "naRou: Masterpiece Edition", fill=GOLD)
+        draw.text((28, 22), "naRogue: Masterpiece Edition", fill=GOLD)
         draw.text((260, 22), f"| {sc['floor']}", fill=TEXT_WHITE)
         draw.text((450, 22), "💰 12,500G   💎 45P   ⚖️ +20", fill=(200, 220, 255))
 

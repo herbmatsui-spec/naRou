@@ -1,4 +1,4 @@
-# 🌌 naRou: Masterpiece Edition & Multi-World Architecture
+# 🌌 naRogue: Masterpiece Edition & Multi-World Architecture
 ## ⚔️ Aの世界：スキル喰い（Skill Eater RPG）完全統合版
 
 <p align="center">
@@ -169,7 +169,7 @@
 
 ---
 
-## 🏛️ クラシック機能（naRou Core）
+## 🏛️ クラシック機能（naRogue Core）
 
 * 🏰 **プロシージャル・ダンジョン**: 毎回自動生成される多層ダンジョン探索
 * 📜 **スキルツリー＆転職**: 70種類以上のスキルと15種のジョブクラス

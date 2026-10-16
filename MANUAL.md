@@ -1,4 +1,4 @@
-# naRou: Masterpiece Edition - 完全マニュアル
+# naRogue: Masterpiece Edition - 完全マニュアル
 
 ---
 
@@ -18,9 +18,9 @@
 
 ## はじめに
 
-### naRou: Masterpiece Edition とは
+### naRogue: Masterpiece Edition とは
 
-**naRou: Masterpiece Edition** は、Python + tcod で実装された本格ローグライクRPGです。Elona（エロナ）にインスパイアされたシステムを現代的なアーキテクチャで再構築し、独自の「異世界マルチバース構想」を実装しています。
+**naRogue: Masterpiece Edition** は、Python + tcod で実装された本格ローグライクRPGです。Elona（エロナ）にインスパイアされたシステムを現代的なアーキテクチャで再構築し、独自の「異世界マルチバース構想」を実装しています。
 
 ### 2つのゲームモード
 
@@ -790,4 +790,4 @@ MIT License - 詳細は `LICENSE` ファイル参照
 
 ---
 
-*最終更新: 2026-10-12 | バージョン 1.0.0 | naRou: Masterpiece Edition*
+*最終更新: 2026-10-12 | バージョン 1.0.0 | naRogue: Masterpiece Edition*

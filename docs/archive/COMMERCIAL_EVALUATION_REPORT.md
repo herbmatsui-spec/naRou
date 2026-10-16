@@ -1,4 +1,4 @@
-# naRou: Masterpiece Edition - 商用化基準評価レポート
+# naRogue: Masterpiece Edition - 商用化基準評価レポート
 
 ## 📋 エグゼクティブサマリー
 
@@ -206,4 +206,4 @@
 
 **評価実施日**: 2026-08-18
 **評価者**: Zoo (AI Software Engineer)
-**対象バージョン**: naRou: Masterpiece Edition v1.0.0 (Commercial Release Candidate)
+**対象バージョン**: naRogue: Masterpiece Edition v1.0.0 (Commercial Release Candidate)

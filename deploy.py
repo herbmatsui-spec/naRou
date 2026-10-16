@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deploy script for naRou: Masterpiece Edition (proposal #1-B).
+"""Deploy script for naRogue: Masterpiece Edition (proposal #1-B).
 
 Supports uploading build artifacts to itch.io (butler) and Steam (steamcmd),
 with automatic rollback to the previous build id on failure.

@@ -20,6 +20,10 @@ def _initialize_player_and_pet(kernel: Kernel, engine) -> None:
     player.resistances.fire = 10
     player.faction = "player"
     player.aggro = AggroList()
+    # Adjust strength for damage, dexterity for hit rate, endurance for balance (step 3 of remaining debt plan)
+    player.attributes.strength += 0
+    player.attributes.dexterity += 15
+    player.attributes.endurance -= 10
 
     if kernel.has_system("meta_progression_manager"):
         meta_mgr = kernel.get_system("meta_progression_manager")

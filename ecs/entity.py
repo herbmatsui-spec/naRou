@@ -42,6 +42,7 @@ PetAI = PetAIComponent
 
 # 後方互換: GodInfo を god_system から再エクスポート (Step 26)
 # プロパティ委譲ヘルパ (Step 41)
+from core.progression_manager import ProgressionFlagComponent
 from delegate_utils import delegate  # noqa: E402
 from god_system import GodInfo  # noqa: E402
 
@@ -179,6 +180,7 @@ class Entity:
         self.components[AttributesComponent] = AttributesComponent()
         self.components[ProceduralQuestComponent] = ProceduralQuestComponent()
         self.components[ArchaeologyComponent] = ArchaeologyComponent()
+        self.components[ProgressionFlagComponent] = ProgressionFlagComponent()
         self.components[BaseStatsComponent] = BaseStatsComponent()
         self.components[EconomyComponent] = EconomyComponent()
         self.components[LevelComponent] = LevelComponent()

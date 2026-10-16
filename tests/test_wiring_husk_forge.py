@@ -161,9 +161,10 @@ def test_world_a_registers_husk_forge_system():
     import os
 
     os.environ["NAROU_HEADLESS"] = "1"
+    from naRou.skill_eater.skill_eater_husk_forge import PuppetForgeSystem
+
     from packages.core.kernel.kernel import Kernel
     from packages.world_a.package import WorldAPackage
-    from naRou.skill_eater.skill_eater_husk_forge import PuppetForgeSystem
 
     kernel = Kernel()
     WorldAPackage().setup(kernel)

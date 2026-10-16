@@ -7,8 +7,9 @@ update this test and the corresponding balance_snapshot test deliberately.
 
 from __future__ import annotations
 
-import yaml
 from pathlib import Path
+
+import yaml
 
 from ecs.entity import Entity
 

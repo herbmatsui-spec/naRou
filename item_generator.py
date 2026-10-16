@@ -6,7 +6,10 @@ Steps 8-12: Quality rolling, enchantment selection, power scaling, and random it
 from __future__ import annotations
 
 import random
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from data.repositories.enchantment import EnchantmentRepository
 
 from naRou.constants import (
     ALL_QUALITIES,
@@ -290,9 +293,8 @@ def _get_lightweight_enchant_repository() -> "EnchantmentRepository":
     """
     global _lightweight_enchant_repo
     if _lightweight_enchant_repo is None:
-        from data.repositories.enchantment import EnchantmentRepository
-
         from config_manager import DataCache
+        from data.repositories.enchantment import EnchantmentRepository
 
         raw = DataCache.get_data("data/item_enchantments.yaml") or {}
         _lightweight_enchant_repo = EnchantmentRepository(

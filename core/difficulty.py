@@ -12,7 +12,7 @@ class DifficultyManager:
     """難易度プリセットに基づく乗数を提供する。"""
 
     _DEFAULTS: ClassVar[dict[str, dict[str, float]]] = {
-        "easy": {"player_damage_taken": 0.75, "enemy_hp": 0.8, "player_regen": 1.2},
+        "easy": {"player_damage_taken": 0.5, "enemy_hp": 0.8, "player_regen": 1.2},
         "normal": {"player_damage_taken": 1.0, "enemy_hp": 1.0, "player_regen": 1.0},
         "hard": {"player_damage_taken": 1.5, "enemy_hp": 1.2, "player_regen": 0.8},
     }

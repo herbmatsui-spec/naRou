@@ -1,4 +1,4 @@
-# naRou: Masterpiece Edition - 2D最高峰ゲームとの厳格比較分析（改善点特化版）
+# naRogue: Masterpiece Edition - 2D最高峰ゲームとの厳格比較分析（改善点特化版）
 
 ## 結論から言うと：まだ「最高峰」には程遠い
 

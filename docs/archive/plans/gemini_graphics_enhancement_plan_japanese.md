@@ -1,7 +1,7 @@
 # naRou Gemini活用 グラフィック底上げ 実装計画書
 
 ## 概要
-Geminiアプリ（画像生成・編集機能）を活用し、naRou: Masterpiece Edition のグラフィック全般を商用レベルへ引き上げるための詳細実装計画。既存の `ui_ux_visual_upgrade_plan_japanese.md`（フェーズ1-4）を補完・拡張し、AI生成アセットの品質管理・一括生成・スタイル統一・継続的改善のワークフローを確立する。
+Geminiアプリ（画像生成・編集機能）を活用し、naRogue: Masterpiece Edition のグラフィック全般を商用レベルへ引き上げるための詳細実装計画。既存の `ui_ux_visual_upgrade_plan_japanese.md`（フェーズ1-4）を補完・拡張し、AI生成アセットの品質管理・一括生成・スタイル統一・継続的改善のワークフローを確立する。
 
 ---
 

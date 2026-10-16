@@ -77,12 +77,12 @@ def start_web_backend(open_browser: bool = False, port: int = 8080):
 def show_help():
     help_text = """
 ========================================
-  naRou: Masterpiece Edition 統合システム - ヘルプ
+  naRogue: Masterpiece Edition 統合システム - ヘルプ
 ========================================
-このシステムは、naRou: Masterpiece Editionと関連ツールを起動するためのメニューです。
+このシステムは、naRogue: Masterpiece Editionと関連ツールを起動するためのメニューです。
 
-1. naRou: Masterpiece Edition（ゲーム本編）を起動
-   - ローグライクゲーム「naRou: Masterpiece Edition」を起動します。
+1. naRogue: Masterpiece Edition（ゲーム本編）を起動
+   - ローグライクゲーム「naRogue: Masterpiece Edition」を起動します。
    - ダンジョン探索、クエスト達成、キャラ育成などを楽しめます。
    - ゲーム内で [?] または [h] キーを押すと詳細なヘルプを参照できます。
 
@@ -97,7 +97,7 @@ def show_help():
 - 数字以外の入力はエラーとなります。
 
 初心者へのアドバイス:
-まずは「1. naRou: Masterpiece Edition（ゲーム本編）を起動」を選んでゲームを始めてみてください。
+まずは「1. naRogue: Masterpiece Edition（ゲーム本編）を起動」を選んでゲームを始めてみてください。
 ゲーム開始直後は画面左下に操作ガイドが表示されるので、それに従ってください。
 さらに詳細なヘルプが必要な場合は、ゲーム内で [?] キーを押してください。
 ========================================
@@ -121,9 +121,9 @@ def main():
 
     while True:
         print("========================================")
-        print("  naRou: Masterpiece Edition 統合システムメニュー")
+        print("  naRogue: Masterpiece Edition 統合システムメニュー")
         print("========================================")
-        print("1. naRou: Masterpiece Edition（ゲーム本編）を起動")
+        print("1. naRogue: Masterpiece Edition（ゲーム本編）を起動")
         print("2. バトルバランス自動検証を実行 (tests/balance_simulator.py)")
         print("3. テキストモードで起動（GPU/SDL 不要）")
         print("0. 終了")

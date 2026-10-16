@@ -1,4 +1,4 @@
-# Skill Tree Definitions for naRou
+# Skill Tree Definitions for naRogue
 # Structure: skill_trees: { tree_id: { name, icon, tiers: [ { id, name, description, cost, prerequisites, effects } ] } }
 
 skill_trees:

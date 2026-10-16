@@ -1,4 +1,4 @@
-=== naRou Test Agents Dashboard ===
+=== naRogue Test Agents Dashboard ===
 Last updated: 2026-10-12T18:03:59.817699
 
 Agent Status:

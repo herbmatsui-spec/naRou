@@ -3,43 +3,7 @@
 import atexit
 import logging
 
-try:
-    from ..localization_manager import LocalizationManager
-except ImportError:
-    # トップレベルの `import engine.systems.*` では親パッケージが存在せず
-    # 相対 import が通らないため、フラット配置の同名モジュールへフォールバックする。
-    from localization_manager import LocalizationManager
-
 from .engine import Engine
-
-
-class GameLocalizer:
-    """Engine-level localization helper."""
-
-    def __init__(self, engine: object = None, language: str = "en") -> None:
-        self.engine = engine
-        self._manager = LocalizationManager()
-        self._manager.set_language(language)
-
-    @property
-    def manager(self) -> LocalizationManager:
-        return self._manager
-
-    def localize(self, key: str, language: str | None = None) -> str:
-        return self._manager.get_text(key, language)
-
-    def set_language(self, language: str) -> bool:
-        success = self._manager.set_language(language)
-        if not success:
-            from exceptions import ResourceLoadError
-
-            raise ResourceLoadError(f"Failed to set localization language to '{language}'")
-        return success
-
-
-def get_localizer(engine: object = None, language: str = "en") -> GameLocalizer:
-    """Return a GameLocalizer instance bound to *engine*."""
-    return GameLocalizer(engine=engine, language=language)
 
 
 def _shutdown_hook():
@@ -52,4 +16,4 @@ def _shutdown_hook():
 
 atexit.register(_shutdown_hook)
 
-__all__ = ["Engine", "GameLocalizer", "get_localizer"]
+__all__ = ["Engine"]

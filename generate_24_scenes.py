@@ -1,5 +1,5 @@
 """
-Generate 24 High-Quality Interactive HTML Demo Scenes for naRou: Masterpiece Edition.
+Generate 24 High-Quality Interactive HTML Demo Scenes for naRogue: Masterpiece Edition.
 
 Each scene reflects a REAL, currently-implemented system of the game
 (data-driven from data/*.yaml + the *_system.py managers). A single SCENES
@@ -450,7 +450,7 @@ SCENE_TEMPLATE = """<!DOCTYPE html>
 
         <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 text-sm flex items-center justify-between">
             <span class="text-yellow-300 font-medium">📜 {log}</span>
-            <span class="text-xs text-slate-500">naRou: Masterpiece Edition</span>
+            <span class="text-xs text-slate-500">naRogue: Masterpiece Edition</span>
         </div>
     </div>
 </body>
@@ -493,7 +493,7 @@ GALLERY_TEMPLATE = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>naRou: Masterpiece Edition - 24 Scenes Grand Showcase</title>
+    <title>naRogue: Masterpiece Edition - 24 Scenes Grand Showcase</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -600,7 +600,7 @@ GALLERY_TEMPLATE = """<!DOCTYPE html>
                 <span class="text-3xl">👑</span>
                 <div>
                     <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-amber-300">
-                        naRou: Masterpiece Edition — 全24シーン・グランドギャラリー
+                        naRogue: Masterpiece Edition — 全24シーン・グランドギャラリー
                     </h1>
                     <p class="text-xs text-slate-400">24種類の個別HTMLシーンを切り替えて鑑賞できるデモ展示（実装済みシステム紹介）</p>
                 </div>

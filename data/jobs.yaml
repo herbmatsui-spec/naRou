@@ -1,4 +1,4 @@
-# Job Definitions for naRou
+# Job Definitions for naRogue
 # Structure: jobs: { job_id: { name, tier, description, stat_modifiers, equipment_restrictions, exclusive_skills, unlock_conditions } }
 
 jobs:

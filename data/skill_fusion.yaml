@@ -1,4 +1,4 @@
-# Skill Fusion Definitions for naRou
+# Skill Fusion Definitions for naRogue
 # Structure: fusions: { fusion_id: { name, description, required_skills, required_job, required_god, result_skills, bonus_effects } }
 
 fusions:

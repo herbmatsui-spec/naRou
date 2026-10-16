@@ -1,8 +1,8 @@
 # ゲームプレイ・デモ（24シーン）再構築 実装計画書
 
 - 作成日: 2026-08-18
-- 対象: `naRou: Masterpiece Edition`
-- 目的: 旧「Elona」テーマの24シーン＆ギャラリーを削除し、現在の実装（`naRou: Masterpiece Edition`）の実システム・機能・特長に合わせて作り直す。
+- 対象: `naRogue: Masterpiece Edition`
+- 目的: 旧「Elona」テーマの24シーン＆ギャラリーを削除し、現在の実装（`naRogue: Masterpiece Edition`）の実システム・機能・特長に合わせて作り直す。
 
 ## 1. 現状認識（なぜ作り直すか）
 

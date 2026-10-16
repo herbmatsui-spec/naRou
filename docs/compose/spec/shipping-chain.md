@@ -40,7 +40,7 @@ ruff check / ruff format --check（変更した 5 ファイル）               
 
 ### S1.1 ゲームが起動できない
 
-README が案内する起動手順を最後までたどってもゲーム本編に入れない。`main.py` の統合メニューで「1. naRou: Masterpiece Edition（ゲーム本編）を起動」を選ぶと例外で終了する。
+README が案内する起動手順を最後までたどってもゲーム本編に入れない。`main.py` の統合メニューで「1. naRogue: Masterpiece Edition（ゲーム本編）を起動」を選ぶと例外で終了する。
 
 ```
 $ python main.py        # 1 を選択

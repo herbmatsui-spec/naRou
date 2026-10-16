@@ -24,6 +24,7 @@ from naRou.skill_eater.skill_eater_meta_intervention_system import (
     TemplateEventGenerator,
 )
 from naRou.skill_eater.skill_eater_template_model import load_templates
+
 from skill_eater_audio_system import SkillEaterAudioSystem
 from skill_eater_meta_quest_system import ReincarnationMetaState
 from skill_eater_presentation_system import SkillEaterPresentationSystem
@@ -101,8 +102,8 @@ def _kernel_systems() -> dict:
 
 
 def test_world_a_binds_meta_state_and_rule_engine():
-    from packages.world_a.package import WorldAPackage
     from packages.core.kernel.kernel import Kernel
+    from packages.world_a.package import WorldAPackage
 
     os_env = pytest.importorskip("os")
     os_env.environ["NAROU_HEADLESS"] = "1"
@@ -117,10 +118,10 @@ def test_world_a_binds_meta_state_and_rule_engine():
 
 
 def test_meta_state_registered_in_kernel():
-    from packages.world_a.package import WorldAPackage
-    from packages.core.kernel.kernel import Kernel
-
     import os
+
+    from packages.core.kernel.kernel import Kernel
+    from packages.world_a.package import WorldAPackage
 
     os.environ["NAROU_HEADLESS"] = "1"
     kernel = Kernel()
@@ -131,10 +132,10 @@ def test_meta_state_registered_in_kernel():
 
 def test_intervention_via_exploration_applies_rewards():
     """探索システム経由の介入が報酬適用までクラッシュせず通る。"""
-    from packages.world_a.package import WorldAPackage
-    from packages.core.kernel.kernel import Kernel
-
     import os
+
+    from packages.core.kernel.kernel import Kernel
+    from packages.world_a.package import WorldAPackage
 
     os.environ["NAROU_HEADLESS"] = "1"
     kernel = Kernel()

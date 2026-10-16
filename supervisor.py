@@ -406,7 +406,7 @@ class SupervisorDaemon:
     def update_text_dashboard(self, dashboard: dict):
         """テキスト版ダッシュボード更新"""
         lines = [
-            "=== naRou Test Agents Dashboard ===",
+            "=== naRogue Test Agents Dashboard ===",
             f"Last updated: {dashboard['timestamp']}",
             "",
             "Agent Status:",

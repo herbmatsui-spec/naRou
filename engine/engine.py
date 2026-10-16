@@ -58,6 +58,7 @@ from constants import (
     Element,
     GameState,
 )
+from core.progression_manager import ProgressionFlagComponent
 from core_framework import AStar, Point, bresenham_line
 from dialogue_system import DialogueManager
 from ecs.entity import Entity
@@ -337,7 +338,7 @@ class Engine:
 
         # --- 初期ログ ---
         self.log(
-            "『naRou: Masterpiece Edition』の世界へようこそ！",
+            "『naRogue: Masterpiece Edition』の世界へようこそ！",
             (255, 255, 120),
             level="SUCCESS",
         )
@@ -918,6 +919,10 @@ class Engine:
     # World A (Skill Eater) package systems
     @property
     def skill_eater_combat_system(self):
+        player = self.game_state_data.player
+        flags = player.get_component(ProgressionFlagComponent)
+        if not flags.skill_eater:
+            return None
         return (
             self.kernel.get_system("skill_eater_combat_system")
             if self.kernel.has_system("skill_eater_combat_system")
@@ -1600,7 +1605,7 @@ def main() -> None:
             columns=SCREEN_WIDTH,
             rows=SCREEN_HEIGHT,
             tileset=tileset,
-            title="naRou: Masterpiece Edition - Steps 1~72 Complete",
+            title="naRogue: Masterpiece Edition - Steps 1~72 Complete",
             vsync=True,
         ) as context:
             root_console = tcod.console.Console(SCREEN_WIDTH, SCREEN_HEIGHT, order="F")

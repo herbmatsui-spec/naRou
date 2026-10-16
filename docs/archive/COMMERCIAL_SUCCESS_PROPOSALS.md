@@ -1,4 +1,4 @@
-# naRou: Masterpiece Edition - 商業的成功のための9つの提案
+# naRogue: Masterpiece Edition - 商業的成功のための9つの提案
 
 **作成日**: 2026-08-19
 **基準**: COMMERCIAL_EVALUATION_REPORT.md (総合 89/100, A+) および各実装計画書

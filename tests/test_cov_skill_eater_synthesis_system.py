@@ -7,9 +7,9 @@ import pytest
 from skill_eater_audio_system import SkillEaterAudioSystem
 from skill_eater_presentation_system import SkillEaterPresentationSystem
 from skill_eater_synthesis_system import (
+    SkillEaterSynthesisSystem,
     StaticSynthesisRecipe,
     SynthesisResult,
-    SkillEaterSynthesisSystem,
     TreeNode,
 )
 from skill_eater_system import (

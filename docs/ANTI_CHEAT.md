@@ -1,4 +1,4 @@
-# Anti-Cheat & Security — naRou: Masterpiece Edition (Proposal #1-C)
+# Anti-Cheat & Security — naRogue: Masterpiece Edition (Proposal #1-C)
 
 This document describes the tamper-resistant infrastructure protecting save files,
 runtime integrity, and license compliance.
