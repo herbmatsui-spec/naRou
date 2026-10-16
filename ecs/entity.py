@@ -217,8 +217,12 @@ class Entity:
         if instance is None:
             self.components[component_type] = component_type()
             return self.components[component_type]
-        # 型ガード: 登録済みインスタンスが要求型であることを保証
-        return self._assert_component_type(component_type, instance)
+        # 正クラス一致ヒットなら型ガードを適用（components dict への誤型格納を検出）。
+        # 名前フォールバック（naRou/ecs 名前空間の重複クラス）は構造互換を前提とし、
+        # 厳密な isinstance は適用しない。
+        if component_type in self.components:
+            return self._assert_component_type(component_type, instance)
+        return instance
 
     def get_required_component(self, component_type: type[T]) -> T:
         """必須コンポーネントを取得する。
