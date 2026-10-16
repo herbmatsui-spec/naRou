@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 from naRou.karma_system import REGISTRY, KarmaManager
-from naRou.skill_eater.skill_eater_template_model import TemplateData, load_templates
+from skill_eater_template_model import TemplateData, load_templates
 
 
 # Mock Entity for testing karma/exposure without full ECS

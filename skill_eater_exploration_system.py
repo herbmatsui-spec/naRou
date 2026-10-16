@@ -11,7 +11,7 @@ import random
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from naRou.skill_eater.skill_eater_meta_intervention_system import (
+from skill_eater_meta_intervention_system import (
     InterventionAction,
     InterventionEngine,
     TemplateEvent,
@@ -23,7 +23,7 @@ from skill_eater_presentation_system import PresentationEvent, SkillEaterPresent
 from skill_eater_system import CharacterState
 
 if TYPE_CHECKING:
-    from naRou.skill_eater.skill_eater_template_model import TemplateData
+    from skill_eater_template_model import TemplateData
 
     from skill_eater_procedural_dungeon import SkillEaterProceduralDungeon
 
@@ -588,7 +588,7 @@ class SkillEaterExplorationSystem:
         instance.current_room_id = data.get("current_room_id", "slum_alley")
 
         # Restore active template events
-        from naRou.skill_eater.skill_eater_template_model import ExploitWindow, RouteStep
+        from skill_eater_template_model import ExploitWindow, RouteStep
         events_data = data.get("active_template_events", [])
         for evt_data in events_data:
             route_steps = [RouteStep(**rs) for rs in evt_data.get("route_steps", [])]

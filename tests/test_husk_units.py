@@ -2,7 +2,7 @@
 
 import pytest
 from naRou.ecs.components.components import PuppetUnitComponent
-from naRou.skill_eater.skill_eater_husk_units import (
+from skill_eater_husk_units import (
     effective_bonus,
     set_order,
     set_route,

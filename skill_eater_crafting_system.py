@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 from naRou.ecs.components.components import HuskComponent, PuppetUnitComponent
-from naRou.skill_eater.skill_eater_husk_forge import PuppetForgeSystem
+from skill_eater_husk_forge import PuppetForgeSystem
 
 
 @dataclass

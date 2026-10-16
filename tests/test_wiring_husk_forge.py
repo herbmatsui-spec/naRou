@@ -5,7 +5,7 @@
   プレイヤーの HuskInventoryComponent へ入る (feature flag で gate)。
 - engine.execute_husk_forge が鍛冶 (スキル注入 → ユニット生成 → 抜け殻消費) を行う。
 - WorldAPackage が PuppetForgeSystem を kernel へ登録する。
-- naRou.skill_eater_husk_ui の UI 関数が ECS (get_component) のプレイヤーで動く。
+- skill_eater_husk_ui の UI 関数が ECS (get_component) のプレイヤーで動く。
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ if str(_root) not in sys.path:
 from naRou.ecs.components.components import HuskInventoryComponent
 from naRou.ecs.entity import Entity
 from naRou.feature_flags import set_flag
-from naRou.skill_eater.skill_eater_husk_system import create_husk
+from skill_eater_husk_system import create_husk
 
 
 class _CombatHandlerStub:
@@ -161,7 +161,7 @@ def test_world_a_registers_husk_forge_system():
     import os
 
     os.environ["NAROU_HEADLESS"] = "1"
-    from naRou.skill_eater.skill_eater_husk_forge import PuppetForgeSystem
+    from skill_eater_husk_forge import PuppetForgeSystem
 
     from packages.core.kernel.kernel import Kernel
     from packages.world_a.package import WorldAPackage
@@ -177,7 +177,7 @@ def test_world_a_registers_husk_forge_system():
 
 @pytest.mark.xfail(strict=True, reason="未配線: husk UI 関数が ECS プレイヤーで動かない")
 def test_husk_ui_functions_work_with_ecs_player():
-    from naRou.skill_eater_husk_ui import forge_status, list_husks, ui_inject
+    from skill_eater_husk_ui import forge_status, list_husks, ui_inject
 
     husk = create_husk("テストスライム", 2)
     player = _make_player_with_husk(husk)

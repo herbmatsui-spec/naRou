@@ -4,7 +4,7 @@ import pytest
 from naRou.ecs.components.components import HuskInventoryComponent, Skill
 from naRou.ecs.entity import Entity
 from naRou.feature_flags import get_husk_enabled, set_flag
-from naRou.skill_eater.skill_eater_husk_system import create_husk
+from skill_eater_husk_system import create_husk
 
 
 def test_husk_creation_on_full_devour():

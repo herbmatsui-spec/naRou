@@ -42,11 +42,11 @@ class WorldAPackage(IPackage):
         )
 
     def setup(self, kernel: Kernel) -> None:
-        from naRou.skill_eater.skill_eater_meta_intervention_system import (
+        from skill_eater_meta_intervention_system import (
             InterventionEngine,
             TemplateEventGenerator,
         )
-        from naRou.skill_eater.skill_eater_template_model import load_templates
+        from skill_eater_template_model import load_templates
 
         from skill_eater_ascension_board import AscensionBoard
         from skill_eater_audio_system import SkillEaterAudioSystem

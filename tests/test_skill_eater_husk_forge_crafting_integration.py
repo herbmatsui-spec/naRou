@@ -2,7 +2,7 @@
 
 import pytest
 from naRou.ecs.components.components import PuppetUnitComponent
-from naRou.skill_eater.skill_eater_husk_forge import PuppetForgeSystem
+from skill_eater_husk_forge import PuppetForgeSystem
 
 from skill_eater_crafting_system import (
     CreatedUnitInfo,

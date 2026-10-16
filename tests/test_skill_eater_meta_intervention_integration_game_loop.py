@@ -1,13 +1,13 @@
 """Regression test for meta intervention integration into game loop."""
 
 import pytest
-from naRou.skill_eater.skill_eater_meta_intervention_system import (
+from skill_eater_meta_intervention_system import (
     InterventionAction,
     InterventionEngine,
     TemplateEvent,
     TemplateEventGenerator,
 )
-from naRou.skill_eater.skill_eater_template_model import load_templates
+from skill_eater_template_model import load_templates
 
 from skill_eater_audio_system import SkillEaterAudioSystem
 from skill_eater_exploration_system import SkillEaterExplorationSystem

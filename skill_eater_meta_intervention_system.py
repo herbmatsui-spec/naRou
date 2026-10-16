@@ -6,7 +6,7 @@ import random
 from dataclasses import dataclass, field
 from typing import Any
 
-from naRou.skill_eater.skill_eater_template_model import ExploitWindow, TemplateData
+from skill_eater_template_model import ExploitWindow, TemplateData
 
 
 @dataclass

@@ -2,7 +2,7 @@
 
 import pytest
 from naRou.ecs.components.components import HuskComponent
-from naRou.skill_eater.skill_eater_husk_forge import PuppetForgeSystem
+from skill_eater_husk_forge import PuppetForgeSystem
 
 
 def test_calc_control_load():

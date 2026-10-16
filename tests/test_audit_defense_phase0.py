@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from naRou.skill_eater.skill_eater_audit_defense import (
+from skill_eater_audit_defense import (
     AUDIT_TIER_CONFIG,
     THREAT_TIER_THRESHOLDS,
     AuditCaptain,
@@ -24,7 +24,7 @@ from naRou.skill_eater.skill_eater_audit_defense import (
     SpecialAuditType,
     load_audit_units,
 )
-from naRou.skill_eater.skill_eater_base_defense import RaidPhase
+from skill_eater_base_defense import RaidPhase
 
 
 class MockSkill:
@@ -407,7 +407,7 @@ def test_blueprint_registry():
 
 def test_defense_facility_element_fields():
     """DefenseFacility element/blueprint_id フィールドテスト (Step 28)"""
-    from naRou.skill_eater.skill_eater_base_defense import DefenseFacility, DefenseFacilityType
+    from skill_eater_base_defense import DefenseFacility, DefenseFacilityType
 
     fac = DefenseFacility(
         id="test",

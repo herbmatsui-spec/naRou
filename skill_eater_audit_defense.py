@@ -13,8 +13,8 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from naRou.skill_eater_audio_system import SkillEaterAudioSystem
-from naRou.skill_eater_base_defense import (
+from skill_eater_audio_system import SkillEaterAudioSystem
+from skill_eater_base_defense import (
     BaseDefenseManager,
     DefenseFacility,
     DefenseFacilityType,
@@ -22,9 +22,9 @@ from naRou.skill_eater_base_defense import (
     RaidTrigger,
     RaidTriggerType,
 )
-from naRou.skill_eater_economy_system import SkillEaterEconomySystem
-from naRou.skill_eater_presentation_system import SkillEaterPresentationSystem
-from naRou.skill_eater_system import CharacterState, SkillEaterRegistry
+from skill_eater_economy_system import SkillEaterEconomySystem
+from skill_eater_presentation_system import SkillEaterPresentationSystem
+from skill_eater_system import CharacterState, SkillEaterRegistry
 
 
 class AuditTier(str, Enum):
@@ -676,7 +676,7 @@ class AuditDefenseManager(BaseDefenseManager):
 
     def place_husk_barricade(self, husk: Any, cell: tuple[int, int]) -> HuskBarricade:
         """Huskをバリケードに変換"""
-        from naRou.skill_eater.skill_eater_husk_system import create_husk
+        from skill_eater_husk_system import create_husk
 
         # HuskComponent からステータス取得想定
         hp = getattr(husk, "hp", 120)

@@ -1,9 +1,9 @@
 """UI functions for the Husk Puppet System."""
 
-from naRou.config import get_config
-from naRou.ecs.components.components import HuskComponent, PuppetUnitComponent
-from naRou.skill_eater.skill_eater_husk_forge import PuppetForgeSystem
-from naRou.skill_eater.skill_eater_husk_units import set_order
+from config import get_config
+from ecs.components.components import HuskComponent, PuppetUnitComponent
+from skill_eater_husk_forge import PuppetForgeSystem
+from skill_eater_husk_units import set_order
 
 
 def open_forge_ui(player) -> str:

@@ -4,21 +4,21 @@ from typing import Any
 
 import pytest
 from naRou.meta_awareness_system import MetaAwarenessSystem
-from naRou.skill_eater.skill_eater_meta_intervention_system import (
+from skill_eater_meta_intervention_system import (
     InterventionAction,
     InterventionEngine,
     TemplateEvent,
     TemplateEventGenerator,
 )
-from naRou.skill_eater.skill_eater_template_model import load_templates
-from naRou.skill_eater_audio_system import SkillEaterAudioSystem
-from naRou.skill_eater_meta_quest_system import (
+from skill_eater_template_model import load_templates
+from skill_eater_audio_system import SkillEaterAudioSystem
+from skill_eater_meta_quest_system import (
     GlobalRuleEngine,
     ReincarnationMetaState,
     SkillEaterQuestSystem,
     SkillEaterReincarnationSystem,
 )
-from naRou.skill_eater_presentation_system import SkillEaterPresentationSystem
+from skill_eater_presentation_system import SkillEaterPresentationSystem
 
 
 class MockPlayer:

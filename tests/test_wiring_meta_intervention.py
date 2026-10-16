@@ -19,11 +19,11 @@ _root = Path(__file__).resolve().parent.parent
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
-from naRou.skill_eater.skill_eater_meta_intervention_system import (
+from skill_eater_meta_intervention_system import (
     InterventionAction,
     TemplateEventGenerator,
 )
-from naRou.skill_eater.skill_eater_template_model import load_templates
+from skill_eater_template_model import load_templates
 
 from skill_eater_audio_system import SkillEaterAudioSystem
 from skill_eater_meta_quest_system import ReincarnationMetaState
