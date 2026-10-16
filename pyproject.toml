@@ -119,6 +119,9 @@ source = ["."]
 omit = [
     "*/tests/**",
     "*/tools/**",
+    "*/stubs/**",
+    "*/test.py",
+    "*/test_bonuses.py",
     "*/venv/**",
     "*/__pycache__/**",
     "*/.tmp_main_check/**",
