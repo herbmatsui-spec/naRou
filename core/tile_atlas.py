@@ -7,9 +7,12 @@ Provides UV lookup for tile_id + variant + frame + direction + state.
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 # Import animated tile registration
 try:
@@ -289,23 +292,23 @@ TILE_ATLAS = TileAtlas()
 if __name__ == "__main__":
     # Quick test
     atlas = TileAtlas()
-    print(f"Loaded {len(atlas.defs)} tile definitions")
-    print(f"Available scales: {list(atlas.atlas_meta.keys())}")
+    logger.info(f"Loaded {len(atlas.defs)} tile definitions")
+    logger.info(f"Available scales: {list(atlas.atlas_meta.keys())}")
 
     # Test UV lookup
     uv = atlas.get_uv("TILE_WALL", variant=0, scale="16")
-    print(f"TILE_WALL variant=0: ({uv.x}, {uv.y}, {uv.w}, {uv.h}) @ {uv.scale}")
+    logger.info(f"TILE_WALL variant=0: ({uv.x}, {uv.y}, {uv.w}, {uv.h}) @ {uv.scale}")
 
     uv = atlas.get_uv("TILE_WATER", frame=1, scale="16")
-    print(f"TILE_WATER frame=1: ({uv.x}, {uv.y}, {uv.w}, {uv.h}) @ {uv.scale}")
+    logger.info(f"TILE_WATER frame=1: ({uv.x}, {uv.y}, {uv.w}, {uv.h}) @ {uv.scale}")
 
     uv = atlas.get_uv("PLAYER", direction=1, frame=2, scale="32")
-    print(f"PLAYER dir=1 frame=2: ({uv.x}, {uv.y}, {uv.w}, {uv.h}) @ {uv.scale}")
+    logger.info(f"PLAYER dir=1 frame=2: ({uv.x}, {uv.y}, {uv.w}, {uv.h}) @ {uv.scale}")
 
     # Test autotile
     mask = 0b0111  # up+right+down
     variant = atlas.get_autotile_variant("TILE_WALL", mask)
-    print(f"Autotile mask {bin(mask)} -> variant {variant}")
+    logger.info(f"Autotile mask {bin(mask)} -> variant {variant}")
 
     # Test neighbor mask calculation
     test_map = [
@@ -314,7 +317,7 @@ if __name__ == "__main__":
         ["TILE_WALL", "TILE_WALL", "TILE_WALL"],
     ]
     mask = atlas.calculate_neighbor_mask(test_map, 1, 1, "TILE_WALL")
-    print(
+    logger.info(
         f"Center wall neighbor mask: {bin(mask)} -> variant {atlas.get_autotile_variant('TILE_WALL', mask)}"
     )
 

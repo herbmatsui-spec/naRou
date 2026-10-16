@@ -1,10 +1,14 @@
-from __future__ import annotations
-
-"""Pytest configuration: ensure project root is importable for test suites."""
-
 import os
-import sys
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
-if ROOT not in sys.path:
-    sys.path.insert(0, ROOT)
+import pytest
+
+# The save HMAC key is now mandatory (save_system.SaveSystem._get_hmac_key).
+# Provide a fixed test-only key so the existing save/load suite keeps running
+# without depending on a real deployment secret. This key is never used outside
+# the test suite.
+_TEST_SAVE_HMAC_KEY = "I/o21oUqC6AWwBUVSFBsMhYrz/nr3i3yO3+gJplnUm4="
+
+
+@pytest.fixture(autouse=True)
+def _require_save_hmac_key(monkeypatch):
+    monkeypatch.setenv("SAVE_HMAC_KEY", _TEST_SAVE_HMAC_KEY)

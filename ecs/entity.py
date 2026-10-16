@@ -145,7 +145,7 @@ class Entity:
 
     def _apply_init_attributes(self) -> None:
         """初期能力値をコンポーネントに適用し、ベース値を保存"""
-        attrs_comp = self.get_component(AttributesComponent)
+        attrs_comp = self.get_required_component(AttributesComponent)
         if self._init_attributes is not None:
             if isinstance(self._init_attributes, dict):
                 for k, v in self._init_attributes.items():
@@ -186,8 +186,12 @@ class Entity:
         self.components[LevelComponent] = LevelComponent()
         self.components[StatusEffectsComponent] = StatusEffectsComponent()
 
-    def get_component(self, component_type: type[T]) -> T:
-        """指定されたコンポーネントを取得（存在しなければ初期化して登録）"""
+    def _lookup_component(self, component_type: type[T]) -> T | None:
+        """コンポーネントを検索し、見つかったインスタンスを返す。
+
+        見つからなければ None を返す。自動生成は行わない。
+        クラス名によるフォールバック検索も行う（naRou/ecs 名前空間の違いを吸収）。
+        """
         # First try exact class match
         if component_type in self.components:
             return self.components[component_type]
@@ -196,138 +200,164 @@ class Entity:
         for comp_class, comp_instance in self.components.items():
             if comp_class.__name__ == type_name:
                 return comp_instance
-        # Not found, create new
-        self.components[component_type] = component_type()
-        return self.components[component_type]
+        return None
+
+    def _assert_component_type(self, component_type: type[T], instance: Any) -> T:
+        """コンポーネントインスタンスが要求型であることを型ガードで検証する。"""
+        if not isinstance(instance, component_type):
+            raise TypeError(
+                f"Component stored as {type(instance).__name__!r} is not an instance of "
+                f"{component_type.__name__}; expected {component_type.__name__}"
+            )
+        return instance
+
+    def get_component(self, component_type: type[T]) -> T:
+        """指定されたコンポーネントを取得（存在しなければ初期化して登録）"""
+        instance = self._lookup_component(component_type)
+        if instance is None:
+            self.components[component_type] = component_type()
+            return self.components[component_type]
+        # 型ガード: 登録済みインスタンスが要求型であることを保証
+        return self._assert_component_type(component_type, instance)
+
+    def get_required_component(self, component_type: type[T]) -> T:
+        """必須コンポーネントを取得する。
+
+        存在しなければ KeyError を発生させる（自動生成は行わない）。
+        必須コンポーネントの存在チェックはこのメソッドに集中する。
+        """
+        instance = self._lookup_component(component_type)
+        if instance is None:
+            raise KeyError(
+                f"Entity {self.name!r} lacks required component {component_type.__name__}"
+            )
+        # 型ガード: 登録済みインスタンスが要求型であることを保証
+        return self._assert_component_type(component_type, instance)
 
     def has_component(self, component_type: type) -> bool:
         """指定されたコンポーネントを所持しているか判定"""
-        if component_type in self.components:
-            return True
-        # Check by class name
-        type_name = component_type.__name__
-        return any(comp_class.__name__ == type_name for comp_class in self.components)
+        return self._lookup_component(component_type) is not None
 
     # -------------------------------------------------------------
     # 称号・統計プロパティ (TitleComponent への委譲)
     # -------------------------------------------------------------
     @property
     def titles(self) -> list[str]:
-        return self.get_component(TitleComponent).titles
+        return self.get_required_component(TitleComponent).titles
 
     @titles.setter
     def titles(self, val: list[str]):
-        self.get_component(TitleComponent).titles = val
+        self.get_required_component(TitleComponent).titles = val
 
     @property
     def equipped_title(self) -> str | None:
-        return self.get_component(TitleComponent).equipped_title
+        return self.get_required_component(TitleComponent).equipped_title
 
     @equipped_title.setter
     def equipped_title(self, val: str | None):
-        self.get_component(TitleComponent).equipped_title = val
+        self.get_required_component(TitleComponent).equipped_title = val
 
     @property
     def title_notifications(self) -> list[str]:
-        return self.get_component(TitleComponent).title_notifications
+        return self.get_required_component(TitleComponent).title_notifications
 
     @title_notifications.setter
     def title_notifications(self, val: list[str]):
-        self.get_component(TitleComponent).title_notifications = val
+        self.get_required_component(TitleComponent).title_notifications = val
 
     @property
     def kill_counts(self) -> dict[str, int]:
-        return self.get_component(TitleComponent).kill_counts
+        return self.get_required_component(TitleComponent).kill_counts
 
     @kill_counts.setter
     def kill_counts(self, val: dict[str, int]):
-        self.get_component(TitleComponent).kill_counts = val
+        self.get_required_component(TitleComponent).kill_counts = val
 
     @property
     def craft_counts(self) -> dict[str, int]:
-        return self.get_component(TitleComponent).craft_counts
+        return self.get_required_component(TitleComponent).craft_counts
 
     @craft_counts.setter
     def craft_counts(self, val: dict[str, int]):
-        self.get_component(TitleComponent).craft_counts = val
+        self.get_required_component(TitleComponent).craft_counts = val
 
     @property
     def max_dungeon_depth(self) -> int:
-        return self.get_component(TitleComponent).max_dungeon_depth
+        return self.get_required_component(TitleComponent).max_dungeon_depth
 
     @max_dungeon_depth.setter
     def max_dungeon_depth(self, val: int):
-        self.get_component(TitleComponent).max_dungeon_depth = val
+        self.get_required_component(TitleComponent).max_dungeon_depth = val
 
     @property
     def near_death_count(self) -> int:
-        return self.get_component(TitleComponent).near_death_count
+        return self.get_required_component(TitleComponent).near_death_count
 
     @near_death_count.setter
     def near_death_count(self, val: int):
-        self.get_component(TitleComponent).near_death_count = val
+        self.get_required_component(TitleComponent).near_death_count = val
 
     @property
     def total_turns(self) -> int:
-        return self.get_component(TitleComponent).total_turns
+        return self.get_required_component(TitleComponent).total_turns
 
     @total_turns.setter
     def total_turns(self, val: int):
-        self.get_component(TitleComponent).total_turns = val
+        self.get_required_component(TitleComponent).total_turns = val
 
     # -------------------------------------------------------------
     # 基本ステータスプロパティ (BaseStatsComponent への委譲)
     # -------------------------------------------------------------
     @property
     def hp(self) -> int:
-        return self.get_component(BaseStatsComponent).hp
+        return self.get_required_component(BaseStatsComponent).hp
 
     @hp.setter
     def hp(self, val: int):
-        self.get_component(BaseStatsComponent).hp = val
+        self.get_required_component(BaseStatsComponent).hp = val
 
     @property
     def max_hp(self) -> int:
-        return self.get_component(BaseStatsComponent).max_hp
+        return self.get_required_component(BaseStatsComponent).max_hp
 
     @max_hp.setter
     def max_hp(self, val: int):
-        self.get_component(BaseStatsComponent).max_hp = val
+        self.get_required_component(BaseStatsComponent).max_hp = val
 
     @property
     def mp(self) -> int:
-        return self.get_component(BaseStatsComponent).mp
+        return self.get_required_component(BaseStatsComponent).mp
 
     @mp.setter
     def mp(self, val: int):
-        self.get_component(BaseStatsComponent).mp = val
+        self.get_required_component(BaseStatsComponent).mp = val
 
     @property
     def max_mp(self) -> int:
-        return self.get_component(BaseStatsComponent).max_mp
+        return self.get_required_component(BaseStatsComponent).max_mp
 
     @max_mp.setter
     def max_mp(self, val: int):
-        self.get_component(BaseStatsComponent).max_mp = val
+        self.get_required_component(BaseStatsComponent).max_mp = val
 
     # -------------------------------------------------------------
     # APプロパティ (BaseStatsComponent への委譲) — Phase 2 Step 34
     # -------------------------------------------------------------
     @property
     def ap(self) -> int:
-        return self.get_component(BaseStatsComponent).ap
+        return self.get_required_component(BaseStatsComponent).ap
 
     @ap.setter
     def ap(self, val: int):
-        self.get_component(BaseStatsComponent).ap = val
+        self.get_required_component(BaseStatsComponent).ap = val
 
     @property
     def max_ap(self) -> int:
-        return self.get_component(BaseStatsComponent).max_ap
+        return self.get_required_component(BaseStatsComponent).max_ap
 
     @max_ap.setter
     def max_ap(self, val: int):
-        self.get_component(BaseStatsComponent).max_ap = val
+        self.get_required_component(BaseStatsComponent).max_ap = val
 
     def reset_ap(self) -> None:
         """ターン開始時にAPを最大値まで回復"""
@@ -349,36 +379,36 @@ class Entity:
     # -------------------------------------------------------------
     @property
     def facing(self) -> str:
-        return self.get_component(BaseStatsComponent).facing
+        return self.get_required_component(BaseStatsComponent).facing
 
     @facing.setter
     def facing(self, val: str):
-        self.get_component(BaseStatsComponent).facing = val
+        self.get_required_component(BaseStatsComponent).facing = val
 
     # -------------------------------------------------------------
     # 経済プロパティ (EconomyComponent への委譲) — delegate_utils 使用 (Step 41)
     # -------------------------------------------------------------
-    gold = delegate(lambda self: self.get_component(EconomyComponent), "gold")
-    platinum = delegate(lambda self: self.get_component(EconomyComponent), "platinum")
+    gold = delegate(lambda self: self.get_required_component(EconomyComponent), "gold")
+    platinum = delegate(lambda self: self.get_required_component(EconomyComponent), "platinum")
 
     # -------------------------------------------------------------
     # レベル・経験値プロパティ (LevelComponent への委譲)
     # -------------------------------------------------------------
     @property
     def level(self) -> int:
-        return self.get_component(LevelComponent).level
+        return self.get_required_component(LevelComponent).level
 
     @level.setter
     def level(self, val: int):
-        self.get_component(LevelComponent).level = val
+        self.get_required_component(LevelComponent).level = val
 
     @property
     def exp(self) -> int:
-        return self.get_component(LevelComponent).exp
+        return self.get_required_component(LevelComponent).exp
 
     @exp.setter
     def exp(self, val: int):
-        self.get_component(LevelComponent).exp = val
+        self.get_required_component(LevelComponent).exp = val
 
     @property
     def exp_next(self) -> int:
@@ -406,19 +436,19 @@ class Entity:
 
     @property
     def skill_points(self) -> int:
-        return self.get_component(LevelComponent).skill_points
+        return self.get_required_component(LevelComponent).skill_points
 
     @skill_points.setter
     def skill_points(self, val: int):
-        self.get_component(LevelComponent).skill_points = val
+        self.get_required_component(LevelComponent).skill_points = val
 
     @property
     def total_skill_points_earned(self) -> int:
-        return self.get_component(LevelComponent).total_skill_points_earned
+        return self.get_required_component(LevelComponent).total_skill_points_earned
 
     @total_skill_points_earned.setter
     def total_skill_points_earned(self, val: int):
-        self.get_component(LevelComponent).total_skill_points_earned = val
+        self.get_required_component(LevelComponent).total_skill_points_earned = val
 
     # -------------------------------------------------------------
     # 主能力プロパティ (AttributesComponent への委譲) - Step 2
@@ -426,7 +456,7 @@ class Entity:
     @property
     def attributes(self) -> AttributesComponent:
         """主能力コンポーネントを取得（後方互換性のため直接アクセス可能にする）"""
-        return self.get_component(AttributesComponent)
+        return self.get_required_component(AttributesComponent)
 
     @attributes.setter
     def attributes(self, val: AttributesComponent):
@@ -502,67 +532,67 @@ class Entity:
     # -------------------------------------------------------------
     @property
     def guild_id(self) -> str | None:
-        return self.get_component(GuildFactionComponent).guild_id
+        return self.get_required_component(GuildFactionComponent).guild_id
 
     @guild_id.setter
     def guild_id(self, val: str | None):
-        self.get_component(GuildFactionComponent).guild_id = val
+        self.get_required_component(GuildFactionComponent).guild_id = val
 
     @property
     def guild_rank(self) -> str:
-        return self.get_component(GuildFactionComponent).guild_rank
+        return self.get_required_component(GuildFactionComponent).guild_rank
 
     @guild_rank.setter
     def guild_rank(self, val: str):
-        self.get_component(GuildFactionComponent).guild_rank = val
+        self.get_required_component(GuildFactionComponent).guild_rank = val
 
     @property
     def guild_contribution(self) -> int:
-        return self.get_component(GuildFactionComponent).guild_contribution
+        return self.get_required_component(GuildFactionComponent).guild_contribution
 
     @guild_contribution.setter
     def guild_contribution(self, val: int):
-        self.get_component(GuildFactionComponent).guild_contribution = val
+        self.get_required_component(GuildFactionComponent).guild_contribution = val
 
     @property
     def guild_role(self) -> str | None:
-        return self.get_component(GuildFactionComponent).guild_role
+        return self.get_required_component(GuildFactionComponent).guild_role
 
     @guild_role.setter
     def guild_role(self, val: str | None):
-        self.get_component(GuildFactionComponent).guild_role = val
+        self.get_required_component(GuildFactionComponent).guild_role = val
 
     @property
     def faction_reputation(self) -> dict[str, int]:
-        return self.get_component(GuildFactionComponent).faction_reputation
+        return self.get_required_component(GuildFactionComponent).faction_reputation
 
     @faction_reputation.setter
     def faction_reputation(self, val: dict[str, int]):
-        self.get_component(GuildFactionComponent).faction_reputation = val
+        self.get_required_component(GuildFactionComponent).faction_reputation = val
 
     @property
     def completed_faction_events(self) -> list[str]:
-        return self.get_component(GuildFactionComponent).completed_faction_events
+        return self.get_required_component(GuildFactionComponent).completed_faction_events
 
     @completed_faction_events.setter
     def completed_faction_events(self, val: list[str]):
-        self.get_component(GuildFactionComponent).completed_faction_events = val
+        self.get_required_component(GuildFactionComponent).completed_faction_events = val
 
     @property
     def ranking_titles(self) -> list[str]:
-        return self.get_component(GuildFactionComponent).ranking_titles
+        return self.get_required_component(GuildFactionComponent).ranking_titles
 
     @ranking_titles.setter
     def ranking_titles(self, val: list[str]):
-        self.get_component(GuildFactionComponent).ranking_titles = val
+        self.get_required_component(GuildFactionComponent).ranking_titles = val
 
     @property
     def guild_quest_progress(self) -> dict[str, int]:
-        return self.get_component(GuildFactionComponent).guild_quest_progress
+        return self.get_required_component(GuildFactionComponent).guild_quest_progress
 
     @guild_quest_progress.setter
     def guild_quest_progress(self, val: dict[str, int]):
-        self.get_component(GuildFactionComponent).guild_quest_progress = val
+        self.get_required_component(GuildFactionComponent).guild_quest_progress = val
 
     # -------------------------------------------------------------
     # 実績・メタ進行プロパティ (AchievementComponent への委譲)
@@ -570,222 +600,222 @@ class Entity:
     # -------------------------------------------------------------
     @property
     def achievements(self) -> list[str]:
-        return self.get_component(AchievementComponent).achievements
+        return self.get_required_component(AchievementComponent).achievements
 
     @achievements.setter
     def achievements(self, val: list[str]):
-        self.get_component(AchievementComponent).achievements = val
+        self.get_required_component(AchievementComponent).achievements = val
 
     @property
     def achievement_progress(self) -> dict[str, int]:
-        return self.get_component(AchievementComponent).achievement_progress
+        return self.get_required_component(AchievementComponent).achievement_progress
 
     @achievement_progress.setter
     def achievement_progress(self, val: dict[str, int]):
-        self.get_component(AchievementComponent).achievement_progress = val
+        self.get_required_component(AchievementComponent).achievement_progress = val
 
     @property
     def achievement_timers(self) -> dict[str, int]:
-        return self.get_component(AchievementComponent).achievement_timers
+        return self.get_required_component(AchievementComponent).achievement_timers
 
     @achievement_timers.setter
     def achievement_timers(self, val: dict[str, int]):
-        self.get_component(AchievementComponent).achievement_timers = val
+        self.get_required_component(AchievementComponent).achievement_timers = val
 
     @property
     def monster_killed_types(self) -> dict[str, int]:
-        return self.get_component(AchievementComponent).monster_killed_types
+        return self.get_required_component(AchievementComponent).monster_killed_types
 
     @monster_killed_types.setter
     def monster_killed_types(self, val: dict[str, int]):
-        self.get_component(AchievementComponent).monster_killed_types = val
+        self.get_required_component(AchievementComponent).monster_killed_types = val
 
     @property
     def unique_items_obtained(self) -> list[str]:
-        return self.get_component(AchievementComponent).unique_items_obtained
+        return self.get_required_component(AchievementComponent).unique_items_obtained
 
     @unique_items_obtained.setter
     def unique_items_obtained(self, val: list[str]):
-        self.get_component(AchievementComponent).unique_items_obtained = val
+        self.get_required_component(AchievementComponent).unique_items_obtained = val
 
     @property
     def social_points(self) -> int:
-        return self.get_component(AchievementComponent).social_points
+        return self.get_required_component(AchievementComponent).social_points
 
     @social_points.setter
     def social_points(self, val: int):
-        self.get_component(AchievementComponent).social_points = val
+        self.get_required_component(AchievementComponent).social_points = val
 
     @property
     def weekly_play_time(self) -> int:
-        return self.get_component(AchievementComponent).weekly_play_time
+        return self.get_required_component(AchievementComponent).weekly_play_time
 
     @weekly_play_time.setter
     def weekly_play_time(self, val: int):
-        self.get_component(AchievementComponent).weekly_play_time = val
+        self.get_required_component(AchievementComponent).weekly_play_time = val
 
     @property
     def total_level_earned(self) -> int:
-        return self.get_component(AchievementComponent).total_level_earned
+        return self.get_required_component(AchievementComponent).total_level_earned
 
     @total_level_earned.setter
     def total_level_earned(self, val: int):
-        self.get_component(AchievementComponent).total_level_earned = val
+        self.get_required_component(AchievementComponent).total_level_earned = val
 
     @property
     def permanent_bonuses(self) -> dict[str, int]:
-        return self.get_component(AchievementComponent).permanent_bonuses
+        return self.get_required_component(AchievementComponent).permanent_bonuses
 
     @permanent_bonuses.setter
     def permanent_bonuses(self, val: dict[str, int]):
-        self.get_component(AchievementComponent).permanent_bonuses = val
+        self.get_required_component(AchievementComponent).permanent_bonuses = val
 
     @property
     def meta_progression(self) -> dict[str, int]:
-        return self.get_component(AchievementComponent).meta_progression
+        return self.get_required_component(AchievementComponent).meta_progression
 
     @meta_progression.setter
     def meta_progression(self, val: dict[str, int]):
-        self.get_component(AchievementComponent).meta_progression = val
+        self.get_required_component(AchievementComponent).meta_progression = val
 
     @property
     def dungeon_floors_visited(self) -> set[tuple[int, int]]:
-        return self.get_component(AchievementComponent).dungeon_floors_visited
+        return self.get_required_component(AchievementComponent).dungeon_floors_visited
 
     @dungeon_floors_visited.setter
     def dungeon_floors_visited(self, val: set[tuple[int, int]]):
-        self.get_component(AchievementComponent).dungeon_floors_visited = val
+        self.get_required_component(AchievementComponent).dungeon_floors_visited = val
 
     @property
     def play_time_seconds(self) -> int:
-        return self.get_component(AchievementComponent).play_time_seconds
+        return self.get_required_component(AchievementComponent).play_time_seconds
 
     @play_time_seconds.setter
     def play_time_seconds(self, val: int):
-        self.get_component(AchievementComponent).play_time_seconds = val
+        self.get_required_component(AchievementComponent).play_time_seconds = val
 
     @property
     def last_festival_check(self) -> str:
-        return self.get_component(AchievementComponent).last_festival_check
+        return self.get_required_component(AchievementComponent).last_festival_check
 
     @last_festival_check.setter
     def last_festival_check(self, val: str):
-        self.get_component(AchievementComponent).last_festival_check = val
+        self.get_required_component(AchievementComponent).last_festival_check = val
 
     @property
     def friend_helps(self) -> int:
-        return self.get_component(AchievementComponent).friend_helps
+        return self.get_required_component(AchievementComponent).friend_helps
 
     @friend_helps.setter
     def friend_helps(self, val: int):
-        self.get_component(AchievementComponent).friend_helps = val
+        self.get_required_component(AchievementComponent).friend_helps = val
 
     @property
     def special_items_combo(self) -> list[str]:
-        return self.get_component(AchievementComponent).special_items_combo
+        return self.get_required_component(AchievementComponent).special_items_combo
 
     @special_items_combo.setter
     def special_items_combo(self, val: list[str]):
-        self.get_component(AchievementComponent).special_items_combo = val
+        self.get_required_component(AchievementComponent).special_items_combo = val
 
     @property
     def achievement_notifications(self) -> list[str]:
-        return self.get_component(AchievementComponent).achievement_notifications
+        return self.get_required_component(AchievementComponent).achievement_notifications
 
     @achievement_notifications.setter
     def achievement_notifications(self, val: list[str]):
-        self.get_component(AchievementComponent).achievement_notifications = val
+        self.get_required_component(AchievementComponent).achievement_notifications = val
 
     # -------------------------------------------------------------
     # 輪廻転生・カーマプロパティ (ReincarnationComponent への委譲)
     # -------------------------------------------------------------
     @property
     def reincarnation_count(self) -> int:
-        return self.get_component(ReincarnationComponent).reincarnation_count
+        return self.get_required_component(ReincarnationComponent).reincarnation_count
 
     @reincarnation_count.setter
     def reincarnation_count(self, val: int):
-        self.get_component(ReincarnationComponent).reincarnation_count = val
+        self.get_required_component(ReincarnationComponent).reincarnation_count = val
 
     @property
     def karma_law_chaos(self) -> int:
-        return self.get_component(ReincarnationComponent).karma_law_chaos
+        return self.get_required_component(ReincarnationComponent).karma_law_chaos
 
     @karma_law_chaos.setter
     def karma_law_chaos(self, val: int):
-        self.get_component(ReincarnationComponent).karma_law_chaos = val
+        self.get_required_component(ReincarnationComponent).karma_law_chaos = val
 
     @property
     def karma_good_evil(self) -> int:
-        return self.get_component(ReincarnationComponent).karma_good_evil
+        return self.get_required_component(ReincarnationComponent).karma_good_evil
 
     @karma_good_evil.setter
     def karma_good_evil(self, val: int):
-        self.get_component(ReincarnationComponent).karma_good_evil = val
+        self.get_required_component(ReincarnationComponent).karma_good_evil = val
 
     @property
     def legacy_skills(self) -> list[str]:
-        return self.get_component(ReincarnationComponent).legacy_skills
+        return self.get_required_component(ReincarnationComponent).legacy_skills
 
     @legacy_skills.setter
     def legacy_skills(self, val: list[str]):
-        self.get_component(ReincarnationComponent).legacy_skills = val
+        self.get_required_component(ReincarnationComponent).legacy_skills = val
 
     @property
     def unlocked_reincarnation_dungeons(self) -> list[str]:
-        return self.get_component(ReincarnationComponent).unlocked_reincarnation_dungeons
+        return self.get_required_component(ReincarnationComponent).unlocked_reincarnation_dungeons
 
     @unlocked_reincarnation_dungeons.setter
     def unlocked_reincarnation_dungeons(self, val: list[str]):
-        self.get_component(ReincarnationComponent).unlocked_reincarnation_dungeons = val
+        self.get_required_component(ReincarnationComponent).unlocked_reincarnation_dungeons = val
 
     @property
     def collected_fragments(self) -> list[str]:
-        return self.get_component(ReincarnationComponent).collected_fragments
+        return self.get_required_component(ReincarnationComponent).collected_fragments
 
     @collected_fragments.setter
     def collected_fragments(self, val: list[str]):
-        self.get_component(ReincarnationComponent).collected_fragments = val
+        self.get_required_component(ReincarnationComponent).collected_fragments = val
 
     @property
     def favor(self) -> dict[str, int]:
-        return self.get_component(ReincarnationComponent).favor
+        return self.get_required_component(ReincarnationComponent).favor
 
     @favor.setter
     def favor(self, val: dict[str, int]):
-        self.get_component(ReincarnationComponent).favor = val
+        self.get_required_component(ReincarnationComponent).favor = val
 
     @property
     def inheritance_selection(self) -> dict[str, Any]:
-        return self.get_component(ReincarnationComponent).inheritance_selection
+        return self.get_required_component(ReincarnationComponent).inheritance_selection
 
     @inheritance_selection.setter
     def inheritance_selection(self, val: dict[str, Any]):
-        self.get_component(ReincarnationComponent).inheritance_selection = val
+        self.get_required_component(ReincarnationComponent).inheritance_selection = val
 
     @property
     def challenge_progress(self) -> dict[str, int]:
-        return self.get_component(ReincarnationComponent).challenge_progress
+        return self.get_required_component(ReincarnationComponent).challenge_progress
 
     @challenge_progress.setter
     def challenge_progress(self, val: dict[str, int]):
-        self.get_component(ReincarnationComponent).challenge_progress = val
+        self.get_required_component(ReincarnationComponent).challenge_progress = val
 
     @property
     def cycle_modifiers(self) -> list[dict[str, Any]]:
-        return self.get_component(ReincarnationComponent).cycle_modifiers
+        return self.get_required_component(ReincarnationComponent).cycle_modifiers
 
     @cycle_modifiers.setter
     def cycle_modifiers(self, val: list[dict[str, Any]]):
-        self.get_component(ReincarnationComponent).cycle_modifiers = val
+        self.get_required_component(ReincarnationComponent).cycle_modifiers = val
 
     @property
     def legacy_records(self) -> list[dict[str, Any]]:
-        return self.get_component(ReincarnationComponent).legacy_records
+        return self.get_required_component(ReincarnationComponent).legacy_records
 
     @legacy_records.setter
     def legacy_records(self, val: list[dict[str, Any]]):
-        self.get_component(ReincarnationComponent).legacy_records = val
+        self.get_required_component(ReincarnationComponent).legacy_records = val
 
     # -------------------------------------------------------------
     # スキルツリー・ジョブプロパティ (SkillTreeJobComponent への委譲)
@@ -793,35 +823,35 @@ class Entity:
 
     @property
     def skill_tree_progress(self) -> dict[str, list[str]]:
-        return self.get_component(SkillTreeJobComponent).skill_tree_progress
+        return self.get_required_component(SkillTreeJobComponent).skill_tree_progress
 
     @skill_tree_progress.setter
     def skill_tree_progress(self, val: dict[str, list[str]]):
-        self.get_component(SkillTreeJobComponent).skill_tree_progress = val
+        self.get_required_component(SkillTreeJobComponent).skill_tree_progress = val
 
     @property
     def skill_points(self) -> int:
-        return self.get_component(SkillTreeJobComponent).skill_points
+        return self.get_required_component(SkillTreeJobComponent).skill_points
 
     @skill_points.setter
     def skill_points(self, val: int):
-        self.get_component(SkillTreeJobComponent).skill_points = val
+        self.get_required_component(SkillTreeJobComponent).skill_points = val
 
     @property
     def total_skill_points_earned(self) -> int:
-        return self.get_component(SkillTreeJobComponent).total_skill_points_earned
+        return self.get_required_component(SkillTreeJobComponent).total_skill_points_earned
 
     @total_skill_points_earned.setter
     def total_skill_points_earned(self, val: int):
-        self.get_component(SkillTreeJobComponent).total_skill_points_earned = val
+        self.get_required_component(SkillTreeJobComponent).total_skill_points_earned = val
 
     @property
     def learned_passive_skills(self) -> list[str]:
-        return self.get_component(SkillTreeJobComponent).learned_passive_skills
+        return self.get_required_component(SkillTreeJobComponent).learned_passive_skills
 
     @learned_passive_skills.setter
     def learned_passive_skills(self, val: list[str]):
-        self.get_component(SkillTreeJobComponent).learned_passive_skills = val
+        self.get_required_component(SkillTreeJobComponent).learned_passive_skills = val
 
     passive_bonuses: dict[str, float] = field(default_factory=dict)
     passive_mp_regen: float = 0.0
@@ -829,152 +859,152 @@ class Entity:
 
     @property
     def job(self) -> str:
-        return self.get_component(SkillTreeJobComponent).job
+        return self.get_required_component(SkillTreeJobComponent).job
 
     @job.setter
     def job(self, val: str):
-        self.get_component(SkillTreeJobComponent).job = val
+        self.get_required_component(SkillTreeJobComponent).job = val
 
     @property
     def job_level(self) -> int:
-        return self.get_component(SkillTreeJobComponent).job_level
+        return self.get_required_component(SkillTreeJobComponent).job_level
 
     @job_level.setter
     def job_level(self, val: int):
-        self.get_component(SkillTreeJobComponent).job_level = val
+        self.get_required_component(SkillTreeJobComponent).job_level = val
 
     @property
     def job_exp(self) -> int:
-        return self.get_component(SkillTreeJobComponent).job_exp
+        return self.get_required_component(SkillTreeJobComponent).job_exp
 
     @job_exp.setter
     def job_exp(self, val: int):
-        self.get_component(SkillTreeJobComponent).job_exp = val
+        self.get_required_component(SkillTreeJobComponent).job_exp = val
 
     @property
     def previous_jobs(self) -> list[str]:
-        return self.get_component(SkillTreeJobComponent).previous_jobs
+        return self.get_required_component(SkillTreeJobComponent).previous_jobs
 
     @previous_jobs.setter
     def previous_jobs(self, val: list[str]):
-        self.get_component(SkillTreeJobComponent).previous_jobs = val
+        self.get_required_component(SkillTreeJobComponent).previous_jobs = val
 
     @property
     def mastered_jobs(self) -> list[str]:
-        return self.get_component(SkillTreeJobComponent).mastered_jobs
+        return self.get_required_component(SkillTreeJobComponent).mastered_jobs
 
     @mastered_jobs.setter
     def mastered_jobs(self, val: list[str]):
-        self.get_component(SkillTreeJobComponent).mastered_jobs = val
+        self.get_required_component(SkillTreeJobComponent).mastered_jobs = val
 
     @property
     def mastered_exclusive_skills(self) -> list[str]:
-        return self.get_component(SkillTreeJobComponent).mastered_exclusive_skills
+        return self.get_required_component(SkillTreeJobComponent).mastered_exclusive_skills
 
     @mastered_exclusive_skills.setter
     def mastered_exclusive_skills(self, val: list[str]):
-        self.get_component(SkillTreeJobComponent).mastered_exclusive_skills = val
+        self.get_required_component(SkillTreeJobComponent).mastered_exclusive_skills = val
 
     @property
     def inherited_skills(self) -> list[str]:
-        return self.get_component(SkillTreeJobComponent).inherited_skills
+        return self.get_required_component(SkillTreeJobComponent).inherited_skills
 
     @inherited_skills.setter
     def inherited_skills(self, val: list[str]):
-        self.get_component(SkillTreeJobComponent).inherited_skills = val
+        self.get_required_component(SkillTreeJobComponent).inherited_skills = val
 
     # -------------------------------------------------------------
     # スキル合成・進化プロパティ (SkillFusionComponent への委譲)
     # -------------------------------------------------------------
     @property
     def skill_fusion_materials(self) -> dict[str, int]:
-        return self.get_component(SkillFusionComponent).skill_fusion_materials
+        return self.get_required_component(SkillFusionComponent).skill_fusion_materials
 
     @skill_fusion_materials.setter
     def skill_fusion_materials(self, val: dict[str, int]):
-        self.get_component(SkillFusionComponent).skill_fusion_materials = val
+        self.get_required_component(SkillFusionComponent).skill_fusion_materials = val
 
     @property
     def skill_evolution(self) -> dict[str, str]:
-        return self.get_component(SkillFusionComponent).skill_evolution
+        return self.get_required_component(SkillFusionComponent).skill_evolution
 
     @skill_evolution.setter
     def skill_evolution(self, val: dict[str, str]):
-        self.get_component(SkillFusionComponent).skill_evolution = val
+        self.get_required_component(SkillFusionComponent).skill_evolution = val
 
     @property
     def awakened_skills(self) -> list[str]:
-        return self.get_component(SkillFusionComponent).awakened_skills
+        return self.get_required_component(SkillFusionComponent).awakened_skills
 
     @awakened_skills.setter
     def awakened_skills(self, val: list[str]):
-        self.get_component(SkillFusionComponent).awakened_skills = val
+        self.get_required_component(SkillFusionComponent).awakened_skills = val
 
     @property
     def skill_traits(self) -> dict[str, dict[str, float]]:
-        return self.get_component(SkillFusionComponent).skill_traits
+        return self.get_required_component(SkillFusionComponent).skill_traits
 
     @skill_traits.setter
     def skill_traits(self, val: dict[str, dict[str, float]]):
-        self.get_component(SkillFusionComponent).skill_traits = val
+        self.get_required_component(SkillFusionComponent).skill_traits = val
 
     @property
     def equipped_skills(self) -> list[str]:
-        return self.get_component(SkillFusionComponent).equipped_skills
+        return self.get_required_component(SkillFusionComponent).equipped_skills
 
     @equipped_skills.setter
     def equipped_skills(self, val: list[str]):
-        self.get_component(SkillFusionComponent).equipped_skills = val
+        self.get_required_component(SkillFusionComponent).equipped_skills = val
 
     @property
     def inheritable_skills(self) -> list[str]:
-        return self.get_component(SkillFusionComponent).inheritable_skills
+        return self.get_required_component(SkillFusionComponent).inheritable_skills
 
     @inheritable_skills.setter
     def inheritable_skills(self, val: list[str]):
-        self.get_component(SkillFusionComponent).inheritable_skills = val
+        self.get_required_component(SkillFusionComponent).inheritable_skills = val
 
     @property
     def skill_specialization(self) -> dict[str, str]:
-        return self.get_component(SkillFusionComponent).skill_specialization
+        return self.get_required_component(SkillFusionComponent).skill_specialization
 
     @skill_specialization.setter
     def skill_specialization(self, val: dict[str, str]):
-        self.get_component(SkillFusionComponent).skill_specialization = val
+        self.get_required_component(SkillFusionComponent).skill_specialization = val
 
     @property
     def fusion_chain_progress(self) -> dict[str, int]:
-        return self.get_component(SkillFusionComponent).fusion_chain_progress
+        return self.get_required_component(SkillFusionComponent).fusion_chain_progress
 
     @fusion_chain_progress.setter
     def fusion_chain_progress(self, val: dict[str, int]):
-        self.get_component(SkillFusionComponent).fusion_chain_progress = val
+        self.get_required_component(SkillFusionComponent).fusion_chain_progress = val
 
     @property
     def skill_archive_progress(self) -> dict[str, bool]:
-        return self.get_component(SkillFusionComponent).skill_archive_progress
+        return self.get_required_component(SkillFusionComponent).skill_archive_progress
 
     @skill_archive_progress.setter
     def skill_archive_progress(self, val: dict[str, bool]):
-        self.get_component(SkillFusionComponent).skill_archive_progress = val
+        self.get_required_component(SkillFusionComponent).skill_archive_progress = val
 
     # -------------------------------------------------------------
     # ストーリーテラー・ワールドプロパティ (StorytellerComponent への委譲)
     # -------------------------------------------------------------
     @property
     def story_flags(self) -> dict[str, bool]:
-        return self.get_component(StorytellerComponent).story_flags
+        return self.get_required_component(StorytellerComponent).story_flags
 
     @story_flags.setter
     def story_flags(self, val: dict[str, bool]):
-        self.get_component(StorytellerComponent).story_flags = val
+        self.get_required_component(StorytellerComponent).story_flags = val
 
     # -------------------------------------------------------------
     # プロシージャル・クエスト生成プロパティ (ProceduralQuestComponent への委譲)
     # -------------------------------------------------------------
     @property
     def procedural_quest(self) -> ProceduralQuestComponent:
-        return self.get_component(ProceduralQuestComponent)
+        return self.get_required_component(ProceduralQuestComponent)
 
     @procedural_quest.setter
     def procedural_quest(self, val: ProceduralQuestComponent):
@@ -982,104 +1012,104 @@ class Entity:
 
     @property
     def story_variables(self) -> dict[str, Any]:
-        return self.get_component(StorytellerComponent).story_variables
+        return self.get_required_component(StorytellerComponent).story_variables
 
     @story_variables.setter
     def story_variables(self, val: dict[str, Any]):
-        self.get_component(StorytellerComponent).story_variables = val
+        self.get_required_component(StorytellerComponent).story_variables = val
 
     @property
     def story_choices_made(self) -> list[str]:
-        return self.get_component(StorytellerComponent).story_choices_made
+        return self.get_required_component(StorytellerComponent).story_choices_made
 
     @story_choices_made.setter
     def story_choices_made(self, val: list[str]):
-        self.get_component(StorytellerComponent).story_choices_made = val
+        self.get_required_component(StorytellerComponent).story_choices_made = val
 
     @property
     def world_state_version(self) -> str:
-        return self.get_component(StorytellerComponent).world_state_version
+        return self.get_required_component(StorytellerComponent).world_state_version
 
     @world_state_version.setter
     def world_state_version(self, val: str):
-        self.get_component(StorytellerComponent).world_state_version = val
+        self.get_required_component(StorytellerComponent).world_state_version = val
 
     @property
     def player_legacy(self) -> dict[str, Any]:
-        return self.get_component(StorytellerComponent).player_legacy
+        return self.get_required_component(StorytellerComponent).player_legacy
 
     @player_legacy.setter
     def player_legacy(self, val: dict[str, Any]):
-        self.get_component(StorytellerComponent).player_legacy = val
+        self.get_required_component(StorytellerComponent).player_legacy = val
 
     @property
     def character_relationships(self) -> dict[str, dict[str, int]]:
-        return self.get_component(StorytellerComponent).character_relationships
+        return self.get_required_component(StorytellerComponent).character_relationships
 
     @character_relationships.setter
     def character_relationships(self, val: dict[str, dict[str, int]]):
-        self.get_component(StorytellerComponent).character_relationships = val
+        self.get_required_component(StorytellerComponent).character_relationships = val
 
     @property
     def memory_fragments(self) -> list[str]:
-        return self.get_component(StorytellerComponent).memory_fragments
+        return self.get_required_component(StorytellerComponent).memory_fragments
 
     @memory_fragments.setter
     def memory_fragments(self, val: list[str]):
-        self.get_component(StorytellerComponent).memory_fragments = val
+        self.get_required_component(StorytellerComponent).memory_fragments = val
 
     @property
     def active_world_events(self) -> list[str]:
-        return self.get_component(StorytellerComponent).active_world_events
+        return self.get_required_component(StorytellerComponent).active_world_events
 
     @active_world_events.setter
     def active_world_events(self, val: list[str]):
-        self.get_component(StorytellerComponent).active_world_events = val
+        self.get_required_component(StorytellerComponent).active_world_events = val
 
     @property
     def completed_storylines(self) -> list[str]:
-        return self.get_component(StorytellerComponent).completed_storylines
+        return self.get_required_component(StorytellerComponent).completed_storylines
 
     @completed_storylines.setter
     def completed_storylines(self, val: list[str]):
-        self.get_component(StorytellerComponent).completed_storylines = val
+        self.get_required_component(StorytellerComponent).completed_storylines = val
 
     @property
     def available_storylines(self) -> list[str]:
-        return self.get_component(StorytellerComponent).available_storylines
+        return self.get_required_component(StorytellerComponent).available_storylines
 
     @available_storylines.setter
     def available_storylines(self, val: list[str]):
-        self.get_component(StorytellerComponent).available_storylines = val
+        self.get_required_component(StorytellerComponent).available_storylines = val
 
     @property
     def story_notifications(self) -> list[dict[str, Any]]:
-        return self.get_component(StorytellerComponent).story_notifications
+        return self.get_required_component(StorytellerComponent).story_notifications
 
     @story_notifications.setter
     def story_notifications(self, val: list[dict[str, Any]]):
-        self.get_component(StorytellerComponent).story_notifications = val
+        self.get_required_component(StorytellerComponent).story_notifications = val
 
     @property
     def current_choice_prompt(self) -> dict[str, Any] | None:
-        return self.get_component(StorytellerComponent).current_choice_prompt
+        return self.get_required_component(StorytellerComponent).current_choice_prompt
 
     @current_choice_prompt.setter
     def current_choice_prompt(self, val: dict[str, Any] | None):
-        self.get_component(StorytellerComponent).current_choice_prompt = val
+        self.get_required_component(StorytellerComponent).current_choice_prompt = val
 
     @property
     def ending_progress(self) -> dict[str, int]:
-        return self.get_component(StorytellerComponent).ending_progress
+        return self.get_required_component(StorytellerComponent).ending_progress
 
     @ending_progress.setter
     def ending_progress(self, val: dict[str, int]):
-        self.get_component(StorytellerComponent).ending_progress = val
+        self.get_required_component(StorytellerComponent).ending_progress = val
 
     # 考古学・発掘・解読メタゲーム (ArchaeologyComponent への委譲, Steps 11, 24)
     @property
     def archaeology(self) -> ArchaeologyComponent:
-        return self.get_component(ArchaeologyComponent)
+        return self.get_required_component(ArchaeologyComponent)
 
     @archaeology.setter
     def archaeology(self, val: ArchaeologyComponent):
@@ -1087,122 +1117,122 @@ class Entity:
 
     @property
     def excavated_sites(self) -> list[str]:
-        return self.get_component(ArchaeologyComponent).excavated_sites
+        return self.get_required_component(ArchaeologyComponent).excavated_sites
 
     @excavated_sites.setter
     def excavated_sites(self, val: list[str]):
-        self.get_component(ArchaeologyComponent).excavated_sites = val
+        self.get_required_component(ArchaeologyComponent).excavated_sites = val
 
     @property
     def decoded_fragments(self) -> list[str]:
-        return self.get_component(ArchaeologyComponent).decoded_fragments
+        return self.get_required_component(ArchaeologyComponent).decoded_fragments
 
     @decoded_fragments.setter
     def decoded_fragments(self, val: list[str]):
-        self.get_component(ArchaeologyComponent).decoded_fragments = val
+        self.get_required_component(ArchaeologyComponent).decoded_fragments = val
 
     @property
     def owned_keys(self) -> list[str]:
-        return self.get_component(ArchaeologyComponent).owned_keys
+        return self.get_required_component(ArchaeologyComponent).owned_keys
 
     @owned_keys.setter
     def owned_keys(self, val: list[str]):
-        self.get_component(ArchaeologyComponent).owned_keys = val
+        self.get_required_component(ArchaeologyComponent).owned_keys = val
 
     @property
     def reached_truths(self) -> list[str]:
-        return self.get_component(ArchaeologyComponent).reached_truths
+        return self.get_required_component(ArchaeologyComponent).reached_truths
 
     @reached_truths.setter
     def reached_truths(self, val: list[str]):
-        self.get_component(ArchaeologyComponent).reached_truths = val
+        self.get_required_component(ArchaeologyComponent).reached_truths = val
 
     @property
     def leaned_endings(self) -> dict[str, str]:
-        return self.get_component(ArchaeologyComponent).leaned_endings
+        return self.get_required_component(ArchaeologyComponent).leaned_endings
 
     @leaned_endings.setter
     def leaned_endings(self, val: dict[str, str]):
-        self.get_component(ArchaeologyComponent).leaned_endings = val
+        self.get_required_component(ArchaeologyComponent).leaned_endings = val
 
     @property
     def interpretation_notes(self) -> dict[str, str]:
-        return self.get_component(ArchaeologyComponent).interpretation_notes
+        return self.get_required_component(ArchaeologyComponent).interpretation_notes
 
     @interpretation_notes.setter
     def interpretation_notes(self, val: dict[str, str]):
-        self.get_component(ArchaeologyComponent).interpretation_notes = val
+        self.get_required_component(ArchaeologyComponent).interpretation_notes = val
 
     # -------------------------------------------------------------
     # 好感度・ペットプロフィール・エモート (コンポーネント委譲, Step 24)
     # -------------------------------------------------------------
     @property
     def affection(self) -> int:
-        return self.get_component(AffectionComponent).affection
+        return self.get_required_component(AffectionComponent).affection
 
     @affection.setter
     def affection(self, val: int) -> None:
-        self.get_component(AffectionComponent).affection = val
+        self.get_required_component(AffectionComponent).affection = val
 
     @property
     def is_mounted(self) -> bool:
-        return self.get_component(AffectionComponent).is_mounted
+        return self.get_required_component(AffectionComponent).is_mounted
 
     @is_mounted.setter
     def is_mounted(self, val: bool) -> None:
-        self.get_component(AffectionComponent).is_mounted = val
+        self.get_required_component(AffectionComponent).is_mounted = val
 
     @property
     def gene_skills(self) -> list[str]:
-        return self.get_component(PetProfileComponent).gene_skills
+        return self.get_required_component(PetProfileComponent).gene_skills
 
     @gene_skills.setter
     def gene_skills(self, val: list[str]) -> None:
-        self.get_component(PetProfileComponent).gene_skills = val
+        self.get_required_component(PetProfileComponent).gene_skills = val
 
     @property
     def pet_type(self) -> str:
-        return self.get_component(PetProfileComponent).pet_type
+        return self.get_required_component(PetProfileComponent).pet_type
 
     @pet_type.setter
     def pet_type(self, val: str) -> None:
-        self.get_component(PetProfileComponent).pet_type = val
+        self.get_required_component(PetProfileComponent).pet_type = val
 
     @property
     def pet_fusion_history(self) -> list[dict[str, Any]]:
-        return self.get_component(PetProfileComponent).pet_fusion_history
+        return self.get_required_component(PetProfileComponent).pet_fusion_history
 
     @pet_fusion_history.setter
     def pet_fusion_history(self, val: list[dict[str, Any]]) -> None:
-        self.get_component(PetProfileComponent).pet_fusion_history = val
+        self.get_required_component(PetProfileComponent).pet_fusion_history = val
 
     @property
     def emote_state(self) -> str | None:
-        return self.get_component(EmoteComponent).emote_state
+        return self.get_required_component(EmoteComponent).emote_state
 
     @emote_state.setter
     def emote_state(self, val: str | None) -> None:
-        self.get_component(EmoteComponent).emote_state = val
+        self.get_required_component(EmoteComponent).emote_state = val
 
     @property
     def emote_timer(self) -> float:
-        return self.get_component(EmoteComponent).emote_timer
+        return self.get_required_component(EmoteComponent).emote_timer
 
     @emote_timer.setter
     def emote_timer(self, val: float) -> None:
-        self.get_component(EmoteComponent).emote_timer = val
+        self.get_required_component(EmoteComponent).emote_timer = val
 
     @property
     def emote_frame(self) -> int:
-        return self.get_component(EmoteComponent).emote_frame
+        return self.get_required_component(EmoteComponent).emote_frame
 
     @emote_frame.setter
     def emote_frame(self, val: int) -> None:
-        self.get_component(EmoteComponent).emote_frame = val
+        self.get_required_component(EmoteComponent).emote_frame = val
 
     @property
     def pet_ai(self) -> "PetAIComponent":
-        return self.get_component(PetAIComponent)
+        return self.get_required_component(PetAIComponent)
 
     def _default_ai_role(self, name: str) -> str:
         """敵の名前から陣形AIロールを自動判定 (提案4)"""
@@ -1556,7 +1586,7 @@ class Entity:
     def status_effects(self):
         """ECS API 使用時は StatusEffectsComponent、レガシーコードはリストを返す。"""
         if getattr(self, "_status_effects_ecs", False):
-            return self.get_component(StatusEffectsComponent)
+            return self.get_required_component(StatusEffectsComponent)
         return self._status_effects_list
 
     @status_effects.setter
@@ -1564,13 +1594,13 @@ class Entity:
         if getattr(self, "_status_effects_ecs", False):
             # ECS モード: レガシー call site のリセット操作 ([] 代入) をクリアに変換
             if isinstance(value, list) and not value:
-                self.get_component(StatusEffectsComponent).clear_all()
+                self.get_required_component(StatusEffectsComponent).clear_all()
             return
         self._status_effects_list = value
 
     def has_status(self, effect_type: str) -> bool:
         self._status_effects_ecs = True
-        return self.get_component(StatusEffectsComponent).has_effect(effect_type)
+        return self.get_required_component(StatusEffectsComponent).has_effect(effect_type)
 
     def add_status(
         self,
@@ -1580,17 +1610,17 @@ class Entity:
         source_name: str = "",
     ) -> bool:
         self._status_effects_ecs = True
-        return self.get_component(StatusEffectsComponent).add_effect(
+        return self.get_required_component(StatusEffectsComponent).add_effect(
             effect_type, duration, power, source_name
         )
 
     def remove_status(self, effect_type: str) -> bool:
         self._status_effects_ecs = True
-        return self.get_component(StatusEffectsComponent).remove_effect(effect_type)
+        return self.get_required_component(StatusEffectsComponent).remove_effect(effect_type)
 
     def clear_statuses(self) -> None:
         self._status_effects_ecs = True
-        self.get_component(StatusEffectsComponent).clear_all()
+        self.get_required_component(StatusEffectsComponent).clear_all()
 
     # -------------------------------------------------------------
     # 属性耐性計算 (PR #8 integration: origin/main より移植, Step 53, 56)

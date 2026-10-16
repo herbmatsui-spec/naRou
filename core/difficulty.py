@@ -7,15 +7,13 @@ from __future__ import annotations
 
 from typing import ClassVar
 
+from constants import DIFFICULTY_MULTIPLIERS, DIFFICULTY_NORMAL, MIN_PLAYER_DAMAGE
+
 
 class DifficultyManager:
     """難易度プリセットに基づく乗数を提供する。"""
 
-    _DEFAULTS: ClassVar[dict[str, dict[str, float]]] = {
-        "easy": {"player_damage_taken": 0.5, "enemy_hp": 0.8, "player_regen": 1.2},
-        "normal": {"player_damage_taken": 1.0, "enemy_hp": 1.0, "player_regen": 1.0},
-        "hard": {"player_damage_taken": 1.5, "enemy_hp": 1.2, "player_regen": 0.8},
-    }
+    _DEFAULTS: ClassVar[dict[str, dict[str, float]]] = DIFFICULTY_MULTIPLIERS
 
     def __init__(self, difficulty: str | None = None) -> None:
         explicit = difficulty is not None
@@ -43,10 +41,13 @@ class DifficultyManager:
 
             preset = get_config(f"game.difficulty_presets.{difficulty}")
             if isinstance(preset, dict):
+                normal = DIFFICULTY_MULTIPLIERS[DIFFICULTY_NORMAL]
                 return {
-                    "player_damage_taken": float(preset.get("player_damage_taken", 1.0)),
-                    "enemy_hp": float(preset.get("enemy_hp", 1.0)),
-                    "player_regen": float(preset.get("player_regen", 1.0)),
+                    "player_damage_taken": float(
+                        preset.get("player_damage_taken", normal["player_damage_taken"])
+                    ),
+                    "enemy_hp": float(preset.get("enemy_hp", normal["enemy_hp"])),
+                    "player_regen": float(preset.get("player_regen", normal["player_regen"])),
                 }
         except ImportError:
             # TODO: handle exception properly
@@ -55,7 +56,7 @@ class DifficultyManager:
 
     def player_damage_taken(self, raw_damage: float) -> float:
         """プレイヤーが受けるダメージを難易度で補正（最小1）。"""
-        return max(1.0, raw_damage * self.multipliers["player_damage_taken"])
+        return max(MIN_PLAYER_DAMAGE, raw_damage * self.multipliers["player_damage_taken"])
 
     def enemy_hp(self, base_hp: float) -> float:
         return base_hp * self.multipliers["enemy_hp"]

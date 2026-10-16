@@ -6,6 +6,10 @@ SDL/WebGL/WebGPU などの GPU 依存コンポーネントを一切使わずに�
 
 from __future__ import annotations
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class TextRenderer:
     """Step1: GPU不要のテキスト(ASCII)レンダラ。"""
@@ -64,7 +68,7 @@ class TextRenderer:
                 else:
                     line.append(f"\x1b[38;5;{code}m{ch}\x1b[0m")
             lines.append("".join(line))
-        print("\n".join(lines))
+        logger.info("\n".join(lines))
 
     # Step8: ルックカーソル設定
     def set_cursor(self, x: int, y: int) -> None:

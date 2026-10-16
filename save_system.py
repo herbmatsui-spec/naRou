@@ -43,16 +43,25 @@ class SaveSystem:
     # Key is derived from environment or build-time secret; not stored in plaintext
     @classmethod
     def _get_hmac_key(cls) -> bytes:
-        """Return HMAC key from env or fallback (for dev only)."""
+        """Return HMAC key from the mandatory SAVE_HMAC_KEY env var.
+
+        SAVE_HMAC_KEY (base64-encoded) is required at runtime. No fallback or
+        derived key is used when it is absent, so a misconfigured deploy fails
+        closed instead of signing saves with a weak hardcoded key.
+        """
         key_b64 = os.environ.get("SAVE_HMAC_KEY")
-        if key_b64:
-            try:
-                return base64.b64decode(key_b64)
-            except Exception as e:
-                # Log exception and use fallback key
-                logger.warning("Failed to decode SAVE_HMAC_KEY, using dev fallback key: %s", e)
-        # Dev fallback: deterministic key from project root hash
-        return hashlib.sha256(b"naRou_dev_hmac_key_fallback").digest()
+        if not key_b64:
+            raise RuntimeError(
+                "SAVE_HMAC_KEY environment variable is required "
+                "(base64-encoded HMAC signing key)."
+            )
+        try:
+            key = base64.b64decode(key_b64, validate=True)
+        except Exception as e:
+            raise RuntimeError(f"SAVE_HMAC_KEY must be valid base64: {e}") from e
+        if not key:
+            raise RuntimeError("SAVE_HMAC_KEY must decode to a non-empty key.")
+        return key
 
     @classmethod
     def _compute_hmac(cls, data: bytes) -> bytes:

@@ -5,6 +5,7 @@ Steps 55-60: Audio integration for time system
 
 from __future__ import annotations
 
+import logging
 import threading
 import time
 from typing import Callable, Optional
@@ -14,6 +15,8 @@ try:
     from naRou.time_system import TimePhase, get_world_clock
 except ImportError:
     from time_system import TimePhase
+
+logger = logging.getLogger(__name__)
 
 
 class WorldClockAudioManager:
@@ -142,7 +145,7 @@ class WorldClockAudioManager:
             TimePhase.NIGHT: "夜勤シフトに切り替わります",
         }
         message = phase_names.get(phase, "シフト変更")
-        print(f"[アナウンス] {message}")  # 実際にはUIに通知
+        logger.info(f"[アナウンス] {message}")  # 実際にはUIに通知
 
     # --- 環境音制御 ---
     def start_ambience(self, phase: TimePhase) -> None:

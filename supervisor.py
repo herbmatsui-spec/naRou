@@ -209,14 +209,15 @@ class SupervisorDaemon:
                 stdout, stderr = b"", b"Process terminated during communicate"
                 try:
                     state.process.kill()
-                except:
-                    pass
+                except Exception as e:
+                    self.logger.error(f"{name} process kill failed: {e}")
             except ValueError:
                 # Handle case where stdin is already closed
                 # Try to get output without communicating
                 try:
                     stdout, stderr = state.process.communicate(timeout=5)
-                except:
+                except Exception as e:
+                    self.logger.error(f"{name} communicate retry failed: {e}")
                     stdout, stderr = b"", b""
 
             state.error_log.append({
@@ -243,8 +244,8 @@ class SupervisorDaemon:
             except subprocess.TimeoutExpired:
                 try:
                     state.process.kill()
-                except:
-                    pass
+                except Exception as e:
+                    self.logger.error(f"{name} process kill failed: {e}")
             return False
 
         # ハートビートファイル確認（オプション）

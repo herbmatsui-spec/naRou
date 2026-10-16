@@ -170,6 +170,28 @@ DIFFICULTY_MODIFIERS = {
     },
 }
 
+# Difficulty preset multipliers (core/difficulty.py)
+DIFFICULTY_MULTIPLIERS = {
+    DIFFICULTY_EASY: {
+        "player_damage_taken": 0.5,
+        "enemy_hp": 0.8,
+        "player_regen": 1.2,
+    },
+    DIFFICULTY_NORMAL: {
+        "player_damage_taken": 1.0,
+        "enemy_hp": 1.0,
+        "player_regen": 1.0,
+    },
+    DIFFICULTY_HARD: {
+        "player_damage_taken": 1.5,
+        "enemy_hp": 1.2,
+        "player_regen": 0.8,
+    },
+}
+
+# Minimum player damage taken after difficulty multiplier (core/difficulty.py)
+MIN_PLAYER_DAMAGE = 1.0
+
 # Colors
 COLOR_WHITE = (255, 255, 255)
 COLOR_GRAY = (128, 128, 128)

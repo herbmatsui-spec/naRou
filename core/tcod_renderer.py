@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +22,8 @@ from core.renderer_base import (
     Viewport,
 )
 from core.tile_atlas import AnimState, TileAtlas
+
+logger = logging.getLogger(__name__)
 
 
 class TCODRenderer(RendererBase):
@@ -89,19 +92,19 @@ class TCODRenderer(RendererBase):
             self._last_frame_time = 0.0
 
             if self._frame_count % 60 == 0:
-                print(
+                logger.info(
                     f"[TCOD] FPS: {self._fps:.1f}, Draw calls: {self._draw_calls}, Animations: {len(self._tile_animations)}"
                 )
 
             # Auto quality adjustment
             if self._fps < 20 and not self._quality_reduced:
                 self._quality_reduced = True
-                print("[TCOD] Performance low, reducing quality")
+                logger.info("[TCOD] Performance low, reducing quality")
                 # Reduce particle effects, limit animations
                 # (particle system would need to be integrated)
             elif self._fps > 40 and self._quality_reduced:
                 self._quality_reduced = False
-                print("[TCOD] Performance recovered, restoring quality")
+                logger.info("[TCOD] Performance recovered, restoring quality")
 
     def get_performance_stats(self) -> dict[str, Any]:
         """Get current performance statistics."""
