@@ -9,14 +9,6 @@ from skill_eater_concept_crystal import ConceptCrystallizer
 from skill_eater_exploration_system import ExplorationRank
 
 
-@pytest.fixture(autouse=True)
-def _clean_shared_state():
-    """drop_history はクラス属性で全インスタンス共有のため、前後でクリアする。"""
-    ConceptCrystallizer.drop_history.clear()
-    yield
-    ConceptCrystallizer.drop_history.clear()
-
-
 @pytest.fixture
 def cryst() -> ConceptCrystallizer:
     return ConceptCrystallizer()

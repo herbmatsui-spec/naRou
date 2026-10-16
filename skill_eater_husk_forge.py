@@ -163,24 +163,27 @@ class PuppetForgeSystem:
             forge_fuel_cost = get_config('husk.forge_fuel')
             # Try to get economy component from player using standard ECS pattern
             try:
-                # Try to import EconomyComponent
-                try:
-                    from naRou.ecs.components.components import EconomyComponent
-                    economy = player.get_component(EconomyComponent)
-                    if economy.gold < forge_fuel_cost:
-                        raise ValueError(f"Insufficient gold: need {forge_fuel_cost}, have {economy.gold}")
-                    economy.gold -= forge_fuel_cost
-                except ImportError:
-                    # EconomyComponent not available in this view - skip resource consumption
-                    # In a full implementation, this component would exist
+                from naRou.ecs.components.components import EconomyComponent
+                economy = player.get_component(EconomyComponent)
+                if economy.gold < forge_fuel_cost:
+                    raise ValueError(f"Insufficient gold: need {forge_fuel_cost}, have {economy.gold}")
+                economy.gold -= forge_fuel_cost
+            except ImportError:
+                # EconomyComponent not available in this view - skip resource consumption
+                # In a full implementation, this component would exist
+                pass
+            except AttributeError:
+                # Player doesn't have get_component method - try direct attribute
+                if forge_fuel_cost is None:
                     pass
-                except AttributeError:
-                    # Player doesn't have get_component method - try direct attribute
-                    if hasattr(player, 'gold') and player.gold >= forge_fuel_cost:
-                        player.gold -= forge_fuel_cost
-                    elif hasattr(player, 'aldo_currency') and player.aldo_currency >= forge_fuel_cost:
-                        player.aldo_currency -= forge_fuel_cost
-                    # If we can't access resources through known paths, skip consumption for now
+                elif hasattr(player, 'gold') and player.gold is not None and player.gold >= forge_fuel_cost:
+                    player.gold -= forge_fuel_cost
+                elif hasattr(player, 'aldo_currency') and player.aldo_currency is not None and player.aldo_currency >= forge_fuel_cost:
+                    player.aldo_currency -= forge_fuel_cost
+                # If we can't access resources through known paths, skip consumption for now
+            except ValueError:
+                # Insufficient resources - propagate to caller
+                raise
             except Exception:
                 # Any other error - skip resource consumption to avoid breaking the flow
                 pass

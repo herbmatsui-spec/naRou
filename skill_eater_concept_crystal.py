@@ -57,12 +57,11 @@ class ConceptCrystallizer:
         },
     }
 
-    # ドロップ履歴
-    drop_history: List[Dict[str, Any]] = []
-
     def __init__(self):
         self._audio: SkillEaterAudioSystem | None = None
         self._presentation: SkillEaterPresentationSystem | None = None
+        # ドロップ履歴 (インスタンスごとに個別保持)
+        self.drop_history: List[Dict[str, Any]] = []
 
     def _get_presentation_systems(self):
         if self._audio is None:
