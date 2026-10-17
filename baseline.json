@@ -276,5 +276,226 @@
       "max": 0
     },
     "samples": 21
+  },
+  "balance_snapshot": {
+    "schema": 1,
+    "exp_curve": {
+      "1": {
+        "exp_next": 120,
+        "cumulative": 120
+      },
+      "2": {
+        "exp_next": 162,
+        "cumulative": 282
+      },
+      "3": {
+        "exp_next": 218,
+        "cumulative": 500
+      },
+      "4": {
+        "exp_next": 295,
+        "cumulative": 795
+      },
+      "5": {
+        "exp_next": 398,
+        "cumulative": 1193
+      },
+      "6": {
+        "exp_next": 538,
+        "cumulative": 1731
+      },
+      "7": {
+        "exp_next": 726,
+        "cumulative": 2457
+      },
+      "8": {
+        "exp_next": 980,
+        "cumulative": 3437
+      },
+      "9": {
+        "exp_next": 1323,
+        "cumulative": 4760
+      },
+      "10": {
+        "exp_next": 1787,
+        "cumulative": 6547
+      },
+      "11": {
+        "exp_next": 2412,
+        "cumulative": 8959
+      },
+      "12": {
+        "exp_next": 3257,
+        "cumulative": 12216
+      },
+      "13": {
+        "exp_next": 4397,
+        "cumulative": 16613
+      },
+      "14": {
+        "exp_next": 5936,
+        "cumulative": 22549
+      },
+      "15": {
+        "exp_next": 8014,
+        "cumulative": 30563
+      },
+      "16": {
+        "exp_next": 10819,
+        "cumulative": 41382
+      },
+      "17": {
+        "exp_next": 14605,
+        "cumulative": 55987
+      },
+      "18": {
+        "exp_next": 19717,
+        "cumulative": 75704
+      },
+      "19": {
+        "exp_next": 26618,
+        "cumulative": 102322
+      },
+      "20": {
+        "exp_next": 35935,
+        "cumulative": 138257
+      }
+    },
+    "kills_per_level": {
+      "1": 3.43,
+      "2": 2.31,
+      "3": 2.08,
+      "4": 2.11,
+      "5": 2.27,
+      "6": 2.56,
+      "7": 2.96,
+      "8": 3.5,
+      "9": 4.2,
+      "10": 5.11,
+      "11": 6.26,
+      "12": 7.75,
+      "13": 9.66,
+      "14": 12.11,
+      "15": 15.26,
+      "16": 19.32,
+      "17": 24.55,
+      "18": 31.3,
+      "19": 40.03,
+      "20": 51.34
+    },
+    "enemy_curve": {
+      "1": {
+        "enemy_hp_mean": 17.0,
+        "enemy_hp_min": 10,
+        "enemy_hp_max": 24,
+        "enemy_attack_mean": 5.75,
+        "enemy_exp": 35
+      },
+      "2": {
+        "enemy_hp_mean": 20.4,
+        "enemy_hp_min": 11,
+        "enemy_hp_max": 27,
+        "enemy_attack_mean": 6.8,
+        "enemy_exp": 70
+      },
+      "3": {
+        "enemy_hp_mean": 30.0,
+        "enemy_hp_min": 13,
+        "enemy_hp_max": 58,
+        "enemy_attack_mean": 9.0,
+        "enemy_exp": 105
+      },
+      "4": {
+        "enemy_hp_mean": 38.11,
+        "enemy_hp_min": 14,
+        "enemy_hp_max": 65,
+        "enemy_attack_mean": 11.11,
+        "enemy_exp": 140
+      },
+      "5": {
+        "enemy_hp_mean": 42.22,
+        "enemy_hp_min": 16,
+        "enemy_hp_max": 72,
+        "enemy_attack_mean": 12.33,
+        "enemy_exp": 175
+      },
+      "6": {
+        "enemy_hp_mean": 46.22,
+        "enemy_hp_min": 17,
+        "enemy_hp_max": 78,
+        "enemy_attack_mean": 13.67,
+        "enemy_exp": 210
+      },
+      "7": {
+        "enemy_hp_mean": 63.1,
+        "enemy_hp_min": 19,
+        "enemy_hp_max": 180,
+        "enemy_attack_mean": 17.4,
+        "enemy_exp": 245
+      },
+      "8": {
+        "enemy_hp_mean": 68.1,
+        "enemy_hp_min": 20,
+        "enemy_hp_max": 194,
+        "enemy_attack_mean": 18.9,
+        "enemy_exp": 280
+      },
+      "9": {
+        "enemy_hp_mean": 82.55,
+        "enemy_hp_min": 22,
+        "enemy_hp_max": 209,
+        "enemy_attack_mean": 20.0,
+        "enemy_exp": 315
+      },
+      "10": {
+        "enemy_hp_mean": 87.73,
+        "enemy_hp_min": 23,
+        "enemy_hp_max": 223,
+        "enemy_attack_mean": 21.18,
+        "enemy_exp": 350
+      }
+    },
+    "player_enemy_ratio": {
+      "1": {
+        "hp": 0.31,
+        "attack": 0.41
+      },
+      "2": {
+        "hp": 0.34,
+        "attack": 0.48
+      },
+      "3": {
+        "hp": 0.45,
+        "attack": 0.62
+      },
+      "4": {
+        "hp": 0.53,
+        "attack": 0.75
+      },
+      "5": {
+        "hp": 0.54,
+        "attack": 0.82
+      },
+      "6": {
+        "hp": 0.55,
+        "attack": 0.9
+      },
+      "7": {
+        "hp": 0.71,
+        "attack": 1.12
+      },
+      "8": {
+        "hp": 0.71,
+        "attack": 1.2
+      },
+      "9": {
+        "hp": 0.82,
+        "attack": 1.25
+      },
+      "10": {
+        "hp": 0.82,
+        "attack": 1.3
+      }
+    }
   }
 }

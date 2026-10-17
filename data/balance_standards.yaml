@@ -54,3 +54,47 @@ judgement:
   min_damage_taken_ratio: 0.1
   # 一撃で倒し切る・一撃で倒される戦闘の割合の上限。
   max_one_shot_rate: 0.1
+
+# --- 難易度カーブ評価テーブル (T33 R3案C) ---
+# 敵の期待値は data/monsters.yaml の base 値 × data_manager.create_monster の
+# 階層スケーリング (scale_mult = 1 + (floor-1) * 0.15、int 切り捨て) の
+# 「その階で出現しうる敵プール平均」。撃破 EXP は managers/combat_manager.py:40 の
+# 35 × 階層 (モンスター種に依存しない)。expected_player_level は「その階を攻略する
+# ときの期待プレイヤーレベル」で、階層 = レベルの想定。
+# ここに置いた値は現行バランスの期待値であり、意図的にバランスを変えたときだけ
+# `python3 balance_tool.py --update-baseline` で baseline.json と一緒に更新する。
+difficulty_curve:
+  dungeon_levels:
+    1: {enemy_hp: 17.0, enemy_attack: 5.75, enemy_exp: 35, expected_player_level: 1}
+    2: {enemy_hp: 20.4, enemy_attack: 6.8, enemy_exp: 70, expected_player_level: 2}
+    3: {enemy_hp: 30.0, enemy_attack: 9.0, enemy_exp: 105, expected_player_level: 3}
+    4: {enemy_hp: 38.11, enemy_attack: 11.11, enemy_exp: 140, expected_player_level: 4}
+    5: {enemy_hp: 42.22, enemy_attack: 12.33, enemy_exp: 175, expected_player_level: 5}
+    6: {enemy_hp: 46.22, enemy_attack: 13.67, enemy_exp: 210, expected_player_level: 6}
+    7: {enemy_hp: 63.1, enemy_attack: 17.4, enemy_exp: 245, expected_player_level: 7}
+    8: {enemy_hp: 68.1, enemy_attack: 18.9, enemy_exp: 280, expected_player_level: 8}
+    9: {enemy_hp: 82.55, enemy_attack: 20.0, enemy_exp: 315, expected_player_level: 9}
+    10: {enemy_hp: 87.73, enemy_attack: 21.18, enemy_exp: 350, expected_player_level: 10}
+  player_levels:
+    # 隣接レベルの必要 EXP 比 (標準 JRPG 曲線の目安 1.2〜1.4 倍の許容帯)。
+    adjacent_exp_ratio: {min: 1.1, max: 1.5}
+    # 「階層 = 期待プレイヤーレベル」の想定で 1 レベル上に必要な撃破数
+    # (exp_next / (35 × 階層)) の許容帯。現行は L3 の 2.1 匹から L20 の 51.3 匹へ
+    # 増え続け (必要 EXP が指数・撃破 EXP が線形のため)、上限を外れている。
+    # tests/test_balance_snapshot.py では xfail (警告) で記録しており、
+    # 撃破 EXP を敵の強さ連動にするなどの修正後に xpass する。
+    kills_per_level: {min: 1.0, max: 6.0}
+  player_enemy_ratio:
+    # 期待プレイヤーレベル同士での 敵平均HP / プレイヤー最大HP と
+    # 敵平均攻撃 / プレイヤー攻撃 (strength) の許容帯 (1-10F の平均レベル)。
+    hp: {min: 0.2, max: 1.5}
+    attack: {min: 0.2, max: 1.5}
+  floor_step:
+    # 「急に辛い階層」の検出用。隣接階層で敵平均 HP が急増しないことの上限
+    # (現行は 2→3F が +47%、6→7F が +37% でティア出現の段差がある → xfail で記録)。
+    max_mean_hp_step_ratio: 1.25
+    # プール内の最も強い個体 (max HP / 攻撃) が期待プレイヤーに迫る上限。
+    # 現行は 7F ミノタウロス (HP 2.5 倍 / 攻撃 1.7 倍)、10F 同 (2.1 倍 / 3.2 倍)
+    # で超過している → xfail で記録。
+    worst_case_hp_ratio_max: 2.0
+    worst_case_attack_ratio_max: 2.0

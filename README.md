@@ -263,6 +263,8 @@ pytest tests/test_player_death.py tests/test_win_condition.py tests/test_ap_syst
 pytest tests/test_entrypoint.py tests/test_narou_package_init.py
 ```
 
+バランス曲線のスナップショット検証は `pytest tests/test_balance_snapshot.py`（バランス変更を意図したときだけ `python3 balance_tool.py --update-baseline` で baseline.json を更新）。
+
 ```text
 ============== 160 passed, 1 skipped in 44.91s ==============  (2026-10-13 実測)
 ```
