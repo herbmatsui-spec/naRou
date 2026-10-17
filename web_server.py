@@ -517,6 +517,14 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                     atb_speed = _atb_display_speed(e)
                     energy = max(0, getattr(e, "energy", 0))
                     next_action_ap = max(0, math.ceil((ENERGY_THRESHOLD - energy) / atb_speed))
+                    # T25案2: 次回行動予告 (enemy_intent の種別) をWTG表示に添付する。
+                    # next_intent は (intent_type, target) タプル — 種別のみ文字列化して配信
+                    intent_type = None
+                    raw_intent = getattr(e, "next_intent", None)
+                    if isinstance(raw_intent, (tuple, list)) and raw_intent:
+                        intent_type = str(raw_intent[0])
+                    elif isinstance(raw_intent, str):
+                        intent_type = raw_intent
                     atb_data.append(
                         {
                             "name": e.name,
@@ -526,6 +534,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                             "is_pet": getattr(e, "is_pet", False),
                             "speed": atb_speed,
                             "next_action_ap": next_action_ap,
+                            "intent": intent_type,
                         }
                     )
                     # Phase 2-A: 敵の視界コーン（プレイヤー方向を向く）

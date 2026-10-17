@@ -1763,25 +1763,20 @@ sprite._playing = false;
       // レンダリングはPixiJSが自動的に行うため、requestAnimationFrameは不要
     }
 
-    // ==================== T16 案1 / T22 案6: ATB風行動順バー ====================
-    // プレイヤー / ペット / 直近敵 3 体の行動順を 5 セグメントのゲージで表示する。
-    // T22案6: サーバの atb_data (速度・次回行動までの残りAP) があれば実データで
-    // ゲージを進行させ、満タン時は金色点滅 (--ready) を演出する。
-    // atb_data がない場合は従来どおり名前ハッシュの擬似速度で進行させる。
+    // ==================== T16 案1 / T22 案6 / T25 案1-3: 行動順ビジュアライザー ====================
+    // ATB風の見た目を保ちつつ、ローグライクのターン制を壊さない表示へ転換した。
+    // ・ゲージはリアルタイム進行しない (「嘘の時計」問題の解消 — T25案1)
+    // ・next_action_ap (次回行動までの残りターン) 昇順で行動順を表示する WTG 方式
+    // ・プレイヤーは常に先頭 (現在ターンはプレイヤー) — T25案1
+    // ・満タン点滅を廃止し、プレイヤーは金枠の静的ハイライト (--active) — T25案2
+    // ・敵セグメントは next_intent (次回行動予告) を境界色で表示 — T25案2
+    // ・順序が入れ替わったときだけセグメントがパルスする解決アニメ — T25案3
     const ATB_SEGMENT_COUNT = 5;
     const ATB_AP_THRESHOLD = 100;  // エンジンの行動エネルギー閾値 (constants.ENERGY_THRESHOLD 相当)
-    const ATB_SPEED_REF = 6;       // ゲージ進行の基準速度 (プレイヤーの表示速度)
-    const ATB_READY_HOLD = 0.6;    // 満タン点滅を保持する秒数
-    const atbState = { key: '', fills: [], gauges: [], ready: [], readyTimer: [] };
+    const ATB_SHUFFLE_MS = 550;    // 並べ替えパルスアニメの表示時間 (T25案3)
+    const atbState = { key: '', fills: [], order: [] };
 
-    function atbPseudoSpeed(name) {
-      // 名前の文字コード和から決定論的な擬似速度係数 (60..140) を作る
-      let sum = 0;
-      for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
-      return 60 + (sum % 81);
-    }
-
-    // T22案6: atb_data エントリをアクターに紐付ける。
+    // T22案6 (維持): atb_data エントリをアクターに紐付ける。
     // エンティティIDが無いため world 座標 → 種別フラグ → 名前 の順で照合する
     function atbFindEntry(state, actor) {
       const data = Array.isArray(state.atb_data) ? state.atb_data : null;
@@ -1796,7 +1791,8 @@ sprite._playing = false;
       return data.find(d => d.name === actor.name) || null;
     }
 
-    // T22案6: 残りAPからゲージの進行度 (0..1) を算出する。実データが不完全なら null
+    // T25案1: 次回行動までの残り割合 (0..1) を静的に算出する。
+    // 1 に近いほど「行動直前」。実データが不完全なら null
     function atbEntryRatio(entry) {
       if (!entry || typeof entry.next_action_ap !== 'number') return null;
       const speed = Math.max(1, entry.speed || 1);
@@ -1804,7 +1800,7 @@ sprite._playing = false;
       return Math.max(0, Math.min(1, 1 - entry.next_action_ap / apTotal));
     }
 
-    function updateAtbBar(state, dt) {
+    function updateAtbBar(state) {
       const bar = document.getElementById('ff6AtbBar');
       if (!bar || !state) return;
 
@@ -1831,9 +1827,7 @@ sprite._playing = false;
         atbState.key = key;
         bar.innerHTML = '';
         atbState.fills = [];
-        atbState.ready = [];
-        atbState.readyTimer = [];
-        atbState.gauges = [];
+        atbState.order = [];
         actors.forEach((a, i) => {
           const seg = document.createElement('div');
           seg.className = 'ff6-atb-segment' + (a ? ` ff6-atb-segment--${a.kind}` : '');
@@ -1841,50 +1835,71 @@ sprite._playing = false;
           fill.className = 'ff6-atb-fill';
           seg.appendChild(fill);
           bar.appendChild(seg);
-          atbState.fills.push(a ? fill : null);
-          atbState.gauges.push(a ? 0.15 + Math.random() * 0.45 : 0);
-          atbState.ready.push(false);
-          atbState.readyTimer.push(0);
-          // 実データがある場合は残りAPでゲージの初期値を同期する
-          const ratio = atbEntryRatio(atbFindEntry(state, a));
-          if (a && ratio !== null) atbState.gauges[i] = ratio;
+          atbState.fills.push(a ? seg : null);
+          atbState.order.push(i);
         });
       }
 
-      // ゲージ進行: atb_data (実データ) があれば速度値で進行、なければ擬似計算へフォールバック
-      for (let i = 0; i < ATB_SEGMENT_COUNT; i++) {
-        const a = actors[i];
-        const fill = atbState.fills[i];
-        if (!a || !fill) continue;
+      // T25案1: 行動順を決定論的に計算する。
+      // プレイヤーは常に 1 番手 (ローグライクでは現在ターン = プレイヤー)。残りは
+      // next_action_ap 昇順 (少ないほど早く行動)。実データが無いアクターは末尾へ。
+      const ranked = actors.map((a, i) => {
         const entry = atbFindEntry(state, a);
-        if (entry) {
-          // --- 実データモード (T22案6): 型別速度に応じてゲージを溜める ---
-          if (atbState.ready[i]) {
-            // 満タン点滅を一定時間保持してから次ターンへ
-            atbState.readyTimer[i] -= dt;
-            if (atbState.readyTimer[i] <= 0) {
-              atbState.ready[i] = false;
-              atbState.gauges[i] = 0;
-            }
-          } else {
-            const speed = Math.max(1, entry.speed || 1);
-            atbState.gauges[i] += (speed / ATB_SPEED_REF) * dt * 0.35;
-            if (atbState.gauges[i] >= 1) {
-              atbState.gauges[i] = 1;
-              atbState.ready[i] = true;
-              atbState.readyTimer[i] = ATB_READY_HOLD;
-            }
+        const ap = (a && entry && typeof entry.next_action_ap === 'number') ? entry.next_action_ap : 9999;
+        return { i, a, entry, ap };
+      });
+      const sorted = ranked
+        .slice()
+        .sort((x, y) => {
+          // プレイヤー最優先 → next_action_ap 昇順 → 表示順
+          const xIsPlayer = x.a && x.a.kind === 'player' ? 0 : 1;
+          const yIsPlayer = y.a && y.a.kind === 'player' ? 0 : 1;
+          if (xIsPlayer !== yIsPlayer) return xIsPlayer - yIsPlayer;
+          return (x.ap - y.ap) || (x.i - y.i);
+        });
+
+      // T25案3: 順序が入れ替わったセグメントにパルスを付与 (DOM は実順序へ移動)
+      const newOrder = sorted.map(r => r.i);
+      const orderChanged = newOrder.join(',') !== atbState.order.join(',');
+      if (orderChanged) {
+        sorted.forEach((r, slot) => {
+          const seg = atbState.fills[r.i];
+          if (seg && atbState.order[slot] !== undefined && atbState.order[slot] !== r.i) {
+            seg.classList.remove('ff6-atb-segment--shuffling');
+            void seg.offsetWidth; // リフロー強制でアニメーションを確実に再始動
+            seg.classList.add('ff6-atb-segment--shuffling');
+            setTimeout(() => seg.classList.remove('ff6-atb-segment--shuffling'), ATB_SHUFFLE_MS);
           }
-          fill.classList.toggle('ff6-atb-fill--ready', atbState.ready[i]);
-          fill.style.width = `${Math.min(100, atbState.gauges[i] * 100)}%`;
-        } else {
-          // --- フォールバック: 従来の名前ハッシュ擬似 ATB 進行 ---
-          atbState.gauges[i] += (atbPseudoSpeed(a.name) / 60) * dt * 0.35;
-          if (atbState.gauges[i] >= 1) atbState.gauges[i] = 0;
-          fill.classList.remove('ff6-atb-fill--ready');
-          fill.style.width = `${Math.min(100, atbState.gauges[i] * 100)}%`;
-        }
+          if (seg && seg.parentNode) {
+            bar.appendChild(seg); // 実行動順へ DOM を移動
+          }
+        });
+        atbState.order = newOrder;
       }
+
+      // T25案1/案2: ゲージ幅・状態クラスを静的に更新する (dt 進行はしない)
+      sorted.forEach((r, slot) => {
+        const seg = atbState.fills[r.i];
+        if (!r.a || !seg) return;
+        const fill = seg.firstChild;
+        if (!fill) return;
+
+        // ゲージ幅 = 次回行動までの溜まり具合 (静的表示。ターン解決時にのみ変化する)
+        const ratio = atbEntryRatio(r.entry);
+        fill.style.width = `${ratio !== null ? Math.round(ratio * 100) : 0}%`;
+
+        // プレイヤーは静的な「アクティブ」ハイライト (点滅は廃止 — T25案2)
+        const isActive = r.a.kind === 'player';
+        seg.classList.toggle('ff6-atb-segment--active', isActive);
+        fill.classList.remove('ff6-atb-fill--ready'); // 旧点滅クラスの掃除
+
+        // 敵セグメントは次回行動予告 (intent) を境界色で示す — T25案2
+        if (r.a.kind === 'enemy' && r.entry && r.entry.intent) {
+          seg.setAttribute('data-intent', String(r.entry.intent));
+        } else {
+          seg.removeAttribute('data-intent');
+        }
+      });
     }
 
     // PixiJSのtickerでレンダリングループを開始
@@ -1914,7 +1929,7 @@ sprite._playing = false;
       // T16 案6: 天候パーティクルを更新
       if (weatherSystem) weatherSystem.update(dt);
       // T16 案1 / T22 案6: ATB風行動順バーを更新 (実データ＋擬似フォールバック)
-      updateAtbBar(gameState, dt);
+      updateAtbBar(gameState);
       render();
     });
 

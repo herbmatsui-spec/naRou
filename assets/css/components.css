@@ -468,7 +468,9 @@
    ======================================================================== */
 .bar-pet { background: linear-gradient(90deg, #ff9db5, #ffb6c1); box-shadow: 0 0 8px rgba(255, 182, 193, .5); }
 
-/* T22案6: ゲージ満タン (行動可能) の金色発光点滅 (2Hz) */
+/* T22案6: ゲージ満タン (行動可能) の金色発光点滅 (2Hz)
+   ※ T25案2 で廃止 — 点滅は「すぐ行動せよ」という嘘のプレッシャーを与えるため、
+     ターン制では使用しない。JS 側の旧実装互換のため定義のみ残存 (付与されない)。 */
 .ff6-atb-fill--ready {
   animation: ff6AtbPulse 0.5s ease-in-out infinite;
 }
@@ -483,6 +485,36 @@
     box-shadow: 0 0 14px rgba(255, 224, 102, 0.95);
   }
 }
+
+/* ========================================================================
+   T25案1-3: 行動順ビジュアライザー (WTG方式) — ATB見た目 × ターン制ルール
+   ======================================================================== */
+
+/* T25案2: プレイヤーセグメントの静的「アクティブ」ハイライト。
+   点滅ではなく金枠の常時発光で「現在ターンはあなた」を示す (焦らせない)。 */
+.ff6-atb-segment--active {
+  border-color: rgba(255, 248, 220, 0.9);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.55);
+}
+
+/* T25案3: ターン解決時の並べ替えパルス。
+   順序が入れ替わったセグメントだけが一瞬縮んで伸びる (解決アニメ)。 */
+.ff6-atb-segment--shuffling {
+  animation: ff6AtbShuffle 0.55s ease-out both;
+}
+
+@keyframes ff6AtbShuffle {
+  0%   { transform: scaleX(0.82); opacity: 0.55; }
+  60%  { transform: scaleX(1.06); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 1; }
+}
+
+/* T25案2: 敵の次回行動予告 (next_intent) を境界色で示す。
+   既存の敵頭上テレグラフ (⚔突撃 / ✷詠唱 / ➛逃走 / ✚回復) と同一の色系統。 */
+.ff6-atb-segment[data-intent="attack"] { border-color: rgba(255, 96, 64, 0.9); }
+.ff6-atb-segment[data-intent="cast"]   { border-color: rgba(170, 120, 255, 0.9); box-shadow: 0 0 6px rgba(170, 120, 255, 0.45); }
+.ff6-atb-segment[data-intent="flee"]   { border-color: rgba(160, 200, 220, 0.75); }
+.ff6-atb-segment[data-intent="heal"]   { border-color: rgba(90, 220, 140, 0.85); }
 
 /* ===== T23 案3: 全画面連動フラッシュ (web_game_client.html が body 直下へ動的生成) ===== */
 
