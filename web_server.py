@@ -254,7 +254,12 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             if _ENGINE_INSTANCE and action:
                 result_msg = self._handle_web_action(_ENGINE_INSTANCE, action, data)
 
-            state = self._serialize_engine_state(_ENGINE_INSTANCE) if _ENGINE_INSTANCE else {}
+            # アクション応答では演出イベントを消費せず、次回の /api/state GET で配信する
+            state = (
+                self._serialize_engine_state(_ENGINE_INSTANCE, consume_pending_events=False)
+                if _ENGINE_INSTANCE
+                else {}
+            )
             state["action_result"] = result_msg
 
             self._set_headers("application/json; charset=utf-8")
@@ -263,7 +268,9 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
 
-    def _serialize_engine_state(self, engine: Engine) -> dict[str, Any]:
+    def _serialize_engine_state(
+        self, engine: Engine, *, consume_pending_events: bool = True
+    ) -> dict[str, Any]:
         """Canvas 2DおよびWebAudio向けに完全なゲーム状態をJSONシリアライズ"""
         p = engine.player
         pet = engine.pet
@@ -445,6 +452,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                             "max_hp": e.max_hp,
                             "is_player": e.is_player,
                             "is_pet": getattr(e, "is_pet", False),
+                            "monster_type": getattr(e, "monster_type", None),
                             "facing": facing,
                             "state": state,
                             "attack_timer": getattr(e, "attack_timer", 0),
@@ -499,6 +507,24 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                             "y": vy,
                             "color": list(ft.color),
                             "life": getattr(ft, "life", 10),
+                        }
+                    )
+
+        # 呪文詠唱イベント (WebクライアントのemitSpellトリガー用、spell IDベース)
+        spell_fx_data = []
+        fx_manager = getattr(engine, "fx_manager", None)
+        if fx_manager is not None:
+            for sfx in getattr(fx_manager, "spell_fx", []):
+                vx = int(sfx["x"]) - cam_x
+                vy = int(sfx["y"]) - cam_y
+                if 0 <= vx < view_w and 0 <= vy < view_h:
+                    spell_fx_data.append(
+                        {
+                            "id": sfx["id"],
+                            "spell": sfx["spell"],
+                            "element": sfx["element"],
+                            "x": vx,
+                            "y": vy,
                         }
                     )
 
@@ -580,6 +606,15 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
 
         screen_shake = engine.screen_shake.is_active if hasattr(engine, "screen_shake") else False
 
+        # Web配信用の演出イベントキュー (カットシーン開始・レベルアップなど)。
+        # 常に出力へ含め、/api/state GET 応答時のみキューから消費する
+        # (/api/action 応答では次回ポーリングまで保持)。
+        pending_events: list[dict[str, Any]] = []
+        if getattr(engine, "pending_events", None):
+            pending_events = list(engine.pending_events)
+            if consume_pending_events:
+                engine.pending_events = []
+
         # プレイヤー属性
         attrs = {
             "str": p.attributes.strength,
@@ -654,6 +689,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             "entities": entities_data,
             "items": items_data,
             "floating_texts": floating_data,
+            "spell_fx": spell_fx_data,
             "particles": particle_data,
             "inventory": inv_items,
             "pet_inventory": pet_inv_items,
@@ -676,6 +712,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 else None
             ),
             "screen_shake": screen_shake,
+            "pending_events": pending_events,
         }
 
     def _handle_web_action(self, engine: Engine, action: str, data: dict[str, Any]) -> str:

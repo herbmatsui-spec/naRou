@@ -1,0 +1,73 @@
+{
+  "tile_size": 16,
+  "atlas_width": 128,
+  "atlas_height": 384,
+  "tiles": {
+    "FF6_HERO": {
+      "x": 0,
+      "y": 0,
+      "width": 48,
+      "height": 64,
+      "variants": 1,
+      "animated": true,
+      "frames": 3,
+      "fps": 8,
+      "directions": 4
+    },
+    "FF6_GOBLIN": {
+      "x": 0,
+      "y": 64,
+      "width": 32,
+      "height": 64,
+      "variants": 1,
+      "animated": true,
+      "frames": 2,
+      "fps": 6,
+      "directions": 4
+    },
+    "FF6_WOLF": {
+      "x": 32,
+      "y": 64,
+      "width": 32,
+      "height": 64,
+      "variants": 1,
+      "animated": true,
+      "frames": 2,
+      "fps": 6,
+      "directions": 4
+    },
+    "FF6_SKELETON": {
+      "x": 64,
+      "y": 64,
+      "width": 32,
+      "height": 64,
+      "variants": 1,
+      "animated": true,
+      "frames": 2,
+      "fps": 6,
+      "directions": 4
+    },
+    "FF6_BAT": {
+      "x": 96,
+      "y": 64,
+      "width": 32,
+      "height": 64,
+      "variants": 1,
+      "animated": true,
+      "frames": 2,
+      "fps": 8,
+      "directions": 4
+    },
+    "FF6_BOSS": {
+      "x": 0,
+      "y": 128,
+      "width": 128,
+      "height": 256,
+      "variants": 1,
+      "animated": true,
+      "frames": 2,
+      "fps": 4,
+      "directions": 4
+    }
+  }
+}

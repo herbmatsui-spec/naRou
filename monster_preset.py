@@ -10,20 +10,29 @@ if TYPE_CHECKING:
 
 
 class MonsterPreset:
-    # Map monster names to Tiny Rogue tile IDs
+    # Map monster names to Tiny Rogue tile IDs.
+    # FF6風スプライト (案2/案3) を優先し、未生成種はTiny Rogueへフォールバックする。
+    # FF6_* TileDef は assets/tiles/tileset_def_ff6_actors.json 断片由来で、
+    # メイン側マージ後のみアトラスに存在する。
     MONSTER_TILE_MAP = {
         "slime": "TR_MONSTER_01",
         "red_slime": "TR_MONSTER_01",
         "snail": "TR_MONSTER_02",
-        "goblin": "TR_MONSTER_01",
-        "kobold": "TR_MONSTER_02",
+        "goblin": "FF6_GOBLIN",
+        "kobold": "FF6_GOBLIN",
         "orc": "TR_MONSTER_03",
-        "hound_fire": "TR_MONSTER_VAR_01",
+        "wolf": "FF6_WOLF",
+        "hound_fire": "FF6_WOLF",
+        "skeleton": "FF6_SKELETON",
+        "bat": "FF6_BAT",
+        "giant_bat": "FF6_BAT",
         "rogue_thief": "TR_MONSTER_VAR_02",
         "novice_wizard": "TR_MONSTER_VAR_03",
         "minotaur": "TR_MONSTER_VAR_01",
         "lich": "TR_MONSTER_VAR_02",
         "dragon_red": "TR_MONSTER_VAR_03",
+        # 案3: 大型ボス (64x64)
+        "void_boss": "FF6_BOSS",
     }
 
     # Map pet types to Tiny Rogue tile IDs so pets render with real art

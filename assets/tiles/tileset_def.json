@@ -2149,6 +2149,251 @@
       ],
       "anchor_x": 0.5,
       "anchor_y": 1.0
+    },
+    "TILE_FF6_WALL_STONE": {
+      "file": "FF6_WALL_STONE",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 16,
+      "variant_width": 16,
+      "autotile": true
+    },
+    "TILE_FF6_WALL_IRON": {
+      "file": "FF6_WALL_IRON",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 16,
+      "variant_width": 16,
+      "autotile": true
+    },
+    "TILE_FF6_WALL_BLUE": {
+      "file": "FF6_WALL_BLUE",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 16,
+      "variant_width": 16,
+      "autotile": true
+    },
+    "TILE_FF6_FLOOR_COBBLE": {
+      "file": "FF6_FLOOR_COBBLE",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 4,
+      "variant_width": 16
+    },
+    "TILE_FF6_FLOOR_MOSS": {
+      "file": "FF6_FLOOR_MOSS",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 4,
+      "variant_width": 16
+    },
+    "TILE_FF6_FLOOR_WOOD": {
+      "file": "FF6_FLOOR_WOOD",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 4,
+      "variant_width": 16
+    },
+    "TILE_FF6_WATER": {
+      "file": "FF6_WATER",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "animated": true,
+      "frames": 4,
+      "fps": 4
+    },
+    "TILE_FF6_LAVA": {
+      "file": "FF6_LAVA",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "animated": true,
+      "frames": 2,
+      "fps": 3
+    },
+    "TILE_DOOR_CLOSED": {
+      "file": "FF6_DOOR_CLOSED",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 1,
+      "variant_width": 16
+    },
+    "TILE_DOOR_OPEN": {
+      "file": "FF6_DOOR_OPEN",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 1,
+      "variant_width": 16
+    },
+    "TILE_FF6_GRASS": {
+      "file": "FF6_GRASS",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 1,
+      "variant_width": 16
+    },
+    "TILE_FF6_FLOWER": {
+      "file": "FF6_FLOWER",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 1,
+      "variant_width": 16
+    },
+    "FF6_HERO": {
+      "file": "FF6_HERO",
+      "atlas_scale": "ff6_16",
+      "variants": 1,
+      "variant_width": 16,
+      "animated": true,
+      "frames": 3,
+      "fps": 8,
+      "frame_width": 16,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "FF6_GOBLIN": {
+      "file": "FF6_GOBLIN",
+      "atlas_scale": "ff6_16",
+      "variants": 1,
+      "variant_width": 16,
+      "animated": true,
+      "frames": 2,
+      "fps": 6,
+      "frame_width": 16,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "FF6_WOLF": {
+      "file": "FF6_WOLF",
+      "atlas_scale": "ff6_16",
+      "variants": 1,
+      "variant_width": 16,
+      "animated": true,
+      "frames": 2,
+      "fps": 6,
+      "frame_width": 16,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "FF6_SKELETON": {
+      "file": "FF6_SKELETON",
+      "atlas_scale": "ff6_16",
+      "variants": 1,
+      "variant_width": 16,
+      "animated": true,
+      "frames": 2,
+      "fps": 6,
+      "frame_width": 16,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "FF6_BAT": {
+      "file": "FF6_BAT",
+      "atlas_scale": "ff6_16",
+      "variants": 1,
+      "variant_width": 16,
+      "animated": true,
+      "frames": 2,
+      "fps": 8,
+      "frame_width": 16,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "FF6_BOSS": {
+      "file": "FF6_BOSS",
+      "atlas_scale": "ff6_16",
+      "variants": 1,
+      "variant_width": 64,
+      "animated": true,
+      "frames": 2,
+      "fps": 4,
+      "frame_width": 64,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
     }
   }
 }

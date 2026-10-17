@@ -8,6 +8,7 @@ dungeon_themes:
     name: "ゴブリンの洞窟"
     base_layout: "cavern"
     difficulty_modifier: 1.0
+    tile_palette: "stone"  # T11 案4: FF6風テラインの石造系
     enemy_pools:
       common:
         - "goblin"
@@ -30,6 +31,7 @@ dungeon_themes:
     name: "古代遺跡"
     base_layout: "dungeon_grid"
     difficulty_modifier: 1.5
+    tile_palette: "blue_stone"  # T11 案4: FF6風テラインの青石系
     enemy_pools:
       common:
         - "skeleton"
@@ -50,6 +52,7 @@ dungeon_themes:
     base_layout: "factory_grid"
     difficulty_modifier: 1.2
     depth_range: [1, 15]
+    tile_palette: "rust"  # T11 案4: スラム=錆鉄系 (FF6風テライン)
     enemy_pools:
       common:
         - "scrap_golem"
@@ -83,6 +86,7 @@ dungeon_themes:
     base_layout: "sewer_network"
     difficulty_modifier: 1.4
     depth_range: [16, 30]
+    tile_palette: "stone"  # T11 案4: FF6風テラインの石造系
     enemy_pools:
       common:
         - "neon_rat"
@@ -117,6 +121,7 @@ dungeon_themes:
     base_layout: "lab_complex"
     difficulty_modifier: 1.8
     depth_range: [31, 50]
+    tile_palette: "lava"  # T11 案4: 深層=熔岩系 (FF6風テライン)
     enemy_pools:
       common:
         - "test_subject"
@@ -151,6 +156,7 @@ dungeon_themes:
     base_layout: "core_chamber"
     difficulty_modifier: 2.5
     depth_range: [51, 99]
+    tile_palette: "blue_stone"  # T11 案4: 塔=青石系 (FF6風テライン)
     enemy_pools:
       common:
         - "babel_guardian"

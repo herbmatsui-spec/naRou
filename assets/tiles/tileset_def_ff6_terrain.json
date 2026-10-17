@@ -1,0 +1,143 @@
+{
+  "version": "1.0",
+  "tile_size": 16,
+  "tiles": {
+    "TILE_FF6_WALL_STONE": {
+      "file": "FF6_WALL_STONE",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 16,
+      "variant_width": 16,
+      "autotile": true
+    },
+    "TILE_FF6_WALL_IRON": {
+      "file": "FF6_WALL_IRON",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 16,
+      "variant_width": 16,
+      "autotile": true
+    },
+    "TILE_FF6_WALL_BLUE": {
+      "file": "FF6_WALL_BLUE",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 16,
+      "variant_width": 16,
+      "autotile": true
+    },
+    "TILE_FF6_FLOOR_COBBLE": {
+      "file": "FF6_FLOOR_COBBLE",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 4,
+      "variant_width": 16
+    },
+    "TILE_FF6_FLOOR_MOSS": {
+      "file": "FF6_FLOOR_MOSS",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 4,
+      "variant_width": 16
+    },
+    "TILE_FF6_FLOOR_WOOD": {
+      "file": "FF6_FLOOR_WOOD",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 4,
+      "variant_width": 16
+    },
+    "TILE_FF6_WATER": {
+      "file": "FF6_WATER",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "animated": true,
+      "frames": 4,
+      "fps": 4
+    },
+    "TILE_FF6_LAVA": {
+      "file": "FF6_LAVA",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "animated": true,
+      "frames": 2,
+      "fps": 3
+    },
+    "TILE_DOOR_CLOSED": {
+      "file": "FF6_DOOR_CLOSED",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 1,
+      "variant_width": 16
+    },
+    "TILE_DOOR_OPEN": {
+      "file": "FF6_DOOR_OPEN",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 1,
+      "variant_width": 16
+    },
+    "TILE_FF6_GRASS": {
+      "file": "FF6_GRASS",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 1,
+      "variant_width": 16
+    },
+    "TILE_FF6_FLOWER": {
+      "file": "FF6_FLOWER",
+      "atlas_scale": "ff6_16",
+      "frame_width": 16,
+      "directions": 1,
+      "states": [
+        "idle"
+      ],
+      "variants": 1,
+      "variant_width": 16
+    }
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "tile_size": 16,
+  "atlas_width": 256,
+  "atlas_height": 203,
+  "tiles": {
+    "FF6_WALL_STONE": {
+      "x": 0,
+      "y": 0,
+      "width": 16,
+      "height": 16,
+      "variants": 16,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1
+    },
+    "FF6_WALL_IRON": {
+      "x": 0,
+      "y": 17,
+      "width": 16,
+      "height": 16,
+      "variants": 16,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1
+    },
+    "FF6_WALL_BLUE": {
+      "x": 0,
+      "y": 34,
+      "width": 16,
+      "height": 16,
+      "variants": 16,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1
+    },
+    "FF6_FLOOR_COBBLE": {
+      "x": 0,
+      "y": 51,
+      "width": 16,
+      "height": 16,
+      "variants": 4,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1
+    },
+    "FF6_FLOOR_MOSS": {
+      "x": 0,
+      "y": 68,
+      "width": 16,
+      "height": 16,
+      "variants": 4,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1
+    },
+    "FF6_FLOOR_WOOD": {
+      "x": 0,
+      "y": 85,
+      "width": 16,
+      "height": 16,
+      "variants": 4,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1
+    },
+    "FF6_WATER": {
+      "x": 0,
+      "y": 102,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 4,
+      "fps": 4,
+      "directions": 1
+    },
+    "FF6_LAVA": {
+      "x": 0,
+      "y": 119,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": true,
+      "frames": 2,
+      "fps": 3,
+      "directions": 1
+    },
+    "FF6_DOOR_CLOSED": {
+      "x": 0,
+      "y": 136,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1
+    },
+    "FF6_DOOR_OPEN": {
+      "x": 0,
+      "y": 153,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1
+    },
+    "FF6_GRASS": {
+      "x": 0,
+      "y": 170,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1
+    },
+    "FF6_FLOWER": {
+      "x": 0,
+      "y": 187,
+      "width": 16,
+      "height": 16,
+      "variants": 1,
+      "animated": false,
+      "frames": 1,
+      "fps": 1,
+      "directions": 1
+    }
+  }
+}

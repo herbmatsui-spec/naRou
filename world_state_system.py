@@ -124,10 +124,11 @@ class WorldStateManager:
         if old_phase != phase:
             self.registry.get_template().current_phase = phase
             if engine:
-                # EventBusを通じてフェーズ変更を通知
-                from core_framework import EventBus
-
-                EventBus.publish("WORLD_PHASE_CHANGED", {"old": old_phase, "new": phase})
+                # engine毎のEventBusインスタンスでフェーズ変更を通知
+                # (旧実装はクラスに直接publishしていたため必ずAttributeErrorになっていた)
+                event_bus = getattr(engine, "event_bus", None)
+                if event_bus is not None:
+                    event_bus.publish("WORLD_PHASE_CHANGED", {"old": old_phase, "new": phase})
 
     def get_variable(self, player: Entity, var_name: str, default: Any = None) -> Any:
         """ワールド変数を取得 (Step 52)"""

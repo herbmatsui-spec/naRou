@@ -19,15 +19,7 @@ if TYPE_CHECKING:
     from secret_area_system import SecretArea
     from world_map_manager import WorldMapManager
 
-from constants import (
-    TILE_FALSE_WALL,
-    TILE_HIDDEN_DOOR,
-    TILE_SECRET_FLOOR,
-    TILE_STAIRS_DOWN,
-    TILE_STAIRS_UP,
-    TILE_VENT,
-    TILE_WALL,
-)
+from constants import TILE_STAIRS_DOWN, TILE_STAIRS_UP
 from feature_flags import is_enabled
 
 # ワールドレイヤーシステムのインポート（オプション）
@@ -49,6 +41,7 @@ class TileRegistry:
         self.atlas_16_meta: dict[str, Any] = {}
         self.atlas_32_meta: dict[str, Any] = {}
         self.atlas_tiny_rogue_meta: dict[str, Any] = {}
+        self.atlas_ff6_meta: dict[str, Any] = {}
         self.tile_size: int = 16
         self._load_definitions()
         self._load_atlas_metadata()
@@ -78,6 +71,18 @@ class TileRegistry:
             }
             self.tile_size = 16
 
+        # T11 案1: FF6風テラインの定義フラグメントをマージ (既存IDは上書きしない)
+        ff6_def_path = self.def_path.parent / "tileset_def_ff6_terrain.json"
+        if ff6_def_path.exists():
+            try:
+                with open(ff6_def_path) as f:
+                    ff6_tiles = json.load(f).get("tiles", {})
+                for tile_id, entry in ff6_tiles.items():
+                    self.defs["tiles"].setdefault(tile_id, entry)
+            except (json.JSONDecodeError, OSError):
+                # 壊れた断片定義は無視して続行
+                pass
+
     def _load_atlas_metadata(self) -> None:
         """Load atlas metadata JSON files"""
         atlas_dir = self.def_path.parent
@@ -101,6 +106,9 @@ class TileRegistry:
         # Load tiny_rogue_16 metadata
         self.atlas_tiny_rogue_meta = _safe_load(atlas_dir / "tileset_tiny_rogue_16x16.json")
 
+        # Load ff6_16 metadata (T11 案1: FF6風テライン)
+        self.atlas_ff6_meta = _safe_load(atlas_dir / "tileset_ff6_terrain_16x16.json")
+
     def get_uv(
         self, tile_id: str, variant: int = 0, scale: str = "16"
     ) -> tuple[int, int, int, int]:
@@ -110,7 +118,7 @@ class TileRegistry:
         Args:
             tile_id: The tile identifier (e.g., "TILE_WALL")
             variant: Variant index for tiles with multiple variants
-            scale: Either "16", "32", or "tiny_rogue_16" for tile scale
+            scale: "16", "32", "tiny_rogue_16", or "ff6_16" for tile scale
 
         Returns:
             Tuple of (x, y, width, height) in atlas pixels
@@ -131,6 +139,9 @@ class TileRegistry:
             tile_size = 32
         elif scale == "tiny_rogue_16":
             atlas_meta = self.atlas_tiny_rogue_meta
+            tile_size = 16
+        elif scale == "ff6_16":
+            atlas_meta = self.atlas_ff6_meta
             tile_size = 16
         else:
             atlas_meta = self.atlas_16_meta
@@ -172,6 +183,9 @@ class TileRegistry:
 
         # Apply variant offset
         variant_width = tile_def.get("variant_width", base_w)
+        # FF6スケールでは定義のバリアント数に折り返して範囲外参照を防ぐ
+        if scale == "ff6_16":
+            variant %= max(1, tile_def.get("variants", 1))
         variant_offset = variant * variant_width
 
         return (base_x + variant_offset, base_y, variant_width, base_h)
@@ -185,7 +199,7 @@ class TileRegistry:
         Args:
             tile_id: The tile identifier
             frame: Frame index
-            scale: Either "16" or "32" for tile scale
+            scale: "16", "32", "tiny_rogue_16", or "ff6_16" for tile scale
 
         Returns:
             Tuple of (x, y, width, height) in atlas pixels
@@ -292,6 +306,9 @@ class GameMap:
         # SkillEaterSecretAccess - 隠しタイル管理
         self.hidden_tiles: dict[tuple[int, int], dict[str, Any]] = {}
 
+        # T11 案4: テーマ別タイルパレット (FF6風テライン) — world_layer が設定し MapRenderer が参照する
+        self.tile_palette: str = "stone"
+
     def is_in_bounds(self, x: int, y: int) -> bool:
         return 0 <= x < self.width and 0 <= y < self.height
 
@@ -300,12 +317,16 @@ class GameMap:
             return False
         tile = self.tiles[x][y]
         # 隠し扉・偽の壁は発見済みなら通行可能
-        if tile in (TILE_HIDDEN_DOOR, TILE_FALSE_WALL):
+        # (タイルは文字列IDで格納されるため文字列で比較する)
+        if tile in ("TILE_HIDDEN_DOOR", "TILE_FALSE_WALL"):
             return True
         # 床下通路・換気ダクトは常に通行可能（発見後）
-        if tile in (TILE_SECRET_FLOOR, TILE_VENT):
+        if tile in ("TILE_SECRET_FLOOR", "TILE_VENT"):
             return True
-        return tile not in (TILE_WALL,)
+        # 閉扉は開けるまで通行不可
+        if tile == "TILE_DOOR_CLOSED":
+            return False
+        return tile != "TILE_WALL"
 
     def is_transparent(self, x: int, y: int) -> bool:
         """光を通すか（FOV計算用）"""
@@ -313,12 +334,16 @@ class GameMap:
             return False
         tile = self.tiles[x][y]
         # 隠し扉・偽の壁は発見済みでも光を通さない（壁扱い）
-        if tile in (TILE_HIDDEN_DOOR, TILE_FALSE_WALL):
+        # (タイルは文字列IDで格納されるため文字列で比較する)
+        if tile in ("TILE_HIDDEN_DOOR", "TILE_FALSE_WALL"):
             return False
         # 床下通路・換気ダクトは光を通す
-        if tile in (TILE_SECRET_FLOOR, TILE_VENT):
+        if tile in ("TILE_SECRET_FLOOR", "TILE_VENT"):
             return True
-        return tile != TILE_WALL
+        # 閉扉は視線を遮る
+        if tile == "TILE_DOOR_CLOSED":
+            return False
+        return tile != "TILE_WALL"
 
     def create_room(self, room: RectRoom) -> None:
         """部屋の内部を床にする (Tiny Rogue variants randomization)"""
@@ -490,6 +515,15 @@ class GameMap:
                         "description": random.choice(blood_messages),
                         "char": "🩸",
                     }
+
+        # T11 案2: 床に確率で草・花の装飾を配置 (FF6風テライン)
+        for room in self.rooms:
+            for x in range(room.x1 + 1, room.x2):
+                for y in range(room.y1 + 1, room.y2):
+                    if self.tiles[x][y] == "TILE_FLOOR" and random.random() < 0.06:
+                        self.tiles[x][y] = (
+                            "TILE_FF6_FLOWER" if random.random() < 0.3 else "TILE_FF6_GRASS"
+                        )
 
         # Calculate variants for autotiling
         self.calculate_all_variants()
@@ -669,8 +703,8 @@ class GameMap:
                         self.tiles[x][y] = "TILE_WALL"
                     else:
                         self.tiles[x][y] = "TILE_FLOOR"
-            # 扉を作る
-            self.tiles[int((h.x1 + h.x2) / 2)][h.y2 - 1] = "TILE_FLOOR"
+            # 扉を作る (T11 案2: 開扉タイルで出入口を表現)
+            self.tiles[int((h.x1 + h.x2) / 2)][h.y2 - 1] = "TILE_DOOR_OPEN"
 
         self.start_pos = (25, 20)
 

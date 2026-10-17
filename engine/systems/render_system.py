@@ -40,6 +40,21 @@ class RenderSystemHandler:
                 console.print(x=1, y=y, string=line, fg=(255, 255, 255))
                 y += 1
             return
+        if engine.game_state_data.game_state == "cutscene":
+            # FF6案6: カットシーン簡易分岐 (全画面暗転 + テロップ行表示)。
+            # 設定済みの復帰ターンを過ぎたら通常プレイへ戻す。
+            revert_turn = getattr(engine, "cutscene_revert_turn", None)
+            if revert_turn is not None and getattr(engine, "turns", 0) >= revert_turn:
+                engine.game_state_data.game_state = "play"
+                engine.cutscene_telop = []
+                return
+            telop_lines = getattr(engine, "cutscene_telop", [])
+            console.clear(bg=(0, 0, 0))
+            y = max(2, console.height // 2 - len(telop_lines))
+            for line in telop_lines:
+                console.print(x=2, y=y, string=line, fg=(255, 215, 0), bg=(0, 0, 0))
+                y += 2
+            return
         if engine.game_state_data.game_state == "game_over":
             console.print(x=1, y=1, string=GAME_OVER_TITLE, fg=(255, 50, 50))
             summary = getattr(engine, "run_summary", None)

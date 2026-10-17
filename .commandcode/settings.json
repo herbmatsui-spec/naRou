@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Shell(node --version)",
+      "Shell(pnpm:*)",
+      "Shell(ls:*)",
+      "Shell(corepack:*)",
+      "Shell(npm:*)",
+      "Shell(node date.js)",
+      "Shell(node date.js 2026-01-02 15:30)",
+      "Shell(node date.js --local 2026-01-02T15:30:00Z)",
+      "Shell(node date.js nope)",
+      "Shell(node date.js --help)"
+    ],
+    "deny": [],
+    "defaultMode": "default"
+  }
+}

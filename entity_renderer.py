@@ -101,15 +101,21 @@ class EntityRenderer:
             else:
                 return "ENEMY_GOBLIN"
 
+        # FF6風スプライト (案2/案3) はアトラス登録済みの場合のみ優先し、
+        # 未登録 (マージ前) なら従来タイルへフォールバックする
+        def _resolve_ff6(tile_id: str, fallback: str) -> str:
+            if cls._tile_atlas is not None and cls._tile_atlas.has_tile(tile_id):
+                return tile_id
+            return fallback
+
         if ent.is_player:
-            return "PLAYER"
+            return _resolve_ff6("FF6_HERO", "PLAYER")
         elif ent.is_pet:
-            if is_enabled("ENABLE_TINY_ROGUE_GFX"):
-                pet_type = getattr(ent, "pet_type", None)
-                return MonsterPreset.PET_TILE_MAP.get(pet_type, "PET")
-            return "PET"
+            pet_type = getattr(ent, "pet_type", None)
+            return MonsterPreset.PET_TILE_MAP.get(pet_type, "PET")
         elif hasattr(ent, "monster_type") and ent.monster_type:
-            return MonsterPreset.MONSTER_TILE_MAP.get(ent.monster_type, "ENEMY_GOBLIN")
+            mapped = MonsterPreset.MONSTER_TILE_MAP.get(ent.monster_type, "ENEMY_GOBLIN")
+            return _resolve_ff6(mapped, "ENEMY_GOBLIN")
         else:
             return "ENEMY_GOBLIN"
 

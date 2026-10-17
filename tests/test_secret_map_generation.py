@@ -5,12 +5,6 @@ from __future__ import annotations
 
 import unittest
 
-from constants import (
-    TILE_FALSE_WALL,
-    TILE_HIDDEN_DOOR,
-    TILE_SECRET_FLOOR,
-    TILE_VENT,
-)
 from map_engine import GameMap
 from secret_area_system import SECRET_REGISTRY, SecretArea
 
@@ -172,10 +166,11 @@ class TestMapGenerationSecrets(unittest.TestCase):
     def test_is_walkable_hidden_types(self):
         """隠しタイプが通行可能か"""
         self.game_map.tiles = [["TILE_WALL" for _ in range(80)] for _ in range(120)]
-        self.game_map.tiles[10][10] = TILE_HIDDEN_DOOR
-        self.game_map.tiles[20][20] = TILE_FALSE_WALL
-        self.game_map.tiles[30][30] = TILE_SECRET_FLOOR
-        self.game_map.tiles[40][40] = TILE_VENT
+        # タイルは文字列IDで格納される (map_engine.py の仕様に合わせ文字列で注入)
+        self.game_map.tiles[10][10] = "TILE_HIDDEN_DOOR"
+        self.game_map.tiles[20][20] = "TILE_FALSE_WALL"
+        self.game_map.tiles[30][30] = "TILE_SECRET_FLOOR"
+        self.game_map.tiles[40][40] = "TILE_VENT"
 
         # 発見済みなら通行可能
         self.assertTrue(self.game_map.is_walkable(10, 10))
@@ -186,10 +181,11 @@ class TestMapGenerationSecrets(unittest.TestCase):
     def test_is_transparent_hidden_types(self):
         """隠しタイプの透過性"""
         self.game_map.tiles = [["TILE_WALL" for _ in range(80)] for _ in range(120)]
-        self.game_map.tiles[10][10] = TILE_HIDDEN_DOOR
-        self.game_map.tiles[20][20] = TILE_FALSE_WALL
-        self.game_map.tiles[30][30] = TILE_SECRET_FLOOR
-        self.game_map.tiles[40][40] = TILE_VENT
+        # タイルは文字列IDで格納される (map_engine.py の仕様に合わせ文字列で注入)
+        self.game_map.tiles[10][10] = "TILE_HIDDEN_DOOR"
+        self.game_map.tiles[20][20] = "TILE_FALSE_WALL"
+        self.game_map.tiles[30][30] = "TILE_SECRET_FLOOR"
+        self.game_map.tiles[40][40] = "TILE_VENT"
 
         # 隠し扉・偽の壁は光を通さない
         self.assertFalse(self.game_map.is_transparent(10, 10))

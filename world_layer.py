@@ -125,6 +125,10 @@ class WorldLayer:
         # TODO: difficulty_modifier をトラップ配置へ適用する
         # ここで難易度に基づくトラップ配置等を行う
 
+        # T11 案4: テーマ別タイルパレット (FF6風テライン) を MapRenderer へ渡す
+        # (dungeon_themes.yaml の tile_palette キー: stone / rust / blue_stone / lava)
+        self.game_map.tile_palette = self.theme_data.get("tile_palette", "stone")
+
     def get_monster_pool(self) -> dict[str, list[str]]:
         """現在の層に基づくモンスタープールを取得"""
         return self.theme_data.get(

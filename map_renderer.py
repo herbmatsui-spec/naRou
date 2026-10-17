@@ -26,6 +26,59 @@ from map_engine import TILE_REGISTRY
 from render_context import RenderContext
 from ui_fx_systems import DynamicLighting
 
+# T11 案4: テーマ別タイルパレット → FF6風テラインへの置換表
+# (dungeon_themes.yaml の tile_palette キーに対応)
+_FF6_PALETTE_WALLS: dict[str, str] = {
+    "stone": "TILE_FF6_WALL_STONE",
+    "rust": "TILE_FF6_WALL_IRON",
+    "blue_stone": "TILE_FF6_WALL_BLUE",
+    "lava": "TILE_FF6_WALL_STONE",
+}
+_FF6_PALETTE_FLOORS: dict[str, str] = {
+    "stone": "TILE_FF6_FLOOR_COBBLE",
+    "rust": "TILE_FF6_FLOOR_COBBLE",
+    "blue_stone": "TILE_FF6_FLOOR_COBBLE",
+    "lava": "TILE_FF6_FLOOR_MOSS",
+}
+_FF6_PALETTE_LIQUIDS: dict[str, str] = {
+    "lava": "TILE_FF6_LAVA",
+}
+
+# 壁タイルとしてAO (環境遮蔽) を適用するID
+_WALL_TILE_IDS = frozenset(
+    {
+        "TILE_WALL",
+        "TILE_FF6_WALL_STONE",
+        "TILE_FF6_WALL_IRON",
+        "TILE_FF6_WALL_BLUE",
+        "TR_WALL_01",
+        "TR_WALL_02",
+        "TR_WALL_03",
+        "TR_WALL_04",
+        "TR_WALL_05",
+        "TR_WALL_06",
+        "TR_WALL_07",
+        "TR_WALL_08",
+        "TR_WALL_09",
+        "TR_WALL_10",
+        "TR_WALL_11",
+        "TR_WALL_12",
+    }
+)
+
+
+def _resolve_themed_tile(tile_id: str, palette: str | None) -> str:
+    """テーマパレットに応じて汎用タイルIDをFF6風テラインIDへ置換する"""
+    if not palette:
+        return tile_id
+    if tile_id == "TILE_WALL":
+        return _FF6_PALETTE_WALLS.get(palette, tile_id)
+    if tile_id == "TILE_FLOOR":
+        return _FF6_PALETTE_FLOORS.get(palette, tile_id)
+    if tile_id == "TILE_WATER":
+        return _FF6_PALETTE_LIQUIDS.get(palette, tile_id)
+    return tile_id
+
 
 class ParallaxBackground:
     """パララックス背景レイヤー (Tiny Rogue tilemap_packed.png使用)"""
@@ -103,6 +156,7 @@ class MapRenderer:
     # Cached atlases to avoid reloading each frame
     _atlas_16: tcod.image.Image | None = None
     _atlas_32: tcod.image.Image | None = None
+    _atlas_ff6: tcod.image.Image | None = None
 
     @classmethod
     def _load_atlases(cls) -> None:
@@ -113,6 +167,14 @@ class MapRenderer:
                 cls._atlas_32 = tcod.image.Image.load("assets/tiles/tileset_32x32.png")
             except Exception as e:
                 logger.warning("Failed to load tileset atlas images: %s", e)
+        if cls._atlas_ff6 is None:
+            try:
+                # T11 案1: FF6風テラインアトラス (読み込み失敗時は16x16にフォールバック)
+                cls._atlas_ff6 = tcod.image.Image.load(
+                    "assets/tiles/tileset_ff6_terrain_16x16.png"
+                )
+            except Exception as e:
+                logger.warning("Failed to load FF6 terrain atlas image: %s", e)
 
     @classmethod
     def render(
@@ -128,13 +190,20 @@ class MapRenderer:
         use_pixel_art = context.game_map.use_pixel_art
         atlas_16: tcod.image.Image | None = None
         atlas_32: tcod.image.Image | None = None
+        atlas_ff6: tcod.image.Image | None = None
         if use_pixel_art:
             cls._load_atlases()
             atlas_16 = cls._atlas_16
             atlas_32 = cls._atlas_32
+            atlas_ff6 = cls._atlas_ff6
             # アトラスロードに失敗した場合はフォールバック
             if atlas_16 is None or atlas_32 is None:
                 use_pixel_art = False
+            if atlas_ff6 is None:
+                atlas_ff6 = atlas_16
+
+        # T11 案4: テーマ別タイルパレット (world_layer から GameMap 経由で受け取る)
+        tile_palette = getattr(context.game_map, "tile_palette", None)
 
         # カメラオフセット計算 (プレイヤー追従) - 呼び出し側から提供されない場合は内部で計算
         if cam_x is None or cam_y is None:
@@ -158,6 +227,7 @@ class MapRenderer:
                         if use_pixel_art and atlas_16 is not None and atlas_32 is not None:
                             # Pixel art rendering using atlas
                             tile_id = context.game_map.tiles[map_x][map_y]
+                            tile_id = _resolve_themed_tile(tile_id, tile_palette)
 
                             # Get variant for autotiling/animation
                             variant = context.game_map.tile_variants.get((map_x, map_y), 0)
@@ -168,9 +238,13 @@ class MapRenderer:
                                 anim = context.game_map.tile_animations[(map_x, map_y)]
                                 frame = anim.get("frame", 0)
 
-                            # Determine scale (could be made configurable)
-                            scale = "16"  # Default to 16x16
-                            tile_size = 16 if scale == "16" else 32
+                            # T11 案1: タイル定義のatlas_scaleに応じてFF6アトラスへルーティング
+                            tile_def = TILE_REGISTRY.defs.get("tiles", {}).get(tile_id, {})
+                            if tile_def.get("atlas_scale") == "ff6_16" and atlas_ff6 is not None:
+                                scale = "ff6_16"
+                            else:
+                                scale = "16"  # Default to 16x16
+                            tile_size = 16
 
                             # Get UV coordinates from atlas
                             if context.game_map.tile_animations.get((map_x, map_y)):
@@ -183,7 +257,9 @@ class MapRenderer:
                                 ux, uy, uw, uh = TILE_REGISTRY.get_uv(tile_id, variant, scale)
 
                             # Blit from atlas
-                            atlas_source = atlas_16 if scale == "16" else atlas_32
+                            atlas_source = (
+                                atlas_ff6 if scale == "ff6_16" else atlas_16
+                            )
                             atlas_source.blit(
                                 console,
                                 vx * tile_size,
@@ -206,43 +282,14 @@ class MapRenderer:
                             brightness = (lit_col[0] + lit_col[1] + lit_col[2]) / (3 * 255.0)
 
                             # Ambient occlusion for walls: darken corners/edges
-                            if tile_id in (
-                                "TILE_WALL",
-                                "TR_WALL_01",
-                                "TR_WALL_02",
-                                "TR_WALL_03",
-                                "TR_WALL_04",
-                                "TR_WALL_05",
-                                "TR_WALL_06",
-                                "TR_WALL_07",
-                                "TR_WALL_08",
-                                "TR_WALL_09",
-                                "TR_WALL_10",
-                                "TR_WALL_11",
-                                "TR_WALL_12",
-                            ):
+                            if tile_id in _WALL_TILE_IDS:
                                 # Check 4 neighbors for AO
                                 ao_factor = 1.0
                                 wall_neighbors = 0
                                 for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
                                     nx, ny = map_x + dx, map_y + dy
                                     if 0 <= nx < MAP_WIDTH and 0 <= ny < MAP_HEIGHT:
-                                        nt = context.game_map.tiles[nx][ny]
-                                        if nt in (
-                                            "TILE_WALL",
-                                            "TR_WALL_01",
-                                            "TR_WALL_02",
-                                            "TR_WALL_03",
-                                            "TR_WALL_04",
-                                            "TR_WALL_05",
-                                            "TR_WALL_06",
-                                            "TR_WALL_07",
-                                            "TR_WALL_08",
-                                            "TR_WALL_09",
-                                            "TR_WALL_10",
-                                            "TR_WALL_11",
-                                            "TR_WALL_12",
-                                        ):
+                                        if context.game_map.tiles[nx][ny] in _WALL_TILE_IDS:
                                             wall_neighbors += 1
                                 # Darken based on how many wall neighbors (more neighbors = darker corner)
                                 ao_factor = max(0.6, 1.0 - wall_neighbors * 0.1)
@@ -304,17 +351,24 @@ class MapRenderer:
                         if use_pixel_art and atlas_16 is not None and atlas_32 is not None:
                             # Pixel art rendering for explored tiles
                             tile_id = context.game_map.tiles[map_x][map_y]
+                            tile_id = _resolve_themed_tile(tile_id, tile_palette)
                             variant = context.game_map.tile_variants.get((map_x, map_y), 0)
 
-                            # Determine scale
-                            scale = "16"
-                            tile_size = 16 if scale == "16" else 32
+                            # T11 案1: タイル定義のatlas_scaleに応じてFF6アトラスへルーティング
+                            tile_def = TILE_REGISTRY.defs.get("tiles", {}).get(tile_id, {})
+                            if tile_def.get("atlas_scale") == "ff6_16" and atlas_ff6 is not None:
+                                scale = "ff6_16"
+                            else:
+                                scale = "16"
+                            tile_size = 16
 
                             # Get UV coordinates from atlas
                             ux, uy, uw, uh = TILE_REGISTRY.get_uv(tile_id, variant, scale)
 
                             # Blit explored tile from atlas
-                            atlas_source = atlas_16 if scale == "16" else atlas_32
+                            atlas_source = (
+                                atlas_ff6 if scale == "ff6_16" else atlas_16
+                            )
                             atlas_source.blit(
                                 console,
                                 vx * tile_size,

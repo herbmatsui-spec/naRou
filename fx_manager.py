@@ -21,6 +21,8 @@ class FXManager:
     def __init__(self, event_bus: EventBus | None = None):
         self.floating_texts: list[FloatingText] = []
         self.particles: list[Particle] = []
+        self.spell_fx: list[dict[str, Any]] = []  # WebクライアントemitSpell連携用の詠唱イベント
+        self._spell_fx_seq = 0
         self.screen_shake = ScreenShake()
         self.glitch_duration: int = 0  # Proposal 7: 次元干渉グリッチ残りフレーム
         self.hit_stop_frames: int = 0  # ヒットストップ残りフレーム
@@ -28,6 +30,27 @@ class FXManager:
 
         if self.event_bus:
             self._register_event_handlers()
+
+    def record_spell_cast(self, spell_id: str, fx_element: str, x: float, y: float, life: int = 20) -> None:
+        """Record a spell cast event for the web client's emitSpell trigger.
+
+        Args:
+            spell_id: 呪文ID (data/spells.yaml のキー)
+            fx_element: クライアント側エフェクト種別 (fire/ice/lightning/heal/teleport/magic)
+            x, y: ワールド座標
+            life: イベントの残存フレーム数
+        """
+        self._spell_fx_seq += 1
+        self.spell_fx.append(
+            {
+                "id": self._spell_fx_seq,
+                "spell": spell_id,
+                "element": fx_element,
+                "x": x,
+                "y": y,
+                "life": life,
+            }
+        )
 
     def _register_event_handlers(self) -> None:
         self.event_bus.subscribe("damage_dealt", self._on_damage_dealt)
@@ -481,6 +504,24 @@ class FXManager:
             vy=random.uniform(-0.4, 0.4),
         )
 
+    def spawn_pillar_of_light(self, x: float, y: float, count: int = 12) -> None:
+        """金色の縦方向上昇パーティクルで光の柱を展開する (FF6案9: レベルアップ演出)"""
+        for i in range(count):
+            self.particles.append(
+                Particle(
+                    char="✦",
+                    x=x + random.uniform(-0.3, 0.3),
+                    y=y - i * 0.4,
+                    color=(255, 215, 0),
+                    life=6 + i % 4,
+                    vx=random.uniform(-0.05, 0.05),
+                    vy=random.uniform(-0.5, -0.25),
+                )
+            )
+        # 柱の根元に衝撃波を重ねて発光感を強調 (trigger_flash と同系の併用パターン)
+        self.spawn_shockwave(x, y, color=(255, 230, 120))
+        self.spawn_sparkle_effect(x, y, count=6)
+
     def spawn_explosion_effect(self, x: float, y: float, count: int = 12) -> None:
         """Spawn explosion effect using TR_EFFECT_08 (explosion)."""
         self.spawn_tile_effect(
@@ -633,6 +674,9 @@ class FXManager:
 
         self.floating_texts = [ft for ft in self.floating_texts if ft.update()]
         self.particles = [p for p in self.particles if p.update()]
+        for spell_fx in self.spell_fx:
+            spell_fx["life"] -= 1
+        self.spell_fx = [fx for fx in self.spell_fx if fx["life"] > 0]
         self.screen_shake.update()
         if self.glitch_duration > 0:
             self.glitch_duration -= 1

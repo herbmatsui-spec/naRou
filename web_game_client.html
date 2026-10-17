@@ -21,6 +21,9 @@
   <script type="module" src="demos/lib/FluidRenderer.js"></script>
   <script type="module" src="demos/lib/DecalSystem.js"></script>
   <script type="module" src="demos/lib/BoidSystem.js"></script>
+  <script type="module" src="demos/lib/BattleBackdrop.js"></script>
+  <script type="module" src="demos/lib/WorldMapOverlay.js"></script>
+  <script type="module" src="demos/lib/CutsceneDirector.js"></script>
   <style>
     /* Brand UI variables and theme variants are provided by web/theme.css
        (auto-generated from design_tokens.json). Theme switching sets
@@ -718,6 +721,20 @@
             osc.start(now + idx * 0.08);
             osc.stop(now + idx * 0.08 + 0.3);
           });
+        } else if (type === "fanfare") {
+          // 5音アルペジオ (サーバー側 sound_manager.py の fanfare と同一音列)
+          [523, 659, 784, 1046, 1318].forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = "square";
+            osc.frequency.setValueAtTime(freq, now + idx * 0.09);
+            gain.gain.setValueAtTime(0.15, now + idx * 0.09);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.45);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + idx * 0.09);
+            osc.stop(now + idx * 0.09 + 0.45);
+          });
         }
       },
 
@@ -886,6 +903,10 @@
     updateBackground();
     backgroundLayer.addChild(backgroundGraphics);
 
+    // T11 案5/案8: フロアテーマ別戦闘バックドロップ & ワールドマップオーバーレイ (Mキー)
+    const battleBackdrop = window.BattleBackdrop ? new BattleBackdrop(pixiApp, backgroundLayer, canvas.width, canvas.height) : null;
+    const worldMapOverlay = window.WorldMapOverlay ? new WorldMapOverlay(pixiApp) : null;
+
     // ステージにレイヤーを追加（下から上へ）
     pixiApp.stage.addChild(backgroundLayer);
     pixiApp.stage.addChild(tileLayer);
@@ -912,6 +933,9 @@
 
     // スクリーンシェイクを初期化
     const screenShake = new ScreenShake(pixiApp.stage, 5, 0.5);
+
+    // カットシーン演出ディレクターを初期化 (FF6案6: DOMオーバーレイ式)
+    const cutsceneDirector = (typeof CutsceneDirector !== "undefined") ? new CutsceneDirector() : null;
 
     // リサイズ処理
     function resize() {
@@ -996,6 +1020,19 @@
             '~': 'TILE_WATER',
             '^': 'TILE_TRAP',
             '⛩️': 'TILE_FLOOR',  // 祭壇は床扱い
+            // T11 案1: FF6風テライン（サーバーはタイルID文字列を送るため同一IDへマップ）
+            'TILE_FF6_WALL_STONE': 'TILE_FF6_WALL_STONE',
+            'TILE_FF6_WALL_IRON': 'TILE_FF6_WALL_IRON',
+            'TILE_FF6_WALL_BLUE': 'TILE_FF6_WALL_BLUE',
+            'TILE_FF6_FLOOR_COBBLE': 'TILE_FF6_FLOOR_COBBLE',
+            'TILE_FF6_FLOOR_MOSS': 'TILE_FF6_FLOOR_MOSS',
+            'TILE_FF6_FLOOR_WOOD': 'TILE_FF6_FLOOR_WOOD',
+            'TILE_FF6_WATER': 'TILE_FF6_WATER',
+            'TILE_FF6_LAVA': 'TILE_FF6_LAVA',
+            'TILE_FF6_GRASS': 'TILE_FF6_GRASS',
+            'TILE_FF6_FLOWER': 'TILE_FF6_FLOWER',
+            'TILE_DOOR_CLOSED': 'TILE_DOOR_CLOSED',
+            'TILE_DOOR_OPEN': 'TILE_DOOR_OPEN',
         };
         return map[mapTile] || 'TILE_FLOOR';
     }
@@ -1095,8 +1132,7 @@
     let animTime = 0;
     let prevPlayerPos = null;
     let prevPlayerHp = null;
-
-    const TILE_SIZE = 24;
+    let prevPlayerLevel = null; // レベルアップ差分検知用 (FF6案9)
 
     function render() {
       animTime += 0.05;
@@ -1109,6 +1145,9 @@
 
       // ポストプロセスを更新
       postProcessManager.update(0.016);
+
+      // T11 案5: バックドロップ更新（星の瞬き・リサイズ追従）
+      if (battleBackdrop) battleBackdrop.update(0.016);
 
       // スクリーンシェイクを更新
       screenShake.update(0.016);
@@ -1195,6 +1234,8 @@
         }
 
         // 1. タイル描画 (床・壁・階段) - TileAtlas使用
+        // T11 案5: ダンジョン階層からバックドロップのテーマを切り替え
+        if (battleBackdrop) battleBackdrop.setTheme(gameState.dungeon_level || 0);
         for (let y = 0; y < viewH; y++) {
           for (let x = 0; x < viewW; x++) {
             const mapTile = map[y][x];
@@ -1302,10 +1343,33 @@
           }
         }
 
+        // プレイヤーのレベルアップ検知 (FF6案9: 光の柱演出)
+        if (player && prevPlayerLevel !== null && player.level > prevPlayerLevel) {
+          // 金色のマジックパーティクルが上昇する光の柱
+          particleSystem.emitEffect('level_up',
+            offsetX + player.x * TILE_SIZE,
+            offsetY + player.y * TILE_SIZE,
+            10
+          );
+          showFloatText('LEVEL UP!',
+            offsetX + player.x * TILE_SIZE,
+            offsetY + player.y * TILE_SIZE - 40,
+            '#ffd700');
+          if (postProcessManager) {
+            postProcessManager.addShockwave(
+              offsetX + (player.x + 0.5) * TILE_SIZE,
+              offsetY + (player.y + 0.5) * TILE_SIZE,
+              160, 0.6
+            );
+          }
+          SoundEngine.playSE('fanfare');
+        }
+
         // プレイヤー位置を記録
         if (player) {
           prevPlayerPos = { x: player.x, y: player.y };
           prevPlayerHp = player.hp;
+          prevPlayerLevel = player.level;
         }
 
         // 前フレームエンティティ保存（向き推定用）
@@ -1539,10 +1603,23 @@ sprite._playing = false;
         const res = await fetch("/api/state");
         if (res.ok) {
           gameState = await res.json();
+          consumePendingEvents(gameState);
           updateUI(gameState);
         }
       } catch (err) {
         console.error("State sync failed:", err);
+      }
+    }
+
+    // pending_events消費: サーバー発の演出イベントをクライアント演出へ振り分け (FF6案6)
+    // レベルアップ演出は prevPlayerLevel 差分検知が担うため、ここではカットシーンのみ処理する
+    function consumePendingEvents(state) {
+      if (!Array.isArray(state.pending_events) || state.pending_events.length === 0) return;
+      for (const ev of state.pending_events) {
+        if (ev && ev.type === "cutscene" && cutsceneDirector &&
+            Array.isArray(ev.sequence) && ev.sequence.length > 0) {
+          cutsceneDirector.play(ev.sequence);
+        }
       }
     }
     setInterval(fetchState, 300);
@@ -1676,6 +1753,11 @@ sprite._playing = false;
 
     // ==================== KEYBOARD CONTROLS ====================
     window.addEventListener("keydown", (e) => {
+      // T11 案8: Mキーでワールドマップオーバーレイ / Escで閉じる
+      if (worldMapOverlay) {
+        if (e.code === "KeyM") { e.preventDefault(); worldMapOverlay.toggle(); return; }
+        if (e.code === "Escape" && worldMapOverlay.isOpen()) { worldMapOverlay.close(); return; }
+      }
       const keyMap = {
         "ArrowUp": "up", "KeyW": "up", "Numpad8": "up",
         "ArrowDown": "down", "KeyS": "down", "Numpad2": "down",

@@ -127,6 +127,7 @@ export class ParticleSystem {
             rotation: 0,
             rotationSpeed: 0,
             gravity: 0.1,
+            blendMode: PIXI.BLEND_MODES.ADD,
             active: false
         };
     }
@@ -167,6 +168,8 @@ export class ParticleSystem {
         // グラフィックを更新
         particle.graphic.clear();
         particle.graphic.beginFill(particle.color, particle.alpha);
+        // 加算ブレンド (案4: フレア/アルテマ級の発光表現)
+        particle.graphic.blendMode = particle.blendMode || PIXI.BLEND_MODES.ADD;
 
         // 形状に応じて描画
         const shape = config.shape || 'circle';

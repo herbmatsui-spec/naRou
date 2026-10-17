@@ -312,9 +312,60 @@ class MainQuestSystem:
         if quest.next_quest_id and quest.next_quest_id in self.quests:
             self.quests[quest.next_quest_id].status = QuestStatus.AVAILABLE
 
+        # クエスト完了カットシーン (FF6案6)
+        self._fire_cutscene_event(quest, engine)
+
         # クエスト完了時にナラティブDAGがある場合は自動開始
         if quest.narrative_dag_id and engine:
             self._start_quest_narrative(quest.narrative_dag_id, player, engine)
+
+    def _fire_cutscene_event(self, quest: MainQuest, engine: Engine | None) -> None:
+        """クエスト完了カットシーンを発火 (FF6案6)
+
+        tcod版は game_state を "cutscene" に切替え、render_system のカットシーン分岐が
+        全画面暗転 + テロップを描画する (数ターン行動すると通常プレイへ復帰)。
+        Web版は pending_events にカットシーン開始イベントを積み、
+        web_server._serialize_engine_state が /api/state 応答でクライアントへ配信する。
+        """
+        if engine is None:
+            return
+
+        sequence = self._build_cutscene_sequence(quest)
+
+        # tcod版: カットシーン状態へ切替
+        try:
+            engine.game_state = "cutscene"
+            engine.cutscene_telop = [step["text"] for step in sequence]
+            engine.cutscene_revert_turn = getattr(engine, "turns", 0) + 3
+        except Exception:
+            logger.exception("カットシーン状態設定失敗")
+
+        # Web版: pending_events への追加
+        events = getattr(engine, "pending_events", None)
+        if events is None:
+            events = []
+            engine.pending_events = events
+        events.append({"type": "cutscene", "source": "main_quest", "sequence": sequence})
+
+    def _build_cutscene_sequence(self, quest: MainQuest) -> list[dict[str, Any]]:
+        """クエスト完了カットシーンのステップ列 (text/background/duration) を生成"""
+        sequence = [
+            {
+                "text": f"★メインクエスト【{quest.title}】 完了！",
+                "background": "#000000",
+                "duration": 2600,
+            }
+        ]
+        next_quest = self.quests.get(quest.next_quest_id) if quest.next_quest_id else None
+        if next_quest is not None:
+            sequence.append(
+                {
+                    "text": f"新たなクエスト【{next_quest.title}】が解放された……",
+                    "background": "#101528",
+                    "duration": 2400,
+                }
+            )
+        return sequence
 
     def _start_quest_narrative(self, dag_id: str, player: Entity, engine: Engine) -> list[str]:
         """クエスト関連ナラティブを開始"""

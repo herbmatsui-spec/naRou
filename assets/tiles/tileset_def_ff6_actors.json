@@ -1,0 +1,114 @@
+{
+  "version": "ff6-actors-1",
+  "tile_size": 16,
+  "tiles": {
+    "FF6_HERO": {
+      "file": "FF6_HERO",
+      "atlas_scale": "ff6_16",
+      "variants": 1,
+      "variant_width": 16,
+      "animated": true,
+      "frames": 3,
+      "fps": 8,
+      "frame_width": 16,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "FF6_GOBLIN": {
+      "file": "FF6_GOBLIN",
+      "atlas_scale": "ff6_16",
+      "variants": 1,
+      "variant_width": 16,
+      "animated": true,
+      "frames": 2,
+      "fps": 6,
+      "frame_width": 16,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "FF6_WOLF": {
+      "file": "FF6_WOLF",
+      "atlas_scale": "ff6_16",
+      "variants": 1,
+      "variant_width": 16,
+      "animated": true,
+      "frames": 2,
+      "fps": 6,
+      "frame_width": 16,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "FF6_SKELETON": {
+      "file": "FF6_SKELETON",
+      "atlas_scale": "ff6_16",
+      "variants": 1,
+      "variant_width": 16,
+      "animated": true,
+      "frames": 2,
+      "fps": 6,
+      "frame_width": 16,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "FF6_BAT": {
+      "file": "FF6_BAT",
+      "atlas_scale": "ff6_16",
+      "variants": 1,
+      "variant_width": 16,
+      "animated": true,
+      "frames": 2,
+      "fps": 8,
+      "frame_width": 16,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    },
+    "FF6_BOSS": {
+      "file": "FF6_BOSS",
+      "atlas_scale": "ff6_16",
+      "variants": 1,
+      "variant_width": 64,
+      "animated": true,
+      "frames": 2,
+      "fps": 4,
+      "frame_width": 64,
+      "directions": 4,
+      "states": [
+        "idle",
+        "walk",
+        "attack"
+      ],
+      "anchor_x": 0.5,
+      "anchor_y": 1.0
+    }
+  }
+}

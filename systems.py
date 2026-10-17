@@ -130,8 +130,58 @@ def cast(spell_id: str, caster: Entity, target: Entity | None = None, engine=Non
         caster.hp -= backlash
         return False, f"詠唱失敗！魔力暴走で{backlash}ダメージ！"
 
+    # 案4: element別のFX接続 (MP消費後・効果実行前)
+    fx_manager = getattr(engine, "fx_manager", None) if engine is not None else None
+    if fx_manager is not None:
+        _spawn_spell_fx(fx_manager, spell_id, spell_data, caster, target)
+
     # 呪文効果実行
     return _execute_spell_effect(spell_id, spell_data, caster, target, engine)
+
+
+# element → FXManager spawn系APIの対応表 (案4)
+_SPELL_FX_SPAWNERS = {
+    "fire": "spawn_fire_effect",
+    "cold": "spawn_ice_effect",
+    "lightning": "spawn_lightning_effect",
+    "heal": "spawn_heal_effect",
+    "utility": "spawn_teleport_effect",
+}
+
+# WebクライアントのemitSpell (ParticleSystem) に渡すエフェクト種別
+_SPELL_FX_ELEMENT_MAP = {
+    "fire": "fire",
+    "cold": "ice",
+    "lightning": "lightning",
+    "heal": "heal",
+    "utility": "teleport",
+}
+
+
+def _spawn_spell_fx(fx_manager, spell_id: str, spell_data: dict, caster: Entity, target: Entity) -> None:
+    """詠唱成功時のelement別エフェクト生成 (既存spawn系API利用、Web連携含む)。
+
+    Note:
+        engine.fx_manager はテスト等でduck-typingされるため、
+        属性欠け時は個別にスキップする。
+    """
+    element = spell_data.get("element", "magic")
+
+    # 詠唱者位置の共通エフェクト
+    spawn_magic_cast = getattr(fx_manager, "spawn_magic_cast", None)
+    if callable(spawn_magic_cast):
+        spawn_magic_cast(caster.x, caster.y)
+
+    # element別の着弾エフェクト
+    spawner = getattr(fx_manager, _SPELL_FX_SPAWNERS.get(element, ""), None)
+    if callable(spawner):
+        spawner(target.x, target.y)
+
+    # Webクライアント向けの詠唱イベント記録 (spell IDベーストリガー用)
+    record_spell_cast = getattr(fx_manager, "record_spell_cast", None)
+    if callable(record_spell_cast):
+        fx_element = _SPELL_FX_ELEMENT_MAP.get(element, "magic")
+        record_spell_cast(spell_id, fx_element, target.x, target.y)
 
 
 def _execute_spell_effect(spell_id: str, spell_data: dict, caster: Entity, target: Entity, engine=None) -> tuple[bool, str]:
@@ -830,19 +880,27 @@ class Quest:
 
 class MonsterPreset:
     # Map monster names to Tiny Rogue tile IDs
+    # FF6風スプライト (案2/案3) を優先し、未生成種はTiny Rogueへフォールバックする。
+    # 正規ソースは naRou/monster_preset.py の MONSTER_TILE_MAP (同一内容を同期)。
     MONSTER_TILE_MAP = {
         "slime": "TR_MONSTER_01",
         "red_slime": "TR_MONSTER_01",
         "snail": "TR_MONSTER_02",
-        "goblin": "TR_MONSTER_01",
-        "kobold": "TR_MONSTER_02",
+        "goblin": "FF6_GOBLIN",
+        "kobold": "FF6_GOBLIN",
         "orc": "TR_MONSTER_03",
-        "hound_fire": "TR_MONSTER_VAR_01",
+        "wolf": "FF6_WOLF",
+        "hound_fire": "FF6_WOLF",
+        "skeleton": "FF6_SKELETON",
+        "bat": "FF6_BAT",
+        "giant_bat": "FF6_BAT",
         "rogue_thief": "TR_MONSTER_VAR_02",
         "novice_wizard": "TR_MONSTER_VAR_03",
         "minotaur": "TR_MONSTER_VAR_01",
         "lich": "TR_MONSTER_VAR_02",
         "dragon_red": "TR_MONSTER_VAR_03",
+        # 案3: 大型ボス (64x64)
+        "void_boss": "FF6_BOSS",
     }
 
     # Map pet types to Tiny Rogue tile IDs so pets render with real art

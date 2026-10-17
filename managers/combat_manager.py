@@ -46,8 +46,21 @@ class CombatManager:
             )
             base_exp = max(1, int(base_exp * penalty))
 
+        prev_level = engine.player.level
         for l in engine.player.gain_exp(base_exp):
             engine.log(l, (255, 255, 100))
+        if engine.player.level > prev_level:
+            # レベルアップ演出: 光の柱 + ファンファーレ (FF6案9)
+            engine.fx_manager.spawn_pillar_of_light(engine.player.x, engine.player.y)
+            from sound_manager import SoundManager
+
+            SoundManager.play_se("fanfare")
+            # Web版への配信チャネル (web_server._serialize_engine_state が消費)
+            events = getattr(engine, "pending_events", None)
+            if events is None:
+                events = []
+                engine.pending_events = events
+            events.append({"type": "level_up", "level": engine.player.level})
         for q in engine.quests:
             if q.target_monster in entity.name and not q.completed:
                 q.current_count += 1
