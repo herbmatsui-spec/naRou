@@ -316,3 +316,39 @@ class ProceduralDungeonGenerator:
     def generate(self, *args, **kwargs) -> dict[str, Any]:
         """generate_dungeon のエイリアス"""
         return self.generate_dungeon(*args, **kwargs)
+
+    # T37 案B: タイルベースダンジョン生成 (多様性オプション)
+    def generate_dungeon_map(
+        self,
+        width: int = 48,
+        height: int = 36,
+        depth: int = 1,
+        use_variety: bool = True,
+        door_chance: float = 0.5,
+        hidden_trap_ratio: float = 0.3,
+    ) -> Any:
+        """深度に応じたスケールでタイルベースのダンジョンマップを生成する (T37 案B)
+
+        world_layer.WorldLayer._apply_theme_to_map と同一の深度スケール式
+        (部屋数 = 20 + depth//10、部屋サイズ = 4 + depth//20 〜 10 + depth//15)
+        を用いて GameMap.generate_dungeon を呼び出す。部屋形状/廊下/扉/トラップの
+        多様性は GameMap 側のオプション (use_variety / door_chance /
+        hidden_trap_ratio) に委譲する。
+        """
+        from map_engine import GameMap
+
+        max_rooms = 20 + depth // 10
+        room_min_size = 4 + depth // 20
+        room_max_size = 10 + depth // 15
+        room_min_size = min(room_min_size, room_max_size)
+
+        game_map = GameMap(width, height, "dungeon", depth)
+        game_map.generate_dungeon(
+            max_rooms=max_rooms,
+            room_min_size=room_min_size,
+            room_max_size=room_max_size,
+            use_variety=use_variety,
+            door_chance=door_chance,
+            hidden_trap_ratio=hidden_trap_ratio,
+        )
+        return game_map

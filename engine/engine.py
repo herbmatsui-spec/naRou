@@ -137,6 +137,8 @@ class Engine:
         "TILE_STAIRS_UP": ("<", (255, 215, 0)),
         "TILE_WATER": ("~", (40, 120, 220)),
         "TILE_TRAP": ("^", (220, 80, 80)),
+        "TILE_DOOR_CLOSED": ("+", (180, 140, 60)),
+        "TILE_DOOR_OPEN": ("'", (180, 140, 60)),
     }
 
     def __init__(self, renderer: Renderer | None = None, kernel: "Kernel | None" = None, headless: bool = False):

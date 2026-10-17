@@ -194,7 +194,7 @@ class GameplayLoop:
 
     def player_act(self, dx: int, dy: int) -> bool:
 
-        from constants import ENERGY_THRESHOLD, TILE_TRAP
+        from constants import ENERGY_THRESHOLD
         from sound_manager import SoundManager
         from systems import CombatSystem
         from ui_fx_systems import FloatingText
@@ -237,6 +237,13 @@ class GameplayLoop:
             self.engine.player.energy -= ENERGY_THRESHOLD
             return True
 
+        elif self.engine.game_map.tiles[tx][ty] == "TILE_DOOR_CLOSED":
+            # T37 案B: 閉扉は踏み込み/攻撃 (bump) で開ける (エネルギー消費は行動1回分)
+            self.engine.game_map.try_open_door(tx, ty)
+            self.engine.log("扉を開けた。", (200, 180, 120))
+            self.engine.player.energy -= ENERGY_THRESHOLD
+            return True
+
         elif self.engine.game_map.is_walkable(tx, ty) and not self.engine.get_entity_at(tx, ty):
             self.engine.player.x, self.engine.player.y = tx, ty
 
@@ -254,27 +261,36 @@ class GameplayLoop:
                     f"神【{GodInfo.GODS[self.engine.player.god_id]['name']}】の祭壇。([p]祈る [o]捧げる)",
                     (255, 215, 0),
                 )
-            tile = self.engine.game_map.tiles[tx][ty]
-            if tile == TILE_TRAP:
-                self.engine.player.hp -= 6
+            # T37 案B: トラップ処理を GameMap (文字列タイルID + 隠し罠) に統一
+            trap = self.engine.game_map.check_trap_trigger(tx, ty)
+            if trap:
+                dmg = trap["damage"]
+                self.engine.player.hp -= dmg
                 CombatSystem.publish_trap_event(
-                    self.engine.event_bus, 6, self.engine.player.x, self.engine.player.y
+                    self.engine.event_bus, dmg, self.engine.player.x, self.engine.player.y
                 )
                 if hasattr(self.engine, "screen_shake"):
                     self.engine.screen_shake.trigger(intensity=1.0, duration=3)
                 self.engine.floating_texts.append(
                     FloatingText(
-                        "-6",
+                        f"-{dmg}",
                         self.engine.player.x,
                         self.engine.player.y - 0.2,
                         (255, 80, 80),
                     )
                 )
-                self.engine.log(
-                    "トラップ発動！ 毒矢が急所を貫く！ (-6 HP)",
-                    (255, 80, 80),
-                    level="WARNING",
-                )
+                if trap["hidden"]:
+                    self.engine.log(
+                        f"隠された罠発動！ 毒矢が急所を貫く！ (-{dmg} HP)",
+                        (255, 80, 80),
+                        level="WARNING",
+                    )
+                else:
+                    self.engine.log(
+                        f"トラップ発動！ 毒矢が急所を貫く！ (-{dmg} HP)",
+                        (255, 80, 80),
+                        level="WARNING",
+                    )
                 if self.engine.player.hp <= 0:
                     self.engine._on_player_death()
 

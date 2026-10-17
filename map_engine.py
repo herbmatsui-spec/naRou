@@ -285,6 +285,11 @@ class GameMap:
         # Room decorations (TR_DECOR variants)
         self.decorations: dict[tuple[int, int], str] = {}
 
+        # T37 案B: トラップメタデータ (隠し罠フラグ・ダメージ) と部屋形状/廊下形式の記録
+        self.trap_data: dict[tuple[int, int], dict[str, Any]] = {}
+        self.room_shapes: list[str] = []
+        self.corridor_styles: list[str] = []
+
         # 松明（光源）位置 — ダイナミックライティング用 (Phase 2-A)
         self.torch_positions: list[tuple[int, int]] = []
 
@@ -345,17 +350,56 @@ class GameMap:
             return False
         return tile != "TILE_WALL"
 
+    def try_open_door(self, x: int, y: int) -> bool:
+        """閉扉を開ける (T37 案B)
+
+        踏み込み/攻撃 (bump) から呼ばれることを想定。開放に鍵は不要。
+        閉扉を開けた場合は True、対象が閉扉でなければ False を返す。
+        """
+        if not self.is_in_bounds(x, y):
+            return False
+        if self.tiles[x][y] == "TILE_DOOR_CLOSED":
+            self.tiles[x][y] = "TILE_DOOR_OPEN"
+            return True
+        return False
+
+    def check_trap_trigger(self, x: int, y: int) -> dict[str, Any] | None:
+        """踏んだ座標のトラップを発動させる (T37 案B)
+
+        発動済みの罠は解除 (床へ戻す) される。
+        戻り値: {"damage": int, "hidden": bool} — 罠がなければ None
+        """
+        if not self.is_in_bounds(x, y):
+            return None
+        info = self.trap_data.pop((x, y), None)
+        if info is not None:
+            if self.tiles[x][y] == "TILE_TRAP":
+                self.tiles[x][y] = "TILE_FLOOR"
+                self.tile_animations.pop((x, y), None)
+            return {
+                "damage": int(info.get("damage", 6)),
+                "hidden": bool(info.get("hidden", False)),
+            }
+        if self.tiles[x][y] == "TILE_TRAP":
+            # trap_data 未登録のレガシー罠 (セーブデータ等) は固定ダメージ
+            self.tiles[x][y] = "TILE_FLOOR"
+            self.tile_animations.pop((x, y), None)
+            return {"damage": 6, "hidden": False}
+        return None
+
+    def _set_floor_tile(self, x: int, y: int) -> None:
+        """単一タイルを床にしてバリアントを初期化する"""
+        self.tiles[x][y] = "TILE_FLOOR"
+        if is_enabled("ENABLE_TINY_ROGUE_GFX"):
+            self.tile_variants[(x, y)] = random.randint(0, 11)
+        else:
+            self.tile_variants[(x, y)] = 0
+
     def create_room(self, room: RectRoom) -> None:
         """部屋の内部を床にする (Tiny Rogue variants randomization)"""
         for x in range(room.x1 + 1, room.x2):
             for y in range(room.y1 + 1, room.y2):
-                self.tiles[x][y] = "TILE_FLOOR"
-                # Random floor variant for visual variety (Tiny Rogue has 12 variants)
-                if is_enabled("ENABLE_TINY_ROGUE_GFX"):
-                    variant = random.randint(0, 11)
-                    self.tile_variants[(x, y)] = variant
-                else:
-                    self.tile_variants[(x, y)] = 0
+                self._set_floor_tile(x, y)
 
         # Place random decorations in room (10% chance per room)
         if is_enabled("ENABLE_TINY_ROGUE_GFX") and random.random() < 0.1:
@@ -366,6 +410,38 @@ class GameMap:
                 decor_variant = random.randint(1, 12)
                 self.decorations = getattr(self, "decorations", {})
                 self.decorations[(decor_x, decor_y)] = f"TR_DECOR_{decor_variant:02d}"
+
+    def _carve_room(self, room: RectRoom, shape: str = "rect") -> None:
+        """形状指定で部屋内部を掘る (T37 案B: rect / l_shape / cross)
+
+        - rect:   従来の矩形部屋 (create_room)
+        - l_shape: 一隅を欠けさせたL字部屋
+        - cross:  十字状 (プラス形) の部屋
+        """
+        if shape == "rect":
+            self.create_room(room)
+            return
+
+        iw = room.x2 - room.x1 - 1
+        ih = room.y2 - room.y1 - 1
+        notch = max(2, min(iw, ih) // 3)
+        cx = (room.x1 + room.x2) // 2
+        cy = (room.y1 + room.y2) // 2
+        band = max(1, min(iw, ih) // 3)
+        # L字の欠け角落とし (0:左上 1:右上 2:左下 3:右下)
+        corner = random.randint(0, 3)
+
+        for x in range(room.x1 + 1, room.x2):
+            for y in range(room.y1 + 1, room.y2):
+                if shape == "l_shape":
+                    nx = x - room.x1 if corner in (0, 2) else room.x2 - x
+                    ny = y - room.y1 if corner in (0, 1) else room.y2 - y
+                    if nx <= notch and ny <= notch:
+                        continue
+                elif shape == "cross":
+                    if abs(x - cx) > band and abs(y - cy) > band:
+                        continue
+                self._set_floor_tile(x, y)
 
     def create_h_tunnel(self, x1: int, x2: int, y: int) -> None:
         """水平方向の通路を作る (ステップ22)"""
@@ -381,14 +457,116 @@ class GameMap:
             if is_enabled("ENABLE_TINY_ROGUE_GFX"):
                 self.tile_variants[(x, y)] = random.randint(0, 11)
 
+    def _connect_rooms_straight(self, prev_room: RectRoom, new_room: RectRoom) -> bool:
+        """部屋間をアンカー点をずらした廊下で接続する (T37 案B)
+
+        主軸方向の1本の直線トンネルで対抗部屋の内側へ到達できた場合は
+        2本目の曲がりを省略する (真っ直ぐな廊下)。到達できなかった場合のみ
+        直交する2本目を掘る (L字廊下)。
+        戻り値: 曲がりなしで接続できたか (True = 直線廊下)
+        """
+        px = random.randint(prev_room.x1 + 1, prev_room.x2 - 1)
+        py = random.randint(prev_room.y1 + 1, prev_room.y2 - 1)
+        tx = random.randint(new_room.x1 + 1, new_room.x2 - 1)
+        ty = random.randint(new_room.y1 + 1, new_room.y2 - 1)
+
+        # 直線で届く軸 (部屋範囲が重なる軸) を優先的に主軸にする
+        y_overlap = max(prev_room.y1, new_room.y1) + 1 <= min(prev_room.y2, new_room.y2) - 1
+        x_overlap = max(prev_room.x1, new_room.x1) + 1 <= min(prev_room.x2, new_room.x2) - 1
+        horizontal_first = y_overlap and (not x_overlap or random.random() < 0.5)
+        if not horizontal_first and not x_overlap:
+            horizontal_first = abs(tx - px) >= abs(ty - py)
+
+        straight = True
+        if horizontal_first:
+            self.create_h_tunnel(px, tx, py)
+            if not (new_room.y1 + 1 <= py <= new_room.y2 - 1):
+                self.create_v_tunnel(py, ty, tx)
+                straight = False
+        else:
+            self.create_v_tunnel(py, ty, px)
+            if not (new_room.x1 + 1 <= px <= new_room.x2 - 1):
+                self.create_h_tunnel(px, tx, ty)
+                straight = False
+        return straight
+
+    def _place_doors(self, room_tiles: set[tuple[int, int]], door_chance: float) -> None:
+        """部屋と廊下の接続部に閉扉を配置する (T37 案B)
+
+        扉は部屋内側でない廊下側の床に置かれる (1部屋につき最大1枚)。
+        閉扉は is_walkable/is_transparent で閉状態として処理され、
+        踏み込み/攻撃 (bump) で try_open_door 経由で開くため到達可能性は保たれる。
+        """
+        if door_chance <= 0.0:
+            return
+        blocked_neighbors = ("TILE_DOOR_CLOSED", "TILE_STAIRS_UP", "TILE_STAIRS_DOWN")
+        used: set[tuple[int, int]] = set()
+        for room in self.rooms:
+            if random.random() >= door_chance:
+                continue
+            candidates: list[tuple[int, int]] = []
+            for x in range(room.x1 + 1, room.x2):
+                for y in range(room.y1 + 1, room.y2):
+                    if (x, y) not in room_tiles or self.tiles[x][y] != "TILE_FLOOR":
+                        continue
+                    for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                        if not self.is_in_bounds(nx, ny):
+                            continue
+                        if (nx, ny) in room_tiles or (nx, ny) in used:
+                            continue
+                        if self.tiles[nx][ny] == "TILE_FLOOR":
+                            candidates.append((nx, ny))
+            if not candidates:
+                continue
+            pos = random.choice(candidates)
+            # 既設扉・階段に隣接する位置は二重扉になるため避ける
+            if any(
+                self.tiles[ax][ay] in blocked_neighbors
+                for ax, ay in (
+                    (pos[0] + 1, pos[1]),
+                    (pos[0] - 1, pos[1]),
+                    (pos[0], pos[1] + 1),
+                    (pos[0], pos[1] - 1),
+                )
+                if self.is_in_bounds(ax, ay)
+            ):
+                continue
+            self.tiles[pos[0]][pos[1]] = "TILE_DOOR_CLOSED"
+            used.add(pos)
+
+    def _place_water(self, rx: int, ry: int) -> None:
+        """床に水たまりとアニメーションを配置する (ステップ28)"""
+        self.tiles[rx][ry] = "TILE_WATER"
+        self.tile_animations[(rx, ry)] = {
+            "tile_id": "TILE_WATER",
+            "frame": 0,
+            "timer": 0.0,
+            "fps": 8,  # 8 FPS for water animation
+            "frames": 8,
+        }
+
     def generate_dungeon(
         self,
         max_rooms: int = 35,
         room_min_size: int = 6,
         room_max_size: int = 15,
+        use_variety: bool = True,
+        door_chance: float = 0.5,
+        hidden_trap_ratio: float = 0.3,
     ) -> None:
-        """ランダムダンジョン生成 (ステップ21, 22, 23)"""
+        """ランダムダンジョン生成 (ステップ21, 22, 23)
+
+        T37 案B: use_variety=True で以下の多様化を有効にする (False で従来生成)。
+        - 部屋形状: 矩形 + L字 (25%) / 十字 (15%) を確率で混在
+        - 廊下: 中心間L字 + ランダムアンカーの直線/L字廊下を混在
+        - 扉: 部屋と廊下の接続部に door_chance で TILE_DOOR_CLOSED を配置
+        - トラップ: 深度が深いほど配置率が増え、hidden_trap_ratio の割合で隠し罠化
+        """
         self.rooms = []
+        self.room_shapes = []
+        self.corridor_styles = []
+        self.trap_data = {}
+        room_tiles: set[tuple[int, int]] = set()
         for _ in range(max_rooms):
             w = random.randint(room_min_size, room_max_size)
             h = random.randint(room_min_size, room_max_size)
@@ -399,7 +577,14 @@ class GameMap:
             if any(new_room.intersects(other) for other in self.rooms):
                 continue
 
-            self.create_room(new_room)
+            shape = "rect"
+            if use_variety:
+                roll = random.random()
+                if roll < 0.25:
+                    shape = "l_shape"
+                elif roll < 0.40:
+                    shape = "cross"
+            self._carve_room(new_room, shape)
             (new_x, new_y) = new_room.center
 
             if len(self.rooms) == 0:
@@ -417,15 +602,26 @@ class GameMap:
                 }
             else:
                 # 前の部屋と通路で繋ぐ
-                (prev_x, prev_y) = self.rooms[-1].center
-                if random.randint(0, 1) == 1:
-                    self.create_h_tunnel(prev_x, new_x, prev_y)
-                    self.create_v_tunnel(prev_y, new_y, new_x)
+                prev_room = self.rooms[-1]
+                (prev_x, prev_y) = prev_room.center
+                if use_variety and random.random() < 0.5:
+                    straight = self._connect_rooms_straight(prev_room, new_room)
+                    self.corridor_styles.append("straight" if straight else "L")
                 else:
-                    self.create_v_tunnel(prev_y, new_y, prev_x)
-                    self.create_h_tunnel(prev_x, new_x, new_y)
+                    self.corridor_styles.append("L")
+                    if random.randint(0, 1) == 1:
+                        self.create_h_tunnel(prev_x, new_x, prev_y)
+                        self.create_v_tunnel(prev_y, new_y, new_x)
+                    else:
+                        self.create_v_tunnel(prev_y, new_y, prev_x)
+                        self.create_h_tunnel(prev_x, new_x, new_y)
 
             self.rooms.append(new_room)
+            self.room_shapes.append(shape)
+            for tx in range(new_room.x1 + 1, new_room.x2):
+                for ty in range(new_room.y1 + 1, new_room.y2):
+                    if self.tiles[tx][ty] != "TILE_WALL":
+                        room_tiles.add((tx, ty))
 
         # 最初の部屋を中心開始位置 & 上り階段に
         if len(self.rooms) == 1:
@@ -456,24 +652,36 @@ class GameMap:
                 "frames": 4,
             }
 
+        # T37 案B: 部屋と廊下の接続部に扉を配置 (階段決定後に行い階段位置を回避)
+        if use_variety:
+            self._place_doors(room_tiles, door_chance)
+
         # 特殊地形・水たまりや罠を配置 (ステップ28)
-        for room in self.rooms[1:-1]:
-            if random.random() < 0.3:
-                rx = random.randint(room.x1 + 1, room.x2 - 1)
-                ry = random.randint(room.y1 + 1, room.y2 - 1)
-                if self.tiles[rx][ry] == "TILE_FLOOR":
-                    tile_type = "TILE_WATER" if random.random() < 0.5 else "TILE_TRAP"
-                    self.tiles[rx][ry] = tile_type
-                    # Initialize animation for water/trap
-                    if tile_type == "TILE_WATER":
-                        self.tile_animations[(rx, ry)] = {
-                            "tile_id": "TILE_WATER",
-                            "frame": 0,
-                            "timer": 0.0,
-                            "fps": 8,  # 8 FPS for water animation
-                            "frames": 8,
-                        }
-                    else:  # TILE_TRAP
+        if use_variety:
+            # 水たまり: 旧ロジック (30% × 50%) の水出現率を維持しつつ水のみ配置
+            for room in self.rooms[1:-1]:
+                if random.random() < 0.15:
+                    rx = random.randint(room.x1 + 1, room.x2 - 1)
+                    ry = random.randint(room.y1 + 1, room.y2 - 1)
+                    if self.tiles[rx][ry] == "TILE_FLOOR":
+                        self._place_water(rx, ry)
+
+            # T37 案B: 深度スケールされたトラップ配置 (可視/隠し)
+            depth = self.world_layer.depth if self.world_layer else self.floor_level
+            trap_chance = min(0.5, 0.1 + depth * 0.015)
+            trap_damage = min(5 + depth, 20)
+            for room in self.rooms:
+                if random.random() >= trap_chance:
+                    continue
+                for _ in range(4):
+                    rx = random.randint(room.x1 + 1, room.x2 - 1)
+                    ry = random.randint(room.y1 + 1, room.y2 - 1)
+                    if self.tiles[rx][ry] != "TILE_FLOOR":
+                        continue
+                    hidden = random.random() < hidden_trap_ratio
+                    self.trap_data[(rx, ry)] = {"damage": trap_damage, "hidden": hidden}
+                    if not hidden:
+                        self.tiles[rx][ry] = "TILE_TRAP"
                         self.tile_animations[(rx, ry)] = {
                             "tile_id": "TILE_TRAP",
                             "frame": 0,
@@ -481,6 +689,27 @@ class GameMap:
                             "fps": 6,  # 6 FPS for trap animation
                             "frames": 3,
                         }
+                    break
+        else:
+            # 従来ロジック (水/罠を 30% × 50/50 で配置)
+            for room in self.rooms[1:-1]:
+                if random.random() < 0.3:
+                    rx = random.randint(room.x1 + 1, room.x2 - 1)
+                    ry = random.randint(room.y1 + 1, room.y2 - 1)
+                    if self.tiles[rx][ry] == "TILE_FLOOR":
+                        tile_type = "TILE_WATER" if random.random() < 0.5 else "TILE_TRAP"
+                        self.tiles[rx][ry] = tile_type
+                        # Initialize animation for water/trap
+                        if tile_type == "TILE_WATER":
+                            self._place_water(rx, ry)
+                        else:  # TILE_TRAP
+                            self.tile_animations[(rx, ry)] = {
+                                "tile_id": "TILE_TRAP",
+                                "frame": 0,
+                                "timer": 0.0,
+                                "fps": 6,  # 6 FPS for trap animation
+                                "frames": 3,
+                            }
 
         # Proposal 8: 緻密なプロシージャル・ディテール (壁画・血文字・古代刻印の生成)
         blood_messages = [
