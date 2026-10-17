@@ -1640,6 +1640,9 @@ def main() -> None:
 
     engine = Engine()
     logger.debug("Engine created successfully")
+    # T18 案5: グラフィカル起動時はタイトル画面から開始する。
+    # Enter 入力で "play" へ遷移する (タイトル中は GameLoopHandler が世界を停止させる)。
+    engine.game_state = "title"
 
     # Load tileset to avoid libtcod font fallback warning
     from pathlib import Path
@@ -1669,6 +1672,16 @@ def main() -> None:
                 # Step 6.5: 入力を ActionRegistry 経由で処理
                 for event in tcod.event.get(timeout=0):
                     if isinstance(event, tcod.event.KeyDown):
+                        # T18 案5: タイトル状態では Enter のみを受け付け、
+                        # 他の専用キー (S/J/G 等) がタイトルを突破しないようにする。
+                        if engine.game_state == "title":
+                            if event.sym in (
+                                tcod.event.KeySym.RETURN,
+                                tcod.event.KeySym.KP_ENTER,
+                            ):
+                                engine.game_state = "play"
+                                engine.log("……冒険の幕が上がる。", (255, 215, 0))
+                            continue
                         if event.sym == tcod.event.KeySym.S:
                             # GAME_OVER は解除しない (画面だけ消えると world が
                             # 動かないまま操作を続けられる中途半端な状態になる)

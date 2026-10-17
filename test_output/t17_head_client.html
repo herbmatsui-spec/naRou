@@ -1,0 +1,2009 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>naRogue: Masterpiece Edition (Canvas 2D & WebAudio)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Sans+JP:wght@400;500;700;900&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/design_tokens.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+  <link rel="stylesheet" href="/assets/css/themes.css">
+  <link rel="stylesheet" href="theme.css">
+  <script src="https://cdn.pixijs.com/pixi.js"></script>
+  <script type="module" src="demos/lib/TileAtlas.js"></script>
+  <script type="module" src="demos/lib/LightingSystem.js"></script>
+  <script type="module" src="demos/lib/ParticleSystem.js"></script>
+  <script type="module" src="demos/lib/PostProcessManager.js"></script>
+  <script type="module" src="demos/lib/ScreenShake.js"></script>
+  <script type="module" src="demos/lib/EnvironmentShader.js"></script>
+  <script type="module" src="demos/lib/FluidRenderer.js"></script>
+  <script type="module" src="demos/lib/DecalSystem.js"></script>
+  <script type="module" src="demos/lib/BoidSystem.js"></script>
+  <script type="module" src="demos/lib/BattleBackdrop.js"></script>
+  <script type="module" src="demos/lib/WorldMapOverlay.js"></script>
+  <script type="module" src="demos/lib/CutsceneDirector.js"></script>
+  <style>
+    /* Brand UI variables and theme variants are provided by web/theme.css
+       (auto-generated from design_tokens.json). Theme switching sets
+       document.documentElement.dataset.theme. */
+
+    /* Step 65 & 66: バネ物理（Spring physics）UIアニメーション */
+    .spring-anim {
+      animation: springBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes springBounce {
+      0% { transform: scale(0.92) translateY(8px); opacity: 0; }
+      70% { transform: scale(1.03) translateY(-2px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    /* Step 68: ボタン波紋（Ripple）とホバーグロー */
+    .hotbar-btn, .tab-btn, .dpad-btn, .audio-btn {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .hotbar-btn:active, .dpad-btn:active {
+      transform: scale(0.92);
+      filter: brightness(1.2);
+    }
+    .ripple-effect {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      transform: scale(0);
+      animation: ripple 0.5s ease-out;
+      pointer-events: none;
+    }
+    @keyframes ripple {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    /* Step 71: Typewriter + Bounce 通知アニメーション */
+    .notif-bounce {
+      animation: notifAppear 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes notifAppear {
+      from { transform: translateY(-16px) scale(0.8); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: var(--bg-gradient);
+      color: var(--text-main);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+      padding: 12px;
+    }
+
+    /* === HEADER === */
+    header {
+      width: 100%;
+      max-width: 1280px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .game-logo {
+      font-family: var(--font-title);
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-version {
+      font-size: 0.65rem;
+      background: rgba(229, 169, 59, 0.2);
+      border: 1px solid var(--primary-accent);
+      color: var(--primary-accent);
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      font-family: var(--font-main);
+    }
+
+    .header-status {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .status-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .audio-btn {
+      background: rgba(229, 169, 59, 0.15);
+      border: 1px solid var(--primary-accent);
+      color: var(--primary-accent);
+      padding: 4px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .audio-btn:hover {
+      background: var(--primary-accent);
+      color: #000;
+      box-shadow: 0 0 12px rgba(229, 169, 59, 0.6);
+    }
+
+    .theme-switch {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 3px 6px;
+    }
+    .theme-switch button {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      line-height: 1;
+      padding: 3px 5px;
+      transition: all 0.2s ease;
+      filter: grayscale(0.4);
+      opacity: 0.7;
+    }
+    .theme-switch button:hover {
+      opacity: 1;
+      filter: none;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .theme-switch button[aria-pressed="true"] {
+      opacity: 1;
+      filter: none;
+      border-color: var(--primary-accent);
+      box-shadow: 0 0 10px rgba(229, 169, 59, 0.5);
+    }
+
+    /* === MAIN LAYOUT === */
+    .main-container {
+      width: 100%;
+      max-width: 1280px;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 16px;
+      height: calc(100vh - 100px);
+      min-height: 640px;
+    }
+
+    /* === CANVAS VIEWPORT === */
+    .viewport-panel {
+      position: relative;
+      background: #000;
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    #gameCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: pixelated;
+      cursor: crosshair;
+    }
+
+    /* Canvas Overlay HUD */
+    .hud-overlay {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .vitals-card {
+      background: rgba(10, 14, 25, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--panel-border);
+      padding: 10px 14px;
+      border-radius: 8px;
+      min-width: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      pointer-events: auto;
+    }
+
+    .vital-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+    }
+
+    .vital-label {
+      width: 24px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .vital-bar-container {
+      flex: 1;
+      height: 10px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+    }
+
+    .vital-bar {
+      height: 100%;
+      transition: width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .bar-hp { background: linear-gradient(90deg, #27ae60, #2ecc71); box-shadow: 0 0 8px rgba(46, 204, 113, 0.5); }
+    .bar-mp { background: linear-gradient(90deg, #2980b9, #3498db); box-shadow: 0 0 8px rgba(52, 152, 219, 0.5); }
+    .bar-hunger { background: linear-gradient(90deg, #d35400, #e67e22); }
+
+    .vital-val {
+      font-size: 0.7rem;
+      font-weight: 600;
+      width: 65px;
+      text-align: right;
+    }
+
+    /* Action Hotbar */
+    .hotbar-container {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      background: rgba(10, 14, 25, 0.9);
+      backdrop-filter: blur(12px);
+      padding: 6px 12px;
+      border-radius: 24px;
+      border: 1px solid var(--panel-border);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+    }
+
+    .hotbar-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .hotbar-btn:hover {
+      background: var(--primary-accent);
+      color: #000;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(229, 169, 59, 0.5);
+    }
+    .hotbar-btn .key-tag {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      color: #ffd700;
+    }
+
+    /* === SIDEBAR PANELS === */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      height: 100%;
+    }
+
+    .panel-card {
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .tabs-header {
+      display: flex;
+      border-bottom: 1px solid var(--panel-border);
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 8px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+    .tab-btn.active {
+      color: var(--primary-accent);
+      border-bottom: 2px solid var(--primary-accent);
+      background: rgba(229, 169, 59, 0.08);
+    }
+
+    .tab-content {
+      padding: 10px;
+      flex: 1;
+      overflow-y: auto;
+      font-size: 0.8rem;
+    }
+
+    /* Item & Log Lists */
+    .item-list, .log-list, .quest-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .item-entry {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      transition: background 0.15s ease;
+    }
+    .item-entry:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--panel-border-glow);
+    }
+    .item-entry.equipped {
+      border-left: 3px solid var(--primary-accent);
+      background: rgba(229, 169, 59, 0.08);
+    }
+
+    .log-panel {
+      flex: 1;
+      min-height: 200px;
+    }
+
+    .log-entry {
+      font-size: 0.72rem;
+      line-height: 1.4;
+      padding: 3px 6px;
+      border-radius: 4px;
+      border-left: 2px solid transparent;
+      animation: fadeIn 0.2s ease;
+    }
+    .log-entry.INFO { border-color: #3498db; color: #d0e4ff; }
+    .log-entry.SUCCESS { border-color: #2ecc71; color: #c8ffd8; }
+    .log-entry.WARNING { border-color: #f39c12; color: #ffe6b3; }
+    .log-entry.ERROR { border-color: #e74c3c; color: #ffb3b3; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* D-PAD / Mobile Controller */
+    .dpad-container {
+      display: grid;
+      grid-template-columns: repeat(3, 40px);
+      grid-template-rows: repeat(3, 40px);
+      gap: 4px;
+      margin: 8px auto;
+    }
+    .dpad-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.1s ease;
+    }
+    .dpad-btn:active {
+      background: var(--primary-accent);
+      color: #000;
+      transform: scale(0.92);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- チュートリアルオーバーレイ (Step 39) -->
+  <div id="tutorial-overlay" style="display:none; position:fixed; top:12px; left:50%; transform:translateX(-50%); z-index:1000; max-width:90%; padding:10px 16px; background:rgba(17,24,39,0.92); color:#fff; border:1px solid #4a7ae6; border-radius:8px; font-family:sans-serif; box-shadow:0 4px 16px rgba(0,0,0,0.5);">
+    <span id="tutorial-text"></span>
+    <button id="tutorial-next" style="margin-left:10px;">次へ ▶</button>
+  </div>
+
+  <!-- ローディング画面 (Step 57) -->
+  <div id="loading-overlay" style="position:fixed; inset:0; z-index:2000; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.85); color:#fff; font-family:sans-serif;">
+    <div style="text-align:center;">
+      <div style="font-size:20px; margin-bottom:12px;">naRou を読み込み中…</div>
+      <div style="width:240px; height:10px; background:#222; border-radius:5px; overflow:hidden; margin:0 auto;">
+        <div id="loading-bar" style="width:10%; height:100%; background:#4a7ae6; transition:width .3s;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- モバイル用 D-pad (Step 59) -->
+  <div id="dpad" style="display:none; position:fixed; bottom:16px; left:16px; z-index:1500; width:150px; height:150px;">
+    <button data-dir="up"    style="position:absolute; top:0;   left:50px; width:50px; height:50px;">▲</button>
+    <button data-dir="down"  style="position:absolute; top:100px; left:50px; width:50px; height:50px;">▼</button>
+    <button data-dir="left"  style="position:absolute; top:50px; left:0;   width:50px; height:50px;">◀</button>
+    <button data-dir="right" style="position:absolute; top:50px; left:100px; width:50px; height:50px;">▶</button>
+    <button data-dir="wait"  style="position:absolute; top:50px; left:50px; width:50px; height:50px;">.</button>
+  </div>
+
+  <style>
+    /* Step 44: キーボード操作の可視化（フォーカスアウトライン） */
+    a:focus, button:focus, input:focus, select:focus, [tabindex]:focus {
+      outline: 3px solid #4a7ae6;
+      outline-offset: 2px;
+    }
+  </style>
+
+  <!-- HEADER -->
+  <header>
+    <div class="game-logo">
+      <span class="font-title text-legendary">NAROU</span>
+      <span class="badge-version font-caption">v2.0 MASTERPIECE</span>
+    </div>
+    <div class="header-status">
+      <div class="status-chip font-caption" id="chipFloor">階層: B1F</div>
+      <div class="status-chip font-caption" id="chipGold">💰 0 G</div>
+      <div class="status-chip font-caption" id="chipPlatinum">💎 0 P</div>
+      <div class="status-chip font-caption" id="chipKarma">⚖️ 善悪: 0</div>
+      <button class="audio-btn" id="btnAudioToggle" onclick="SoundEngine.toggleAudio()">🔊 サウンド起動</button>
+      <div class="theme-switch" id="themeSwitch" role="group" aria-label="テーマ切替">
+        <button type="button" data-theme-value="dark" title="ダーク">🌑</button>
+        <button type="button" data-theme-value="light" title="ライト">☀️</button>
+        <button type="button" data-theme-value="high-contrast" title="ハイコントラスト">🔆</button>
+        <button type="button" data-theme-value="colorblind" title="色覚サポート">👁️</button>
+        <button type="button" data-theme-value="sepia" title="セピア">📜</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <div class="main-container">
+
+    <!-- CANVAS VIEWPORT -->
+    <div class="viewport-panel" id="viewportPanel">
+      <canvas id="gameCanvas" width="960" height="576"></canvas>
+      <div id="gl-error-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); color:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:100; text-align:center; padding:20px;">
+        <h2 style="color:#e74c3c; margin-bottom:10px;">⚠️ グラフィックス初期化警告</h2>
+        <p id="gl-error-msg" style="margin-bottom:15px; max-width:500px;">WebGL2 / WebGPU の初期化に失敗したか、サポートされていません。フォールバック描画モードで動作しています。</p>
+        <button onclick="document.getElementById('gl-error-overlay').style.display='none'" style="background:var(--primary-accent,#3498db); color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">閉じる</button>
+      </div>
+
+      <!-- HUD OVERLAY -->
+      <div class="hud-overlay">
+        <!-- PLAYER VITALS -->
+        <div class="vitals-card">
+          <div style="font-weight: 700; font-size: 0.85rem; color: #ffd700;" id="hudPlayerName">名無しの冒険者</div>
+          <div class="vital-row">
+            <span class="vital-label">HP</span>
+            <div class="vital-bar-container"><div class="vital-bar bar-hp" id="barHP" style="width: 100%;"></div></div>
+            <span class="vital-val" id="valHP">100/100</span>
+          </div>
+          <div class="vital-row">
+            <span class="vital-label">MP</span>
+            <div class="vital-bar-container"><div class="vital-bar bar-mp" id="barMP" style="width: 100%;"></div></div>
+            <span class="vital-val" id="valMP">50/50</span>
+          </div>
+          <div class="vital-row">
+            <span class="vital-label" style="font-size:0.65rem;">満腹</span>
+            <div class="vital-bar-container"><div class="vital-bar bar-hunger" id="barHunger" style="width: 80%;"></div></div>
+            <span class="vital-val" id="valHunger">普通</span>
+          </div>
+        </div>
+
+        <!-- PET VITALS -->
+        <div class="vitals-card" id="petCard" style="min-width: 180px;">
+          <div style="font-weight: 700; font-size: 0.8rem; color: #ffb6c1;" id="hudPetName">シエル</div>
+          <div class="vital-row">
+            <span class="vital-label">HP</span>
+            <div class="vital-bar-container"><div class="vital-bar bar-hp" id="barPetHP" style="width: 100%;"></div></div>
+            <span class="vital-val" id="valPetHP">--/--</span>
+          </div>
+          <div style="font-size: 0.7rem; color: var(--text-muted);" id="valPetTactic">指示: バランス</div>
+        </div>
+      </div>
+
+      <!-- ACTION HOTBAR -->
+      <div class="hotbar-container">
+        <button class="hotbar-btn" onclick="sendAction('pickup')"><span>拾う</span><span class="key-tag">G</span></button>
+        <button class="hotbar-btn" onclick="sendAction('cast_fireball')"><span>🔥 火炎球</span><span class="key-tag">F</span></button>
+        <button class="hotbar-btn" onclick="sendAction('use_potion')"><span>🧪 回復薬</span><span class="key-tag">Q</span></button>
+        <button class="hotbar-btn" onclick="sendAction('pray')"><span>🙏 祈る</span><span class="key-tag">P</span></button>
+        <button class="hotbar-btn" onclick="sendAction('wait')"><span>⏳ 待機</span><span class="key-tag">Space</span></button>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+      <!-- TABS PANEL -->
+      <div class="panel-card" style="height: 50%;">
+        <div class="tabs-header">
+          <button class="tab-btn active font-caption" onclick="switchTab('tabInventory')">荷物</button>
+          <button class="tab-btn font-caption" onclick="switchTab('tabStats')">能力</button>
+          <button class="tab-btn font-caption" onclick="switchTab('tabQuests')">依頼</button>
+          <button class="tab-btn font-caption" onclick="switchTab('tabPet')">ペット</button>
+        </div>
+
+        <!-- TAB: INVENTORY -->
+        <div class="tab-content" id="tabInventory">
+          <div class="item-list" id="inventoryList">
+            <div style="color: var(--text-muted); text-align: center;">読み込み中...</div>
+          </div>
+        </div>
+
+        <!-- TAB: STATS -->
+        <div class="tab-content" id="tabStats" style="display: none;">
+          <div id="statsContent" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- TAB: QUESTS -->
+        <div class="tab-content" id="tabQuests" style="display: none;">
+          <div class="quest-list" id="questList">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- TAB: PET TACTICS -->
+        <div class="tab-content" id="tabPet" style="display: none;">
+          <div style="font-size: 0.75rem; margin-bottom: 8px;">ペットの戦闘戦術方針:</div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <button class="hotbar-btn" onclick="sendAction('set_pet_tactic', {tactic: 'balanced'})">⚔️ バランス (追従・迎撃)</button>
+            <button class="hotbar-btn" onclick="sendAction('set_pet_tactic', {tactic: 'aggressive'})">💥 積極索敵 (突撃殲滅)</button>
+            <button class="hotbar-btn" onclick="sendAction('set_pet_tactic', {tactic: 'defensive'})">🛡️ 専守防衛 (主人護衛)</button>
+            <button class="hotbar-btn" onclick="sendAction('set_pet_tactic', {tactic: 'passive'})">🏃 不戦避難 (攻撃停止)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOG & CONTROLLER PANEL -->
+      <div class="panel-card log-panel">
+        <div class="font-h3" style="padding: 6px 10px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--panel-border);">
+          📜 冒険ログ
+        </div>
+        <div class="tab-content" id="logContainer" style="display: flex; flex-direction: column-reverse;">
+          <!-- Log Entries -->
+        </div>
+
+        <!-- MINI DPAD -->
+        <div class="dpad-container">
+          <button class="dpad-btn" onclick="sendAction('up_left')">↖</button>
+          <button class="dpad-btn" onclick="sendAction('up')">↑</button>
+          <button class="dpad-btn" onclick="sendAction('up_right')">↗</button>
+          <button class="dpad-btn" onclick="sendAction('left')">←</button>
+          <button class="dpad-btn" onclick="sendAction('wait')">・</button>
+          <button class="dpad-btn" onclick="sendAction('right')">→</button>
+          <button class="dpad-btn" onclick="sendAction('down_left')">↙</button>
+          <button class="dpad-btn" onclick="sendAction('down')">↓</button>
+          <button class="dpad-btn" onclick="sendAction('down_right')">↘</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT: CANVAS 2D & WEBAUDIO ENGINE -->
+  <script>
+    // ==================== WEBAUDIO SOUND ENGINE ====================
+    const SoundEngine = {
+      ctx: null,
+      enabled: false,
+      bgmInterval: null,
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+        this.enabled = true;
+        document.getElementById("btnAudioToggle").innerText = "🔊 サウンド ON";
+        this.startDynamicBGM();
+      },
+
+      toggleAudio() {
+        if (!this.enabled) {
+          this.init();
+          this.playSE("level_up");
+        } else {
+          this.enabled = false;
+          if (this.bgmInterval) clearInterval(this.bgmInterval);
+          document.getElementById("btnAudioToggle").innerText = "🔇 サウンド OFF";
+        }
+      },
+
+      playSE(type) {
+        if (!this.enabled || !this.ctx) return;
+        const now = this.ctx.currentTime;
+
+        if (type === "hit") {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(140, now);
+          osc.frequency.exponentialRampToValueAtTime(30, now + 0.12);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.12);
+        } else if (type === "kill") {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.exponentialRampToValueAtTime(80, now + 0.25);
+          gain.gain.setValueAtTime(0.4, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        } else if (type === "level_up") {
+          [440, 554.37, 659.25, 880].forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+            gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.3);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + idx * 0.08);
+            osc.stop(now + idx * 0.08 + 0.3);
+          });
+        } else if (type === "fanfare") {
+          // 5音アルペジオ (サーバー側 sound_manager.py の fanfare と同一音列)
+          [523, 659, 784, 1046, 1318].forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = "square";
+            osc.frequency.setValueAtTime(freq, now + idx * 0.09);
+            gain.gain.setValueAtTime(0.15, now + idx * 0.09);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.45);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + idx * 0.09);
+            osc.stop(now + idx * 0.09 + 0.45);
+          });
+        }
+      },
+
+      startDynamicBGM() {
+        if (this.bgmInterval) clearInterval(this.bgmInterval);
+        const chords = [
+          [220, 261.63, 329.63], // Am
+          [174.61, 220, 261.63], // F
+          [196, 246.94, 293.66], // G
+          [164.81, 196, 246.94]  // Em
+        ];
+        let chordIdx = 0;
+
+        this.bgmInterval = setInterval(() => {
+          if (!this.enabled || !this.ctx) return;
+          const chord = chords[chordIdx % chords.length];
+          chordIdx++;
+          const now = this.ctx.currentTime;
+
+          chord.forEach(freq => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(freq * 0.5, now);
+            gain.gain.setValueAtTime(0.001, now);
+            gain.gain.linearRampToValueAtTime(0.03, now + 1.2);
+            gain.gain.linearRampToValueAtTime(0.001, now + 3.8);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 4.0);
+          });
+        }, 4000);
+      }
+    };
+
+// ==================== PIXI.JS WEBGL RENDER ENGINE ====================
+    const canvas = document.getElementById("gameCanvas");
+
+    // モジュールロード待機
+    function waitForModules(callback, maxAttempts = 50) {
+      let attempts = 0;
+      const check = () => {
+        attempts++;
+        if (window.LightingSystem && window.ParticleSystem &&
+            window.PostProcessManager && window.ScreenShake && window.TextureAtlas &&
+            window.InteractionManager && window.FoliageFilter && window.FluidRenderer &&
+            window.DecalSystem && window.BoidSystem) {
+          callback();
+        } else if (attempts < maxAttempts) {
+          setTimeout(check, 100);
+        } else {
+          console.error('Module loading timeout');
+        }
+      };
+      check();
+    }
+
+    // 2Dフォールバック初期化（WebGL2が利用できない場合）
+    function init2DFallback() {
+        console.log('Initializing 2D Canvas fallback...');
+        const ctx2d = canvas.getContext('2d');
+        if (!ctx2d) return;
+
+        // 簡易的な2Dレンダリングループ
+        function render2D() {
+            ctx2d.fillStyle = '#0a0b10';
+            ctx2d.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (!gameState) {
+                ctx2d.fillStyle = '#8b9bb4';
+                ctx2d.font = '16px var(--font-main)';
+                ctx2d.textAlign = 'center';
+                ctx2d.fillText('サーバーに接続中……', canvas.width / 2, canvas.height / 2);
+            } else {
+                // 簡易マップ描画
+                const map = gameState.map || [];
+                const viewH = map.length;
+                const viewW = viewH > 0 ? map[0].length : 0;
+                const TILE_SIZE = 24;
+                const offsetX = Math.max(0, (canvas.width - viewW * TILE_SIZE) / 2);
+                const offsetY = Math.max(0, (canvas.height - viewH * TILE_SIZE) / 2);
+
+                for (let y = 0; y < viewH; y++) {
+                    for (let x = 0; x < viewW; x++) {
+                        const ch = map[y][x];
+                        const px = offsetX + x * TILE_SIZE;
+                        const py = offsetY + y * TILE_SIZE;
+                        ctx2d.fillStyle = ch === '#' ? '#333' : ch === '>' ? '#f00' : '#1a1a2e';
+                        ctx2d.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+                    }
+                }
+
+                // プレイヤー描画
+                if (gameState.player) {
+                    const p = gameState.player;
+                    const px = offsetX + p.x * TILE_SIZE + TILE_SIZE/2;
+                    const py = offsetY + p.y * TILE_SIZE + TILE_SIZE/2;
+                    ctx2d.fillStyle = '#0f0';
+                    ctx2d.beginPath();
+                    ctx2d.arc(px, py, TILE_SIZE/3, 0, Math.PI*2);
+                    ctx2d.fill();
+                }
+            }
+            requestAnimationFrame(render2D);
+        }
+        render2D();
+    }
+
+    waitForModules(() => {
+
+    // PixiJSアプリケーションの初期化（WebGL2）
+    let pixiApp = null;
+    let use2DFallback = false;
+
+    try {
+        pixiApp = new PIXI.Application({
+            view: canvas,
+            width: canvas.width,
+            height: canvas.height,
+            backgroundColor: 0x000000,
+            resolution: window.devicePixelRatio || 1,
+            autoDensity: true,
+            preferWebGL: true,
+            forceCanvas: false
+        });
+    } catch (error) {
+        console.error('WebGL2 initialization failed:', error);
+        document.getElementById('gl-error-overlay').style.display = 'flex';
+        use2DFallback = true;
+        init2DFallback();
+        return;
+    }
+
+    // レイヤー分離のためのコンテナを作成
+    const backgroundLayer = new PIXI.Container();
+    const tileLayer = new PIXI.Container();
+    const entityLayer = new PIXI.Container();
+    const effectLayer = new PIXI.Container();
+
+    // Step 49 & 50: 永続的デカールシステム (DecalSystem) の初期化
+    const decalSystem = new DecalSystem(pixiApp, canvas.width, canvas.height);
+    backgroundLayer.addChild(decalSystem.sprite);
+
+    // Step 18: 環境干渉 & Foliage フィルターの初期化
+    const interactionManager = new InteractionManager();
+    const foliageFilter = new FoliageFilter();
+    tileLayer.filters = [foliageFilter];
+
+    // Step 35: 流体シミュレーション (FluidRenderer) の初期化
+    const fluidRenderer = new FluidRenderer(pixiApp, canvas.width, canvas.height);
+    effectLayer.addChild(fluidRenderer.fluidSprite);
+
+    // Step 57: 自律飛行群れパーティクル (BoidSystem) の初期化
+    const boidSystem = new BoidSystem(pixiApp, effectLayer, canvas.width, canvas.height, 40);
+
+    // 背景グラフィックを作成（濃紫で塗りつぶし）
+    const backgroundGraphics = new PIXI.Graphics();
+    function updateBackground() {
+        backgroundGraphics.clear();
+        backgroundGraphics.beginFill(0x0a0b10); // 濃紫 (#0a0b10)
+        backgroundGraphics.drawRect(0, 0, pixiApp.screen.width, pixiApp.screen.height);
+        backgroundGraphics.endFill();
+    }
+    // 初期背景を描画
+    updateBackground();
+    backgroundLayer.addChild(backgroundGraphics);
+
+    // T11 案5/案8: フロアテーマ別戦闘バックドロップ & ワールドマップオーバーレイ (Mキー)
+    const battleBackdrop = window.BattleBackdrop ? new BattleBackdrop(pixiApp, backgroundLayer, canvas.width, canvas.height) : null;
+    const worldMapOverlay = window.WorldMapOverlay ? new WorldMapOverlay(pixiApp) : null;
+
+    // ステージにレイヤーを追加（下から上へ）
+    pixiApp.stage.addChild(backgroundLayer);
+    pixiApp.stage.addChild(tileLayer);
+    pixiApp.stage.addChild(entityLayer);
+    pixiApp.stage.addChild(effectLayer);
+
+    // ライティングシステムを初期化
+    const viewW = 40;
+    const viewH = 24;
+    const TILE_SIZE = 24;
+    const lightingSystem = new LightingSystem(
+        pixiApp,
+        tileLayer,
+        viewW * TILE_SIZE,
+        viewH * TILE_SIZE
+    );
+
+    // パーティクルシステムを初期化
+    const particleSystem = new ParticleSystem(pixiApp, effectLayer);
+
+    // ポストプロセスマネージャーを初期化
+    const postProcessManager = new PostProcessManager(pixiApp);
+    pixiApp.stage.addChild(postProcessManager.getEffectsContainer());
+
+    // スクリーンシェイクを初期化
+    const screenShake = new ScreenShake(pixiApp.stage, 5, 0.5);
+
+    // カットシーン演出ディレクターを初期化 (FF6案6: DOMオーバーレイ式)
+    const cutsceneDirector = (typeof CutsceneDirector !== "undefined") ? new CutsceneDirector() : null;
+
+    // リサイズ処理
+    function resize() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        pixiApp.renderer.resize(width, height);
+        // 背景グラフィックもリサイズに合わせて更新
+        updateBackground();
+    }
+    window.addEventListener('resize', resize);
+    // 初期リサイズ
+    resize();
+
+    // テクスチャアトラス
+    let tileAtlas = null;
+    let tileAnimCache = {};      // 静的タイルアニメーションキャッシュ
+    let entityAnimCache = {};    // エンティティアニメーションキャッシュ
+
+    // TileAtlasの初期化
+    async function initTileAtlas() {
+        try {
+            // アトラス画像をロード
+            const atlasImage = new Image();
+            atlasImage.src = 'demos/assets/font_atlas.png';
+
+            await new Promise((resolve, reject) => {
+                atlasImage.onload = resolve;
+                atlasImage.onerror = reject;
+            });
+
+            // Step 10: ノーマルマップ画像をロード
+            const normalAtlasImage = new Image();
+            normalAtlasImage.src = 'demos/assets/normal_atlas.png';
+            await new Promise((resolve) => {
+                normalAtlasImage.onload = resolve;
+                normalAtlasImage.onerror = () => {
+                    console.warn('Normal atlas not found, skipping');
+                    resolve();
+                };
+            });
+
+            // アトラスメタデータをロード
+            const metadataResponse = await fetch('demos/assets/font_atlas.json');
+            const metadata = await metadataResponse.json();
+
+            // PixiJSテクスチャを作成
+            const baseTexture = new PIXI.BaseTexture(atlasImage);
+            tileAtlas = new TextureAtlas(baseTexture, metadata);
+
+            if (normalAtlasImage.complete && normalAtlasImage.naturalWidth > 0) {
+                const normalBaseTexture = new PIXI.BaseTexture(normalAtlasImage);
+                tileAtlas.loadNormalMap(normalBaseTexture);
+                if (lightingSystem && lightingSystem.normalMapFilter) {
+                    lightingSystem.normalMapFilter.uniforms.uNormalSampler = normalBaseTexture;
+                    tileLayer.filters = [lightingSystem.normalMapFilter];
+                }
+            }
+
+            // タイル文字と色のマッピング（テクスチャアトラスを使用）
+            let tileTextures = {
+                '#': tileAtlas.getTexture('#'),
+                '.': tileAtlas.getTexture('.'),
+                '>': tileAtlas.getTexture('>'),
+                ' ': tileAtlas.getTexture(' '),
+                '⛩️': tileAtlas.getTexture('⛩️')
+            };
+
+            console.log('Texture atlas and normal maps loaded successfully');
+        } catch (error) {
+            console.error('Failed to load TileAtlas:', error);
+        }
+    }
+
+    // タイル描画用ヘルパー: マップ配列からタイルIDを解決
+    function getTileDefId(mapTile) {
+        // マップから送られてくる文字をTileDef IDにマッピング
+        const map = {
+            '#': 'TILE_WALL',
+            '.': 'TILE_FLOOR',
+            '>': 'TILE_STAIRS_DOWN',
+            '<': 'TILE_STAIRS_UP',
+            '~': 'TILE_WATER',
+            '^': 'TILE_TRAP',
+            '⛩️': 'TILE_FLOOR',  // 祭壇は床扱い
+            // T11 案1: FF6風テライン（サーバーはタイルID文字列を送るため同一IDへマップ）
+            'TILE_FF6_WALL_STONE': 'TILE_FF6_WALL_STONE',
+            'TILE_FF6_WALL_IRON': 'TILE_FF6_WALL_IRON',
+            'TILE_FF6_WALL_BLUE': 'TILE_FF6_WALL_BLUE',
+            'TILE_FF6_FLOOR_COBBLE': 'TILE_FF6_FLOOR_COBBLE',
+            'TILE_FF6_FLOOR_MOSS': 'TILE_FF6_FLOOR_MOSS',
+            'TILE_FF6_FLOOR_WOOD': 'TILE_FF6_FLOOR_WOOD',
+            'TILE_FF6_WATER': 'TILE_FF6_WATER',
+            'TILE_FF6_LAVA': 'TILE_FF6_LAVA',
+            'TILE_FF6_GRASS': 'TILE_FF6_GRASS',
+            'TILE_FF6_FLOWER': 'TILE_FF6_FLOWER',
+            'TILE_DOOR_CLOSED': 'TILE_DOOR_CLOSED',
+            'TILE_DOOR_OPEN': 'TILE_DOOR_OPEN',
+        };
+        return map[mapTile] || 'TILE_FLOOR';
+    }
+
+    // タイル描画用ヘルパー: アニメーションタイルかどうか判定
+    function isAnimatedTile(tileId) {
+        const td = tileAtlas?.defs[tileId];
+        return td && td.animated;
+    }
+
+    // 向き計算ヘルパー (0:下, 1:左, 2:右, 3:上)
+    function calculateFacing(dx, dy) {
+        if (Math.abs(dx) > Math.abs(dy)) {
+            return dx > 0 ? 2 : 1;
+        } else {
+            return dy > 0 ? 0 : 3;
+        }
+    }
+
+    // 前フレーム位置から向き推定
+    function estimateFacing(ent, prevEntities) {
+        if (!prevEntities) return ent.facing || 0;
+        const prev = prevEntities.find(e => e.id === ent.id || (e.world_x === ent.world_x && e.world_y === ent.world_y));
+        if (!prev) return ent.facing || 0;
+        const dx = ent.x - prev.x;
+        const dy = ent.y - prev.y;
+        if (dx === 0 && dy === 0) return ent.facing || 0;
+        return calculateFacing(dx, dy);
+    }
+
+    // エンティティごとの攻撃タイマー管理
+    const entityAttackTimers = new Map(); // entity_id -> { timer, duration }
+
+    // 汎用エンティティTileDef ID解決
+    function getEntityTileId(ent) {
+        if (ent.is_player) return "PLAYER";
+        if (ent.is_pet) return "PET";
+        // 将来的に種別対応:
+        // if (ent.monster_type) return MONSTER_TYPE_MAP[ent.monster_type] || "ENEMY_GOBLIN";
+        return "ENEMY_GOBLIN";
+    }
+
+    function updateEntityAttackState(ent) {
+        // サーバーから attack_timer が来ていれば優先
+        if (ent.attack_timer > 0) {
+            const id = ent.id || `${ent.world_x},${ent.world_y}`;
+            entityAttackTimers.set(id, { timer: ent.attack_timer, duration: 0.5 });
+            return true;
+        }
+        return false;
+    }
+
+    // TileAtlas初期化
+    initTileAtlas();
+
+    // パフォーマンス監視
+    let lastFrameTime = performance.now();
+    let frameCount = 0;
+    let fps = 60;
+    let qualityReduced = false;
+
+    function monitorPerformance() {
+        const now = performance.now();
+        const dt = now - lastFrameTime;
+        lastFrameTime = now;
+        fps = Math.round(1000 / dt);
+        frameCount++;
+
+        if (frameCount % 60 === 0) {
+            console.log(`FPS: ${fps}, Draw calls: ${pixiApp.renderer.drawCount || 'N/A'}`);
+        }
+
+        if (fps < 30 && !qualityReduced) {
+            qualityReduced = true;
+            console.warn('Performance low, reducing quality');
+            if (particleSystem) particleSystem.maxParticles = 250;
+            if (postProcessManager) postProcessManager.setBloomEnabled(false);
+            if (tileAtlas) {
+                for (const anim of tileAtlas.animatedSpriteCache.values()) {
+                    anim.animationSpeed *= 0.5;
+                }
+            }
+        } else if (fps > 50 && qualityReduced) {
+            qualityReduced = false;
+            console.log('Performance recovered, restoring quality');
+            if (particleSystem) particleSystem.maxParticles = 500;
+            if (postProcessManager) postProcessManager.setBloomEnabled(true);
+            if (tileAtlas) {
+                for (const anim of tileAtlas.animatedSpriteCache.values()) {
+                    anim.animationSpeed *= 2;
+                }
+            }
+        }
+    }
+
+    let gameState = null;
+    let animTime = 0;
+    let prevPlayerPos = null;
+    let prevPlayerHp = null;
+    let prevPlayerLevel = null; // レベルアップ差分検知用 (FF6案9)
+
+    function render() {
+      animTime += 0.05;
+
+      // パフォーマンス監視
+      monitorPerformance();
+
+      // パーティクルシステムを更新
+      particleSystem.update(0.016); // 約60fps想定
+
+      // ポストプロセスを更新
+      postProcessManager.update(0.016);
+
+      // T11 案5: バックドロップ更新（星の瞬き・リサイズ追従）
+      if (battleBackdrop) battleBackdrop.update(0.016);
+
+      // スクリーンシェイクを更新
+      screenShake.update(0.016);
+
+      if (!gameState) {
+        // サーバーに接続中... をDOMオーバーレイで表示（Canvas 2Dコンテキストを使用しない）
+        if (!document.getElementById('loading-overlay')) {
+            const overlay = document.createElement('div');
+            overlay.id = 'loading-overlay';
+            overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);color:#8b9bb4;font:16px var(--font-main);z-index:50;pointer-events:none;';
+            overlay.textContent = 'サーバーに接続中……';
+            document.getElementById('viewportPanel').appendChild(overlay);
+        }
+        return;
+    } else {
+        // 接続完了時はローディングオーバーレイを削除
+        const loadingOverlay = document.getElementById('loading-overlay');
+        if (loadingOverlay) loadingOverlay.remove();
+    }
+        // Clear layers each frame (except background which is static)
+        tileLayer.removeChildren();
+        entityLayer.removeChildren();
+        effectLayer.removeChildren();
+
+        const map = gameState.map || [];
+        const lightMap = gameState.light_map || [];
+        const lightColor = gameState.light_color || [];
+        const lightSources = gameState.light_sources || [];
+        const enemyCones = gameState.enemy_cones || [];
+        const viewH = map.length;
+        const viewW = viewH > 0 ? map[0].length : 0;
+
+        // 画面中央オフセット
+        const offsetX = Math.max(0, (canvas.width - viewW * TILE_SIZE) / 2);
+        const offsetY = Math.max(0, (canvas.height - viewH * TILE_SIZE) / 2);
+
+        // Step 5 & 8: 霧密度 (Fog Density) の同期
+        window.fogDensity = gameState.fog_density !== undefined ? gameState.fog_density : 0.35;
+
+        // ライティングシステムを更新（乗算ブレンド＋松明フリッカー＋敵視界コーン＋GI/フォグ）
+        lightingSystem.updateLightMap(lightMap, lightColor);
+        lightingSystem.setLightSources(lightSources, animTime);
+        lightingSystem.setEnemyCones(enemyCones, animTime);
+        if (lightingSystem.updateSDF && gameState.raw_tiles) {
+            const blockedGrid = gameState.raw_tiles.map(row => row.map(t => (t === '#' ? 1 : 0)));
+            lightingSystem.updateSDF(blockedGrid);
+        }
+        if (lightingSystem.renderGI) {
+            lightingSystem.renderGI(animTime);
+        }
+        if (lightingSystem.updateNormalLighting && gameState.player) {
+            const playerPx = offsetX + (gameState.player.x + 0.5) * TILE_SIZE;
+            const playerPy = offsetY + (gameState.player.y + 0.5) * TILE_SIZE;
+            lightingSystem.updateNormalLighting(playerPx, playerPy);
+        }
+        lightingSystem.applyLighting(pixiApp.stage);
+
+        // Step 19 & 21: 環境干渉 (Foliage Bending) の Interactor 更新
+        if (interactionManager && foliageFilter) {
+            const interactors = [];
+            if (gameState.player) {
+                interactors.push({
+                    x: offsetX + (gameState.player.x + 0.5) * TILE_SIZE,
+                    y: offsetY + (gameState.player.y + 0.5) * TILE_SIZE,
+                    radius: 28.0
+                });
+            }
+            if (Array.isArray(gameState.entities)) {
+                for (const ent of gameState.entities.slice(0, 7)) {
+                    interactors.push({
+                        x: offsetX + (ent.x + 0.5) * TILE_SIZE,
+                        y: offsetY + (ent.y + 0.5) * TILE_SIZE,
+                        radius: 22.0
+                    });
+                }
+            }
+            interactionManager.updateInteractors(interactors);
+            foliageFilter.update(interactionManager, 0.016);
+        }
+
+        // 深度別カラーグレーディング（ポストプロセス）
+        if (postProcessManager && postProcessManager.setColorGrade) {
+            postProcessManager.setColorGrade(gameState.dungeon_level || 0);
+        }
+
+        // 1. タイル描画 (床・壁・階段) - TileAtlas使用
+        // T11 案5: ダンジョン階層からバックドロップのテーマを切り替え
+        if (battleBackdrop) battleBackdrop.setTheme(gameState.dungeon_level || 0);
+        for (let y = 0; y < viewH; y++) {
+          for (let x = 0; x < viewW; x++) {
+            const mapTile = map[y][x];
+            const tileId = getTileDefId(mapTile);
+            const light = lightMap[y] ? lightMap[y][x] : 0;
+
+            const px = offsetX + x * TILE_SIZE;
+            const py = offsetY + y * TILE_SIZE;
+
+            // オートタイルバリアント計算（壁・床のみ）
+            let variant = 0;
+            if (tileId === "TILE_WALL" || tileId === "TILE_FLOOR") {
+              variant = tileAtlas.calculateNeighborMask(map, x, y, tileId);
+            }
+
+            // アニメーションタイル判定
+            const td = tileAtlas.defs[tileId];
+            let sprite;
+            if (td && td.animated) {
+              // アニメーションスプライト作成・キャッシュ
+              const animKey = `${tileId}_${variant}_${td.states?.[0]||'idle'}_${td.fps}`;
+              if (!tileAnimCache[animKey]) {
+                tileAnimCache[animKey] = tileAtlas.createAnimatedSprite(tileId, { variant, fps: td.fps });
+              }
+              sprite = tileAnimCache[animKey];
+              sprite.x = px; sprite.y = py;
+              if (sprite.parent !== tileLayer) tileLayer.addChild(sprite);
+            } else {
+              // 静的スプライト
+              sprite = tileAtlas.createSprite(tileId, { variant });
+              sprite.x = px; sprite.y = py;
+              tileLayer.addChild(sprite);
+            }
+          }
+        }
+
+        // 2. エンティティ描画 (プレイヤー・ペット・モンスター) - TileAtlasアニメーションスプライト使用
+        const entities = gameState.entities || [];
+        const player = gameState.player;
+
+        // プレイヤーの移動パーティクル & 足跡デカール
+        if (player && prevPlayerPos) {
+          const dx = player.x - prevPlayerPos.x;
+          const dy = player.y - prevPlayerPos.y;
+          if (dx !== 0 || dy !== 0) {
+            // 移動時にほこりのパーティクルを発生
+            particleSystem.emitEffect('step',
+              offsetX + player.x * TILE_SIZE,
+              offsetY + player.y * TILE_SIZE,
+              3
+            );
+            // Step 54: 足跡スタンプを地面に焼き付け
+            if (decalSystem) {
+              decalSystem.stampFootprint(
+                offsetX + (player.x + 0.5) * TILE_SIZE,
+                offsetY + (player.y + 0.5) * TILE_SIZE,
+                dx, dy
+              );
+            }
+          }
+        }
+
+        // プレイヤーのHP変化パーティクル
+        if (player && prevPlayerHp !== null) {
+          if (player.hp < prevPlayerHp) {
+            // ダメージを受けた
+            particleSystem.emitEffect('damage',
+              offsetX + player.x * TILE_SIZE,
+              offsetY + player.y * TILE_SIZE,
+              5
+            );
+            // ダメージ数を浮上表示（改善案5: クラストグル制御の例）
+            const dmg = prevPlayerHp - player.hp;
+            showFloatText(`-${dmg}`,
+              offsetX + player.x * TILE_SIZE,
+              offsetY + player.y * TILE_SIZE - 28,
+              '#ff6b6b');
+            // スクリーンシェイク
+            screenShake.shake('medium');
+
+            // Step 38: 血痕流体パーティクルを散布
+            if (fluidRenderer) {
+                fluidRenderer.spawnSpatter(
+                    offsetX + (player.x + 0.5) * TILE_SIZE,
+                    offsetY + (player.y + 0.5) * TILE_SIZE,
+                    'blood', 8, 70.0
+                );
+            }
+            // Step 27 & 46: 衝撃波とダメージ色収差
+            if (postProcessManager) {
+                postProcessManager.triggerDamageDistortion(1.0);
+                postProcessManager.addShockwave(
+                    offsetX + (player.x + 0.5) * TILE_SIZE,
+                    offsetY + (player.y + 0.5) * TILE_SIZE,
+                    140, 0.45
+                );
+            }
+          } else if (player.hp > prevPlayerHp) {
+            // 回復した
+            particleSystem.emitEffect('heal',
+              offsetX + player.x * TILE_SIZE,
+              offsetY + player.y * TILE_SIZE,
+              8
+            );
+          }
+        }
+
+        // プレイヤーのレベルアップ検知 (FF6案9: 光の柱演出)
+        if (player && prevPlayerLevel !== null && player.level > prevPlayerLevel) {
+          // 金色のマジックパーティクルが上昇する光の柱
+          particleSystem.emitEffect('level_up',
+            offsetX + player.x * TILE_SIZE,
+            offsetY + player.y * TILE_SIZE,
+            10
+          );
+          showFloatText('LEVEL UP!',
+            offsetX + player.x * TILE_SIZE,
+            offsetY + player.y * TILE_SIZE - 40,
+            '#ffd700');
+          if (postProcessManager) {
+            postProcessManager.addShockwave(
+              offsetX + (player.x + 0.5) * TILE_SIZE,
+              offsetY + (player.y + 0.5) * TILE_SIZE,
+              160, 0.6
+            );
+          }
+          SoundEngine.playSE('fanfare');
+        }
+
+        // プレイヤー位置を記録
+        if (player) {
+          prevPlayerPos = { x: player.x, y: player.y };
+          prevPlayerHp = player.hp;
+          prevPlayerLevel = player.level;
+        }
+
+        // 前フレームエンティティ保存（向き推定用）
+        const prevEntities = entities.map(e => ({...e}));
+
+        // フローティングテキストに応じたパーティクル
+        if (gameState.floating_texts) {
+          gameState.floating_texts.forEach(ft => {
+            if (ft.text && ft.text.includes('🔥') || ft.text && ft.text.includes('魔法')) {
+              particleSystem.emitEffect('magic_cast',
+                offsetX + ft.x * TILE_SIZE,
+                offsetY + ft.y * TILE_SIZE,
+                10
+              );
+            }
+          });
+        }
+
+        entities.forEach(ent => {
+          const px = offsetX + ent.x * TILE_SIZE;
+          const py = offsetY + ent.y * TILE_SIZE;
+
+          // 息遣いアニメーション
+          const bounce = Math.sin(animTime * 4 + ent.x) * 1.5;
+
+          // エンティティのTileDef ID決定
+          let tileId = getEntityTileId(ent);
+
+          const td = tileAtlas.defs[tileId];
+          if (!td) return;
+
+          // 向き決定: サーバー優先 → 推定
+          const dir = ent.facing !== undefined ? ent.facing : estimateFacing(ent, prevEntities);
+
+          // 状態決定: サーバー優先 → 推定
+          let state = ent.state || "idle";
+          const isAttacking = state === "attack";
+
+          // 攻撃タイマー管理
+          if (isAttacking) {
+              const id = ent.id || `${ent.world_x},${ent.world_y}`;
+              entityAttackTimers.set(id, { timer: 0.5, duration: 0.5 });
+}
+
+           // 攻撃中は強制的にattack状態維持
+          const attackInfo = entityAttackTimers.get(ent.id || `${ent.world_x},${ent.world_y}`);
+          if (attackInfo) {
+              state = "attack";
+              attackInfo.timer -= 1/60;
+              if (attackInfo.timer <= 0) {
+                  entityAttackTimers.delete(ent.id || `${ent.world_x},${ent.world_y}`);
+                  state = "idle";
+              }
+          } else if (ent.hp <= 0) {
+              state = "dead";
+          } else if (ent.moving || (ent.vx !== 0 || ent.vy !== 0)) {
+              state = "walk";
+          }
+
+          // アニメーションキー: tileId_direction_state
+          const animKey = `${tileId}_${dir}_${state}`;
+          if (!entityAnimCache[animKey]) {
+              const loop = state !== "attack" && state !== "dead";
+              const fps = state === "attack" ? 12 : td.fps;
+              entityAnimCache[animKey] = tileAtlas.createAnimatedSprite(tileId, {
+                  direction: dir, state, fps, loop
+              });
+          }
+          const sprite = entityAnimCache[animKey];
+
+          // 攻撃・死亡アニメは最初から再生
+          if ((state === "attack" || state === "dead") && !sprite._playing) {
+              sprite.gotoAndPlay(0);
+              sprite._playing = true;
+              sprite.onComplete = () => {
+sprite._playing = false;
+                   if (state === "dead") sprite.visible = false;
+               };
+           }
+
+           sprite.x = px;
+          sprite.y = py + bounce;
+          entityLayer.addChild(sprite);
+
+          // HPバー（プレイヤーとペット以外のエンティティに対して）
+          if (!ent.is_player && !ent.is_pet && ent.max_hp > 0) {
+            const hpRatio = Math.max(0, Math.min(1, ent.hp / ent.max_hp));
+
+            // HPバーの背景
+            const hpBarBg = new PIXI.Graphics();
+            hpBarBg.beginFill(0x000000, 0.6);
+            hpBarBg.drawRect(-TILE_SIZE * 0.5 + 2, -TILE_SIZE * 0.5 - 4, TILE_SIZE - 4, 3);
+            hpBarBg.endFill();
+            hpBarBg.x = px;
+            hpBarBg.y = py + bounce;
+            entityLayer.addChild(hpBarBg);
+
+            // HPバーの前景
+            const hpColor = hpRatio > 0.5 ? 0x2ecc71 : hpRatio > 0.2 ? 0xf39c12 : 0xe74c3c;
+            const hpBarFg = new PIXI.Graphics();
+            hpBarFg.beginFill(hpColor);
+            hpBarFg.drawRect(-TILE_SIZE * 0.5 + 2, -TILE_SIZE * 0.5 - 4, (TILE_SIZE - 4) * hpRatio, 3);
+            hpBarFg.endFill();
+            hpBarFg.x = px;
+            hpBarFg.y = py + bounce;
+            entityLayer.addChild(hpBarFg);
+          }
+        });
+
+        // 3. アイテム描画 - TileAtlas使用
+        // 品質色マッピング
+        const qualityColors = {
+          'common': 0xcccccc,
+          'uncommon': 0x33ff33,
+          'rare': 0x3366ff,
+          'epic': 0x9933ff,
+          'legendary': 0xffaa00
+        };
+
+        const items = gameState.items || [];
+        items.forEach(item => {
+          const px = offsetX + item.x * TILE_SIZE;
+          const py = offsetY + item.y * TILE_SIZE;
+
+          // アイテムのTileDef ID決定
+          let tileId = "ITEM_POTION";
+          if (item.tile_id && tileAtlas.defs[item.tile_id]) {
+            tileId = item.tile_id;
+          } else if (item.char === '$' || item.char === '💰') {
+            tileId = "ITEM_GOLD";
+          } else if (item.char === ')') {
+            tileId = "ITEM_WEAPON";
+          } else if (item.char === '[') {
+            tileId = "ITEM_ARMOR";
+          }
+
+          const td = tileAtlas.defs[tileId];
+          if (!td) return;
+
+          let sprite;
+          if (td.animated) {
+            const animKey = `${tileId}_idle_${td.fps}`;
+            if (!tileAnimCache[animKey]) {
+              tileAnimCache[animKey] = tileAtlas.createAnimatedSprite(tileId, { fps: td.fps });
+            }
+            sprite = tileAnimCache[animKey];
+            sprite.x = px; sprite.y = py;
+            if (sprite.parent !== entityLayer) entityLayer.addChild(sprite);
+          } else {
+            sprite = tileAtlas.createSprite(tileId, {
+                variant: item.variant || 0,
+                tint: qualityColors[item.quality] || 0xffffff
+            });
+            sprite.x = px; sprite.y = py;
+            entityLayer.addChild(sprite);
+          }
+        });
+
+        // TODO: エフェクト描画（パーティクル、ライティング等）
+      }
+      // レンダリングはPixiJSが自動的に行うため、requestAnimationFrameは不要
+    }
+
+    // PixiJSのtickerでレンダリングループを開始
+    pixiApp.ticker.add((delta) => {
+      const dt = delta / 60.0;
+      if (fluidRenderer) {
+          fluidRenderer.update(dt);
+          fluidRenderer.render();
+      }
+      if (postProcessManager) {
+          postProcessManager.update(dt);
+      }
+      if (boidSystem) {
+          const playerPos = gameState && gameState.player ? {
+              x: (gameState.player.x + 0.5) * TILE_SIZE,
+              y: (gameState.player.y + 0.5) * TILE_SIZE
+          } : null;
+          boidSystem.update(dt, playerPos, gameState ? gameState.light_sources : []);
+      }
+      render();
+    });
+
+    // Step 68: UIボタンの波紋クリック（Ripple）エフェクト初期化
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.hotbar-btn, .tab-btn, .dpad-btn, .audio-btn');
+      if (btn) {
+        const circle = document.createElement('span');
+        const diameter = Math.max(btn.clientWidth, btn.clientHeight);
+        const radius = diameter / 2;
+        const rect = btn.getBoundingClientRect();
+        circle.style.width = circle.style.height = `${diameter}px`;
+        circle.style.left = `${e.clientX - rect.left - radius}px`;
+        circle.style.top = `${e.clientY - rect.top - radius}px`;
+        circle.classList.add('ripple-effect');
+        const oldRipple = btn.getElementsByClassName('ripple-effect')[0];
+        if (oldRipple) oldRipple.remove();
+        btn.appendChild(circle);
+        setTimeout(() => circle.remove(), 500);
+      }
+    });
+
+    // ==================== アニメーション制御の例（改善案5） ====================
+    // クラスの付加・削除でトランジションを制御し、アイテム獲得・ダメージ表示を
+    // 浮上（.float-up）させてから要素を削除する。
+    function showFloatText(text, x, y, color = '#ffd700') {
+      const el = document.createElement('div');
+      el.className = 'float-up';
+      el.textContent = text;
+      el.style.position = 'fixed';
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+      el.style.color = color;
+      el.style.pointerEvents = 'none';
+      el.style.zIndex = 2000;
+      el.style.fontWeight = '700';
+      document.body.appendChild(el);
+      // 連続発生時にもトランジションを再起動するため、一度削除して再付与
+      el.classList.remove('float-up');
+      void el.offsetHeight; // リフロー強制
+      el.classList.add('float-up');
+      setTimeout(() => {
+        el.classList.remove('float-up');
+        el.remove();
+      }, 350); // --animation-duration-slow と同等
+    }
+
+    // ==================== STATE SYNC & API ====================
+    async function fetchState() {
+      try {
+        const res = await fetch("/api/state");
+        if (res.ok) {
+          gameState = await res.json();
+          consumePendingEvents(gameState);
+          updateUI(gameState);
+        }
+      } catch (err) {
+        console.error("State sync failed:", err);
+      }
+    }
+
+    // pending_events消費: サーバー発の演出イベントをクライアント演出へ振り分け (FF6案6)
+    // レベルアップ演出は prevPlayerLevel 差分検知が担うため、ここではカットシーンのみ処理する
+    function consumePendingEvents(state) {
+      if (!Array.isArray(state.pending_events) || state.pending_events.length === 0) return;
+      for (const ev of state.pending_events) {
+        if (ev && ev.type === "cutscene" && cutsceneDirector &&
+            Array.isArray(ev.sequence) && ev.sequence.length > 0) {
+          cutsceneDirector.play(ev.sequence);
+        }
+      }
+    }
+    setInterval(fetchState, 300);
+    fetchState();
+
+    async function sendAction(actionName, payload = {}) {
+      try {
+        const res = await fetch("/api/action", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: actionName, ...payload })
+        });
+        if (res.ok) {
+          gameState = await res.json();
+          updateUI(gameState);
+          SoundEngine.playSE("hit");
+        }
+      } catch (err) {
+        console.error("Action dispatch failed:", err);
+      }
+    }
+
+    // ==================== UI UPDATE ====================
+    function updateUI(state) {
+      if (!state || !state.player) return;
+      const p = state.player;
+      const pet = state.pet;
+
+      // Header Chips
+      document.getElementById("chipFloor").innerText = `階層: B${state.dungeon_level || 1}F`;
+      document.getElementById("chipGold").innerText = `💰 ${p.gold} G`;
+      document.getElementById("chipPlatinum").innerText = `💎 ${p.platinum} P`;
+      document.getElementById("chipKarma").innerText = `⚖️ 善悪: ${p.karma}`;
+
+      // Player Vitals
+      document.getElementById("hudPlayerName").innerText = `${p.name} (Lv.${p.level} ${p.job})`;
+      const hpPct = Math.max(0, Math.min(100, (p.hp / p.max_hp) * 100));
+      document.getElementById("barHP").style.width = `${hpPct}%`;
+      document.getElementById("valHP").innerText = `${p.hp}/${p.max_hp}`;
+
+      const mpPct = Math.max(0, Math.min(100, (p.mp / p.max_mp) * 100));
+      document.getElementById("barMP").style.width = `${mpPct}%`;
+      document.getElementById("valMP").innerText = `${p.mp}/${p.max_mp}`;
+
+      const hungerPct = Math.max(0, Math.min(100, (p.hunger / 2000) * 100));
+      document.getElementById("barHunger").style.width = `${hungerPct}%`;
+      document.getElementById("valHunger").innerText = p.hunger > 1500 ? "満腹" : p.hunger > 800 ? "普通" : "空腹";
+
+      // Pet Vitals
+      if (pet && pet.name) {
+        document.getElementById("hudPetName").innerText = `妹分『${pet.name}』`;
+        const petHpPct = Math.max(0, Math.min(100, (pet.hp / pet.max_hp) * 100));
+        document.getElementById("barPetHP").style.width = `${petHpPct}%`;
+        document.getElementById("valPetHP").innerText = `${pet.hp}/${pet.max_hp}`;
+        document.getElementById("valPetTactic").innerText = `指示: ${pet.tactic || 'バランス'}`;
+      }
+
+      // Inventory List (品質をレアリティ色クラスにマッピング)
+      const invContainer = document.getElementById("inventoryList");
+      const rarityByQuality = { bad: 'common', normal: 'uncommon', good: 'rare', miracle: 'epic', god: 'legendary' };
+      if (state.inventory && state.inventory.length > 0) {
+        invContainer.innerHTML = state.inventory.map(item => {
+          const rarity = rarityByQuality[item.quality] ?? 'common';
+          return `
+            <div class="item-entry ${item.equipped ? 'equipped' : ''} rarity-${rarity}">
+              <span class="font-main ${rarity}">${item.char} ${item.name}</span>
+              <span class="font-caption" style="color: var(--color-text-muted);">${item.weight}s</span>
+            </div>
+          `;
+        }).join("");
+      } else {
+        invContainer.innerHTML = `<div style="color: var(--text-muted); text-align: center;">荷物は空です</div>`;
+      }
+
+      // Stats Tab
+      if (p.attributes) {
+        const statsEl = document.getElementById("statsContent");
+        statsEl.innerHTML = `
+          <div>腕力 (STR): <b>${p.attributes.str}</b></div>
+          <div>耐久 (END): <b>${p.attributes.end}</b></div>
+          <div>器用 (DEX): <b>${p.attributes.dex}</b></div>
+          <div>感覚 (PER): <b>${p.attributes.per}</b></div>
+          <div>習得 (LER): <b>${p.attributes.ler}</b></div>
+          <div>意志 (WIL): <b>${p.attributes.wil}</b></div>
+          <div>魔力 (MAG): <b>${p.attributes.mag}</b></div>
+          <div>魅力 (CHA): <b>${p.attributes.cha}</b></div>
+          <div style="grid-column: span 2; margin-top: 6px; color: #ffd700;">信仰: ${p.god} (信仰度: ${p.piety})</div>
+        `;
+      }
+
+      // Quests Tab
+      const questEl = document.getElementById("questList");
+      if (state.quests && state.quests.length > 0) {
+        questEl.innerHTML = state.quests.map(q => `
+          <div class="item-entry" style="${q.completed ? 'opacity: 0.6;' : ''}">
+            <div>
+              <div style="font-weight: 600;">${q.title}</div>
+              <div style="font-size: 0.7rem; color: var(--text-muted);">${q.target}: ${q.current}/${q.needed}</div>
+            </div>
+            <div style="color: #ffd700;">+${q.reward_gold}G</div>
+          </div>
+        `).join("");
+      } else {
+        questEl.innerHTML = `<div style="color: var(--text-muted); text-align: center;">受領中の依頼はありません</div>`;
+      }
+
+      // Logs
+      const logContainer = document.getElementById("logContainer");
+      if (state.logs) {
+        logContainer.innerHTML = state.logs.map(log => `
+          <div class="log-entry ${log.level || 'INFO'} font-mono">${log.text}</div>
+        `).join("");
+      }
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-content").forEach(el => {
+        el.style.display = "none";
+        el.classList.remove("spring-anim");
+      });
+      document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+      const targetEl = document.getElementById(tabId);
+      if (targetEl) {
+        targetEl.style.display = "block";
+        targetEl.classList.add("spring-anim");
+      }
+      if (window.event && window.event.target) {
+        window.event.target.classList.add("active");
+      }
+    }
+
+    // ==================== KEYBOARD CONTROLS ====================
+    window.addEventListener("keydown", (e) => {
+      // T11 案8: Mキーでワールドマップオーバーレイ / Escで閉じる
+      if (worldMapOverlay) {
+        if (e.code === "KeyM") { e.preventDefault(); worldMapOverlay.toggle(); return; }
+        if (e.code === "Escape" && worldMapOverlay.isOpen()) { worldMapOverlay.close(); return; }
+      }
+      const keyMap = {
+        "ArrowUp": "up", "KeyW": "up", "Numpad8": "up",
+        "ArrowDown": "down", "KeyS": "down", "Numpad2": "down",
+        "ArrowLeft": "left", "KeyA": "left", "Numpad4": "left",
+        "ArrowRight": "right", "KeyD": "right", "Numpad6": "right",
+        "Numpad7": "up_left", "Numpad9": "up_right",
+        "Numpad1": "down_left", "Numpad3": "down_right",
+        "Space": "wait", "Numpad5": "wait",
+        "KeyG": "pickup",
+        "KeyF": "cast_fireball",
+        "KeyQ": "use_potion",
+        "KeyP": "pray"
+      };
+
+      if (keyMap[e.code]) {
+        e.preventDefault();
+        sendAction(keyMap[e.code]);
+      }
+    });
+    });
+
+    // ==================== THEME MANAGER ====================
+    // Persists the selected visual theme (dark / light / high-contrast /
+    // colorblind / sepia) and applies it via <html data-theme="...">.
+    const ThemeManager = (() => {
+      const STORAGE_KEY = 'narou-theme';
+      const VALID = ['dark', 'light', 'high-contrast', 'colorblind', 'sepia'];
+      const root = document.documentElement;
+
+      function current() {
+        return root.dataset.theme || 'dark';
+      }
+
+      function apply(theme) {
+        if (!VALID.includes(theme)) theme = 'dark';
+        root.dataset.theme = theme;
+        try { localStorage.setItem(STORAGE_KEY, theme); } catch (e) {}
+        document.querySelectorAll('#themeSwitch button').forEach((btn) => {
+          const active = btn.dataset.themeValue === theme;
+          btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+      }
+
+      function init() {
+        let saved = 'dark';
+        try { saved = localStorage.getItem(STORAGE_KEY) || 'dark'; } catch (e) {}
+        apply(saved);
+        const sw = document.getElementById('themeSwitch');
+        if (sw) {
+          sw.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-theme-value]');
+            if (btn) apply(btn.dataset.themeValue);
+          });
+        }
+      }
+
+      return { apply, current, init };
+    })();
+    ThemeManager.init();
+  </script>
+
+  <!-- アクセシビリティ: チュートリアル表示 + トークン(?a11y= 対応) (Step 39/43) -->
+  <script>
+    (function () {
+      // URL の ?a11y= を /api/tokens に渡して色覚トークンを上書き (Step 43)
+      var params = new URLSearchParams(location.search);
+      var a11y = params.get('a11y');
+      var tokensUrl = '/api/tokens' + (a11y ? ('?a11y=' + encodeURIComponent(a11y)) : '');
+      fetch(tokensUrl)
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data && data.tokens) {
+            document.documentElement.style.setProperty('--font-scale', (data.font_scale || 1.0));
+          }
+        })
+        .catch(function () {});
+
+      // チュートリアル手順を取得し、最初の1ステップをオーバーレイ表示 (Step 39)
+      fetch('/api/tutorial')
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          var steps = (data && data.steps) || [];
+          if (!steps.length) return;
+          var overlay = document.getElementById('tutorial-overlay');
+          var textEl = document.getElementById('tutorial-text');
+          var nextBtn = document.getElementById('tutorial-next');
+          var idx = 0;
+          function show() { textEl.textContent = ('チュートリアル ' + (idx + 1) + '/' + steps.length + ': ' + steps[idx].text); }
+          show();
+          overlay.style.display = 'block';
+          nextBtn.addEventListener('click', function () {
+            if (idx < steps.length - 1) { idx++; show(); }
+            else { overlay.style.display = 'none'; }
+          });
+        })
+        .catch(function () {});
+    })();
+  </script>
+<!-- Step 55-65: アクセシビリティ・パフォーマンス・モバイル対応スクリプト -->
+  <script>
+    (function () {
+      // Step 55: WebGPU / WebGL2 / Canvas2D レンダラ選択
+      var rendererSelected = "unknown";
+      var webgl2Supported = false;
+      var webgpuSupported = false;
+
+      // WebGPU 検出
+      if ('gpu' in navigator) {
+        webgpuSupported = true;
+      }
+
+      // WebGL2 検出（簡易テスト）
+      try {
+        var testCanvas = document.createElement('canvas');
+        var gl = testCanvas.getContext('webgl2', { alpha: false, antialias: false });
+        webgl2Supported = !!gl;
+      } catch (e) { /* ignore */ }
+
+      // Step 56: サーバーに選択レンダラを通知（Fetch API POST）
+      function reportRenderer(renderer) {
+        rendererSelected = renderer;
+        fetch('/api/capabilities', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ selected: renderer })
+        }).catch(function () { /* サーバー通信失敗は無視 */ });
+        window.__selectedRenderer = renderer; // デバッグ用
+      }
+
+      // 初期化時にレンダラ決定と通知
+      if (webgpuSupported) {
+        reportRenderer('webgpu');
+      } else if (webgl2Supported) {
+        reportRenderer('webgl2');
+      } else {
+        reportRenderer('canvas2d');
+      }
+
+      // Step 58: タッチイベントハンドラ（移動/待機にマップ）
+      var touchStartX = 0, touchStartY = 0;
+      var THRESHOLD = 30; // px
+      document.addEventListener('touchstart', function (e) {
+        if (e.touches.length === 1) {
+          var t = e.touches[0];
+          touchStartX = t.clientX;
+          touchStartY = t.clientY;
+        }
+      }, { passive: true });
+      document.addEventListener('touchend', function (e) {
+        if (e.changedTouches.length === 1) {
+          var t = e.changedTouches[0];
+          var dx = t.clientX - touchStartX;
+          var dy = t.clientY - touchStartY;
+          if (Math.abs(dx) > THRESHOLD || Math.abs(dy) > THRESHOLD) {
+            // スワイプ判定（Step 60）
+            if (Math.abs(dx) > Math.abs(dy)) {
+              if (dx > 0) { /* 右 */ dispatchKey('d'); }
+              else { /* 左 */ dispatchKey('a'); }
+            } else {
+              if (dy > 0) { /* 下 */ dispatchKey('s'); }
+              else { /* 上 */ dispatchKey('w'); }
+            }
+          } else {
+            // タップは待機扱い（Step 58）
+            dispatchKey('.');
+          }
+        }
+      }, { passive: true });
+
+      // キーディスパッチヘルパー（既存の key ハンドラへ送信）
+      function dispatchKey(key) {
+        var evt = new KeyboardEvent('keydown', { key: key });
+        document.dispatchEvent(evt);
+      }
+
+      // Step 59: D-pad ボタン（タッチ／クリック） -> キー送信
+      document.querySelectorAll('#dpad button[data-dir]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var dir = this.getAttribute('data-dir');
+          var map = { up: 'w', down: 's', left: 'a', right: 'd', wait: '.' };
+          if (map[dir]) { dispatchKey(map[dir]); }
+        });
+      });
+
+      // Step 61: レスポンシブ対応（CSS で主に対応、必要なら canvas サイズ調整）
+      function adjustCanvasSize() {
+        var canvas = document.getElementById('gameCanvas');
+        if (!canvas) return;
+        // 画面幅に応じてスケール（CSS が主だが、必要なら JS でも調整可）
+        // ここでは CSS 側で flex 等に任せる
+      }
+      window.addEventListener('resize', adjustCanvasSize);
+      adjustCanvasSize();
+
+      // Step 63: 自動再接続（簡易版：API エラー時にリトライ）
+      var apiRetryDelay = 2000; // ms
+      function fetchWithRetry(url, opts) {
+        return fetch(url, opts).catch(function (err) {
+          console.warn('API fetch failed, retrying:', url, err);
+          return new Promise(function (resolve) {
+            setTimeout(function () {
+              resolve(fetchWithRetry(url, opts));
+            }, apiRetryDelay);
+          });
+        });
+      }
+      // 実際のアプリでは個別 fetch 呼び出しをラップするが、ここではデモとして関数を公開
+      window.fetchWithRetry = fetchWithRetry;
+
+      // Step 64: FPS ベースの自動品質低下（簡易実装）
+      var fps = 60, frameCount = 0, lastTime = performance.now();
+      var qualityReduced = false;
+      function updateFPS() {
+        var now = performance.now();
+        frameCount++;
+        if (now - lastTime >= 1000) {
+          fps = Math.round((frameCount * 1000) / (now - lastTime));
+          frameCount = 0;
+          lastTime = now;
+          if (fps < 30 && !qualityReduced) {
+            // 例：パーティクル数を半分に（実際のゲームでは別途実装要）
+            console.warn('Low FPS (' + fps + '): consider reducing quality');
+            qualityReduced = true;
+          } else if (fps >= 40 && qualityReduced) {
+            qualityReduced = false;
+          }
+        }
+      }
+      // ゲームループに組み込む想定（ここではタイマーでデモ）
+      setInterval(updateFPS, 250);
+
+      // Step 65: ライトモードトグル（簡易：シェーダー系フラグを window に公開）
+      window.__liteMode = false;
+      window.toggleLiteMode = function () {
+        window.__liteMode = !window.__liteMode;
+        console.log('Lite mode:', window.__liteMode);
+      };
+
+      // Step 57: ローディング画面非表示（リソース読み込み完了時）
+      // 実際のゲームではロード完了イベントをここに組み込む
+      window.addEventListener('load', function () {
+        var loading = document.getElementById('loading-overlay');
+        if (loading) { loading.style.display = 'none'; }
+      });
+
+    })();
+  </script>
+</body>
+</html>

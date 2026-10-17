@@ -22,6 +22,36 @@ class RenderSystemHandler:
     def render(self, console: Any) -> None:
         """描画処理 (ゲームロジックを含まない)"""
         engine = self.engine
+        if engine.game_state_data.game_state == "title":
+            # T18 案5: タイトル画面 (NAROUロゴASCII + Enterで開始)。
+            # 起動直後のみ表示され、Enter 入力で engine.main() 側が "play" へ遷移する。
+            console.clear(bg=(0, 0, 0))
+            logo = [
+                r"  _   _                 ",
+                r" | \ | | _____   ____ _ ",
+                r" |  \| |/ _ \ \ / / _` |",
+                r" | |\  | (_) \ V / (_| |",
+                r" |_| \_|\___/ \_/ \__,_|",
+            ]
+            y = max(2, console.height // 2 - len(logo) - 1)
+            for line in logo:
+                console.print(x=1, y=y, string=line, fg=(255, 215, 0), bg=(0, 0, 0))
+                y += 1
+            console.print(
+                x=1,
+                y=y + 1,
+                string="〜Masterpiece Edition〜",
+                fg=(201, 178, 106),
+                bg=(0, 0, 0),
+            )
+            console.print(
+                x=1,
+                y=y + 3,
+                string="── Enterキーで開始 ──",
+                fg=(255, 255, 255),
+                bg=(0, 0, 0),
+            )
+            return
         if engine.game_state_data.game_state == "skill_tree":
             from ui_fx_systems import format_skill_tree_display
 

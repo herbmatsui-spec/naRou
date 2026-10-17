@@ -60,6 +60,11 @@ class CombatSystem:
         if hasattr(engine, "screen_shake"):
             engine.screen_shake.trigger(intensity=1.2, duration=3)
 
+        # 撃破の瞬間を静止させるヒットストップ (打撃感統合: 既存FXに追加)
+        fx_manager = getattr(engine, "fx_manager", None)
+        if fx_manager is not None and hasattr(fx_manager, "trigger_hit_stop"):
+            fx_manager.trigger_hit_stop(duration=6)
+
         # Explosion particles
         for _ in range(3):
             engine.particles.append(

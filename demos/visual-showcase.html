@@ -356,6 +356,7 @@
       <button class="nav-btn active" onclick="showScreen('title')" data-screen="title">タイトル画面</button>
       <button class="nav-btn" onclick="showScreen('status')" data-screen="status">ステータス画面</button>
       <button class="nav-btn" onclick="showScreen('gameover')" data-screen="gameover">ゲームオーバー画面</button>
+      <button class="nav-btn" onclick="showScreen('ff6ui')" data-screen="ff6ui">FF6風UI</button>
     </nav>
   </header>
 
@@ -517,6 +518,50 @@
 
       <div class="title-actions">
         <button class="btn btn-primary font-main" onclick="showScreen('title')">タイトルへ戻る</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FF6風UI (T16 案1) ===== -->
+  <section id="screen-ff6ui" class="screen">
+    <div class="screen-panel">
+      <header>
+        <span class="font-title">🪟</span>
+        <h2 class="screen-title font-title">FF6風UIウィンドウ枠</h2>
+      </header>
+
+      <p class="font-main" style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+        9-sliceウィンドウ枠 (48x48 / slice 16px) — 青グラデ＋銀の飾り縁＋角の装飾。
+        ホバーは枠上にマウスを乗せると銀縁が強調され、無効は沈んだバリエーションになります。
+      </p>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px;">
+        <!-- 通常 -->
+        <div class="ff6-window">
+          <div class="font-title" style="color:#ffd700; font-size:0.9rem; letter-spacing:2px;">COMMAND</div>
+          <div class="font-main" style="font-size:0.8rem; color:#e8ecf4; margin-top:6px; line-height:1.7;">
+            たたかう<br>まほう<br>アイテム<br>にげる
+          </div>
+        </div>
+        <!-- 無効バリエーション -->
+        <div class="ff6-window ff6-window--disabled">
+          <div class="font-title" style="color:#ffd700; font-size:0.9rem; letter-spacing:2px;">STATUS</div>
+          <div class="font-main" style="font-size:0.8rem; color:#c8ccd8; margin-top:6px; line-height:1.7;">
+            無効状態のウィンドウ<br>(選択不可を示す低彩度枠)
+          </div>
+        </div>
+      </div>
+
+      <h3 class="font-title" style="margin:20px 0 10px; color:var(--primary-accent); font-size:1rem;">ATB風行動順ゲージ</h3>
+      <p class="font-main" style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">
+        プレイヤー / ペット / 直近敵3体の行動順を金→白グラデの5セグメントで表示 (数字なし)。
+      </p>
+      <div class="ff6-atb-bar" style="max-width:none;">
+        <div class="ff6-atb-segment ff6-atb-segment--player" title="プレイヤー"><div class="ff6-atb-fill" style="width:72%;"></div></div>
+        <div class="ff6-atb-segment ff6-atb-segment--pet" title="ペット"><div class="ff6-atb-fill" style="width:45%;"></div></div>
+        <div class="ff6-atb-segment ff6-atb-segment--enemy" title="敵1"><div class="ff6-atb-fill" style="width:88%;"></div></div>
+        <div class="ff6-atb-segment ff6-atb-segment--enemy" title="敵2"><div class="ff6-atb-fill" style="width:30%;"></div></div>
+        <div class="ff6-atb-segment ff6-atb-segment--enemy" title="敵3"><div class="ff6-atb-fill" style="width:12%;"></div></div>
       </div>
     </div>
   </section>

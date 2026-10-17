@@ -252,7 +252,16 @@ export class PostProcessManager {
      */
     setVignetteIntensity(intensity) {
         this.vignetteIntensity = Math.max(0, Math.min(1, intensity));
-        this.vignetteFilter.strength = this.vignetteIntensity;
+        if (this.vignetteFilter) {
+            this.vignetteFilter.strength = this.vignetteIntensity;
+        } else if (this.cinematicFilter) {
+            // vignetteFilter未初期化環境ではシネマティックフィルタのビネットuniformへ反映
+            // (update()の減衰処理がベース値 this.vignetteIntensity へ戻す)
+            this.cinematicFilter.uniforms.uVignette = Math.max(
+                this.cinematicFilter.uniforms.uVignette || 0,
+                this.vignetteIntensity
+            );
+        }
     }
 
     /**

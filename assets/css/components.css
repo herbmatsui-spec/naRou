@@ -380,3 +380,84 @@
 .border-rare      { border-color: var(--color-rare,      #3b82f6); }
 .border-uncommon  { border-color: var(--color-uncommon,  #10b981); }
 .border-common    { border-color: var(--color-common,    #6b7280); }
+
+/* ========================================================================
+   T16 案1: FF6風UIウィンドウ枠 + ATB風行動順ゲージ
+   9-slice 枠画像 (48x48, slice 16) は tools/generate_ff6_ui.py の生成物。
+   ======================================================================== */
+
+/* FF6風ウィンドウ枠 (青グラデ + 銀の飾り縁 + 角の装飾) */
+.ff6-window {
+  border-style: solid;
+  border-width: 16px;
+  /* 9-slice: slice=16 / 枠幅=16px / fill で中央の青グラデも背景に使う */
+  border-image: url("../tiles/ff6_ui_frame.png") 16 fill / 16px stretch;
+  border-radius: 0;
+  padding: 10px 12px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ホバー: 銀縁を明るく強調したバリエーションに切替 */
+.ff6-window:hover {
+  border-image-source: url("../tiles/ff6_ui_frame_hover.png");
+}
+
+/* 無効: 低彩度・沈んだバリエーション */
+.ff6-window.ff6-window--disabled,
+.ff6-window:disabled {
+  border-image-source: url("../tiles/ff6_ui_frame_disabled.png");
+  filter: saturate(0.5) brightness(0.8);
+  pointer-events: none;
+}
+
+/* ATB風行動順ゲージ (金→白グラデ、数字なしの擬似行動順バー) */
+.ff6-atb-bar {
+  display: flex;
+  gap: 4px;
+  align-items: stretch;
+  min-width: 200px;
+  max-width: 300px;
+  padding: 4px 5px;
+  background: rgba(10, 14, 25, 0.85);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: auto;
+}
+
+/* キャラ別セグメント (プレイヤー / ペット / 敵) */
+.ff6-atb-segment {
+  position: relative;
+  flex: 1;
+  height: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+/* ゲージ本体: 金→白グラデ */
+.ff6-atb-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 0%;
+  background: linear-gradient(90deg, #d4af37, #fff8dc);
+  box-shadow: 0 0 6px rgba(212, 175, 55, 0.6);
+  transition: width 0.1s linear;
+}
+
+/* キャラ別の枠色で区別 (ゲージの金→白グラデは共通) */
+.ff6-atb-segment--player { border-color: rgba(255, 215, 0, 0.55); }
+.ff6-atb-segment--pet    { border-color: rgba(255, 158, 181, 0.55); }
+.ff6-atb-segment--enemy  { border-color: rgba(224, 96, 64, 0.55); }
+
+/* 行動可能 (ゲージ満タン) の瞬間: 枠が光る */
+.ff6-atb-segment--ready {
+  border-color: rgba(255, 248, 220, 0.85);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}

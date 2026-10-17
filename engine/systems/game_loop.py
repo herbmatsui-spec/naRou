@@ -302,6 +302,10 @@ class GameLoopHandler:
     def update(self, delta_time: float = 1.0) -> None:
         """ゲームロジック更新 (描画を行わない)"""
         engine = self.engine
+        # T18 案5: タイトル状態は世界を停止させる (Enterで "play" へ遷移するまで待機)。
+        # これがないとプレイヤーがEnterを押すまでの間に敵の行動が進行してしまう。
+        if engine.game_state == "title":
+            return
         # ターン処理
         if hasattr(engine, "turn_queue") and engine.turn_queue:
             engine.turn_queue.process(engine, delta_time)

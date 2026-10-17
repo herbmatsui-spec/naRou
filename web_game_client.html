@@ -24,6 +24,10 @@
   <script type="module" src="demos/lib/BattleBackdrop.js"></script>
   <script type="module" src="demos/lib/WorldMapOverlay.js"></script>
   <script type="module" src="demos/lib/CutsceneDirector.js"></script>
+  <script type="module" src="demos/lib/WeatherSystem.js"></script>
+  <script type="module" src="demos/lib/BossBattleDirector.js"></script>
+  <script type="module" src="demos/lib/RareDropDirector.js"></script>
+  <script type="module" src="demos/lib/TransitionDirector.js"></script>
   <style>
     /* Brand UI variables and theme variants are provided by web/theme.css
        (auto-generated from design_tokens.json). Theme switching sets
@@ -555,6 +559,9 @@
           </div>
         </div>
 
+        <!-- ATB風行動順バー (T16 案1: プレイヤー/ペット/直近敵3体、数字なしの擬似ゲージ) -->
+        <div class="ff6-atb-bar" id="ff6AtbBar" aria-label="行動順ゲージ"></div>
+
         <!-- PET VITALS -->
         <div class="vitals-card" id="petCard" style="min-width: 180px;">
           <div style="font-weight: 700; font-size: 0.8rem; color: #ffb6c1;" id="hudPetName">シエル</div>
@@ -735,8 +742,33 @@
             osc.start(now + idx * 0.09);
             osc.stop(now + idx * 0.09 + 0.45);
           });
-        }
-      },
+        } else if (type === "rare_drop") {
+          // T20 案7: レアドロップジングル (上昇グリッサンド＋キラキラ音)
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(330, now);
+          osc.frequency.exponentialRampToValueAtTime(1320, now + 0.35);
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.5);
+          // キラキラの追加音2つ (レア感の演出)
+          [1760, 2093].forEach((freq, idx) => {
+            const sparkOsc = this.ctx.createOscillator();
+            const sparkGain = this.ctx.createGain();
+            sparkOsc.type = "sine";
+            sparkOsc.frequency.setValueAtTime(freq, now + 0.4 + idx * 0.12);
+            sparkGain.gain.setValueAtTime(0.12, now + 0.4 + idx * 0.12);
+            sparkGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4 + idx * 0.12 + 0.25);
+            sparkOsc.connect(sparkGain);
+            sparkGain.connect(this.ctx.destination);
+            sparkOsc.start(now + 0.4 + idx * 0.12);
+            sparkOsc.stop(now + 0.4 + idx * 0.12 + 0.25);
+          });
+        },
 
       startDynamicBGM() {
         if (this.bgmInterval) clearInterval(this.bgmInterval);
@@ -927,6 +959,11 @@
     // パーティクルシステムを初期化
     const particleSystem = new ParticleSystem(pixiApp, effectLayer);
 
+    // T16 案6: 天候パーティクルシステムを初期化 (effectLayer 直下の専用レイヤー)
+    const weatherLayer = new PIXI.Container();
+    pixiApp.stage.addChildAt(weatherLayer, pixiApp.stage.getChildIndex(effectLayer));
+    const weatherSystem = (typeof WeatherSystem !== "undefined") ? new WeatherSystem(pixiApp, weatherLayer) : null;
+
     // ポストプロセスマネージャーを初期化
     const postProcessManager = new PostProcessManager(pixiApp);
     pixiApp.stage.addChild(postProcessManager.getEffectsContainer());
@@ -936,6 +973,16 @@
 
     // カットシーン演出ディレクターを初期化 (FF6案6: DOMオーバーレイ式)
     const cutsceneDirector = (typeof CutsceneDirector !== "undefined") ? new CutsceneDirector() : null;
+
+    // T18 案3: ボス戦専用演出ディレクター (PIXI DOM併用) を初期化
+    // FF6_BOSS アトラスはバックグラウンドで事前ロードし、失敗時はフォールバック描画に切り替わる
+    const bossDirector = (typeof BossBattleDirector !== "undefined") ? new BossBattleDirector(pixiApp) : null;
+    if (bossDirector) bossDirector.init();
+
+    // T20 案7: レアドロップ演出ディレクター (DOMオーバーレイ式) を初期化
+    const rareDropDirector = (typeof RareDropDirector !== "undefined") ? new RareDropDirector() : null;
+    // T20 案9: マップ遷移演出ディレクター (DOMオーバーレイ式) を初期化
+    const transitionDirector = (typeof TransitionDirector !== "undefined") ? new TransitionDirector() : null;
 
     // リサイズ処理
     function resize() {
@@ -1066,13 +1113,48 @@
     // エンティティごとの攻撃タイマー管理
     const entityAttackTimers = new Map(); // entity_id -> { timer, duration }
 
+    // T18 案3: ボス種別判定 (monster_type ベース。void_boss 等の *_boss をボス扱いとする)
+    const BOSS_MONSTER_TYPES = ["void_boss"];
+    function isBossEntity(ent) {
+      if (!ent || ent.is_player || ent.is_pet) return false;
+      if (BOSS_MONSTER_TYPES.includes(ent.monster_type)) return true;
+      return typeof ent.monster_type === "string" && ent.monster_type.endsWith("_boss");
+    }
+
     // 汎用エンティティTileDef ID解決
     function getEntityTileId(ent) {
         if (ent.is_player) return "PLAYER";
         if (ent.is_pet) return "PET";
+        // T18 案3: ボスは FF6_BOSS TileDef (64x64) を優先 (アトラスに未定義の種別は従来描画へフォールバック)
+        if (isBossEntity(ent) && tileAtlas && tileAtlas.defs && tileAtlas.defs["FF6_BOSS"]) {
+            return "FF6_BOSS";
+        }
         // 将来的に種別対応:
         // if (ent.monster_type) return MONSTER_TYPE_MAP[ent.monster_type] || "ENEMY_GOBLIN";
         return "ENEMY_GOBLIN";
+    }
+
+    // T18 案3: ボス出現 → 入場演出 / HPバー更新 / 消滅 → 撃破演出 の追跡
+    // (サーバーは可視 & hp>0 のエンティティのみ送信するため、ボスが一覧から消えたら撃破扱いとする)
+    let activeBossId = null; // 表示中ボスの識別子 (null = ボス不在)
+    function updateBossDirectorState() {
+      if (!bossDirector) return;
+      const ents = gameState.entities || gameState.enemies || [];
+      const boss = ents.find(isBossEntity);
+      if (boss) {
+        const bid = boss.id || `${boss.world_x},${boss.world_y}`;
+        if (activeBossId === null) {
+          // ボスが視界に入った最初のフレームで入場演出
+          activeBossId = bid;
+          bossDirector.playEntrance(boss.name || "？？？");
+        } else if (activeBossId === bid) {
+          bossDirector.updateBossHp(boss.hp, boss.max_hp);
+        }
+      } else if (activeBossId !== null) {
+        // 前フレームまで存在したボスが消えた → 撃破演出
+        activeBossId = null;
+        bossDirector.onDefeated();
+      }
     }
 
     function updateEntityAttackState(ent) {
@@ -1133,6 +1215,40 @@
     let prevPlayerPos = null;
     let prevPlayerHp = null;
     let prevPlayerLevel = null; // レベルアップ差分検知用 (FF6案9)
+    let prevDungeonLevel = null; // フロア遷移差分検知用 (T20案9)
+    let prevInventoryCount = null; // アイテム獲得差分検知用 (T20案7)
+
+    // ==================== 打撃感フィードバック (T17案4) ====================
+    // 「命中→揺れ→ヒットストップ→赤ビネット」の統合パターン
+    const HIT_FEEDBACK_CRIT_THRESHOLD = 20; // クリティカル判定のダメージ閾値
+    const HIT_STOP_TIME_SCALE = 0.05;       // ヒットストップ中の時間スケール
+    const HIT_STOP_MIN = 0.06;              // ヒットストップ最短時間 (秒)
+    const HIT_STOP_MAX = 0.09;              // ヒットストップ最長時間 (秒)
+    const VIGNETTE_BASE = 0.4;              // 通常時のビネット強度
+    let hitStopTimer = 0.0;                 // ヒットストップ残り時間 (秒)
+    let frameDt = 0.016;                    // ヒットストップ適用済みの直近フレームdt (秒)
+    let lastSpellFxId = 0;                  // 消費済み詠唱イベントID (spell_fx重複再生防止)
+    const prevEnemyHpMap = new Map();       // エンティティID → 前フレームHP (与ダメ検知用)
+
+    /**
+     * 被弾・与弾共通の打撃感フィードバックを適用する
+     * 揺れ＋ヒットストップ＋赤ビネットを強度に応じて一括で発火する
+     * @param {number} intensity - 強度 (0.2〜1.5、クリティカルや被弾で増加)
+     */
+    function applyHitFeedback(intensity = 1.0) {
+      const strength = Math.max(0.2, Math.min(1.5, intensity));
+      // 揺れ: 強度に応じてプリセットを使い分け
+      screenShake.shake(strength >= 1.0 ? 'heavy' : strength >= 0.7 ? 'medium' : 'light');
+      // ヒットストップ: 時間スケールを一時的に0.05倍 (60-90ms)
+      hitStopTimer = Math.min(HIT_STOP_MAX, HIT_STOP_MIN + strength * 0.02);
+      // 赤ビネット: 一時的に強度を上げ、一定時間後にベースへ戻す
+      if (postProcessManager.setVignetteIntensity) {
+        postProcessManager.setVignetteIntensity(Math.min(1.0, VIGNETTE_BASE + strength * 0.3));
+        setTimeout(() => {
+          postProcessManager.setVignetteIntensity(VIGNETTE_BASE);
+        }, 400);
+      }
+    }
 
     function render() {
       animTime += 0.05;
@@ -1140,17 +1256,17 @@
       // パフォーマンス監視
       monitorPerformance();
 
-      // パーティクルシステムを更新
-      particleSystem.update(0.016); // 約60fps想定
+      // パーティクルシステムを更新 (ヒットストップ適用済みdt)
+      particleSystem.update(frameDt);
 
-      // ポストプロセスを更新
-      postProcessManager.update(0.016);
+      // ポストプロセスを更新 (ヒットストップ適用済みdt)
+      postProcessManager.update(frameDt);
 
       // T11 案5: バックドロップ更新（星の瞬き・リサイズ追従）
-      if (battleBackdrop) battleBackdrop.update(0.016);
+      if (battleBackdrop) battleBackdrop.update(frameDt);
 
-      // スクリーンシェイクを更新
-      screenShake.update(0.016);
+      // スクリーンシェイクを更新 (ヒットストップ中は静止してから揺れる)
+      screenShake.update(frameDt);
 
       if (!gameState) {
         // サーバーに接続中... をDOMオーバーレイで表示（Canvas 2Dコンテキストを使用しない）
@@ -1167,10 +1283,15 @@
         const loadingOverlay = document.getElementById('loading-overlay');
         if (loadingOverlay) loadingOverlay.remove();
     }
+        // T18 案3: ボス出現/HP更新/撃破の追跡 (タイル描画より先に実行し、後段で例外が出ても演出を担保)
+        updateBossDirectorState();
         // Clear layers each frame (except background which is static)
         tileLayer.removeChildren();
         entityLayer.removeChildren();
-        effectLayer.removeChildren();
+        // effectLayerは毎フレームクリアしない (T17案2):
+        // パーティクル/流体/ボイドは自己管理型でスプライトを保持し続けるため、
+        // ここでremoveChildrenするとemitSpellの多層演出が1フレームで消えてしまう。
+
 
         const map = gameState.map || [];
         const lightMap = gameState.light_map || [];
@@ -1236,6 +1357,13 @@
         // 1. タイル描画 (床・壁・階段) - TileAtlas使用
         // T11 案5: ダンジョン階層からバックドロップのテーマを切り替え
         if (battleBackdrop) battleBackdrop.setTheme(gameState.dungeon_level || 0);
+        // T16 案6: フロアテーマ連動の天候 (dungeon_themes.yaml のテーマ名から判定、差分検知付き)
+        if (weatherSystem) weatherSystem.setWeatherForLevel(gameState.dungeon_level || 0);
+        // T20 案9: フロア遷移演出 (dungeon_level 差分で暗転→フロア名カード→復帰)
+        if (transitionDirector && gameState.dungeon_level != null && prevDungeonLevel !== null && gameState.dungeon_level !== prevDungeonLevel) {
+          transitionDirector.playTransition(`B${gameState.dungeon_level}F`);
+        }
+        if (gameState.dungeon_level != null) prevDungeonLevel = gameState.dungeon_level;
         for (let y = 0; y < viewH; y++) {
           for (let x = 0; x < viewW; x++) {
             const mapTile = map[y][x];
@@ -1313,8 +1441,9 @@
               offsetX + player.x * TILE_SIZE,
               offsetY + player.y * TILE_SIZE - 28,
               '#ff6b6b');
-            // スクリーンシェイク
-            screenShake.shake('medium');
+            // T17案4: 命中→揺れ→ヒットストップ→赤ビネットの統合パターン
+            // (dmgが閾値以上のクリティカル時は強度増)
+            applyHitFeedback(dmg >= HIT_FEEDBACK_CRIT_THRESHOLD ? 1.0 : 0.6);
 
             // Step 38: 血痕流体パーティクルを散布
             if (fluidRenderer) {
@@ -1324,9 +1453,9 @@
                     'blood', 8, 70.0
                 );
             }
-            // Step 27 & 46: 衝撃波とダメージ色収差
+            // Step 27 & 46: 衝撃波とダメージ色収差 (色収差はダメージ量に連動)
             if (postProcessManager) {
-                postProcessManager.triggerDamageDistortion(1.0);
+                postProcessManager.triggerDamageDistortion(dmg >= HIT_FEEDBACK_CRIT_THRESHOLD ? 1.2 : 0.8);
                 postProcessManager.addShockwave(
                     offsetX + (player.x + 0.5) * TILE_SIZE,
                     offsetY + (player.y + 0.5) * TILE_SIZE,
@@ -1375,17 +1504,43 @@
         // 前フレームエンティティ保存（向き推定用）
         const prevEntities = entities.map(e => ({...e}));
 
-        // フローティングテキストに応じたパーティクル
-        if (gameState.floating_texts) {
-          gameState.floating_texts.forEach(ft => {
-            if (ft.text && ft.text.includes('🔥') || ft.text && ft.text.includes('魔法')) {
-              particleSystem.emitEffect('magic_cast',
-                offsetX + ft.x * TILE_SIZE,
-                offsetY + ft.y * TILE_SIZE,
-                10
+        // 呪文詠唱エフェクト (T17案2: サーバーのspell_fxイベントをemitSpellの多層魔法として再生)
+        // イベントIDは単調増加するため、未消費のものだけ再生してポーリング重複を防ぐ
+        if (Array.isArray(gameState.spell_fx)) {
+          // サーバー再起動でIDが巻き戻った場合は検知位置をリセット (再開まで全イベント無視を防ぐ)
+          const lastId = gameState.spell_fx.length > 0
+            ? gameState.spell_fx[gameState.spell_fx.length - 1].id : 0;
+          if (lastId < lastSpellFxId) lastSpellFxId = 0;
+          gameState.spell_fx.forEach(sfx => {
+            if (sfx.id > lastSpellFxId) {
+              lastSpellFxId = sfx.id;
+              particleSystem.emitSpell(sfx.element || 'magic',
+                offsetX + (sfx.x + 0.5) * TILE_SIZE,
+                offsetY + (sfx.y + 0.5) * TILE_SIZE
               );
             }
           });
+        }
+
+        // 与ダメ検知: 敵のHP減少時に小さめのヒットフィードバック (T17案4)
+        if (Array.isArray(entities)) {
+          const aliveKeys = new Set();
+          for (const ent of entities) {
+            if (ent.is_player || ent.is_pet) continue;
+            const entKey = ent.id !== undefined ? ent.id : `${ent.world_x},${ent.world_y}`;
+            aliveKeys.add(entKey);
+            const prevHp = prevEnemyHpMap.get(entKey);
+            if (prevHp !== undefined && ent.hp < prevHp && ent.hp > 0) {
+              // 与ダメ側: 小さめのヒットフィードバック＋デジタルヒット
+              applyHitFeedback(0.5);
+              if (postProcessManager) postProcessManager.triggerDamageDistortion(0.5);
+            }
+            prevEnemyHpMap.set(entKey, ent.hp);
+          }
+          // 存在しなくなったエンティティの記録を掃除
+          for (const entKey of prevEnemyHpMap.keys()) {
+            if (!aliveKeys.has(entKey)) prevEnemyHpMap.delete(entKey);
+          }
         }
 
         entities.forEach(ent => {
@@ -1533,9 +1688,80 @@ sprite._playing = false;
       // レンダリングはPixiJSが自動的に行うため、requestAnimationFrameは不要
     }
 
+    // ==================== T16 案1: ATB風行動順バー ====================
+    // プレイヤー / ペット / 直近敵 3 体の行動順を 5 セグメントの擬似ゲージで表示する。
+    // サーバ state の entities に速度・AP は含まれないため、名前から決定論的に
+    // 擬似速度を算出し、クライアント側でゲージを進行させる。
+    const ATB_SEGMENT_COUNT = 5;
+    const atbState = { key: '', fills: [], gauges: [] };
+
+    function atbPseudoSpeed(name) {
+      // 名前の文字コード和から決定論的な擬似速度係数 (60..140) を作る
+      let sum = 0;
+      for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
+      return 60 + (sum % 81);
+    }
+
+    function updateAtbBar(state, dt) {
+      const bar = document.getElementById('ff6AtbBar');
+      if (!bar || !state) return;
+
+      const player = state.player;
+      const entities = Array.isArray(state.entities) ? state.entities : [];
+      const pet = entities.find(e => e.is_pet) || null;
+      const enemies = entities
+        .filter(e => !e.is_player && !e.is_pet)
+        .map(e => ({ e, dist: player ? (e.x - player.x) ** 2 + (e.y - player.y) ** 2 : 0 }))
+        .sort((a, b) => a.dist - b.dist)
+        .slice(0, 3)
+        .map(o => o.e);
+
+      const actors = [];
+      if (player) actors.push({ name: player.name || 'プレイヤー', kind: 'player' });
+      if (pet) actors.push({ name: pet.name || 'ペット', kind: 'pet' });
+      for (const e of enemies) actors.push({ name: e.name || e.char || '敵', kind: 'enemy' });
+      while (actors.length < ATB_SEGMENT_COUNT) actors.push(null); // 空スロット
+      actors.length = ATB_SEGMENT_COUNT;
+
+      // エンティティ構成が変わったときだけ DOM を再構築する
+      const key = actors.map(a => (a ? `${a.kind}:${a.name}` : '-')).join('|');
+      if (key !== atbState.key) {
+        atbState.key = key;
+        bar.innerHTML = '';
+        atbState.fills = [];
+        atbState.gauges = actors.map(a => (a ? 0.15 + Math.random() * 0.45 : 0));
+        actors.forEach(a => {
+          const seg = document.createElement('div');
+          seg.className = 'ff6-atb-segment' + (a ? ` ff6-atb-segment--${a.kind}` : '');
+          const fill = document.createElement('div');
+          fill.className = 'ff6-atb-fill';
+          seg.appendChild(fill);
+          bar.appendChild(seg);
+          atbState.fills.push(a ? fill : null);
+        });
+      }
+
+      // 擬似 ATB 進行: 速度係数に応じてゲージを溜め、満タンで行動完了→次ターンへ
+      for (let i = 0; i < ATB_SEGMENT_COUNT; i++) {
+        const a = actors[i];
+        const fill = atbState.fills[i];
+        if (!a || !fill) continue;
+        atbState.gauges[i] += (atbPseudoSpeed(a.name) / 60) * dt * 0.35;
+        if (atbState.gauges[i] >= 1) atbState.gauges[i] = 0;
+        fill.style.width = `${Math.min(100, atbState.gauges[i] * 100)}%`;
+      }
+    }
+
     // PixiJSのtickerでレンダリングループを開始
     pixiApp.ticker.add((delta) => {
-      const dt = delta / 60.0;
+      const rawDt = delta / 60.0;
+      let dt = rawDt;
+      // T17案4: ヒットストップ中は時間スケールを0.05倍に低下 (打撃の瞬間を静止させる)
+      if (hitStopTimer > 0) {
+        hitStopTimer -= rawDt;
+        dt = rawDt * HIT_STOP_TIME_SCALE;
+      }
+      frameDt = dt;
       if (fluidRenderer) {
           fluidRenderer.update(dt);
           fluidRenderer.render();
@@ -1550,6 +1776,10 @@ sprite._playing = false;
           } : null;
           boidSystem.update(dt, playerPos, gameState ? gameState.light_sources : []);
       }
+      // T16 案6: 天候パーティクルを更新
+      if (weatherSystem) weatherSystem.update(dt);
+      // T16 案1: ATB風行動順バーを更新 (擬似計算)
+      updateAtbBar(gameState, dt);
       render();
     });
 
@@ -1626,6 +1856,8 @@ sprite._playing = false;
     fetchState();
 
     async function sendAction(actionName, payload = {}) {
+      // T18 案5: タイトル画面/オープニング表示中はゲーム入力を無効化する
+      if (window.__narouTitleActive) return;
       try {
         const res = await fetch("/api/action", {
           method: "POST",
@@ -1692,6 +1924,22 @@ sprite._playing = false;
         }).join("");
       } else {
         invContainer.innerHTML = `<div style="color: var(--text-muted); text-align: center;">荷物は空です</div>`;
+      }
+
+      // T20 案7: レアドロップ演出 (インベントリ件数増加を拾得とみなして再生)
+      if (rareDropDirector && state.inventory && Array.isArray(state.inventory)) {
+        const invCount = state.inventory.length;
+        if (prevInventoryCount !== null && invCount > prevInventoryCount) {
+          // 直近の最上位レアリティ品を代表表示 (拾得イベントの代表)
+          const qualityRank = { bad: 0, normal: 1, good: 2, miracle: 3, god: 4 };
+          const best = state.inventory.reduce((acc, cur) =>
+            (acc == null || (qualityRank[cur.quality] ?? 0) > (qualityRank[acc.quality] ?? 0)) ? cur : acc, null);
+          if (best) {
+            rareDropDirector.playDrop(best.name, rarityByQuality[best.quality] ?? 'common');
+            SoundEngine.playSE('rare_drop');
+          }
+        }
+        prevInventoryCount = invCount;
       }
 
       // Stats Tab
@@ -2003,6 +2251,84 @@ sprite._playing = false;
         if (loading) { loading.style.display = 'none'; }
       });
 
+    })();
+  </script>
+
+  <!-- T18 案5: タイトル画面 (DOMオーバーレイ / loading-overlayパターン流用 / z-index 3000) -->
+  <div id="title-overlay" style="position:fixed; inset:0; z-index:3000; display:flex; align-items:center; justify-content:center; background:radial-gradient(ellipse at center, #14101e 0%, #05060a 62%, #000000 100%); color:#fff; font-family:sans-serif; opacity:1; transition:opacity .8s ease;">
+    <div style="text-align:center; padding:24px;">
+      <div class="font-title" style="font-size:min(88px, 14vw); font-weight:800; letter-spacing:.14em; line-height:1; background:linear-gradient(135deg, #fff3b0 0%, #ffd700 45%, #ff8c00 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; filter:drop-shadow(0 0 24px rgba(255,180,40,.55));">NAROU</div>
+      <div class="font-title" style="margin-top:10px; font-size:min(18px, 3.4vw); font-weight:600; letter-spacing:.34em; color:#c9b26a; text-shadow:0 1px 4px rgba(0,0,0,.9);">〜Masterpiece Edition〜</div>
+      <div style="margin-top:44px; display:flex; flex-direction:column; gap:14px; align-items:center;">
+        <button id="btnTitleNew" style="width:240px; padding:12px 0; font-size:16px; letter-spacing:.22em; color:#ffd700; background:rgba(20,16,8,.9); border:1px solid #ffd700; border-radius:6px; cursor:pointer; font-family:var(--font-title, 'Cinzel', serif); transition:all .2s ease;" onmouseover="this.style.background='rgba(64,48,12,.95)'" onmouseout="this.style.background='rgba(20,16,8,.9)'">はじめから</button>
+        <button id="btnTitleContinue" disabled style="width:240px; padding:12px 0; font-size:16px; letter-spacing:.22em; color:#9a9a9a; background:rgba(20,16,8,.9); border:1px solid #555; border-radius:6px; cursor:not-allowed; font-family:var(--font-title, 'Cinzel', serif); transition:all .2s ease;">続きから</button>
+      </div>
+      <div class="font-caption" style="margin-top:36px; font-size:11px; letter-spacing:.2em; color:var(--text-muted, #8b9bb4);">v2.0 MASTERPIECE &nbsp;|&nbsp; FF6 Visual Edition</div>
+    </div>
+  </div>
+
+  <!-- T18 案5: タイトル画面制御 & オープニングカットシーン (CutsceneDirector 使用) -->
+  <script>
+    (function () {
+      var overlay = document.getElementById('title-overlay');
+      var btnNew = document.getElementById('btnTitleNew');
+      var btnContinue = document.getElementById('btnTitleContinue');
+      var started = false;
+
+      // タイトル表示中はゲーム入力 (sendAction) を無効化する
+      window.__narouTitleActive = true;
+
+      // オープニングカットシーン: README Phase 0「転落と覚醒 (Betrayal & Awakening)」準拠
+      var OPENING_SEQUENCE = [
+        { text: "巨大企業都市『バベルタワー』──若きエリート監査官は、上層部の不正を暴こうとしていた。", background: "#0b0d1c", duration: 3600 },
+        { text: "だが待ち受けていたのは罠。権限を永久剥奪され、深度700mの廃棄スラム街へと投棄される。", background: "#151019", duration: 3600 },
+        { text: "暗黒の底で、最底辺の廃棄スキル《基礎解析》が目覚める。解析し、暴き、生き延びよ。", background: "#1c1206", duration: 3600 },
+        { text: "──追捕犬の包囲網を潜り抜け、生存のための逃走劇が今、始まる。", background: "#000000", duration: 3200 }
+      ];
+
+      function dismissTitle() {
+        if (started) return;
+        started = true;
+        window.__narouTitleActive = false;
+        overlay.style.opacity = '0';
+        setTimeout(function () { overlay.style.display = 'none'; }, 820);
+      }
+
+      function playOpening() {
+        // 既存 CutsceneDirector (demos/lib/CutsceneDirector.js) を利用
+        var Director = window.CutsceneDirector;
+        if (!Director) {
+          console.warn('CutsceneDirector が未読込のためオープニングをスキップします');
+          return Promise.resolve();
+        }
+        var director = new Director({ fadeMs: 700, autoAdvanceMs: 3600 });
+        return director.play(OPENING_SEQUENCE);
+      }
+
+      // はじめから: フェードアウト → オープニングカットシーン → ゲーム開始
+      btnNew.addEventListener('click', function () {
+        dismissTitle();
+        setTimeout(playOpening, 820);
+      });
+
+      // 続きから: タイトルから直接ゲームへ復帰 (カットシーンなし)
+      btnContinue.addEventListener('click', dismissTitle);
+
+      // 続きからボタンの有効化判定: 既存のセーブ読み込みAPIは未整備のため、
+      // 進行中セッション (/api/state に player が存在) を取得できたら「復帰可能」とみなす。
+      // 取得できない (バックエンド未起動/プレイヤー未生成) 場合はボタンを無効化したままにする。
+      fetch('/api/state')
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (state) {
+          if (state && state.player && !state.error) {
+            btnContinue.disabled = false;
+            btnContinue.style.color = '#ffd700';
+            btnContinue.style.borderColor = '#ffd700';
+            btnContinue.style.cursor = 'pointer';
+            btnContinue.title = '前回の冒険から再開する';
+          }
+        })
+        .catch(function () { /* 無効のまま */ });
     })();
   </script>
 </body>
