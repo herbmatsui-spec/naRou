@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING, Any
 
 import yaml
 
+from quest import REWARD_COLORS, QUEST_REWARD_KEYS, QuestRewardResolver, ResolvedReward
+
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
@@ -163,6 +165,8 @@ class MainQuestSystem:
         self.data_path = data_path
         self.quests: dict[str, MainQuest] = {}
         self.active_quest_id: str | None = None
+        # T35 R3案A: 報酬の解決・付与は quest.QuestRewardResolver へ一元化
+        self.reward_resolver = QuestRewardResolver()
         self.load_quests()
 
     def load_quests(self) -> None:
@@ -188,6 +192,14 @@ class MainQuestSystem:
                     unlock_dsl=q_data.get("unlock_condition", ""),
                     narrative_dag_id=q_data.get("narrative_dag_id", ""),
                 )
+                # T35 R3案A: 報酬テーブル外のキーは報酬として解決されないため警告する
+                unknown_keys = set(quest.rewards) - set(QUEST_REWARD_KEYS)
+                if unknown_keys:
+                    logger.warning(
+                        "クエスト %s の報酬にテーブル外キーがあります (無視されます): %s",
+                        quest.quest_id,
+                        sorted(unknown_keys),
+                    )
                 self.quests[quest.quest_id] = quest
 
         # 条件ツリーの遅延構築
@@ -210,7 +222,14 @@ class MainQuestSystem:
                     narrative_dag_id="prologue_branching",
                 )
             ],
-            rewards={"gold": 100, "world_phase": "AWAKENING"},
+            # T35 R3案A: data/main_quests.yaml の prologue_01 報酬テーブルと同じ定義
+            rewards={
+                "gold": 100,
+                "exp": 50,
+                "skill_points": 1,
+                "items": {"potion_heal": 2},
+                "world_phase": "AWAKENING",
+            },
             next_quest_id="awakening_01",
             narrative_dag_id="prologue_branching",
         )
@@ -286,14 +305,11 @@ class MainQuestSystem:
         """クエスト完了処理と報酬付与"""
         quest.status = QuestStatus.COMPLETED
 
-        # 報酬付与
-        rewards = quest.rewards
-        if "gold" in rewards:
-            # SurvivalSystem経由でゴールド追加（実際の実装に合わせて調整）
-            # engine.survival は game_state_data.survival を返す（engine.survival_system とは別オブジェクト）
-            if hasattr(engine, "survival"):
-                engine.survival.gold += rewards["gold"]
+        # 報酬付与 (T35 R3案A: 報酬定義は data/main_quests.yaml rewards: に一元化)
+        resolved_rewards = self.reward_resolver.grant(player, engine, quest.rewards)
 
+        # world_phase は報酬ではなく進行制御のため resolver 外で処理する
+        rewards = quest.rewards or {}
         if "world_phase" in rewards:
             # ワールドフェーズの更新
             if engine:
@@ -306,6 +322,9 @@ class MainQuestSystem:
                     ws_manager.set_phase(WorldPhase[rewards["world_phase"]], engine)
                 except KeyError:
                     pass
+
+        # 報酬受領演出 (FloatingText + ログ) を一箇所で発行 (重複表示解消)
+        self._emit_reward_feedback(player, engine, resolved_rewards)
 
         # 次のクエストを準備
         self.active_quest_id = None  # 次の更新タイミングで _try_activate_next_quest が呼ばれる
@@ -322,6 +341,33 @@ class MainQuestSystem:
             for msg in narrative_logs:
                 if callable(log_func):
                     log_func(msg, (170, 150, 255))
+
+    def _emit_reward_feedback(
+        self,
+        player: Entity,
+        engine: Engine | None,
+        resolved_rewards: list[ResolvedReward],
+    ) -> None:
+        """報酬受領の FloatingText とログを一箇所で発行する (T35 R3案A)
+
+        報酬1種につき FloatingText 1件 + ログ1件のみを出し、複数システムから
+        個別に表示されていた重複表示を解消する。engine が演出手段を持たない
+        場合 (テスト用のモックなど) は黙って省略する。
+        """
+        if not resolved_rewards or engine is None:
+            return
+
+        fx_manager = getattr(engine, "fx_manager", None)
+        log_func = getattr(engine, "log", None)
+        x = getattr(player, "x", 0.0)
+        y = getattr(player, "y", 0.0)
+
+        for reward in resolved_rewards:
+            color = REWARD_COLORS.get(reward.kind, (230, 230, 230))
+            if fx_manager is not None and hasattr(fx_manager, "add_floating_text"):
+                fx_manager.add_floating_text(reward.label, x, y - 1.0, color)
+            if callable(log_func):
+                log_func(f"報酬: {reward.label}", color)
 
     def _fire_cutscene_event(self, quest: MainQuest, engine: Engine | None) -> None:
         """クエスト完了カットシーンを発火 (FF6案6)

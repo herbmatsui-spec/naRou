@@ -9,8 +9,15 @@ main_quests:
         target_type: "visit"
         target_id: "village_elder"
         required_count: 1
+    # T35 案A: 報酬はこの rewards: テーブルに一元定義する (唯一の報酬定義源)。
+    # 正キー: gold / exp / items{item_id: 個数} / skill_points / world_phase(進行制御)。
+    # 付与と FloatingText/ログ演出は quest.QuestRewardResolver 経由で一箇所から行う。
     rewards:
       gold: 100
+      exp: 50
+      skill_points: 1
+      items:
+        potion_heal: 2
       world_phase: "AWAKENING"
     next_quest_id: "awakening_01"
     # T26 案1: 完了時に Phase 0「転落と覚醒」ナラティブを開始する
@@ -31,8 +38,13 @@ main_quests:
         target_type: "collect"
         target_id: "world_fragment"
         required_count: 1
+    # T35 案A: 報酬テーブル (Lv3帯)
     rewards:
       gold: 1000
+      exp: 200
+      skill_points: 1
+      items:
+        potion_heal: 2
       world_phase: "EXPLORATION"
     next_quest_id: "exploration_01"
     # T26 案1: 完了時に Phase 1「喰らいと抜け殻」ナラティブを開始する
@@ -54,8 +66,13 @@ main_quests:
         target_id: "prove_resolve"
         required_count: 1
         condition_dsl: "(or (>= player.level 5) (has flags.slew_guardian))"
+    # T35 案A: 報酬テーブル (Lv5帯)
     rewards:
       gold: 5000
+      exp: 1000
+      skill_points: 2
+      items:
+        potion_mana: 2
       world_phase: "CONFRONTATION"
     # T26 案1: 鎖を Phase 3/4-5 へ延長 (confrontation_01 → ascension_01)。
     # 自動受注は LOCKED かつ required_phase 一致のクエストに限られるため
@@ -74,8 +91,13 @@ main_quests:
         target_id: "prove_ascension"
         required_count: 1
         condition_dsl: "(>= player.level 10)"
+    # T35 案A: 報酬テーブル (Lv10帯)
     rewards:
       gold: 10000
+      exp: 2500
+      skill_points: 2
+      items:
+        potion_heal_major: 1
       world_phase: "CLIMAX"
     next_quest_id: "ascension_01"
     # T26 案1: 完了時に Phase 3「神格化と因果律ボス」ナラティブを開始する
@@ -92,8 +114,13 @@ main_quests:
         target_id: "open_dimension_gate"
         required_count: 1
         condition_dsl: "(>= player.level 15)"
+    # T35 案A: 報酬テーブル (Lv15帯・鎖の終端)
     rewards:
       gold: 50000
+      exp: 6000
+      skill_points: 3
+      items:
+        potion_heal_major: 2
       world_phase: "EPILOGUE"
     # 終端: `ascension_01` の完了で Phase 4-5 ナラティブが閉じ、物語は完了する。
     # main_quest_system.py のガードは未解決の id を黙って無視するので、
