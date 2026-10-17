@@ -461,3 +461,49 @@
   border-color: rgba(255, 248, 220, 0.85);
   box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
 }
+
+/* ========================================================================
+   T24 案5: ペット差別化 — HPバーをピンク系グラデにする (.bar-pet)
+   プレイヤーの .bar-hp (緑系) と色で区別する
+   ======================================================================== */
+.bar-pet { background: linear-gradient(90deg, #ff9db5, #ffb6c1); box-shadow: 0 0 8px rgba(255, 182, 193, .5); }
+
+/* T22案6: ゲージ満タン (行動可能) の金色発光点滅 (2Hz) */
+.ff6-atb-fill--ready {
+  animation: ff6AtbPulse 0.5s ease-in-out infinite;
+}
+
+@keyframes ff6AtbPulse {
+  0%, 100% {
+    background: linear-gradient(90deg, #d4af37, #fff8dc);
+    box-shadow: 0 0 6px rgba(212, 175, 55, 0.6);
+  }
+  50% {
+    background: linear-gradient(90deg, #ffe066, #ffffff);
+    box-shadow: 0 0 14px rgba(255, 224, 102, 0.95);
+  }
+}
+
+/* ===== T23 案3: 全画面連動フラッシュ (web_game_client.html が body 直下へ動的生成) ===== */
+
+/* レベルアップ / クエスト完了の全画面金色フラッシュ。
+   アニメは .levelup-flash-active 付与中のみ再生し、
+   クライアント側のクラス再適用 (リフロー強制) で連続発火に対応する。 */
+#levelUpFlash {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  pointer-events: none;
+  background: rgba(255, 215, 0, 0.35);
+  opacity: 0;
+}
+
+#levelUpFlash.levelup-flash-active {
+  animation: levelUpFlash 600ms ease-out;
+}
+
+@keyframes levelUpFlash {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  100% { opacity: 0; }
+}

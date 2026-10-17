@@ -86,12 +86,24 @@ class RenderSystemHandler:
                 y += 2
             return
         if engine.game_state_data.game_state == "game_over":
+            # T23 案2: 死亡画面を FF6 風に強化 (赤テロップ + 戦績 + 操作案内)。
+            # 演出系分岐と同じく黒画面で消去してから描画する。
+            console.clear(bg=(0, 0, 0))
             console.print(x=1, y=1, string=GAME_OVER_TITLE, fg=(255, 50, 50))
+            console.print(x=1, y=2, string="─" * 48, fg=(140, 40, 40))
             summary = getattr(engine, "run_summary", None)
-            y = 2
+            y = 4
             for line in summary.format_lines() if summary else []:
                 console.print(x=1, y=y, string=line, fg=COLOR_GOLD_YELLOW)
                 y += 1
+            # 操作案内: 死亡後は行動入力が全て遮断される (engine.player_act / InputHandler の門)。
+            # リトライ操作は未実装のため、ありのままの終了手順のみを案内する。
+            console.print(
+                x=1,
+                y=y + 1,
+                string="── ウィンドウを閉じると戦績を保存して終了します ──",
+                fg=(170, 170, 185),
+            )
             return
 
         # Use new TCODRenderer with lighting and particle systems

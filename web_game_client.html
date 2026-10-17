@@ -564,10 +564,11 @@
 
         <!-- PET VITALS -->
         <div class="vitals-card" id="petCard" style="min-width: 180px;">
-          <div style="font-weight: 700; font-size: 0.8rem; color: #ffb6c1;" id="hudPetName">シエル</div>
+          <!-- T24 案5: ペット名はCinzel風表示 (font-title + サイズはインラインで上書き) -->
+          <div class="font-title" style="font-weight: 700; font-size: 0.8rem; color: #ffb6c1; letter-spacing: 0.04em;" id="hudPetName">シエル</div>
           <div class="vital-row">
             <span class="vital-label">HP</span>
-            <div class="vital-bar-container"><div class="vital-bar bar-hp" id="barPetHP" style="width: 100%;"></div></div>
+            <div class="vital-bar-container"><div class="vital-bar bar-pet" id="barPetHP" style="width: 100%;"></div></div>
             <span class="vital-val" id="valPetHP">--/--</span>
           </div>
           <div style="font-size: 0.7rem; color: var(--text-muted);" id="valPetTactic">指示: バランス</div>
@@ -768,7 +769,8 @@
             sparkOsc.start(now + 0.4 + idx * 0.12);
             sparkOsc.stop(now + 0.4 + idx * 0.12 + 0.25);
           });
-        },
+        }
+      },
 
       startDynamicBGM() {
         if (this.bgmInterval) clearInterval(this.bgmInterval);
@@ -1134,6 +1136,37 @@
         return "ENEMY_GOBLIN";
     }
 
+    // T22案1: 呼吸アニメの位相シード (エンティティID基準)。
+    // サーバはエンティティIDを送らないため、未定義なら world 座標から決定論的に生成する
+    function entityIdBreathSeed(ent) {
+        const rawId = ent.id !== undefined ? ent.id : `${ent.world_x},${ent.world_y}`;
+        if (typeof rawId === "number") return rawId;
+        let hash = 0;
+        for (let i = 0; i < rawId.length; i++) hash = (hash * 31 + rawId.charCodeAt(i)) % 997;
+        return hash;
+    }
+
+    // T24 案5: ペット名札 (エンティティ頭上に小さく表示して FF6_HERO/プレイヤーと区別)
+    // entityLayer は毎フレーム removeChildren されるため PIXI.Text をキャッシュし、
+    // 名前変更時のみ再ラスタライズする
+    let petNameLabel = null;
+    function getPetNameLabel(name) {
+      if (!petNameLabel) {
+        petNameLabel = new PIXI.Text("", {
+          fontFamily: "Cinzel, serif",
+          fontSize: 9,
+          fontWeight: "700",
+          fill: 0xffb6c1,
+          stroke: 0x1a1420,
+          strokeThickness: 3,
+        });
+        petNameLabel.anchor.set(0.5, 1.0);
+      }
+      const label = String(name || "シエル");
+      if (petNameLabel.text !== label) petNameLabel.text = label;
+      return petNameLabel;
+    }
+
     // T18 案3: ボス出現 → 入場演出 / HPバー更新 / 消滅 → 撃破演出 の追跡
     // (サーバーは可視 & hp>0 のエンティティのみ送信するため、ボスが一覧から消えたら撃破扱いとする)
     let activeBossId = null; // 表示中ボスの識別子 (null = ボス不在)
@@ -1154,6 +1187,11 @@
         // 前フレームまで存在したボスが消えた → 撃破演出
         activeBossId = null;
         bossDirector.onDefeated();
+        // T23 案3: ボス撃破の全画面連動 (強打撃フィードバック + 画面中央からの衝撃波)
+        applyHitFeedback(1.5);
+        if (postProcessManager) {
+          postProcessManager.addShockwave(window.innerWidth / 2, window.innerHeight / 2, 240, 0.6);
+        }
       }
     }
 
@@ -1355,10 +1393,23 @@
         }
 
         // 1. タイル描画 (床・壁・階段) - TileAtlas使用
-        // T11 案5: ダンジョン階層からバックドロップのテーマを切り替え
-        if (battleBackdrop) battleBackdrop.setTheme(gameState.dungeon_level || 0);
-        // T16 案6: フロアテーマ連動の天候 (dungeon_themes.yaml のテーマ名から判定、差分検知付き)
-        if (weatherSystem) weatherSystem.setWeatherForLevel(gameState.dungeon_level || 0);
+        // T11 案5 → T24 案4: サーバー解決のワールドテーマ名を優先してバックドロップを切替
+        // (world_theme 未配信時は従来どおり dungeon_level からの判定にフォールバック)
+        if (battleBackdrop) {
+          if (gameState.world_theme) {
+            battleBackdrop.setThemeByName(gameState.world_theme);
+          } else {
+            battleBackdrop.setTheme(gameState.dungeon_level || 0);
+          }
+        }
+        // T16 案6 → T24 案4: ワールドテーマ名直指定で天候を設定 (差分検知付き)
+        if (weatherSystem) {
+          if (gameState.world_theme) {
+            weatherSystem.setWeatherTheme(gameState.world_theme);
+          } else {
+            weatherSystem.setWeatherForLevel(gameState.dungeon_level || 0);
+          }
+        }
         // T20 案9: フロア遷移演出 (dungeon_level 差分で暗転→フロア名カード→復帰)
         if (transitionDirector && gameState.dungeon_level != null && prevDungeonLevel !== null && gameState.dungeon_level !== prevDungeonLevel) {
           transitionDirector.playTransition(`B${gameState.dungeon_level}F`);
@@ -1472,6 +1523,12 @@
           }
         }
 
+        // T23 案2: プレイヤー死亡検知 (既存 prevPlayerHp 差分監視パターン流用)。
+        // hp が正 → 0 以下へ転じた瞬間に一度だけゲームオーバー演出を開始する。
+        if (player && prevPlayerHp !== null && prevPlayerHp > 0 && player.hp <= 0) {
+          if (window.__narouShowGameOver) window.__narouShowGameOver();
+        }
+
         // プレイヤーのレベルアップ検知 (FF6案9: 光の柱演出)
         if (player && prevPlayerLevel !== null && player.level > prevPlayerLevel) {
           // 金色のマジックパーティクルが上昇する光の柱
@@ -1492,6 +1549,8 @@
             );
           }
           SoundEngine.playSE('fanfare');
+          // T23 案3: レベルアップの全画面金色フラッシュ (#levelUpFlash を body 直下へ動的生成)
+          if (window.__narouGoldFlash) window.__narouGoldFlash();
         }
 
         // プレイヤー位置を記録
@@ -1547,9 +1606,6 @@
           const px = offsetX + ent.x * TILE_SIZE;
           const py = offsetY + ent.y * TILE_SIZE;
 
-          // 息遣いアニメーション
-          const bounce = Math.sin(animTime * 4 + ent.x) * 1.5;
-
           // エンティティのTileDef ID決定
           let tileId = getEntityTileId(ent);
 
@@ -1584,11 +1640,22 @@
               state = "walk";
           }
 
-          // アニメーションキー: tileId_direction_state
-          const animKey = `${tileId}_${dir}_${state}`;
+          // 息遣いアニメーション (T22案1):
+          // idle時はエンティティIDごとに位相をずらした呼吸オフセットを適用し、
+          // walk/attack/dead時は既存のバウンスパターンを優先する
+          let bounce;
+          if (state === "idle") {
+              bounce = Math.sin(animTime * 4 + entityIdBreathSeed(ent) * 1.7) * 1.5;
+          } else {
+              bounce = Math.sin(animTime * 4 + ent.x) * 1.5;
+          }
+
+          // アニメーションキー: tileId_direction_state_fps
+          // (T22案1: ボスの fps=4 固定と既存スプライトキャッシュの競合を避けるため fps を含める)
+          const loop = state !== "attack" && state !== "dead";
+          const fps = isBossEntity(ent) ? 4 : (state === "attack" ? 12 : td.fps);
+          const animKey = `${tileId}_${dir}_${state}_${fps}`;
           if (!entityAnimCache[animKey]) {
-              const loop = state !== "attack" && state !== "dead";
-              const fps = state === "attack" ? 12 : td.fps;
               entityAnimCache[animKey] = tileAtlas.createAnimatedSprite(tileId, {
                   direction: dir, state, fps, loop
               });
@@ -1631,6 +1698,14 @@ sprite._playing = false;
             hpBarFg.x = px;
             hpBarFg.y = py + bounce;
             entityLayer.addChild(hpBarFg);
+          }
+
+          // T24 案5: ペットは名札を頭上に表示してプレイヤー (FF6_HERO) と区別する
+          if (ent.is_pet) {
+            const petLabel = getPetNameLabel(ent.name);
+            petLabel.x = px;
+            petLabel.y = py + bounce - TILE_SIZE - 4;
+            if (petLabel.parent !== entityLayer) entityLayer.addChild(petLabel);
           }
         });
 
@@ -1688,18 +1763,45 @@ sprite._playing = false;
       // レンダリングはPixiJSが自動的に行うため、requestAnimationFrameは不要
     }
 
-    // ==================== T16 案1: ATB風行動順バー ====================
-    // プレイヤー / ペット / 直近敵 3 体の行動順を 5 セグメントの擬似ゲージで表示する。
-    // サーバ state の entities に速度・AP は含まれないため、名前から決定論的に
-    // 擬似速度を算出し、クライアント側でゲージを進行させる。
+    // ==================== T16 案1 / T22 案6: ATB風行動順バー ====================
+    // プレイヤー / ペット / 直近敵 3 体の行動順を 5 セグメントのゲージで表示する。
+    // T22案6: サーバの atb_data (速度・次回行動までの残りAP) があれば実データで
+    // ゲージを進行させ、満タン時は金色点滅 (--ready) を演出する。
+    // atb_data がない場合は従来どおり名前ハッシュの擬似速度で進行させる。
     const ATB_SEGMENT_COUNT = 5;
-    const atbState = { key: '', fills: [], gauges: [] };
+    const ATB_AP_THRESHOLD = 100;  // エンジンの行動エネルギー閾値 (constants.ENERGY_THRESHOLD 相当)
+    const ATB_SPEED_REF = 6;       // ゲージ進行の基準速度 (プレイヤーの表示速度)
+    const ATB_READY_HOLD = 0.6;    // 満タン点滅を保持する秒数
+    const atbState = { key: '', fills: [], gauges: [], ready: [], readyTimer: [] };
 
     function atbPseudoSpeed(name) {
       // 名前の文字コード和から決定論的な擬似速度係数 (60..140) を作る
       let sum = 0;
       for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
       return 60 + (sum % 81);
+    }
+
+    // T22案6: atb_data エントリをアクターに紐付ける。
+    // エンティティIDが無いため world 座標 → 種別フラグ → 名前 の順で照合する
+    function atbFindEntry(state, actor) {
+      const data = Array.isArray(state.atb_data) ? state.atb_data : null;
+      if (!data || !actor) return null;
+      const ent = actor.ent;
+      if (ent && ent.world_x !== undefined) {
+        const byPos = data.find(d => d.world_x === ent.world_x && d.world_y === ent.world_y);
+        if (byPos) return byPos;
+      }
+      if (actor.kind === 'player') return data.find(d => d.is_player) || null;
+      if (actor.kind === 'pet') return data.find(d => d.is_pet) || null;
+      return data.find(d => d.name === actor.name) || null;
+    }
+
+    // T22案6: 残りAPからゲージの進行度 (0..1) を算出する。実データが不完全なら null
+    function atbEntryRatio(entry) {
+      if (!entry || typeof entry.next_action_ap !== 'number') return null;
+      const speed = Math.max(1, entry.speed || 1);
+      const apTotal = Math.max(1, Math.ceil(ATB_AP_THRESHOLD / speed));
+      return Math.max(0, Math.min(1, 1 - entry.next_action_ap / apTotal));
     }
 
     function updateAtbBar(state, dt) {
@@ -1717,9 +1819,9 @@ sprite._playing = false;
         .map(o => o.e);
 
       const actors = [];
-      if (player) actors.push({ name: player.name || 'プレイヤー', kind: 'player' });
-      if (pet) actors.push({ name: pet.name || 'ペット', kind: 'pet' });
-      for (const e of enemies) actors.push({ name: e.name || e.char || '敵', kind: 'enemy' });
+      if (player) actors.push({ name: player.name || 'プレイヤー', kind: 'player', ent: player });
+      if (pet) actors.push({ name: pet.name || 'ペット', kind: 'pet', ent: pet });
+      for (const e of enemies) actors.push({ name: e.name || e.char || '敵', kind: 'enemy', ent: e });
       while (actors.length < ATB_SEGMENT_COUNT) actors.push(null); // 空スロット
       actors.length = ATB_SEGMENT_COUNT;
 
@@ -1729,8 +1831,10 @@ sprite._playing = false;
         atbState.key = key;
         bar.innerHTML = '';
         atbState.fills = [];
-        atbState.gauges = actors.map(a => (a ? 0.15 + Math.random() * 0.45 : 0));
-        actors.forEach(a => {
+        atbState.ready = [];
+        atbState.readyTimer = [];
+        atbState.gauges = [];
+        actors.forEach((a, i) => {
           const seg = document.createElement('div');
           seg.className = 'ff6-atb-segment' + (a ? ` ff6-atb-segment--${a.kind}` : '');
           const fill = document.createElement('div');
@@ -1738,17 +1842,48 @@ sprite._playing = false;
           seg.appendChild(fill);
           bar.appendChild(seg);
           atbState.fills.push(a ? fill : null);
+          atbState.gauges.push(a ? 0.15 + Math.random() * 0.45 : 0);
+          atbState.ready.push(false);
+          atbState.readyTimer.push(0);
+          // 実データがある場合は残りAPでゲージの初期値を同期する
+          const ratio = atbEntryRatio(atbFindEntry(state, a));
+          if (a && ratio !== null) atbState.gauges[i] = ratio;
         });
       }
 
-      // 擬似 ATB 進行: 速度係数に応じてゲージを溜め、満タンで行動完了→次ターンへ
+      // ゲージ進行: atb_data (実データ) があれば速度値で進行、なければ擬似計算へフォールバック
       for (let i = 0; i < ATB_SEGMENT_COUNT; i++) {
         const a = actors[i];
         const fill = atbState.fills[i];
         if (!a || !fill) continue;
-        atbState.gauges[i] += (atbPseudoSpeed(a.name) / 60) * dt * 0.35;
-        if (atbState.gauges[i] >= 1) atbState.gauges[i] = 0;
-        fill.style.width = `${Math.min(100, atbState.gauges[i] * 100)}%`;
+        const entry = atbFindEntry(state, a);
+        if (entry) {
+          // --- 実データモード (T22案6): 型別速度に応じてゲージを溜める ---
+          if (atbState.ready[i]) {
+            // 満タン点滅を一定時間保持してから次ターンへ
+            atbState.readyTimer[i] -= dt;
+            if (atbState.readyTimer[i] <= 0) {
+              atbState.ready[i] = false;
+              atbState.gauges[i] = 0;
+            }
+          } else {
+            const speed = Math.max(1, entry.speed || 1);
+            atbState.gauges[i] += (speed / ATB_SPEED_REF) * dt * 0.35;
+            if (atbState.gauges[i] >= 1) {
+              atbState.gauges[i] = 1;
+              atbState.ready[i] = true;
+              atbState.readyTimer[i] = ATB_READY_HOLD;
+            }
+          }
+          fill.classList.toggle('ff6-atb-fill--ready', atbState.ready[i]);
+          fill.style.width = `${Math.min(100, atbState.gauges[i] * 100)}%`;
+        } else {
+          // --- フォールバック: 従来の名前ハッシュ擬似 ATB 進行 ---
+          atbState.gauges[i] += (atbPseudoSpeed(a.name) / 60) * dt * 0.35;
+          if (atbState.gauges[i] >= 1) atbState.gauges[i] = 0;
+          fill.classList.remove('ff6-atb-fill--ready');
+          fill.style.width = `${Math.min(100, atbState.gauges[i] * 100)}%`;
+        }
       }
     }
 
@@ -1778,7 +1913,7 @@ sprite._playing = false;
       }
       // T16 案6: 天候パーティクルを更新
       if (weatherSystem) weatherSystem.update(dt);
-      // T16 案1: ATB風行動順バーを更新 (擬似計算)
+      // T16 案1 / T22 案6: ATB風行動順バーを更新 (実データ＋擬似フォールバック)
       updateAtbBar(gameState, dt);
       render();
     });
@@ -1842,13 +1977,20 @@ sprite._playing = false;
     }
 
     // pending_events消費: サーバー発の演出イベントをクライアント演出へ振り分け (FF6案6)
-    // レベルアップ演出は prevPlayerLevel 差分検知が担うため、ここではカットシーンのみ処理する
+    // レベルアップ演出は prevPlayerLevel 差分検知が担う。cutscene は CutsceneDirector へ、
+    // quest_complete は全画面連動演出 (金色フラッシュ + 短い衝撃波) を再生する (T23 案3)
     function consumePendingEvents(state) {
       if (!Array.isArray(state.pending_events) || state.pending_events.length === 0) return;
       for (const ev of state.pending_events) {
         if (ev && ev.type === "cutscene" && cutsceneDirector &&
             Array.isArray(ev.sequence) && ev.sequence.length > 0) {
           cutsceneDirector.play(ev.sequence);
+        } else if (ev && ev.type === "quest_complete") {
+          // T23 案3: クエスト完了の全画面連動 (金色フラッシュ + 短い衝撃波)
+          if (window.__narouGoldFlash) window.__narouGoldFlash();
+          if (postProcessManager) {
+            postProcessManager.addShockwave(window.innerWidth / 2, window.innerHeight / 2, 180, 0.35);
+          }
         }
       }
     }
@@ -2329,6 +2471,93 @@ sprite._playing = false;
           }
         })
         .catch(function () { /* 無効のまま */ });
+    })();
+  </script>
+
+  <style>
+    /* T23 案2: ゲームオーバー画面 (title-overlay パターン流用 / z-index 2500)。
+       __narouShowGameOver() が display を切り替え、暗転1秒 → .is-revealed で
+       テロップ/ボタンをゆっくりフェードイン → 離脱時は .is-leaving でフェード復帰する。 */
+    #gameOverOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2500;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0);
+      color: #fff;
+      font-family: sans-serif;
+      transition: background 1s ease, opacity .8s ease;
+    }
+    #gameOverOverlay.is-active { background: rgba(2, 1, 3, 0.92); }
+    #gameOverOverlay.is-revealed .gameover-reveal { opacity: 1; }
+    #gameOverOverlay.is-leaving { opacity: 0; }
+    .gameover-reveal { opacity: 0; transition: opacity 1.8s ease; }
+    #gameOverActions.gameover-reveal { transition-delay: 1.4s; }
+  </style>
+
+  <!-- T23 案2: ゲームオーバー画面 (DOMオーバーレイ / body直下 / z-index 2500) -->
+  <div id="gameOverOverlay">
+    <div style="text-align:center; padding:24px;">
+      <div id="gameOverTelop" class="gameover-reveal" style="font-family:'Cinzel', serif; font-size:min(72px, 12vw); font-weight:800; letter-spacing:.3em; text-indent:.3em; line-height:1; color:#e5342b; text-shadow:0 0 32px rgba(229,52,43,.55), 0 2px 8px rgba(0,0,0,.9);">GAME OVER</div>
+      <div id="gameOverSub" class="gameover-reveal font-caption" style="margin-top:20px; font-size:12px; letter-spacing:.34em; text-indent:.34em; color:#a06a6a; text-shadow:0 1px 4px rgba(0,0,0,.9); transition-delay:.45s;">── 冒険の記録はここで閉じられる ──</div>
+      <div id="gameOverActions" class="gameover-reveal" style="margin-top:48px; display:flex; gap:16px; justify-content:center;">
+        <button id="btnGameOverRetry" style="width:200px; padding:12px 0; font-size:15px; letter-spacing:.22em; color:#ffd700; background:rgba(20,16,8,.9); border:1px solid #ffd700; border-radius:6px; cursor:pointer; font-family:var(--font-title, 'Cinzel', serif); transition:all .2s ease;" onmouseover="this.style.background='rgba(64,48,12,.95)'" onmouseout="this.style.background='rgba(20,16,8,.9)'">リトライ</button>
+        <button id="btnGameOverTitle" style="width:200px; padding:12px 0; font-size:15px; letter-spacing:.22em; color:#c9b26a; background:rgba(20,16,8,.9); border:1px solid #8a6d2f; border-radius:6px; cursor:pointer; font-family:var(--font-title, 'Cinzel', serif); transition:all .2s ease;" onmouseover="this.style.background='rgba(64,48,12,.95)'" onmouseout="this.style.background='rgba(20,16,8,.9)'">タイトルへ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- T23 案2/案3: 全画面連動演出コントローラ (window 経由で render/consumePendingEvents 側から呼び出す) -->
+  <script>
+    (function () {
+      var shown = false;
+
+      // ゲームオーバー画面: 暗転1秒 → 赤テロップ → [リトライ]/[タイトルへ]
+      window.__narouShowGameOver = function () {
+        if (shown) return;
+        shown = true;
+        var overlay = document.getElementById('gameOverOverlay');
+        if (!overlay) return;
+        // ゲームオーバー中は sendAction (キーボード/ホットバー) を無効化する (タイトル画面と同じ門)
+        window.__narouTitleActive = true;
+        overlay.style.display = 'flex';
+        // 暗転1秒: 背景を透過 → 黒へ遷移させ、その後にテロップとボタンをフェードイン
+        requestAnimationFrame(function () {
+          overlay.classList.add('is-active');
+          setTimeout(function () { overlay.classList.add('is-revealed'); }, 1000);
+        });
+      };
+
+      // 離脱: フェード復帰後にページを再読み込みする。
+      // サーバー側に reset/respawn アクションが未実装のため location.reload() フォールバック。
+      // 再読み込み後は既存タイトル画面 (title-overlay) がデフォルト表示される。
+      function leaveByReload() {
+        var overlay = document.getElementById('gameOverOverlay');
+        if (overlay) overlay.classList.add('is-leaving');
+        setTimeout(function () { location.reload(); }, 800);
+      }
+      var retryBtn = document.getElementById('btnGameOverRetry');
+      var titleBtn = document.getElementById('btnGameOverTitle');
+      if (retryBtn) retryBtn.addEventListener('click', leaveByReload);
+      if (titleBtn) titleBtn.addEventListener('click', leaveByReload);
+
+      // 全画面金色フラッシュ (#levelUpFlash を body 直下へ動的生成)。
+      // レベルアップ / クエスト完了の両方から呼び出す (金色 rgba(255,215,0,.35) / 600ms)。
+      window.__narouGoldFlash = function () {
+        var flash = document.getElementById('levelUpFlash');
+        if (!flash) {
+          flash = document.createElement('div');
+          flash.id = 'levelUpFlash';
+          document.body.appendChild(flash);
+        }
+        // 連続発火でもアニメーションを再始動させる (クラス除去 → リフロー強制 → 再適用)
+        flash.classList.remove('levelup-flash-active');
+        void flash.offsetWidth;
+        flash.classList.add('levelup-flash-active');
+      };
     })();
   </script>
 </body>

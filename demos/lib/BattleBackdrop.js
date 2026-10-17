@@ -12,6 +12,17 @@ export class BattleBackdrop {
         tower: { skyTop: 0x0c1024, skyMid: 0x141a38, horizon: 0x243058, ground: 0x0a0c1c, silhouette: 0x0a0c1c, starRatio: 0.9 },
     };
 
+    // T24 案4: dungeon_themes.yaml のテーマ名 (theme_id) → バックドロップテーマ対応表
+    // (WeatherSystem.THEME_WEATHER と同じテーマ名を受け取る)
+    static THEME_BY_WORLD = {
+        industrial_ruins: 'slums',   // 廃工場跡 (スラム)
+        neon_sewers: 'sewers',       // ネオン下水道
+        midas_labs: 'labs',          // ミダス研究棟
+        babel_core: 'tower',         // バベル核心 (塔)
+        goblin_cave: 'slums',        // ゴブリンの洞窟
+        ancient_ruins: 'tower',      // 古代遺跡
+    };
+
     /**
      * ダンジョン階層からテーマ名を決定する
      * @param {number} level - ダンジョン階層 (0=街/地上)
@@ -37,6 +48,7 @@ export class BattleBackdrop {
         this.themeName = '';
         this._time = 0;
         this._drawnLevel = -1;
+        this._drawnWorldTheme = null;
 
         // 描画レイヤー (下から: 空 → シルエット → 星)
         this.sky = new PIXI.Graphics();
@@ -91,6 +103,20 @@ export class BattleBackdrop {
         if (name === this.themeName && level === this._drawnLevel) return;
         this.themeName = name;
         this._drawnLevel = level;
+        this._redraw();
+    }
+
+    /**
+     * ワールドテーマ名からバックドロップを適用する (T24 案4: setTheme の実データ版)
+     * dungeon_themes.yaml のテーマ名をサーバーから受け取って直指定する。
+     * 未知のテーマ名は従来どおり階層 0 (スラム) 扱いにフォールバックする。
+     * @param {string} themeName - dungeon_themes.yaml のテーマ名 (例: 'industrial_ruins')
+     */
+    setThemeByName(themeName) {
+        const name = BattleBackdrop.THEME_BY_WORLD[themeName] || BattleBackdrop.selectTheme(0);
+        if (name === this.themeName && themeName === this._drawnWorldTheme) return;
+        this.themeName = name;
+        this._drawnWorldTheme = themeName;
         this._redraw();
     }
 

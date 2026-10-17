@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any
 
 logger = logging.getLogger(__name__)
 
+from constants import ENERGY_THRESHOLD
 from ui_event_panel import get_current_event_info, get_event_ranking, get_player_event_score
 from ui_ranking_panel import get_all_event_rankings
 
@@ -73,6 +74,55 @@ def _is_rate_allowed(client_ip: str) -> bool:
     # 現在のリクエストを記録
     _REQUEST_HISTORY[client_ip].append(now)
     return True
+
+
+def _resolve_world_theme(level: int) -> str:
+    """T24 案4: dungeon_level を dungeon_themes.yaml のテーマ名 (theme_id) へ解決する
+
+    解決ロジックは world_layer.resolve_theme_id_for_level (depth_range マップ) に委譲し、
+    world_layer を利用できない環境では既定テーマへフォールバックする。
+    """
+    try:
+        from world_layer import resolve_theme_id_for_level
+
+        return resolve_theme_id_for_level(level)
+    except Exception:
+        logger.exception("world_theme の解決に失敗 (既定テーマへフォールバック)")
+        return "industrial_ruins"
+
+
+# T22案6: ATBゲージ用の型別デフォルト速度。
+# speed_componentを持たないエンティティは種別ごとの固定値でゲージを進行させる
+_ATB_DEFAULT_SPEEDS = {
+    "player": 6,
+    "pet": 5,
+    "goblin": 4,
+    "wolf": 6,
+    "skeleton": 3,
+    "bat": 8,
+    "boss": 2,
+}
+
+
+def _atb_display_speed(ent: Any) -> int:
+    """エンティティのATB表示用速度値を解決する (T22案6)。
+
+    speed_componentがあればその値を優先し、なければ型別デフォルトを使う。
+    """
+    speed_comp = getattr(ent, "speed_component", None)
+    if isinstance(speed_comp, (int, float)):
+        return max(1, int(speed_comp))
+    if getattr(ent, "is_player", False):
+        return _ATB_DEFAULT_SPEEDS["player"]
+    if getattr(ent, "is_pet", False):
+        return _ATB_DEFAULT_SPEEDS["pet"]
+    monster_type = getattr(ent, "monster_type", None)
+    if isinstance(monster_type, str):
+        if monster_type.endswith("_boss"):
+            return _ATB_DEFAULT_SPEEDS["boss"]
+        if monster_type in _ATB_DEFAULT_SPEEDS:
+            return _ATB_DEFAULT_SPEEDS[monster_type]
+    return _ATB_DEFAULT_SPEEDS["goblin"]
 
 
 class GameHTTPRequestHandler(BaseHTTPRequestHandler):
@@ -399,6 +449,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             light_color.append(color_row)
 
         entities_data = []
+        atb_data = []
         enemy_cones = []
         for e in engine.entities:
             if engine.game_map.visible[e.x][e.y] and e.hp > 0:
@@ -459,6 +510,22 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                             "moving": getattr(e, "moving", False),
                             "faction": getattr(e, "faction", "neutral"),
                             "status_effects": [st.name for st in getattr(e, "status_effects", [])],
+                        }
+                    )
+                    # T22案6: ATBバー用の実データ (表示速度＋次回行動までの残りAP)。
+                    # speed_componentがあればその値、なければ型別デフォルトを _atb_display_speed が解決する
+                    atb_speed = _atb_display_speed(e)
+                    energy = max(0, getattr(e, "energy", 0))
+                    next_action_ap = max(0, math.ceil((ENERGY_THRESHOLD - energy) / atb_speed))
+                    atb_data.append(
+                        {
+                            "name": e.name,
+                            "world_x": e.x,
+                            "world_y": e.y,
+                            "is_player": e.is_player,
+                            "is_pet": getattr(e, "is_pet", False),
+                            "speed": atb_speed,
+                            "next_action_ap": next_action_ap,
                         }
                     )
                     # Phase 2-A: 敵の視界コーン（プレイヤー方向を向く）
@@ -643,6 +710,16 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                     }
                 )
 
+        # T24 案4: ワールドテーマ名 (dungeon_themes.yaml の theme_id) を解決する。
+        # game_map に world_layer が接続されている場合はそのテーマを優先し、
+        # 通常プレイ (world_layer 未接続) では dungeon_level から深度帯を解決する
+        world_layer = getattr(engine.game_map, "world_layer", None)
+        world_theme = ""
+        if world_layer is not None and world_layer.is_theme_valid():
+            world_theme = str(world_layer.theme_data.get("theme_id", ""))
+        if not world_theme:
+            world_theme = _resolve_world_theme(engine.dungeon_level)
+
         return {
             "player": {
                 "name": p.name,
@@ -687,6 +764,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 "height": engine.game_map.height,
             },
             "entities": entities_data,
+            "atb_data": atb_data,
             "items": items_data,
             "floating_texts": floating_data,
             "spell_fx": spell_fx_data,
@@ -696,6 +774,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             "quests": quests,
             "logs": logs,
             "dungeon_level": engine.dungeon_level,
+            "world_theme": world_theme,
             "game_state": getattr(engine, "game_state", "play"),
             "tutorial_popup": popup_tutorial,
             "floating_notification": (

@@ -86,6 +86,9 @@ export class WeatherSystem {
         // フロア切替の差分検知用 (setWeatherForLevel)
         this.currentLevel = null;
 
+        // テーマ切替の差分検知用 (setWeatherTheme / T24 案4)
+        this.currentTheme = null;
+
         // prefers-reduced-motion 環境では実効強度 0 (パーティクルを発生させない)
         const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
         this.reducedMotion = mediaQuery.matches;
@@ -121,7 +124,20 @@ export class WeatherSystem {
         if (level === this.currentLevel) return;
         this.currentLevel = level;
         const theme = WeatherSystem.selectTheme(level);
-        const weather = WeatherSystem.THEME_WEATHER[theme] || null;
+        // T24 案4: テーマ名直指定 API へ委譲 (後方互換維持)
+        this.setWeatherTheme(theme);
+    }
+
+    /**
+     * dungeon_themes.yaml のテーマ名から天候を設定する (T24 案4、差分検知付き)
+     * サーバー (web_server.py) が解決した world_theme を直指定する。
+     * 未登録のテーマ名は天候なし (null) として扱う。
+     * @param {string} themeName - テーマ名 (例: 'industrial_ruins')
+     */
+    setWeatherTheme(themeName) {
+        if (themeName === this.currentTheme) return;
+        this.currentTheme = themeName;
+        const weather = WeatherSystem.THEME_WEATHER[themeName] || null;
         this.setWeather(weather, 1.0);
     }
 

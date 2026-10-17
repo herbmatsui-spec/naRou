@@ -29,6 +29,9 @@ _INTENT_COLORS = {
     INTENT_GUARD: (120, 255, 255),
 }
 
+# T24 案5: ペットの色差別化 (ピンク系。generate_readme_gifs.py の PET_COL と同系色)
+_PET_COL = (255, 180, 210)
+
 
 def render_entity_intent(console, ent, vx: int, vy: int) -> None:
     """敵の次回行動（意図）を頭上に描画 (提案2)。"""
@@ -196,8 +199,10 @@ class EntityRenderer:
                     # サブイメージ取得・描画
                     sub_image = core_renderer.get_subimage(ent._render_id)
                     if sub_image:
-                        # 呼吸アニメ (bounce)
-                        bounce = math.sin(cls._anim_time * 4 + ent.x) * 1.5
+                        # 呼吸アニメ (bounce) (T22案1):
+                        # 全エンティティに適用し、エンティティIDで位相をずらして
+                        # 全員が同じタイミングで揺れないようにする
+                        bounce = math.sin(cls._anim_time * 4 + ent._render_id * 1.7) * 1.5
                         draw_vy = vy + int(bounce)
 
                         # ライティング適用
@@ -227,6 +232,9 @@ class EntityRenderer:
                         )
                         if not ent.is_player and not ent.is_pet and intensity < 0.3:
                             ent_col = (70, 70, 90)
+                        elif ent.is_pet:
+                            # T24 案5: ペットはピンク系でプレイヤーと色差別化する
+                            ent_col = _PET_COL
                         else:
                             ent_col = lit_col
                         console.print(x=vx, y=vy, string=char_to_draw, fg=ent_col)
