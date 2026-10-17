@@ -670,6 +670,78 @@
     </div>
   </div>
 
+  <!-- T26 案1: メインクエストナラティブオーバーレイ (FF6風ウィンドウ + 縦並び選択肢)。
+       updateNarrativeOverlay() が narrative_state を受けて表示を制御する。z-index 2400
+       (ローディング 2000 / ゲームオーバー 2500 / タイトル 3000 の中間) -->
+  <style>
+    #narrative-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2400;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(4, 6, 12, 0.55);
+      pointer-events: auto;
+    }
+    #narrative-overlay .narrative-window {
+      width: min(560px, 88vw);
+      max-height: 80vh;
+      overflow-y: auto;
+      color: #e8ecf5;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+    }
+    #narrative-overlay .narrative-phase {
+      font-family: var(--font-title, 'Cinzel', serif);
+      font-size: 11px;
+      letter-spacing: .3em;
+      color: var(--color-text-muted, #8b9bb4);
+    }
+    #narrative-overlay .narrative-title {
+      font-family: var(--font-title, 'Cinzel', serif);
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffd700;
+      margin-top: 4px;
+    }
+    #narrative-overlay .narrative-description {
+      margin-top: 10px;
+      font-size: 14px;
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+    #narrative-overlay .narrative-choices {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    #narrative-overlay .narrative-choice-btn {
+      padding: 10px 14px;
+      text-align: left;
+      font: inherit;
+      font-size: 14px;
+      color: #e8ecf5;
+      background: rgba(10, 14, 25, 0.85);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: border-color .15s ease, background-color .15s ease;
+    }
+    #narrative-overlay .narrative-choice-btn:hover {
+      border-color: #ffd700;
+      background: rgba(30, 26, 12, 0.92);
+    }
+  </style>
+  <div id="narrative-overlay">
+    <div class="ff6-window narrative-window">
+      <div class="narrative-phase">── MAIN QUEST NARRATIVE ──</div>
+      <div id="narrative-title" class="narrative-title"></div>
+      <div id="narrative-description" class="narrative-description"></div>
+      <div id="narrative-choices" class="narrative-choices"></div>
+    </div>
+  </div>
+
   <!-- JAVASCRIPT: CANVAS 2D & WEBAUDIO ENGINE -->
   <script>
     // ==================== WEBAUDIO SOUND ENGINE ====================
@@ -1998,6 +2070,7 @@ sprite._playing = false;
         if (res.ok) {
           gameState = await res.json();
           consumePendingEvents(gameState);
+          updateNarrativeOverlay(gameState);
           updateUI(gameState);
         }
       } catch (err) {
@@ -2023,12 +2096,75 @@ sprite._playing = false;
         }
       }
     }
+
+    // ナラティブオーバーレイ: メインクエストDAGの現在ノードと選択肢を表示 (T26案1)
+    // narrative_state は /api/state / /api/action 応答に常時付加される。
+    // completed (END ノード) は一度表示して閉じたら、同ノードは再表示しない。
+    let __narouNarrativeDismissed = "";
+    function updateNarrativeOverlay(state) {
+      const overlay = document.getElementById("narrative-overlay");
+      if (!overlay) return;
+      const ns = state && state.narrative_state;
+      const hide = () => {
+        overlay.style.display = "none";
+        window.__narouNarrativeActive = false;
+      };
+      if (!ns || !ns.node_id) { hide(); return; }
+      const dismissKey = `${ns.dag_id || ""}:${ns.node_id}`;
+      if (ns.completed && __narouNarrativeDismissed === dismissKey) { hide(); return; }
+
+      document.getElementById("narrative-title").innerText = ns.title || "";
+      document.getElementById("narrative-description").innerText = ns.description || "";
+      const choicesEl = document.getElementById("narrative-choices");
+      choicesEl.innerHTML = "";
+      const choices = Array.isArray(ns.choices) ? ns.choices : [];
+      if (choices.length > 0) {
+        for (const c of choices) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "narrative-choice-btn";
+          btn.dataset.edgeId = c.edge_id;
+          btn.textContent = c.choice_text || c.edge_id;
+          choicesEl.appendChild(btn);
+        }
+      } else {
+        // END ノードなど選択肢を持たないノード: 閉じるボタンのみ
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "narrative-choice-btn";
+        btn.dataset.close = "1";
+        btn.dataset.dismissKey = dismissKey;
+        btn.textContent = ns.completed ? "── 閉じる ──" : "……";
+        choicesEl.appendChild(btn);
+      }
+      overlay.style.display = "flex";
+      window.__narouNarrativeActive = true;
+    }
+
+    // 選択肢ボタン (縦並び) の委譲クリック: サーバの narrative_choice アクションへ中継
+    (function () {
+      const choicesEl = document.getElementById("narrative-choices");
+      if (!choicesEl) return;
+      choicesEl.addEventListener("click", (ev) => {
+        const btn = ev.target.closest(".narrative-choice-btn");
+        if (!btn) return;
+        if (btn.dataset.close) {
+          __narouNarrativeDismissed = btn.dataset.dismissKey || "";
+          updateNarrativeOverlay({ narrative_state: null });
+          return;
+        }
+        if (btn.dataset.edgeId) sendAction("narrative_choice", { edge_id: btn.dataset.edgeId });
+      });
+    })();
+
     setInterval(fetchState, 300);
     fetchState();
 
     async function sendAction(actionName, payload = {}) {
       // T18 案5: タイトル画面/オープニング表示中はゲーム入力を無効化する
       if (window.__narouTitleActive) return;
+      // T26 案1: ナラティブオーバーレイ表示中は選択以外のゲーム入力を無効化する
+      if (window.__narouNarrativeActive && actionName !== "narrative_choice") return;
       try {
         const res = await fetch("/api/action", {
           method: "POST",
@@ -2037,6 +2173,7 @@ sprite._playing = false;
         });
         if (res.ok) {
           gameState = await res.json();
+          updateNarrativeOverlay(gameState);
           updateUI(gameState);
           SoundEngine.playSE("hit");
         }
