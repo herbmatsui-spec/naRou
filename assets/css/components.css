@@ -63,6 +63,171 @@
   .container { max-width: 80rem; padding-left: var(--spacing-xxl); padding-right: var(--spacing-xxl); }
 }
 
+/* ===== Panel System: 奥行きと状態を持たせたUIパネル（案2） ===== */
+
+/* ベース：半透明パネル + 内枠ハイライトで9-slice風の凸奥行きを表現 */
+.panel,
+.panel-card,
+.vitals-card,
+.hotbar-container {
+  position: relative;
+  background: var(--panel-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transition: transform var(--animation-duration-normal) var(--animation-easing-easeOut),
+              border-color var(--animation-duration-normal) var(--animation-easing-easeOut),
+              box-shadow var(--animation-duration-normal) var(--animation-easing-easeOut);
+}
+
+/* 内枠ハイライト：上・左を明るくしてパネルが浮き上がるように見せる */
+.panel::before,
+.panel-card::before,
+.vitals-card::before,
+.hotbar-container::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: calc(var(--radius-lg) - 1px);
+  pointer-events: none;
+}
+
+/* ホバー：リフト + ボーダーグロー + シャドウ拡大 */
+.panel:hover,
+.panel-card:hover,
+.vitals-card:hover,
+.hotbar-container:hover {
+  transform: translateY(-2px);
+  border-color: var(--panel-border-glow);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+}
+
+/* 押下：沈み込み */
+.panel:active,
+.panel--pressed,
+.panel-card:active,
+.vitals-card:active,
+.hotbar-container:active {
+  transform: translateY(1px);
+  border-color: var(--panel-border-medium);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* 無効：不透明度下げ、グレースケール、ポインタイベント無効 */
+.panel--disabled,
+.panel-card--disabled,
+.vitals-card--disabled,
+.hotbar-container--disabled {
+  opacity: 0.5;
+  filter: grayscale(0.6);
+  pointer-events: none;
+  transform: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* フォーカス：アクセシビリティ用リング */
+.panel:focus-visible,
+.panel-card:focus-visible,
+.vitals-card:focus-visible,
+.hotbar-container:focus-visible {
+  outline: none;
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.3), 0 16px 48px rgba(0, 0, 0, 0.55);
+}
+
+/* パネルヘッダー（タブバー部分）の境界強化 */
+.panel > .tabs-header,
+.panel-card > .tabs-header {
+  border-bottom: 1px solid var(--panel-border);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* ===== Animation & Transition utilities (改善案5) ===== */
+
+/* パネル フェードイン */
+.panel-fade-in {
+  animation: panelFadeIn var(--animation-duration-normal) var(--animation-easing-easeOut) both;
+}
+@keyframes panelFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* パネル スライドアップ（下から現れる） */
+.panel-slide-up {
+  animation: panelSlideUp var(--animation-duration-normal) var(--animation-easing-easeOut) both;
+}
+@keyframes panelSlideUp {
+  from { opacity: 0; transform: translateY(var(--spacing-md)); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* パネル スライドダウン（上から現れる） */
+.panel-slide-down {
+  animation: panelSlideDown var(--animation-duration-normal) var(--animation-easing-easeOut) both;
+}
+@keyframes panelSlideDown {
+  from { opacity: 0; transform: translateY(calc(var(--spacing-md) * -1)); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 汎用ホバー：拡大 */
+.panel-hover-scale {
+  transition: transform var(--animation-duration-fast) var(--animation-easing-easeOut);
+}
+.panel-hover-scale:hover {
+  transform: scale(1.06);
+}
+
+/* 汎用ホバー：色変化（背景・ボーダー・テキスト） */
+.panel-hover-color {
+  transition: background-color var(--animation-duration-fast) var(--animation-easing-easeOut),
+              border-color var(--animation-duration-fast) var(--animation-easing-easeOut),
+              color var(--animation-duration-fast) var(--animation-easing-easeOut);
+}
+.panel-hover-color:hover {
+  background-color: var(--color-background-muted);
+  border-color: var(--panel-border-glow);
+  color: var(--color-text-primary);
+}
+
+/* アイテム獲得・ダメージ表示：浮上してフェードアウト */
+.float-up {
+  animation: floatUp var(--animation-duration-slow) var(--animation-easing-easeOut) both;
+}
+@keyframes floatUp {
+  0% { opacity: 0; transform: translateY(var(--spacing-md)); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(calc(var(--spacing-md) * -4)); }
+}
+
+/* リップルエフェクト拡張：色バリエーション */
+.ripple-effect--tint {
+  background-color: var(--primary-accent);
+  opacity: 0.55;
+}
+.ripple-effect--subtle {
+  opacity: 0.25;
+}
+
+/* モーダル開閉トランジション */
+.modal-enter {
+  animation: modalEnter var(--animation-duration-normal) var(--animation-easing-easeOut) both;
+}
+.modal-exit {
+  animation: modalExit var(--animation-duration-fast) var(--animation-easing-easeIn) both;
+}
+@keyframes modalEnter {
+  from { opacity: 0; transform: scale(0.92) translateY(var(--spacing-md)); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes modalExit {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to { opacity: 0; transform: scale(0.94) translateY(calc(var(--spacing-md) * 0.5)); }
+}
+
 /* ===== Reduced motion (Step 17) ===== */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -72,3 +237,146 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ===== レアリティ枠（改善案8: ビジュアルアイデンティティ） ===== */
+/* design_tokens.json の color-semantic レアリティカラーを活用 */
+/* common: #6b7280 / uncommon: #10b981 / rare: #3b82f6 / epic: #a855f7 / legendary: #d4af37 */
+.rarity-common,
+.rarity-uncommon,
+.rarity-rare,
+.rarity-epic,
+.rarity-legendary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-style: solid;
+  border-width: 2px;
+  border-radius: var(--radius-md);
+  font-weight: var(--fontWeight-semibold);
+  font-family: var(--fontFamily-ui);
+  transition: border-color var(--animation-duration-normal) var(--animation-easing-easeOut),
+              box-shadow var(--animation-duration-normal) var(--animation-easing-easeOut);
+}
+
+.rarity-common { border-color: var(--color-semantic-common); color: var(--color-semantic-common); }
+.rarity-uncommon { border-color: var(--color-semantic-uncommon); color: var(--color-semantic-uncommon); }
+.rarity-rare { border-color: var(--color-semantic-rare); color: var(--color-semantic-rare); }
+.rarity-epic { border-color: var(--color-semantic-epic); color: var(--color-semantic-epic); }
+.rarity-legendary { border-color: var(--color-semantic-legendary); color: var(--color-semantic-legendary); }
+
+/* レアリティ枠付きカード（アイテム・装備表示用） */
+.rarity-card {
+  position: relative;
+  background: var(--panel-bg);
+  border: 2px solid transparent;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-md);
+  transition: border-color var(--animation-duration-normal) var(--animation-easing-easeOut);
+}
+.rarity-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: calc(var(--radius-lg) + 1px);
+  padding: 2px;
+  background: linear-gradient(var(--panel-bg), var(--panel-bg)) padding-box,
+              linear-gradient(to right, var(--color-semantic-common), var(--color-semantic-legendary)) border-box;
+  pointer-events: none;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+.rarity-card.rarity-common::before  { background: linear-gradient(var(--panel-bg), var(--panel-bg)) padding-box, linear-gradient(to right, var(--color-semantic-common), var(--color-semantic-common)) border-box; }
+.rarity-card.rarity-uncommon::before { background: linear-gradient(var(--panel-bg), var(--panel-bg)) padding-box, linear-gradient(to right, var(--color-semantic-uncommon), var(--color-semantic-uncommon)) border-box; }
+.rarity-card.rarity-rare::before    { background: linear-gradient(var(--panel-bg), var(--panel-bg)) padding-box, linear-gradient(to right, var(--color-semantic-rare), var(--color-semantic-rare)) border-box; }
+.rarity-card.rarity-epic::before    { background: linear-gradient(var(--panel-bg), var(--panel-bg)) padding-box, linear-gradient(to right, var(--color-semantic-epic), var(--color-semantic-epic)) border-box; }
+.rarity-card.rarity-legendary::before { background: linear-gradient(var(--panel-bg), var(--panel-bg)) padding-box, linear-gradient(to right, var(--color-semantic-legendary), var(--color-semantic-legendary)) border-box; }
+
+/* 本文フォント（design_tokens.json の --font-main / --fontFamily-ui を活用） */
+.font-main { font-family: var(--font-main, var(--fontFamily-ui)); }
+
+/* ========================================================================
+   改善案3: フォント階層
+   design_tokens.json / theme.css のCSS変数を優先使用し、未定義時のみフォールバック
+   ======================================================================== */
+
+/* タイトル・ロゴタイプ：セリフ体で存在感を出す */
+.font-title {
+  font-family: var(--font-title, 'Cinzel', serif);
+  font-weight: var(--font-weight-extrabold, 800);
+  font-size: var(--font-size-xxxl, 1.875rem);
+  line-height: var(--line-height-none, 1);
+  letter-spacing: -0.02em;
+}
+
+/* 見出し */
+.font-h1 {
+  font-family: var(--font-ui, var(--font-primary));
+  font-weight: var(--font-weight-bold, 700);
+  font-size: var(--font-size-xxl, 1.5rem);
+  line-height: var(--line-height-sm, 1.25);
+}
+
+.font-h2 {
+  font-family: var(--font-ui, var(--font-primary));
+  font-weight: var(--font-weight-semibold, 600);
+  font-size: var(--font-size-xl, 1.25rem);
+  line-height: var(--line-height-sm, 1.25);
+}
+
+.font-h3 {
+  font-family: var(--font-ui, var(--font-primary));
+  font-weight: var(--font-weight-medium, 500);
+  font-size: var(--font-size-lg, 1.125rem);
+  line-height: var(--line-height-base, 1.5);
+}
+
+/* 本文 */
+.font-body {
+  font-family: var(--font-primary, var(--font-ui));
+  font-weight: var(--font-weight-regular, 400);
+  font-size: var(--font-size-base, 1rem);
+  line-height: var(--line-height-base, 1.5);
+}
+
+/* キャプション・補助テキスト */
+.font-caption {
+  font-family: var(--font-primary, var(--font-ui));
+  font-weight: var(--font-weight-medium, 500);
+  font-size: var(--font-size-xs, 0.75rem);
+  line-height: var(--line-height-sm, 1.25);
+  color: var(--color-text-secondary, var(--text-muted));
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* 等幅（ログ・数値・コード） */
+.font-mono {
+  font-family: var(--font-mono, 'JetBrains Mono', 'Courier New', monospace);
+  font-weight: var(--font-weight-regular, 400);
+  font-size: var(--font-size-sm, 0.875rem);
+  line-height: var(--line-height-base, 1.5);
+}
+
+/* ========================================================================
+   改善案4: カラーパレット強化（レアリティ別 テキスト / 背景 / ボーダー）
+   design_tokens.json / theme.css の --color-legendary 等を優先使用
+   ======================================================================== */
+
+.text-legendary { color: var(--color-legendary, #d4af37); }
+.text-epic      { color: var(--color-epic,      #a855f7); }
+.text-rare      { color: var(--color-rare,      #3b82f6); }
+.text-uncommon  { color: var(--color-uncommon,  #10b981); }
+.text-common    { color: var(--color-common,    #6b7280); }
+
+.bg-legendary { background-color: var(--color-legendary, #d4af37); }
+.bg-epic      { background-color: var(--color-epic,      #a855f7); }
+.bg-rare      { background-color: var(--color-rare,      #3b82f6); }
+.bg-uncommon  { background-color: var(--color-uncommon,  #10b981); }
+.bg-common    { background-color: var(--color-common,    #6b7280); }
+
+.border-legendary { border-color: var(--color-legendary, #d4af37); }
+.border-epic      { border-color: var(--color-epic,      #a855f7); }
+.border-rare      { border-color: var(--color-rare,      #3b82f6); }
+.border-uncommon  { border-color: var(--color-uncommon,  #10b981); }
+.border-common    { border-color: var(--color-common,    #6b7280); }

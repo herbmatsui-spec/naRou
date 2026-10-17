@@ -24,14 +24,36 @@ class SaveSystem:
 # This save system handles achievements via the Entity component system
     """gzip+pickleによる完全なセーブシステム（ECSコンポーネント完全対応・SHA256チェックサム・自動バックアップ・世代管理）
 
+    シリアライズ方針 (pickle 本線):
+    - ``Engine.__getstate__`` が unpicklable な属性
+      (kernel / entity_manager / 各システムハンドラ / renderer / web_server /
+      config_mgr / localization_manager / game_state_initializer 等) を除外し、
+      残りの ``__dict__`` を pickle する。
+    - ロード時は ``SaveSystem.load(target_engine=live_engine)`` で
+      ``live_engine.__dict__.update(loaded.__dict__)`` を行い、**ライブ側の
+      kernel（および kernel 経由の entity_manager / 各スキル喰いシステム）を
+      維持したまま、シリアル化可能な進行状態だけを上書き復元**する。
+      これが pickle 本線の正式な復元フローである。
+
     永続化の既知制約 (設計上の意図, 改善案2で実測・文書化):
-    - pickle 本線は Engine 全体を直列化するが、``Engine.__getstate__`` が
-      kernel / entity_manager / 各ハンドラを除外する。ロード後は
-      ``engine.__dict__.update(loaded.__dict__)`` によりライブ側の kernel が
-      維持されるため、kernel 保持の skill_eater システム実行状態と
-      敵エンティティはセーブ対象外 (ローグライクの世界再生成に相当)。
+    - kernel/entity_manager/各ハンドラは pickle 対象外。
+      ロード後もライブ側の kernel が維持されるため、kernel 登録システム
+      (skill_eater_combat_system / skill_eater_meta_intervention / …) と
+      entity_manager に所属する **敵エンティティはセーブ対象外** であり、
+      ロード時はローグライクの世界再生成相当となり、敵・マップの配置は
+      再スポーンされる。
+    - skill_eater の実行状態 (CharacterState: スキルクールダウン、中毒度、
+      メモリ使用量、発見シークレット/鍵、last_devoured_element、
+      archived_skills 等) は kernel 登録システム / ハンドラの一時状態として
+      保持され、pickle 本線では **シリアライズされない**。プレイヤーが
+      奪取したスキル id 自体は ``player.skills`` (ECS) に記録されるため
+      保持されるが、実行時の補助状態はリセットされる。
     - player/pet Entity 上の状態 (ECS コンポーネント、pet 性格系属性) と
       Item.enchants は両パスで保持される (tests/test_entity_personality_persistence.py)。
+    - 上記を完全に永続化したい場合は JSON 副線
+      (serialize_engine_to_dict / deserialize_dict_to_engine) を拡張するか、
+      skill_eater 状態・敵エンティティを別サイドカーとして保存・復元する
+      仕組みを追加する必要がある。
     """
 
     SAVE_PATH = "savegame.bin"
@@ -165,8 +187,19 @@ class SaveSystem:
             return f"セーブ失敗: {e}"
 
     @classmethod
-    def load(cls, allow_backup_recovery: bool = True) -> tuple[Any | None, str]:
-        """HMAC署名検証 + チェックサム検証 + バージョン互換性検証 + バックアップ自動リカバリ (Step 61, 62)"""
+    def load(
+        cls, allow_backup_recovery: bool = True, target_engine: Any | None = None
+    ) -> tuple[Any | None, str]:
+        """HMAC署名検証 + チェックサム検証 + バージョン互換性検証 + バックアップ自動リカバリ (Step 61, 62)
+
+        ``target_engine`` が指定された場合、逆直列化した状態を
+        ``target_engine.__dict__.update(loaded.__dict__)`` でライブ側エンジンに
+        マージし、**ライブ側の kernel / entity_manager / 各ハンドラを維持したまま**
+        シリアル化可能な進行状態だけを復元する。これが pickle 本線の正式な
+        復元フローである。指定がない場合は従来どおり逆直列化エンジンを
+        そのまま返す（kernel は含まれないため、呼び出し側でライブエンジン
+        へのマージを責務を持つこと）。
+        """
         if not os.path.exists(cls.SAVE_PATH):
             return None, "セーブデータが見つかりません。"
 
@@ -218,6 +251,15 @@ class SaveSystem:
                     pet.pet_ai.evolution_stage = 0
                 if not hasattr(pet.pet_ai, "equipment"):
                     pet.pet_ai.equipment = {}
+
+            if target_engine is not None:
+                # pickle 本線の正式フロー: ライブ側 kernel / entity_manager /
+                # 各ハンドラを維持したまま、シリアル化可能な進行状態だけを上書き復元。
+                target_engine.__dict__.update(loaded_engine.__dict__)
+                return (
+                    target_engine,
+                    "ロード完了！ ゲームが完全に復元されました。",
+                )
 
             return loaded_engine, "ロード完了！ ゲームが完全に復元されました。"
         except Exception as e:

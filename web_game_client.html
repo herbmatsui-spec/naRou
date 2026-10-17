@@ -499,14 +499,14 @@
   <!-- HEADER -->
   <header>
     <div class="game-logo">
-      <span>NAROU</span>
-      <span class="badge-version">v2.0 MASTERPIECE</span>
+      <span class="font-title text-legendary">NAROU</span>
+      <span class="badge-version font-caption">v2.0 MASTERPIECE</span>
     </div>
     <div class="header-status">
-      <div class="status-chip" id="chipFloor">階層: B1F</div>
-      <div class="status-chip" id="chipGold">💰 0 G</div>
-      <div class="status-chip" id="chipPlatinum">💎 0 P</div>
-      <div class="status-chip" id="chipKarma">⚖️ 善悪: 0</div>
+      <div class="status-chip font-caption" id="chipFloor">階層: B1F</div>
+      <div class="status-chip font-caption" id="chipGold">💰 0 G</div>
+      <div class="status-chip font-caption" id="chipPlatinum">💎 0 P</div>
+      <div class="status-chip font-caption" id="chipKarma">⚖️ 善悪: 0</div>
       <button class="audio-btn" id="btnAudioToggle" onclick="SoundEngine.toggleAudio()">🔊 サウンド起動</button>
       <div class="theme-switch" id="themeSwitch" role="group" aria-label="テーマ切替">
         <button type="button" data-theme-value="dark" title="ダーク">🌑</button>
@@ -580,10 +580,10 @@
       <!-- TABS PANEL -->
       <div class="panel-card" style="height: 50%;">
         <div class="tabs-header">
-          <button class="tab-btn active" onclick="switchTab('tabInventory')">荷物</button>
-          <button class="tab-btn" onclick="switchTab('tabStats')">能力</button>
-          <button class="tab-btn" onclick="switchTab('tabQuests')">依頼</button>
-          <button class="tab-btn" onclick="switchTab('tabPet')">ペット</button>
+          <button class="tab-btn active font-caption" onclick="switchTab('tabInventory')">荷物</button>
+          <button class="tab-btn font-caption" onclick="switchTab('tabStats')">能力</button>
+          <button class="tab-btn font-caption" onclick="switchTab('tabQuests')">依頼</button>
+          <button class="tab-btn font-caption" onclick="switchTab('tabPet')">ペット</button>
         </div>
 
         <!-- TAB: INVENTORY -->
@@ -621,7 +621,7 @@
 
       <!-- LOG & CONTROLLER PANEL -->
       <div class="panel-card log-panel">
-        <div style="padding: 6px 10px; font-weight: 700; font-size: 0.75rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--panel-border);">
+        <div class="font-h3" style="padding: 6px 10px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--panel-border);">
           📜 冒険ログ
         </div>
         <div class="tab-content" id="logContainer" style="display: flex; flex-direction: column-reverse;">
@@ -1266,6 +1266,12 @@
               offsetY + player.y * TILE_SIZE,
               5
             );
+            // ダメージ数を浮上表示（改善案5: クラストグル制御の例）
+            const dmg = prevPlayerHp - player.hp;
+            showFloatText(`-${dmg}`,
+              offsetX + player.x * TILE_SIZE,
+              offsetY + player.y * TILE_SIZE - 28,
+              '#ff6b6b');
             // スクリーンシェイク
             screenShake.shake('medium');
 
@@ -1502,6 +1508,31 @@ sprite._playing = false;
       }
     });
 
+    // ==================== アニメーション制御の例（改善案5） ====================
+    // クラスの付加・削除でトランジションを制御し、アイテム獲得・ダメージ表示を
+    // 浮上（.float-up）させてから要素を削除する。
+    function showFloatText(text, x, y, color = '#ffd700') {
+      const el = document.createElement('div');
+      el.className = 'float-up';
+      el.textContent = text;
+      el.style.position = 'fixed';
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+      el.style.color = color;
+      el.style.pointerEvents = 'none';
+      el.style.zIndex = 2000;
+      el.style.fontWeight = '700';
+      document.body.appendChild(el);
+      // 連続発生時にもトランジションを再起動するため、一度削除して再付与
+      el.classList.remove('float-up');
+      void el.offsetHeight; // リフロー強制
+      el.classList.add('float-up');
+      setTimeout(() => {
+        el.classList.remove('float-up');
+        el.remove();
+      }, 350); // --animation-duration-slow と同等
+    }
+
     // ==================== STATE SYNC & API ====================
     async function fetchState() {
       try {
@@ -1569,15 +1600,19 @@ sprite._playing = false;
         document.getElementById("valPetTactic").innerText = `指示: ${pet.tactic || 'バランス'}`;
       }
 
-      // Inventory List
+      // Inventory List (品質をレアリティ色クラスにマッピング)
       const invContainer = document.getElementById("inventoryList");
+      const rarityByQuality = { bad: 'common', normal: 'uncommon', good: 'rare', miracle: 'epic', god: 'legendary' };
       if (state.inventory && state.inventory.length > 0) {
-        invContainer.innerHTML = state.inventory.map(item => `
-          <div class="item-entry ${item.equipped ? 'equipped' : ''}">
-            <span>${item.char} ${item.name}</span>
-            <span style="color: var(--text-muted);">${item.weight}s</span>
-          </div>
-        `).join("");
+        invContainer.innerHTML = state.inventory.map(item => {
+          const rarity = rarityByQuality[item.quality] ?? 'common';
+          return `
+            <div class="item-entry ${item.equipped ? 'equipped' : ''} rarity-${rarity}">
+              <span class="font-main ${rarity}">${item.char} ${item.name}</span>
+              <span class="font-caption" style="color: var(--color-text-muted);">${item.weight}s</span>
+            </div>
+          `;
+        }).join("");
       } else {
         invContainer.innerHTML = `<div style="color: var(--text-muted); text-align: center;">荷物は空です</div>`;
       }
@@ -1618,7 +1653,7 @@ sprite._playing = false;
       const logContainer = document.getElementById("logContainer");
       if (state.logs) {
         logContainer.innerHTML = state.logs.map(log => `
-          <div class="log-entry ${log.level || 'INFO'}">${log.text}</div>
+          <div class="log-entry ${log.level || 'INFO'} font-mono">${log.text}</div>
         `).join("");
       }
     }

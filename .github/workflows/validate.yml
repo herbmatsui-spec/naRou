@@ -7,45 +7,74 @@ on:
     branches: [ main, master ]
 
 jobs:
-  validate:
-    name: Code Quality & Balance Simulation
+  code-quality:
+    name: Code Quality & Static Analysis
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install mypy ruff black pytest pytest-xdist coverage pip-audit
-
       - name: Lint (ruff)
         run: |
           ruff check .
-
       - name: Type check (mypy)
         run: |
           mypy .
-
       - name: Vulnerability scan (pip-audit)
         run: |
           pip-audit || true
-
       - name: Validate Code Quality (Linter & Types)
         run: |
           python validate.py --code || true
 
-      - name: Run Unit & Integration Tests (parallel)
+  core-tests:
+    name: Core Unit Tests (fast)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install dependencies
         run: |
-          python validate.py --tests || pytest -m "not integration" -n auto
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install mypy ruff black pytest pytest-xdist coverage pip-audit
+      - name: Run core tests (parallel, excluding heavy simulation/integration)
+        run: |
+          python validate.py --tests || pytest -m "not integration" -n auto --ignore=tests/performance --ignore=tests/integration tests
 
+  simulation:
+    name: Heavy Simulation & Balance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install mypy ruff black pytest pytest-xdist coverage pip-audit
+      - name: Run performance / integration simulation tests
+        run: |
+          pytest tests/performance tests/integration -n auto
       - name: Validate Battle Balance Simulator
         run: |
           python validate.py --balance

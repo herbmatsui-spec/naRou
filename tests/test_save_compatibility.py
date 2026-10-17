@@ -12,11 +12,13 @@ pickle 本線と JSON 副線の両方で、以下が保持されることを検�
 from __future__ import annotations
 
 import pickle
+from types import SimpleNamespace
 
 import pytest
 
 from ecs.components.components import HuskComponent, HuskInventoryComponent
 from ecs.entity import Entity
+from engine.engine import Engine
 from item_system import Item
 from save_system import SaveSystem
 
@@ -173,3 +175,63 @@ def test_save_system_docstring_mentions_getstate_exclusion():
     assert "kernel" in doc
     assert "entity_manager" in doc
     assert "__getstate__" in doc
+
+
+# ---------------------------------------------------------------------------
+# pickle 本線: __dict__.update によるライブ kernel 維持フローの回帰固定
+# ---------------------------------------------------------------------------
+
+
+def _stub_engine(**overrides) -> Engine:
+    """__init__ を迂回し、unpicklable 属性をダミーで持つ Engine スタブ。
+
+    entity_manager / renderer はプロパティのため __dict__ へ直接書き込む。
+    """
+    kernel = SimpleNamespace(get_system=lambda name: object())
+    engine = Engine.__new__(Engine)
+    engine.kernel = kernel
+    engine.__dict__["entity_manager"] = object()
+    engine.__dict__["renderer"] = object()
+    engine.combat_handler = object()
+    engine.skill_eater_handler = object()
+    engine.web_server = object()
+    engine.game_state_data = SimpleNamespace(turns=0, dungeon_level=1)
+    engine.__dict__.update(overrides)
+    return engine
+
+
+def test_engine_getstate_excludes_unpicklable_attrs():
+    """Engine.__getstate__ は kernel / entity_manager / 各ハンドラを pickle 対象外とする。"""
+    engine = _stub_engine()
+    state = engine.__getstate__()
+    for key in (
+        "kernel",
+        "entity_manager",
+        "combat_handler",
+        "skill_eater_handler",
+        "renderer",
+        "web_server",
+        "game_state_initializer",
+    ):
+        assert key not in state, f"{key} should be excluded from pickle state"
+    # シリアル化可能な進行状態は保持される
+    assert "game_state_data" in state
+
+
+def test_dict_update_merge_preserves_live_kernel():
+    """ロード後の engine.__dict__.update はライブ側 kernel を維持し、
+    シリアル化可能な進行状態だけを上書き復元する (pickle 本線の正式フロー)。"""
+    live = _stub_engine()
+    sentinel = SimpleNamespace(get_system=lambda name: object())
+    live.kernel = sentinel
+    live.magic_number = 1
+
+    loaded = _stub_engine()
+    loaded.magic_number = 42
+    # pickle 本線では kernel が除外済みであることを前提に、kernel を省いた状態をマージする。
+    loaded_state = {k: v for k, v in loaded.__dict__.items() if k != "kernel"}
+    live.__dict__.update(loaded_state)
+
+    assert live.kernel is sentinel  # ライブ側 kernel は維持される
+    assert live.magic_number == 42  # 進行状態のみ上書き復元
+    assert live.entity_manager is not None  # ライブ側 entity_manager も維持
