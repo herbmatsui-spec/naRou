@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Any
 logger = logging.getLogger(__name__)
 
 from constants import ENERGY_THRESHOLD
+from pet_systems import PetGrowthSystem
 from ui_event_panel import get_current_event_info, get_event_ranking, get_player_event_score
 from ui_ranking_panel import get_all_event_rankings
 
@@ -747,6 +748,26 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
         if not world_theme:
             world_theme = _resolve_world_theme(engine.dungeon_level)
 
+        # T26 案1: メインクエストナラティブの進行状態
+        # (dag_id / 現在ノード / 選択肢 / 完了フラグ)。非進行中は None を配信する。
+        narrative_state: dict[str, Any] | None = None
+        try:
+            if engine.kernel.has_system("main_quest_system"):
+                mq_system = engine.main_quest_system
+                narrative = mq_system.get_narrative_state(p)
+                if narrative is not None:
+                    node = mq_system.get_active_narrative_node(p)
+                    narrative_state = {
+                        "dag_id": narrative.get("dag_id", ""),
+                        "node_id": narrative.get("current_node_id", ""),
+                        "title": node.title if node is not None else "",
+                        "description": node.description if node is not None else "",
+                        "completed": bool(narrative.get("completed", False)),
+                        "choices": mq_system.get_narrative_choices(p),
+                    }
+        except Exception:
+            logger.exception("ナラティブ状態の取得に失敗")
+
         return {
             "player": {
                 "name": p.name,
@@ -774,6 +795,10 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 "hp": pet.hp if pet else 0,
                 "max_hp": pet.max_hp if pet else 0,
                 "tactic": getattr(pet, "tactic", "balanced") if pet else "balanced",
+                # T30 案B: ペット成長曲線の可視化用 (Lv / EXP / 次レベル要求EXP)
+                "level": getattr(pet, "level", 1) if pet else 1,
+                "exp": getattr(pet, "exp", 0) if pet else 0,
+                "exp_next": PetGrowthSystem.exp_required(getattr(pet, "level", 1)) if pet else 1,
             },
             "map": visible_tiles,
             "raw_tiles": raw_tiles,
@@ -820,6 +845,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             ),
             "screen_shake": screen_shake,
             "pending_events": pending_events,
+            "narrative_state": narrative_state,
         }
 
     def _handle_web_action(self, engine: Engine, action: str, data: dict[str, Any]) -> str:
@@ -912,6 +938,8 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 return f"戦術指示: {tactic}"
         elif action == "learn_skill":
             return self._handle_learn_skill(engine, data)
+        elif action == "narrative_choice":
+            return self._handle_narrative_choice(engine, data)
 
         if dx != 0 or dy != 0:
             acted = engine.player_act(dx, dy)
@@ -956,6 +984,25 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
 
         SoundManager.play_se("level_up")
         return f"スキル【{tier_name}】を習得しました"
+
+    def _handle_narrative_choice(self, engine: Engine, data: dict[str, Any]) -> str:
+        """Webのナラティブ選択肢クリック処理 (T26案1)。
+
+        遷移結果のうちマイルストーン (★) メッセージのみメッセージログへ流し、
+        ノードテキストと選択肢の描画はクライアントの narrative_state オーバーレイに任せる。
+        """
+        edge_id = str(data.get("edge_id", ""))
+        try:
+            if not engine.kernel.has_system("main_quest_system"):
+                return "ナラティブシステムを利用できません"
+            mq_system = engine.main_quest_system
+        except Exception:
+            return "ナラティブシステムを利用できません"
+        logs = mq_system.make_narrative_choice(engine.player, edge_id)
+        for msg in logs:
+            if msg.startswith("★"):
+                engine.log(msg, (170, 150, 255), level="SUCCESS")
+        return "ナラティブの選択を適用しました"
 
     def log_message(self, format, *args):
         return

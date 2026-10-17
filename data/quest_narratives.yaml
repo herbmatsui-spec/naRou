@@ -403,6 +403,410 @@ narrative_dags:
         target: "faction_end"
         type: "AUTO"
 
+  # ======================================================================
+  # T26 案1: メインクエスト DAG — スキル喰い 5大フェーズ
+  # README「📖 ストーリーとゲームの流れ（全5大フェーズ）」に沿った
+  # Phase 0-5 の主要ナラティブ。各メインクエスト完了時
+  # (main_quest_system._complete_quest) に narrative_dag_id 経由で開始される。
+  # 注意: エッジの condition_dsl は NarrativeContext 未対応のため使用せず、
+  # 分岐は CHOICE エッジの合流と effects (state 変数記録) で表現する。
+  # ======================================================================
+
+  # Phase 0: 転落と覚醒 (Betrayal & Awakening)
+  skill_eater_phase0_fall:
+    dag_id: "skill_eater_phase0_fall"
+    title: "Phase 0: 転落と覚醒"
+    description: "上層部の不正を暴こうとした監査官は罠に嵌められ、深度700mの廃棄スラム街へ投棄される"
+    nodes:
+      phase0_start:
+        type: "START"
+        title: "バベルタワーの罠"
+        description: "巨大企業都市バベルタワー、上層区130階。若きエリート監査官は上層部の不正の証拠を握った——直後、監査室の扉が内側から開かなくなる。"
+        actions: []
+
+      phase0_discard:
+        type: "EVENT"
+        title: "永久剥奪と深度700m"
+        description: "告発は握りつぶされ、監査官権限は永久剥奪。取り押さえられたあなたは、廃棄物処理区画——深度700mの廃棄スラム街へ投棄される。"
+        actions: []
+        set_flags: ["phase0_discarded"]
+
+      phase0_awakening:
+        type: "EVENT"
+        title: "《基礎解析》の覚醒"
+        description: "真っ暗な廃棄品の山。暗闇で見出したのは、最底辺の廃棄スキル《基礎解析》。スラムの配管・通路・追捕犬の位置が『解析』され、生存経路だけが視界に浮かぶ。"
+        actions: []
+        rewards:
+          unique_skill: "basic_analysis"
+        set_flags: ["basic_analysis_awakened"]
+
+      phase0_devour:
+        type: "CHOICE"
+        title: "禁忌のコード《喰らい》"
+        description: "足元の陶片には、自己の肉体を魔導炉とする禁忌のコード——《喰らい（Devour）》が刻まれている。読み込めば、あなたはもう元の世界には戻れない。"
+        actions: []
+
+      phase0_end:
+        type: "END"
+        title: "包囲網の先へ"
+        description: "遠くで追捕犬の遠吠えが響く。生存のための逃走劇が、今始まる。"
+        actions: []
+        set_flags: ["phase0_completed"]
+
+    edges:
+      - edge_id: "phase0_expose"
+        source: "phase0_start"
+        target: "phase0_discard"
+        type: "CHOICE"
+        choice_text: "扉越しに不正を叫び、上層議会へ告発する"
+        effects:
+          phase0_choice: "expose"
+
+      - edge_id: "phase0_abscond"
+        source: "phase0_start"
+        target: "phase0_discard"
+        type: "CHOICE"
+        choice_text: "証拠を懐に抱え、闇ルートから逃走を図る"
+        effects:
+          phase0_choice: "abscond"
+
+      - edge_id: "phase0_open_eyes"
+        source: "phase0_discard"
+        target: "phase0_awakening"
+        type: "CHOICE"
+        choice_text: "廃棄物の山の中で、暗闇に目を開く"
+
+      - edge_id: "phase0_read_shard"
+        source: "phase0_awakening"
+        target: "phase0_devour"
+        type: "CHOICE"
+        choice_text: "足元の陶片に刻まれたコードを読む"
+
+      - edge_id: "phase0_accept_devour"
+        source: "phase0_devour"
+        target: "phase0_end"
+        type: "CHOICE"
+        choice_text: "《喰らい》をこの身に宿す"
+        effects:
+          devour_code: "accepted"
+
+      - edge_id: "phase0_refuse_devour"
+        source: "phase0_devour"
+        target: "phase0_end"
+        type: "CHOICE"
+        choice_text: "コードを握りつぶし、元の世界を信じる"
+        effects:
+          devour_code: "refused"
+
+  # Phase 1: 禁忌の《喰らい》と抜け殻 (Devour & Husk)
+  skill_eater_phase1_devour:
+    dag_id: "skill_eater_phase1_devour"
+    title: "Phase 1: 禁忌の《喰らい》と抜け殻"
+    description: "敵の核を喰らいスキルを強奪し、奪われた敵は抜け殻（Husk）へと退化する"
+    nodes:
+      phase1_start:
+        type: "START"
+        title: "最初の捕食"
+        description: "スラムの路地で追捕犬と対峙。拳で弱らせたその瞬間、体内の《喰らい》が獲物の核を欲して疼く。"
+        actions: []
+
+      phase1_husk:
+        type: "EVENT"
+        title: "抜け殻（Husk）"
+        description: "核を喰われた犬は意志を失った『抜け殻』へと退化し、力なく崩れ落ちる。奪ったスキル《追跡嗅覚》は、永久にあなたのものになった。"
+        actions: []
+        rewards:
+          unique_skill: "tracking_nose"
+        set_flags: ["first_devour_done"]
+
+      phase1_toxicity:
+        type: "CHOICE"
+        title: "スキル拒絶反応（Toxicity）"
+        description: "捕食を重ねるたび、体内に毒性が蓄積していく。このまま狩り続けるか、セーフハウスでデトックスするか。"
+        actions: []
+
+      phase1_end:
+        type: "END"
+        title: "捕食者の資格"
+        description: "喰らいは習性となった。スラム解放戦線が『合成炉』の噂を運んでくる——次は、喰ったスキルを掛け合わせる番だ。"
+        actions: []
+        set_flags: ["phase1_completed"]
+
+    edges:
+      - edge_id: "phase1_devour_dog"
+        source: "phase1_start"
+        target: "phase1_husk"
+        type: "CHOICE"
+        choice_text: "弱った追捕犬の核を、喰らう"
+        effects:
+          phase1_prey: "hound"
+
+      - edge_id: "phase1_spare_dog"
+        source: "phase1_start"
+        target: "phase1_husk"
+        type: "CHOICE"
+        choice_text: "《喰らい》を抑え、犬を仕留めるだけに留める"
+        effects:
+          phase1_prey: "spared"
+
+      - edge_id: "phase1_advance"
+        source: "phase1_husk"
+        target: "phase1_toxicity"
+        type: "CHOICE"
+        choice_text: "毒性の疼きを感じながら、立ち上がる"
+
+      - edge_id: "phase1_detox"
+        source: "phase1_toxicity"
+        target: "phase1_end"
+        type: "CHOICE"
+        choice_text: "セーフハウスで休息し、毒性をデトックスする"
+        effects:
+          toxicity_policy: "detox"
+
+      - edge_id: "phase1_keep_hunting"
+        source: "phase1_toxicity"
+        target: "phase1_end"
+        type: "CHOICE"
+        choice_text: "構わず狩り続け、毒性の限界に挑む"
+        effects:
+          toxicity_policy: "overdrive"
+
+  # Phase 2: キメラ合成炉とスラム拠点復興 (Chimera Synthesis & Base)
+  skill_eater_phase2_chimera:
+    dag_id: "skill_eater_phase2_chimera"
+    title: "Phase 2: キメラ合成炉とスラム拠点復興"
+    description: "強奪したスキル2種を掛け合わせ、認可外の上位キメラスキルを錬成する"
+    nodes:
+      phase2_start:
+        type: "START"
+        title: "解放戦線の合成炉"
+        description: "スラム解放戦線が廃炉を魔導合成炉として再生した。喰らって奪ったスキル2種を、炉に投じる番だ。"
+        actions: []
+
+      phase2_synthesis:
+        type: "EVENT"
+        title: "キメラ錬成"
+        description: "炉が唸り声を上げ、認可外の上位キメラスキル《変異融合》が錬成される。スラムの民が、初めて『上』を見上げた。"
+        actions: []
+        rewards:
+          unique_skill: "chimera_fusion"
+        set_flags: ["first_chimera_synthesized"]
+
+      phase2_base:
+        type: "CHOICE"
+        title: "拠点の拡張"
+        description: "解放戦線拠点に、廃品と余剰スキルを投資できる。復興の優先先を選べ。"
+        actions: []
+
+      phase2_dispatch:
+        type: "EVENT"
+        title: "ハスクハウンド派遣と環境パズル"
+        description: "改造魔獣ハスクハウンドを廃品処分場へ派遣し、物資を調達。合成した属性スキルで氷壁と電子隔壁を突破した。"
+        actions: []
+        set_flags: ["slum_base_expanded"]
+
+      phase2_end:
+        type: "END"
+        title: "炉の火は上を目指す"
+        description: "下層スラムは解放戦線のものになった。今や『神格化』の噂が、上層から降りてくる。"
+        actions: []
+        set_flags: ["phase2_completed"]
+
+    edges:
+      - edge_id: "phase2_recipe_fire"
+        source: "phase2_start"
+        target: "phase2_synthesis"
+        type: "CHOICE"
+        choice_text: "《初級火炎》×《思考加速》を投じる"
+        effects:
+          recipe: "fire_thought"
+
+      - edge_id: "phase2_recipe_ice"
+        source: "phase2_start"
+        target: "phase2_synthesis"
+        type: "CHOICE"
+        choice_text: "《氷の矢》×《雷撃》を投じる"
+        effects:
+          recipe: "ice_shock"
+
+      - edge_id: "phase2_advance"
+        source: "phase2_synthesis"
+        target: "phase2_base"
+        type: "CHOICE"
+        choice_text: "キメラを携え、拠点の復興へ戻る"
+
+      - edge_id: "phase2_market"
+        source: "phase2_base"
+        target: "phase2_dispatch"
+        type: "CHOICE"
+        choice_text: "地下闇市場をアンロックする"
+        effects:
+          base_facility: "black_market"
+
+      - edge_id: "phase2_clinic"
+        source: "phase2_base"
+        target: "phase2_dispatch"
+        type: "CHOICE"
+        choice_text: "医療ステーションをアンロックする"
+        effects:
+          base_facility: "clinic"
+
+      - edge_id: "phase2_advance2"
+        source: "phase2_dispatch"
+        target: "phase2_end"
+        type: "CHOICE"
+        choice_text: "上層から降りてくる『神格化』の噂を追う"
+
+  # Phase 3: 神格化アセンションと因果律ボス (Ascension & Final Battle)
+  skill_eater_phase3_ascension:
+    dag_id: "skill_eater_phase3_ascension"
+    title: "Phase 3: 神格化アセンションと因果律ボス"
+    description: "星座盤で神格化し、第0因果律執行神『クロノス・ミダス』と決戦する"
+    nodes:
+      phase3_start:
+        type: "START"
+        title: "神格化星座盤（Ascension Board）"
+        description: "マスタースキルを星座グリッドに装着し、Void / Flame / Light の属性隣接リンクで爆発的なシナジーパッシブを発動する。かつて監査官の権限で覗いた世界の設計図が、今は自分の内側にある。"
+        actions: []
+        set_flags: ["ascension_board_activated"]
+
+      phase3_arena:
+        type: "CHOICE"
+        title: "地下闘技場 & 指名手配ハイスト"
+        description: "ミダス商会幹部10人が、賞金首として星空の下に並んでいる。討伐の要諦を選べ。"
+        actions: []
+
+      phase3_boss:
+        type: "EVENT"
+        title: "第0因果律執行神『クロノス・ミダス』"
+        description: "決戦。世界の理を支配する神が眼前に立つ。放った攻撃は全て因果律に巻き戻され、防壁は『原因』そのものでできている。"
+        actions: []
+
+      phase3_end_liberation:
+        type: "END"
+        title: "Aの世界の解放"
+        description: "《概念喰らい》で因果律の防壁ごと神の理を喰らい尽くした。鎖が解け、Aの世界は真に解放される。"
+        actions: []
+        rewards:
+          title: "因果律の喰らい手"
+        set_flags: ["world_a_liberated"]
+
+      phase3_end_hollow:
+        type: "END"
+        title: "形だけの解放"
+        description: "時間をかけて防壁を削り切った——その瞬間、誰かが崩れる因果律の核を強奪して闇に消えた。Aの世界は、形だけ自由になった。"
+        actions: []
+        rewards:
+          title: "防壁を削りし者"
+        set_flags: ["world_a_freedom_hollow"]
+
+    edges:
+      - edge_id: "phase3_advance"
+        source: "phase3_start"
+        target: "phase3_arena"
+        type: "CHOICE"
+        choice_text: "星座を巡らせ、指名手配ハイストへ向かう"
+
+      - edge_id: "phase3_headon"
+        source: "phase3_arena"
+        target: "phase3_boss"
+        type: "CHOICE"
+        choice_text: "正面から幹部10人を撃ち抜く"
+        effects:
+          arena_tactic: "headon"
+
+      - edge_id: "phase3_weakpoint"
+        source: "phase3_arena"
+        target: "phase3_boss"
+        type: "CHOICE"
+        choice_text: "監査官の目で弱点を突き、権限ごと剥奪する"
+        effects:
+          arena_tactic: "weakpoint"
+
+      - edge_id: "phase3_concept_devour"
+        source: "phase3_boss"
+        target: "phase3_end_liberation"
+        type: "CHOICE"
+        choice_text: "《概念喰らい》で因果律の防壁ごと喰らう"
+
+      - edge_id: "phase3_grind"
+        source: "phase3_boss"
+        target: "phase3_end_hollow"
+        type: "CHOICE"
+        choice_text: "概念を頼らず、時間をかけて防壁を削り切る"
+
+  # Phase 4-5: 概念結晶化とマルチバース次元跳躍 (Concept & Multiverse)
+  skill_eater_phase45_multiverse:
+    dag_id: "skill_eater_phase45_multiverse"
+    title: "Phase 4-5: 概念結晶化とマルチバース次元跳躍"
+    description: "スキルを概念結晶へ超圧縮し、時空金庫に確定保存して次元ゲートを抜ける"
+    nodes:
+      phase45_start:
+        type: "START"
+        title: "概念結晶化（Concept Crystallization）"
+        description: "同系統スキル3つを1つの『概念結晶』へ超圧縮する。スキルが知識を捨て、概念へと昇格する瞬間。"
+        actions: []
+        set_flags: ["concept_crystallized"]
+
+      phase45_vault:
+        type: "CHOICE"
+        title: "時空金庫（Temporal Vault）"
+        description: "次世界へ持ち出す最終スキル枠（3〜5スロット）を、時空金庫に確定保存する。何を連れて行く？"
+        actions: []
+
+      phase45_epilogue:
+        type: "EVENT"
+        title: "スラムの民の独立"
+        description: "スラムの民は、自分たちの街を自分たちの手で取り戻した。あなたの胸には永続の証『concept_eater_mark』が宿る。"
+        actions: []
+        set_flags: ["concept_eater_mark"]
+
+      phase45_end:
+        type: "END"
+        title: "次元ゲート開放"
+        description: "マルチバース次元ゲートが開く。主人公はBの世界——錬金術の深淵へと、旅立つ。"
+        actions: []
+        rewards:
+          next_world: "alchemy_abyss"
+        set_flags: ["phase45_completed"]
+
+    edges:
+      - edge_id: "phase45_advance"
+        source: "phase45_start"
+        target: "phase45_vault"
+        type: "CHOICE"
+        choice_text: "結晶を手に、時空金庫へ向かう"
+
+      - edge_id: "phase45_vault_combat"
+        source: "phase45_vault"
+        target: "phase45_epilogue"
+        type: "CHOICE"
+        choice_text: "戦闘の結晶を保存する"
+        effects:
+          vault_slot: "combat"
+
+      - edge_id: "phase45_vault_knowledge"
+        source: "phase45_vault"
+        target: "phase45_epilogue"
+        type: "CHOICE"
+        choice_text: "知識の結晶を保存する"
+        effects:
+          vault_slot: "knowledge"
+
+      - edge_id: "phase45_vault_bond"
+        source: "phase45_vault"
+        target: "phase45_epilogue"
+        type: "CHOICE"
+        choice_text: "スラムで結んだ縁の結晶を保存する"
+        effects:
+          vault_slot: "bond"
+
+      - edge_id: "phase45_advance2"
+        source: "phase45_epilogue"
+        target: "phase45_end"
+        type: "CHOICE"
+        choice_text: "スラムの独立を見届け、次元ゲートへ歩む"
+
 # 条件分岐の例：プレイヤーのビルドに応じた分岐
 build_specialized_branching:
   dag_id: "build_specialized_branching"

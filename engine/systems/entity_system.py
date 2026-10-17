@@ -19,6 +19,7 @@ from constants import (
     PET_RETREAT_HP_RATIO,
 )
 from core_framework import AStar, Point, bresenham_line
+from pet_systems import PetGrowthSystem
 
 if TYPE_CHECKING:
     from game import Engine
@@ -86,6 +87,8 @@ class EntitySystem:
                         engine.log(f"【シエル】が{nearest.name}を倒した！", (255, 200, 220))
                         for l in engine.pet.gain_exp(40):
                             engine.log(l, COLOR_PET_PINK)
+                        # 進化条件達成の検知と進化イベント発火 (T30 案B)
+                        PetGrowthSystem.check_and_apply_evolution(engine)
                         engine.entity_manager.remove_entity(nearest)
                 else:
                     path = AStar.get_path(

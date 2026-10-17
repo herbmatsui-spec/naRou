@@ -1341,6 +1341,11 @@ class Entity:
         self.stamina = min(self.stamina, self.max_stamina)
 
     def gain_exp(self, amount: int) -> list[str]:
+        # ペットは標準JRPG式の独自成長曲線 (pet_systems.PetGrowthSystem) へ委譲する (T30 案B)
+        if self.is_pet:
+            from pet_systems import PetGrowthSystem
+
+            return PetGrowthSystem.gain_exp(self, amount)
         logs = []
         self.exp += amount
         # ジョブ経験値ボーナス (Step 52): 獲得経験値の10%を加算

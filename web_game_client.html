@@ -571,6 +571,12 @@
             <div class="vital-bar-container"><div class="vital-bar bar-pet" id="barPetHP" style="width: 100%;"></div></div>
             <span class="vital-val" id="valPetHP">--/--</span>
           </div>
+          <!-- T30 案B: ペット成長曲線の可視化 (Lv + EXPゲージ、.bar-pet流用) -->
+          <div class="vital-row">
+            <span class="vital-label" style="font-size:0.65rem;" id="valPetLevel">Lv1</span>
+            <div class="vital-bar-container"><div class="vital-bar bar-pet" id="barPetExp" style="width: 0%;"></div></div>
+            <span class="vital-val" id="valPetExp">0/0</span>
+          </div>
           <div style="font-size: 0.7rem; color: var(--text-muted);" id="valPetTactic">指示: バランス</div>
         </div>
       </div>
@@ -2071,6 +2077,12 @@ sprite._playing = false;
         const petHpPct = Math.max(0, Math.min(100, (pet.hp / pet.max_hp) * 100));
         document.getElementById("barPetHP").style.width = `${petHpPct}%`;
         document.getElementById("valPetHP").innerText = `${pet.hp}/${pet.max_hp}`;
+        // T30 案B: ペット成長曲線の可視化 (Lv + EXPゲージ)
+        const petLevel = pet.level || 1;
+        document.getElementById("valPetLevel").innerText = `Lv${petLevel}`;
+        document.getElementById("valPetExp").innerText = `${pet.exp || 0}/${pet.exp_next || 0}`;
+        const petExpPct = pet.exp_next ? Math.max(0, Math.min(100, ((pet.exp || 0) / pet.exp_next) * 100)) : 0;
+        document.getElementById("barPetExp").style.width = `${petExpPct}%`;
         document.getElementById("valPetTactic").innerText = `指示: ${pet.tactic || 'バランス'}`;
       }
 

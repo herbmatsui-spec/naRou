@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from exceptions import SaveDataCorruptedError
 from ecs.components import (
     AchievementComponent,
     BaseStatsComponent,
@@ -137,6 +138,12 @@ REQUIRED_COMPONENTS = [
     LevelComponent,
 ]
 
+# JSON 副線の移行対象バージョン (T31)。
+# 対応済み旧バージョンはすべて LATEST_SAVE_VERSION へ単一ステップで移行する。
+# save_system.SaveSystem.SUPPORTED_VERSIONS と整合させること。
+LEGACY_SAVE_VERSIONS = ("1.0.0", "1.1.0", "1.2.0")
+LATEST_SAVE_VERSION = "2.0.0"
+
 
 class MigrationPipeline:
     """Manages data transformations between versions and populating defaults."""
@@ -160,16 +167,30 @@ class MigrationPipeline:
 
     @classmethod
     def migrate(cls, data: dict[str, Any], target_version: str = "2.0.0") -> dict[str, Any]:
-        """Apply sequential migrations from current save_version up to target_version."""
+        """Apply sequential migrations from current save_version up to target_version.
+
+        - save_version 欠損は旧形式 (1.0.0) として扱い、最新版へ移行する。
+        - 対応済み旧バージョン (1.0.0 / 1.1.0 / 1.2.0) は v2.0.0 へ移行する (T31)。
+        - 未対応バージョンは SaveDataCorruptedError で明確に失敗させる
+          （無効データの黙認を避ける）。
+        """
         version = data.get("save_version", "1.0.0")
-        if version == "1.0.0":
-            data = cls._migrate_v1_to_v2(data)
-        return data
+        if version == target_version:
+            return data
+        if target_version != LATEST_SAVE_VERSION:
+            raise ValueError(f"未対応の移行先バージョンです: {target_version}")
+        if version not in LEGACY_SAVE_VERSIONS:
+            raise SaveDataCorruptedError(f"未対応のセーブバージョンです: {version}")
+        return cls._migrate_to_v2(data)
 
     @classmethod
-    def _migrate_v1_to_v2(cls, data: dict[str, Any]) -> dict[str, Any]:
-        """v1.0.0 -> v2.0.0 JSON/Dict schema migration."""
-        data["save_version"] = "2.0.0"
+    def _migrate_to_v2(cls, data: dict[str, Any]) -> dict[str, Any]:
+        """旧バージョン (1.0.0 / 1.1.0 / 1.2.0) -> v2.0.0 のスキーマ移行。
+
+        1.1.0 / 1.2.0 は 1.0.0 と同じ JSON スキーマ差分（player.components
+        の補完）しか持たないため、単一ステップに統合している。
+        """
+        data["save_version"] = LATEST_SAVE_VERSION
         if "player" in data and isinstance(data["player"], dict):
             p = data["player"]
             if "components" not in p:

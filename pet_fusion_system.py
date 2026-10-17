@@ -199,6 +199,23 @@ class PetFusionManager:
         new_pet.pet_type = recipe.result_pet
         new_pet.pet_ai.bond = 100
 
+        # 成長継承 (T30 案B): 両親のレベル平均にレシピの継承率を掛けたレベルまで
+        # 成長適用済みの状態で誕生させる (性格差別化された HP/攻撃/速度成長を含む)
+        from pet_systems import PetGrowthSystem
+
+        p1_level = int(getattr(pets[0], "level", 1))
+        p2_level = int(getattr(pets[1], "level", 1))
+        avg_level = (p1_level + p2_level) / 2.0
+        inherited_level = max(1, int(round(avg_level * recipe.inheritance_rate)))
+        PetGrowthSystem.set_level_with_growth(new_pet, inherited_level)
+
+        # 性格は最初の親から引き継ぎ、以後の成長差別化 (T30 案B) を維持する
+        parent_personality = getattr(pets[0], "personality", None) or getattr(
+            pets[1], "personality", None
+        )
+        if parent_personality:
+            new_pet.personality = parent_personality
+
         # スキル継承
         for inherit in recipe.skill_inheritance:
             for s in inherit.get("skills", []):

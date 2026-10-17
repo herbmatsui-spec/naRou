@@ -317,7 +317,11 @@ class MainQuestSystem:
 
         # クエスト完了時にナラティブDAGがある場合は自動開始
         if quest.narrative_dag_id and engine:
-            self._start_quest_narrative(quest.narrative_dag_id, player, engine)
+            narrative_logs = self._start_quest_narrative(quest.narrative_dag_id, player, engine)
+            log_func = getattr(engine, "log", None)
+            for msg in narrative_logs:
+                if callable(log_func):
+                    log_func(msg, (170, 150, 255))
 
     def _fire_cutscene_event(self, quest: MainQuest, engine: Engine | None) -> None:
         """クエスト完了カットシーンを発火 (FF6案6)

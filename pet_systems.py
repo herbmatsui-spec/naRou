@@ -8,6 +8,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from constants import (
+    PERSONALITY_AGGRESSIVE,
+    PERSONALITY_BRAVE,
+    PERSONALITY_CALM,
+    PERSONALITY_COWARDLY,
+    PERSONALITY_GLUTTONOUS,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -218,3 +226,150 @@ class PetBondSystem:
             logger.warning("Failed to update bond via PetBondSystem: %s", e)
             pet_ai.bond = getattr(pet_ai, "bond", 0) + amount
             return pet_ai.bond
+
+
+# ============================================================
+# T30 案B: Pet growth curve (EXP / level / status / evolution hook)
+# ============================================================
+
+
+class PetGrowthSystem:
+    """ペットの成長曲線・レベルアップ成長・進化条件検知を担うシステム (T30 案B)
+
+    プレイヤー (balance_standards.yaml の指数曲線) と異なり、ペットは
+    標準JRPG式の多項式曲線 level^2 + level*10 で成長要求が段階的に増える。
+    レベルアップ時のステータス成長 (HP/攻撃/速度) は性格で差別化する。
+    """
+
+    # 性格別のレベルアップ成長量 {hp, attack(筋力), speed}
+    _GROWTH_PROFILES: dict[str, dict[str, int]] = {
+        PERSONALITY_BRAVE: {"hp": 6, "attack": 3, "speed": 1},
+        PERSONALITY_AGGRESSIVE: {"hp": 4, "attack": 4, "speed": 1},
+        PERSONALITY_CALM: {"hp": 5, "attack": 2, "speed": 2},
+        PERSONALITY_COWARDLY: {"hp": 3, "attack": 1, "speed": 4},
+        PERSONALITY_GLUTTONOUS: {"hp": 8, "attack": 1, "speed": 1},
+    }
+    _DEFAULT_GROWTH: dict[str, int] = {"hp": 5, "attack": 2, "speed": 1}
+
+    @staticmethod
+    def exp_required(level: int) -> int:
+        """レベル level から level+1 へ到達するために必要な経験値 (標準JRPG式)"""
+        level = max(1, int(level))
+        return level * level + level * 10
+
+    @classmethod
+    def get_growth_profile(cls, pet: Any) -> dict[str, int]:
+        """ペットの性格に応じたレベルアップ成長量を返す (未付与ならデフォルト)"""
+        personality = getattr(pet, "personality", None)
+        return dict(cls._GROWTH_PROFILES.get(personality, cls._DEFAULT_GROWTH))
+
+    @classmethod
+    def apply_level_growth(cls, pet: Any) -> list[str]:
+        """レベル 1 上昇分のステータス成長 (HP/攻撃/速度) を性格差別化込みで適用する
+
+        レベルアップ時は HP 全回復する (標準JRPG挙動)。筋力は _base_attributes
+        側にも反映し、recalculate_stats() によるベース値復元で成長が消えないようにする。
+        """
+        growth = cls.get_growth_profile(pet)
+        hp_gain = growth["hp"]
+        atk_gain = growth["attack"]
+        spd_gain = growth["speed"]
+
+        pet.max_hp = int(getattr(pet, "max_hp", 10)) + hp_gain
+        pet.hp = pet.max_hp
+
+        attributes = getattr(pet, "attributes", None)
+        if attributes is not None and hasattr(attributes, "strength"):
+            attributes.strength += atk_gain
+            base_attrs = getattr(pet, "_base_attributes", None)
+            if base_attrs is not None and hasattr(base_attrs, "strength"):
+                base_attrs.strength += atk_gain
+
+        pet.speed = int(getattr(pet, "speed", 70)) + spd_gain
+
+        return [
+            f"{getattr(pet, 'name', 'ペット')}はレベル {int(getattr(pet, 'level', 1))} に上がった！ "
+            f"(HP+{hp_gain} 攻撃+{atk_gain} 速度+{spd_gain}, 全回復)"
+        ]
+
+    @classmethod
+    def gain_exp(cls, pet: Any, amount: int) -> list[str]:
+        """ペットに経験値を与え、成長曲線に沿ってレベルアップさせる (T30 案B)
+
+        Entity.gain_exp (is_pet ブランチ) から委譲される。戻り値はログメッセージ。
+        """
+        pet.exp = max(0, int(getattr(pet, "exp", 0)) + int(amount))
+
+        logs: list[str] = []
+        while pet.exp >= cls.exp_required(pet.level):
+            pet.exp -= cls.exp_required(pet.level)
+            pet.level = int(getattr(pet, "level", 1)) + 1
+            logs.extend(cls.apply_level_growth(pet))
+        return logs
+
+    @classmethod
+    def set_level_with_growth(cls, pet: Any, target_level: int) -> None:
+        """現在レベルから target_level まで成長を適用しながら一括で到達させる (融合継承用)"""
+        target = max(1, int(target_level))
+        while int(getattr(pet, "level", 1)) < target:
+            pet.level = int(getattr(pet, "level", 1)) + 1
+            cls.apply_level_growth(pet)
+        pet.exp = 0
+
+    @classmethod
+    def check_and_apply_evolution(cls, engine: Any) -> bool:
+        """進化条件の達成を検知して進化を適用し、演出を発火する (T30 案B)
+
+        条件判定 (requirements: level/bond) は既存 PetEvolutionManager の
+        get_available_evolutions に委譲する。発火時は進化ログ + 浮遊テキスト +
+        レベルアップ SE を出す。進化管理システムが不在な環境では何もしない。
+        """
+        pet = getattr(engine, "pet", None)
+        if pet is None or getattr(pet, "hp", 0) <= 0:
+            return False
+
+        try:
+            evo_mgr = engine.pet_evolution_manager
+        except Exception:
+            return False
+        if evo_mgr is None:
+            return False
+
+        try:
+            p_type = getattr(pet, "pet_type", "puppy")
+            available = evo_mgr.get_available_evolutions(p_type, pet.pet_ai, pet)
+        except Exception:
+            logger.warning("ペット進化条件の判定に失敗", exc_info=True)
+            return False
+        if not available:
+            return False
+
+        target = available[0]
+        try:
+            ok = evo_mgr.apply_evolution(pet.pet_ai, target, pet)
+        except Exception:
+            logger.warning("ペット進化の適用に失敗", exc_info=True)
+            return False
+        if not ok:
+            return False
+
+        # 進化イベント演出: ログ + 浮遊テキスト + レベルアップ SE
+        engine.log(
+            f"★{getattr(pet, 'name', 'ペット')} は進化条件を満たし、【{target.name}】へ進化した！",
+            (255, 215, 0),
+        )
+        fx_manager = getattr(engine, "fx_manager", None)
+        floating_texts = getattr(engine, "floating_texts", None)
+        if fx_manager is not None and floating_texts is not None and hasattr(
+            fx_manager, "FloatingText"
+        ):
+            floating_texts.append(
+                fx_manager.FloatingText("進化！", pet.x, pet.y - 0.3, (255, 215, 0))
+            )
+        try:
+            from sound_manager import SoundManager
+
+            SoundManager.play_se("level_up")
+        except Exception:
+            logger.debug("進化 SE の再生に失敗", exc_info=True)
+        return True

@@ -61,6 +61,14 @@ class SaveSystem:
     SUPPORTED_VERSIONS = {"1.0.0", "1.1.0", "1.2.0", "2.0.0"}
     MAX_BACKUPS = 3
 
+    # バイナリコンテナの形式バージョン (T31)。CURRENT_VERSION（データスキーマの
+    # バージョン）とは別管理。ヘッダレイアウト:
+    #   [32B SHA256][32B HMAC][4B magic "NRSV"][2B version][gzip payload]
+    # バージョンヘッダを持たない旧形式は形式バージョン 0 として読み込む。
+    SAVE_VERSION = 1
+    SAVE_HEADER_MAGIC = b"NRSV"
+    SAVE_HEADER_EXTRA_LEN = len(SAVE_HEADER_MAGIC) + 2
+
     # HMAC signing for tamper detection (Step 61)
     # Key is derived from environment or build-time secret; not stored in plaintext
     @classmethod
@@ -96,6 +104,30 @@ class SaveSystem:
         """Verify HMAC-SHA256 of data."""
         expected = cls._compute_hmac(data)
         return hmac.compare_digest(expected, expected_hmac)
+
+    @classmethod
+    def _parse_save_header(cls, rest: bytes) -> bytes:
+        """ヘッダ部（チェックサム/HMAC 以降）を解析し gzip payload を返す。
+
+        新形式は magic + 2 バイトの形式バージョンを持つ。旧形式
+        （バージョンヘッダなし）は形式バージョン 0 相当として扱い、
+        そのまま payload を返す。対応範囲外の形式バージョンは
+        SaveDataCorruptedError として明確に失敗させる (T31)。
+        """
+        if rest[: len(cls.SAVE_HEADER_MAGIC)] != cls.SAVE_HEADER_MAGIC:
+            # 旧形式: バージョンヘッダなし → 形式バージョン 0
+            return rest
+        if len(rest) < cls.SAVE_HEADER_EXTRA_LEN:
+            raise SaveDataCorruptedError("セーブデータのバージョンヘッダが破損しています。")
+        container_version = int.from_bytes(
+            rest[len(cls.SAVE_HEADER_MAGIC) : cls.SAVE_HEADER_EXTRA_LEN], "big"
+        )
+        if not 1 <= container_version <= cls.SAVE_VERSION:
+            raise SaveDataCorruptedError(
+                f"未対応のセーブ形式バージョンです: {container_version}"
+                f"（対応範囲: 1〜{cls.SAVE_VERSION}、旧形式はバージョンヘッダなし）"
+            )
+        return rest[cls.SAVE_HEADER_EXTRA_LEN:]
 
     # 後方互換性用フィールド定義（migration_pipeline へ移譲）
     DEFAULT_FIELD_FACTORIES = DEFAULT_FIELD_FACTORIES
@@ -177,9 +209,10 @@ class SaveSystem:
             # HMAC署名計算 (32 bytes) - Step 61
             save_hmac = cls._compute_hmac(compressed)
 
-            # [32 bytes SHA256] + [32 bytes HMAC] + [compressed gzip payload]
+            # [32 bytes SHA256] + [32 bytes HMAC] + [4B magic + 2B version] + [gzip payload]
+            version_header = cls.SAVE_HEADER_MAGIC + cls.SAVE_VERSION.to_bytes(2, "big")
             with open(cls.SAVE_PATH, "wb") as f:
-                f.write(checksum + save_hmac + compressed)
+                f.write(checksum + save_hmac + version_header + compressed)
 
             return f"セーブ完了！ ({len(compressed)} bytes, チェックサム検証済, 圧縮率{100 - int(len(compressed) / len(pickled) * 100)}%)"
         except Exception as e:
@@ -199,6 +232,12 @@ class SaveSystem:
         復元フローである。指定がない場合は従来どおり逆直列化エンジンを
         そのまま返す（kernel は含まれないため、呼び出し側でライブエンジン
         へのマージを責務を持つこと）。
+
+        バージョン管理 (T31): ヘッダは形式バージョン (SAVE_VERSION) を保持し、
+        旧形式（ヘッダなし）は形式バージョン 0 として読み込む。形式バージョン・
+        データバージョン (player.save_version) のいずれかが未対応値の場合は
+        SaveDataCorruptedError を送出し、バックアップからの自動復元に
+        フォールバックする。
         """
         if not os.path.exists(cls.SAVE_PATH):
             return None, "セーブデータが見つかりません。"
@@ -207,14 +246,14 @@ class SaveSystem:
             with open(cls.SAVE_PATH, "rb") as f:
                 data = f.read()
 
-            # New format: 32 bytes SHA256 + 32 bytes HMAC + payload
-            # Legacy format: 32 bytes SHA256 + payload (no HMAC)
+            # New format: 32 bytes SHA256 + 32 bytes HMAC + version header + payload
+            # Legacy format: 32 bytes SHA256 + 32 bytes HMAC + payload (no version header)
             if len(data) < 64:
                 raise SaveDataCorruptedError("セーブデータが破損しています（サイズ不正）。")
 
             checksum = data[:32]
             save_hmac = data[32:64]
-            payload = data[64:]
+            payload = cls._parse_save_header(data[64:])
 
             # HMAC検証 (Step 61) - まずHMACを検証
             if not cls._verify_hmac(payload, save_hmac):
@@ -264,6 +303,9 @@ class SaveSystem:
             return loaded_engine, "ロード完了！ ゲームが完全に復元されました。"
         except Exception as e:
             if allow_backup_recovery:
+                logger.warning(
+                    "セーブデータの読み込みに失敗しました。バックアップから復元を試みます: %s", e
+                )
                 # バックアップからの復旧試行
                 for i in range(1, cls.MAX_BACKUPS + 1):
                     bak_file = f"{cls.SAVE_PATH}.bak{i}"
@@ -276,10 +318,17 @@ class SaveSystem:
                                     res,
                                     f"【警告】セーブデータ破損のため、バックアップ(世代{i})から復旧しました。",
                                 )
-                        except Exception as e:
+                        except Exception as backup_err:
                             # Log backup load failure and continue to next backup
-                            logger.warning("Failed to recover from backup %s: %s", bak_file, e)
+                            logger.warning(
+                                "Failed to recover from backup %s: %s", bak_file, backup_err
+                            )
                             continue
+                logger.error(
+                    "バックアップからの復元に失敗しました。セーブデータは復旧できません: %s", e
+                )
+            else:
+                logger.warning("セーブデータの読み込みに失敗しました: %s", e)
             logger.exception("Save load failed: %s", e)
             return None, f"ロード失敗: {e}"
 

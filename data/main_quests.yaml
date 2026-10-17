@@ -13,6 +13,8 @@ main_quests:
       gold: 100
       world_phase: "AWAKENING"
     next_quest_id: "awakening_01"
+    # T26 案1: 完了時に Phase 0「転落と覚醒」ナラティブを開始する
+    narrative_dag_id: "skill_eater_phase0_fall"
 
   - quest_id: "awakening_01"
     title: "目覚めの試練"
@@ -33,6 +35,8 @@ main_quests:
       gold: 1000
       world_phase: "EXPLORATION"
     next_quest_id: "exploration_01"
+    # T26 案1: 完了時に Phase 1「喰らいと抜け殻」ナラティブを開始する
+    narrative_dag_id: "skill_eater_phase1_devour"
 
   - quest_id: "exploration_01"
     title: "失われた記憶の探索"
@@ -53,7 +57,47 @@ main_quests:
     rewards:
       gold: 5000
       world_phase: "CONFRONTATION"
-    # 終端: `confrontation_01` は存在しないため、ここを境に物語は終わる。
-    # main_quest_system.py:311-312 のガードは未解決の id を黙って無視するので、
-    # 壊れた鎖ではなく「意図的にここで終わる鎖」を表す。
+    # T26 案1: 鎖を Phase 3/4-5 へ延長 (confrontation_01 → ascension_01)。
+    # 自動受注は LOCKED かつ required_phase 一致のクエストに限られるため
+    # (tests/test_quest_narrative.py 参照)、後続クエストは受注フロー待ちになる。
+    next_quest_id: "confrontation_01"
+    narrative_dag_id: "skill_eater_phase2_chimera"
+
+  - quest_id: "confrontation_01"
+    title: "神格化アセンション"
+    description: "星座盤で神格化し、第0因果律執行神『クロノス・ミダス』を撃破してAの世界を解放せよ。"
+    required_phase: "CONFRONTATION"
+    objectives:
+      - objective_id: "prove_ascension"
+        description: "神格化の淵に達する (Lv10 到達)"
+        target_type: "variable"
+        target_id: "prove_ascension"
+        required_count: 1
+        condition_dsl: "(>= player.level 10)"
+    rewards:
+      gold: 10000
+      world_phase: "CLIMAX"
+    next_quest_id: "ascension_01"
+    # T26 案1: 完了時に Phase 3「神格化と因果律ボス」ナラティブを開始する
+    narrative_dag_id: "skill_eater_phase3_ascension"
+
+  - quest_id: "ascension_01"
+    title: "次元ゲート開放"
+    description: "概念結晶を時空金庫に収め、スラムの民の独立を見届け、マルチバースの門を潜れ。"
+    required_phase: "CLIMAX"
+    objectives:
+      - objective_id: "open_dimension_gate"
+        description: "次元跳躍の準備を整える (Lv15 到達)"
+        target_type: "variable"
+        target_id: "open_dimension_gate"
+        required_count: 1
+        condition_dsl: "(>= player.level 15)"
+    rewards:
+      gold: 50000
+      world_phase: "EPILOGUE"
+    # 終端: `ascension_01` の完了で Phase 4-5 ナラティブが閉じ、物語は完了する。
+    # main_quest_system.py のガードは未解決の id を黙って無視するので、
+    # ここが「意図的に終わる鎖」の終端である。
     next_quest_id: null
+    # T26 案1: 完了時に Phase 4-5「概念結晶と次元跳躍」ナラティブを開始する
+    narrative_dag_id: "skill_eater_phase45_multiverse"

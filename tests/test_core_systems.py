@@ -742,14 +742,17 @@ class TestPickleSaveLoad:
         assert engine.player.save_version == SaveSystem.CURRENT_VERSION
 
     def test_file_layout_is_checksum_hmac_payload(self, save_path):
-        import gzip
         import hashlib
 
         SaveSystem.save(_fake_engine())
         data = save_path.read_bytes()
-        checksum, file_hmac, payload = data[:32], data[32:64], data[64:]
+        header_len = 64 + SaveSystem.SAVE_HEADER_EXTRA_LEN
+        checksum, file_hmac = data[:32], data[32:64]
+        version_header, payload = data[64:header_len], data[header_len:]
         assert checksum == hashlib.sha256(payload).digest()
         assert file_hmac == SaveSystem._compute_hmac(payload)
+        assert version_header[:4] == SaveSystem.SAVE_HEADER_MAGIC
+        assert int.from_bytes(version_header[4:], "big") == SaveSystem.SAVE_VERSION
         assert payload[:2] == b"\x1f\x8b"  # gzip magic
 
     def test_round_trip_preserves_engine_state(self, save_path):
