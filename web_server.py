@@ -768,6 +768,15 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
         except Exception:
             logger.exception("ナラティブ状態の取得に失敗")
 
+        # T36 案A: 派閥戦争の状況 (影響力/領土/物価/開戦状態) を Web へ配信
+        faction_status: list[dict[str, Any]] = []
+        try:
+            kernel = getattr(engine, "kernel", None)
+            if kernel is not None and kernel.has_system("faction_war_manager"):
+                faction_status = engine.faction_war_manager.get_faction_status()
+        except Exception:
+            logger.exception("派閥戦争状態の取得に失敗")
+
         return {
             "player": {
                 "name": p.name,
@@ -846,6 +855,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             "screen_shake": screen_shake,
             "pending_events": pending_events,
             "narrative_state": narrative_state,
+            "faction_status": faction_status,
         }
 
     def _handle_web_action(self, engine: Engine, action: str, data: dict[str, Any]) -> str:
