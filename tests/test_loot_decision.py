@@ -42,8 +42,8 @@ class TestLootDecision:
 
     def test_two_items_with_same_base_can_differ_by_affix(self):
         """Step 59.1: 同一基底・接尾辞違いの2品が比較可能であること"""
-        a = _make_item("longsword", affix_id="of_sharpness")  # dmg+4, hit-1
-        b = _make_item("longsword", affix_id="of_precision")  # hit+5, dmg-2
+        a = _make_item("longsword", affix_id="of_sharpness")  # dmg+3, hit-3
+        b = _make_item("longsword", affix_id="of_precision")  # hit+5, dmg-4
 
         assert a.name != b.name, f"接尾辞違いで表示名が同一: {a.name} == {b.name}"
         stat_a = (a.dmg_bonus, a.hit_bonus, a.pv, a.dv)
@@ -81,8 +81,8 @@ class TestLootDecision:
         同一基底で戦闘価値の低い品は、インベントリの枠を浪費する。
         比較関数が「より弱い品」を判別できることを確認する。
         """
-        strong = _make_item("longsword", affix_id="of_the_berserker")  # dmg+8, pv-3
-        weak = _make_item("longsword", affix_id="of_precision")  # hit+5, dmg-2
+        strong = _make_item("longsword", affix_id="of_the_berserker")  # dmg+8, pv-4, max_hp-8
+        weak = _make_item("longsword", affix_id="of_precision")  # hit+5, dmg-4
 
         assert _combat_score(strong) > _combat_score(weak), (
             f"強弱の判別ができない: strong={_combat_score(strong)}, weak={_combat_score(weak)}"

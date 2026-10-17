@@ -28,7 +28,7 @@ from naRou.data_manager import DataManager
 
 from data.generated.item.enchantment import EnchantmentDefinition, ItemEnchantmentInstance
 from data.generated.item.item import ItemDefinition
-from item_system import Item
+from item_system import Item, load_affixes
 
 
 class ItemGenerator:
@@ -344,3 +344,118 @@ def generate_random_item(
         luck_bonus=luck_bonus,
         identified=identified,
     )
+
+
+# ============================================================
+# 接尾辞バランス検証 (T32 案B: 利得/代償バランス再調整)
+# ============================================================
+
+# 利得/代償の許容比率上限 (利得は代償の 1.5 倍まで)
+AFFIX_BALANCE_RATIO_LIMIT = 1.5
+
+# mods キー別の価値重み (ダメージ換算)。
+# 実戦での消費度合いを反映する: dmg_bonus/hit_bonus/pv/dv は戦闘解決で
+# 直接消費され、speed は行動エネルギー、str/dexterity/endurance/magic は
+# 命中・被ダメ軽減・詠唱に寄与する。learning/will/charisma/stealth は
+# 戦闘外補正のため低め。
+AFFIX_MOD_WEIGHTS: dict[str, float] = {
+    "dmg_bonus": 1.0,
+    "hit_bonus": 0.8,
+    "pv": 0.8,
+    "dv": 0.8,
+    "speed": 0.3,
+    "max_hp": 0.5,
+    "hp_regen": 3.0,
+    "mp_regen": 2.0,
+    "life_steal": 0.5,
+    "thorns": 0.6,
+    "stealth": 0.15,
+    "fire_resist": 0.08,
+    "cold_resist": 0.08,
+    "fire_damage": 1.0,
+    "ice_damage": 1.0,
+    "str": 1.0,
+    "endurance": 1.0,
+    "dexterity": 1.0,
+    "perception": 0.8,
+    "magic": 1.0,
+    "learning": 0.4,
+    "will": 0.4,
+    "charisma": 0.3,
+}
+
+
+def _affix_split(mods: dict[str, int]) -> tuple[float, float, list[str]]:
+    """mods を (利得合計, 代償合計, 未定義キー) に分解する (T32 案B)
+
+    未定義キーは item_system._apply_affix で無視される (利得/代償ともに
+    無効) ため、unknown_keys として別途報告する。
+    """
+    gain = 0.0
+    cost = 0.0
+    unknown: list[str] = []
+    for key, value in mods.items():
+        weight = AFFIX_MOD_WEIGHTS.get(key)
+        if weight is None:
+            unknown.append(key)
+            continue
+        scored = float(value) * weight
+        if scored >= 0:
+            gain += scored
+        else:
+            cost -= scored
+    return gain, cost, unknown
+
+
+def affix_balance_report(path: str | None = None) -> dict[str, Any]:
+    """全接尾辞の利得/代償を数値化したバランスレポートを返す (T32 案B)
+
+    各戦闘系接尾辞について、mods を AFFIX_MOD_WEIGHTS の重みでダメージ換算
+    した利得合計・代償合計と比率 (利得/代償) を集計する。比率が
+    AFFIX_BALANCE_RATIO_LIMIT を超える接尾辞は imbalanced に列挙され、
+    適用時に無視される未定義キーは unknown_keys に列挙される。
+    呪い系 (cursed=true) は純代償が仕様のため対象外。
+
+    CLI 確認例 (リポジトリルートで実行):
+        python3 -c "import json; from item_generator import affix_balance_report; print(json.dumps(affix_balance_report(), ensure_ascii=False, indent=2))"
+
+    Args:
+        path: item_affixes.yaml のパス (None なら既定の data/item_affixes.yaml)
+
+    Returns:
+        レポート辞書:
+            affixes: {id: {name, tier, gain, cost, ratio, unknown_keys}}
+            total_gain / total_cost: 戦闘系接尾辞全体の利得・代償合計
+            overall_ratio: 全体の利得/代償比率
+            imbalanced: 比率が上限を超える接尾辞 ID のリスト
+    """
+    affixes = load_affixes(path) if path is not None else load_affixes()
+    entries: dict[str, dict[str, Any]] = {}
+    total_gain = 0.0
+    total_cost = 0.0
+    imbalanced: list[str] = []
+    for affix_id, affix in affixes.items():
+        if affix.is_curse:
+            continue
+        gain, cost, unknown = _affix_split(affix.mods)
+        ratio = gain / cost if cost > 0 else float("inf")
+        entries[affix_id] = {
+            "name": affix.name,
+            "tier": affix.tier,
+            "gain": round(gain, 2),
+            "cost": round(cost, 2),
+            "ratio": round(ratio, 2),
+            "unknown_keys": unknown,
+        }
+        total_gain += gain
+        total_cost += cost
+        if ratio > AFFIX_BALANCE_RATIO_LIMIT:
+            imbalanced.append(affix_id)
+    overall_ratio = total_gain / total_cost if total_cost > 0 else float("inf")
+    return {
+        "affixes": entries,
+        "total_gain": round(total_gain, 2),
+        "total_cost": round(total_cost, 2),
+        "overall_ratio": round(overall_ratio, 2),
+        "imbalanced": imbalanced,
+    }

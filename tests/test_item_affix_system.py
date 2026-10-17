@@ -337,7 +337,7 @@ class TestLoadAffixes:
         assert sharp.slot == "weapon"
         assert sharp.weight == 12
         assert sharp.tier == 1
-        assert sharp.mods == {"dmg_bonus": 4, "hit_bonus": -1}
+        assert sharp.mods == {"dmg_bonus": 3, "hit_bonus": -3}
         curse = affixes["curse_of_thinness"]
         assert curse.is_curse is True
         assert curse.weight == 0

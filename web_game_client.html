@@ -2226,11 +2226,53 @@ sprite._playing = false;
       // Inventory List (品質をレアリティ色クラスにマッピング)
       const invContainer = document.getElementById("inventoryList");
       const rarityByQuality = { bad: 'common', normal: 'uncommon', good: 'rare', miracle: 'epic', god: 'legendary' };
+      // T32 案B: 接尾辞の利得/代償ツールチップ (表示名の [接尾辞] 部分から title 属性を組む)
+      const AFFIX_DETAILS = {
+        "秃鷹の": "利得: 腕力+3 ／ 代償: 回避-2・最大HP-5",
+        "鋭利の": "利得: ダメージ+3 ／ 代償: 命中-3",
+        "狂戦士の": "利得: ダメージ+8 ／ 代償: 防御-4・最大HP-8",
+        "精密の": "利得: 命中+5 ／ 代償: ダメージ-4",
+        "要塞の": "利得: 防御+6 ／ 代償: 回避-5",
+        "迅速の": "利得: 回避+5 ／ 代償: 防御-4",
+        "亀甲の": "利得: 防御+4 ／ 代償: 速度-10",
+        "軽妙の": "利得: 速度+15 ／ 代償: 防御-4",
+        "脆弱の": "利得: 回避+3 ／ 代償: 耐久-2",
+        "英知の": "利得: 習得+6 ／ 代償: 腕力-2",
+        "学者の": "利得: 魔力+4 ／ 代償: 耐久-3",
+        "活力の": "利得: 耐久+4 ／ 代償: 器用-3",
+        "発光の": "利得: HP回復+1・MP回復+1 ／ 代償: 最大HP-8",
+        "吸血の": "利得: 吸血+10% ／ 代償: 最大HP-10",
+        "再生の": "利得: HP回復+2 ／ 代償: 最大HP-12",
+        "茨の": "利得: 反撃+6 ／ 代償: 回避-4",
+        "回避の": "利得: 回避+7 ／ 代償: 防御-6",
+        "巨人の": "利得: 腕力+8 ／ 代償: 器用-6",
+        "大魔導の": "利得: 魔力+8 ／ 代償: 耐久-6",
+        "影の": "利得: 隠密+20 ／ 代償: 防御-4",
+        "不死鳥の": "利得: 炎耐性+50% ／ 代償: 冷気耐性-40%",
+        "氷結の": "利得: 氷ダメージ+5 ／ 代償: ダメージ-5",
+        "炎の": "利得: 炎ダメージ+5 ／ 代償: 命中-5",
+        "薄れの呪い": "呪い: 回避-5",
+        "硝子の呪い": "呪い: 最大HP-3",
+        "衰弱の呪い": "呪い: 腕力-5",
+        "怠惰の呪い": "呪い: 速度-20"
+      };
+      const affixTooltip = (name) => {
+        if (!name) return "";
+        const parts = [];
+        for (const m of name.matchAll(/\[([^\]]+)\]/g)) {
+          for (const token of m[1].split("/")) {
+            const detail = AFFIX_DETAILS[token.trim()];
+            if (detail) parts.push(detail);
+          }
+        }
+        return parts.join("\n");
+      };
       if (state.inventory && state.inventory.length > 0) {
         invContainer.innerHTML = state.inventory.map(item => {
           const rarity = rarityByQuality[item.quality] ?? 'common';
+          const tooltip = affixTooltip(item.name);
           return `
-            <div class="item-entry ${item.equipped ? 'equipped' : ''} rarity-${rarity}">
+            <div class="item-entry ${item.equipped ? 'equipped' : ''} rarity-${rarity}" title="${tooltip}">
               <span class="font-main ${rarity}">${item.char} ${item.name}</span>
               <span class="font-caption" style="color: var(--color-text-muted);">${item.weight}s</span>
             </div>

@@ -1,5 +1,8 @@
-# Item Affixes - Phase 3 Step 57
-# すべての接尾辞は「利得と代償の両方」を持つ (test_affixes_trade_off_two_ways が強制)
+# Item Affixes - Phase 3 Step 57 / T32 案B バランス再調整
+# すべての戦闘系接尾辞は「利得と代償の両方」を持つ (test_affixes_trade_off_two_ways が強制)
+# バランス指針 (T32 案B): 利得/代償を item_generator.AFFIX_MOD_WEIGHTS の重みで
+# ダメージ換算し、利得が代償の 1.5 倍を超えないこと (tests/test_affix_balance.py が強制)。
+# 形骸化した代償 (非消費ステータスの減少) は最大HP減・防御減などの実効代償へ再定義した。
 
 # --- 武器系: 攻撃利得 × 防御/重量代償 ---
 of_the_vulture:
@@ -10,6 +13,7 @@ of_the_vulture:
   mods:
     str: 3
     dv: -2
+    max_hp: -5
 
 of_sharpness:
   name: "鋭利の"
@@ -17,8 +21,8 @@ of_sharpness:
   weight: 12
   tier: 1
   mods:
-    dmg_bonus: 4
-    hit_bonus: -1
+    dmg_bonus: 3
+    hit_bonus: -3
 
 of_the_berserker:
   name: "狂戦士の"
@@ -27,7 +31,8 @@ of_the_berserker:
   tier: 2
   mods:
     dmg_bonus: 8
-    pv: -3
+    pv: -4
+    max_hp: -8
 
 of_precision:
   name: "精密の"
@@ -36,7 +41,7 @@ of_precision:
   tier: 1
   mods:
     hit_bonus: 5
-    dmg_bonus: -2
+    dmg_bonus: -4
 
 # --- 防具系: 防御利得 × 机动/能力代償 ---
 of_the_fortress:
@@ -46,7 +51,7 @@ of_the_fortress:
   tier: 2
   mods:
     pv: 6
-    dv: -3
+    dv: -5
 
 of_swiftness:
   name: "迅速の"
@@ -55,7 +60,7 @@ of_swiftness:
   tier: 1
   mods:
     dv: 5
-    pv: -1
+    pv: -4
 
 of_the_turtle:
   name: "亀甲の"
@@ -73,7 +78,7 @@ of_lightness:
   tier: 1
   mods:
     speed: 15
-    pv: -2
+    pv: -4
 
 # --- 能力値系: 一部強化 × 一部弱化 ---
 of_the_frail:
@@ -91,8 +96,8 @@ of_wisdom:
   weight: 8
   tier: 2
   mods:
-    learning: 5
-    strength: -2
+    learning: 6
+    str: -2
 
 of_the_scholar:
   name: "学者の"
@@ -101,7 +106,7 @@ of_the_scholar:
   tier: 2
   mods:
     magic: 4
-    endurance: -2
+    endurance: -3
 
 of_vitality:
   name: "活力の"
@@ -110,7 +115,7 @@ of_vitality:
   tier: 1
   mods:
     endurance: 4
-    dexterity: -2
+    dexterity: -3
 
 # --- 再生・回復系 ---
 glowing:
@@ -121,7 +126,7 @@ glowing:
   mods:
     hp_regen: 1
     mp_regen: 1
-    stealth: -5
+    max_hp: -8
 
 vampiric:
   name: "吸血の"
@@ -139,7 +144,7 @@ of_regen:
   tier: 2
   mods:
     hp_regen: 2
-    dv: -1
+    max_hp: -12
 
 # --- 特殊系 ---
 of_thorns:
@@ -148,8 +153,8 @@ of_thorns:
   weight: 5
   tier: 3
   mods:
-    thorns: 5
-    dv: -2
+    thorns: 6
+    dv: -4
 
 of_evasion:
   name: "回避の"
@@ -158,7 +163,7 @@ of_evasion:
   tier: 2
   mods:
     dv: 7
-    pv: -4
+    pv: -6
 
 of_the_titan:
   name: "巨人の"
@@ -166,8 +171,8 @@ of_the_titan:
   weight: 5
   tier: 3
   mods:
-    strength: 8
-    dexterity: -4
+    str: 8
+    dexterity: -6
 
 of_the_archmage:
   name: "大魔導の"
@@ -176,7 +181,7 @@ of_the_archmage:
   tier: 3
   mods:
     magic: 8
-    endurance: -3
+    endurance: -6
 
 of_shadows:
   name: "影の"
@@ -185,7 +190,7 @@ of_shadows:
   tier: 2
   mods:
     stealth: 20
-    pv: -2
+    pv: -4
 
 of_the_phoenix:
   name: "不死鳥の"
@@ -194,7 +199,7 @@ of_the_phoenix:
   tier: 3
   mods:
     fire_resist: 50
-    cold_resist: -30
+    cold_resist: -40
 
 of_frost:
   name: "氷結の"
@@ -203,7 +208,7 @@ of_frost:
   tier: 2
   mods:
     ice_damage: 5
-    dmg_bonus: -3
+    dmg_bonus: -5
 
 of_flames:
   name: "炎の"
@@ -212,7 +217,7 @@ of_flames:
   tier: 2
   mods:
     fire_damage: 5
-    hit_bonus: -2
+    hit_bonus: -5
 
 # ============================================================
 # 呪い系 (Step 62) — 常に純代償。cursed=true とセットで付与される
@@ -242,7 +247,7 @@ curse_of_weakness:
   tier: 0
   cursed: true
   mods:
-    strength: -5
+    str: -5
 
 curse_of_sloth:
   name: "怠惰の呪い"
@@ -260,4 +265,6 @@ curse_of_sloth:
 #   tier: 品質階層 (1=通常, 2=良品以上, 3=奇跡以上)
 #   cursed: true のとき cursed フラグ必須
 #   mods: 適用される修正 (損得がペアで存在することを Step 58.4 が強制)
+#         属性キーは item_system._apply_affix の動的キーに揃えること
+#         (str/endurance/dexterity/... — strength は未定義のため不可)
 # ============================================================
