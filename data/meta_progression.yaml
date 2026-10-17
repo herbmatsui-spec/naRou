@@ -1,4 +1,12 @@
-# メタ進行システム 定義データ (Steps 4-5)
+# メタ進行システム 定義データ (Steps 4-5, 30)
+#
+# [S2.2] 永続報酬トークンは「実装されて実読される」か「未実装のため保留」の二択で、
+# 定義だけある無言の状態を残さない。
+#
+# Step 30: reward_bonus キーを実装可能な実キーに変更
+# - damage_boost: 討伐数マイルストーンで付与されるダメージブースト（累積）
+# - gold_gain: 総獲得ゴールドマイルストーンで付与されるゴールド獲得倍率（累積）
+# これらは meta_progression_system.py の apply_meta_progression_bonuses() で読まれる。
 
 meta_progression:
   total_monsters_slain:
@@ -8,13 +16,13 @@ meta_progression:
     milestones:
       - count: 10
         reward_gold: 500
-        reward_bonus: "damage_boost_1"
+        reward_bonus: "damage_boost"
       - count: 50
         reward_gold: 2500
-        reward_bonus: "damage_boost_2"
+        reward_bonus: "damage_boost"
       - count: 200
         reward_gold: 10000
-        reward_bonus: "damage_boost_3"
+        reward_bonus: "damage_boost"
 
   total_gold_accumulated:
     name: "総獲得ゴールド"
@@ -23,10 +31,10 @@ meta_progression:
     milestones:
       - count: 10000
         reward_gold: 1000
-        reward_bonus: "gold_gain_5"
+        reward_bonus: "gold_gain"
       - count: 100000
         reward_gold: 10000
-        reward_bonus: "gold_gain_10"
+        reward_bonus: "gold_gain"
 
   total_dungeon_depth:
     name: "最深到達階層"

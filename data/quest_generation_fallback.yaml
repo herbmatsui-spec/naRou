@@ -1,1 +1,75 @@
-# placeholder
+# クエスト生成フォールバック設定 (Phase 3: 13バイトプレースホルダを実データに置換)
+# config_loader.load_all() が main (procedural_scenarios.yaml) 不在時にマージする最小構成。
+# メインの procedural_scenarios.yaml が正なので、ここは「最低限動く」程度の軽量フォールバック。
+
+quest_generation:
+  archetypes:
+    slay:
+      id: "slay"
+      name: "討伐"
+      objective_type: "kill"
+      title_template: "{setting}での{enemy}討伐"
+      desc_template: "{setting}に潜む{enemy}を{required_count}体討伐せよ。"
+      reward_weight: 1.0
+      base_complexity: 1
+
+    explore:
+      id: "explore"
+      name: "探索"
+      objective_type: "explore"
+      title_template: "{setting}の探索"
+      desc_template: "{setting}を踏査し、所在を報告せよ。"
+      reward_weight: 0.7
+      base_complexity: 1
+
+    gather:
+      id: "gather"
+      name: "採集"
+      objective_type: "collect"
+      title_template: "{setting}での{item}採集"
+      desc_template: "{setting}で{item}を{required_count}個採取せよ。"
+      reward_weight: 0.8
+      base_complexity: 1
+
+    excavation:
+      id: "excavation"
+      name: "発掘"
+      objective_type: "explore"
+      title_template: "{setting}の遺跡発掘"
+      desc_template: "{setting}の遺跡を掘り起こし、記憶の欠片を発見せよ。"
+      reward_weight: 1.0
+      base_complexity: 2
+
+  difficulty_tiers:
+    easy:
+      id: "easy"
+      name: "初段"
+      level_range: [1, 5]
+      enemy_level_scale: 0.8
+      reward_scale: 0.8
+    normal:
+      id: "normal"
+      name: "並"
+      level_range: [4, 12]
+      enemy_level_scale: 1.0
+      reward_scale: 1.0
+    hard:
+      id: "hard"
+      name: "高難"
+      level_range: [10, 25]
+      enemy_level_scale: 1.3
+      reward_scale: 1.5
+
+  rewards:
+    standard:
+      id: "standard"
+      gold_range: [50, 200]
+      exp_range: [30, 120]
+      item_pool: ["potion_minor", "bread", "scroll_identify"]
+      bonus: {}
+    rich:
+      id: "rich"
+      gold_range: [200, 600]
+      exp_range: [100, 400]
+      item_pool: ["potion_major", "scroll_teleport", "gem"]
+      bonus: {}

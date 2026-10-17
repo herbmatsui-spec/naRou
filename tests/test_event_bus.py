@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from naRou.core_framework import EventBus
+from core_framework import EventBus
 
 
 def test_subscribe_publish():

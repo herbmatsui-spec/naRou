@@ -11,7 +11,7 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from naRou.src.relationships import RelationshipType, create_engine
+from src.relationships import RelationshipType, create_engine
 
 
 def demo():

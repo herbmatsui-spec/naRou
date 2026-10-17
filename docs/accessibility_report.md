@@ -1,6 +1,6 @@
 # アクセシビリティ対応レポート
 
-`naRou: Masterpiece Edition` は「誰でも面白く遊べる」ことを目指し、以下の
+`naRogue: Masterpiece Edition` は「誰でも面白く遊べる」ことを目指し、以下の
 アクセシビリティ機能を提供します。
 
 ## 1. 色覚多様性対応（CVD）

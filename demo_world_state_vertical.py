@@ -5,7 +5,7 @@ World State System 垂直ワールド拡張 デモ
 
 from __future__ import annotations
 
-from naRou.world_state_system import WorldStateManager
+from world_state_system import WorldStateManager
 
 
 def demo_world_state_extension():

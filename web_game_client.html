@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>naRou: Masterpiece Edition (Canvas 2D & WebAudio)</title>
+  <title>naRogue: Masterpiece Edition (Canvas 2D & WebAudio)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Sans+JP:wght@400;500;700;900&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
@@ -499,14 +499,14 @@
   <!-- HEADER -->
   <header>
     <div class="game-logo">
-      <span>NAROU</span>
-      <span class="badge-version">v2.0 MASTERPIECE</span>
+      <span class="font-title text-legendary">NAROU</span>
+      <span class="badge-version font-caption">v2.0 MASTERPIECE</span>
     </div>
     <div class="header-status">
-      <div class="status-chip" id="chipFloor">階層: B1F</div>
-      <div class="status-chip" id="chipGold">💰 0 G</div>
-      <div class="status-chip" id="chipPlatinum">💎 0 P</div>
-      <div class="status-chip" id="chipKarma">⚖️ 善悪: 0</div>
+      <div class="status-chip font-caption" id="chipFloor">階層: B1F</div>
+      <div class="status-chip font-caption" id="chipGold">💰 0 G</div>
+      <div class="status-chip font-caption" id="chipPlatinum">💎 0 P</div>
+      <div class="status-chip font-caption" id="chipKarma">⚖️ 善悪: 0</div>
       <button class="audio-btn" id="btnAudioToggle" onclick="SoundEngine.toggleAudio()">🔊 サウンド起動</button>
       <div class="theme-switch" id="themeSwitch" role="group" aria-label="テーマ切替">
         <button type="button" data-theme-value="dark" title="ダーク">🌑</button>
@@ -580,32 +580,16 @@
       <!-- TABS PANEL -->
       <div class="panel-card" style="height: 50%;">
         <div class="tabs-header">
-          <button class="tab-btn active" onclick="switchTab('tabInventory')">荷物</button>
-          <button class="tab-btn" onclick="switchTab('tabStats')">能力</button>
-          <button class="tab-btn" onclick="switchTab('tabCrafting')">製作</button>
-          <button class="tab-btn" onclick="switchTab('tabLore')">古文書</button>
-          <button class="tab-btn" onclick="switchTab('tabQuests')">依頼</button>
-          <button class="tab-btn" onclick="switchTab('tabPet')">ペット</button>
+          <button class="tab-btn active font-caption" onclick="switchTab('tabInventory')">荷物</button>
+          <button class="tab-btn font-caption" onclick="switchTab('tabStats')">能力</button>
+          <button class="tab-btn font-caption" onclick="switchTab('tabQuests')">依頼</button>
+          <button class="tab-btn font-caption" onclick="switchTab('tabPet')">ペット</button>
         </div>
 
         <!-- TAB: INVENTORY -->
         <div class="tab-content" id="tabInventory">
           <div class="item-list" id="inventoryList">
             <div style="color: var(--text-muted); text-align: center;">読み込み中...</div>
-          </div>
-        </div>
-
-        <!-- TAB: CRAFTING -->
-        <div class="tab-content" id="tabCrafting" style="display: none;">
-          <div class="item-list" id="craftingList">
-            <div style="color: var(--text-muted); text-align: center;">レシピ読み込み中...</div>
-          </div>
-        </div>
-
-        <!-- TAB: LORE / DECODER -->
-        <div class="tab-content" id="tabLore" style="display: none;">
-          <div class="item-list" id="loreList">
-            <div style="color: var(--text-muted); text-align: center;">古文書読み込み中...</div>
           </div>
         </div>
 
@@ -625,15 +609,7 @@
 
         <!-- TAB: PET TACTICS -->
         <div class="tab-content" id="tabPet" style="display: none;">
-          <div id="petDetails" style="margin-bottom: 10px; padding: 8px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-              <span id="petTabName" style="font-weight: 700; color: #ff80ab;">妹分</span>
-              <span id="petTabPersonality" style="font-size: 0.75rem; color: #ffeb3b; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">性格: 勇敢</span>
-            </div>
-            <div style="font-size: 0.75rem; color: #81c784; margin-bottom: 6px;" id="petTabBond">絆: 50 / 100</div>
-            <button class="hotbar-btn" style="width: 100%; padding: 4px; font-size: 0.75rem; background: rgba(255,105,180,0.3); border: 1px solid #ff69b4;" onclick="sendAction('feed_pet', {})">🍖 おやつをあげる (絆上昇)</button>
-          </div>
-          <div style="font-size: 0.75rem; margin-bottom: 6px; font-weight: 600;">ペットの戦闘戦術方針:</div>
+          <div style="font-size: 0.75rem; margin-bottom: 8px;">ペットの戦闘戦術方針:</div>
           <div style="display: flex; flex-direction: column; gap: 6px;">
             <button class="hotbar-btn" onclick="sendAction('set_pet_tactic', {tactic: 'balanced'})">⚔️ バランス (追従・迎撃)</button>
             <button class="hotbar-btn" onclick="sendAction('set_pet_tactic', {tactic: 'aggressive'})">💥 積極索敵 (突撃殲滅)</button>
@@ -645,7 +621,7 @@
 
       <!-- LOG & CONTROLLER PANEL -->
       <div class="panel-card log-panel">
-        <div style="padding: 6px 10px; font-weight: 700; font-size: 0.75rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--panel-border);">
+        <div class="font-h3" style="padding: 6px 10px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--panel-border);">
           📜 冒険ログ
         </div>
         <div class="tab-content" id="logContainer" style="display: flex; flex-direction: column-reverse;">
@@ -1290,6 +1266,12 @@
               offsetY + player.y * TILE_SIZE,
               5
             );
+            // ダメージ数を浮上表示（改善案5: クラストグル制御の例）
+            const dmg = prevPlayerHp - player.hp;
+            showFloatText(`-${dmg}`,
+              offsetX + player.x * TILE_SIZE,
+              offsetY + player.y * TILE_SIZE - 28,
+              '#ff6b6b');
             // スクリーンシェイク
             screenShake.shake('medium');
 
@@ -1526,6 +1508,31 @@ sprite._playing = false;
       }
     });
 
+    // ==================== アニメーション制御の例（改善案5） ====================
+    // クラスの付加・削除でトランジションを制御し、アイテム獲得・ダメージ表示を
+    // 浮上（.float-up）させてから要素を削除する。
+    function showFloatText(text, x, y, color = '#ffd700') {
+      const el = document.createElement('div');
+      el.className = 'float-up';
+      el.textContent = text;
+      el.style.position = 'fixed';
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+      el.style.color = color;
+      el.style.pointerEvents = 'none';
+      el.style.zIndex = 2000;
+      el.style.fontWeight = '700';
+      document.body.appendChild(el);
+      // 連続発生時にもトランジションを再起動するため、一度削除して再付与
+      el.classList.remove('float-up');
+      void el.offsetHeight; // リフロー強制
+      el.classList.add('float-up');
+      setTimeout(() => {
+        el.classList.remove('float-up');
+        el.remove();
+      }, 350); // --animation-duration-slow と同等
+    }
+
     // ==================== STATE SYNC & API ====================
     async function fetchState() {
       try {
@@ -1586,44 +1593,29 @@ sprite._playing = false;
 
       // Pet Vitals
       if (pet && pet.name) {
-        document.getElementById("hudPetName").innerText = `妹分『${pet.name}』(${pet.personality_label || '勇敢'})`;
+        document.getElementById("hudPetName").innerText = `妹分『${pet.name}』`;
         const petHpPct = Math.max(0, Math.min(100, (pet.hp / pet.max_hp) * 100));
         document.getElementById("barPetHP").style.width = `${petHpPct}%`;
         document.getElementById("valPetHP").innerText = `${pet.hp}/${pet.max_hp}`;
-        document.getElementById("valPetTactic").innerText = `指示: ${pet.tactic || 'バランス'} (絆: ${pet.bond || 50})`;
-
-        const petTabNameEl = document.getElementById("petTabName");
-        if (petTabNameEl) petTabNameEl.innerText = `妹分『${pet.name}』`;
-        const petTabPersEl = document.getElementById("petTabPersonality");
-        if (petTabPersEl) petTabPersEl.innerText = `性格: ${pet.personality_label || '勇敢'}`;
-        const petTabBondEl = document.getElementById("petTabBond");
-        if (petTabBondEl) petTabBondEl.innerText = `💖 絆 (信頼度): ${pet.bond || 50} / 100`;
+        document.getElementById("valPetTactic").innerText = `指示: ${pet.tactic || 'バランス'}`;
       }
 
-
-      // Inventory List
+      // Inventory List (品質をレアリティ色クラスにマッピング)
       const invContainer = document.getElementById("inventoryList");
+      const rarityByQuality = { bad: 'common', normal: 'uncommon', good: 'rare', miracle: 'epic', god: 'legendary' };
       if (state.inventory && state.inventory.length > 0) {
-        invContainer.innerHTML = state.inventory.map(item => `
-          <div class="item-entry ${item.equipped ? 'equipped' : ''}" style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <span>${item.char} ${item.name}</span>
-              ${item.count > 1 ? `<span style="font-size: 0.75rem; color: #64b5f6;"> x${item.count}</span>` : ''}
-              <span style="color: var(--text-muted); font-size: 0.75rem;">(${item.weight}s)</span>
+        invContainer.innerHTML = state.inventory.map(item => {
+          const rarity = rarityByQuality[item.quality] ?? 'common';
+          return `
+            <div class="item-entry ${item.equipped ? 'equipped' : ''} rarity-${rarity}">
+              <span class="font-main ${rarity}">${item.char} ${item.name}</span>
+              <span class="font-caption" style="color: var(--color-text-muted);">${item.weight}s</span>
             </div>
-            <div>
-              ${!item.equipped && ['weapon', 'shield', 'helm', 'armor', 'ring'].includes(item.category) ? `
-                <button class="hotbar-btn" style="padding: 2px 6px; font-size: 0.7rem; background: rgba(220,100,50,0.3); border: 1px solid #ff7043;" onclick="sendAction('salvage', {item_id: '${item.id || item.raw_name || item.name}'})">分解</button>
-              ` : ''}
-            </div>
-          </div>
-        `).join("");
+          `;
+        }).join("");
       } else {
         invContainer.innerHTML = `<div style="color: var(--text-muted); text-align: center;">荷物は空です</div>`;
       }
-
-      // Crafting Tab (fetch & render)
-      fetchRecipesAndRender();
 
       // Stats Tab
       if (p.attributes) {
@@ -1661,7 +1653,7 @@ sprite._playing = false;
       const logContainer = document.getElementById("logContainer");
       if (state.logs) {
         logContainer.innerHTML = state.logs.map(log => `
-          <div class="log-entry ${log.level || 'INFO'}">${log.text}</div>
+          <div class="log-entry ${log.level || 'INFO'} font-mono">${log.text}</div>
         `).join("");
       }
     }
@@ -1680,89 +1672,7 @@ sprite._playing = false;
       if (window.event && window.event.target) {
         window.event.target.classList.add("active");
       }
-      if (tabId === 'tabCrafting') {
-        fetchRecipesAndRender();
-      }
-      if (tabId === 'tabLore') {
-        fetchFragmentsAndRender();
-      }
     }
-
-    async function fetchRecipesAndRender() {
-      const craftingListEl = document.getElementById("craftingList");
-      if (!craftingListEl) return;
-      try {
-        const res = await fetch("/api/recipes");
-        if (!res.ok) return;
-        const data = await res.json();
-        const recipes = data.recipes || [];
-        if (recipes.length === 0) {
-          craftingListEl.innerHTML = `<div style="color: var(--text-muted); text-align: center;">利用可能なレシピがありません</div>`;
-          return;
-        }
-        craftingListEl.innerHTML = recipes.map(r => `
-          <div class="item-entry" style="display: flex; flex-direction: column; gap: 4px; padding: 6px 8px; margin-bottom: 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-weight: 700; color: #ffd700;">${r.name}</span>
-              <button class="hotbar-btn" style="padding: 3px 10px; font-size: 0.75rem; background: ${r.can_craft ? 'rgba(76, 175, 80, 0.4)' : 'rgba(100, 100, 100, 0.3)'}; border: 1px solid ${r.can_craft ? '#4caf50' : '#555'};" ${r.can_craft ? '' : 'disabled'} onclick="sendAction('craft', {recipe_id: '${r.id}'})">製作</button>
-            </div>
-            <div style="font-size: 0.75rem; color: var(--text-muted);">${r.description}</div>
-            <div style="display: flex; gap: 8px; font-size: 0.75rem; flex-wrap: wrap;">
-              ${r.materials.map(m => `
-                <span style="color: ${m.satisfied ? '#81c784' : '#e57373'};">
-                  ${m.name}: ${m.current}/${m.required}
-                </span>
-              `).join("")}
-            </div>
-          </div>
-        `).join("");
-      } catch (e) {
-        // ignore network error
-      }
-    }
-
-    async function fetchFragmentsAndRender() {
-      const loreListEl = document.getElementById("loreList");
-      if (!loreListEl) return;
-      try {
-        const res = await fetch("/api/archaeology/fragments");
-        if (!res.ok) return;
-        const data = await res.json();
-        const fragments = data.fragments || [];
-        if (fragments.length === 0) {
-          loreListEl.innerHTML = `<div style="color: var(--text-muted); text-align: center;">発見された古文書はありません</div>`;
-          return;
-        }
-        loreListEl.innerHTML = fragments.map(f => `
-          <div class="item-entry" style="display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; margin-bottom: 8px; background: rgba(30, 20, 10, 0.4); border: 1px solid #8d6e63; border-radius: 6px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <span style="font-weight: 700; color: #ffcc80;">📜 ${f.name}</span>
-                <span style="font-size: 0.7rem; color: #bcaaa4; margin-left: 6px;">[${f.cipher_type}]</span>
-              </div>
-              <div style="display: flex; gap: 6px; align-items: center;">
-                <span style="font-size: 0.75rem; color: ${f.is_decoded ? '#81c784' : '#ffb74d'};">
-                  解読率: ${Math.round(f.decode_ratio * 100)}%
-                </span>
-                ${f.matching_key_id && !f.has_key ? `
-                  <button class="hotbar-btn" style="padding: 2px 6px; font-size: 0.7rem; background: rgba(255,215,0,0.2); border: 1px solid #ffd700;" onclick="sendAction('unlock_decoder_key', {key_id: '${f.matching_key_id}'}); fetchFragmentsAndRender();">鍵使用</button>
-                ` : ''}
-              </div>
-            </div>
-            <div style="font-family: 'Cinzel', serif; font-size: 0.85rem; letter-spacing: 1px; color: ${f.is_decoded ? '#e0e0e0' : '#80cbc4'}; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; border-left: 3px solid ${f.is_decoded ? '#81c784' : '#26a69a'};">
-              ${f.displayed_text}
-            </div>
-            <div style="font-size: 0.7rem; color: #a1887f;">
-              💡 <b>解読の手がかり:</b> ${f.decoder_hint || '古代の石板に記された鍵を手に入れよう。'}
-            </div>
-          </div>
-        `).join("");
-      } catch (e) {
-        // ignore network error
-      }
-    }
-
-
 
     // ==================== KEYBOARD CONTROLS ====================
     window.addEventListener("keydown", (e) => {

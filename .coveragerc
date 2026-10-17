@@ -6,6 +6,10 @@ omit =
     */tools/*
     */venv/*
     */__pycache__/*
+    */.tmp_main_check/*
+    */.worktrees/*
+    */build/*
+    */dist/*
 
 [report]
 exclude_lines =

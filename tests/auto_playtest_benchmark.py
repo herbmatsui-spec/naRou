@@ -17,7 +17,7 @@ for p in [str(NAROU_DIR), str(NAROU_DIR.parent)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from naRou.ai.ai_autonomous_subagent import AutonomousSubagentAI
+from ai_autonomous_subagent import AutonomousSubagentAI
 from game import Engine
 
 
@@ -32,14 +32,13 @@ class PlaytestSessionResult:
     potions_used: int
     altars_offered: int
     is_victory: bool
-    ending_reached: bool = False
     death_reason: str = "none"
 
 
 class AutonomousPlaytestBenchmark:
     """Orchestrates automated playtest trials and records multi-dimensional analytics."""
 
-    def __init__(self, strategy: str = "hybrid", max_turns_per_session: int = 5000):
+    def __init__(self, strategy: str = "hybrid", max_turns_per_session: int = 2000):
         self.strategy = strategy
         self.max_turns = max_turns_per_session
 
@@ -52,7 +51,6 @@ class AutonomousPlaytestBenchmark:
         potions_used = 0
         altars_offered = 0
         enemies_killed = 0
-        ending_reached = False
         death_reason = "none"
 
         while turns < self.max_turns:
@@ -82,12 +80,6 @@ class AutonomousPlaytestBenchmark:
                     else:
                         if hasattr(engine, "advance_world"):
                             engine.advance_world()
-
-                elif action == "excavate":
-                    if hasattr(engine, "excavate"):
-                        engine.excavate()
-                    if hasattr(engine, "advance_world"):
-                        engine.advance_world()
 
                 elif action == "use_item":
                     potions_used += 1
@@ -134,19 +126,13 @@ class AutonomousPlaytestBenchmark:
                 if hasattr(engine, "advance_world"):
                     engine.advance_world()
 
-            # Track ending reach via archaeology progress
-            if getattr(player, "ending_progress", None):
-                if any(v >= 1 for v in player.ending_progress.values()):
-                    ending_reached = True
-                    break
-
             # Track kills
             living = getattr(engine.entity_manager, "get_living_entities", lambda: [])()
             # If floor cleared or entities decreased
 
         duration = time.perf_counter() - start_time
         max_floor = getattr(engine, "dungeon_level", 1)
-        is_victory = ending_reached or max_floor >= 5 or turns >= self.max_turns
+        is_victory = max_floor >= 5 or turns >= self.max_turns
 
         if turns >= self.max_turns and death_reason == "none":
             death_reason = "turn_limit"
@@ -161,7 +147,6 @@ class AutonomousPlaytestBenchmark:
             potions_used=potions_used,
             altars_offered=altars_offered,
             is_victory=is_victory,
-            ending_reached=ending_reached,
             death_reason=death_reason,
         )
 
@@ -224,13 +209,3 @@ class AutonomousPlaytestBenchmark:
         lines.append("")
 
         return "\n".join(lines)
-
-
-if __name__ == "__main__":
-    benchmark = AutonomousPlaytestBenchmark(strategy="hybrid", max_turns_per_session=5000)
-    results = [benchmark.run_single_session(i) for i in range(1, 4)]
-    stats = AutonomousPlaytestBenchmark.aggregate_statistics(results)
-    print(AutonomousPlaytestBenchmark.format_markdown_report(results, stats))
-    for r in results:
-        print(f"[Session {r.session_id}] ending_reached={r.ending_reached} "
-              f"max_floor=B{r.max_floor}F turns={r.turns} death={r.death_reason}")

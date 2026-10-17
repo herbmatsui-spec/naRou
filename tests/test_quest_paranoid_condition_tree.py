@@ -10,8 +10,8 @@ import tempfile
 
 import pytest
 
-from naRou.main_quest_system import MainQuestSystem, QuestObjective
-from naRou.quest_condition_ast import (
+from main_quest_system import MainQuestSystem, QuestObjective
+from quest_condition_ast import (
     AndCondition,
     LeafCondition,
     NotCondition,
@@ -19,8 +19,8 @@ from naRou.quest_condition_ast import (
     XorCondition,
     is_condition_node,
 )
-from naRou.quest_condition_evaluator import DictContext, evaluate
-from naRou.quest_condition_parser import ConditionParseError, parse_condition
+from quest_condition_evaluator import DictContext, evaluate
+from quest_condition_parser import ConditionParseError, parse_condition
 
 # ---------------------------------------------------------------------------
 # Step 1 / Step 3: AST + 評価

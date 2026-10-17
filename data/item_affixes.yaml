@@ -1,0 +1,263 @@
+# Item Affixes - Phase 3 Step 57
+# すべての接尾辞は「利得と代償の両方」を持つ (test_affixes_trade_off_two_ways が強制)
+
+# --- 武器系: 攻撃利得 × 防御/重量代償 ---
+of_the_vulture:
+  name: "秃鷹の"
+  slot: "weapon"
+  weight: 10
+  tier: 1
+  mods:
+    str: 3
+    dv: -2
+
+of_sharpness:
+  name: "鋭利の"
+  slot: "weapon"
+  weight: 12
+  tier: 1
+  mods:
+    dmg_bonus: 4
+    hit_bonus: -1
+
+of_the_berserker:
+  name: "狂戦士の"
+  slot: "weapon"
+  weight: 6
+  tier: 2
+  mods:
+    dmg_bonus: 8
+    pv: -3
+
+of_precision:
+  name: "精密の"
+  slot: "weapon"
+  weight: 10
+  tier: 1
+  mods:
+    hit_bonus: 5
+    dmg_bonus: -2
+
+# --- 防具系: 防御利得 × 机动/能力代償 ---
+of_the_fortress:
+  name: "要塞の"
+  slot: "armor"
+  weight: 8
+  tier: 2
+  mods:
+    pv: 6
+    dv: -3
+
+of_swiftness:
+  name: "迅速の"
+  slot: "armor"
+  weight: 10
+  tier: 1
+  mods:
+    dv: 5
+    pv: -1
+
+of_the_turtle:
+  name: "亀甲の"
+  slot: "armor"
+  weight: 8
+  tier: 1
+  mods:
+    pv: 4
+    speed: -10
+
+of_lightness:
+  name: "軽妙の"
+  slot: "armor"
+  weight: 10
+  tier: 1
+  mods:
+    speed: 15
+    pv: -2
+
+# --- 能力値系: 一部強化 × 一部弱化 ---
+of_the_frail:
+  name: "脆弱の"
+  slot: "armor"
+  weight: 10
+  tier: 1
+  mods:
+    endurance: -2
+    dv: 3
+
+of_wisdom:
+  name: "英知の"
+  slot: "armor"
+  weight: 8
+  tier: 2
+  mods:
+    learning: 5
+    strength: -2
+
+of_the_scholar:
+  name: "学者の"
+  slot: "armor"
+  weight: 8
+  tier: 2
+  mods:
+    magic: 4
+    endurance: -2
+
+of_vitality:
+  name: "活力の"
+  slot: "armor"
+  weight: 10
+  tier: 1
+  mods:
+    endurance: 4
+    dexterity: -2
+
+# --- 再生・回復系 ---
+glowing:
+  name: "発光の"
+  slot: "any"
+  weight: 6
+  tier: 2
+  mods:
+    hp_regen: 1
+    mp_regen: 1
+    stealth: -5
+
+vampiric:
+  name: "吸血の"
+  slot: "weapon"
+  weight: 4
+  tier: 3
+  mods:
+    life_steal: 10
+    max_hp: -10
+
+of_regen:
+  name: "再生の"
+  slot: "any"
+  weight: 6
+  tier: 2
+  mods:
+    hp_regen: 2
+    dv: -1
+
+# --- 特殊系 ---
+of_thorns:
+  name: "茨の"
+  slot: "armor"
+  weight: 5
+  tier: 3
+  mods:
+    thorns: 5
+    dv: -2
+
+of_evasion:
+  name: "回避の"
+  slot: "armor"
+  weight: 8
+  tier: 2
+  mods:
+    dv: 7
+    pv: -4
+
+of_the_titan:
+  name: "巨人の"
+  slot: "any"
+  weight: 5
+  tier: 3
+  mods:
+    strength: 8
+    dexterity: -4
+
+of_the_archmage:
+  name: "大魔導の"
+  slot: "any"
+  weight: 4
+  tier: 3
+  mods:
+    magic: 8
+    endurance: -3
+
+of_shadows:
+  name: "影の"
+  slot: "any"
+  weight: 5
+  tier: 2
+  mods:
+    stealth: 20
+    pv: -2
+
+of_the_phoenix:
+  name: "不死鳥の"
+  slot: "any"
+  weight: 3
+  tier: 3
+  mods:
+    fire_resist: 50
+    cold_resist: -30
+
+of_frost:
+  name: "氷結の"
+  slot: "weapon"
+  weight: 5
+  tier: 2
+  mods:
+    ice_damage: 5
+    dmg_bonus: -3
+
+of_flames:
+  name: "炎の"
+  slot: "weapon"
+  weight: 5
+  tier: 2
+  mods:
+    fire_damage: 5
+    hit_bonus: -2
+
+# ============================================================
+# 呪い系 (Step 62) — 常に純代償。cursed=true とセットで付与される
+# ============================================================
+curse_of_thinness:
+  name: "薄れの呪い"
+  slot: "any"
+  weight: 0  # ロール対象外: cursed 生成時のみ
+  tier: 0
+  cursed: true
+  mods:
+    dv: -5
+
+curse_of_glass:
+  name: "硝子の呪い"
+  slot: "any"
+  weight: 0
+  tier: 0
+  cursed: true
+  mods:
+    max_hp: -3  # 装備時に最大HP-3
+
+curse_of_weakness:
+  name: "衰弱の呪い"
+  slot: "any"
+  weight: 0
+  tier: 0
+  cursed: true
+  mods:
+    strength: -5
+
+curse_of_sloth:
+  name: "怠惰の呪い"
+  slot: "any"
+  weight: 0
+  tier: 0
+  cursed: true
+  mods:
+    speed: -20
+
+# ============================================================
+# フィールド説明
+#   slot: 装備可能部位 (weapon/armor/any)
+#   weight: 抽選重み (0 = ロール対象外、呪い専用)
+#   tier: 品質階層 (1=通常, 2=良品以上, 3=奇跡以上)
+#   cursed: true のとき cursed フラグ必須
+#   mods: 適用される修正 (損得がペアで存在することを Step 58.4 が強制)
+# ============================================================

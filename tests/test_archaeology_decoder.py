@@ -1,15 +1,15 @@
 """Unit tests for Archaeology & Decoder System (Phase 5, Steps 25-48)"""
 
 import pytest
-
-from naRou.ecs.components import ArchaeologyComponent
 from naRou.ecs.entity import Entity
-from naRou.systems.archaeology_decoder_system import ArchaeologyDecoderSystem, obfuscate_text
+
+from archaeology_decoder_system import ArchaeologyDecoderSystem, obfuscate_text
+from naRou.ecs.components import ArchaeologyComponent
 
 
 def test_obfuscate_text_full_and_zero():
     text = "我が剣折れ、盾砕くとも、星の導きが汝の歩みを照らし続けんことを。"
-    
+
     # 1.0 (完全解読) では原文と一致すること
     decoded = obfuscate_text(text, decode_ratio=1.0)
     assert decoded == text
@@ -23,7 +23,7 @@ def test_obfuscate_text_full_and_zero():
 
 def test_obfuscate_text_partial_multibyte_safe():
     text = "小さな命が哭いている。母を呼び、光を恐れ、ただ巣の温もりを求めて震えていた。"
-    
+
     # 部分解読 (50%)
     partial = obfuscate_text(text, decode_ratio=0.5)
     assert len(partial) == len(text)  # 文字数が一致しマルチバイトでも崩れないこと

@@ -7,7 +7,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from naRou.pet_systems import PetEquipmentManager, PetGuildManager, PetLegacyManager, PetTrainingManager
+from pet_systems import PetEquipmentManager, PetGuildManager, PetLegacyManager, PetTrainingManager
 
 
 class FakePet:

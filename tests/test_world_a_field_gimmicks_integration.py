@@ -7,7 +7,7 @@ from __future__ import annotations
 import unittest
 
 from game import Engine
-from naRou.renderer import NullRenderer
+from renderer import NullRenderer
 
 
 class TestWorldAFieldGimmicksIntegration(unittest.TestCase):

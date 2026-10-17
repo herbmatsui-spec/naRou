@@ -9,7 +9,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from naRou.quest_scheduler import (
+from quest_scheduler import (
     LogicOperator,
     QuestSchedule,
     QuestScheduler,
@@ -223,9 +223,9 @@ def test_advance_world_scheduler_hook():
 
 def test_world_event_schedule_injection():
     """ワールドイベント発生時のスケジュール注入"""
-    from naRou.quest_scheduler import QuestScheduler
-    from naRou.world_event_system import REGISTRY as WE_REG
-    from naRou.world_event_system import WorldEventData, WorldEventManager
+    from quest_scheduler import QuestScheduler
+    from world_event_system import REGISTRY as WE_REG
+    from world_event_system import WorldEventData, WorldEventManager
 
     # レジストリクリア
     WE_REG._events.clear()
@@ -244,9 +244,17 @@ def test_world_event_schedule_injection():
     mgr = WorldEventManager()
     scheduler = QuestScheduler()
 
-    player = Mock()
-    player.active_world_events = []
+    # Properly mock player with required attributes
+    class MockPlayer:
+        def __init__(self):
+            self.active_world_events = []
+            self.gold = 0
+            self.platinum = 0
+            self.exp = 0
+            self.piety = 0
+            self.components = {}
 
+    player = MockPlayer()
     engine = Mock()
     engine.quest_scheduler = scheduler
     engine.log = Mock()
@@ -262,9 +270,9 @@ def test_world_event_schedule_injection():
 
 def test_world_event_moon_eclipse():
     """月食イベントのスケジュール注入"""
-    from naRou.quest_scheduler import QuestScheduler
-    from naRou.world_event_system import REGISTRY as WE_REG
-    from naRou.world_event_system import WorldEventData, WorldEventManager
+    from quest_scheduler import QuestScheduler
+    from world_event_system import REGISTRY as WE_REG
+    from world_event_system import WorldEventData, WorldEventManager
 
     WE_REG._events.clear()
     WE_REG._loaded = False
@@ -281,8 +289,16 @@ def test_world_event_moon_eclipse():
     mgr = WorldEventManager()
     scheduler = QuestScheduler()
 
-    player = Mock()
-    player.active_world_events = []
+    class MockPlayer:
+        def __init__(self):
+            self.active_world_events = []
+            self.gold = 0
+            self.platinum = 0
+            self.exp = 0
+            self.piety = 0
+            self.components = {}
+
+    player = MockPlayer()
     engine = Mock()
     engine.quest_scheduler = scheduler
     engine.log = Mock()
@@ -296,9 +312,9 @@ def test_world_event_moon_eclipse():
 
 def test_world_event_meteor():
     """流星群イベントのスケジュール注入"""
-    from naRou.quest_scheduler import QuestScheduler
-    from naRou.world_event_system import REGISTRY as WE_REG
-    from naRou.world_event_system import WorldEventData, WorldEventManager
+    from quest_scheduler import QuestScheduler
+    from world_event_system import REGISTRY as WE_REG
+    from world_event_system import WorldEventData, WorldEventManager
 
     WE_REG._events.clear()
     WE_REG._loaded = False
@@ -315,8 +331,16 @@ def test_world_event_meteor():
     mgr = WorldEventManager()
     scheduler = QuestScheduler()
 
-    player = Mock()
-    player.active_world_events = []
+    class MockPlayer:
+        def __init__(self):
+            self.active_world_events = []
+            self.gold = 0
+            self.platinum = 0
+            self.exp = 0
+            self.piety = 0
+            self.components = {}
+
+    player = MockPlayer()
     engine = Mock()
     engine.quest_scheduler = scheduler
     engine.log = Mock()
@@ -331,7 +355,7 @@ def test_world_event_meteor():
 def test_schedule_context_from_engine():
     """ScheduleContext.from_engine でエンジンからコンテキスト生成"""
     from game import Engine
-    from naRou.quest_scheduler import ScheduleContext
+    from quest_scheduler import ScheduleContext
 
     engine = Engine()
     ctx = ScheduleContext.from_engine(engine)

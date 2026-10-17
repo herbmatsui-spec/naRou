@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from naRou.webgl_resource_pool import WebGLResourcePool
+from webgl_resource_pool import WebGLResourcePool
 
 
 # Simple creator that returns a new dict identifying the resource

@@ -1,0 +1,15 @@
+{
+  "runs": 170,
+  "last_depth": 20,
+  "last_kills": 0,
+  "last_turns": 0,
+  "last_cause": "不明",
+  "best_depth": 20,
+  "best_kills": 2,
+  "devoured_skills": [
+    "alpha_skill",
+    "beta_skill",
+    "gamma_skill"
+  ],
+  "version": 1
+}

@@ -27,7 +27,7 @@ def run_script(script_name):
 def prompt_accessibility():
     """Step 35/36: 色覚対応と難易度を選択し、config に永続化する。"""
     try:
-        from naRou.config import configure, get_config
+        from config import configure, get_config
     except Exception as e:
         print(f"警告: 設定モジュールの読み込みに失敗しました: {e}")
         logger.exception("Failed to load config module: %s", e)
@@ -55,7 +55,7 @@ def start_web_backend(open_browser: bool = False, port: int = 8080):
     """Step 50/51: Web サーバーを別スレッドで起動し、必要ならブラウザを開く。"""
     try:
         import game
-        from naRou import web_server
+        import web_server
 
         eng = game.Engine()
         srv = web_server.start_web_server(eng, port=port)
@@ -63,7 +63,7 @@ def start_web_backend(open_browser: bool = False, port: int = 8080):
             web_server.launch_browser(f"http://localhost:{port}")
         return srv
     except Exception as exc:  # noqa: BLE001 - バックエンド起動失敗は致命的ではない
-        from naRou.exceptions import ElonaError, SystemInitError
+        from exceptions import ElonaError, SystemInitError
 
         err_msg = f"Web バックエンド起動に失敗しました: {exc}"
         print(err_msg)
@@ -77,12 +77,12 @@ def start_web_backend(open_browser: bool = False, port: int = 8080):
 def show_help():
     help_text = """
 ========================================
-  naRou: Masterpiece Edition 統合システム - ヘルプ
+  naRogue: Masterpiece Edition 統合システム - ヘルプ
 ========================================
-このシステムは、naRou: Masterpiece Editionと関連ツールを起動するためのメニューです。
+このシステムは、naRogue: Masterpiece Editionと関連ツールを起動するためのメニューです。
 
-1. naRou: Masterpiece Edition（ゲーム本編）を起動
-   - ローグライクゲーム「naRou: Masterpiece Edition」を起動します。
+1. naRogue: Masterpiece Edition（ゲーム本編）を起動
+   - ローグライクゲーム「naRogue: Masterpiece Edition」を起動します。
    - ダンジョン探索、クエスト達成、キャラ育成などを楽しめます。
    - ゲーム内で [?] または [h] キーを押すと詳細なヘルプを参照できます。
 
@@ -97,7 +97,7 @@ def show_help():
 - 数字以外の入力はエラーとなります。
 
 初心者へのアドバイス:
-まずは「1. naRou: Masterpiece Edition（ゲーム本編）を起動」を選んでゲームを始めてみてください。
+まずは「1. naRogue: Masterpiece Edition（ゲーム本編）を起動」を選んでゲームを始めてみてください。
 ゲーム開始直後は画面左下に操作ガイドが表示されるので、それに従ってください。
 さらに詳細なヘルプが必要な場合は、ゲーム内で [?] キーを押してください。
 ========================================
@@ -121,9 +121,9 @@ def main():
 
     while True:
         print("========================================")
-        print("  naRou: Masterpiece Edition 統合システムメニュー")
+        print("  naRogue: Masterpiece Edition 統合システムメニュー")
         print("========================================")
-        print("1. naRou: Masterpiece Edition（ゲーム本編）を起動")
+        print("1. naRogue: Masterpiece Edition（ゲーム本編）を起動")
         print("2. バトルバランス自動検証を実行 (tests/balance_simulator.py)")
         print("3. テキストモードで起動（GPU/SDL 不要）")
         print("0. 終了")
@@ -145,7 +145,7 @@ def main():
                 print(f"エラー: モジュールが見つからないか、インポートエラーがあります: {e}")
                 logger.exception("Import error during game launch: %s", e)
             except Exception as e:  # noqa: BLE001
-                from naRou.exceptions import ElonaError
+                from exceptions import ElonaError
 
                 print(f"\n【重大なエラーが発生しました】: {e}")
                 if isinstance(e, ElonaError):

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pytest
 
-from naRou.feature_flags import set_flag
+from feature_flags import set_flag
 
 # Enable graphics for testing
 set_flag("ENABLE_TINY_ROGUE_GFX", True)
@@ -17,7 +17,7 @@ class TestTinyRogueTileAtlas:
     """Test TileAtlas loads and provides correct UVs for tiny_rogue_16 scale."""
 
     def test_atlas_loads_tiny_rogue_scale(self):
-        from naRou.core.tile_atlas import TileAtlas
+        from core.tile_atlas import TileAtlas
 
         atlas = TileAtlas()
         assert "tiny_rogue_16" in atlas.atlas_meta
@@ -26,7 +26,7 @@ class TestTinyRogueTileAtlas:
         assert len(atlas.atlas_meta["tiny_rogue_16"]["tiles"]) == 105
 
     def test_floor_tile_uv_lookup(self):
-        from naRou.core.tile_atlas import TileAtlas
+        from core.tile_atlas import TileAtlas
 
         atlas = TileAtlas()
         # Test all 12 floor variants
@@ -38,7 +38,7 @@ class TestTinyRogueTileAtlas:
             assert uv.h == 16
 
     def test_wall_tile_uv_lookup(self):
-        from naRou.core.tile_atlas import TileAtlas
+        from core.tile_atlas import TileAtlas
 
         atlas = TileAtlas()
         for v in range(12):
@@ -47,7 +47,7 @@ class TestTinyRogueTileAtlas:
             assert uv.h == 16
 
     def test_monster_directional_frames(self):
-        from naRou.core.tile_atlas import TileAtlas
+        from core.tile_atlas import TileAtlas
 
         atlas = TileAtlas()
         # Test 4 directions × 4 animation frames
@@ -70,7 +70,7 @@ class TestTinyRogueTileAtlas:
         assert len({uv_down.y, uv_left.y, uv_right.y, uv_up.y}) == 4
 
     def test_player_directional_frames(self):
-        from naRou.core.tile_atlas import TileAtlas
+        from core.tile_atlas import TileAtlas
 
         atlas = TileAtlas()
         for direction in range(4):
@@ -79,7 +79,7 @@ class TestTinyRogueTileAtlas:
             assert uv.h == 16
 
     def test_effect_tiles(self):
-        from naRou.core.tile_atlas import TileAtlas
+        from core.tile_atlas import TileAtlas
 
         atlas = TileAtlas()
         for i in range(1, 13):
@@ -93,21 +93,21 @@ class TestTinyRogueTileRegistry:
     """Test TileRegistry integration with tiny_rogue_16 scale."""
 
     def test_registry_loads_tiny_rogue(self):
-        from naRou.map_engine import TILE_REGISTRY
+        from map_engine import TILE_REGISTRY
 
         assert "tiny_rogue_16" in dir(TILE_REGISTRY) or hasattr(
             TILE_REGISTRY, "atlas_tiny_rogue_meta"
         )
 
     def test_registry_uv_lookup(self):
-        from naRou.map_engine import TILE_REGISTRY
+        from map_engine import TILE_REGISTRY
 
         uv = TILE_REGISTRY.get_uv("TR_FLOOR_01", scale="tiny_rogue_16")
         assert len(uv) == 4
         assert all(isinstance(v, int) for v in uv)
 
     def test_registry_variant_lookup(self):
-        from naRou.map_engine import TILE_REGISTRY
+        from map_engine import TILE_REGISTRY
 
         for v in range(12):
             uv = TILE_REGISTRY.get_uv("TR_FLOOR_01", variant=v, scale="tiny_rogue_16")
@@ -115,7 +115,7 @@ class TestTinyRogueTileRegistry:
             assert uv[3] == 16  # height
 
     def test_registry_animation_frame(self):
-        from naRou.map_engine import TILE_REGISTRY
+        from map_engine import TILE_REGISTRY
 
         for frame in range(4):
             uv = TILE_REGISTRY.get_animation_frame("TR_MONSTER_01", frame, scale="tiny_rogue_16")
@@ -127,8 +127,8 @@ class TestTinyRogueEntityRendering:
     """Test entity rendering with Tiny Rogue tiles."""
 
     def test_monster_tile_mapping(self):
-        from naRou.entity_renderer import EntityRenderer
-        from naRou.systems import MonsterPreset
+        from entity_renderer import EntityRenderer
+        from systems import MonsterPreset
 
         # Test all 12 monster types map to correct tiles
         expected = {
@@ -152,8 +152,8 @@ class TestTinyRogueEntityRendering:
             assert tile_id == expected_tile, f"{mtype}: expected {expected_tile}, got {tile_id}"
 
     def test_player_and_pet_unchanged(self):
-        from naRou.ecs.entity import Entity
-        from naRou.entity_renderer import EntityRenderer
+        from ecs.entity import Entity
+        from entity_renderer import EntityRenderer
 
         player = Entity(0, 0, "@", (255, 255, 255), "Player")
         player.is_player = True
@@ -177,8 +177,8 @@ class TestTinyRogueEntityRendering:
         set_flag("ENABLE_TINY_ROGUE_GFX", True)
 
     def test_feature_flag_toggle(self):
-        from naRou.entity_renderer import EntityRenderer
-        from naRou.systems import MonsterPreset
+        from entity_renderer import EntityRenderer
+        from systems import MonsterPreset
 
         set_flag("ENABLE_TINY_ROGUE_GFX", False)
         e = MonsterPreset.create("goblin", 0, 0)
@@ -192,8 +192,8 @@ class TestTinyRogueDungeonGeneration:
     """Test dungeon generation uses Tiny Rogue tile variants."""
 
     def test_floor_variants_assigned(self):
-        from naRou.feature_flags import set_flag
-        from naRou.map_engine import GameMap
+        from feature_flags import set_flag
+        from map_engine import GameMap
 
         set_flag("ENABLE_TINY_ROGUE_GFX", True)
         gm = GameMap(30, 30)
@@ -207,7 +207,7 @@ class TestTinyRogueDungeonGeneration:
         assert all(0 <= v <= 11 for v in floor_variants)
 
     def test_wall_variants_assigned(self):
-        from naRou.map_engine import GameMap
+        from map_engine import GameMap
 
         gm = GameMap(30, 30)
         gm.generate_dungeon(max_rooms=3)
@@ -220,9 +220,9 @@ class TestTinyRogueFXSystem:
     """Test FX Manager integration with Tiny Rogue tiles."""
 
     def test_blood_splatter_on_damage(self):
-        from naRou.core_framework import EventBus
-        from naRou.fx_manager import FXManager
-        from naRou.systems import CombatSystem
+        from core_framework import EventBus
+        from fx_manager import FXManager
+        from systems import CombatSystem
 
         bus = EventBus()
         fx = FXManager(bus)
@@ -234,9 +234,9 @@ class TestTinyRogueFXSystem:
         assert len(blood_particles) > 0
 
     def test_blood_pool_on_kill(self):
-        from naRou.core_framework import EventBus
-        from naRou.fx_manager import FXManager
-        from naRou.systems import CombatSystem
+        from core_framework import EventBus
+        from fx_manager import FXManager
+        from systems import CombatSystem
 
         bus = EventBus()
         fx = FXManager(bus)
@@ -247,8 +247,8 @@ class TestTinyRogueFXSystem:
         assert len(blood_particles) > 0
 
     def test_loot_sparkle(self):
-        from naRou.core_framework import EventBus
-        from naRou.fx_manager import FXManager
+        from core_framework import EventBus
+        from fx_manager import FXManager
 
         bus = EventBus()
         fx = FXManager(bus)
@@ -260,8 +260,8 @@ class TestTinyRogueFXSystem:
         assert len(sparkle_particles) > 0
 
     def test_flash_on_crit(self):
-        from naRou.core_framework import EventBus
-        from naRou.fx_manager import FXManager
+        from core_framework import EventBus
+        from fx_manager import FXManager
 
         bus = EventBus()
         fx = FXManager(bus)
@@ -275,8 +275,8 @@ class TestTinyRogueFXSystem:
         assert len(flash_particles) > 0
 
     def test_all_effect_types(self):
-        from naRou.core_framework import EventBus
-        from naRou.fx_manager import FXManager
+        from core_framework import EventBus
+        from fx_manager import FXManager
 
         bus = EventBus()
         fx = FXManager(bus)
@@ -307,7 +307,7 @@ class TestTinyRogueTileMappings:
     """Test tile mapping utilities."""
 
     def test_dungeon_tile_mappings(self):
-        from naRou.core.tiny_rogue_tiles import get_dungeon_tile_id
+        from core.tiny_rogue_tiles import get_dungeon_tile_id
 
         mappings = {
             "floor": "TR_FLOOR_01",
@@ -324,15 +324,15 @@ class TestTinyRogueTileMappings:
             assert result == expected, f"{key}: expected {expected}, got {result}"
 
     def test_item_tile_mappings(self):
-        from naRou.core.tiny_rogue_tiles import get_item_tile_id
+        from core.tiny_rogue_tiles import get_item_tile_id
 
         assert get_item_tile_id("potion") == "TR_ITEM_01"
         assert get_item_tile_id("gold") == "TR_ITEM_09"
         assert get_item_tile_id("unknown") == "TR_ITEM_12"  # default
 
     def test_feature_flag_fallback(self):
-        from naRou.core.tiny_rogue_tiles import get_dungeon_tile_id
-        from naRou.feature_flags import set_flag
+        from core.tiny_rogue_tiles import get_dungeon_tile_id
+        from feature_flags import set_flag
 
         set_flag("ENABLE_TINY_ROGUE_GFX", False)
         assert get_dungeon_tile_id("floor") == "TILE_FLOOR"

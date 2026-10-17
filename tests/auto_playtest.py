@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 import argparse
-from collections import deque
-from dataclasses import asdict, dataclass, field
-from datetime import datetime
 import json
 import os
-from pathlib import Path
 import random
 import sys
 import time
+from collections import deque
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 # Add project directories to sys.path
@@ -951,7 +951,7 @@ class PlayTestRunner:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="naRou: Masterpiece Edition Auto Playtest")
+    parser = argparse.ArgumentParser(description="naRogue: Masterpiece Edition Auto Playtest")
     parser.add_argument("-n", "--runs", type=int, default=10, help="Number of playthroughs")
     parser.add_argument("-t", "--max-turns", type=int, default=5000, help="Max turns per run")
     parser.add_argument("-d", "--max-depth", type=int, default=20, help="Max dungeon level")

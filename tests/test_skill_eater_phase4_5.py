@@ -8,9 +8,9 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
-from naRou.skill_eater_economy_system import SkillEaterEconomySystem
-from naRou.skill_eater_servant_system import SkillEaterServantSystem
-from naRou.skill_eater_system import CharacterState, SkillEaterRegistry
+from skill_eater_economy_system import SkillEaterEconomySystem
+from skill_eater_servant_system import SkillEaterServantSystem
+from skill_eater_system import CharacterState, SkillEaterRegistry
 
 
 class TestSkillEaterPhase4And5(unittest.TestCase):

@@ -5,7 +5,7 @@ from __future__ import annotations
 import io
 import sys
 
-from naRou.core.text_renderer import TextRenderer, get_text_action
+from core.text_renderer import TextRenderer, get_text_action
 
 
 def test_init_grid():

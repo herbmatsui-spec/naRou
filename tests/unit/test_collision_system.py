@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from naRou.collision_system import SpatialHashCollision
+from collision_system import SpatialHashCollision
 
 
 class DummyEntity:

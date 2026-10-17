@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from naRou.webgl_manager import WebGLManager
+from webgl_manager import WebGLManager
 
 
 class DummyCanvas:

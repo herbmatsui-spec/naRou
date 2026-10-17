@@ -1,13 +1,13 @@
 """Tests for meta intervention template event generator."""
 
 import pytest
-from naRou.systems.skill_eater_template_model import load_templates
-from naRou.systems.skill_eater_meta_intervention_system import TemplateEventGenerator
-from naRou.skill_eater_exploration_system import SkillEaterExplorationSystem
-from naRou.skill_eater_presentation_system import SkillEaterPresentationSystem
-from naRou.skill_eater_audio_system import SkillEaterAudioSystem
-from naRou.packages.world_a.package import WorldAPackage
 from naRou.packages.core.kernel.kernel import Kernel
+from naRou.packages.world_a.package import WorldAPackage
+from skill_eater_meta_intervention_system import TemplateEventGenerator
+from skill_eater_template_model import load_templates
+from skill_eater_audio_system import SkillEaterAudioSystem
+from skill_eater_exploration_system import SkillEaterExplorationSystem
+from skill_eater_presentation_system import SkillEaterPresentationSystem
 
 
 def test_generator_deterministic():
@@ -143,5 +143,5 @@ def test_engine_property():
     # Test intervention engine
     engine = kernel.get_system("skill_eater_intervention_engine")
     assert engine is not None
-    from naRou.systems.skill_eater_meta_intervention_system import InterventionEngine
+    from skill_eater_meta_intervention_system import InterventionEngine
     assert isinstance(engine, InterventionEngine)

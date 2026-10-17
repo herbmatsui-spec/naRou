@@ -6,8 +6,8 @@ from __future__ import annotations
 
 import pytest
 
-from naRou.narrative_executor import NarrativeExecutor, NarrativeState
-from naRou.quest_narrative_dag import (
+from narrative_executor import NarrativeExecutor, NarrativeState
+from quest_narrative_dag import (
     NarrativeContext,
     NarrativeDAG,
     NarrativeEdge,
@@ -353,7 +353,7 @@ def test_get_available_endings():
 
 def test_quest_objective_narrative_dag_id():
     """QuestObjective に narrative_dag_id フィールド"""
-    from naRou.main_quest_system import QuestObjective
+    from main_quest_system import QuestObjective
 
     obj = QuestObjective(
         objective_id="test",
@@ -369,7 +369,7 @@ def test_quest_objective_narrative_dag_id():
 
 def test_main_quest_narrative_dag_id():
     """MainQuest に narrative_dag_id フィールド"""
-    from naRou.main_quest_system import MainQuest, QuestObjective
+    from main_quest_system import MainQuest, QuestObjective
 
     quest = MainQuest(
         quest_id="test_quest",
@@ -385,7 +385,7 @@ def test_main_quest_narrative_dag_id():
 
 def test_main_quest_system_narrative_methods():
     """MainQuestSystem ナラティブ連携メソッド存在確認"""
-    from naRou.main_quest_system import MainQuestSystem
+    from main_quest_system import MainQuestSystem
 
     mqs = MainQuestSystem()
 

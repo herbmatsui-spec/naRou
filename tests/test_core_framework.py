@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from naRou.core_framework import AStar, Point, bresenham_line
+from core_framework import AStar, Point, bresenham_line
 
 
 def test_point_add_sub():

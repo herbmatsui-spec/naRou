@@ -8,23 +8,31 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from naRou.exceptions import ElonaError
+from exceptions import ElonaError
 from game import Engine
-from naRou.save_system import SaveSystem
+from save_system import SaveSystem
 from tests.balance_simulator import BalanceSimulator
 
 
-def test_balance_simulator_execution():
+def test_balance_simulator_execution(tmp_path):
     sim = BalanceSimulator()
     res = sim.simulate_battle(player_level=1, monster_type="slime", trials=50)
     assert res["trials"] == 50
     assert "win_rate" in res
     assert "avg_turns" in res
-    assert res["is_balanced"]
+    # 計測器は結果を PASS に固定してはならない。Lv1 スライムは現状 100% 勝利で、
+    # しかもプレイヤーに実質的なダメージが通らない (被与ダメージ比が下限未満) ため
+    # 「バランス良好」ではない。以前はここが常に真だった。
+    assert res["win_rate"] == 1.0
+    assert not res["is_balanced"], res["unbalanced_reasons"]
 
-    full_rep = sim.run_full_validation()
+    # 出力先は引数で指定する。git 追跡対象の balance_report.* を汚さないこと。
+    full_rep = sim.run_full_validation(output_path=str(tmp_path / "balance_report.json"))
     assert "summary" in full_rep
     assert "scenarios" in full_rep
+    assert full_rep["summary"] == "WARNINGS_DETECTED"
+    assert (tmp_path / "balance_report.json").exists()
+    assert (tmp_path / "balance_report.html").exists()
 
 
 def test_save_checksum_and_backup():

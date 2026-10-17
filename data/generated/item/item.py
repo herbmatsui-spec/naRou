@@ -94,6 +94,10 @@ class ItemDefinition(DataModel):
     """
     Material name (affects properties)
     """
+    salvage_materials: dict[str, int] | None = {}
+    """
+    Materials returned when item is salvaged / broken down (PR #8 integration)
+    """
     heal_amount: int | None = 0
     """
     Healing amount for potions/food
@@ -118,20 +122,7 @@ class ItemDefinition(DataModel):
     """
     Whether item is identified
     """
-    quality: str | None = "normal"
+    sell_price: int | None = 0
     """
-    Item quality (bad, normal, good, miracle, god)
+    Sell price in gold pieces (overrides base_value if set)
     """
-    enchantments: list[Any] | None = []
-    """
-    List of enchantments
-    """
-    salvage_materials: dict[str, int] | None = {}
-    """
-    Materials returned when item is salvaged / broken down
-    """
-    food_tags: list[str] | None = []
-    """
-    Food tags (meat, vegetable, sweet, etc.) for pet favorite foods
-    """
-

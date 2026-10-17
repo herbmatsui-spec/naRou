@@ -1,0 +1,16 @@
+=== naRogue Test Agents Dashboard ===
+Last updated: 2026-10-12T18:03:59.817699
+
+Agent Status:
+  ⚪ agent-test-fixer: idle (PID: 398132, Uptime: 0s, Restarts: 6)
+  ☠️ agent-coverage-builder: dead (PID: 398230, Uptime: 21297s, Restarts: 5)
+  ⚪ agent-infra-monitor: idle (PID: 397572, Uptime: 0s, Restarts: 3)
+
+Task Summary:
+  Total: 16
+  Completed: 0 ✅
+  Failed: 15 ❌
+  In Progress: 0 🔄
+  Pending: 1 ⏳
+
+Recent Activity:

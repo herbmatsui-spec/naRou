@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from naRou.localization_manager import LocalizationManager
+from localization_manager import LocalizationManager
 
 
 class TestFinalValidation(unittest.TestCase):
@@ -14,6 +14,7 @@ class TestFinalValidation(unittest.TestCase):
         # Integration-level checks across supported languages
         supported = lm.get_supported_languages()
         self.assertIn("en", supported)
+        self.assertIn("ja", supported)  # ja is the default language
         for lang in supported:
             self.assertTrue(lm.get_language_data(lang).get("hello"))
 

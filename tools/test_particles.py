@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import tcod
 import tcod.console
 
-from naRou.core.lighting import PARTICLE_EFFECTS, PARTICLE_TYPES, TerminalParticleSystem
+from core.lighting import PARTICLE_EFFECTS, PARTICLE_TYPES, TerminalParticleSystem
 
 
 def test_particle_creation():

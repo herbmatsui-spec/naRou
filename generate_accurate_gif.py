@@ -1,5 +1,5 @@
 """
-Generate high-fidelity animated GIF preview that directly reflects the true codebase of naRou: Masterpiece Edition.
+Generate high-fidelity animated GIF preview that directly reflects the true codebase of naRogue: Masterpiece Edition.
 Accurately renders:
 1. True 3-tier HUD (Status, HP/MP bars, Gold, Platinum, God piety, Turn/Floor, Survival Hunger/Karma)
 2. Accurate Grid Map (Fog of War, Dynamic Lighting, Altar, Stairs, Resource Nodes, Items with rarities)
@@ -60,7 +60,7 @@ scenes = [
         "nodes": [("%", (4, 4), (100, 255, 180))],
         "tooltip": "💡 祭壇の近く: [p]キーで神に祈りを捧げて恩恵を受ける",
         "logs": [
-            ("『naRou: Masterpiece Edition』の世界へようこそ！", (255, 255, 120)),
+            ("『naRogue: Masterpiece Edition』の世界へようこそ！", (255, 255, 120)),
             ("妹分シエル「お兄ちゃん、今日も一緒に頑張ろうね！」", COLOR_PET_PINK),
             (
                 "【初心者ガイド】[?]キーでいつでもヘルプ・操作一覧を確認できます！",
@@ -169,7 +169,7 @@ scenes = [
                 "獲得ボーナス: 基礎能力値継承 / 固有称号『伝説の救世主』獲得",
                 (255, 240, 120),
             ),
-            ("次なる旅路へ… naRou: Masterpiece Edition", (200, 220, 255)),
+            ("次なる旅路へ… naRogue: Masterpiece Edition", (200, 220, 255)),
         ],
         "fx": [
             ("particle", "✨", (13, 7), (255, 240, 100)),
@@ -187,7 +187,7 @@ for sc_idx, sc in enumerate(scenes):
 
         # 1. Top HUD Header
         draw.rectangle([(12, 10), (W - 12, 38)], fill=PANEL_BG, outline=PANEL_BORDER, width=1)
-        draw.text((22, 16), "naRou: Masterpiece Edition v1.0.0", fill=COLOR_GOLD_YELLOW)
+        draw.text((22, 16), "naRogue: Masterpiece Edition v1.0.0", fill=COLOR_GOLD_YELLOW)
         draw.text((290, 16), f"| {sc['floor_name']}", fill=TEXT_WHITE)
         draw.text(
             (540, 16),

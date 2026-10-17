@@ -1,0 +1,25 @@
+{
+  "agents": [
+    {
+      "name": "agent-test-fixer",
+      "task_type": "test_fix",
+      "prompt_template": "Fix failing tests in {target}. Run pytest to verify the fix.",
+      "working_dir": "/home/herbmatsui/narou",
+      "max_restarts": 10
+    },
+    {
+      "name": "agent-coverage-builder",
+      "task_type": "coverage",
+      "prompt_template": "Add tests for {target} to improve coverage. Focus on {focus_areas}.",
+      "working_dir": "/home/herbmatsui/narou",
+      "max_restarts": 5
+    },
+    {
+      "name": "agent-infra-monitor",
+      "task_type": "infra",
+      "prompt_template": "Monitor test execution and update progress dashboard for {target}.",
+      "working_dir": "/home/herbmatsui/narou",
+      "max_restarts": 3
+    }
+  ]
+}

@@ -13,8 +13,8 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from naRou.fov import compute_light_map
-from naRou.map_engine import GameMap
+from fov import compute_light_map
+from map_engine import GameMap
 
 
 def _build_viewport(game_map, cam_x, cam_y, view_w, view_h, sources):

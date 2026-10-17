@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build script for naRou: Masterpiece Edition.
+"""Build script for naRogue: Masterpiece Edition.
 
 Implements proposal #1-B (build/deploy automation). Supports one-file
 PyInstaller builds for Windows, macOS and Linux, plus AppImage and WASM

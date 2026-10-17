@@ -42,7 +42,7 @@ def test_all_36_steps_procedural_quest_enhancement():
     assert "magma_elemental" in dn["enemy"] and "heal_herb" in dn["item"], "Step 6-7 Failed"
     print("[OK] Steps 5-8 (display_names: enemy/item/stage/difficulty 定義)")
 
-    from naRou.procedural_quest_generator import (
+    from procedural_quest_generator import (
         REGISTRY,
         GeneratedQuest,
         ProceduralQuestGenerator,
@@ -62,7 +62,7 @@ def test_all_36_steps_procedural_quest_enhancement():
 
     # Step 11-12: _compose が日本語表示名を使う（英語ID非含有）
     gen = ProceduralQuestGenerator(REGISTRY)
-    from naRou.ecs.entity import Entity
+    from ecs.entity import Entity
 
     p = Entity()
     leaks = 0
@@ -193,7 +193,7 @@ def test_all_36_steps_procedural_quest_enhancement():
     # ---------------------------------------------------------
     # フェーズD: 提案3 UI統合 (Steps 27-34)
     # ---------------------------------------------------------
-    from naRou.journal_ui import JournalUI
+    from journal_ui import JournalUI
 
     # Step 27-28: journal_ui インポート + engine から manager 取得方針
     assert JournalUI is not None, "Step 27 Failed"

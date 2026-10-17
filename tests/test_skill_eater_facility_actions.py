@@ -7,9 +7,9 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
-from naRou.skill_eater_audio_system import SkillEaterAudioSystem
-from naRou.skill_eater_economy_system import BaseFacility, SkillEaterEconomySystem
-from naRou.skill_eater_facility_actions import (
+from skill_eater_audio_system import SkillEaterAudioSystem
+from skill_eater_economy_system import BaseFacility, SkillEaterEconomySystem
+from skill_eater_facility_actions import (
     FacilityAction,
     FacilityActionRegistry,
     FacilityActionResult,
@@ -33,8 +33,8 @@ from naRou.skill_eater_facility_actions import (
     execute_reverse_engineer_tech,
     execute_treat_toxicity,
 )
-from naRou.skill_eater_presentation_system import SkillEaterPresentationSystem
-from naRou.skill_eater_system import CharacterState, SkillEaterRegistry
+from skill_eater_presentation_system import SkillEaterPresentationSystem
+from skill_eater_system import CharacterState, SkillEaterRegistry
 
 
 class TestFacilityActions(unittest.TestCase):

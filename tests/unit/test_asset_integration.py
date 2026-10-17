@@ -6,8 +6,8 @@ import unittest
 
 import yaml
 
-from naRou.asset_manager import ASSET_MANAGER
-from naRou.emote_system import EMOTE_SYSTEM, get_emote_frame, play_emote
+from asset_manager import ASSET_MANAGER
+from emote_system import EMOTE_SYSTEM, get_emote_frame, play_emote
 
 
 class TestAssetManagerIntegration(unittest.TestCase):
@@ -143,7 +143,7 @@ class TestEmoteSystem(unittest.TestCase):
         play_emote("entity1", "heart")
         self.assertTrue(EMOTE_SYSTEM.is_playing("entity1"))
 
-        from naRou.emote_system import stop_emote
+        from emote_system import stop_emote
 
         stop_emote("entity1")
         self.assertFalse(EMOTE_SYSTEM.is_playing("entity1"))

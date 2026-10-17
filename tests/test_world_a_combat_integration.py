@@ -6,9 +6,9 @@ from __future__ import annotations
 
 import unittest
 
-from naRou.ecs.entity import Entity
+from ecs.entity import Entity
 from game import Engine
-from naRou.renderer import NullRenderer
+from renderer import NullRenderer
 
 
 class TestWorldACombatIntegration(unittest.TestCase):

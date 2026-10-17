@@ -17,13 +17,13 @@ def test_husk_component_to_from_dict():
         injected_skills=["fire_bolt", "heal"],
         injected_codes=["synergy_fire_heal"]
     )
-    
+
     # dictに変換
     data = original.to_dict()
-    
+
     # dictから復元
     restored = HuskComponent.from_dict(data)
-    
+
     # ソースモンスターが保存されていることを確認
     assert restored.source_monster == "slime"
     # 他のフィールドも保存されていることを確認
@@ -34,7 +34,7 @@ def test_husk_component_to_from_dict():
     assert restored.slots == 3
     assert restored.injected_skills == ["fire_bolt", "heal"]
     assert restored.injected_codes == ["synergy_fire_heal"]
-    
+
     # 空のコンポーネントでもデフォルト値で正常に動作することを確認
     empty = HuskComponent(husk_id="", source_monster="")
     data_empty = empty.to_dict()

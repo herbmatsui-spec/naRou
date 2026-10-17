@@ -7,7 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  core:
+    name: Core suite (fast)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -19,15 +20,43 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install -r requirements-dev.txt || true
+          pip install pre-commit "ruff==0.15.20" mypy pytest-xdist coverage pip-audit
       - name: Run linters
         run: |
+          ruff check .
           pre-commit run --all-files
-      - name: Run tests
+      - name: Type check (mypy)
         run: |
-          pytest -m "not integration"
+          mypy .
+      - name: Run core tests (parallel, excluding heavy simulation/integration)
+        run: |
+          pytest -m "not integration" -n auto --ignore=tests/performance --ignore=tests/integration tests
+      - name: Vulnerability scan (pip-audit)
+        run: |
+          pip-audit || true
       - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:
           name: coverage
           path: coverage.xml
+
+  simulation:
+    name: Heavy simulation & integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-xdist
+      - name: Run performance / integration simulation tests
+        run: |
+          pytest tests/performance tests/integration -n auto
+      - name: Run balance simulator
+        run: |
+          python tests/balance_simulator.py

@@ -5,18 +5,18 @@ CI/CD Automated Regression Test Suite for Autonomous Subagent AI
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 NAROU_DIR = Path(__file__).resolve().parent.parent
 for p in [str(NAROU_DIR), str(NAROU_DIR.parent)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from naRou.ai.ai_autonomous_subagent import AutonomousSubagentAI
+from ai_autonomous_subagent import AutonomousSubagentAI
+from ecs.entity import Entity
 from game import Engine
-from naRou.ecs.entity import Entity
-from naRou.item_system import Item
+from item_system import Item
 
 
 class TestAutonomousSubagentRegression(unittest.TestCase):

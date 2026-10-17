@@ -204,114 +204,247 @@ skills:
         target: "Self"
         element: "Fire"
         multiplier: 4.0
-
-  - id: "meta_zamamami"
-    name: "《ざまぁの極み》"
-    tier: "MetaUnique"
-    type: "Active"
-    mp_cost: 50
-    cooldown: 100
-    market_value: -1
-    tags: ["MetaUnique", "Mental", "Active", "AntiTemplate"]
-    flavor_text: "「ざまぁ」を期待する敵の自尊心を粉砕し、精神即死を誘発する禁忌のメタスキル。"
-    effects:
-      - type: "MetaDamage"
-        target: "Enemy"
-        condition: "enemy.expects_zamama"
-        formula: "int * 5.0 + target.max_hp * 0.5"
-        effect: "MentalDeath"
-
-  - id: "meta_exile_pride"
-    name: "《追放者の意地》"
-    tier: "MetaUnique"
-    type: "Passive"
-    mp_cost: 0
-    cooldown: 0
-    market_value: -1
-    tags: ["MetaUnique", "Guts", "Passive", "AntiTemplate"]
-    flavor_text: "不利な状況こそが力となる。追放テンプレを逆手に取った自己強化の極み。"
-    effects:
-      - type: "ConditionalStatMod"
-        target: "Self"
-        condition: "hp_below_30_or_surrounded"
-        stats:
-          atk: "*2.0"
-          def: "*2.0"
-          spd: "*1.5"
-          drop_rate: "*2.0"
-
-  - id: "meta_credit_return"
-    name: "《横取り還元》"
-    tier: "MetaUnique"
-    type: "Active"
-    mp_cost: 30
-    cooldown: 50
-    market_value: -1
-    tags: ["MetaUnique", "Economy", "Active", "AntiTemplate"]
-    flavor_text: "他者が得た功績・スキル・アイテムを強制的に再割り当てする強奪の上位互換。"
-    effects:
-      - type: "MetaSteal"
-        target: "Enemy"
-        condition: "enemy.recently_stole_credit"
-        steal_types: ["skill", "item", "credit", "gold"]
-        probability: 1.0
-
-  - id: "meta_original_edit"
-    name: "《原典編集》"
-    tier: "MetaUnique"
-    type: "Active"
-    mp_cost: 100
-    cooldown: 200
-    market_value: -1
-    tags: ["MetaUnique", "Meta", "Active", "AntiTemplate"]
-    flavor_text: "読み取ったテンプレートフラグをその場で別の定形ルートへ書き換える、原典閲覧の完全形。"
-    effects:
-      - type: "MetaRewrite"
-        target: "TemplateFlag"
-        condition: "flag_detected"
-        new_route: "player_chosen"
-        cost: "karma_1000"
-
-  - id: "meta_reader_privilege"
-    name: "《読者特権・外伝創生》"
-    tier: "MetaUnique"
-    type: "Active"
-    mp_cost: 80
-    cooldown: 150
-    market_value: -1
-    tags: ["MetaUnique", "Meta", "Active", "Summon"]
-    flavor_text: "破壊したテンプレートを「自分だけのIF外伝」として保存し、任意の場面で召喚・再現できる。"
-    effects:
-      - type: "MetaSummon"
-        target: "Self"
-        summon_type: "TemplateEcho"
-        duration: 30
-        stats_multiplier: 1.5
-
-  - id: "com_magic_001"
-    name: "魔力感知"
+  - id: "throw_stone"
+    name: "石投げ"
     tier: "Common"
-    type: "Passive"
-    mp_cost: 0
-    cooldown: 0
-    market_value: 1000
-    tags: ["Magic", "Passive", "Vision"]
-    flavor_text: "周囲の魔力の流れを大まかに感知する初級術士の基礎スキル。"
+    type: "Active"
+    mp_cost: 3
+    cooldown: 1
+    market_value: 800
+    tags: ["Ranged", "Thrown", "Goblin", "Active"]
+    flavor_text: "足元の石を投げ捨てるだけ。ゴブリンにとってはそれで十分だ。"
     effects:
-      - type: "PassiveEffect"
-        target: "Self"
-        effect_name: "magic_sense"
+      - type: "Damage"
+        target: "Enemy"
+        formula: "dex * 1.2"
 
-  - id: "rar_infrared_vision"
-    name: "赤外線視覚"
+  - id: "power_bash"
+    name: "力強打"
+    tier: "Common"
+    type: "Active"
+    mp_cost: 5
+    cooldown: 2
+    market_value: 1200
+    tags: ["Combat", "Blunt", "Orc", "Active"]
+    flavor_text: "力には理屈が要らない。オークの周到さとは無縁の一撃。"
+    effects:
+      - type: "Damage"
+        target: "Enemy"
+        formula: "str * 1.6"
+      - type: "DamageMod"
+        target: "Self"
+        weapon_type: "Blunt"
+        formula: "*1.15"
+
+  - id: "fire_breath"
+    name: "炎の息吹"
+    tier: "Rare"
+    type: "Active"
+    mp_cost: 12
+    cooldown: 4
+    market_value: 4000
+    tags: ["Magic", "Fire", "Breath", "Active"]
+    flavor_text: "犬が一言も発さずに火を吹く。尻尾の毛まで焦げる。"
+    effects:
+      - type: "Damage"
+        target: "Enemy"
+        element: "Fire"
+        formula: "int * 1.8"
+
+  - id: "steal_gold"
+    name: "金の窃盗"
+    tier: "Common"
+    type: "Active"
+    mp_cost: 8
+    cooldown: 5
+    market_value: 3500
+    tags: ["Stealth", "Economy", "Thief", "Active"]
+    flavor_text: "手癖が悪い。盗んだ金は翌朝には別の名前になっている。"
+    effects:
+      - type: "EconomyMod"
+        target: "Enemy"
+        stat: "gold"
+        formula: "*0.35"
+
+  - id: "cast_dart"
+    name: "呪毒弾"
+    tier: "Common"
+    type: "Active"
+    mp_cost: 4
+    cooldown: 1
+    market_value: 600
+    tags: ["Magic", "Ranged", "Poison", "Active"]
+    flavor_text: "見習いの魔法。毒は薄いが、刺されれば多少は効く。"
+    effects:
+      - type: "Damage"
+        target: "Enemy"
+        formula: "int * 0.8"
+      - type: "ApplyStatus"
+        target: "Enemy"
+        status: "Poison"
+        chance: 35
+        duration: 3
+
+  - id: "heal_self"
+    name: "己の癒し"
+    tier: "Common"
+    type: "Active"
+    mp_cost: 10
+    cooldown: 6
+    market_value: 2000
+    tags: ["Magic", "Heal", "Self", "Active"]
+    flavor_text: "仲間はいない。だから自分自身しか癒せない。"
+    effects:
+      - type: "Heal"
+        target: "Self"
+        formula: "int * 1.4 + 15"
+
+  - id: "heavy_cleave"
+    name: "豪快な大袈裟"
+    tier: "Rare"
+    type: "Active"
+    mp_cost: 8
+    cooldown: 3
+    market_value: 3500
+    tags: ["Combat", "Axe", "Minotaur", "Active"]
+    flavor_text: "斧を振り回して自分の体も回す。見舞いは泥と汗で終わる。"
+    effects:
+      - type: "Damage"
+        target: "Enemy"
+        formula: "str * 2.1"
+      - type: "ApplyStatus"
+        target: "Enemy"
+        status: "Bleeding"
+        chance: 40
+        duration: 3
+
+  - id: "roar"
+    name: "戦吼"
     tier: "Rare"
     type: "Passive"
     mp_cost: 0
-    cooldown: 0
-    market_value: 5000
-    tags: ["Chimera", "Passive", "Vision"]
-    flavor_text: "暗闇でも熱源を視認できるキメラ合成の成果物。"
+    cooldown: 8
+    market_value: 2500
+    tags: ["Combat", "Intimidate", "Passive"]
+    flavor_text: "牛の肺はデカい。叫んだ相手はその一音で足が止まる。"
+    effects:
+      - type: "AggroMod"
+        target: "Self"
+        formula: "*1.8"
+      - type: "StatMod"
+        target: "Self"
+        stat: "defense"
+        formula: "+3"
+
+  - id: "cast_fireball"
+    name: "火球術"
+    tier: "Unique"
+    type: "Active"
+    mp_cost: 25
+    cooldown: 5
+    market_value: 12000
+    tags: ["Magic", "Fire", "Lich", "Active"]
+    flavor_text: "賢者の得意。詠唱の途中で骨が鳴るが、代わりに相手は燃える。"
+    effects:
+      - type: "Damage"
+        target: "Enemy"
+        element: "Fire"
+        formula: "int * 2.6 + 30"
+      - type: "ApplyStatus"
+        target: "Enemy"
+        status: "Burning"
+        chance: 50
+        duration: 3
+
+  - id: "summon_undead"
+    name: "亡者の召喚"
+    tier: "Unique"
+    type: "Active"
+    mp_cost: 40
+    cooldown: 10
+    market_value: 20000
+    tags: ["Summon", "Undead", "Lich", "Active"]
+    flavor_text: "墓を開く。召喚された者は、何も知らなくても従う。"
     effects:
       - type: "PassiveEffect"
         target: "Self"
-        effect_name: "thermal_vision"
+        effect_name: "summon_minion"
+        count: 2
+      - type: "AggroMod"
+        target: "Enemy"
+        formula: "*1.5"
+
+  - id: "drain_mp"
+    name: "魔力吸引"
+    tier: "Unique"
+    type: "Active"
+    mp_cost: 0
+    cooldown: 4
+    market_value: 15000
+    tags: ["Magic", "Drain", "Lich", "Active"]
+    flavor_text: "相手の魔力を自分の壺に注ぎ込む。魔力がない相手は怖い。"
+    effects:
+      - type: "StatMod"
+        target: "Enemy"
+        stat: "mp"
+        formula: "-40"
+      - type: "StatMod"
+        target: "Self"
+        stat: "mp"
+        formula: "+25"
+
+  - id: "inferno_breath"
+    name: "煉獄の息吹"
+    tier: "Unique"
+    type: "Active"
+    mp_cost: 35
+    cooldown: 7
+    market_value: 25000
+    tags: ["Magic", "Fire", "Dragon", "Active"]
+    flavor_text: "火炎の吐息。城壁の石も数秒で灰になる。"
+    effects:
+      - type: "Damage"
+        target: "Enemy"
+        element: "Fire"
+        formula: "int * 3.4 + 40"
+      - type: "DamageReduction"
+        target: "Self"
+        element: "Fire"
+        formula: "*0.9"
+
+  - id: "tail_swipe"
+    name: "尾払い"
+    tier: "Rare"
+    type: "Active"
+    mp_cost: 5
+    cooldown: 2
+    market_value: 3000
+    tags: ["Combat", "Dragon", "Physical", "Active"]
+    flavor_text: "首より速い。竜は剣を持たなくても勝てる理由がある。"
+    effects:
+      - type: "Damage"
+        target: "Enemy"
+        formula: "str * 1.4"
+      - type: "SpeedBuff"
+        target: "Self"
+        stat: "evasion"
+        multiplier: 1.5
+
+  - id: "intimidate"
+    name: "威嚇"
+    tier: "Unique"
+    type: "Passive"
+    mp_cost: 0
+    cooldown: 6
+    market_value: 18000
+    tags: ["Combat", "Intimidate", "Dragon", "Passive"]
+    flavor_text: "視線を合わせただけで膝をつく。竜の威嚇は戦闘ではなく交渉である。"
+    effects:
+      - type: "StatMod"
+        target: "Enemy"
+        stat: "atk"
+        formula: "*0.7"
+      - type: "ResistanceMod"
+        target: "Enemy"
+        element: "Fear"
+        formula: "+0.3"

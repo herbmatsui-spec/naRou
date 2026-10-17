@@ -3,9 +3,9 @@ requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "naRou"
+name = "naRogue"
 description = "Elona Roguelike Clone - Ultimate Masterpiece Edition"
-version = "1.0.5"
+version = "1.0.0"
 authors = [
     {name = "naRou Developers", email = "dev@narou.example"}
 ]
@@ -13,22 +13,101 @@ license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "tcod>=12.0",
+    "tcod>=21.2.1",
+    "PyYAML>=6.0.2",
+    "cryptography>=42.0.0",
+    "numpy>=1.24.0",
+    "pydantic>=2.0.0",
+    "python-dotenv>=1.0.0",
     "Pillow>=8.0",
+    "scipy>=1.11.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=6.0",
-    "watchdog>=2.0",
-    "ruff>=0.5",
-    "mypy>=1.0",
-    "black>=24.0",
+    "pytest>=8.0.0",
+    "pytest-xdist>=3.0.0",   # 改善案8: テスト並列実行
+    "mypy>=1.10.0",
+    "ruff>=0.5.0",
+    "black>=24.0.0",
     "isort>=5.13",
+    "watchdog>=2.0",
+    "coverage>=7.0.0",       # 改善案8: カバレッジ計測
+    "pip-audit>=2.0.0",      # 改善案9: 依存関係脆弱性スキャン
 ]
 
 [project.scripts]
-narou = "game:main"
+narou = "naRou.game:main"
+narogue = "naRou.game:main"
+
+[tool.setuptools]
+# リポジトリはフラットレイアウト（ルート直下にモジュールが並ぶ）だが、配布名は
+# naRou であり、その名前空間で参照される。package-dir でリポジトリルートを naRou
+# パッケージの配置として解決することで、シンボリックリンクなしで wheel に全コードが載る。
+packages = [
+    "naRou",
+    "naRou.audio",
+    "naRou.cloud_save",
+    "naRou.core",
+    "naRou.core.systems",
+    "naRou.data",
+    "naRou.data.generated",
+    "naRou.data.generated.character",
+    "naRou.data.generated.dungeon",
+    "naRou.data.generated.faction",
+    "naRou.data.generated.item",
+    "naRou.data.generated.meta",
+    "naRou.data.generated.monster",
+    "naRou.data.generated.quest",
+    "naRou.data.generated.skill",
+    "naRou.data.generated.social",
+    "naRou.data.generated.text",
+    "naRou.data.generated_dc",
+    "naRou.data.repositories",
+    "naRou.data.schemas",
+    "naRou.dotenv",
+    "naRou.ecs",
+    "naRou.ecs.components",
+    "naRou.engine",
+    "naRou.managers",
+    "naRou.mods",
+    "naRou.mods.sample_event",
+    "naRou.mods.sample_sword",
+    "naRou.packages",
+    "naRou.packages.character",
+    "naRou.packages.core",
+    "naRou.packages.core.ecs",
+    "naRou.packages.core.events",
+    "naRou.packages.core.kernel",
+    "naRou.packages.core.render",
+    "naRou.packages.core.time",
+    "naRou.packages.gameplay",
+    "naRou.packages.meta",
+    "naRou.packages.narrative",
+    "naRou.packages.platform",
+    "naRou.packages.social",
+    "naRou.packages.world",
+    "naRou.packages.world_a",
+    "naRou.scripts",
+    "naRou.skill_eater",
+    "naRou.skill_eater.ai",
+    "naRou.skill_eater.combat",
+    "naRou.skill_eater.economy",
+    "naRou.skill_eater.territory",
+    "naRou.stubs",
+    "naRou.stubs.PIL",
+    "naRou.stubs.psutil",
+    "naRou.stubs.pydantic",
+    "naRou.stubs.pygame",
+]
+include-package-data = true
+
+[tool.setuptools.package-dir]
+naRou = "."
+
+[tool.setuptools.package-data]
+"naRou" = ["*.yaml", "config.yaml", "npc_behavior.yaml"]
+"naRou.data" = ["*.yaml", "schemas/**/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = "tests"
@@ -38,28 +117,80 @@ filterwarnings = [
     "ignore::PendingDeprecationWarning"
 ]
 
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "*/tests/**",
+    "*/tools/**",
+    "*/stubs/**",
+    "*/test.py",
+    "*/test_bonuses.py",
+    "*/venv/**",
+    "*/__pycache__/**",
+    "*/.tmp_main_check/**",
+    "*/.worktrees/**",
+    "*/build/**",
+    "*/dist/**",
+    "*/.git/**",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if DEBUG",
+    "if settings.DEBUG",
+    "if settings.TESTING",
+]
+ignore_errors = true
+fail_under = 80
+show_missing = true
+skip_covered = false
+
 [tool.ruff]
 line-length = 100
 target-version = "py310"
 src = ["."]
+extend-exclude = [
+    ".tmp_main_check",
+    ".tmp_bb4",
+    ".worktrees",
+    "build",
+    "dist",
+    ".venv",
+    "venv",
+]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I"]
+select = ["E", "F", "W", "I", "B", "UP"]
 ignore = ["E402", "F401", "F403", "F405", "E501", "E722", "F841", "E741"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 
+# --- 段階的厳格化方針 (改善案8) ---
+# select に B(bugbear: バグパターン検出) と UP(pyupgrade: モダンな書き推奨) を追加。
+# ignore は現状維持。既存コードとの兼ね合いで E722 (裸の except) 等は
+# 改善案3で構造化済みのため、今後の段階で解除を検討する。
+# disallow_untyped_defs は現状 false のまま（コードベースが大きいため
+# 段階適用）。mypy strict = true への即時移行は回避し、
+# warn_return_any 等の個別フラグで段階強化する方針とする。
+
 [tool.mypy]
 python_version = "3.10"
 ignore_missing_imports = true
 warn_unused_ignores = true
-disallow_untyped_defs = false
+disallow_untyped_defs = true
 strict = false
 explicit_package_bases = true
+warn_return_any = true
 exclude = [
     "src/relationships/__init__.py",
     "naRou/audio/dynamic_audio.py",
+    "procedural_questigator.py",
 ]
 
 [[tool.mypy.overrides]]

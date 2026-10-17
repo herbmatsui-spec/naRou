@@ -6,8 +6,8 @@ import sys
 
 sys.path.insert(0, r"E:\narou3\naRou")
 
-from naRou.skill_eater_exploration_system import SkillEaterExplorationSystem
-from naRou.skill_eater_procedural_dungeon import SkillEaterProceduralDungeon
+from skill_eater_exploration_system import SkillEaterExplorationSystem
+from skill_eater_procedural_dungeon import SkillEaterProceduralDungeon
 
 
 def test_procedural_dungeon_integration():

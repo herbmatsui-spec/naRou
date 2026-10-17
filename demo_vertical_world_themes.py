@@ -6,8 +6,8 @@ Vertical World System テーマデモ
 
 from __future__ import annotations
 
-from naRou.world_layer import WorldLayer
-from naRou.world_map_manager import WorldMapManager
+from world_layer import WorldLayer
+from world_map_manager import WorldMapManager
 
 
 def demo_themed_content():

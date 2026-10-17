@@ -13,7 +13,7 @@ def test_web_server_smoke() -> None:
     """サーバーを起動して / にアクセスし、200 OK を確認する。"""
     # サーバーをバックグラウンドで起動
     proc = subprocess.Popen(
-        [sys.executable, "-m", "naRou.web_server"],
+        [sys.executable, "web_server.py"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,

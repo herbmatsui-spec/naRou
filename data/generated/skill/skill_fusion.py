@@ -40,6 +40,14 @@ class Type(Enum):
     heal_on_hit = "heal_on_hit"
     undead_bane = "undead_bane"
     backstab_multiplier = "backstab_multiplier"
+    spell_crit_chance = "spell_crit_chance"
+    holy_damage = "holy_damage"
+    dark_damage = "dark_damage"
+    magic_damage = "magic_damage"
+    stealth_bonus = "stealth_bonus"
+    homing = "homing"
+    spell_power = "spell_power"
+    melee_magic_bonus = "melee_magic_bonus"
 
 
 class Target(Enum):
@@ -65,17 +73,15 @@ class Effect(DataModel):
 
 class SkillFusion(DataModel):
     model_config = ConfigDict(
-        extra="ignore",
-        populate_by_name=True,
+        extra="forbid",
     )
-    id: str | None = None
     name: str = Field(..., min_length=1)
-    description: str | None = ""
-    required_skills: list[Any] = Field(default_factory=list)
+    description: str
+    required_skills: list[RequiredSkill] = Field(..., min_length=1)
     required_job: str | None = None
     required_god: str | None = None
-    result_skills: list[Any] = Field(default_factory=list)
-    bonus_effects: list[Any] = Field(default_factory=list, alias="bonusEffects")
+    result_skills: list[ResultSkill] = Field(..., min_length=1)
+    bonus_effects: list[Effect]
 
 
 class SkillFusionDefinition(DataModel):

@@ -6,9 +6,9 @@ from __future__ import annotations
 
 import unittest
 
-from naRou.packages.core.kernel.kernel import Kernel
-from naRou.packages.core.package import CorePackage
-from naRou.packages.world_a.package import WorldAPackage
+from packages.core.kernel.kernel import Kernel
+from packages.core.package import CorePackage
+from packages.world_a.package import WorldAPackage
 
 
 class TestWorldAPackageIntegration(unittest.TestCase):
@@ -30,7 +30,7 @@ class TestWorldAPackageIntegration(unittest.TestCase):
 
     def test_engine_loads_world_a_package(self):
         from game import Engine
-        from naRou.renderer import NullRenderer
+        from renderer import NullRenderer
 
         engine = Engine(renderer=NullRenderer())
         self.assertTrue(engine.kernel.has_system("skill_eater_combat_system"))

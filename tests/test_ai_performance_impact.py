@@ -6,17 +6,17 @@ Validates that the AutonomousSubagentAI resolves oscillations, avoids fatal dama
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 NAROU_DIR = Path(__file__).resolve().parent.parent
 for p in [str(NAROU_DIR), str(NAROU_DIR.parent)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from naRou.ai.ai_autonomous_subagent import AutonomousSubagentAI
+from ai_autonomous_subagent import AutonomousSubagentAI
 from game import Engine
-from naRou.item_system import Item
+from item_system import Item
 
 
 class TestAIPerformanceImpact(unittest.TestCase):

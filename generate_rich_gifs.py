@@ -39,8 +39,7 @@ def get_font(size: int = 14):
     try:
         return ImageFont.truetype("arial.ttf", size)
     except Exception:
-        # TODO: handle exception properly
-        logger.exception("Unhandled exception")
+        logger.exception("Failed to load font, falling back to default")
         return ImageFont.load_default()
 
 

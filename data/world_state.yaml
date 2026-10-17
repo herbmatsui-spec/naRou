@@ -1,30 +1,49 @@
-# ワールド状態テンプレート (Steps 5, 6)
-# 垂直ワールド拡張に関するフィールドを追加
+# World State Configuration
 
+# 勝利条件設定
+win:
+  kind: "depth_boss"
+  depth: 20
+  boss_id: "void_boss"
+
+# ゲーム設定
+game:
+  starting_dungeon_level: 1
+  max_dungeon_level: 50
+
+# ダンジョン設定
+dungeon:
+  width: 80
+  height: 50
+  room_min_size: 6
+  room_max_size: 10
+  max_rooms: 30
+
+# Step 5, 6: ワールド状態テンプレート
 world_state_template:
-  version: "1.0"
-  last_updated: "2026-08-17"
-  current_phase: "BEGINNING"
   persistent_variables:
-    goblin_threat_level: 50
-    bandit_activity: 30
-    kingdom_prosperity: 70
-    plague_outbreak: false
-  location_states:
-    vernis:
-      defense: 80
-      morale: 75
-    palmia:
-      defense: 95
-      morale: 90
-  faction_relations:
-    kingdom_vs_mages: 0
-    thieves_vs_guards: -100
-  global_events: []
-  player_legacy:
-    titles_won: []
-    sacrifices_made: 0
-  # Vertical World Extension
-  player_layer_history: []
-  visited_layers: []
-  layer_discoveries: {}
+    goblin_threat_level: 0
+    goblin_invasion_active: false
+    goblin_chieftain_defeated: false
+    rescued_villagers: 0
+    vernis_safety_index: 100
+    main_quest_chapter: 0
+    altar_purified: false
+    corrupted_power_unlocked: false
+  chapter_progression:
+    - chapter: 1
+      name: "侵攻の予兆"
+      required_variables:
+        goblin_invasion_active: false
+      unlock_variables:
+        goblin_invasion_active: true
+        goblin_scout_spawned: true
+    - chapter: 2
+      name: "本隊との対決"
+      required_variables:
+        goblin_scout_defeated: true
+      unlock_variables:
+        goblin_chieftain_spawned: true
+      completion_variables:
+        goblin_chieftain_defeated: true
+        vernis_safety_index: 100

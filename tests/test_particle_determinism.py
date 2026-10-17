@@ -9,7 +9,7 @@ import sys
 
 import numpy as np
 
-from naRou.core.particles import (
+from core.particles import (
     CurlNoise,
     Emitter,
     ParticleBuffer,

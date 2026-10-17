@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from naRou.localization_manager import LocalizationManager
+from localization_manager import LocalizationManager
 
 
 class TestInternationalization(unittest.TestCase):
@@ -15,7 +15,9 @@ class TestInternationalization(unittest.TestCase):
         self.assertTrue(self.lm.get_supported_languages())
 
     def test_default_language(self):
-        self.assertEqual(self.lm.get_current_language(), "en")
+        # Step 65.4 (GAME_DESIGN_V2): 日本語が主言語のため既定は ja。
+        # tests/test_i18n.py::test_default_language_is_japanese と同一契約。
+        self.assertEqual(self.lm.get_current_language(), "ja")
 
     def test_validate(self):
         self.assertTrue(self.lm.validate()["valid"])

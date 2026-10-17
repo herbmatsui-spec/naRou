@@ -8,12 +8,12 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
-from naRou.skill_eater_meta_quest_system import (
+from skill_eater_meta_quest_system import (
     GlobalRuleEngine,
     SkillEaterQuestSystem,
     SkillEaterReincarnationSystem,
 )
-from naRou.skill_eater_system import CharacterState, SkillEaterRegistry
+from skill_eater_system import CharacterState, SkillEaterRegistry
 
 
 class TestSkillEaterPhase678(unittest.TestCase):

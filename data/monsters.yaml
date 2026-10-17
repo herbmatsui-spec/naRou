@@ -1,8 +1,3 @@
-# ==============================================================================
-# Elona Masterpiece Edition - Complete Monsters Catalog (data/monsters.yaml)
-# AI Types: aggressive, coward, tactical, caster, support, boss
-# ==============================================================================
-
 # --- 初級モンスター (Tier 1: Floor 1-3) ---
 slime:
   name: "ぷち"
@@ -11,10 +6,10 @@ slime:
   speed: 50
   max_hp: 14
   min_floor: 1
-  max_floor: 4
+  max_floor: 30
   ai_type: "coward"
+  ai_role: "brute"
   skills: []
-  weaknesses: ["fire"]
   attributes:
     strength: 5
     endurance: 6
@@ -32,12 +27,10 @@ red_slime:
   speed: 60
   max_hp: 22
   min_floor: 2
-  max_floor: 6
+  max_floor: 30
   ai_type: "aggressive"
+  ai_role: "brute"
   skills: []
-  resistances:
-    fire: 50
-  weaknesses: ["ice"]
   attributes:
     strength: 8
     endurance: 8
@@ -55,8 +48,9 @@ snail:
   speed: 35
   max_hp: 10
   min_floor: 1
-  max_floor: 3
+  max_floor: 30
   ai_type: "coward"
+  ai_role: "brute"
   attributes:
     strength: 3
     endurance: 4
@@ -74,8 +68,9 @@ goblin:
   speed: 70
   max_hp: 24
   min_floor: 1
-  max_floor: 5
+  max_floor: 30
   ai_type: "aggressive"
+  ai_role: "kiter"
   skills: ["throw_stone"]
   attributes:
     strength: 8
@@ -94,8 +89,9 @@ kobold:
   speed: 80
   max_hp: 20
   min_floor: 1
-  max_floor: 5
+  max_floor: 30
   ai_type: "tactical"
+  ai_role: "flanker"
   attributes:
     strength: 7
     endurance: 6
@@ -114,8 +110,9 @@ orc:
   speed: 65
   max_hp: 45
   min_floor: 3
-  max_floor: 9
+  max_floor: 30
   ai_type: "aggressive"
+  ai_role: "brute"
   skills: ["power_bash"]
   attributes:
     strength: 14
@@ -134,12 +131,11 @@ hound_fire:
   speed: 95
   max_hp: 36
   min_floor: 4
-  max_floor: 10
+  max_floor: 30
   ai_type: "tactical"
+  ai_role: "kiter"
   skills: ["fire_breath"]
-  resistances:
-    fire: 80
-  weaknesses: ["ice"]
+  resistances: {fire: 80, cold: -20}
   attributes:
     strength: 10
     endurance: 9
@@ -157,8 +153,9 @@ rogue_thief:
   speed: 85
   max_hp: 40
   min_floor: 4
-  max_floor: 12
+  max_floor: 30
   ai_type: "tactical"
+  ai_role: "flanker"
   skills: ["steal_gold", "backstab"]
   attributes:
     strength: 11
@@ -177,7 +174,7 @@ novice_wizard:
   speed: 70
   max_hp: 28
   min_floor: 3
-  max_floor: 9
+  max_floor: 30
   ai_type: "caster"
   skills: ["cast_dart", "heal_self"]
   attributes:
@@ -198,11 +195,10 @@ minotaur:
   speed: 80
   max_hp: 95
   min_floor: 7
-  max_floor: 20
+  max_floor: 30
   ai_type: "aggressive"
+  ai_role: "brute"
   skills: ["heavy_cleave", "roar"]
-  resistances:
-    physical: 10
   attributes:
     strength: 22
     endurance: 20
@@ -222,12 +218,9 @@ lich:
   min_floor: 9
   max_floor: 30
   ai_type: "caster"
+  ai_role: "caster"
   skills: ["cast_fireball", "summon_undead", "drain_mp"]
-  resistances:
-    poison: 100
-    dark: 80
-    ice: 50
-  weaknesses: ["fire", "holy"]
+  resistances: {cold: 50, darkness: 60, fire: -10}
   attributes:
     strength: 8
     endurance: 10
@@ -245,13 +238,10 @@ dragon_red:
   speed: 90
   max_hp: 220
   min_floor: 12
-  max_floor: 50
+  max_floor: 30
   ai_type: "boss"
+  ai_role: "boss"
   skills: ["inferno_breath", "tail_swipe", "intimidate"]
-  resistances:
-    fire: 100
-    physical: 20
-  weaknesses: ["ice"]
   attributes:
     strength: 30
     endurance: 28
@@ -262,67 +252,23 @@ dragon_red:
     magic: 18
     charisma: 16
 
-# --- ペット・仲間モンスター (Pets & Allies) ---
-puppy:
-  name: "子犬"
-  char: "🐕"
-  color: [220, 180, 120]
-  speed: 75
-  max_hp: 30
-  min_floor: 1
-  max_floor: 10
-  ai_type: "aggressive"
-  personalities: ["brave", "cowardly", "gluttonous"]
-  favorite_food_tags: ["meat"]
+void_boss:
+  name: "ヴォイド・ボス"
+  char: "👁️"
+  color: [100, 20, 180]
+  speed: 100
+  max_hp: 500
+  min_floor: 20
+  max_floor: 30
+  ai_type: "boss"
+  ai_role: "boss"
+  skills: ["inferno_breath", "tail_swipe", "intimidate", "cast_fireball", "drain_mp"]
   attributes:
-    strength: 10
-    endurance: 10
-    dexterity: 12
-    perception: 14
-    learning: 6
-    will: 8
-    magic: 4
-    charisma: 14
-
-cat_girl:
-  name: "猫耳少女"
-  char: "🐱"
-  color: [255, 180, 200]
-  speed: 95
-  max_hp: 45
-  min_floor: 1
-  max_floor: 20
-  ai_type: "tactical"
-  personalities: ["calm", "gluttonous", "aggressive"]
-  favorite_food_tags: ["fish", "sweet"]
-  attributes:
-    strength: 12
-    endurance: 11
-    dexterity: 18
-    perception: 16
-    learning: 10
-    will: 10
-    magic: 8
-    charisma: 16
-
-younger_sister:
-  name: "妹"
-  char: "👧"
-  color: [255, 150, 180]
-  speed: 80
-  max_hp: 40
-  min_floor: 1
-  max_floor: 20
-  ai_type: "support"
-  personalities: ["brave", "cowardly", "calm"]
-  favorite_food_tags: ["sweet", "vegetable"]
-  attributes:
-    strength: 8
-    endurance: 9
-    dexterity: 14
-    perception: 12
-    learning: 12
-    will: 14
-    magic: 12
+    strength: 35
+    endurance: 40
+    dexterity: 20
+    perception: 25
+    learning: 30
+    will: 35
+    magic: 40
     charisma: 20
-

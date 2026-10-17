@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Any
 
 from pydantic import ConfigDict, Field, RootModel
 
@@ -55,9 +56,74 @@ class AiType(Enum):
     support = "support"
 
 
+class AiRole(Enum):
+    """
+    Formation AI role
+    """
+    brute = "brute"
+    kiter = "kiter"
+    flanker = "flanker"
+    support = "support"
+    caster = "caster"
+    boss = "boss"
+
+
+class MonsterAbility(DataModel):
+    """
+    Monster ability definition (Phase 2 Step 46-47)
+    """
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: str = Field(..., pattern="^[a-z_][a-z0-9_]*$")
+    """
+    Unique ability ID (e.g., throw_stone)
+    """
+    name: str = Field(..., min_length=1)
+    """
+    Display name (Japanese)
+    """
+    description: str | None = None
+    """
+    Description
+    """
+    cost: int = Field(..., ge=0)
+    """
+    AP cost
+    """
+    cooldown: int = Field(0, ge=0)
+    """
+    Cooldown in turns
+    """
+    range: int = Field(0, ge=0)
+    """
+    Range
+    """
+    radius: int = Field(0, ge=0)
+    """
+    AoE radius
+    """
+    target_type: str = Field(..., pattern="^(single|area|self|beam)$")
+    """
+    Target type: single, area, self, beam
+    """
+    effect: dict[str, Any] = Field(...)
+    """
+    Effect definition
+    """
+    sound: str | None = None
+    """
+    Sound effect name
+    """
+    ai_hint: str = Field(..., pattern="^(ranged|melee|heal|support|utility|debuff|summon)$")
+    """
+    AI hint for skill selection
+    """
+
+
 class MonsterDefinition(DataModel):
     model_config = ConfigDict(
-        extra="ignore",
+        extra="forbid",
     )
     id: str | None = Field(None, pattern="^mn_[a-z_][a-z0-9_]*$")
     """
@@ -123,9 +189,13 @@ class MonsterDefinition(DataModel):
     """
     Dodge value
     """
+    abilities: list[MonsterAbility] | None = Field([], validate_default=True)
+    """
+    能力一覧 (Phase 2 Step 46-47)
+    """
     skills: list[Skill] | None = Field([], validate_default=True)
     """
-    Known skill IDs (with or without 'sk_' prefix)
+    Known skill IDs (with or without 'sk_' prefix) - DEPRECATED: use abilities instead
     """
     spells: list[Spell] | None = Field([], validate_default=True)
     """
@@ -140,25 +210,26 @@ class MonsterDefinition(DataModel):
     Faction ID for reputation/aggro
     """
     ai_type: AiType | None = None
-    resistances: dict[str, int] | None = Field(default_factory=dict)
+    ai_role: AiRole | None = None
+    """
+    Formation AI role. Overrides the name-derived default.
+    """
+    resistances: dict[str, int] | None = {}
     """
     Element resistances (fire, cold, lightning, etc.)
     """
-    weaknesses: list[str] | None = Field(default_factory=list)
-    """
-    Element weaknesses (fire, ice, lightning, holy, etc.)
-    """
-    attributes: dict[str, int] | None = Field(default_factory=dict)
+    attributes: dict[str, int] | None = {}
     """
     Base attributes (str, dex, con, int, wis, cha)
     """
-    personalities: list[str] | None = Field(default_factory=list)
-    """
-    Available personalities for this pet (brave, cowardly, calm, etc.)
-    """
-    favorite_food_tags: list[str] | None = Field(default_factory=list)
-    """
-    Favorite food tags (meat, vegetable, sweet, etc.)
-    """
 
 
+_MONSTER_DEFINITION_REBUILT = False
+
+
+def _ensure_monster_definition_rebuilt() -> None:
+    """Ensure MonsterDefinition model is rebuilt (for forward refs)."""
+    global _MONSTER_DEFINITION_REBUILT
+    if not _MONSTER_DEFINITION_REBUILT:
+        MonsterDefinition.model_rebuild()
+        _MONSTER_DEFINITION_REBUILT = True

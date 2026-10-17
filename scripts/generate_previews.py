@@ -10,7 +10,7 @@ from pathlib import Path
 
 import yaml
 
-from naRou.asset_manager import ASSET_MANAGER
+from asset_manager import ASSET_MANAGER
 
 
 def generate_tile_preview(output_path: Path) -> None:

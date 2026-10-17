@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import tcod.event
 
-from naRou.input_actions import ActionRegistry
-from naRou.input_handler import InputHandler
+from input_actions import ActionRegistry
+from input_handler import InputHandler
 
 
 class StubEngine:
@@ -27,6 +27,11 @@ class StubEngine:
         self.moved = None
         self.opened = None
         self.logs = []
+        # Step 14 (死亡/勝利後は入力拒否) で Engine 契約に追加された
+        # game_state_machine のスタブ。playing 以外は入力が握り潰される。
+        self.game_state_machine = type(
+            "StubStateMachine", (), {"current": "playing"}
+        )()
 
     def player_act(self, dx, dy):
         self.moved = (dx, dy)

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>naRou - Visual Showcase (改善案8・9)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Sans+JP:wght@400;500;700;900&family=Outfit:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/design_tokens.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+  <link rel="stylesheet" href="/assets/css/themes.css">
+  <link rel="stylesheet" href="/assets/css/demo.css">
+  <style>
+    /* デザイントークン変数のフォールバック（theme.css未読込時も動作） */
+    :root {
+      --bg-dark: #0a0b10;
+      --bg-gradient: radial-gradient(circle at 50% 20%, #151b2e 0%, #080a10 100%);
+      --panel-bg: rgba(18, 22, 36, 0.75);
+      --panel-border: rgba(99, 130, 210, 0.25);
+      --panel-border-glow: rgba(99, 130, 210, 0.5);
+      --primary-accent: #e5a93b;
+      --text-main: #f0f4fc;
+      --text-muted: #8b9bb4;
+      --font-main: 'Noto Sans JP', 'Outfit', sans-serif;
+      --font-title: 'Cinzel', serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: var(--bg-gradient);
+      color: var(--text-main);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    header {
+      width: 100%;
+      max-width: 720px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .page-title {
+      font-family: var(--font-title);
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: 3px;
+      margin-bottom: 4px;
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .page-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    /* ナビゲーションタブ */
+    .nav {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+    .nav-btn {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      color: var(--text-main);
+      padding: 8px 16px;
+      border-radius: var(--radius-full);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: var(--font-main);
+    }
+    .nav-btn:hover {
+      border-color: var(--primary-accent);
+      color: var(--primary-accent);
+    }
+    .nav-btn.active {
+      background: var(--primary-accent);
+      color: #000;
+      box-shadow: 0 0 16px rgba(229, 169, 59, 0.5);
+    }
+
+    /* 共通スクリーン */
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+      max-width: 720px;
+      animation: screenFade 0.4s ease;
+    }
+    .screen.active { display: flex; }
+
+    @keyframes screenFade {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .screen-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      width: 100%;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(12px);
+    }
+
+    .screen-panel header {
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .screen-title {
+      font-family: var(--font-title);
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: var(--primary-accent);
+    }
+
+    /* ---- タイトル画面 ---- */
+    .title-deco {
+      font-size: 3rem;
+      margin: 16px 0;
+      opacity: 0.85;
+    }
+
+    .title-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      font-weight: var(--fontWeight-semibold);
+      font-size: 0.9rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      font-family: var(--font-main);
+    }
+    .btn-primary {
+      background: var(--primary-accent);
+      color: #000;
+    }
+    .btn-primary:hover {
+      opacity: 0.9;
+      box-shadow: 0 0 16px rgba(229, 169, 59, 0.6);
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--panel-border);
+      color: var(--text-main);
+    }
+    .btn-outline:hover {
+      border-color: var(--primary-accent);
+      color: var(--primary-accent);
+    }
+
+    .title-hint {
+      margin-top: 14px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* SVG 装飾（タイトル画面：剣＆盾） */
+    .title-svg {
+      width: 120px;
+      height: 120px;
+      margin: 12px 0;
+    }
+
+    /* ---- ステータス画面 ---- */
+    .status-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 640px) {
+      .status-grid { grid-template-columns: 1fr; }
+    }
+
+    .stat-block {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: var(--radius-md);
+      padding: 14px;
+    }
+    .stat-block h3 {
+      font-family: var(--font-title);
+      font-size: 1rem;
+      margin-bottom: 10px;
+      color: var(--primary-accent);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 6px;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 0.9rem;
+    }
+    .stat-label { color: var(--text-muted); }
+    .stat-value { font-weight: 700; font-family: var(--font-mono, monospace); }
+
+    .bar-container {
+      width: 100%;
+      height: 8px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: 6px;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+    .bar-hp { background: linear-gradient(90deg, #27ae60, #2ecc71); width: 78%; }
+    .bar-mp { background: linear-gradient(90deg, #2980b9, #3498db); width: 52%; }
+
+    /* レアリティ装備スロット */
+    .equipment {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .equip-slot {
+      aspect-ratio: 1;
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      position: relative;
+    }
+    .equip-slot::after {
+      content: attr(data-label);
+      position: absolute;
+      bottom: -16px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-family: var(--font-main);
+    }
+
+    /* スキルチップ */
+    .skills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .skill-chip {
+      padding: 6px 10px;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid var(--panel-border);
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    /* ---- ゲームオーバー画面 ---- */
+    .gameover-deco {
+      font-size: 4rem;
+      margin-bottom: 12px;
+      opacity: 0.9;
+    }
+    .gameover-title {
+      font-family: var(--font-title);
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: 4px;
+      color: #dc2626;
+      margin-bottom: 8px;
+    }
+    .gameover-reason {
+      font-size: 1.1rem;
+      color: var(--text-main);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .stats-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stat-item {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .stat-item .value {
+      font-size: 1.4rem;
+      font-weight: 800;
+      font-family: var(--font-mono, monospace);
+      color: var(--primary-accent);
+    }
+    .stat-item .label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* 汎用ユーティリティ */
+    .font-title { font-family: var(--font-title); }
+    .font-main { font-family: var(--font-main); }
+    .font-mono { font-family: var(--font-mono, 'JetBrains Mono', monospace); }
+
+    footer {
+      margin-top: 32px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1 class="page-title font-title">naRou</h1>
+    <p class="page-subtitle font-main">Visual Showcase — 改善案8（ビジュアルアイデンティティ）＋ 改善案9（専用ビジュアルスクリーン・デモ充実）</p>
+
+    <nav class="nav">
+      <button class="nav-btn active" onclick="showScreen('title')" data-screen="title">タイトル画面</button>
+      <button class="nav-btn" onclick="showScreen('status')" data-screen="status">ステータス画面</button>
+      <button class="nav-btn" onclick="showScreen('gameover')" data-screen="gameover">ゲームオーバー画面</button>
+    </nav>
+  </header>
+
+  <!-- ===== タイトル画面 ===== -->
+  <section id="screen-title" class="screen active">
+    <div class="screen-panel">
+      <header>
+        <span class="font-title">🏰</span>
+        <h2 class="screen-title font-title">タイトル画面</h2>
+      </header>
+
+      <div class="title-deco">⚔️ 🛡️</div>
+      <svg class="title-svg" viewBox="0 0 200 200" aria-label="剣と盾のエンブレム" role="img">
+        <defs>
+          <linearGradient id="gradGold" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#ffd700;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#e5a93b;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <!-- 盾 -->
+        <path d="M100 30 C60 30 40 70 40 110 L100 170 L160 110 C160 70 140 30 100 30 Z"
+              fill="#1a1a2e" stroke="#e5a93b" stroke-width="4" />
+        <path d="M100 50 Q80 70 100 90 Q120 70 100 50 Z" fill="none" stroke="#ffd700" stroke-width="2" />
+        <!-- 剣 -->
+        <line x1="100" y1="40" x2="100" y2="140" stroke="#e5a93b" stroke-width="5" stroke-linecap="round" />
+        <path d="M85 55 L100 45 L115 55 Z" fill="#e5a93b" />
+        <circle cx="100" cy="145" r="6" fill="#e5a93b" />
+      </svg>
+
+      <h1 class="font-title" style="font-size:2.6rem; letter-spacing:6px; margin:14px 0 6px; color:var(--text-main);">naRou</h1>
+      <p class="font-main" style="font-size:1rem; color:var(--text-muted); margin-bottom:18px;">Masterpiece Edition — 魔界の迷宮を冒険せよ</p>
+
+      <div class="title-actions">
+        <button class="btn btn-primary font-main">▶ New Game</button>
+        <button class="btn btn-outline font-main">💾 Load Game</button>
+        <button class="btn btn-outline font-main">⚙️ Settings</button>
+      </div>
+
+      <p class="title-hint font-main">レアリティ枠：common / uncommon / rare / epic / legendary をデザイントークンカラーで表現</p>
+    </div>
+  </section>
+
+  <!-- ===== ステータス画面 ===== -->
+  <section id="screen-status" class="screen">
+    <div class="screen-panel">
+      <header>
+        <span class="font-title">📊</span>
+        <h2 class="screen-title font-title">ステータス画面</h2>
+      </header>
+
+      <div class="status-grid">
+        <!-- 左：基本情報 -->
+        <div class="stat-block">
+          <h3 class="font-title">冒険者情報</h3>
+          <div class="stat-row"><span class="stat-label">名前</span><span class="stat-value">名無しの冒険者</span></div>
+          <div class="stat-row"><span class="stat-label">職業</span><span class="stat-value">戦士</span></div>
+          <div class="stat-row"><span class="stat-label">レベル</span><span class="stat-value font-main">12</span></div>
+          <div class="stat-row"><span class="stat-label">経験値</span><span class="stat-value">4,850 / 6,000</span></div>
+          <div class="bar-container"><div class="bar-fill bar-hp" style="width:80%;"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-muted);margin-top:2px;">
+            <span>HP</span><span>78/100</span>
+          </div>
+        </div>
+
+        <div class="stat-block">
+          <h3 class="font-title">リソース</h3>
+          <div class="stat-row"><span class="stat-label">MP</span><span class="stat-value">36/70</span></div>
+          <div class="bar-container"><div class="bar-fill bar-mp" style="width:51%;"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-muted);margin-top:2px;">
+            <span>満腹度</span><span>普通</span>
+          </div>
+          <div class="stat-row"><span class="stat-label">ゴールド</span><span class="stat-value">💰 1,250 G</span></div>
+          <div class="stat-row"><span class="stat-label">プラチナ</span><span class="stat-value">💎 4 P</span></div>
+          <div class="stat-row"><span class="stat-label">カルマ</span><span class="stat-value">⚖️ +12</span></div>
+        </div>
+
+        <!-- 右：属性・装備 -->
+        <div class="stat-block" style="grid-column: span 2;">
+          <h3 class="font-title">属性</h3>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+            <div class="stat-row"><span class="stat-label">STR</span><span class="stat-value">16</span></div>
+            <div class="stat-row"><span class="stat-label">END</span><span class="stat-value">14</span></div>
+            <div class="stat-row"><span class="stat-label">DEX</span><span class="stat-value">13</span></div>
+            <div class="stat-row"><span class="stat-label">MAG</span><span class="stat-value">10</span></div>
+          </div>
+
+          <h3 class="font-title" style="margin-top:16px;">装備（レアリティ枠）</h3>
+          <div class="equipment">
+            <div class="equip-slot rarity-common" data-label="Common">
+              <span>🪵</span>
+            </div>
+            <div class="equip-slot rarity-uncommon" data-label="Uncommon">
+              <span>🥉</span>
+            </div>
+            <div class="equip-slot rarity-rare" data-label="Rare">
+              <span>🗡️</span>
+            </div>
+            <div class="equip-slot rarity-epic" data-label="Epic">
+              <span>🔮</span>
+            </div>
+            <div class="equip-slot rarity-legendary" data-label="Legendary">
+              <span>👑</span>
+            </div>
+            <div class="equip-slot rarity-legendary" data-label="Legendary">
+              <span>💍</span>
+            </div>
+          </div>
+
+          <h3 class="font-title" style="margin-top:16px;">習得スキル</h3>
+          <div class="skills">
+            <span class="skill-chip">剣術・上級</span>
+            <span class="skill-chip">魔法・中級</span>
+            <span class="skill-chip">体術・初級</span>
+            <span class="skill-chip">鑑定</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:18px; text-align:center;">
+        <button class="btn btn-outline font-main" onclick="showScreen('title')">◀ タイトルへ戻る</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ゲームオーバー画面 ===== -->
+  <section id="screen-gameover" class="screen">
+    <div class="screen-panel" style="text-align:center;">
+      <header>
+        <span class="font-title">💀</span>
+        <h2 class="screen-title font-title" style="color:#dc2626;">ゲームオーバー</h2>
+      </header>
+
+      <div class="gameover-deco">💀 ⚰️ 💀</div>
+      <h1 class="gameover-title font-title">GAME OVER</h1>
+      <p class="gameover-reason font-main">深層21階で【紅き竜】に討ち取られた……</p>
+
+      <div class="stats-list">
+        <div class="stat-item">
+          <div class="value">21F</div>
+          <div class="label">到達階層</div>
+        </div>
+        <div class="stat-item">
+          <div class="value">1,284</div>
+          <div class="label">ターン数</div>
+        </div>
+        <div class="stat-item">
+          <div class="value">💰 840 G</div>
+          <div class="label">所持ゴールド</div>
+        </div>
+        <div class="stat-item">
+          <div class="value">12</div>
+          <div class="label">討伐数</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <p class="font-main" style="color:var(--text-muted); font-size:0.85rem;">セーブデータはSHA256検証済みです。続きから再開可能です。</p>
+      </div>
+
+      <div class="title-actions">
+        <button class="btn btn-primary font-main" onclick="showScreen('title')">タイトルへ戻る</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    naRou Visual Showcase — CSS / SVG / 文字コードのみで表現（画像未使用）<br>
+    デザイントークン：design_tokens.json の色定義を活用
+  </footer>
+
+  <script>
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('screen-' + id).classList.add('active');
+      document.querySelector('.nav-btn[data-screen="' + id + '"]').classList.add('active');
+    }
+  </script>
+</body>
+</html>

@@ -1,55 +1,137 @@
 {
-  "summary": "PASS",
+  "summary": "WARNINGS_DETECTED",
+  "judgement_criteria": {
+    "win_rate_tolerance": 0.3,
+    "absolute_victory_win_rate": 1.0,
+    "min_damage_taken_ratio": 0.1,
+    "max_one_shot_rate": 0.1
+  },
   "scenarios": {
     "lvl1_vs_slime": {
       "player_level": 1,
       "monster_type": "slime",
-      "trials": 100,
+      "trials": 30,
+      "completed_trials": 30,
       "win_rate": 1.0,
       "expected_win_rate": 0.95,
-      "win_rate_alert": false,
-      "avg_turns": 3.24,
-      "std_dev_turns": 1.12,
-      "avg_dmg_dealt": 17.0,
-      "avg_dmg_taken": 3.8,
-      "one_shot_count": 10,
+      "win_rate_alert": true,
+      "avg_turns": 2.93,
+      "std_dev_turns": 1.15,
+      "avg_dmg_dealt": 21.8,
+      "avg_dmg_taken": 0.13,
+      "avg_hp_regen": 0.0,
+      "damage_taken_ratio": 0.006,
+      "one_shot_count": 15,
+      "one_shot_rate": 0.5,
       "stalled_count": 0,
-      "is_balanced": true
+      "stalled_rate": 0.0,
+      "is_balanced": false,
+      "unbalanced_reasons": [
+        "一撃決着の割合 0.50 が上限 0.1 を超えた",
+        "被与ダメージ比 0.01 が下限 0.1 を下回った",
+        "期待勝率 0.95 に対し勝率 1.0 (絶対勝利) となった"
+      ]
     },
     "lvl3_vs_goblin": {
       "player_level": 3,
       "monster_type": "goblin",
-      "trials": 100,
+      "trials": 30,
+      "completed_trials": 30,
       "win_rate": 1.0,
       "expected_win_rate": 0.85,
-      "win_rate_alert": false,
-      "avg_turns": 4.8,
-      "std_dev_turns": 1.45,
-      "avg_dmg_dealt": 27.93,
-      "avg_dmg_taken": 8.05,
-      "one_shot_count": 0,
+      "win_rate_alert": true,
+      "avg_turns": 3.53,
+      "std_dev_turns": 0.99,
+      "avg_dmg_dealt": 37.73,
+      "avg_dmg_taken": 3.63,
+      "avg_hp_regen": 0.0,
+      "damage_taken_ratio": 0.096,
+      "one_shot_count": 1,
+      "one_shot_rate": 0.033,
       "stalled_count": 0,
-      "is_balanced": true
+      "stalled_rate": 0.0,
+      "is_balanced": false,
+      "unbalanced_reasons": [
+        "被与ダメージ比 0.10 が下限 0.1 を下回った",
+        "期待勝率 0.85 に対し勝率 1.0 (絶対勝利) となった"
+      ]
     },
     "lvl5_vs_orc": {
       "player_level": 5,
       "monster_type": "orc",
-      "trials": 100,
+      "trials": 30,
+      "completed_trials": 30,
       "win_rate": 1.0,
       "expected_win_rate": 0.7,
-      "win_rate_alert": false,
-      "avg_turns": 7.26,
-      "std_dev_turns": 1.43,
-      "avg_dmg_dealt": 48.5,
-      "avg_dmg_taken": 17.01,
+      "win_rate_alert": true,
+      "avg_turns": 8.5,
+      "std_dev_turns": 1.86,
+      "avg_dmg_dealt": 78.07,
+      "avg_dmg_taken": 20.37,
+      "avg_hp_regen": 0.03,
+      "damage_taken_ratio": 0.261,
       "one_shot_count": 0,
+      "one_shot_rate": 0.0,
       "stalled_count": 0,
-      "is_balanced": true
+      "stalled_rate": 0.0,
+      "is_balanced": false,
+      "unbalanced_reasons": [
+        "期待勝率 0.7 に対し勝率 1.0 (絶対勝利) となった"
+      ]
     }
   },
+  "economy_measurement": {
+    "gold_per_dungeon_floor": 6700,
+    "dungeon_level": 1,
+    "player_level": 1,
+    "defeated": 6,
+    "monsters": 6,
+    "turns": 290,
+    "method": "実ダンジョン1階を全撃破するまでの獲得ゴールド"
+  },
   "balance_standards": {
-    "status": "PASS",
-    "issues": [],
+    "status": "FAIL",
+    "issues": [
+      {
+        "standard": "standards.levels.1.max_hp",
+        "level": 1,
+        "field": "hp",
+        "value": 55,
+        "limit": 50,
+        "message": "Lv1 の hp が実測 55 で、基準 max_hp=50 を外れている"
+      },
+      {
+        "standard": "standards.levels.1.max_attack",
+        "level": 1,
+        "field": "attack",
+        "value": 14,
+        "limit": 12,
+        "message": "Lv1 の attack が実測 14 で、基準 max_attack=12 を外れている"
+      },
+      {
+        "standard": "standards.levels.10.min_hp",
+        "level": 10,
+        "field": "hp",
+        "value": 108,
+        "limit": 120,
+        "message": "Lv10 の hp が実測 108 で、基準 min_hp=120 を外れている"
+      },
+      {
+        "standard": "standards.levels.10.min_attack",
+        "level": 10,
+        "field": "attack",
+        "value": 18,
+        "limit": 25,
+        "message": "Lv10 の attack が実測 18 で、基準 min_attack=25 を外れている"
+      },
+      {
+        "standard": "economy.max_gold_per_dungeon_floor",
+        "field": "gold_per_dungeon_floor",
+        "value": 6700,
+        "limit": 5000,
+        "message": "1 ダンジョンフロアあたりの획取ゴールドが実測 6700 で、基準 5000 を超えている"
+      }
+    ],
     "standards_loaded": true
   }
 }

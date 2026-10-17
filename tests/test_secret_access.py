@@ -6,7 +6,7 @@ from __future__ import annotations
 import unittest
 from unittest.mock import patch
 
-from naRou.systems.secret_area_system import (
+from secret_area_system import (
     KeyItem,
     SecretArea,
     SecretAreaRegistry,
@@ -17,7 +17,7 @@ from naRou.systems.secret_area_system import (
     perception_check,
     try_unlock_secret,
 )
-from naRou.skill_eater_system import CharacterState, SkillDef, SkillEaterRegistry, SkillTier, SkillType
+from skill_eater_system import CharacterState, SkillDef, SkillEaterRegistry, SkillTier, SkillType
 
 
 class MockGameMap:
@@ -49,7 +49,7 @@ class TestPerceptionCheck(unittest.TestCase):
 
     def test_perception_check_success_high_stats(self):
         """高ステータスで成功"""
-        with patch('naRou.systems.secret_area_system.random.randint', return_value=50):
+        with patch('secret_area_system.random.randint', return_value=50):
             success, margin = perception_check(self.player, 20, 0)
             self.assertTrue(success)
             self.assertGreater(margin, 0)
@@ -61,21 +61,21 @@ class TestPerceptionCheck(unittest.TestCase):
             atk=5, defense=2, intelligence=5, speed=80,
             perception=5, analysis_level=1,
         )
-        with patch('naRou.systems.secret_area_system.random.randint', return_value=10):
+        with patch('secret_area_system.random.randint', return_value=10):
             success, margin = perception_check(weak_player, 30, 0)
             self.assertFalse(success)
             self.assertEqual(margin, 0)
 
     def test_perception_check_with_skill_bonus(self):
         """スキルボーナス込みで判定"""
-        with patch('naRou.systems.secret_area_system.random.randint', return_value=30):
+        with patch('secret_area_system.random.randint', return_value=30):
             success, margin = perception_check(self.player, 25, 10)  # スキルボーナス+10
             self.assertTrue(success)
 
     def test_perception_check_failure_penalty(self):
         """連続失敗ペナルティ適用"""
         self.player.failed_search_count = 3  # ペナルティ+6
-        with patch('naRou.systems.secret_area_system.random.randint', return_value=30):
+        with patch('secret_area_system.random.randint', return_value=30):
             success, margin = perception_check(self.player, 20, 0)
             # ペナルティ込みで target = 20 + 6 = 26
             # effective = 15*2 + 3*3 = 39
@@ -164,7 +164,7 @@ class TestCheckSecretDetection(unittest.TestCase):
         self.registry._secret_areas["test_detect_01"] = self.test_area
         self.registry._areas_by_layer[self.layer_key] = [self.test_area]
 
-    @patch('naRou.systems.secret_area_system.SECRET_REGISTRY', new_callable=lambda: SecretAreaRegistry())
+    @patch('secret_area_system.SECRET_REGISTRY', new_callable=lambda: SecretAreaRegistry())
     def test_check_secret_detection_success(self, mock_registry):
         """検知成功"""
         # モックレジストリにエリア設定
@@ -174,14 +174,14 @@ class TestCheckSecretDetection(unittest.TestCase):
         # プレイヤーをエリアの近くに配置
         self.player.x, self.player.y = 11, 11
 
-        with patch('naRou.systems.secret_area_system.random.randint', return_value=50):
+        with patch('secret_area_system.random.randint', return_value=50):
             discovered = check_secret_detection(self.player, self.game_map, self.layer_key)
             self.assertEqual(len(discovered), 1)
             self.assertEqual(discovered[0].id, "test_detect_01")
             self.assertTrue(self.test_area.is_discovered)
             self.assertIn("test_detect_01", self.player.discovered_secrets)
 
-    @patch('naRou.systems.secret_area_system.SECRET_REGISTRY', new_callable=lambda: SecretAreaRegistry())
+    @patch('secret_area_system.SECRET_REGISTRY', new_callable=lambda: SecretAreaRegistry())
     def test_check_secret_detection_too_far(self, mock_registry):
         """距離が遠くて検知されない"""
         mock_registry._secret_areas = self.registry._secret_areas
@@ -194,7 +194,7 @@ class TestCheckSecretDetection(unittest.TestCase):
         self.assertEqual(len(discovered), 0)
         self.assertFalse(self.test_area.is_discovered)
 
-    @patch('naRou.systems.secret_area_system.SECRET_REGISTRY', new_callable=lambda: SecretAreaRegistry())
+    @patch('secret_area_system.SECRET_REGISTRY', new_callable=lambda: SecretAreaRegistry())
     def test_check_secret_detection_already_discovered(self, mock_registry):
         """既に発見済みならスキップ"""
         mock_registry._secret_areas = self.registry._secret_areas
@@ -370,7 +370,7 @@ class TestTryUnlockSecret(unittest.TestCase):
         )
         self.registry._secret_areas["test_unlock_01"] = self.test_area
 
-    @patch('naRou.systems.secret_area_system.SECRET_REGISTRY', new_callable=lambda: SecretAreaRegistry())
+    @patch('secret_area_system.SECRET_REGISTRY', new_callable=lambda: SecretAreaRegistry())
     def test_try_unlock_secret_success(self, mock_registry):
         """解除成功"""
         mock_registry._secret_areas = self.registry._secret_areas
@@ -385,7 +385,7 @@ class TestTryUnlockSecret(unittest.TestCase):
         self.assertIn("test_unlock_01", self.player.unlocked_secrets)
         self.assertIn("解放されました", msg)
 
-    @patch('naRou.systems.secret_area_system.SECRET_REGISTRY', new_callable=lambda: SecretAreaRegistry())
+    @patch('secret_area_system.SECRET_REGISTRY', new_callable=lambda: SecretAreaRegistry())
     def test_try_unlock_secret_not_discovered(self, mock_registry):
         """未発見で失敗"""
         mock_registry._secret_areas = self.registry._secret_areas
@@ -394,7 +394,7 @@ class TestTryUnlockSecret(unittest.TestCase):
         self.assertFalse(success)
         self.assertIn("発見されていません", msg)
 
-    @patch('naRou.systems.secret_area_system.SECRET_REGISTRY', new_callable=lambda: SecretAreaRegistry())
+    @patch('secret_area_system.SECRET_REGISTRY', new_callable=lambda: SecretAreaRegistry())
     def test_try_unlock_secret_missing_faction(self, mock_registry):
         """派閥評判不足で失敗"""
         mock_registry._secret_areas = self.registry._secret_areas
@@ -408,7 +408,7 @@ class TestTryUnlockSecret(unittest.TestCase):
         self.assertFalse(success)
         self.assertIn("評判が足りません", msg)
 
-    @patch('naRou.systems.secret_area_system.SECRET_REGISTRY', new_callable=lambda: SecretAreaRegistry())
+    @patch('secret_area_system.SECRET_REGISTRY', new_callable=lambda: SecretAreaRegistry())
     def test_try_unlock_secret_consumable_key(self, mock_registry):
         """消費型キーが消費される"""
         mock_registry._secret_areas = self.registry._secret_areas

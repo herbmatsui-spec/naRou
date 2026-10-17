@@ -8,8 +8,8 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
-from naRou.skill_eater_combat_system import SkillEaterCombatSystem
-from naRou.skill_eater_system import CharacterState, SkillEaterRegistry
+from skill_eater_combat_system import SkillEaterCombatSystem
+from skill_eater_system import CharacterState, SkillEaterRegistry
 
 
 class TestSkillEaterPhase2(unittest.TestCase):

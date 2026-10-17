@@ -1,0 +1,273 @@
+# Monster Abilities - Phase 2 Step 47
+# 15能力の実定義 (monsters.yaml で宣言されている全スキルの実体)
+
+# ==========================================
+# 投擲・遠距離攻撃
+# ==========================================
+
+throw_stone:
+  name: "投石"
+  description: "石を投げて遠距離から攻撃する"
+  cost: 1
+  cooldown: 2
+  range: 6
+  target_type: "single"
+  effect:
+    type: "damage"
+    element: "physical"
+    dice_num: 1
+    dice_side: 6
+    dmg_bonus: 2
+  sound: "throw"
+  ai_hint: "ranged"
+
+# ==========================================
+# 近接・物理攻撃
+# ==========================================
+
+power_bash:
+  name: "力強打"
+  description: "力を込めた強力な一撃"
+  cost: 1
+  cooldown: 3
+  range: 1
+  target_type: "single"
+  effect:
+    type: "damage"
+    element: "physical"
+    dice_num: 2
+    dice_side: 8
+    dmg_bonus: 4
+  sound: "bash"
+  ai_hint: "melee"
+
+backstab:
+  name: "背面攻撃"
+  description: "敵の背後から急所を突く"
+  cost: 1
+  cooldown: 2
+  range: 1
+  target_type: "single"
+  effect:
+    type: "damage"
+    element: "physical"
+    dice_num: 2
+    dice_side: 8
+    dmg_bonus: 6
+    condition: "target_facing_away"
+  sound: "stab"
+  ai_hint: "melee"
+
+heavy_cleave:
+  name: "豪快な大袈裟"
+  description: "大振りの斬撃で広範囲を薙ぎ払う"
+  cost: 2
+  cooldown: 4
+  range: 1
+  target_type: "area"
+  radius: 1
+  effect:
+    type: "damage"
+    element: "physical"
+    dice_num: 2
+    dice_side: 10
+    dmg_bonus: 6
+  sound: "cleave"
+  ai_hint: "melee"
+
+roar:
+  name: "戦吼"
+  description: "威圧的な咆哮で自身の防御力を上げる"
+  cost: 1
+  cooldown: 5
+  range: 0
+  target_type: "self"
+  effect:
+    type: "buff"
+    stat: "defense"
+    amount: 8
+    duration: 10
+  sound: "roar"
+  ai_hint: "support"
+
+# ==========================================
+# 属性ブレス・遠距離魔法
+# ==========================================
+
+fire_breath:
+  name: "炎の息吹"
+  description: "炎を吐いて前方広範囲を焼き払う"
+  cost: 2
+  cooldown: 4
+  range: 5
+  radius: 1
+  target_type: "area"
+  effect:
+    type: "damage"
+    element: "fire"
+    dice_num: 2
+    dice_side: 8
+    dmg_bonus: 4
+  sound: "fire_breath"
+  ai_hint: "ranged"
+
+inferno_breath:
+  name: "業火の息吹"
+  description: "より強力な炎のブレスで広範囲を灰燼に帰す"
+  cost: 3
+  cooldown: 6
+  range: 6
+  radius: 2
+  target_type: "area"
+  effect:
+    type: "damage"
+    element: "fire"
+    dice_num: 3
+    dice_side: 10
+    dmg_bonus: 8
+  sound: "inferno_breath"
+  ai_hint: "ranged"
+
+cast_dart:
+  name: "呪毒弾"
+  description: "毒を帯びた魔法の矢を放つ"
+  cost: 1
+  cooldown: 2
+  range: 6
+  target_type: "single"
+  effect:
+    type: "damage"
+    element: "poison"
+    dice_num: 1
+    dice_side: 10
+    dmg_bonus: 3
+    status:
+      type: "poison"
+      power: 2
+      duration: 20
+  sound: "magic_dart"
+  ai_hint: "ranged"
+
+cast_fireball:
+  name: "火球術"
+  description: "爆発する火球を放ち、周囲を巻き込む"
+  cost: 2
+  cooldown: 4
+  range: 5
+  radius: 1
+  target_type: "area"
+  effect:
+    type: "damage"
+    element: "fire"
+    dice_num: 2
+    dice_side: 12
+    dmg_bonus: 5
+  sound: "fireball"
+  ai_hint: "ranged"
+
+# ==========================================
+# 特殊・妨害・支援
+# ==========================================
+
+steal_gold:
+  name: "金の窃盗"
+  description: "相手の所持金を盗み取る"
+  cost: 1
+  cooldown: 3
+  range: 1
+  target_type: "single"
+  effect:
+    type: "steal"
+    resource: "gold"
+    amount_per_level: 10
+  sound: "steal"
+  ai_hint: "utility"
+
+heal_self:
+  name: "己の癒し"
+  description: "自身の傷を癒やす"
+  cost: 1
+  cooldown: 5
+  range: 0
+  target_type: "self"
+  effect:
+    type: "heal"
+    dice_num: 2
+    dice_side: 8
+    dmg_bonus: 10
+  sound: "heal"
+  ai_hint: "heal"
+
+summon_undead:
+  name: "亡者の召喚"
+  description: "アンデッドの手下を呼び出す"
+  cost: 2
+  cooldown: 8
+  range: 0
+  target_type: "self"
+  effect:
+    type: "summon"
+    monster_id: "skeleton"
+    count: 1
+    duration: 50
+  sound: "summon"
+  ai_hint: "summon"
+
+drain_mp:
+  name: "魔力吸引"
+  description: "相手の魔力を吸い取り、自身のMPを回復する"
+  cost: 1
+  cooldown: 3
+  range: 4
+  target_type: "single"
+  effect:
+    type: "drain"
+    resource: "mp"
+    amount: 8
+  sound: "drain"
+  ai_hint: "utility"
+
+tail_swipe:
+  name: "尻尾叩きつけ"
+  description: "巨大な尻尾で周囲を薙ぎ払う"
+  cost: 2
+  cooldown: 4
+  range: 1
+  target_type: "area"
+  radius: 1
+  effect:
+    type: "damage"
+    element: "physical"
+    dice_num: 2
+    dice_side: 10
+    dmg_bonus: 5
+    status:
+      type: "knockback"
+      power: 1
+  sound: "tail"
+  ai_hint: "melee"
+
+intimidate:
+  name: "威嚇"
+  description: "威圧的な眼光で敵を麻痺させる"
+  cost: 1
+  cooldown: 5
+  range: 6
+  target_type: "single"
+  effect:
+    type: "status"
+    status_type: "paralysis"
+    power: 2
+    duration: 15
+  sound: "intimidate"
+  ai_hint: "debuff"
+
+# ==========================================
+# 共通プロパティ説明
+# ==========================================
+# cost: AP消費量 (1手2AP制)
+# cooldown: 再使用までのターン数
+# range: 射程 (0=自己, 1=隣接, N=Nマス先)
+# radius: 範囲攻撃の半径
+# target_type: single/area/self/beam
+# ai_hint: AIがこのスキルを選ぶ際のヒント (ranged/melee/heal/support/utility/debuff/summon)

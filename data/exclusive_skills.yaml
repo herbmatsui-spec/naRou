@@ -1,4 +1,4 @@
-# Exclusive Skills Definition for naRou
+# Exclusive Skills Definition for naRogue
 # Structure: exclusive_skills: { skill_id: { name, job, type, mp_cost, cooldown, description, effects, inherit_chance } }
 
 exclusive_skills:

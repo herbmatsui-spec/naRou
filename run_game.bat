@@ -4,7 +4,7 @@ cd /d "%~dp0"
 title naRou - Masterpiece Edition and Multi-World
 
 echo ========================================================
-echo   naRou: Masterpiece Edition and A-World (Skill Eater)
+echo   naRogue: Masterpiece Edition and A-World (Skill Eater)
 echo ========================================================
 echo.
 echo  [1] Launch Main Game (python main.py)

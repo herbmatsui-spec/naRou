@@ -1,11 +1,11 @@
 """Unit tests for Crafting and Salvage System (Phase 4, Steps 1-24)"""
 
 import pytest
-
 from naRou.data_manager import DataManager
 from naRou.ecs.entity import Entity
-from naRou.systems.crafting_system import CraftingSystem
-from naRou.systems.item_system import Inventory, Item
+
+from crafting_engine import CraftingSystem
+from item_system import Inventory, Item
 
 
 def test_crafting_system_initialization():

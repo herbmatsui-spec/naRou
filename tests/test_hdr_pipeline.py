@@ -9,9 +9,9 @@ import sys
 
 import numpy as np
 
-from naRou.core.auto_exposure import AutoExposure
-from naRou.core.compositor import Compositor, PseudoHDR
-from naRou.core.hdr import HDRCompositor, HDRTarget
+from core.auto_exposure import AutoExposure
+from core.compositor import Compositor, PseudoHDR
+from core.hdr import HDRCompositor, HDRTarget
 
 
 def test_hdr_target():

@@ -26,7 +26,7 @@ except ImportError:
     HAS_PYGAME = False
     pygame = None
 
-from naRou.feature_flags import is_enabled
+from feature_flags import is_enabled
 
 
 class AudioBackend:

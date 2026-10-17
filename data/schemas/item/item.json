@@ -119,19 +119,6 @@
       "type": "boolean",
       "default": true,
       "description": "Whether item is identified"
-    },
-    "quality": {
-      "type": "string",
-      "default": "normal",
-      "description": "Item quality (bad, normal, good, miracle, god)"
-    },
-    "enchantments": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      },
-      "default": [],
-      "description": "List of random or fixed enchantments"
     }
   },
   "$defs": {

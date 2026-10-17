@@ -5,17 +5,16 @@
  */
 class StatusBar extends UIComponent {
     /**
-     * Render the status bar with optional status effect badges.
+     * Render the status bar.
      * @param {Object} props
      * @param {string} props.label - Label text (e.g., "HP")
      * @param {number} props.current - Current value
      * @param {number} props.max - Maximum value
      * @param {string} [props.colorToken] - CSS variable for the bar color (e.g., '--colors-status-danger')
-     * @param {Array} [props.statusBadges] - Array of active status objects: { type, icon, label, duration }
      * @param {string} [props.id] - Optional element ID
      * @returns {HTMLElement}
      */
-    render({ label, current, max, colorToken = '--colors-brand-primary', statusBadges = [], id = 'status-bar' }) {
+    render({ label, current, max, colorToken = '--colors-brand-primary', id = 'status-bar' }) {
         const percentage = Math.min(Math.max((current / max) * 100, 0), 100);
 
         const container = this.createElement('div', {
@@ -33,7 +32,7 @@ class StatusBar extends UIComponent {
 
         const fill = this.createElement('div', {
             className: 'status-bar-fill',
-            style: `width: ${percentage}%; background-color: var(${colorToken}, #3b82f6);`
+            style: `width: ${percentage}%; background-color: var(${colorToken});`
         }, []);
 
         const valueText = this.createElement('span', {
@@ -44,22 +43,6 @@ class StatusBar extends UIComponent {
         container.appendChild(labelElement);
         container.appendChild(track);
         container.appendChild(valueText);
-
-        // Status Effect Badges (Step 65)
-        if (statusBadges && statusBadges.length > 0) {
-            const badgeContainer = this.createElement('div', {
-                className: 'status-badges-container'
-            }, []);
-
-            statusBadges.forEach(b => {
-                const badge = this.createElement('span', {
-                    className: `status-badge status-badge--${b.type}`,
-                    title: `${b.label || b.type}${b.duration ? ` (残り${b.duration}ターン)` : ''}`
-                }, [b.icon || '⚠️']);
-                badgeContainer.appendChild(badge);
-            });
-            container.appendChild(badgeContainer);
-        }
 
         this._injectStyles();
 
@@ -106,31 +89,6 @@ class StatusBar extends UIComponent {
                 color: var(--colors-content-text-main);
                 min-width: 60px;
                 text-align: right;
-            }
-            .status-badges-container {
-                display: flex;
-                gap: 4px;
-                margin-left: 6px;
-            }
-            .status-badge {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 14px;
-                padding: 1px 3px;
-                border-radius: 4px;
-                background: rgba(0,0,0,0.5);
-                border: 1px solid rgba(255,255,255,0.2);
-                cursor: help;
-                animation: badgePulse 2s infinite ease-in-out;
-            }
-            .status-badge--poison { border-color: #22c55e; background: rgba(34,197,94,0.2); }
-            .status-badge--burn { border-color: #ef4444; background: rgba(239,68,68,0.2); }
-            .status-badge--freeze { border-color: #38bdf8; background: rgba(56,189,248,0.2); }
-            .status-badge--paralyze { border-color: #eab308; background: rgba(234,179,8,0.2); }
-            @keyframes badgePulse {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.15); }
             }
         `;
         document.head.appendChild(style);

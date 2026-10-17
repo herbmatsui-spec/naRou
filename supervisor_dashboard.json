@@ -1,0 +1,175 @@
+{
+  "timestamp": "2026-10-12T18:03:59.817699",
+  "agents": {
+    "agent-test-fixer": {
+      "status": "idle",
+      "pid": 398132,
+      "uptime": 0.0006511211395263672,
+      "restart_count": 6,
+      "current_task": null,
+      "completed_count": 6,
+      "last_health_check": 1791774362.779395
+    },
+    "agent-coverage-builder": {
+      "status": "dead",
+      "pid": 398230,
+      "uptime": 21296.733596801758,
+      "restart_count": 5,
+      "current_task": null,
+      "completed_count": 6,
+      "last_health_check": 1791774362.7794485
+    },
+    "agent-infra-monitor": {
+      "status": "idle",
+      "pid": 397572,
+      "uptime": 0.00010037422180175781,
+      "restart_count": 3,
+      "current_task": null,
+      "completed_count": 3,
+      "last_health_check": 1791774362.7794852
+    }
+  },
+  "task_queues": {
+    "test_fix": [
+      {
+        "id": "fix_save_pickle",
+        "target": "save_system.py",
+        "status": "failed",
+        "assigned_to": "agent-test-fixer",
+        "started_at": "2026-10-12T12:05:52.741179",
+        "completed_at": "2026-10-12T12:06:12.793017"
+      },
+      {
+        "id": "fix_ui_fx_15",
+        "target": "ui_fx_systems.py",
+        "status": "failed",
+        "assigned_to": "agent-test-fixer",
+        "started_at": "2026-10-12T12:06:22.805372",
+        "completed_at": "2026-10-12T12:06:52.856323"
+      },
+      {
+        "id": "fix_skill_eater_expel",
+        "target": "skill_eater_meta_intervention",
+        "status": "failed",
+        "assigned_to": "agent-test-fixer",
+        "started_at": "2026-10-12T12:07:02.866773",
+        "completed_at": "2026-10-12T12:07:32.918355"
+      },
+      {
+        "id": "fix_audio_bookflip",
+        "target": "skill_eater_audio_integration",
+        "status": "failed",
+        "assigned_to": "agent-test-fixer",
+        "started_at": "2026-10-12T12:07:42.930753",
+        "completed_at": "2026-10-12T12:08:12.981960"
+      },
+      {
+        "id": "fix_balance_sim",
+        "target": "stability.py::test_balance_simulator_execution",
+        "status": "failed",
+        "assigned_to": "agent-test-fixer",
+        "started_at": "2026-10-12T12:08:22.992733",
+        "completed_at": "2026-10-12T12:08:43.059832"
+      },
+      {
+        "id": "fix_shutdown_log",
+        "target": "engine/__init__.py",
+        "status": "failed",
+        "assigned_to": "agent-test-fixer",
+        "started_at": "2026-10-12T12:08:53.070053",
+        "completed_at": "2026-10-12T12:09:13.098138"
+      }
+    ],
+    "coverage": [
+      {
+        "id": "cov_engine_core",
+        "target": "engine/",
+        "status": "failed",
+        "assigned_to": "agent-coverage-builder",
+        "started_at": "2026-10-12T12:05:52.744116",
+        "completed_at": "2026-10-12T12:06:22.812068"
+      },
+      {
+        "id": "cov_engine_systems",
+        "target": "engine/systems/",
+        "status": "failed",
+        "assigned_to": "agent-coverage-builder",
+        "started_at": "2026-10-12T12:06:32.823973",
+        "completed_at": "2026-10-12T12:07:02.871153"
+      },
+      {
+        "id": "cov_audio",
+        "target": "audio/",
+        "status": "failed",
+        "assigned_to": "agent-coverage-builder",
+        "started_at": "2026-10-12T12:07:12.883508",
+        "completed_at": "2026-10-12T12:07:42.937508"
+      },
+      {
+        "id": "cov_web",
+        "target": "web_server.py",
+        "status": "failed",
+        "assigned_to": "agent-coverage-builder",
+        "started_at": "2026-10-12T12:07:52.950154",
+        "completed_at": "2026-10-12T12:08:22.998152"
+      },
+      {
+        "id": "cov_visual_fx",
+        "target": "visual_fx_system.py",
+        "status": "failed",
+        "assigned_to": "agent-coverage-builder",
+        "started_at": "2026-10-12T12:08:33.016085",
+        "completed_at": "2026-10-12T12:08:53.076568"
+      },
+      {
+        "id": "cov_skill_eater",
+        "target": "skill_eater/",
+        "status": "failed",
+        "assigned_to": "agent-coverage-builder",
+        "started_at": "2026-10-12T12:09:03.084149",
+        "completed_at": "2026-10-12T12:09:23.110232"
+      },
+      {
+        "id": "cov_data_repos",
+        "target": "data/repositories/",
+        "status": "pending",
+        "assigned_to": null,
+        "started_at": null,
+        "completed_at": null
+      }
+    ],
+    "infra": [
+      {
+        "id": "infra_dashboard",
+        "target": "progress_dashboard",
+        "status": "failed",
+        "assigned_to": "agent-infra-monitor",
+        "started_at": "2026-10-12T12:05:52.745791",
+        "completed_at": "2026-10-12T12:06:32.826912"
+      },
+      {
+        "id": "infra_metrics",
+        "target": "coverage_metrics",
+        "status": "failed",
+        "assigned_to": "agent-infra-monitor",
+        "started_at": "2026-10-12T12:06:42.837752",
+        "completed_at": "2026-10-12T12:07:12.886463"
+      },
+      {
+        "id": "infra_health",
+        "target": "system_health",
+        "status": "failed",
+        "assigned_to": "agent-infra-monitor",
+        "started_at": "2026-10-12T12:07:22.897429",
+        "completed_at": "2026-10-12T12:07:52.955962"
+      }
+    ]
+  },
+  "summary": {
+    "total_tasks": 16,
+    "completed_tasks": 0,
+    "failed_tasks": 15,
+    "in_progress_tasks": 0,
+    "pending_tasks": 1
+  }
+}

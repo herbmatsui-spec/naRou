@@ -1,0 +1,959 @@
+"""
+Elona Roguelike - Input Action System (Step 6.1)
+コマンドパターンによる入力アクションの抽象化
+"""
+
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass
+from typing import Any, Protocol
+
+logger = logging.getLogger(__name__)
+
+
+class InputAction(Protocol):
+    """入力アクションのプロトコル"""
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        """アクションを実行。消費された場合Trueを返す"""
+        ...
+
+    def can_execute(self, engine: Any) -> bool:
+        """現在の状態で実行可能か判定"""
+        ...
+
+
+class ActionMeta(type):
+    """Verb のメタクラス。
+
+    バインド表は「キー → Verb クラス」で持つので、レジストリをそのまま inspected した
+    側が Verb クラスに触っても isinstance が成立するようにしておく。
+    """
+
+    def __instancecheck__(cls, obj: Any) -> bool:
+        return obj is cls or super().__instancecheck__(obj)
+
+
+class Verb(metaclass=ActionMeta):
+    """全 Verb の基底。can_execute / execute を実装する"""
+
+
+@dataclass
+class KeyBinding:
+    """キーバインド定義。
+
+    action には Verb クラス、または方向のようにバインド固有値を持つ Verb のインスタンス
+    を載せる。実行時は Verb.build() がクラスならインスタンスを組み立てる。
+    """
+
+    key: int  # tcod.event.KeySym
+    action: type[Verb] | Verb
+    modifiers: int = 0  # tcod.event.Modifier
+    description: str = ""
+
+    def build(self) -> Verb:
+        """実行する Verb のインスタンスを返す"""
+        return self.action() if isinstance(self.action, type) else self.action
+
+
+class ActionRegistry:
+    """アクションレジストリ：ステートごとのキーバインドを管理"""
+
+    def __init__(self):
+        self._bindings: dict[str, list[KeyBinding]] = {}
+        self._global_bindings: list[KeyBinding] = []
+
+    def register(self, state: str, binding: KeyBinding) -> None:
+        """ステート固有のキーバインドを登録
+
+        同じ (キー, 修飾子) は先勝ち。解決は常に表の先頭から最初の一致を返すため、
+        後から来た同キーの登録は決して到達しない。黙って影に隠れるのを防ぐ。
+        """
+        if self._claim(self._bindings.setdefault(state, []), binding):
+            return
+        self._bindings[state].append(binding)
+
+    def register_global(self, binding: KeyBinding) -> None:
+        """全ステート共通のキーバインドを登録"""
+        if self._claim(self._global_bindings, binding):
+            return
+        self._global_bindings.append(binding)
+
+    @staticmethod
+    def _claim(bindings: list[KeyBinding], binding: KeyBinding) -> bool:
+        """(キー, 修飾子) を先に確保していれば True を返す。"""
+        taken = next(
+            (
+                b
+                for b in bindings
+                if b.key == binding.key and b.modifiers == binding.modifiers
+            ),
+            None,
+        )
+        if taken is None:
+            return False
+        if taken.action is not binding.action:
+            logger.warning(
+                "キーバインドの重複を無視した: key=%s mod=%s 保持=%s 破棄=%s",
+                binding.key,
+                binding.modifiers,
+                getattr(taken.action, "__name__", taken.action),
+                getattr(binding.action, "__name__", binding.action),
+            )
+        return True
+
+    def get_bindings(self, state: str) -> list[KeyBinding]:
+        """指定ステートのキーバインドを取得（グローバル含む）"""
+        return self._bindings.get(state, []) + self._global_bindings
+
+    def clear_state(self, state: str) -> None:
+        """ステートのバインディングをクリア"""
+        if state in self._bindings:
+            self._bindings[state].clear()
+
+
+# ============================================================
+# 具体的なアクションクラス (Step 6.2)
+# ============================================================
+
+import tcod.event
+
+from constants import (
+    CAT_FOOD,
+    CAT_POTION,
+    CAT_SCROLL,
+    ENERGY_THRESHOLD,
+    GameState,
+)
+from save_system import SaveSystem
+from sound_manager import SoundManager
+from systems import CombatSystem, cast, get_spell_ids
+
+# 「使う」動詞が対象にするカテゴリ。並び順はそのまま優先順になる。
+CONSUMABLE_CATEGORIES = (CAT_POTION, CAT_FOOD, CAT_SCROLL)
+
+
+class MovementAction(Verb):
+    """移動アクション"""
+
+    def __init__(self, dx: int, dy: int):
+        self.dx = dx
+        self.dy = dy
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        if engine.player_act(self.dx, self.dy):
+            engine.advance_world()
+        return True
+
+
+class OpenContextMenuAction(Verb):
+    """コンテキストメニューを開く"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.open_context_menu()
+        return True
+
+
+class LookModeAction(Verb):
+    """調査モードに入る"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.game_state = "look"
+        engine.look_cursor.x = engine.player.x
+        engine.look_cursor.y = engine.player.y
+        engine.log("【調査モード】矢印キーで対象を選択 (Esc/Enter:閉じる)", (255, 255, 120))
+        return True
+
+
+class PickupAction(Verb):
+    """足元のアイテムを拾う"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        for itm in list(engine.items_on_ground):
+            if itm.x == engine.player.x and itm.y == engine.player.y:
+                ok, msg = engine.inventory.add_item(itm)
+                engine.log(msg, (255, 255, 200))
+                SoundManager.play_se("get_item")
+                if ok:
+                    engine.items_on_ground.remove(itm)
+                break
+        else:
+            engine.log("足元には何もない。")
+        return True
+
+
+class HelpAction(Verb):
+    """ヘルプ画面を開く"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.game_state = "help"
+        engine.help_tab = 0
+        return True
+
+
+class InventoryAction(Verb):
+    """インベントリを開く（プレイヤー/ペット切り替え対応）"""
+
+    def __init__(self, target: str = "player"):
+        self.target = target
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.game_state = "inventory"
+        engine.inventory_target = self.target
+        engine.inventory_cursor = 0
+        return True
+
+
+class UseConsumableAction(Verb):
+    """所持の消耗品を使う (ポーション→食料→巻物 の順で1個だけ消費)"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        item = find_consumable(engine.inventory, engine.player)
+        if item is None:
+            engine.log("使える消耗品がない。", (200, 200, 200))
+            return True
+        if not use_consumable(engine, item, engine.player, engine.inventory):
+            return True
+        # 消費は1ターン分の行動として数える
+        engine.player.energy -= ENERGY_THRESHOLD
+        engine.advance_world()
+        return True
+
+
+def find_consumable(inventory: Any, user: Any) -> Any | None:
+    """所持品から「次に使う消耗品」を1つ選ぶ (負傷中は回復ポーションを優先)"""
+    fallback = None
+    for item in inventory.items:
+        if item.category == CAT_POTION:
+            if user.hp < user.max_hp:
+                return item
+        elif item.category in CONSUMABLE_CATEGORIES:
+            fallback = fallback or item
+    return fallback
+
+
+def consume_one(inventory: Any, item: Any) -> bool:
+    """スタックから1個だけ消費する。尽きたときはスタックごとインベントリから外す"""
+    if item.count > 1:
+        item.count -= 1
+        return True
+    item.count = 0
+    return inventory.remove_item(item, count=1) is not None
+
+
+def use_consumable(engine: Any, item: Any, user: Any, inventory: Any) -> bool:
+    """消耗品を1個使い、効果を適用してスタックを減らす。通知は engine.log に出す"""
+    if item.category == CAT_POTION:
+        user.hp = min(user.max_hp, user.hp + item.heal_amount)
+        SoundManager.play_se("heal")
+        engine.log(f"{user.name}は{item.name}を飲んだ！ HP+{item.heal_amount}", (100, 255, 100))
+    elif item.category == CAT_FOOD:
+        for message in engine.survival.eat(user, item):
+            engine.log(message, (255, 200, 150))
+    elif item.category == CAT_SCROLL:
+        if not read_scroll(engine, item, inventory):
+            return False
+    else:
+        engine.log(f"{item.name}は使える消耗品ではない。", (200, 200, 200))
+        return False
+    consume_one(inventory, item)
+    return True
+
+
+def read_scroll(engine: Any, item: Any, inventory: Any) -> bool:
+    """巻物の効果を適用する。効果がなかったとき（＝消費しない）False を返す"""
+    if item.spell_id != "identify":
+        # 効果が動かない巻物を黙って消費すると手持ちだけが消えるので読めなかったことにする
+        spell = item.spell_id or "名も無き術"
+        engine.log(
+            f"{item.name}の巻物を開いたが、{spell} の術式は読み取れなかった。",
+            (200, 200, 200),
+        )
+        return False
+    revealed = 0
+    for carried in inventory.items:
+        if not carried.identified:
+            carried.identified = True
+            revealed += 1
+    detail = f"{revealed}個の品の正体を見抜いた。" if revealed else "隠されていた品はなかった。"
+    engine.log(f"{item.name}を読み、{detail}", (255, 230, 150))
+    return True
+
+
+class StatusAction(Verb):
+    """ステータス画面を開く"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.game_state = "status"
+        return True
+
+
+class JournalAction(Verb):
+    """ジャーナルを開く"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.open_journal()
+        return True
+
+
+class SkillTreeAction(Verb):
+    """スキルツリー画面を開く"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.game_state = "skill_tree"
+        return True
+
+
+class JobAction(Verb):
+    """ジョブ画面を開く（Shift+Jでジョブ、Jでジャーナル）"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        # Shift修飾子の判定は呼び出し元で行う
+        if hasattr(event, "mod") and event.mod & tcod.event.Modifier.SHIFT:
+            engine.game_state = "jobs"
+        else:
+            engine.open_journal()
+        return True
+
+
+class GuildAction(Verb):
+    """ギルド画面を開く"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.game_state = "guild"
+        return True
+
+
+class CastFireballAction(Verb):
+    """ファイアボール詠唱"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.cast_fireball()
+        return True
+
+
+class CastSpellAction(Verb):
+    """統一呪文詠唱アクション (Phase 2 Step 40)"""
+
+    def __init__(self, spell_id: str):
+        self.spell_id = spell_id
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+
+        # APチェック
+        from systems import CombatSystem
+        if not engine.player.can_act(CombatSystem.AP_COST["spell"]):
+            engine.log("AP不足: 呪文詠唱には1AP必要", (255, 100, 100))
+            return False
+
+        # 照準: 最寄りの敵を自動標的 (self-target以外)
+        from systems import get_spell_data
+        spell_data = get_spell_data().get(self.spell_id)
+        target = None
+
+        if spell_data and spell_data.get("target_type") != "self":
+            # 最寄りの敵を探索
+            from systems import find_nearest_visible_target
+            result = find_nearest_visible_target(engine.player, spell_data.get("range", 6), engine)
+            if result:
+                target, _ = result
+            if target is None:
+                engine.log("射程内に標的が見当たらない", (200, 200, 200))
+                return False
+        else:
+            # self-target
+            target = engine.player
+
+        # AP消費
+        engine.player.spend_ap(CombatSystem.AP_COST["spell"])
+
+        # 呪文実行
+        success, msg = cast(self.spell_id, engine.player, target, engine)
+        engine.log(msg, (255, 200, 100) if success else (255, 100, 100))
+
+        if success:
+            engine.advance_world()
+        return True
+
+
+class MineWallAction(Verb):
+    """壁採掘"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.mine_wall()
+        return True
+
+
+class PlayMusicAction(Verb):
+    """音楽再生"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return True  # どの状態でも可
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        engine.play_music()
+        return True
+
+
+class PrayAction(Verb):
+    """祈り"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.pray()
+        return True
+
+
+class OfferAltarAction(Verb):
+    """祭壇への捧げ物"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.offer_altar()
+        return True
+
+
+class TalkAction(Verb):
+    """会話"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.talk_to_neighbor()
+        return True
+
+
+class HarvestAction(Verb):
+    """採取"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.harvest_resource()
+        return True
+
+
+class WishRodAction(Verb):
+    """願いの杖使用"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.use_wish_rod()
+        return True
+
+
+class DescendStairsAction(Verb):
+    """階段を下りる"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.descend_stairs()
+        return True
+
+
+class SaveAction(Verb):
+    """セーブ"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return True  # どの状態でも可
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        msg = SaveSystem.save(engine)
+        engine.log(msg, (100, 255, 150))
+        return True
+
+
+class LoadAction(Verb):
+    """ロード"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return True  # どの状態でも可
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        loaded_engine, msg = SaveSystem.load()
+        if loaded_engine is not None:
+            engine.__dict__.update(loaded_engine.__dict__)
+        engine.log(msg, (100, 200, 255))
+        return True
+
+
+class DebugAction(Verb):
+    """デバッグコンソールを開く"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return True
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        engine.game_state = "debug"
+        engine.debug_input = ""
+        return True
+
+
+class WaitAction(Verb):
+    """待機 (1ターン経過) - スケジューラ再評価トリガー (Phase 3 Step 11)"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        engine.log("待機した。", (200, 200, 200))
+        engine.pass_turn()
+        return True
+
+
+class RangedAttackAction(Verb):
+    """射程攻撃アクション (Phase 2 Step 36)
+
+    視線が通る最も近い敵を自動標的とする。
+    APコスト: 1 (CombatSystem.AP_COST["attack"])
+    """
+
+    def __init__(self, max_range: int = 6):
+        self.max_range = max_range
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+
+        # APチェック
+        if not engine.player.can_act(CombatSystem.AP_COST["attack"]):
+            engine.log("AP不足: 射程攻撃には1AP必要", (255, 100, 100))
+            return False
+
+        # 照準計算: find_nearest_visible_target を使用
+        from systems import find_nearest_visible_target
+
+        result = find_nearest_visible_target(engine.player, self.max_range, engine)
+        if result is None:
+            engine.log("射程内に敵が見当たらない。", (200, 200, 200))
+            return False
+
+        target, target_point = result
+
+        # AP消費
+        engine.player.spend_ap(CombatSystem.AP_COST["attack"])
+
+        # 攻撃実行
+        from engine.systems.combat_system import CombatSystem as NewCombatSystem
+        dmg, is_crit, msg = NewCombatSystem.calculate_melee_attack(engine.player, target)
+        if dmg > 0:
+            target.hp -= dmg
+            if target.hp <= 0:
+                target.hp = 0
+        engine.log(f"射程攻撃！ {msg}", (255, 200, 100))
+
+        # 世界進行
+        engine.advance_world()
+        return True
+
+
+class SleepAction(Verb):
+    """睡眠 (HP/MP全快 + 長時間経過) - スケジューラ再評価トリガー (Phase 3 Step 11)"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        logs = engine.survival.sleep(engine.player)
+        for log_msg in logs:
+            engine.log(log_msg, (150, 150, 255))
+        # 睡眠は複数ターン経過させる (例: 8時間 = 数百ターン相当)
+        for _ in range(20):
+            engine.advance_world()
+        return True
+
+
+class ActionScan(Verb):
+    """《解析》アクション (Step 14, 20, 22)"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+
+        current_world = getattr(getattr(engine, "game_state_data", None), "current_world", "main")
+        if current_world != "skill_eater" and not getattr(engine, "devour_debug_enabled", False):
+            engine.log(
+                "《解析》はAの世界（スキル喰い）でのみ使用可能です。",
+                (180, 180, 180),
+            )
+            return True
+
+        if hasattr(engine, "execute_scan"):
+            return engine.execute_scan()
+
+        engine.log("【解析スキャン】周囲の生体構造をスキャン中...", (100, 255, 100))
+        combat_sys = (
+            engine.kernel.get_system("skill_eater_combat_system")
+            if hasattr(engine, "kernel") and engine.kernel.has_system("skill_eater_combat_system")
+            else None
+        )
+        if combat_sys:
+            # Find nearest monster
+            from core_framework import Point
+
+            nearest = None
+            min_dist = 999.0
+            player_pos = Point(engine.player.x, engine.player.y)
+            for entity in engine.entity_manager.get_living_entities():
+                if entity != engine.player and not getattr(entity, "is_pet", False):
+                    p = Point(entity.x, entity.y)
+                    dist = ((p.x - player_pos.x) ** 2 + (p.y - player_pos.y) ** 2) ** 0.5
+                    if dist < min_dist:
+                        min_dist = dist
+                        nearest = entity
+
+            if nearest:
+                from skill_eater_system import CharacterState
+
+                analyzer = CharacterState(
+                    id="player",
+                    name=engine.player.name,
+                    hp=engine.player.hp,
+                    max_hp=engine.player.max_hp,
+                    mp=engine.player.mp,
+                    max_mp=engine.player.max_mp,
+                    atk=10,
+                    defense=5,
+                    intelligence=10,
+                    speed=100,
+                    analysis_level=getattr(engine.player, "analysis_level", 1),
+                )
+                target_state = CharacterState(
+                    id=str(getattr(nearest, "id", "enemy")),
+                    name=nearest.name,
+                    hp=nearest.hp,
+                    max_hp=nearest.max_hp,
+                    mp=10,
+                    max_mp=10,
+                    atk=5,
+                    defense=2,
+                    intelligence=5,
+                    speed=80,
+                )
+                res = combat_sys.analyze_target(analyzer, target_state)
+                success_rate_pct = int(res.devour_success_rate * 100)
+                engine.log(
+                    f"【解析結果】対象: {res.target_name} (捕食成功率: {success_rate_pct}%)",
+                    (100, 255, 200),
+                )
+                for sk in res.revealed_skills:
+                    engine.log(f" - スキル: [{sk.tier}] {sk.name}", (255, 215, 0))
+            else:
+                engine.log("周囲に解析可能な対象が見つかりません。", (200, 200, 200))
+        return True
+
+
+class ActionDevour(Verb):
+    """《喰らい》アクション (Step 13, 19, 22, 23)"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+
+        current_world = getattr(getattr(engine, "game_state_data", None), "current_world", "main")
+        if current_world != "skill_eater" and not getattr(engine, "devour_debug_enabled", False):
+            engine.log(
+                "《喰らい》はAの世界（スキル喰い）でのみ使用可能です。",
+                (180, 180, 180),
+            )
+            return True
+
+        if hasattr(engine, "execute_devour"):
+            return engine.execute_devour()
+
+        engine.log("【捕食コマンド】《喰らい》を発動！", (255, 100, 100))
+        return True
+
+
+class ActionSynthesisMenu(Verb):
+    """スキル合成メニュー (Step 15, 21)"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+
+        current_world = getattr(getattr(engine, "game_state_data", None), "current_world", "main")
+        if current_world != "skill_eater" and not getattr(engine, "devour_debug_enabled", False):
+            engine.log(
+                "《スキル合成》はAの世界（スキル喰い）でのみ使用可能です。",
+                (180, 180, 180),
+            )
+            return True
+
+        if hasattr(engine, "execute_synthesis"):
+            return engine.execute_synthesis()
+
+        engine.log("【キメラ合成炉】スキル合成メニューを展開します。", (200, 150, 255))
+        return True
+
+
+class ActionSearch(Verb):
+    """秘密検索アクション (SkillEaterSecretAccess Step 19)"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+
+        current_world = getattr(getattr(engine, "game_state_data", None), "current_world", "main")
+        if current_world != "skill_eater" and not getattr(engine, "devour_debug_enabled", False):
+            engine.log(
+                "《秘密検索》はAの世界（スキル喰い）でのみ使用可能です。",
+                (180, 180, 180),
+            )
+            return True
+
+        try:
+            from secret_area_system import SECRET_REGISTRY, check_secret_detection
+
+            SECRET_REGISTRY.load_from_yaml()
+            current_layer = getattr(engine.game_map, "world_layer", None)
+            if current_layer:
+                layer_key = (
+                    f"{current_layer.zone}:{current_layer.biome}:"
+                    f"{current_layer.depth}:{current_layer.dimension}"
+                )
+                skill_bonus = 0
+                for skill_id in ["detection_mastery", "trap_finder", "secret_sense"]:
+                    if engine.player.has_skill(skill_id):
+                        slot = engine.player.skills.get(skill_id)
+                        if slot:
+                            skill_bonus += slot.level * 5
+
+                discovered = check_secret_detection(engine.player, engine.game_map, layer_key)
+                if discovered:
+                    for area in discovered:
+                        engine.log(
+                            f"【発見】隠しエリア『{area.name}』を発見！ ({area.get_hint_text()})",
+                            (100, 255, 150),
+                            level="INFO",
+                        )
+                        from event_bus import event_bus
+
+                        event_bus.publish(
+                            "secret_detected",
+                            {
+                                "area_id": area.id,
+                                "position": area.position,
+                                "secret_type": area.secret_type,
+                                "skill_bonus": skill_bonus,
+                            },
+                        )
+                    engine.log("周囲を念入りに探索した。", (150, 255, 150))
+                else:
+                    engine.log("特に異常は見つからなかった。", (180, 180, 180))
+                    engine.player.failed_search_count += 1
+                    if engine.player.failed_search_count >= 3:
+                        engine.log("探索に失敗し続けている…疲労が溜まっている。", (255, 150, 150))
+            else:
+                engine.log("現在の層では秘密検索できません。", (180, 180, 180))
+        except Exception as e:
+            engine.log(f"検索エラー: {e}", (255, 100, 100))
+        return True
+
+
+class SellAction(Verb):
+    """インベントリからアイテムを売却する (ステップ26)"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return engine.game_state == "play" or (
+            hasattr(engine, "current_state") and engine.current_state == GameState.EXPLORING
+        )
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        if not self.can_execute(engine):
+            return False
+        # インベントリ画面を開いて売却モードにする
+        engine.game_state = "inventory"
+        engine.inventory_target = "player"
+        engine.inventory_cursor = 0
+        engine.inventory_sell_mode = True
+        engine.log("【売却モード】売りたいアイテムを選んで [E] で売却、[Esc] でキャンセル", (255, 215, 0))
+        return True
+
+
+class QuitAction(Verb):
+    """終了"""
+
+    def can_execute(self, engine: Any) -> bool:
+        return True
+
+    def execute(self, engine: Any, event: Any) -> bool:
+        print("Auto-saving before quit...")
+        SaveSystem.save(engine)
+        import sys
+
+        sys.exit()
+        return True

@@ -1,4 +1,4 @@
-# ストーリーエンディング設定 (DSL対応版)
+# ストーリーエンディング設定 (Steps 15, 16)
 
 story_endings:
   goblin_peace_bringer:
@@ -6,9 +6,8 @@ story_endings:
     name: "ゴブリンの和平使者"
     description: "武力による殲滅ではなく対話と共存を選び、人と魔物の間に新たな架け橋を築いた。"
     unlock_conditions:
-      - "(has flags.spared_cubs_resolved)"
-      - "(>= player.karma 50)"
-      - "(or (>= player.faction_rep.kingdom 30) (>= player.faction_rep.church 30))"
+      - "spared_cubs_resolved"
+      - "karma_good_50"
     ending_scene: "scene_peace_banquet"
     rewards:
       title: "peace_envoy"
@@ -20,69 +19,10 @@ story_endings:
     name: "冷徹なる殲滅覇者"
     description: "一片の慈悲も無く全ての脅威を滅ぼし尽くし、絶対的恐怖による平穏をもたらした。"
     unlock_conditions:
-      - "(has flags.ruthless_extermination_resolved)"
-      - "(>= player.kill_counts.total 500)"
-      - "(<= player.karma -50)"
+      - "ruthless_extermination_resolved"
+      - "kill_counts_total_500"
     ending_scene: "scene_iron_reign"
     rewards:
       title: "absolute_conqueror"
       gold: 100000
       item: "crown_of_domination"
-
-  kingdom_loyalist:
-    id: "kingdom_loyalist"
-    name: "王国の忠臣"
-    description: "ガルド王国への忠誠を貫き、王国の平和と秩序を守り抜いた。"
-    unlock_conditions:
-      - "(has flags.faction_kingdom)"
-      - "(>= player.faction_rep.kingdom_garde 100)"
-      - "(truthy quest.completed.confrontation_01)"
-    ending_scene: "scene_kingdom_victory"
-    rewards:
-      title: "kingdom_guardian"
-      gold: 75000
-      item: "crown_of_loyalty"
-
-  church_saint:
-    id: "church_saint"
-    name: "教会の聖者"
-    description: "ルミエスト教会の教えを体現し、慈愛によって世界を救済した。"
-    unlock_conditions:
-      - "(has flags.faction_church)"
-      - "(>= player.faction_rep.church_of_lumiest 100)"
-      - "(>= player.piety 200)"
-      - "(truthy quest.completed.confrontation_01)"
-    ending_scene: "scene_church_victory"
-    rewards:
-      title: "living_saint"
-      gold: 60000
-      item: "halo_of_grace"
-
-  shadow_lord:
-    id: "shadow_lord"
-    name: "闇の支配者"
-    description: "シャドウハンドの頂点に立ち、影から世界を操る真の支配者となった。"
-    unlock_conditions:
-      - "(has flags.faction_shadow)"
-      - "(>= player.faction_rep.shadow_hand 100)"
-      - "(<= player.karma -100)"
-      - "(truthy quest.completed.confrontation_01)"
-    ending_scene: "scene_shadow_victory"
-    rewards:
-      title: "shadow_overlord"
-      gold: 80000
-      item: "cloak_of_void"
-
-  neutral_wanderer:
-    id: "neutral_wanderer"
-    name: "孤高の放浪者"
-    description: "どの派閥にも属さず、己の信念のみで道を切り開いた真実の求道者。"
-    unlock_conditions:
-      - "(has flags.faction_neutral)"
-      - "(or (and (>= player.faction_rep.kingdom 50) (>= player.faction_rep.church 50)) (>= player.karma 100))"
-      - "(truthy quest.completed.confrontation_01)"
-    ending_scene: "scene_neutral_victory"
-    rewards:
-      title: "eternal_wanderer"
-      gold: 50000
-      item: "compass_of_truth"

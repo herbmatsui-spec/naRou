@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from naRou.input_handler import InputHandler
+from input_handler import InputHandler
 
 
 class TestEvent(unittest.TestCase):

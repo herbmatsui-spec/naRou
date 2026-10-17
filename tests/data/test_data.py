@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from naRou.localization_manager import LocalizationManager
+from localization_manager import LocalizationManager
 
 
 class TestData(unittest.TestCase):

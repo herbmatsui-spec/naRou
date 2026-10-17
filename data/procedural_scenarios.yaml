@@ -1,255 +1,478 @@
+# プロシージャル・クエスト生成システム データ定義
+# procedural_quest_generator.py とテストで使用
+
 scenario_templates:
+  # 既存シナリオテンプレート (後方互換用 Step 7)
   goblin_invasion:
-    id: "goblin_invasion"
-    name: "ゴブリンの襲撃"
-    description: "村を襲うゴブリン部隊を撃退する"
+    name: "ゴブリンの侵攻"
+    description: "近隣の村がゴブリンの群れに襲われている。撃退せよ。"
+    dungeon_theme: "goblin_cave"
+    enemy_pool: ["goblin", "goblin_archer", "goblin_shaman"]
+    boss: "goblin_chieftain"
+    reward_tier: "silver"
+    min_level: 5
+    max_level: 15
     chapters:
-      - chapter: 1
-        name: "前哨戦"
-      - chapter: 2
-        name: "首領討伐"
+      - id: "chapter_1"
+        name: "侵攻の予兆"
+        description: "村の外れでゴブリンの斥候が目撃される。"
+        objectives:
+          - type: "scout"
+            target: "goblin_scout"
+            count: 3
+      - id: "chapter_2"
+        name: "本隊との対決"
+        description: "ゴブリンの本隊が村を包囲する。酋長を倒せ。"
+        objectives:
+          - type: "kill"
+            target: "goblin_chieftain"
+            count: 1
+          - type: "kill"
+            target: "goblin"
+            count: 10
 
 quest_generation:
+  # Step 2: クエストアーキタイプ (7種)
   archetypes:
     slay:
       id: "slay"
       name: "討伐"
       objective_type: "kill"
-      title_template: "{setting}の{enemy}討伐"
-      desc_template: "{setting}に現れた{enemy}を討伐せよ。"
+      title_template: "{setting}での{enemy}討伐"
+      desc_template: "{setting}に潜む{enemy}を{required_count}体討伐せよ。{flavor}"
       reward_weight: 1.0
       base_complexity: 1
+
     gather:
       id: "gather"
-      name: "採取"
+      name: "採集"
       objective_type: "collect"
-      title_template: "{setting}の素材採取"
-      desc_template: "{setting}で貴重な素材を採取せよ。"
-      reward_weight: 0.9
+      title_template: "{setting}での{item}採集"
+      desc_template: "{setting}で{item}を{required_count}個採取せよ。{flavor}"
+      reward_weight: 0.8
       base_complexity: 1
+
     escort:
       id: "escort"
       name: "護衛"
       objective_type: "escort"
       title_template: "{setting}への護衛任務"
-      desc_template: "{setting}まで依頼人を無事に護衛せよ。"
-      reward_weight: 1.3
+      desc_template: "依頼人を{setting}まで護衛せよ。{required_count}回の襲撃を退けよ。{flavor}"
+      reward_weight: 1.2
       base_complexity: 2
+
     explore:
       id: "explore"
       name: "探索"
       objective_type: "explore"
-      title_template: "{setting}の深部探索"
-      desc_template: "{setting}の未知のエリアを探索・マッピングせよ。"
+      title_template: "{setting}の深層探索"
+      desc_template: "{setting}の{required_count}階層まで踏破せよ。{flavor}"
       reward_weight: 1.1
       base_complexity: 2
+
     boss_hunt:
       id: "boss_hunt"
       name: "ボス討伐"
       objective_type: "kill"
-      title_template: "{setting}の強敵討伐"
-      desc_template: "{setting}の主たる強大な魔物を討伐せよ。"
-      reward_weight: 1.8
+      title_template: "{setting}の{boss}討伐"
+      desc_template: "{setting}の奥に潜む{boss}を討ち取れ。{flavor}"
+      reward_weight: 1.5
       base_complexity: 3
+
     rescue:
       id: "rescue"
       name: "救出"
       objective_type: "rescue"
-      title_template: "{setting}での遭難者救出"
-      desc_template: "{setting}で消息を絶った仲間を救出せよ。"
-      reward_weight: 1.4
+      title_template: "{setting}からの救出作戦"
+      desc_template: "{setting}に囚われた{required_count}名を救出せよ。{flavor}"
+      reward_weight: 1.3
       base_complexity: 2
+
     delivery:
       id: "delivery"
       name: "配達"
       objective_type: "delivery"
-      title_template: "{setting}への緊急物資配達"
-      desc_template: "{setting}の拠点へ物資を速やかに届けよ。"
-      reward_weight: 0.8
+      title_template: "{setting}への{item}配達"
+      desc_template: "{item}を{setting}の依頼主へ届けよ。{flavor}"
+      reward_weight: 0.7
       base_complexity: 1
 
+    excavation:
+      id: "excavation"
+      name: "発掘"
+      objective_type: "explore"
+      title_template: "{setting}の遺跡発掘"
+      desc_template: "{setting}の遺跡を掘り起こし、記憶の欠片を発見せよ。{flavor}"
+      reward_weight: 1.0
+      base_complexity: 2
+
+  # Step 3: 難易度ティア (6段階)
   difficulty_tiers:
     tutorial:
       id: "tutorial"
-      name: "序"
+      name: "入門"
       level_range: [1, 5]
-      enemy_multiplier: 1.0
-      objective_complexity: 1.0
+      enemy_multiplier: 0.5
+      objective_complexity: 0.8
       recommended_power: 10
+
     easy:
       id: "easy"
-      name: "低"
-      level_range: [6, 15]
-      enemy_multiplier: 1.5
-      objective_complexity: 1.2
+      name: "簡易"
+      level_range: [5, 15]
+      enemy_multiplier: 0.8
+      objective_complexity: 1.0
       recommended_power: 30
+
     normal:
       id: "normal"
-      name: "中"
-      level_range: [16, 35]
-      enemy_multiplier: 2.6
-      objective_complexity: 1.6
+      name: "標準"
+      level_range: [15, 35]
+      enemy_multiplier: 1.2
+      objective_complexity: 1.2
       recommended_power: 80
+
     hard:
       id: "hard"
-      name: "高"
-      level_range: [36, 60]
-      enemy_multiplier: 4.5
-      objective_complexity: 2.2
-      recommended_power: 180
-    extreme:
-      id: "extreme"
-      name: "極"
-      level_range: [61, 90]
-      enemy_multiplier: 8.0
-      objective_complexity: 3.0
-      recommended_power: 350
+      name: "困難"
+      level_range: [35, 55]
+      enemy_multiplier: 1.8
+      objective_complexity: 1.5
+      recommended_power: 200
+
+    nightmare:
+      id: "nightmare"
+      name: "悪夢"
+      level_range: [55, 80]
+      enemy_multiplier: 2.8
+      objective_complexity: 2.0
+      recommended_power: 500
+
     abyss:
       id: "abyss"
       name: "深淵"
-      level_range: [91, 100]
-      enemy_multiplier: 15.0
-      objective_complexity: 4.5
-      recommended_power: 600
+      level_range: [80, 999]
+      enemy_multiplier: 4.0
+      objective_complexity: 3.0
+      recommended_power: 1000
 
+  # Step 4: 報酬テーブル (5段階)
   reward_tables:
     copper:
       id: "copper"
       name: "銅"
       gold_range: [50, 150]
-      exp_range: [20, 60]
-      item_pool: ["herb", "bandage"]
-      bonus: {"fame": 1}
+      exp_range: [30, 80]
+      item_pool: ["heal_herb", "antidote", "small_gem"]
+      bonus:
+        fame: 2
+
     silver:
       id: "silver"
       name: "銀"
       gold_range: [200, 500]
-      exp_range: [80, 200]
-      item_pool: ["potion", "antidote"]
-      bonus: {"fame": 3}
+      exp_range: [100, 250]
+      item_pool: ["mana_potion", "bomb", "medium_gem", "enchant_scroll"]
+      bonus:
+        fame: 5
+        guild_points: 10
+
     gold:
       id: "gold"
       name: "金"
       gold_range: [600, 1500]
-      exp_range: [250, 600]
-      item_pool: ["high_potion", "elixir"]
-      bonus: {"fame": 8}
-    rainbow:
-      id: "rainbow"
-      name: "虹"
+      exp_range: [300, 600]
+      item_pool: ["rare_gem", "skill_book", "artifact_fragment", "elixir"]
+      bonus:
+        fame: 12
+        guild_points: 30
+        reputation: 5
+
+    platinum:
+      id: "platinum"
+      name: "白金"
       gold_range: [2000, 5000]
-      exp_range: [800, 2000]
-      item_pool: ["rare_gem", "master_scroll"]
-      bonus: {"fame": 20}
+      exp_range: [800, 1500]
+      item_pool: ["legendary_gem", "unique_item", "ancient_scroll", "divine_blessing"]
+      bonus:
+        fame: 25
+        guild_points: 60
+        reputation: 15
+        meta_progress: 10
+
     legendary:
       id: "legendary"
-      name: "伝承"
-      gold_range: [8000, 20000]
+      name: "伝説"
+      gold_range: [10000, 30000]
       exp_range: [3000, 8000]
-      item_pool: ["ancient_artifact", "god_tear"]
-      bonus: {"fame": 50}
+      item_pool: ["mythic_equipment", "world_item", "cosmic_essence", "wish_orb"]
+      bonus:
+        fame: 50
+        guild_points: 150
+        reputation: 40
+        meta_progress: 30
+        title: "legendary_hero"
 
+  # Step 5: 舞台設定 (8種)
   stage_settings:
     town:
       id: "town"
-      name: "街・平野"
-      flavor: "のどかな平野と街道沿い"
-      enemy_pool: ["slime", "goblin"]
+      name: "街近郊"
+      flavor: "平和な街の外れだが、最近は物騒だ。"
+      enemy_pool: ["bandit", "stray_dog", "pickpocket", "thug"]
       hazard: "なし"
       depth_modifier: 1.0
       environmental_modifier: 1.0
+
     forest:
       id: "forest"
-      name: "迷いの森"
-      flavor: "木々が生い茂る暗い原生林"
-      enemy_pool: ["wolf", "bandit"]
-      hazard: "視界不良"
-      depth_modifier: 1.2
+      name: "深い森"
+      flavor: "古木が生い茂る森。獣が潜む。"
+      enemy_pool: ["wolf", "goblin", "bear", "boar", "forest_spirit"]
+      hazard: "毒草"
+      depth_modifier: 1.0
       environmental_modifier: 1.1
+
     cave:
       id: "cave"
-      name: "地下鍾乳洞"
-      flavor: "湿った空気と鍾乳石が立ち並ぶ洞窟"
-      enemy_pool: ["bat", "spider"]
+      name: "洞窟"
+      flavor: "湿った地下洞窟。奇妙な生物が棲む。"
+      enemy_pool: ["bat", "cave_bear", "slime", "skeleton", "cave_worm"]
       hazard: "落石"
-      depth_modifier: 1.4
-      environmental_modifier: 1.2
+      depth_modifier: 1.1
+      environmental_modifier: 1.0
+
     ruins:
       id: "ruins"
       name: "古代遺跡"
-      flavor: "失われた文明の石造建築群"
-      enemy_pool: ["golem", "skeleton"]
-      hazard: "罠"
-      depth_modifier: 1.6
-      environmental_modifier: 1.3
+      flavor: "文明の残骸。トラップとアンデッドが守る。"
+      enemy_pool: ["skeleton", "ghost", "golem", "cursed_knight", "lich"]
+      hazard: "呪い"
+      depth_modifier: 1.2
+      environmental_modifier: 1.2
+
     volcano:
       id: "volcano"
-      name: "灼熱火山"
-      flavor: "溶岩が煮えたぎる灼熱の山"
-      enemy_pool: ["fire_elemental", "salamander"]
-      hazard: "熱波"
-      depth_modifier: 1.8
-      environmental_modifier: 1.5
+      name: "火山地帯"
+      flavor: "溶岩が流れる灼熱の地。炎の精霊が舞う。"
+      enemy_pool: ["fire_lizard", "magma_elemental", "ifrit", "pyro_golem", "flame_drake"]
+      hazard: "灼熱"
+      depth_modifier: 1.3
+      environmental_modifier: 1.3
+
     snowfield:
       id: "snowfield"
-      name: "極寒雪原"
-      flavor: "吹き荒れる吹雪と凍てつく大地"
-      enemy_pool: ["ice_wolf", "yeti"]
-      hazard: "吹雪"
-      depth_modifier: 1.8
-      environmental_modifier: 1.5
+      name: "雪原"
+      flavor: "極寒の大地。凍える風が吹き荒れる。"
+      enemy_pool: ["frost_wolf", "yeti", "ice_sprite", "frost_giant", "blizzard_wraith"]
+      hazard: "凍結"
+      depth_modifier: 1.1
+      environmental_modifier: 1.2
+
     swamp:
       id: "swamp"
-      name: "毒霧湿地"
-      flavor: "有毒ガスが立ち込める泥濘"
-      enemy_pool: ["poison_toad", "hydra"]
+      name: "沼地"
+      flavor: "毒沼が広がる不気味な湿地帯。"
+      enemy_pool: ["crocodile", "venom_toad", "bog_mummy", "will_o_wisp", "hydra"]
       hazard: "毒沼"
-      depth_modifier: 2.0
-      environmental_modifier: 1.6
+      depth_modifier: 1.2
+      environmental_modifier: 1.1
+
     abyss:
       id: "abyss"
-      name: "次元の深淵"
-      flavor: "時空が歪み狂気が漂う奈落"
-      enemy_pool: ["abyss_fiend", "void_stalker"]
-      hazard: "次元断裂"
-      depth_modifier: 2.5
-      environmental_modifier: 2.0
+      name: "深淵"
+      flavor: "世界の果て。異形の存在が跋扈する。"
+      enemy_pool: ["abyssal_horror", "void_lord", "nightmare", "eldritch_abomination", "void_walker"]
+      hazard: "狂気"
+      depth_modifier: 1.5
+      environmental_modifier: 1.5
 
+  # Step 6: NPC個別クエストテーマ
   npc_quest_themes:
     villager:
       npc_type: "villager"
-      quest_pool: ["gather", "rescue"]
+      quest_pool: ["gather", "escort", "rescue", "delivery"]
       relationship_gate: 1
-      flavor: "{npc}「村のために力を貸してください…」"
+      flavor: "{npc}「お願い、助けてほしいの…」"
+
     merchant:
       npc_type: "merchant"
-      quest_pool: ["delivery", "escort"]
-      relationship_gate: 10
-      flavor: "{npc}「頼もしい護衛を探していたところです。」"
-    noble:
-      npc_type: "noble"
-      quest_pool: ["boss_hunt", "explore"]
-      relationship_gate: 30
-      flavor: "{npc}「我が領地の栄光のために働きなさい。」"
+      quest_pool: ["gather", "delivery", "escort", "slay"]
+      relationship_gate: 1
+      flavor: "{npc}「いい取引になるよ、君にとってもね。」"
+
+    guard:
+      npc_type: "guard"
+      quest_pool: ["slay", "boss_hunt", "escort", "rescue"]
+      relationship_gate: 1
+      flavor: "{npc}「市民の平和のためだ。頼む。」"
+
+    scholar:
+      npc_type: "scholar"
+      quest_pool: ["explore", "gather", "delivery"]
+      relationship_gate: 1
+      flavor: "{npc}「学術的価値のある発見が期待できる。」"
+
+    guild_master:
+      npc_type: "guild_master"
+      quest_pool: ["slay", "boss_hunt", "explore", "rescue"]
+      relationship_gate: 1
+      flavor: "{npc}「ギルドの名にかけて、遂行せよ。」"
+
+    blacksmith:
+      npc_type: "blacksmith"
+      quest_pool: ["gather", "delivery", "slay"]
+      relationship_gate: 1
+      flavor: "{npc}「良い素材が手に入れば、良い装備が作れる。」"
+
+    alchemist:
+      npc_type: "alchemist"
+      quest_pool: ["gather", "explore", "delivery"]
+      relationship_gate: 1
+      flavor: "{npc}「珍しい材料が必要なんだ。協力してくれ。」"
+
     priest:
       npc_type: "priest"
-      quest_pool: ["rescue", "slay"]
-      relationship_gate: 20
-      flavor: "{npc}「神の御心に従い、迷える魂を救ってください。」"
-    adventurer:
-      npc_type: "adventurer"
-      quest_pool: ["explore", "boss_hunt"]
-      relationship_gate: 15
-      flavor: "{npc}「おい、一緒に大きな山を踏破しないか？」"
+      quest_pool: ["rescue", "escort", "slay", "delivery"]
+      relationship_gate: 1
+      flavor: "{npc}「神の加護あれ。この任務は重要だ。」"
 
+  # Step 8: 依頼ボード設定
   request_board:
     max_active: 8
-    refresh_cycle: 100
+    refresh_cycle: 1440  # 分 (24時間)
     type_weights:
-      slay: 3
-      gather: 2
-      explore: 2
-      escort: 1
-      boss_hunt: 1
-      rescue: 1
-      delivery: 1
+      slay: 30
+      gather: 20
+      escort: 15
+      explore: 10
+      boss_hunt: 5
+      rescue: 10
+      delivery: 10
+    min_difficulty: "tutorial"
+    max_difficulty: "hard"
+
+  # 日本語表示名マッピング (強化版 Steps 5-8, 10-12)
+  display_names:
+    enemy:
+      goblin: "ゴブリン"
+      goblin_archer: "ゴブリンアーチャー"
+      goblin_shaman: "ゴブリンシャーマン"
+      goblin_chieftain: "ゴブリン酋長"
+      wolf: "オオカミ"
+      bear: "クマ"
+      boar: "イノシシ"
+      bat: "コウモリ"
+      cave_bear: "ケイブベア"
+      slime: "スライム"
+      skeleton: "スケルトン"
+      ghost: "ゴースト"
+      golem: "ゴーレム"
+      cursed_knight: "呪われし騎士"
+      lich: "リッチ"
+      fire_lizard: "ファイアリザード"
+      magma_elemental: "マグマエレメンタル"
+      ifrit: "イフリート"
+      pyro_golem: "パイロゴーレム"
+      flame_drake: "フレイムドレイク"
+      frost_wolf: "フロストウルフ"
+      yeti: "イエティ"
+      ice_sprite: "アイススプライト"
+      frost_giant: "フロストジャイアント"
+      blizzard_wraith: "ブリザードレイス"
+      crocodile: "クロコダイル"
+      venom_toad: "ベノムトード"
+      bog_mummy: "ボグミイラ"
+      will_o_wisp: "ウィルオーウィスプ"
+      hydra: "ヒドラ"
+      abyssal_horror: "アビサルホラー"
+      void_lord: "ヴォイドロード"
+      nightmare: "ナイトメア"
+      eldritch_abomination: "エルドリッチ・アボミネーション"
+      void_walker: "ヴォイドウォーカー"
+      bandit: "バンディット"
+      stray_dog: "野良犬"
+      pickpocket: "スリ"
+      thug: "チンピラ"
+      forest_spirit: "森の精霊"
+      cave_worm: "ケイブワーム"
+
+    item:
+      heal_herb: "薬草"
+      antidote: "解毒剤"
+      small_gem: "小さな宝石"
+      mana_potion: "マナポーション"
+      bomb: "爆弾"
+      medium_gem: "中くらいの宝石"
+      enchant_scroll: "エンチャント巻物"
+      rare_gem: "レア宝石"
+      skill_book: "スキルブック"
+      artifact_fragment: "遺物の欠片"
+      elixir: "エリクサー"
+      legendary_gem: "伝説の宝石"
+      unique_item: "ユニークアイテム"
+      ancient_scroll: "古代の巻物"
+      divine_blessing: "神の祝福"
+      mythic_equipment: "神話装備"
+      world_item: "ワールドアイテム"
+      cosmic_essence: "宇宙のエッセンス"
+      wish_orb: "願いの宝珠"
+
+    stage:
+      town: "街近郊"
+      forest: "深い森"
+      cave: "洞窟"
+      ruins: "古代遺跡"
+      volcano: "火山地帯"
+      snowfield: "雪原"
+      swamp: "沼地"
+      abyss: "深淵"
+
+    difficulty:
+      tutorial: "入門"
+      easy: "簡易"
+      normal: "標準"
+      hard: "困難"
+      nightmare: "悪夢"
+      abyss: "深淵"
+
+  # 連鎖クエスト設定 (強化版 Steps 15-16, 21)
+  chain_config:
+    max_depth: 5
+    difficulty_escalation: 1
+    reward_escalation: 1
+    gold_multiplier_per_depth: 1.5
+    exp_multiplier_per_depth: 1.4
+    cascade_fame_per_depth: 2
+    cascade_relationship_per_depth: 1
+    cascade_meta_per_depth: 1
+
+# ペットクエストテンプレート (ペット関連クエスト生成用)
+pet_quest_templates:
+  - pet_species: "dog"
+    pet_contract_type: "partner"
+    objective_type: "escort"
+    title_template: "{npc}と{setting}を散歩"
+    description_template: "{npc}と一緒に{setting}を散歩しよう。"
+    min_bond: 20
+
+  - pet_species: "cat"
+    pet_contract_type: "familiar"
+    objective_type: "gather"
+    title_template: "{npc}のお気に入り{item}探し"
+    description_template: "{npc}が欲しがっている{item}を{setting}で探そう。"
+    min_bond: 30
+
+  - pet_species: "dragon"
+    pet_contract_type: "partner"
+    objective_type: "boss_hunt"
+    title_template: "{npc}と挑む{setting}のボス"
+    description_template: "相棒{npc}と共に{setting}のボスを倒せ。"
+    min_bond: 50
+
+  - pet_species: "*"
+    pet_contract_type: "*"
+    objective_type: "explore"
+    title_template: "{npc}と{setting}探検"
+    description_template: "ペットの{npc}と{setting}を探検しよう。"
+    min_bond: 10

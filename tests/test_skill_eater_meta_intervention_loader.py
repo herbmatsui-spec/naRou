@@ -1,13 +1,13 @@
 """Tests for meta intervention template loader."""
 
 import tempfile
-import pytest
-from pathlib import Path
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
-from naRou.systems.skill_eater_template_model import load_templates, TemplateData
-from naRou.systems.karma_system import KarmaManager, REGISTRY
+import pytest
+from naRou.karma_system import REGISTRY, KarmaManager
+from skill_eater_template_model import TemplateData, load_templates
 
 
 # Mock Entity for testing karma/exposure without full ECS

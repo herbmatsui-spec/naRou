@@ -6,7 +6,7 @@ import sys
 
 sys.path.insert(0, r"E:\narou3\naRou")
 
-from naRou.skill_eater_procedural_dungeon import (
+from skill_eater_procedural_dungeon import (
     ROOM_TEMPLATES,
     THEME_ROOM_WEIGHTS,
     DungeonTheme,

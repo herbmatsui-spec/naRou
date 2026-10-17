@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from naRou.render_system import RenderSystem
+from render_system import RenderSystem
 
 
 class DummyContext:

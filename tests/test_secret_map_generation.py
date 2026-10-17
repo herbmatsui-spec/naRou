@@ -5,14 +5,14 @@ from __future__ import annotations
 
 import unittest
 
-from naRou.constants import (
+from constants import (
     TILE_FALSE_WALL,
     TILE_HIDDEN_DOOR,
     TILE_SECRET_FLOOR,
     TILE_VENT,
 )
-from naRou.map_engine import GameMap
-from naRou.secret_area_system import SECRET_REGISTRY, SecretArea
+from map_engine import GameMap
+from secret_area_system import SECRET_REGISTRY, SecretArea
 
 
 class MockWorldLayer:

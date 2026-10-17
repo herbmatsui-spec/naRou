@@ -1,4 +1,4 @@
-# Anti-Cheat & Security — naRou: Masterpiece Edition (Proposal #1-C)
+# Anti-Cheat & Security — naRogue: Masterpiece Edition (Proposal #1-C)
 
 This document describes the tamper-resistant infrastructure protecting save files,
 runtime integrity, and license compliance.
@@ -9,7 +9,8 @@ runtime integrity, and license compliance.
 
 - **Algorithm:** HMAC-SHA256 over the gzip-compressed pickle payload.
 - **Key Management:** `SAVE_HMAC_KEY` environment variable (base64-encoded 32-byte key).
-  Falls back to a deterministic dev key derived from project hash.
+  Required at runtime; no fallback or derived key is used when it is absent
+  (signing fails closed instead).
 - **Format:** `[32 bytes SHA256] [32 bytes HMAC] [compressed payload]`
 - **Verification:** HMAC verified first; then SHA256 checksum.
 - **Tamper Response:** `SaveDataCorruptedError` raised; auto-recovers from latest

@@ -10,7 +10,7 @@ import pytest
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from naRou.fov import compute_light_map, line_of_sight, recursive_shadowcast
+from fov import compute_light_map, line_of_sight, recursive_shadowcast
 
 # 11x11 grid; 1 = wall, 0 = floor
 WALLS = [

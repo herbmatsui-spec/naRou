@@ -1,4 +1,4 @@
-# Telemetry & Analytics — naRou: Masterpiece Edition (Proposal #1-B)
+# Telemetry & Analytics — naRogue: Masterpiece Edition (Proposal #1-B)
 
 ## Overview
 
