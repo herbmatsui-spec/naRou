@@ -146,6 +146,12 @@ class CombatSystem:
         from managers.faction_manager import FactionManager
         FactionManager().update_kill_reputation(engine, entity)
 
+        # T39 案C: カルマ反映 (撃破対象の所属で善悪行動を判定)
+        self._apply_karma_action(engine, entity)
+
+        # T39 案C: 評判変動後のゲート再評価
+        self._evaluate_reputation_gates(engine)
+
         # Memory fragments
         if random.random() < 0.08 and hasattr(engine, "meta_progression_manager"):
             from meta_progression_system import MemoryFragmentGenerator
@@ -155,6 +161,35 @@ class CombatSystem:
                 context={"enemy_name": entity.name, "dungeon_level": engine.dungeon_level},
             )
             engine.meta_progression_manager.add_memory_fragment(engine.player, frag, engine)
+
+    def _apply_karma_action(self, engine: "Engine", entity) -> None:
+        """撃破対象の所属に応じて善悪行動をカルマへ反映する (T39 案C)。"""
+        try:
+            from naRou.systems import FACTION_MONSTER
+
+            karma_mgr = getattr(engine, "karma_manager", None)
+            player = getattr(engine, "player", None)
+            if karma_mgr is None or player is None:
+                return
+            if getattr(entity, "faction", FACTION_MONSTER) == FACTION_MONSTER:
+                karma_mgr.apply_action(player, "defeat_monster", engine=engine)
+            else:
+                # 無抵抗のNPC・衛兵・町人などの撃破は悪行
+                karma_mgr.apply_action(player, "murder_innocent", engine=engine)
+        except Exception:
+            logger.exception("カルマイベントの適用に失敗")
+
+    def _evaluate_reputation_gates(self, engine: "Engine") -> None:
+        """評判変動後に ReputationGate を再評価する (T39 案C)。"""
+        try:
+            from reputation_gate_system import ensure_reputation_gate
+
+            player = getattr(engine, "player", None)
+            gate = ensure_reputation_gate(engine) if player is not None else None
+            if gate is not None:
+                gate.check_all_gates(player)
+        except Exception:
+            logger.exception("評判ゲートの再評価に失敗")
 
     def _handle_secret_drops(self, entity) -> None:
         """Handle secret area key item drops."""

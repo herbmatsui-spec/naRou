@@ -204,7 +204,8 @@ class GameplayLoop:
 
         if target and target not in (self.engine.player, self.engine.pet):
             if "グウェン" in target.name:
-                self.engine.survival.karma -= 15
+                # T39 案C: カルママネージャー経由で二軸カルマにも反映する
+                self._apply_karma_action("attack_gwen")
                 self.engine.log("【悪行】グウェンを攻撃した！ (Karma -15)", (255, 80, 80))
             weapon = self.engine.inventory.equipment.get("main_hand")
             dmg, is_crit, msg = CombatSystem.calculate_melee_attack(
@@ -234,6 +235,12 @@ class GameplayLoop:
             if target.hp <= 0:
                 CombatSystem.publish_kill_event(self.engine.event_bus, target.x, target.y)
                 self.engine._on_kill(target)
+            elif getattr(target, "faction", "monster") != "monster":
+                # T39 案C: 無抵抗のNPCへの攻撃は悪行 (撃破時は murder_innocent が適用される)
+                self._apply_karma_action("attack_innocent")
+                self.engine.log(
+                    f"【悪行】無抵抗の{target.name}を攻撃した！ (Karma -2)", (255, 80, 80)
+                )
             self.engine.player.energy -= ENERGY_THRESHOLD
             return True
 
@@ -245,7 +252,11 @@ class GameplayLoop:
             return True
 
         elif self.engine.game_map.is_walkable(tx, ty) and not self.engine.get_entity_at(tx, ty):
+            old_x, old_y = self.engine.player.x, self.engine.player.y
             self.engine.player.x, self.engine.player.y = tx, ty
+
+            # T39 案C: 逃走中の無害な敵を見逃した場合の善意行動
+            self._check_spared_enemies(old_x, old_y, tx, ty)
 
             try:
                 from event_bus import EVENT_ON_MOVE, event_bus
@@ -320,6 +331,55 @@ class GameplayLoop:
             self.engine.player.energy -= ENERGY_THRESHOLD
             return True
         return False
+
+    def _apply_karma_action(self, action: str) -> None:
+        """カルママネージャー経由で善悪行動をカルマへ反映する (T39 案C)。
+
+        カルママネージャーが利用できない環境ではスカラー版カルマ
+        (survival.karma) のみを従来どおり更新する。
+        """
+        engine = self.engine
+        karma_mgr = getattr(engine, "karma_manager", None)
+        if karma_mgr is None:
+            if action == "attack_gwen":
+                engine.survival.karma -= 15
+            return
+        karma_mgr.apply_action(engine.player, action, engine=engine)
+
+    def _check_spared_enemies(self, old_x: int, old_y: int, new_x: int, new_y: int) -> None:
+        """逃走意図の無害な敵を隣接状態から離れる方向へ移動した場合、
+        見逃し (善意行動) としてカルマへ反映する (T39 案C)。
+
+        同一エンティティに対しては karma_spared フラグで一度のみ適用する。
+        """
+        engine = self.engine
+        try:
+            from constants import INTENT_FLEE
+            from systems import FACTION_MONSTER
+
+            karma_mgr = getattr(engine, "karma_manager", None)
+            if karma_mgr is None:
+                return
+            for e in engine.entity_manager.get_living_entities():
+                if e in (engine.player, engine.pet) or e.hp <= 0:
+                    continue
+                intent = getattr(e, "next_intent", None)
+                if not intent or intent.get("type") != INTENT_FLEE:
+                    continue
+                if getattr(e, "faction", FACTION_MONSTER) != FACTION_MONSTER:
+                    continue
+                if getattr(e, "karma_spared", False):
+                    continue
+                old_dist = max(abs(e.x - old_x), abs(e.y - old_y))
+                new_dist = max(abs(e.x - new_x), abs(e.y - new_y))
+                if old_dist <= 1 and new_dist > old_dist:
+                    e.karma_spared = True
+                    karma_mgr.apply_action(engine.player, "spare_enemy", engine=engine)
+                    engine.log(f"【善行】逃げる{e.name}を見逃した。 (Karma +2)", (160, 220, 255))
+        except Exception:
+            import logging
+
+            logging.getLogger(__name__).exception("見逃し判定に失敗")
 
     def advance_world(self) -> None:
         from constants import ENERGY_THRESHOLD

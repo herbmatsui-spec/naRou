@@ -291,6 +291,7 @@ class Engine:
             "entity_manager",  # EntityManager
             "player_pet_initializer",  # function
             "_shutdown_hook",  # function
+            "_reputation_gate",  # ReputationGate (エンジン参照を保持するため復元時に再生成)
         ]
         for key in unpicklable:
             state.pop(key, None)

@@ -131,7 +131,7 @@ class ReputationGate:
     def get_npc_reputation(self, player: Entity, npc_id: str) -> int:
         """プレイヤーから見た NPC への評判取得（関係システム連携）"""
         # 直接 character_relationships から trust 取得（最優先）
-        rel = player.character_relationships.get(npc_id, {})
+        rel = getattr(player, "character_relationships", {}).get(npc_id, {})
         trust = rel.get("trust", 0)
         base = self._npc_gates.get(npc_id, NPCReputationGate(npc_id)).base_reputation
         return base + trust
@@ -139,7 +139,7 @@ class ReputationGate:
     def get_faction_reputation(self, player: Entity, faction_id: str) -> int:
         """プレイヤーの派閥評判取得"""
         # GuildFactionComponent 経由
-        rep = player.faction_reputation.get(faction_id, 0)
+        rep = getattr(player, "faction_reputation", {}).get(faction_id, 0)
         # 派閥影響力も加味（派閥マネージャー経由）
         base = self._faction_gates.get(
             faction_id, FactionReputationGate(faction_id)
@@ -260,19 +260,45 @@ class ReputationGate:
         return False
 
     def _unlock_shop(self, shop_id: str, player: Entity, params: dict) -> bool:
-        # ショップシステム連携（実装時に）
+        """商店を解放状態にする（player.gate_unlocked_shops に記録）。"""
+        unlocked = getattr(player, "gate_unlocked_shops", None)
+        if unlocked is None:
+            unlocked = set()
+            player.gate_unlocked_shops = unlocked
+        unlocked.add(shop_id)
+        self._log(f"【評判】商店『{shop_id}』が解放された！", (120, 255, 160), level="SUCCESS")
         return True
 
     def _unlock_dialogue(self, dialogue_id: str, player: Entity, params: dict) -> bool:
-        # 会話システム連携（story_choices 等）
+        """会話を解放状態にする（player.gate_unlocked_dialogues に記録）。"""
+        unlocked = getattr(player, "gate_unlocked_dialogues", None)
+        if unlocked is None:
+            unlocked = set()
+            player.gate_unlocked_dialogues = unlocked
+        unlocked.add(dialogue_id)
+        self._log(f"【評判】会話『{dialogue_id}』が解放された！", (160, 220, 255), level="SUCCESS")
         return True
 
     def _grant_buff(self, buff_id: str, player: Entity, params: dict) -> bool:
-        # TODO: 難易度プリセットの補正値を適用
-        # バフシステム連携
+        """評判によるバフを適用する（player.gate_buffs に記録）。"""
+        buffs = getattr(player, "gate_buffs", None)
+        if buffs is None:
+            buffs = {}
+            player.gate_buffs = buffs
+        buffs[buff_id] = dict(params)
+        self._log(f"【評判】加護『{buff_id}』を得た！ {params}", (120, 255, 160), level="SUCCESS")
         return True
 
     def _apply_debuff(self, debuff_id: str, player: Entity, params: dict) -> bool:
+        """評判によるデバフを適用する（player.gate_debuffs に記録）。"""
+        debuffs = getattr(player, "gate_debuffs", None)
+        if debuffs is None:
+            debuffs = {}
+            player.gate_debuffs = debuffs
+        debuffs[debuff_id] = dict(params)
+        self._log(
+            f"【評判】厄災『{debuff_id}』が降りかかった…… {params}", (255, 120, 120), level="WARNING"
+        )
         return True
 
     def _custom_action(self, name: str, player: Entity, params: dict) -> bool:
@@ -281,19 +307,31 @@ class ReputationGate:
             return func(self.engine, player, params)
         return False
 
+    def _log(self, text: str, color: tuple[int, int, int] = (230, 230, 230), level: str = "INFO") -> None:
+        """Engine のログへ通知する（log 非対応の Engine では無視）。"""
+        log = getattr(self.engine, "log", None)
+        if callable(log):
+            try:
+                log(text, color, level=level)
+            except TypeError:
+                log(text)
+
     def check_all_gates(self, player: Entity) -> list[str]:
         """全ゲート一括チェック・発火。発火したゲートIDリストを返す。"""
         fired = []
-        # NPC ゲート
-        for npc_id in self._npc_gates:
-            for thresh in self.evaluate_npc_gates(player, npc_id):
-                if self.fire_gate(thresh, f"npc:{npc_id}", player):
-                    fired.append(f"npc:{npc_id}:{thresh.action.name}:{thresh.target_id}")
-        # 派閥ゲート
-        for fac_id in self._faction_gates:
-            for thresh in self.evaluate_faction_gates(player, fac_id):
-                if self.fire_gate(thresh, f"faction:{fac_id}", player):
-                    fired.append(f"faction:{fac_id}:{thresh.action.name}:{thresh.target_id}")
+        try:
+            # NPC ゲート
+            for npc_id in self._npc_gates:
+                for thresh in self.evaluate_npc_gates(player, npc_id):
+                    if self.fire_gate(thresh, f"npc:{npc_id}", player):
+                        fired.append(f"npc:{npc_id}:{thresh.action.name}:{thresh.target_id}")
+            # 派閥ゲート
+            for fac_id in self._faction_gates:
+                for thresh in self.evaluate_faction_gates(player, fac_id):
+                    if self.fire_gate(thresh, f"faction:{fac_id}", player):
+                        fired.append(f"faction:{fac_id}:{thresh.action.name}:{thresh.target_id}")
+        except Exception:
+            logger.exception("評判ゲートの評価中にエラー")
         return fired
 
 
@@ -317,7 +355,66 @@ def create_thresholds_from_yaml(
     return result
 
 
+# 既定の派閥ID（FactionManager が撃破時に評価を加算する王国騎士団）
+FACTION_KINGDOM_GARDE = "kingdom_garde"
+
+
+def _register_default_gates(gate: ReputationGate) -> None:
+    """デフォルトの評判ゲートを登録する（派閥・主要NPC）。"""
+    if gate._faction_gates or gate._npc_gates:
+        return  # 既に登録済み（idempotent）
+    gate.register_faction_gate(
+        FACTION_KINGDOM_GARDE,
+        [
+            ReputationThreshold(
+                threshold=30,
+                action=GateAction.UNLOCK_SHOP,
+                target_id="royal_shop",
+                description="王国騎士団の信頼 (評判30) で王立商店が解放される",
+            ),
+            ReputationThreshold(
+                threshold=60,
+                action=GateAction.GRANT_BUFF,
+                target_id="royal_favor",
+                params={"atk": 2, "def": 2},
+                description="王国騎士団の加護 (評判60) で攻撃・防御ボーナス",
+            ),
+        ],
+    )
+    gate.register_npc_gate(
+        "かたつむり少女『グウェン』",
+        [
+            ReputationThreshold(
+                threshold=40,
+                action=GateAction.UNLOCK_DIALOGUE,
+                target_id="gwen_friend_chat",
+                description="グウェンの信頼 (trust 40) で親密な会話が解放される",
+            ),
+        ],
+    )
+
+
+def ensure_reputation_gate(engine: Engine) -> ReputationGate | None:
+    """Engine に ReputationGate を遅延生成して返す（生成失敗時は None）。
+
+    combat_system / entity_system などのイベントフックから呼び出され、
+    評判変動のたびに check_all_gates() で解放状態を反映する。
+    """
+    existing = getattr(engine, "_reputation_gate", None)
+    if isinstance(existing, ReputationGate):
+        return existing
+    try:
+        gate = ReputationGate(engine)
+        _register_default_gates(gate)
+        engine._reputation_gate = gate
+        return gate
+    except Exception:
+        logger.exception("評判ゲートの初期化に失敗")
+        return None
+
+
 __all__ = [
+    "FACTION_KINGDOM_GARDE",
     "FactionReputationGate",
     "GateAction",
     "NPCReputationGate",
@@ -325,4 +422,5 @@ __all__ = [
     "ReputationSource",
     "ReputationThreshold",
     "create_thresholds_from_yaml",
+    "ensure_reputation_gate",
 ]

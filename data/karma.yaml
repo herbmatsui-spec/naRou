@@ -19,3 +19,52 @@ karma:
     murder_innocent:
       law_chaos: -2
       good_evil: -5
+    attack_innocent:
+      law_chaos: -1
+      good_evil: -2
+    attack_gwen:
+      law_chaos: -3
+      good_evil: -15
+    relief_wounded:
+      law_chaos: 1
+      good_evil: 2
+    spare_enemy:
+      law_chaos: 1
+      good_evil: 2
+  # 段階境界: 大善 >= 50 / 善 20..49 / 中立 -19..19 / 悪 -49..-20 / 大悪 <= -50
+  stages:
+    - id: saint
+      name: 大善
+      min_good_evil: 50
+      shop_price_modifier: 0.8
+      npc_reaction: "人々は敬意をもってあなたを見つめ、店は笑顔で安くしてくれる。"
+      epilogue_flag: epilogue_saint
+      color: [120, 255, 160]
+    - id: good
+      name: 善
+      min_good_evil: 20
+      shop_price_modifier: 0.9
+      npc_reaction: "多くの人があなたに好意を抱いている。"
+      epilogue_flag: epilogue_good
+      color: [160, 220, 255]
+    - id: neutral
+      name: 中立
+      min_good_evil: -19
+      shop_price_modifier: 1.0
+      npc_reaction: "人々はいつも通りに接してくる。"
+      epilogue_flag: epilogue_neutral
+      color: [200, 200, 200]
+    - id: evil
+      name: 悪
+      min_good_evil: -49
+      shop_price_modifier: 1.15
+      npc_reaction: "人々はあなたを警戒し、店は疑いの目で値をつり上げる。"
+      epilogue_flag: epilogue_evil
+      color: [255, 170, 120]
+    - id: demon
+      name: 大悪
+      min_good_evil: -50
+      shop_price_modifier: 1.3
+      npc_reaction: "誰もがあなたを忌み嫌い、衛兵が指名手配の目で追う。"
+      epilogue_flag: epilogue_demon
+      color: [255, 90, 90]

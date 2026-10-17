@@ -22,6 +22,13 @@ class PetSystemHandler:
     def __init__(self, engine: "Engine"):
         self.engine = engine
 
+    def _apply_karma_action(self, action: str) -> None:
+        """カルママネージャー経由で善意・悪行をカルマへ反映する (T39 案C)。"""
+        engine = self.engine
+        karma_mgr = getattr(engine, "karma_manager", None)
+        if karma_mgr is not None and getattr(engine, "player", None) is not None:
+            karma_mgr.apply_action(engine.player, action, engine=engine)
+
     def use_pet_evolution_stone(self) -> None:
         """特別アイテムによるペット進化トリガー (Step 46)"""
         engine = self.engine
@@ -112,6 +119,8 @@ class PetSystemHandler:
                 engine.inventory.remove_item(itm, count=1)
                 engine.player.piety += 30
                 engine.log(f"{itm.name} を捧げた！ 信仰度: {engine.player.piety}", (255, 215, 0))
+                # T39 案C: 捧げ物は寄付 (善意行動) としてカルマに反映される
+                self._apply_karma_action("donate_to_temple")
                 engine.player.energy -= ENERGY_THRESHOLD
                 engine.advance_world()
                 return
