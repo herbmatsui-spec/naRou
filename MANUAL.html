@@ -5,10 +5,12 @@
 <li><a href="#はじめに">はじめに</a></li>
 <li><a href="#インストールと起動">インストールと起動</a></li>
 <li><a href="#基本操作">基本操作</a></li>
+<li><a href="#web版ui操作方法">Web版UI操作方法</a></li>
 <li><a href="#ゲームシステム詳細">ゲームシステム詳細</a></li>
 <li><a href="#aの世界スキル喰い-完全ガイド">Aの世界：スキル喰い 完全ガイド</a></li>
 <li><a href="#クラシック機能narou-core">クラシック機能（naRou Core）</a></li>
 <li><a href="#設定とカスタマイズ">設定とカスタマイズ</a></li>
+<li><a href="#テーマ設定">テーマ設定</a></li>
 <li><a href="#トラブルシューティング">トラブルシューティング</a></li>
 <li><a href="#開発者向け情報">開発者向け情報</a></li>
 </ol>
@@ -77,6 +79,57 @@ narou
 <p>python main.py --open</p>
 <h1>ブラウザで http://localhost:8080 を開く</h1>
 <p>```</p>
+<h4>ビジュアルショーケースデモ (demos/visual-showcase.html)</h4>
+<p>Webブラウザ版のビジュアル強化（改善案8・9）を確認できるデモページです。サーバー不要でブラウザで直接開けます。</p>
+<ul>
+<li><strong>demos/visual-showcase.html</strong> - タイトル画面／ステータス画面／ゲームオーバー画面の3スクリーンを切替表示。レアリティ枠色分け（common/uncommon/rare/epic/legendary）、デザイントークンカラー、SVG装飾、スクリーン遷移アニメーションを体験できます。</li>
+<li>ナビゲーションタブで画面を切り替え、「▶ New Game」「◀ タイトルへ戻る」ボタンで操作感を確認できます。</li>
+<li>テーマ切替は、開発者コンソールまたはURLパラメータで適用する5テーマ（dark/light/high-contrast/colorblind/sepia）をプレビュー可能です。</li>
+</ul>
+<hr />
+<h2>Web版UI操作方法</h2>
+<h3>パネルのホバー・押下・フォーカス</h3>
+<ul>
+<li><strong>ホバー</strong>: パネルやボタンにマウスを重ねると、境界線がアクセントカラー（#e5a93b）に変化し、テキスト色がアクセント色へ移ります。押下感のある視覚フィードバックを与えます。</li>
+<li><strong>押下（アクティブ）</strong>: 選択中のタブやボタンは背景がアクセントカラーで塗りつぶされ、テキストが暗色（#000）に変化。box-shadow（発光）で選択状態を強調表示します。</li>
+<li><strong>フォーカス</strong>: キーボードナビゲーション（Tab等）でフォースされた要素にはフォーカスリング（system.focusトークン）が表示され、アクセシビリティを確保します。</li>
+</ul>
+<h3>レアリティ枠色分け</h3>
+<ul>
+<li>装備スロットには rarity-common / rarity-uncommon / rarity-rare / rarity-epic / rarity-legendary の5クラスで枠色を色分けします。</li>
+<li>色は design_tokens.json の rarity 定義に準拠: common=#6b7280（灰）、uncommon=#10b981（緑）、rare=#3b82f6（青）、epic=#a855f7（紫）、legendary=#d4af37（金）。</li>
+<li>レジェンダリー枠は発光エフェクト（box-shadow）で特別感を演出します。</li>
+</ul>
+<h3>アニメーション</h3>
+<ul>
+<li>スクリーン遷移時に screenFade（0.4s ease、フェード＋下からのスライドイン）が適用されます。</li>
+<li>HP/MPバーなどの数値変化は width トランジション（0.5s ease）でスムーズに変化します。</li>
+<li>ボタンホバー・押下は all 0.2s ease で色・影が滑らかに変化します。</li>
+<li>config.yaml の accessibility.reduce_motion=true でアニメーションを軽減・無効化できます。</li>
+</ul>
+<h3>ホットバー・バイタルカード操作</h3>
+<ul>
+<li><strong>ホットバー</strong>: 1〜8キー（またはマウスクリック）で呪文・スキルをクイック選択。選択中スロットはハイライト表示。</li>
+<li><strong>バイタルカード</strong>: ヘッダーにHP/MP/レベル/深度/ゴールド/毒性をカード状に配置。バー幅で残量を直感的に把握でき、毒性80%超過で警告色変化。</li>
+<li>マウスホイールでログスクロール・リストスクロールが可能です。</li>
+</ul>
+<hr />
+<h2>テーマ設定</h2>
+<h3>5テーマの切替方法と特徴</h3>
+<p>Web版（demos/visual-showcase.html）およびグラフィカルUIでは、以下の5テーマを切替可能です。切替はURLパラメータまたは開発者コンソールから適用し、即座に反映されます。</p>
+<table>
+<tr><th>テーマ名</th><th>切替方法</th><th>特徴</th></tr>
+<tr><td><strong>dark</strong>（標準）</td><td>デフォルト適用</td><td>濃紺ベース（#0a0b10）のダークテーマ。長時間プレイでも目に優しく、発光エフェクトが映える。</td></tr>
+<tr><td><strong>light</strong></td><td>prefers-color-scheme: light または手動切替</td><td>白ベース（#ffffff）のライトテーマ。明るい環境での視認性を重視。</td></tr>
+<tr><td><strong>high-contrast</strong></td><td>prefers-contrast: more または手動切替</td><td>黒白の高コントラスト。境界線・テキストを強調し、視覚障害のあるユーザー向け。</td></tr>
+<tr><td><strong>colorblind</strong></td><td>デザイントークン（deutan/protan/tritan）適用</td><td>色覚多様性に配慮。赤/緑に依存しない配色で、情報の識別を確保。</td></tr>
+<tr><td><strong>sepia</strong></td><td>手動切替</td><td>セピア調の落ち着いた配色。レトロな雰囲気で、目の疲れを軽減。</td></tr>
+</table>
+<h3>関連設定</h3>
+<ul>
+<li><code>design_tokens.json</code> / <code>design_tokens.deutan.json</code> / <code>design_tokens.protan.json</code> / <code>design_tokens.tritan.json</code> / <code>design_tokens.high_contrast.json</code> で色定義を管理。</li>
+<li>アクセシビリティ設定（色覚対応・高コントラスト・アニメーション軽減）は起動時メニュー「色覚対応と難易度」からも選択可能。設定は <code>config.yaml</code> に永続化。</li>
+</ul>
 <hr />
 <h2>基本操作</h2>
 <h3>キーボード操作一覧</h3>
