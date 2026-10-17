@@ -691,6 +691,24 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             if consume_pending_events:
                 engine.pending_events = []
 
+        # スキルツリー: 習得可能スキル一覧 (Webのskillタブ用、T27案2)
+        learnable_skills: list[dict[str, Any]] = []
+        skill_tree_manager = getattr(engine, "skill_tree_manager", None)
+        if skill_tree_manager is not None:
+            try:
+                learnable_skills = [
+                    {
+                        "tree_id": s["tree_id"],
+                        "tier_id": s["tier_id"],
+                        "tree": s["tree"],
+                        "name": s["tier"],
+                        "cost": s["cost"],
+                    }
+                    for s in skill_tree_manager.get_available_skills(p)
+                ]
+            except Exception:
+                logger.exception("習得可能スキルの取得に失敗")
+
         # プレイヤー属性
         attrs = {
             "str": p.attributes.strength,
@@ -749,6 +767,7 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 "piety": getattr(p, "piety", 0),
                 "attributes": attrs,
                 "skill_points": getattr(p, "skill_points", 0),
+                "learnable_skills": learnable_skills,
             },
             "pet": {
                 "name": pet.name if pet else "",
@@ -891,6 +910,8 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 engine.pet.tactic = tactic
                 engine.log(f"シエルへの戦術指示を【{tactic}】に変更しました。", (255, 180, 220))
                 return f"戦術指示: {tactic}"
+        elif action == "learn_skill":
+            return self._handle_learn_skill(engine, data)
 
         if dx != 0 or dy != 0:
             acted = engine.player_act(dx, dy)
@@ -898,6 +919,43 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
                 engine.advance_world()
             return "移動/攻撃を行いました"
         return "Action processed"
+
+    def _handle_learn_skill(self, engine: Engine, data: dict[str, Any]) -> str:
+        """Webのskillタブからのスキル習得リクエスト処理 (T27案2)。
+
+        習得成功時はターミナル版 (input_handler) と同じく
+        FloatingText + level_up SE の演出を伴う。
+        """
+        tree_id = str(data.get("tree_id", ""))
+        tier_id = str(data.get("tier_id", ""))
+        skill_tree_manager = getattr(engine, "skill_tree_manager", None)
+        if skill_tree_manager is None:
+            return "スキルツリーを利用できません"
+
+        tree = skill_tree_manager.registry.get(tree_id)
+        tier_name = tier_id
+        if tree is not None:
+            tier_name = next((t.name for t in tree.tiers if t.id == tier_id), tier_id)
+
+        ok = skill_tree_manager.learn_skill(engine.player, tree_id, tier_id)
+        if not ok:
+            return "スキルポイントが足りないか、前提条件を満たしていません。"
+
+        engine.log(f"★スキル【{tier_name}】を習得した！", (100, 255, 100), level="SUCCESS")
+        from ui_fx_systems import FloatingText
+
+        engine.floating_texts.append(
+            FloatingText(
+                f"{tier_name} 習得!",
+                engine.player.x,
+                engine.player.y - 1,
+                (100, 255, 100),
+            )
+        )
+        from sound_manager import SoundManager
+
+        SoundManager.play_se("level_up")
+        return f"スキル【{tier_name}】を習得しました"
 
     def log_message(self, format, *args):
         return

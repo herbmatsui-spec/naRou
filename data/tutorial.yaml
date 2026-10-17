@@ -1,0 +1,58 @@
+# T28 案3: ステップ制チュートリアル定義 (8ステップ)
+# TutorialManager (tutorial_system.py) が順番に読み込んで進行する。
+#   step_id     : 一意 ID。達成時に player.completed_tutorials へ同期される
+#   title       : ステップ名 (パネル見出し / ログ)
+#   message     : ローグライク初心者向けの簡潔な説明
+#   condition   : 達成条件 ID (tutorial_system.py の検知系と対応)
+#                 player_moved / enemy_defeated は EventBus 既存イベント、
+#                 scan_used / devour_used / spell_cast は入力フック通知、
+#                 item_picked / save_used / dungeon_descended はフラグ監視
+#   reward_hint : パネル下段に表示する補足ヒント
+tutorial_steps:
+  - step_id: tut_move
+    title: 移動
+    message: 矢印キー (または WASD) で1マスずつ移動しよう。Web版は画面下の方向パッドでも動かせる。まずは1歩歩いてみよう。
+    condition: player_moved
+    reward_hint: 敵のいるマスへ進もうとすると、そこで攻撃になる
+
+  - step_id: tut_attack
+    title: 攻撃
+    message: 敵に隣接して移動すると体当たり攻撃！HPを0にして撃破すると★撃破ログが出る。ペットのシエルも一緒に戦ってくれる。
+    condition: enemy_defeated
+    reward_hint: 撃破で EXP とゴールドを獲得。逃げながら戦うのがローグライクの基本
+
+  - step_id: tut_pickup
+    title: 拾う
+    message: 足元のアイテムの上で [G] キー (Web版は『拾う』ボタン) で回収。ポーションや装備はどんどん拾おう。
+    condition: item_picked
+    reward_hint: 持ち物は [I] で確認、[E] でポーションや食料を使える
+
+  - step_id: tut_scan
+    title: 深度解析 X
+    message: "[X] キーは《深度解析》。Aの世界（スキル喰い）では敵の弱点・所持スキル・喰らい成功率が見える。まずは押して操作を確かめよう。"
+    condition: scan_used
+    reward_hint: 弱点属性を突くと与ダメージが伸び、捕食成功率も上がる
+
+  - step_id: tut_devour
+    title: 喰らい V
+    message: "[V] キーは《喰らい》。弱らせた敵のスキルを捕食して奪い、敵は無力な『抜け殻』に。まずは [V] を押して操作を確かめよう。"
+    condition: devour_used
+    reward_hint: 捕食を重ねると毒性が蓄積。[C] で毒性を確認し、80% 超えると拒絶反応
+
+  - step_id: tut_spell
+    title: 呪文
+    message: 数字キー [1]〜[8] で呪文詠唱 (魔矢・火炎球・治癒など。Web版は [F] で火炎球)。MP を消費して遠距離から攻めよう。
+    condition: spell_cast
+    reward_hint: 詠唱には成功率判定があり、失敗すると魔力暴走で反動ダメージ
+
+  - step_id: tut_save
+    title: セーブ
+    message: "[S] キーで冒険の記録を保存。ウィンドウを閉じるときも自動セーブされる。ロードは [R] キー。"
+    condition: save_used
+    reward_hint: セーブデータは savegame.bin。バックアップも自動で作られる
+
+  - step_id: tut_descend
+    title: ダンジョン探索開始
+    message: マップの階段 [>] に乗って [Shift + .] で下の階へ。深く潜るほど敵は強く、報酬も豪華になる。あとは自由探索だ！
+    condition: dungeon_descended
+    reward_hint: 階層ごとにテーマが変化。B10F 到達で輪廻転生が視野に入る

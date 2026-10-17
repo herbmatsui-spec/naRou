@@ -593,6 +593,7 @@
         <div class="tabs-header">
           <button class="tab-btn active font-caption" onclick="switchTab('tabInventory')">荷物</button>
           <button class="tab-btn font-caption" onclick="switchTab('tabStats')">能力</button>
+          <button class="tab-btn font-caption" onclick="switchTab('tabSkills')">スキル</button>
           <button class="tab-btn font-caption" onclick="switchTab('tabQuests')">依頼</button>
           <button class="tab-btn font-caption" onclick="switchTab('tabPet')">ペット</button>
         </div>
@@ -607,6 +608,13 @@
         <!-- TAB: STATS -->
         <div class="tab-content" id="tabStats" style="display: none;">
           <div id="statsContent" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- TAB: SKILLS -->
+        <div class="tab-content" id="tabSkills" style="display: none;">
+          <div class="item-list" id="skillContent">
             <!-- Rendered by JS -->
           </div>
         </div>
@@ -2113,6 +2121,27 @@ sprite._playing = false;
           <div>魅力 (CHA): <b>${p.attributes.cha}</b></div>
           <div style="grid-column: span 2; margin-top: 6px; color: #ffd700;">信仰: ${p.god} (信仰度: ${p.piety})</div>
         `;
+      }
+
+      // Skills Tab (T27案2: スキルツリー習得フローのWeb接続)
+      const skillEl = document.getElementById("skillContent");
+      if (skillEl) {
+        const learnable = p.learnable_skills || [];
+        if (learnable.length > 0) {
+          skillEl.innerHTML = `
+            <div style="color: #ffd700; font-weight: 600;">スキルポイント: ${p.skill_points ?? 0} SP</div>
+          ` + learnable.map(s => `
+            <div class="item-entry">
+              <div>
+                <div style="font-weight: 600;">${s.tree} ‣ ${s.name}</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted);">消費SP: ${s.cost}</div>
+              </div>
+              <button class="hotbar-btn" onclick="sendAction('learn_skill', {tree_id: '${s.tree_id}', tier_id: '${s.tier_id}'})">習得</button>
+            </div>
+          `).join("");
+        } else {
+          skillEl.innerHTML = `<div style="color: var(--text-muted); text-align: center;">習得可能なスキルはありません</div>`;
+        }
       }
 
       // Quests Tab

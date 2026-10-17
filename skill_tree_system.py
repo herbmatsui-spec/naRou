@@ -376,8 +376,57 @@ class SkillTreeManager:
 
         return True
 
-    def _apply_tier_effects(self, player, tier):
-        """Apply tier effects to player (placeholder for future expansion)."""
+    def _apply_tier_effects(self, player, tier) -> None:
+        """習得したティアの効果をプレイヤーへ反映する。
+
+        数値系効果 (damage_bonus 等) は Entity.recalculate_stats が
+        aggregate_tier_bonuses 経由で都度集計するため、ここでは
+        unlock_skill の所有登録と再計算の促しだけを行う。
+        """
+        for eff in tier.effects:
+            if eff.type == "unlock_skill" and eff.value:
+                self._grant_unlock_skill(player, str(eff.value))
+        recalc = getattr(player, "recalculate_stats", None)
+        if callable(recalc):
+            recalc()
+
+    def _grant_unlock_skill(self, player, skill_id: str) -> None:
+        """unlock_skill 効果: Entity.skills へ所有登録し、戦闘 (スペルブック) にも橋渡しする。"""
+        skills = getattr(player, "skills", None)
+        if isinstance(skills, dict) and skill_id not in skills:
+            from ecs.components import Skill
+
+            skills[skill_id] = Skill(name=skill_id)
+        try:
+            from skill_bridge import bridge_skill_to_spellbook
+
+            bridge_skill_to_spellbook(player, skill_id)
+        except Exception:
+            # World A / skill_eater が利用できない環境では所有登録のみで成立する
+            logger.debug("unlock_skill %s のスペルブック橋渡しをスキップ", skill_id, exc_info=True)
+
+    def aggregate_tier_bonuses(self, player) -> dict[str, float]:
+        """習得済みティアの数値効果を効果種別ごとに合計する。
+
+        Returns:
+            効果 type -> 合計値 (unlock_skill など数値化できない効果は除く)
+        """
+        bonuses: dict[str, float] = {}
+        progress = getattr(player, "skill_tree_progress", {}) or {}
+        for tree_id, tier_ids in progress.items():
+            tree = self.registry.get(tree_id)
+            if tree is None:
+                continue
+            for tier in tree.tiers:
+                if tier.id not in tier_ids:
+                    continue
+                for eff in tier.effects:
+                    try:
+                        val = float(eff.value)
+                    except (TypeError, ValueError):
+                        continue
+                    bonuses[eff.type] = bonuses.get(eff.type, 0.0) + val
+        return bonuses
 
     def get_available_skills(self, player) -> list[dict]:
         """Get list of available (learnable) skills for player."""

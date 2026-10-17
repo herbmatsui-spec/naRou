@@ -296,6 +296,9 @@ class CombatSystem:
             return 0, False, f"{attacker.name}の攻撃は{defender.name}にかわされた。"
 
         crit_rate = 5 + int(attacker.attributes.perception / 5)
+        # スキルツリー/パッシブ習得効果の反映 (T27案2)
+        atk_bonuses = getattr(attacker, "passive_bonuses", None) or {}
+        crit_rate += int(atk_bonuses.get("crit_chance", 0))
         is_crit = random.randint(1, 100) <= crit_rate
 
         dice_n = weapon.dice_num if weapon else 1
@@ -303,6 +306,7 @@ class CombatSystem:
         bonus = weapon.dmg_bonus if weapon else 0
         roll_dmg = sum(random.randint(1, dice_s) for _ in range(dice_n)) + bonus
         roll_dmg += int(attacker.attributes.strength / 3)
+        roll_dmg += int(atk_bonuses.get("damage_bonus", 0))
         if is_crit:
             roll_dmg = int(roll_dmg * 1.5) + dice_s
 

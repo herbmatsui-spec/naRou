@@ -259,6 +259,13 @@ class Engine:
             self.web_server,
         ) = SystemInitializer.initialize_ui_and_services(self)
 
+        # T28 案3: ステップ制チュートリアル (data/tutorial.yaml)。
+        # popup 型ガイド (self.tutorial_manager / ui_fx_systems) とは別系統。
+        from tutorial_system import TutorialManager
+
+        self.tutorial_flow_manager = TutorialManager()
+        self.tutorial_flow_manager.attach(self)
+
     def __getstate__(self) -> dict:
         """Return state for pickling, excluding unpicklable attributes."""
         state = self.__dict__.copy()
@@ -1436,6 +1443,10 @@ class Engine:
     def update(self, delta_time: float = 1.0) -> None:
         """ゲームロジック更新 (GameLoopHandler へ委譲)"""
         self.game_loop_handler.update(delta_time)
+        # T28 案3: ステップ制チュートリアルのフラグ監視 (拾う/セーブ/階段降下)
+        mgr = getattr(self, "tutorial_flow_manager", None)
+        if mgr is not None:
+            mgr.update(self)
 
     def render(self, console: Any) -> None:
         """描画処理 (RenderSystemHandler へ委譲)"""

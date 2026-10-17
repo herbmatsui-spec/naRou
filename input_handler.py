@@ -61,7 +61,7 @@ from item_system import CAT_FOOD, CAT_POTION, CAT_SCROLL, CAT_WEAPON
 from render_system import RenderSystem
 from save_system import SaveSystem
 from sound_manager import SoundManager
-from ui_fx_systems import HelpSystem
+from ui_fx_systems import FloatingText, HelpSystem
 
 if TYPE_CHECKING:
     from game import Engine
@@ -351,6 +351,14 @@ class InputHandler:
                     )
                     if ok:
                         engine.log(f"★スキル【{target['tier']}】を習得した！", (100, 255, 100))
+                        engine.floating_texts.append(
+                            FloatingText(
+                                f"{target['tier']} 習得!",
+                                engine.player.x,
+                                engine.player.y - 1,
+                                (100, 255, 100),
+                            )
+                        )
                         SoundManager.play_se("level_up")
                     else:
                         engine.log(

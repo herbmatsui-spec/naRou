@@ -1316,12 +1316,22 @@ class Entity:
 
             mgr = get_passive_skill_manager()
             bonuses = mgr.aggregate_bonuses(self)
+            # スキルツリー習得効果の統合 (T27案2: ツリーデータを実ステータスへ接続)
+            try:
+                from skill_tree_system import get_skill_tree_manager
+
+                for key, val in get_skill_tree_manager().aggregate_tier_bonuses(self).items():
+                    bonuses[key] = bonuses.get(key, 0.0) + val
+            except Exception:
+                logger.exception("スキルツリー習得効果の集計に失敗")
             self.passive_bonuses = bonuses
             if "max_hp_bonus" in bonuses:
                 self.max_hp += int(bonuses["max_hp_bonus"])
                 self.hp = min(self.hp, self.max_hp)
             if "mp_regen_bonus" in bonuses:
                 self.passive_mp_regen = bonuses["mp_regen_bonus"]
+            if "magic_power" in bonuses:
+                self.attributes.magic += int(bonuses["magic_power"])
         except Exception:
             logger.exception("ロード失敗")
         self.passive_bonuses = getattr(self, "passive_bonuses", {})
