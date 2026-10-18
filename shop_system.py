@@ -5,7 +5,7 @@
 
 購入価格は次の順で乗算して決定する (乗算順序は経済バランスに直結するため固定):
 
-    購入価格 = round(基本価格 × (1 + 派閥物価補正) × カルマ店価格倍率)
+    購入価格 = round(基本価格 × (1 + 派閥物価補正) × カルマ店価格倍率 × 季節店価格倍率)
 
 1. 派閥物価補正: FactionWarData.price_modifier
    (戦争勝利派閥 = 負 = 割引 / 敗北派閥 = 正 = 高騰, R4-A)。
@@ -14,6 +14,9 @@
 2. カルマ店価格倍率: KarmaManager.get_shop_price_modifier (R4-C)。
    善行段階 = 割引 / 悪行段階 = 割増。将来の割引要素を追加する場合も
    この乗算順序を維持すること。
+3. 季節店価格倍率: SeasonEffects.shop_price_multiplier (T44 案B)。
+   現在季節が SEASON_SYSTEM で追跡され、収穫祭の秋のみ 0.9 (10%引)、
+   それ以外の季節は 1.0。既存乗算の後段に乗算されるのみで順序は不変。
 """
 
 from __future__ import annotations
@@ -25,6 +28,7 @@ from typing import Any
 from faction_war_system import REGISTRY as FACTION_WAR_REGISTRY
 from faction_war_system import FactionWarRegistry
 from karma_system import KarmaManager
+from season_system import Season, SEASON_SYSTEM
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +84,7 @@ class PurchasePrice:
     """購入価格の計算結果と内訳
 
     乗算順序: base_price → × (1 + faction_price_modifier) → × karma_price_modifier
+             → × season_price_multiplier
     """
 
     base_price: int
@@ -90,16 +95,24 @@ class PurchasePrice:
     karma_stage_name: str
     karma_price_modifier: float
     final_price: int
+    season_id: str = "spring"
+    season_price_modifier: float = 1.0
 
     def to_log_parts(self) -> str:
-        """購入ログ用の価格内訳文字列を生成する。"""
+        """購入ログ用の価格内訳文字列を生成する。
+
+        季節補正は倍率が 1.0 (影響なし) の場合は内訳に含めない。
+        """
         faction_label = self.faction_id if self.faction_id else "無所属"
-        return (
+        parts = (
             f"基本{self.base_price}G → 派閥[{faction_label}] "
             f"{self.faction_price_modifier:+.1%} → {round(self.price_after_faction)}G "
-            f"→ カルマ[{self.karma_stage_name}] ×{self.karma_price_modifier:.2f} "
-            f"→ {self.final_price}G"
+            f"→ カルマ[{self.karma_stage_name}] ×{self.karma_price_modifier:.2f}"
         )
+        if self.season_price_modifier != 1.0:
+            parts += f" → 季節[{self.season_id}] ×{self.season_price_modifier:.2f}"
+        parts += f" → {self.final_price}G"
+        return parts
 
 
 def calculate_purchase_price(
@@ -107,10 +120,11 @@ def calculate_purchase_price(
     player: Any = None,
     faction_registry: FactionWarRegistry | None = None,
     karma_manager: KarmaManager | None = None,
+    season: Season | None = None,
 ) -> PurchasePrice:
-    """基本価格に派閥物価補正とカルマ店価格倍率を適用した購入価格を計算する。
+    """基本価格に派閥物価補正・カルマ店価格倍率・季節店価格倍率を適用した購入価格を計算する。
 
-    乗算順序 (固定): 基本価格 × (1 + 派閥物価補正) × カルマ店価格倍率
+    乗算順序 (固定): 基本価格 × (1 + 派閥物価補正) × カルマ店価格倍率 × 季節店価格倍率
 
     Args:
         base_price: 商品の基本価格 (data/items.yaml の base_value 等)
@@ -118,6 +132,7 @@ def calculate_purchase_price(
                 (None なら補正なしの中立扱い)
         faction_registry: 派閥抗争レジストリ (既定は faction_war_system.REGISTRY)
         karma_manager: カーママネージャ (既定は karma_system.KarmaManager())
+        season: 適用する季節 (既定は SEASON_SYSTEM が追跡する現在季節)
 
     Returns:
         内訳を含む PurchasePrice
@@ -129,7 +144,10 @@ def calculate_purchase_price(
     price_after_faction = base_price * (1.0 + faction_modifier)
     good_evil = int(getattr(player, "karma_good_evil", 0) or 0)
     stage = karma_mgr.get_stage(good_evil)
-    final_price = int(round(price_after_faction * stage.shop_price_modifier))
+    applied_season = season if season is not None else SEASON_SYSTEM.current_season
+    season_effects = SEASON_SYSTEM.get_effects(season)
+    price_after_karma = price_after_faction * stage.shop_price_modifier
+    final_price = int(round(price_after_karma * season_effects.shop_price_multiplier))
     return PurchasePrice(
         base_price=base_price,
         faction_id=faction_id,
@@ -139,6 +157,8 @@ def calculate_purchase_price(
         karma_stage_name=stage.name,
         karma_price_modifier=stage.shop_price_modifier,
         final_price=final_price,
+        season_id=applied_season.season_id,
+        season_price_modifier=season_effects.shop_price_multiplier,
     )
 
 
@@ -300,6 +320,8 @@ class Shop:
                 "karma_stage_id": price.karma_stage_id,
                 "karma_stage_name": price.karma_stage_name,
                 "karma_price_modifier": price.karma_price_modifier,
+                "season_id": price.season_id,
+                "season_price_modifier": price.season_price_modifier,
                 "final_price": price.final_price,
                 "total_gold": total,
             }

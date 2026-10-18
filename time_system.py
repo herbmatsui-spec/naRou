@@ -162,6 +162,15 @@ class WorldClock:
         return self._current_phase
 
     @property
+    def season(self) -> Any:
+        """現在の季節 (月に基づく季節判定, season_system.Season)"""
+        try:
+            from naRou.season_system import Season
+        except ImportError:
+            from season_system import Season
+        return Season.from_month(self.month)
+
+    @property
     def npc_registry(self):
         """NPCスケジュールレジストリ取得 (遅延初期化)"""
         if self._npc_registry is None:
