@@ -67,3 +67,12 @@ class WorldNewsManager:
             and hasattr(engine.player, "guild_quest_progress")
         ):
             engine.log("【ギルド】日次ギルド依頼が更新・リセットされました。", (180, 220, 255))
+
+        # === ギルド昇格チェック (T41 案C) ===
+        # 貢献度・クエスト達成数が昇格条件を満たしたら、昇格イベント
+        # (ログ+FloatingText+SE) と特典反映を process_promotion が行う。
+        # 条件未達時は process_promotion 内で即座に return するため毎ターン呼び出しでも軽量。
+        if engine.player and getattr(engine.player, "guild_id", None):
+            guild_manager = getattr(engine, "guild_manager", None)
+            if guild_manager is not None and hasattr(guild_manager, "process_promotion"):
+                guild_manager.process_promotion(engine.player, engine)

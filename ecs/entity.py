@@ -598,6 +598,14 @@ class Entity:
     def guild_quest_progress(self, val: dict[str, int]):
         self.get_required_component(GuildFactionComponent).guild_quest_progress = val
 
+    @property
+    def guild_completed_quests(self) -> int:
+        return self.get_required_component(GuildFactionComponent).guild_completed_quests
+
+    @guild_completed_quests.setter
+    def guild_completed_quests(self, val: int):
+        self.get_required_component(GuildFactionComponent).guild_completed_quests = val
+
     # -------------------------------------------------------------
     # 実績・メタ進行プロパティ (AchievementComponent への委譲)
     # TODO: Achievement fields - delegated to AchievementComponent

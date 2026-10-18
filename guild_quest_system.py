@@ -108,19 +108,38 @@ REGISTRY = GuildQuestRegistry()
 
 
 class GuildQuestManager:
-    """ギルドクエスト管理マネージャー (Steps 35-39)"""
+    """ギルドクエスト管理マネージャー (Steps 35-39, T41 案C)"""
 
-    def __init__(self, registry: GuildQuestRegistry | None = None):
+    def __init__(
+        self,
+        registry: GuildQuestRegistry | None = None,
+        guild_manager: Any | None = None,
+    ):
         self.registry = registry or REGISTRY
+        # T41 案C: ランク特典 (報酬倍率・専用クエスト解放) のために GuildManager を注入
+        self.guild_manager = guild_manager
 
     def get_available_quests(
         self, player: Entity, quest_type: str = "daily"
     ) -> list[GuildQuestData]:
-        """プレイヤーが受領可能なギルドクエスト一覧を取得 (Step 36)"""
+        """プレイヤーが受領可能なギルドクエスト一覧を取得 (Step 36)
+
+        requirements に min_rank を持つ専用クエストは、昇格ランクがその段階に
+        達した時のみ解放される (T41 案C)。
+        """
         gid = getattr(player, "guild_id", None)
         if not gid:
             return []
-        return self.registry.get(gid, quest_type)
+        available: list[GuildQuestData] = []
+        for quest in self.registry.get(gid, quest_type):
+            min_rank = quest.requirements.get("min_rank")
+            if min_rank is None:
+                available.append(quest)
+            elif self.guild_manager is not None and self.guild_manager.is_rank_at_or_above(
+                player, min_rank
+            ):
+                available.append(quest)
+        return available
 
     def update_quest_progress(self, player: Entity, quest_id: str, amount: int = 1) -> bool:
         """ギルドクエスト進捗を加算 (Step 37)"""
@@ -139,22 +158,30 @@ class GuildQuestManager:
         return player.guild_quest_progress.get(quest_id, 0) >= 100
 
     def complete_quest(self, player: Entity, quest_id: str) -> tuple[bool, str, dict[str, Any]]:
-        """ギルドクエスト完了と報酬付与 (Step 39)"""
+        """ギルドクエスト完了と報酬付与 (Step 39, T41 案C)"""
         if not self.can_complete_quest(player, quest_id):
             return False, "クエスト条件を達成していません。", {}
 
         quest = self.registry.get_quest_by_id(quest_id)
         reward = quest.reward if quest else {}
 
-        contrib = reward.get("contribution", 30)
-        gold = reward.get("gold", 50)
+        # T41 案C: ランク特典の報酬倍率を報酬 (貢献度・金貨) に適用
+        multiplier = 1.0
+        if self.guild_manager is not None:
+            multiplier = self.guild_manager.get_reward_multiplier(player)
+        contrib = int(round(reward.get("contribution", 30) * multiplier))
+        gold = int(round(reward.get("gold", 50) * multiplier))
         reward.get("item")
 
         player.guild_contribution = getattr(player, "guild_contribution", 0) + contrib
         player.gold = getattr(player, "gold", 0) + gold
+        # T41 案C: ギルドクエスト達成数を記録 (昇格条件 completed_quests に使用)
+        player.guild_completed_quests = getattr(player, "guild_completed_quests", 0) + 1
 
         # 進捗をリセット
         player.guild_quest_progress[quest_id] = 0
 
         msg = f"★ギルドクエスト【{quest.name if quest else quest_id}】達成！ 貢献度+{contrib}, 金貨+{gold}G 獲得！"
+        if multiplier > 1.0:
+            msg += f"（ランク特典 報酬×{multiplier:.2f}）"
         return True, msg, reward

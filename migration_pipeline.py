@@ -122,6 +122,7 @@ DEFAULT_FIELD_FACTORIES: dict[str, Any] = {
     "job_level": lambda: 1,
     "job_exp": int,
     "guild_contribution": int,
+    "guild_completed_quests": int,
 }
 
 REQUIRED_COMPONENTS = [

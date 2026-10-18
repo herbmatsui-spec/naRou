@@ -43,11 +43,15 @@ class SocialPackage(IPackage):
 
         guild_reg = GuildRegistry()
         guild_reg.load()
-        kernel.register_system("guild_manager", GuildManager(guild_reg))
+        guild_manager = GuildManager(guild_reg)
+        kernel.register_system("guild_manager", guild_manager)
 
         guild_quest_reg = GuildQuestRegistry()
         guild_quest_reg.load()
-        kernel.register_system("guild_quest_manager", GuildQuestManager(guild_quest_reg))
+        kernel.register_system(
+            "guild_quest_manager",
+            GuildQuestManager(guild_quest_reg, guild_manager=guild_manager),
+        )
 
         faction_war_reg = FactionWarRegistry()
         faction_war_reg.load()

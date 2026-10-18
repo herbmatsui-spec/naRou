@@ -75,6 +75,7 @@ class GuildFactionComponent:
     completed_faction_events: list[str] = field(default_factory=list)
     ranking_titles: list[str] = field(default_factory=list)
     guild_quest_progress: dict[str, int] = field(default_factory=dict)
+    guild_completed_quests: int = 0
 
 
 @dataclass

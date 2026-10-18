@@ -856,6 +856,8 @@ class GameHTTPRequestHandler(BaseHTTPRequestHandler):
             "pending_events": pending_events,
             "narrative_state": narrative_state,
             "faction_status": faction_status,
+            # T41 案C: ギルド昇格ランクの可視化
+            "guild_rank": getattr(p, "guild_rank", "none"),
         }
 
     def _handle_web_action(self, engine: Engine, action: str, data: dict[str, Any]) -> str:

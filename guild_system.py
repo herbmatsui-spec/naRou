@@ -34,6 +34,75 @@ class GuildData:
     max_members: int = 100
 
 
+# 既定の昇格段階 (README: novice → member → veteran → officer → leader の5段階)
+DEFAULT_RANK_ORDER: list[str] = ["novice", "member", "veteran", "officer", "leader"]
+
+
+@dataclass
+class GuildRankData:
+    """昇格段階データ (T41 案C: data/guild_ranks.yaml)"""
+
+    rank: str
+    order: int = 0
+    label: str = ""
+    contribution: int = 0
+    completed_quests: int = 0
+    reward_multiplier: float = 1.0
+    unlocked_quests: list[str] = field(default_factory=list)
+
+
+class GuildRankRegistry:
+    """昇格段階レジストリ (シングルトン) (T41 案C)"""
+
+    _instance: GuildRankRegistry | None = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._ranks: dict[str, dict[str, GuildRankData]] = {}
+            cls._instance._loaded = False
+        return cls._instance
+
+    def load(self, path: str = "data/guild_ranks.yaml") -> None:
+        """YAMLから昇格段階定義をロード (T41 案C)"""
+        p = Path(path)
+        if not p.exists():
+            logger.warning("昇格段階定義が見つかりません: %s", path)
+            self._loaded = True
+            return
+        try:
+            with open(path, encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+            for gid, g_dict in (data.get("guild_ranks", {}) or {}).items():
+                rank_map: dict[str, GuildRankData] = {}
+                for r_name, r in (g_dict.get("ranks", {}) or {}).items():
+                    rank_map[r_name] = GuildRankData(
+                        rank=r_name,
+                        order=int(r.get("order", 0)),
+                        label=str(r.get("label", "")),
+                        contribution=int(r.get("contribution", 0)),
+                        completed_quests=int(r.get("completed_quests", 0)),
+                        reward_multiplier=float(r.get("reward_multiplier", 1.0)),
+                        unlocked_quests=list(r.get("unlocked_quests") or []),
+                    )
+                self._ranks[gid] = rank_map
+            logger.info("Loaded guild ranks for: %s", list(self._ranks.keys()))
+        except Exception:
+            logger.exception("昇格段階定義のロードに失敗: %s", path)
+        self._loaded = True
+
+    def get(self, guild_id: str) -> dict[str, GuildRankData]:
+        """ギルドIDごとの昇格段階マップを取得"""
+        return self._ranks.get(guild_id, {})
+
+    def all(self) -> dict[str, dict[str, GuildRankData]]:
+        """すべての昇格段階定義を返す"""
+        return self._ranks
+
+
+RANK_REGISTRY = GuildRankRegistry()
+
+
 class GuildRegistry:
     """ギルドレジストリ (シングルトン) (Steps 17, 18)"""
 
@@ -106,10 +175,15 @@ REGISTRY = GuildRegistry()
 
 
 class GuildManager:
-    """ギルド管理マネージャー (Steps 19-23, 46-48)"""
+    """ギルド管理マネージャー (Steps 19-23, 46-48, T41 案C)"""
 
-    def __init__(self, registry: GuildRegistry | None = None):
+    def __init__(
+        self,
+        registry: GuildRegistry | None = None,
+        rank_registry: GuildRankRegistry | None = None,
+    ):
         self.registry = registry or REGISTRY
+        self.rank_registry = rank_registry or RANK_REGISTRY
 
     def can_join_guild(self, player: Entity, guild_id: str) -> bool:
         """ギルド加入可否チェック (Step 20)"""
@@ -153,7 +227,11 @@ class GuildManager:
 
     # === ギルド報酬・ランクアップ (Steps 46, 47, 48) ===
     def check_rank_up(self, player: Entity) -> str | None:
-        """貢献度に応じた昇格可能ランクをチェック (Step 47)"""
+        """貢献度に応じた昇格可能ランクをチェック (Step 47)
+
+        貢献度のみでの簡易判定 (段階の飛び越しを許容するレガシーAPI)。
+        昇格フロー本体は get_promotable_rank / process_promotion を使用する。
+        """
         guild = self.get_guild_info(player)
         if not guild or not guild.rank_requirements:
             return None
@@ -173,6 +251,166 @@ class GuildManager:
                     highest_eligible = r_name
 
         return highest_eligible
+
+    # === 昇格フロー (T41 案C) ===
+    def get_rank_order(self, player: Entity) -> list[str]:
+        """所属ギルドの昇格段階順序を返す (未定義ギルドは既定の5段階)"""
+        gid = getattr(player, "guild_id", None)
+        rank_map = self.rank_registry.get(gid) if gid else {}
+        if rank_map:
+            return sorted(rank_map, key=lambda r: rank_map[r].order)
+        return list(DEFAULT_RANK_ORDER)
+
+    def get_rank_data(self, player: Entity, rank_name: str) -> GuildRankData | None:
+        """指定段階の昇格データを取得 (未定義時は None)"""
+        gid = getattr(player, "guild_id", None)
+        if not gid:
+            return None
+        return self.rank_registry.get(gid).get(rank_name)
+
+    def get_next_rank(self, player: Entity) -> str | None:
+        """現在ランクの1つ上の段階を返す (最上位段階なら None)"""
+        order = self.get_rank_order(player)
+        current = getattr(player, "guild_rank", "none")
+        cur_idx = order.index(current) if current in order else -1
+        if cur_idx + 1 < len(order):
+            return order[cur_idx + 1]
+        return None
+
+    def _contribution_requirement(self, player: Entity, rank_name: str) -> int:
+        """昇格に必要な貢献度 (guilds.yaml の既存定義を優先し、未定義時は guild_ranks.yaml)"""
+        guild = self.get_guild_info(player)
+        if guild and rank_name in guild.rank_requirements:
+            return int(guild.rank_requirements[rank_name])
+        rank_data = self.get_rank_data(player, rank_name)
+        if rank_data is not None:
+            return rank_data.contribution
+        return 0
+
+    def meets_promotion_requirements(self, player: Entity, rank_name: str) -> bool:
+        """指定段階の昇格条件 (貢献度+ギルドクエスト達成数) を満たすか判定 (T41 案C)"""
+        if getattr(player, "guild_contribution", 0) < self._contribution_requirement(
+            player, rank_name
+        ):
+            return False
+        rank_data = self.get_rank_data(player, rank_name)
+        required_quests = rank_data.completed_quests if rank_data is not None else 0
+        return getattr(player, "guild_completed_quests", 0) >= required_quests
+
+    def get_promotable_rank(self, player: Entity) -> str | None:
+        """昇格条件を満たす次の段階を返す (T41 案C)
+
+        段階の飛び越しは認めない (novice から officer への直接昇格は不可)。
+        現在の1つ上の段階のみを判定し、条件未達なら None を返す。
+        """
+        next_rank = self.get_next_rank(player)
+        if next_rank is None:
+            return None
+        if self.meets_promotion_requirements(player, next_rank):
+            return next_rank
+        return None
+
+    def process_promotion(self, player: Entity, engine: Any | None = None) -> str | None:
+        """昇格検知からイベント・特典反映までの一連フローを実行 (T41 案C)
+
+        昇格条件を満たしていれば1段階昇格し、apply_rank_rewards で特典を適用した
+        上で昇格イベント (ログ+FloatingText+SE) を発行する。条件未達なら
+        何もせず None を返す。engine が渡らない場合 (テスト等) は演出を省略する。
+        """
+        new_rank = self.get_promotable_rank(player)
+        if new_rank is None:
+            return None
+        self.apply_rank_rewards(player, new_rank)
+        self._emit_promotion_event(player, new_rank, engine)
+        return new_rank
+
+    def get_reward_multiplier(self, player: Entity) -> float:
+        """現在ランクの報酬倍率を返す (未所属・未定義ランクは 1.0)"""
+        current = getattr(player, "guild_rank", "none")
+        rank_data = self.get_rank_data(player, current)
+        if rank_data is not None:
+            return rank_data.reward_multiplier
+        return 1.0
+
+    def get_unlocked_quest_ids(self, player: Entity) -> list[str]:
+        """現在ランクまでに解放された専用クエストID一覧 (累積) を返す"""
+        order = self.get_rank_order(player)
+        current = getattr(player, "guild_rank", "none")
+        cur_idx = order.index(current) if current in order else -1
+        unlocked: list[str] = []
+        for r_name in order[: cur_idx + 1]:
+            rank_data = self.get_rank_data(player, r_name)
+            if rank_data is None:
+                continue
+            for qid in rank_data.unlocked_quests:
+                if qid not in unlocked:
+                    unlocked.append(qid)
+        return unlocked
+
+    def is_rank_at_or_above(self, player: Entity, rank_name: str) -> bool:
+        """現在ランクが指定段階以上か判定 (専用クエストの解放判定に使用)"""
+        order = self.get_rank_order(player)
+        current = getattr(player, "guild_rank", "none")
+        if rank_name not in order or current not in order:
+            return False
+        return order.index(current) >= order.index(rank_name)
+
+    def _emit_promotion_event(self, player: Entity, new_rank: str, engine: Any | None) -> None:
+        """昇格イベントを発行する (ログ+FloatingText+SE)
+
+        engine が演出手段を持たない場合 (テスト用のモックなど) は黙って省略する。
+        """
+        if engine is None:
+            return
+        guild = self.get_guild_info(player)
+        rank_data = self.get_rank_data(player, new_rank)
+        label = (rank_data.label if rank_data is not None else "") or new_rank
+        guild_name = guild.name if guild is not None else ""
+        message = (
+            f"★【{guild_name}】ランクが【{label}】に昇格した！"
+            f" (報酬倍率×{self.get_reward_multiplier(player):.2f})"
+        )
+        quest_names = self._resolve_unlocked_quest_names(player)
+        if quest_names:
+            message += f" 専用クエスト解放: {'、'.join(quest_names)}"
+
+        log_func = getattr(engine, "log", None)
+        if callable(log_func):
+            log_func(message, (255, 215, 0))
+
+        fx_manager = getattr(engine, "fx_manager", None)
+        if fx_manager is not None and hasattr(fx_manager, "add_floating_text"):
+            fx_manager.add_floating_text(
+                f"昇格: {label}",
+                getattr(player, "x", 0.0),
+                getattr(player, "y", 0.0) - 1.5,
+                (255, 215, 0),
+            )
+
+        try:
+            from sound_manager import SoundManager
+
+            SoundManager.play_se("level_up")
+        except Exception:
+            logger.debug("昇格SEの再生に失敗", exc_info=True)
+
+    def _resolve_unlocked_quest_names(self, player: Entity) -> list[str]:
+        """現在ランクで新たに解放された専用クエスト名を解決する (未ロード時は空)"""
+        current = getattr(player, "guild_rank", "none")
+        rank_data = self.get_rank_data(player, current)
+        if rank_data is None or not rank_data.unlocked_quests:
+            return []
+        try:
+            from guild_quest_system import GuildQuestRegistry
+
+            quest_registry = GuildQuestRegistry()
+        except Exception:
+            return []
+        names: list[str] = []
+        for qid in rank_data.unlocked_quests:
+            quest = quest_registry.get_quest_by_id(qid)
+            names.append(quest.name if quest is not None else qid)
+        return names
 
     def apply_rank_rewards(self, player: Entity, new_rank: str) -> None:
         """ランクアップ報酬の適用 (Step 48)"""

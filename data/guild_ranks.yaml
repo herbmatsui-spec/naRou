@@ -1,0 +1,128 @@
+# ギルド昇格段階定義 (T41 案C)
+# 5段階: novice → member → veteran → officer → leader (README の昇格順序)
+# 各段階の条件と特典を guild_system (GuildRankRegistry) が参照する。
+#
+# contribution      : 昇格に必要な貢献度 (data/guilds.yaml の rank_requirements と一致させること。
+#                     判定時は guilds.yaml の既存定義を優先し、未定義ギルドのフォールバックに使用)
+# completed_quests  : 昇格に必要なギルドクエスト達成数 (GuildQuestManager.complete_quest が加算)
+# reward_multiplier : ギルドクエスト報酬 (貢献度・金貨) に掛かる倍率 (ランク特典)
+# unlocked_quests   : その段階への昇格で解放される専用クエストID (data/guild_quests.yaml の special)
+# label             : ログ・FloatingText 表示用の段階名
+guild_ranks:
+  adventurers_guild:
+    ranks:
+      novice:
+        order: 0
+        label: "見習い"
+        contribution: 0
+        completed_quests: 0
+        reward_multiplier: 1.0
+        unlocked_quests: []
+      member:
+        order: 1
+        label: "正会員"
+        contribution: 100
+        completed_quests: 3
+        reward_multiplier: 1.05
+        unlocked_quests:
+          - "member_beast_cull"
+      veteran:
+        order: 2
+        label: "熟練者"
+        contribution: 500
+        completed_quests: 10
+        reward_multiplier: 1.10
+        unlocked_quests:
+          - "veteran_ancient_dragon"
+      officer:
+        order: 3
+        label: "幹部"
+        contribution: 2000
+        completed_quests: 25
+        reward_multiplier: 1.20
+        unlocked_quests:
+          - "officer_relic_recovery"
+      leader:
+        order: 4
+        label: "マスター"
+        contribution: 5000
+        completed_quests: 50
+        reward_multiplier: 1.30
+        unlocked_quests:
+          - "leader_guild_trial"
+
+  mages_guild:
+    ranks:
+      novice:
+        order: 0
+        label: "見習い"
+        contribution: 0
+        completed_quests: 0
+        reward_multiplier: 1.0
+        unlocked_quests: []
+      member:
+        order: 1
+        label: "正会員"
+        contribution: 150
+        completed_quests: 3
+        reward_multiplier: 1.05
+        unlocked_quests: []
+      veteran:
+        order: 2
+        label: "熟練者"
+        contribution: 600
+        completed_quests: 10
+        reward_multiplier: 1.10
+        unlocked_quests: []
+      officer:
+        order: 3
+        label: "幹部"
+        contribution: 2500
+        completed_quests: 25
+        reward_multiplier: 1.20
+        unlocked_quests: []
+      leader:
+        order: 4
+        label: "マスター"
+        contribution: 6000
+        completed_quests: 50
+        reward_multiplier: 1.30
+        unlocked_quests: []
+
+  thieves_guild:
+    ranks:
+      novice:
+        order: 0
+        label: "見習い"
+        contribution: 0
+        completed_quests: 0
+        reward_multiplier: 1.0
+        unlocked_quests: []
+      member:
+        order: 1
+        label: "正会員"
+        contribution: 100
+        completed_quests: 3
+        reward_multiplier: 1.05
+        unlocked_quests: []
+      veteran:
+        order: 2
+        label: "熟練者"
+        contribution: 500
+        completed_quests: 10
+        reward_multiplier: 1.10
+        unlocked_quests: []
+      officer:
+        order: 3
+        label: "幹部"
+        contribution: 2000
+        completed_quests: 25
+        reward_multiplier: 1.20
+        unlocked_quests: []
+      leader:
+        order: 4
+        label: "マスター"
+        contribution: 5000
+        completed_quests: 50
+        reward_multiplier: 1.30
+        unlocked_quests: []

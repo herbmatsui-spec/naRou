@@ -31,6 +31,49 @@ guild_quests:
           contribution: 300
           gold: 1000
           item: "steel_ingot"
+    special:
+      - id: "member_beast_cull"
+        name: "【専用】魔獣の大規模駆除"
+        description: "正会員以上に許される大規模な魔獣駆除任務。"
+        requirements:
+          min_rank: "member"
+          monster_kills:
+            beast: 10
+        reward:
+          contribution: 120
+          gold: 400
+          item: "heal_potion"
+      - id: "veteran_ancient_dragon"
+        name: "【専用】古竜討伐の命"
+        description: "熟練者のみに下される古竜討伐の極秘任務。"
+        requirements:
+          min_rank: "veteran"
+          monster_kills:
+            dragon: 1
+        reward:
+          contribution: 500
+          gold: 3000
+          item: "dragon_scale"
+      - id: "officer_relic_recovery"
+        name: "【専用】遺物回収作戦"
+        description: "幹部以上に許される遺跡遺物の回収任務。"
+        requirements:
+          min_rank: "officer"
+          dungeon_depth: 15
+        reward:
+          contribution: 800
+          gold: 5000
+          item: "ancient_relic"
+      - id: "leader_guild_trial"
+        name: "【専用】ギルド試練: 最深部踏破"
+        description: "マスターの座を目指す者だけに課される最終試練。"
+        requirements:
+          min_rank: "leader"
+          dungeon_depth: 20
+        reward:
+          contribution: 1000
+          gold: 10000
+          item: "guild_master_crest"
 
   mages_guild:
     daily:
