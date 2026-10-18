@@ -39,6 +39,24 @@ def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line("markers", "requires_gpu: marks tests requiring GPU/rendering")
     config.addinivalue_line("markers", "balance: marks balance simulation tests")
 
+
+@pytest.fixture(autouse=True)
+def _clear_global_memory_registry():
+    """グローバル NPC 記憶レジストリのテスト間リークを防ぐ
+
+    GLOBAL_MEMORY_REGISTRY はプロセス全体のシングルトンであり、NPC 記憶
+    フック (combat / entity / gameplay 経由) を通るテストが Mock NPC の
+    記憶を登録する。放置すると後続テスト (test_phase2_social_simulation 等)
+    の all_managers() 検証が汚染されるため、各テスト後にクリアする。
+    """
+    yield
+    try:
+        from npc_memory_system import GLOBAL_MEMORY_REGISTRY
+
+        GLOBAL_MEMORY_REGISTRY._managers.clear()
+    except Exception:
+        pass
+
 # =============================================================================
 # Core Test Data Builders
 # =============================================================================

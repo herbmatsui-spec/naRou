@@ -71,4 +71,38 @@ class DialogueManager:
                 elif trust <= -30:
                     return speaker_name, "「……お前に関わる気はない。立ち去れ。」"
 
+        # T43 案A: NPC の記憶・噂を会話へ反映 (記憶も噂も無ければ既定台詞のまま)
+        memory_line = cls._social_memory_line(speaker, player, speaker_name, engine)
+        if memory_line is not None:
+            return speaker_name, memory_line
+
         return speaker_name, cls.DEFAULT_NPC_DIALOGUE
+
+    @classmethod
+    def _social_memory_line(
+        cls, speaker: Any, player: Any, speaker_name: str, engine: Any | None
+    ) -> str | None:
+        """NPC の記憶・噂から会話の一言を生成する (どちらも無ければ None)
+
+        記憶を持つ NPC はプレイヤーの過去の行動に言及し、噂を知る NPC は
+        それを話題にする。どちらも知らない NPC は何も語らない (情報非対称)。
+        """
+        player_id = getattr(player, "name", "player")
+        try:
+            from npc_memory_system import build_memory_dialogue_line
+
+            line = build_memory_dialogue_line(speaker, player_id=player_id)
+        except Exception:
+            line = None
+        if line:
+            return line
+
+        rumor_engine = getattr(engine, "rumor_engine", None) if engine is not None else None
+        if rumor_engine is None:
+            return None
+        try:
+            from rumor_propagation_system import build_rumor_dialogue_line
+
+            return build_rumor_dialogue_line(rumor_engine, speaker_name, player_name=player_id)
+        except Exception:
+            return None

@@ -207,6 +207,8 @@ class GameplayLoop:
                 # T39 案C: カルママネージャー経由で二軸カルマにも反映する
                 self._apply_karma_action("attack_gwen")
                 self.engine.log("【悪行】グウェンを攻撃した！ (Karma -15)", (255, 80, 80))
+                # T43 案A: 攻撃対象の NPC 記憶へ登録
+                self._record_npc_social_memory(target, "attack_gwen")
             weapon = self.engine.inventory.equipment.get("main_hand")
             dmg, is_crit, msg = CombatSystem.calculate_melee_attack(
                 self.engine.player, target, weapon
@@ -241,6 +243,8 @@ class GameplayLoop:
                 self.engine.log(
                     f"【悪行】無抵抗の{target.name}を攻撃した！ (Karma -2)", (255, 80, 80)
                 )
+                # T43 案A: 攻撃対象の NPC 記憶へ登録
+                self._record_npc_social_memory(target, "attack_innocent")
             self.engine.player.energy -= ENERGY_THRESHOLD
             return True
 
@@ -346,6 +350,17 @@ class GameplayLoop:
             return
         karma_mgr.apply_action(engine.player, action, engine=engine)
 
+    def _record_npc_social_memory(self, target, action: str) -> None:
+        """プレイヤーの行動を対象 NPC の記憶・態度・噂へ反映する (T43 案A)。"""
+        try:
+            from npc_memory_system import notify_player_action
+
+            notify_player_action(self.engine, target, action, player=self.engine.player)
+        except Exception:
+            import logging
+
+            logging.getLogger(__name__).exception("NPC 記憶への行動反映に失敗")
+
     def _check_spared_enemies(self, old_x: int, old_y: int, new_x: int, new_y: int) -> None:
         """逃走意図の無害な敵を隣接状態から離れる方向へ移動した場合、
         見逃し (善意行動) としてカルマへ反映する (T39 案C)。
@@ -376,6 +391,8 @@ class GameplayLoop:
                     e.karma_spared = True
                     karma_mgr.apply_action(engine.player, "spare_enemy", engine=engine)
                     engine.log(f"【善行】逃げる{e.name}を見逃した。 (Karma +2)", (160, 220, 255))
+                    # T43 案A: 見逃された NPC の記憶へ登録
+                    self._record_npc_social_memory(e, "spare_enemy")
         except Exception:
             import logging
 

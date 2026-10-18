@@ -195,6 +195,11 @@ class GameLoopHandler:
 
         FactionManager().update_influence(engine)
 
+        # === 噂伝播の定期進行 (RumorEngine に委譲, T43 案A) ===
+        from rumor_propagation_system import tick_world_rumors
+
+        tick_world_rumors(engine)
+
         # === ペット絆度 & 進化チェック (PetBondManager に委譲) ===
         from managers.pet_bond_manager import PetBondManager
 

@@ -176,8 +176,19 @@ class CombatSystem:
             else:
                 # 無抵抗のNPC・衛兵・町人などの撃破は悪行
                 karma_mgr.apply_action(player, "murder_innocent", engine=engine)
+                # T43 案A: 悪行を犠牲者と目撃者の記憶・噂へ反映
+                self._record_npc_social_memory(engine, entity, "murder_innocent", player)
         except Exception:
             logger.exception("カルマイベントの適用に失敗")
+
+    def _record_npc_social_memory(self, engine: "Engine", target, action: str, player) -> None:
+        """プレイヤーの行動を対象 NPC の記憶・態度・噂へ反映する (T43 案A)。"""
+        try:
+            from npc_memory_system import notify_player_action
+
+            notify_player_action(engine, target, action, player=player)
+        except Exception:
+            logger.exception("NPC 記憶への行動反映に失敗")
 
     def _evaluate_reputation_gates(self, engine: "Engine") -> None:
         """評判変動後に ReputationGate を再評価する (T39 案C)。"""

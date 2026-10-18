@@ -144,6 +144,13 @@ class EntitySystem:
                 if hasattr(engine.pet, "pet_ai"):
                     engine.pet.pet_ai.increase_bond(-50, "defeated")
                 engine.combat_system.publish_kill_event(engine.event_bus, target.x, target.y)
+                # エミートトリガ: 仲間倒れ → 悲しみ (T46 案A)
+                bus = getattr(engine, "event_bus", None)
+                if bus is not None:
+                    bus.publish(
+                        "ally_down",
+                        {"entity": target, "name": getattr(target, "name", "仲間")},
+                    )
         elif dist <= 8 and can_see:
             blocked = engine.get_blocked_positions()
             path = AStar.get_path(
@@ -176,6 +183,9 @@ class EntitySystem:
             for log in logs:
                 engine.message_log.add(log)
 
+        # T39 案C: 負傷した無害なNPCを見舞うと救済 (善意行動) としてカルマに反映
+        self._relieve_wounded_neighbor(neighbor)
+
         for dx, dy in [
             (0, -1), (0, 1), (-1, 0), (1, 0),
             (-1, -1), (1, 1), (-1, 1), (1, -1),
@@ -188,9 +198,61 @@ class EntitySystem:
                     engine.relationship_manager.update_relationship(
                         engine.player, t.name, action="talk"
                     )
+                    # T39 案C: 関係値変動後の評判ゲート再評価
+                    self._evaluate_reputation_gates()
                 return
 
         engine.log("周囲に話しかけられる相手がいない。")
+
+    def _relieve_wounded_neighbor(self, neighbor) -> None:
+        """負傷した無害なNPCへの話しかけを看病 (救済) としてカルマへ反映する (T39 案C)。
+
+        同一エンティティに対しては karma_relief_done フラグで一度のみ適用する。
+        """
+        engine = self.engine
+        try:
+            hp = getattr(neighbor, "hp", None)
+            max_hp = getattr(neighbor, "max_hp", None)
+            if hp is None or max_hp is None or hp >= max_hp:
+                return
+            from naRou.systems import FACTION_MONSTER
+
+            if getattr(neighbor, "faction", FACTION_MONSTER) == FACTION_MONSTER:
+                return
+            if getattr(neighbor, "karma_relief_done", False):
+                return
+            karma_mgr = getattr(engine, "karma_manager", None)
+            if karma_mgr is None or getattr(engine, "player", None) is None:
+                return
+            neighbor.karma_relief_done = True
+            karma_mgr.apply_action(engine.player, "relief_wounded", engine=engine)
+            engine.log(f"【善行】負傷した{neighbor.name}を看病した。 (Karma +2)", (160, 220, 255))
+            # T43 案A: 救済を対象 NPC の記憶・態度・噂へ反映
+            self._record_npc_social_memory(neighbor, "relief_wounded")
+        except Exception:
+            logger.exception("看病 (救済) のカルマ反映に失敗")
+
+    def _record_npc_social_memory(self, target, action: str) -> None:
+        """プレイヤーの行動を対象 NPC の記憶・態度・噂へ反映する (T43 案A)。"""
+        try:
+            from npc_memory_system import notify_player_action
+
+            notify_player_action(self.engine, target, action, player=self.engine.player)
+        except Exception:
+            logger.exception("NPC 記憶への行動反映に失敗")
+
+    def _evaluate_reputation_gates(self) -> None:
+        """関係値変動後に ReputationGate を再評価する (T39 案C)。"""
+        engine = self.engine
+        try:
+            from reputation_gate_system import ensure_reputation_gate
+
+            player = getattr(engine, "player", None)
+            gate = ensure_reputation_gate(engine) if player is not None else None
+            if gate is not None:
+                gate.check_all_gates(player)
+        except Exception:
+            logger.exception("評判ゲートの再評価に失敗")
 
     def harvest_resource(self) -> None:
         """Harvest resource nodes."""
